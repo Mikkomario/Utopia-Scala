@@ -15,6 +15,7 @@ Supports **Flow v2.3**
 - The message parameter in **ContainerUpdateLoop**`.handleFailureResponse(...)` is now **String** instead of an **Option**
 ### Deprecations
 - Renamed **QueueSystem**`.pushSynchronous(ApiRequest)` to `.pushBlocking(ApiRequest)`
+- Renamed **QueueSystem**`.isOnlinePointer` to `.onlineFlag`
 ### New features
 - Added support for a new way of sending requests: **ApiRequestSeed**
   - This allows delayed request-generation in a persisted context. 
@@ -22,7 +23,7 @@ Supports **Flow v2.3**
 - Persisting requests now support variable persisting formats
 ### New methods
 - **QueueSystem**
-  - Added `.onlineFlag`
+  - Added `.queuedRequestCountPointer`
 - **Schrodinger**
   - Added `.pointer`, which provides read-only access to the wrapped `.fullStatePointer`
 - **SchrodingerState**

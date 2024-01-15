@@ -53,6 +53,7 @@
 - Added **SomeBeforeNone** utility ordering class for altered **Option**-ordering
 ### New methods
 - **ActionQueue**
+  - Added `.queueSizePointer: Changing[Int]`
   - Added `.pushAsync(=> Future)`
   - Added `.prepend(...)` variations
 - **CompoundingBuilder**

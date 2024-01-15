@@ -71,6 +71,11 @@ class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
 	private val queue = VolatileList[Action[_]]()
 	private val handleCompletions = VolatileList[Future[_]]()
 	
+	/**
+	  * A pointer that contains the number of queued (waiting) items in this queue at any time.
+	  */
+	lazy val queueSizePointer = queue.readOnly.map { _.size }
+	
 	
 	// OTHER	----------------------
 	

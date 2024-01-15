@@ -57,6 +57,11 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *         Contains false during offline mode.
 	  */
 	def onlineFlag = _onlineFlag.readOnly
+	/**
+	  * @return A pointer that contains the number of queued (i.e. waiting) requests.
+	  *         In online mode (the standard mode), contains 0.
+	  */
+	def queuedRequestCountPointer = offlineQueue.queueSizePointer
 	
 	/**
 	  * @return Whether the system is currently in online mode and functioning normally
@@ -70,7 +75,8 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	/**
 	  * @return A read-only pointer that shows whether this system is currently online (true) or offline (false)
 	  */
-	def isOnlinePointer: AbstractChanging[Boolean] = _onlineFlag
+	@deprecated("Renamed to onlineFlag", "v1.7")
+	def isOnlinePointer = onlineFlag
 	
 	
 	// OTHER    ----------------------------------
