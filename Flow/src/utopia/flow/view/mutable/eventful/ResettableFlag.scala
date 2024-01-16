@@ -15,7 +15,7 @@ object ResettableFlag
 	 * @param initialValue The initial value of this flag
 	  * @return A new resettable flag
 	  */
-	def apply(initialValue: Boolean = false): ResettableFlag = new _ResettableFlag()
+	def apply(initialValue: Boolean = false): ResettableFlag = new _ResettableFlag(initialValue)
 	
 	
 	// NESTED   -----------------------

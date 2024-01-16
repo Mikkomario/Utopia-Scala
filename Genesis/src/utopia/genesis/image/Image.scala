@@ -214,16 +214,16 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	def cropped = {
 		val px = pixels
 		// Finds the first row that contains visible pixels
-		px.rowIndices.find { y => px.columnIndices.exists { x => px(x, y).alpha > 0.0 } } match {
+		px.rowIndices.find { y => px.columnIndices.exists { x => px(x, y).visible } } match {
 			case Some(minY) =>
 				// Finds the last row that contains visible pixels
-				val maxY = px.rowIndices.findLast { y => px.columnIndices.exists { x => px(x, y).alpha > 0.0 } }.get
+				val maxY = px.rowIndices.findLast { y => px.columnIndices.exists { x => px(x, y).visible } }.get
 				val colRange = minY to maxY
 				// Finds the first and last column that contain visible pixels
-				val minX = px.columnIndices.find { x => colRange.exists { y => px(x, y).alpha > 0.0 } }.get
-				val maxX = px.columnIndices.findLast { x => colRange.exists { y => px(x, y).alpha > 0.0 } }.get
+				val minX = px.columnIndices.find { x => colRange.exists { y => px(x, y).visible } }.get
+				val maxX = px.columnIndices.findLast { x => colRange.exists { y => px(x, y).visible } }.get
 				// Returns the cropped image, preserves the origin
-				crop(Insets(minX, px.width - maxX, minY, px.height - maxY))
+				crop(Insets(minX, px.width - maxX - 1, minY, px.height - maxY - 1))
 			// Case: No visible pixels found => returns an empty image
 			case None => Image.empty
 		}

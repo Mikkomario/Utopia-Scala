@@ -7,6 +7,7 @@
 - Deleted functions and classes that were deprecated at v3.0 or earlier
 ### Bugfixes
 - **MouseEventGenerator** that's directly attached to a **java.awt.Window** now accounts for the window insets
+- Fixed **Image**`.cropped`, which would previously crop too much
 ### New methods
 - **Image**
   - Added `.withCanvasSize(Size)` function, which adds padding or crops the image in order to get it to the desired size
