@@ -1,13 +1,15 @@
 package utopia.reach.component.button.image
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
-import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -15,13 +17,12 @@ import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{FramedFactory, FromContextComponentFactoryFactory}
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FramedFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsLike, ImageLabelSettings}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
-
 /**
   * Common trait for image and text button factories and settings
   * @tparam Repr Implementing factory/settings type
@@ -30,6 +31,7 @@ import utopia.reach.focus.FocusListener
   */
 trait ImageAndTextButtonSettingsLike[+Repr]
 	extends FramedFactory[Repr] with ButtonSettingsLike[Repr] with ImageAndTextLabelSettingsLike[Repr]
+		with AppliesButtonImageEffectsFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -45,14 +47,14 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	/**
 	  * Wrapped general button settings
 	  * @param settings New button settings to use.
-	  *                 Wrapped general button settings
+	  * Wrapped general button settings
 	  * @return Copy of this factory with the specified button settings
 	  */
 	def withButtonSettings(settings: ButtonSettings): Repr
 	/**
 	  * Wrapped settings for label construction
 	  * @param settings New label settings to use.
-	  *                 Wrapped settings for label construction
+	  * Wrapped settings for label construction
 	  * @return Copy of this factory with the specified label settings
 	  */
 	def withLabelSettings(settings: ImageAndTextLabelSettings): Repr
@@ -64,9 +66,9 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	override def enabledPointer = buttonSettings.enabledPointer
 	override def focusListeners = buttonSettings.focusListeners
 	override def forceEqualBreadth = labelSettings.forceEqualBreadth
+	override def hotKeys: Set[HotKey] = buttonSettings.hotKeys
 	override def imageSettings = labelSettings.imageSettings
 	override def isHint = labelSettings.isHint
-	override def hotKeys: Set[HotKey] = buttonSettings.hotKeys
 	
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
@@ -95,22 +97,28 @@ object ImageAndTextButtonSettings
 	
 	val default = apply()
 }
+
 /**
   * Combined settings used when constructing image and text buttons
-  * @param insets         Insets to place around created components
+  * @param insets Insets to place around created components
   * @param buttonSettings Wrapped general button settings
-  * @param labelSettings  Wrapped settings for label construction
+  * @param labelSettings Wrapped settings for label construction
+  * @param imageEffects Effects applied to generated image sets
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
 case class ImageAndTextButtonSettings(insets: StackInsets = StackInsets.any,
                                       buttonSettings: ButtonSettings = ButtonSettings.default,
-                                      labelSettings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
+                                      labelSettings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
+                                      imageEffects: Vector[ButtonImageEffect] = ComponentCreationDefaults.inButtonImageEffects)
 	extends ImageAndTextButtonSettingsLike[ImageAndTextButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
+	override def self: ImageAndTextButtonSettings = this
+	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
+	override def withImageEffects(effects: Vector[ButtonImageEffect]) = copy(imageEffects = effects)
 	override def withInsets(insets: StackInsetsConvertible) = copy(insets = insets.toInsets)
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) = copy(labelSettings = settings)
 }
@@ -128,8 +136,7 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
 	/**
 	  * Settings wrapped by this instance
 	  */
-	def settings: ImageAndTextButtonSettings
-	
+	protected def settings: ImageAndTextButtonSettings
 	/**
 	  * @return Copy of this factory with the specified settings
 	  */
@@ -138,12 +145,16 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
 	
 	// IMPLEMENTED	--------------------
 	
-	override def labelSettings = settings.labelSettings
 	override def buttonSettings: ButtonSettings = settings.buttonSettings
+	override def imageEffects = settings.imageEffects
 	override def insets: StackInsets = settings.insets
+	override def labelSettings = settings.labelSettings
 	
+	override def withButtonSettings(settings: ButtonSettings): Repr =
+		mapSettings { _.withButtonSettings(settings) }
+	override def withImageEffects(effects: Vector[ButtonImageEffect]) =
+		mapSettings { _.withImageEffects(effects) }
 	override def withInsets(insets: StackInsetsConvertible) = mapSettings { _.withInsets(insets) }
-	override def withButtonSettings(settings: ButtonSettings): Repr = mapSettings { _.withButtonSettings(settings) }
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) =
 		mapSettings { _.withLabelSettings(settings) }
 	
@@ -250,10 +261,11 @@ case class ImageAndTextButtonSetup(settings: ImageAndTextButtonSettings = ImageA
 {
 	// IMPLEMENTED	--------------------
 	
+	override def self: ImageAndTextButtonSetup = this
+	
 	override def withContext(hierarchy: ComponentHierarchy,
 	                         context: TextContext): ContextualImageAndTextButtonFactory =
 		ContextualImageAndTextButtonFactory(hierarchy, context, settings)
-	
 	override def withSettings(settings: ImageAndTextButtonSettings): ImageAndTextButtonSetup =
 		copy(settings = settings)
 }
@@ -281,6 +293,30 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer
 		.mergeWith(settings.enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
+	
+	// Applies the button image effects, if applicable
+	private val appliedImage = image match {
+		// Case: Starts from a static icon or an image => Converts to a button image set, if effects are present
+		case Left(imageOrIcon) =>
+			NotEmpty(settings.imageEffects) match {
+				// Case: Effects applied => Converts to an image set
+				case Some(effects) =>
+					// Converts the icon to an image, if needed
+					val image = imageOrIcon.leftOrMap { icon =>
+						settings.imageColorOverlay match {
+							// Case: Color-overlay applied
+							case Some(color) => icon(color)
+							// Case: Black or white icon
+							case None => icon.contextual(context)
+						}
+					}
+					Right(ButtonImageSet(image) ++ effects)
+				// Case: No effects applied => Keeps as a static image or icon
+				case None => Left(imageOrIcon)
+			}
+		// Case: Button image set used => Applies effects on top of the set
+		case Right(imageSet) => Right(imageSet ++ settings.imageEffects)
+	}
 	
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	override val focusId = hashCode()
@@ -313,7 +349,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 			// Adds state-based background-drawing
 			.withCustomBackgroundDrawer(
 				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)))
-		image match {
+		appliedImage match {
 			// Case: Image won't change => Constructs an immutable label
 			case Left(staticImage) => factory(staticImage, text)
 			// Case: Image is defined as a set and will changed based on the state => Constructs a view-label

@@ -100,7 +100,7 @@ class ImageAndTextButton(initialImages: ButtonImageSet, initialText: LocalizedSt
 	
 	private var _images = initialImages
 	
-	private val imageLabel = new ImageLabel(initialImages.defaultImage)
+	private val imageLabel = new ImageLabel(initialImages.default)
 	private val textLabel = new TextLabel(initialText, font, textColor,
 		insets.withLeft(StackLength.fixedZero).mapRight { _.expanding }, initialAlignment = textAlignment)
 	private val content = {

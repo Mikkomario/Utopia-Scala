@@ -22,6 +22,17 @@ object View
 	def fixed[A](value: A): View[A] = new FixedView[A](value)
 	
 	
+	// IMPLICIT -----------------------------
+	
+	implicit class DeepView[A](val v: View[View[A]]) extends AnyVal
+	{
+		/**
+		  * @return A view into the value of this view's value
+		  */
+		def flatten = View { v.value.value }
+	}
+	
+	
 	// NESTED	-----------------------------
 	
 	private class ViewWrapper[+A](_value: => A) extends View[A] {

@@ -102,7 +102,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	/**
 	  * A pointer to the current overall shade of this button (based on the focused-image)
 	  */
-	val shadePointer = imagesPointer.lazyMap { _.focusImage.shade }
+	val shadePointer = imagesPointer.lazyMap { _.focus.shade }
 	
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()

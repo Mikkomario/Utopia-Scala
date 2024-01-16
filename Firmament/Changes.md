@@ -3,13 +3,29 @@
 ## v1.1.1 (in development)
 Supports **Flow v2.3**
 ### Deprecations
+- Deprecated **ButtonImageSet** constructors
+  - The image effects are now applied **after** the initial (identity) set has been created
+    - E.g. `ButtonImageSet.lowAlphaOnDisabled(Image, Double)` is now written as 
+      `ButtonImageSet(Image).lowAlphaOnDisabled`
+- Renamed all **ButtonImageSet** properties
+  - E.g. `.defaultImage` is now `.default`
 - Renamed `.withLowPriority` to `.lowPriority` in **StackLength** and **StackSize**
 - Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
+- Deprecated `Border.square(Double, Color)`, as this was a duplicate of `.symmetric(Double, Color)`
+### New features
+- **ButtonImageSet** now supports combined image effects
+  - This includes a new effect called **ChangeSize**, which modifies image/icon size based on button state
+- Added **FromColorFactory** trait
 ### New methods
-- **ButtonImageSet** (object)
-  - Added `.changingSize(Image, Double)`
-    - Also added functions to **SingleColorIcon** for converting them into this type of button-image-set
+- **ButtonImageSet**
+  - Added mapping functions for individual images
+- **ComponentCreationDefaults**
+  - Added `.inButtonImageEffects` and `.asButtonImageEffects`
+- **SingleColorIcon**
+  - Added more color-based apply functions to button-related factories
 ### Other changes
+- The image effects listed in **ComponentCreationDefaults** now affect **SingleColorIcon** **ButtonImageSet** 
+  conversion functions
 - Scala version updated to 2.13.12
 
 ## v1.1 - 27.09.2023

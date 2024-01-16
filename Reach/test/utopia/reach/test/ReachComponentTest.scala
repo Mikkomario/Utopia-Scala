@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.firmament.component.Window
-import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
@@ -66,10 +66,10 @@ object ReachComponentTest extends App
 							val closeButtonFactory = factories.mapContext { _ / Primary }(ImageAndTextButton)
 								.withFocusListener(focusReporter("Close Button"))
 								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
-							val closeButton = closeButtonFactory.apply(SingleColorIcon(
-									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty))
-									.inButton.sizeChanging.contextual(closeButtonFactory.context),
-								"Close (esc)") { windowPointer.value.foreach { _.close() } }
+							val closeButton = closeButtonFactory.sizeChanging
+								.apply(SingleColorIcon(
+									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty)),
+									"Close (esc)") { windowPointer.value.foreach { _.close() } }
 							/*
 							val closeButton = factories.mapContext { _ / Primary }(TextButton)
 								.withFocusListener(focusReporter("Close Button"))

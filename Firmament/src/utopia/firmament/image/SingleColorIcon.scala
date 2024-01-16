@@ -1,6 +1,6 @@
 package utopia.firmament.image
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.WeakCache
@@ -9,11 +9,9 @@ import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
-import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet, ColorShade, FromShadeFactory}
+import utopia.paradigm.color.{Color, ColorShade, FromShadeFactory}
 import utopia.paradigm.shape.shape2d.vector.size.{Size, Sized}
-import utopia.paradigm.transform.Adjustment
 
 import scala.language.implicitConversions
 
@@ -52,7 +50,7 @@ object SingleColorIcon
   */
 case class SingleColorIcon(original: Image, standardSize: Size)
 	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
-		with StandardSizeAdjustable[SingleColorIcon]
+		with StandardSizeAdjustable[SingleColorIcon] with FromColorFactory[Image]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -65,16 +63,10 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		Lazy { original.mapIfNotEmpty { _.withAlpha(0.88) } },
 		Lazy { original.mapIfNotEmpty { _.withColorOverlay(Color.white) } }
 	)
-	private val _inButtonSets = _blackAndWhite.map { _.map { ButtonImageSet.lowAlphaOnDisabled(_) } }
-	
-	/**
-	  * A version of this icon for black individual buttons
-	  */
-	lazy val blackIndividualButton = ButtonImageSet.brightening(black)
-	/**
-	  * A version of this icon for white individual buttons
-	  */
-	lazy val whiteIndividualButton = ButtonImageSet.darkening(white)
+	private val _inButtonSets = _blackAndWhite
+		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.inButtonImageEffects } }
+	private val _highlightingInButtonSets = _blackAndWhite
+		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.asButtonImageEffects } }
 	
 	override protected lazy val relativeToStandardSize: Double = {
 		if (standardSize.dimensions.exists { _ == 0.0 })
@@ -107,6 +99,14 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * A version of this icon for dark image + text buttons
 	  */
 	def whiteForButtons = _inButtonSets.second.value
+	/**
+	  * A version of this icon for black individual buttons
+	  */
+	def blackIndividualButton = _highlightingInButtonSets.first.value
+	/**
+	  * A version of this icon for white individual buttons
+	  */
+	def whiteIndividualButton = _highlightingInButtonSets.second.value
 	
 	/**
 	  * @return Access to methods that generate button image sets suitable for icon buttons
@@ -115,7 +115,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	/**
 	  * @return Access to methods that generate images suitable to be used inside buttons
 	  */
-	def inButton = new IconInsideButton(None)
+	def inButton = IconInsideButton
 	
 	/**
 	  * @return A full size version of this icon where icon size matches the source resolution
@@ -153,25 +153,16 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		case Light => white
 		case Dark => black
 	}
+	/**
+	  * @param color A color
+	  * @return This icon painted with that color
+	  */
+	override def apply(color: Color) = paintedImageCache(color)
 	
 	override def *(mod: Double): SingleColorIcon = map { _ * mod }
 	
 	
 	// OTHER	---------------------------
-	
-	/**
-	  * @param color A color
-	  * @return This icon painted with that color
-	  */
-	def apply(color: Color) = paintedImageCache(color)
-	/**
-	  * @param role Icon color role
-	  * @param preferredShade Preferred color shade (default = standard)
-	  * @param context Implicit color context
-	  * @return This icon converted to an image with a color
-	  */
-	def apply(role: ColorRole, preferredShade: ColorLevel = Standard)(implicit context: ColorContext): Image =
-		apply(context.color.preferring(preferredShade)(role))
 	
 	/**
 	  * @param f A mapping function
@@ -225,7 +216,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	
 	// NESTED   --------------------------
 	
-	object IconAsButton extends FromShadeFactory[ButtonImageSet]
+	object IconAsButton extends FromShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
 	{
 		// COMPUTED --------------------------
 		
@@ -247,38 +238,17 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 			case Dark => blackIndividualButton
 		}
 		
-		
-		// OTHER    -------------------------
-		
-		/**
-		  * @param colors Color set to use
-		  * @param context Implicit component creation context
-		  * @return A coloured button image set to use
-		  */
-		def apply(colors: ColorSet)(implicit context: ColorContext): ButtonImageSet =
-			apply(colors.against(context.background))
-		/**
-		  * @param color Color role to use
-		  * @param context Implicit component creation context
-		  * @return A colored button image set to use
-		  */
-		def apply(color: ColorRole)(implicit context: ColorContext): ButtonImageSet =
-			apply(context.color(color))
-		
 		/**
 		  * @param color Target icon color
 		  * @return A button image set that uses icons with that color
 		  */
-		def apply(color: Color) = {
+		override def apply(color: Color) = {
 			val colored = SingleColorIcon.this.apply(color)
-			if (color.relativeLuminance < 0.6)
-				ButtonImageSet.brightening(colored)
-			else
-				ButtonImageSet.darkening(colored)
+			ButtonImageSet(colored).lowerAlphaOnDisabled.highlighting
 		}
 	}
 	
-	class IconInsideButton(resizeAdjustment: Option[Adjustment]) extends FromShadeFactory[ButtonImageSet]
+	object IconInsideButton extends FromShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
 	{
 		// COMPUTED -------------------------
 		
@@ -292,12 +262,6 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		def black = apply(Dark)
 		
 		/**
-		  * @param adj Adjustment that determines the size of the size change
-		  * @return Copy of this factory that constructs size-changing icons
-		  */
-		def sizeChanging(implicit adj: Adjustment) = new IconInsideButton(resizeAdjustment = Some(adj))
-		
-		/**
 		  * @param context Component creation context
 		  * @return A button image set based on this icon, where only alpha values may change
 		  */
@@ -306,17 +270,12 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		
 		// IMPLEMENTED  ---------------------
 		
-		override def apply(shade: ColorShade): ButtonImageSet = {
-			resizeAdjustment match {
-				case Some(adj) =>
-					val base = SingleColorIcon.this(shade)
-					ButtonImageSet.changingSize(base)(adj)
-				case None =>
-					shade match {
-						case Dark => blackForButtons
-						case Light => whiteForButtons
-					}
-			}
+		override def apply(shade: ColorShade): ButtonImageSet = shade match {
+			case Dark => blackForButtons
+			case Light => whiteForButtons
 		}
+		
+		override def apply(color: Color): ButtonImageSet =
+			ButtonImageSet(SingleColorIcon.this(color)).lowerAlphaOnDisabled
 	}
 }

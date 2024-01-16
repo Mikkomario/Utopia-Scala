@@ -200,6 +200,11 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 			area.withEnds(area.start - halved, area.end + halved)
 		})
 	/**
+	  * @param enlargement Amount of enlargement **on each side**
+	  * @return Copy of this instance with enlarged bounds
+	  */
+	def enlarged(enlargement: Double): Repr = enlarged(Vector2D.fill(2)(enlargement * 2))
+	/**
 	  * Creates a copy of this item with shrunk bounds where the center-point remains the same
 	  * @param shrinking A size decrease to apply
 	  * @return A copy of this item with bounds that keep the same center-point but have shrunk size
@@ -210,4 +215,10 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 			val halved = (decrease min area.length) / 2
 			area.withEnds(area.start + halved, area.end - halved)
 		})
+	/**
+	  * Creates a copy of this item with shrunk bounds where the center-point remains the same
+	  * @param shrinking A size decrease to apply **on each side**
+	  * @return A copy of this item with bounds that keep the same center-point but have shrunk size
+	  */
+	def shrunk(shrinking: Double): Repr = shrunk(Vector2D.fill(2)(shrinking * 2))
 }

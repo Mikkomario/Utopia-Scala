@@ -28,7 +28,6 @@ object Border
 	  * @return A new border
 	  */
 	def apply(insets: Insets, color: Color): Border = Border(insets, Some(color))
-	
 	/**
 	  * Creates a new border
 	  * @param left Left side width
@@ -39,7 +38,6 @@ object Border
 	  * @return A new border
 	  */
 	def apply(left: Double, right: Double, top: Double, bottom: Double, color: Color): Border = apply(Insets(left, right, top, bottom), color)
-	
 	/**
 	  * Creates a new border
 	  * @param sizes Border insets
@@ -63,21 +61,18 @@ object Border
 	  * @return A border that only affects the top of a component
 	  */
 	def top(height: Double, color: Color) = towards(Up, height, color)
-	
 	/**
 	  * @param height Height of this border
 	  * @param color Border color
 	  * @return A border that only affects the bottom of a component
 	  */
 	def bottom(height: Double, color: Color) = towards(Down, height, color)
-	
 	/**
 	  * @param width Width of this border
 	  * @param color Border color
 	  * @return A border that only affects the left side of a component
 	  */
 	def left(width: Double, color: Color) = towards(Direction2D.Left, width, color)
-	
 	/**
 	  * @param width Width of this border
 	  * @param color Border color
@@ -91,16 +86,15 @@ object Border
 	  * @param color Color of this border
 	  * @return A new border
 	  */
-	def square(side: Double, color: Color) = Border(Insets.symmetric(side), color)
-	
+	@deprecated("Please use .symmetric(Double, Color) instead", "v1.1.1")
+	def square(side: Double, color: Color) = symmetric(side, color)
 	/**
 	  * Creates a symmetric border
 	  * @param side Length of each side
 	  * @param color Color used in this border
 	  * @return A symmetric border
 	  */
-	def symmetric(side: Double, color: Color) = square(side, color)
-	
+	def symmetric(side: Double, color: Color) = Border(Insets.symmetric(side), color)
 	/**
 	  * Creates a symmetric border
 	  * @param hBorder Left & right insets
@@ -109,7 +103,6 @@ object Border
 	  * @return A new border
 	  */
 	def symmetric(hBorder: Double, vBorder: Double, color: Color) = Border(Insets.symmetric(hBorder, vBorder), color)
-	
 	/**
 	  * Creates a symmetric border
 	  * @param insets Total border insets
@@ -126,7 +119,6 @@ object Border
 	  * @return A new border
 	  */
 	def horizontal(left: Double, right: Double, color: Color) = Border(Insets(left, right, 0, 0), color)
-	
 	/**
 	  * Creates a horizontal border
 	  * @param hBorder left & right insets
@@ -134,7 +126,6 @@ object Border
 	  * @return A new border
 	  */
 	def horizontal(hBorder: Double, color: Color): Border = horizontal(hBorder, hBorder, color)
-	
 	/**
 	  * Creates a vertical border
 	  * @param top Top insets
@@ -143,7 +134,6 @@ object Border
 	  * @return A new border
 	  */
 	def vertical(top: Double, bottom: Double, color: Color) = Border(Insets(0, 0, top, bottom), color)
-	
 	/**
 	  * Creates a vertical border
 	  * @param vBorder Top & bottom insets
@@ -166,8 +156,7 @@ object Border
 	  * @param intensity The intensity of color change applied where 0 is no change and 1 is the default change
 	  * @return A new border
 	  */
-	def raised(w: Double, baseColor: Color, intensity: Double = 1.0) =
-	{
+	def raised(w: Double, baseColor: Color, intensity: Double = 1.0) = {
 		val dark = Border(Insets(0, w, 0, w), baseColor.darkenedBy(intensity))
 		val light = Border(dark.insets.opposite, baseColor.lightenedBy(intensity), dark)
 		

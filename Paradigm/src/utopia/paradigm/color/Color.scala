@@ -6,6 +6,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.angular.Angle
+import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.enumeration.RgbChannel
 import utopia.paradigm.generic.ParadigmDataType.ColorType
 
@@ -438,5 +439,15 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 			darkenedBy(impact)
 		else
 			lightenedBy(impact)
+	}
+	/**
+	  * Creates a slightly modified copy of this color
+	  * @param impact An impact modifier, where 0 is no impact and 1 is the default impact
+	  * @param direction Direction that determines whether this color becomes darker or lighter
+	  * @return Modified copy of this color
+	  */
+	def highlightedBy(impact: Double, direction: ColorShade) = direction match {
+		case Light => lightenedBy(impact)
+		case Dark => darkenedBy(impact)
 	}
 }

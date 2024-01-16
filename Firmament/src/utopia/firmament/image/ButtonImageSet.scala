@@ -1,5 +1,6 @@
 package utopia.firmament.image
 
+import utopia.firmament.image.ButtonImageEffect.{ChangeSize, Highlight, LowerAlphaOnDisabled}
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, Hover}
 import utopia.firmament.model.GuiElementStatus
 import utopia.flow.operator.sign.Sign.Negative
@@ -9,10 +10,17 @@ import utopia.paradigm.transform.Adjustment
 object ButtonImageSet
 {
 	/**
+	  * @param image The image to display for every state
+	  * @return An image set that doesn't change
+	  */
+	def apply(image: Image): ButtonImageSet = apply(image, image, image, image)
+	
+	/**
 	  * Creates a new button image set that always presents the same image
 	  * @param image The image presented in the new set
 	  * @return A set that only contains the specified image
 	  */
+	@deprecated("Please use apply instead", "v1.1.1")
 	def fixed(image: Image) = ButtonImageSet(image, image, image, image)
 	
 	/**
@@ -21,6 +29,7 @@ object ButtonImageSet
 	  * @param intensity Brightening intensity modifier (default = 1)
 	  * @return A set that will a) Use 55% alpha while disabled and b) brighten the image on focus and pressed -states
 	  */
+	@deprecated("Please use apply(Image).highlighting instead", "v1.1.1")
 	def brightening(image: Image, intensity: Double = 1) = {
 		val disabled = image.timesAlpha(0.55)
 		val focused = image.mapEachPixel { _.lightenedBy(intensity) }
@@ -34,6 +43,7 @@ object ButtonImageSet
 	  * @param intensity Darkening intensity modifier (default = 1)
 	  * @return A set that will a) Use 55% alpha while disabled and b) darken the image on focus and pressed -states
 	  */
+	@deprecated("Please use apply(Image) + Highlight(preferredShade = Dark) instead", "v1.1.1")
 	def darkening(image: Image, intensity: Double = 1) = {
 		val disabled = image.timesAlpha(0.55)
 		val focused = image.mapEachPixel { _.darkenedBy(intensity) }
@@ -64,6 +74,7 @@ object ButtonImageSet
 	 * @param alphaOnDisabled Alpha modifier on disabled image (default = 55% = 0.55)
 	 * @return A button image set
 	 */
+	@deprecated("Please use apply(Image).lowAlphaOnDisabled instead", "v1.1.1")
 	def lowAlphaOnDisabled(image: Image, alphaOnDisabled: Double = 0.55) =
 		ButtonImageSet(image, image, image, image.timesAlpha(alphaOnDisabled))
 	
@@ -74,42 +85,96 @@ object ButtonImageSet
 	  * @param adjustment Implicit adjustment that determines the size of the size changes
 	  * @return A set that uses the specified image in different sizes
 	  */
-	def changingSize(image: Image, alphaOnDisabled: Double = 0.55)(implicit adjustment: Adjustment) = {
-		// Calculates the maximum image size, which determines the canvas size for all images
-		// Default impact is -1. Focus impact is 0. Activated impact is 0.5 (total).
-		val maxScaling = adjustment(0.5)
-		val newSize = (image.size * maxScaling).round
-		
-		val default = (image * adjustment(-1)).withCanvasSize(newSize)
-		val focus = image.withCanvasSize(newSize)
-		val activated = image.withSize(newSize)
-		apply(default, focus, activated, image.timesAlpha(alphaOnDisabled))
-	}
+	@deprecated("Please use apply(Image).sizeChanging instead", "v1.1.1")
+	def changingSize(image: Image, alphaOnDisabled: Double = 0.55)(implicit adjustment: Adjustment) =
+		apply(image).sizeChanging
 }
 
 /**
   * Used in buttons to display images differently based on button state
   * @author Mikko Hilpinen
   * @since 1.8.2019, Reflection v1+
-  * @param defaultImage The image that is displayed by default
-  * @param focusImage The image that is displayed when button is in focus (or mouse is over button)
-  * @param actionImage The image that is displayed when button is being pressed
-  * @param disabledImage The image that is displayed while button is disabled
+  * @param default The image that is displayed by default
+  * @param focus The image that is displayed when button is in focus (or mouse is over button)
+  * @param action The image that is displayed when button is being pressed
+  * @param disabled The image that is displayed while button is disabled
   */
-case class ButtonImageSet(defaultImage: Image, focusImage: Image, actionImage: Image, disabledImage: Image)
+case class ButtonImageSet(default: Image, focus: Image, action: Image, disabled: Image)
 {
+	// COMPUTED ---------------------
+	
+	@deprecated("Renamed to .default", "v1.1.1")
+	def defaultImage = default
+	@deprecated("Renamed to .focus", "v1.1.1")
+	def focusImage = focus
+	@deprecated("Renamed to .action", "v1.1.1")
+	def actionImage = action
+	@deprecated("Renamed to .disabled", "v1.1.1")
+	def disabledImage = disabled
+	
+	/**
+	  * @return Copy of this image-set where the disabled state has a lower alpha value (i.e. higher transparency)
+	  */
+	def lowerAlphaOnDisabled = this + LowerAlphaOnDisabled()
+	/**
+	  * @param adj Implicit adjustment size to use when changing size
+	  * @return Copy of this set where the image changes size according to the applicable state
+	  */
+	def sizeChanging(implicit adj: Adjustment) = this + ChangeSize()
+	/**
+	  * @return Copy of this image-set where the image grows brighter or darker based on the applicable state
+	  */
+	def highlighting = this + Highlight()
+	
+	
+	// OTHER    ---------------------
+	
 	/**
 	  * @param state A button state
 	  * @return An image that represents that state
 	  */
 	def apply(state: GuiElementStatus) = {
 		if (state is Activated)
-			actionImage
+			action
 		else if (state.is(Focused) || state.is(Hover))
-			focusImage
+			focus
 		else if (state.states.exists { _.effect == Negative })
-			disabledImage
+			disabled
 		else
-			defaultImage
+			default
 	}
+	
+	/**
+	  * @param f A mapping function applied to the default state
+	  * @return Copy of this set with a mapped default value
+	  */
+	def mapDefault(f: Image => Image) = copy(default = f(default))
+	/**
+	  * @param f A mapping function applied to the focused state
+	  * @return Copy of this set with a mapped focused value
+	  */
+	def mapFocus(f: Image => Image) = copy(focus = f(focus))
+	/**
+	  * @param f A mapping function applied to the action state
+	  * @return Copy of this set with a mapped action value
+	  */
+	def mapAction(f: Image => Image) = copy(action = f(action))
+	/**
+	  * @param f A mapping function applied to the disabled state
+	  * @return Copy of this set with a mapped disabled value
+	  */
+	def mapDisabled(f: Image => Image) = copy(disabled = f(disabled))
+	
+	/**
+	  * Applies an effect over this image set
+	  * @param effect An effect to apply
+	  * @return Copy of this image set with the effect applied
+	  */
+	def +(effect: ButtonImageEffect) = effect(this)
+	/**
+	  * Applies 0-n effects over this image set
+	  * @param effects Effects to apply
+	  * @return Copy of this image set with the specified effects applied
+	  */
+	def ++(effects: IterableOnce[ButtonImageEffect]) = effects.iterator.foldLeft(this) { _ + _ }
 }

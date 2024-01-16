@@ -24,10 +24,13 @@
 ### New methods
 - **Alignment**
   - Added `.surroundWith(Size)`, which may be used for constructing insets
+- **Bounded**
+  - Added new method variants: `.enlarged(Double)` and `.shrunk(Double)`
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Color**
   - Added `.visible` and `.invisible`
+  - Added `.highlightedBy(Double)`
 - **DimensionalFactory**
   - Added a new `.twice(D)` constructor
 - **Distance** (object)

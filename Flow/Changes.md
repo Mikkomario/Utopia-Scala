@@ -105,6 +105,8 @@
   - Added `.prependIfNotEmpty(String)` and `.appendIfNotEmpty(String)`
 - **Try** (**CollectionExtensions**)
   - Added `.failWith(Throwable)` and `.failIf(=> Option[Throwable])`
+- **View**
+  - Added `.flatten` to **Views** that contain **Views**
 ### Other changes
 - **Path** now extends **ApproxEquals**, as well as **MayBeEmpty** (after importing **FileExtensions**)
   - `~==` checks whether the two paths target the same file

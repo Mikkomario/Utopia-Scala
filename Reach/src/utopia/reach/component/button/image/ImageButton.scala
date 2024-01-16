@@ -1,20 +1,21 @@
 package utopia.reach.component.button.image
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
+import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsetsConvertible
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabelSettings, ImageLabelSettingsLike, ViewImageLabel}
 import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
@@ -27,7 +28,8 @@ import utopia.reach.focus.FocusListener
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-trait ImageButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with ImageLabelSettingsLike[Repr]
+trait ImageButtonSettingsLike[+Repr]
+	extends ButtonSettingsLike[Repr] with ImageLabelSettingsLike[Repr] with AppliesButtonImageEffectsFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -46,30 +48,31 @@ trait ImageButtonSettingsLike[+Repr] extends ButtonSettingsLike[Repr] with Image
 	def withImageSettings(settings: ImageLabelSettings): Repr
 	
 	
-	// IMPLEMENTED  ----------------
+	// IMPLEMENTED	--------------------
 	
-	def customDrawers = imageSettings.customDrawers
-	def enabledPointer = buttonSettings.enabledPointer
-	def hotKeys = buttonSettings.hotKeys
-	def focusListeners = buttonSettings.focusListeners
-	def insets = imageSettings.insets
-	def alignment = imageSettings.alignment
-	def imageScaling = imageSettings.imageScaling
-	def colorOverlay = imageSettings.colorOverlay
-	def usesLowPrioritySize = imageSettings.usesLowPrioritySize
+	override def alignment = imageSettings.alignment
+	override def colorOverlay = imageSettings.colorOverlay
+	override def customDrawers = imageSettings.customDrawers
+	override def enabledPointer = buttonSettings.enabledPointer
+	override def focusListeners = buttonSettings.focusListeners
+	override def hotKeys = buttonSettings.hotKeys
+	override def imageScaling = imageSettings.imageScaling
+	override def insets = imageSettings.insets
+	override def usesLowPrioritySize = imageSettings.usesLowPrioritySize
 	
 	override def apply(alignment: Alignment): Repr = mapImageSettings { _.withAlignment(alignment) }
-	
+	override def withAlignment(alignment: Alignment) = withImageSettings(imageSettings.withAlignment(alignment))
+	override def withColor(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
-		mapImageSettings { _.withCustomDrawers(drawers) }
-	def withColor(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
-	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
-	def withFocusListeners(listeners: Vector[FocusListener]) =
+		withImageSettings(imageSettings.withCustomDrawers(drawers))
+	override def withEnabledPointer(p: Changing[Boolean]) =
+		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withFocusListeners(listeners: Vector[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
-	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
-	def withImageScaling(scaling: Double) = withImageSettings(imageSettings.withImageScaling(scaling))
-	def withInsets(insets: StackInsetsConvertible) = withImageSettings(imageSettings.withInsets(insets))
-	def withUseLowPrioritySize(lowPriority: Boolean) =
+	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
+	override def withImageScaling(scaling: Double) = withImageSettings(imageSettings.withImageScaling(scaling))
+	override def withInsets(insets: StackInsetsConvertible) = withImageSettings(imageSettings.withInsets(insets))
+	override def withUseLowPrioritySize(lowPriority: Boolean) =
 		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
 	
 	
@@ -85,18 +88,24 @@ object ImageButtonSettings
 	
 	val default = apply()
 }
+
 /**
   * Combined settings used when constructing image buttons
+  * @param imageEffects Effects applied to generated image sets
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
 case class ImageButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.default,
-                               imageSettings: ImageLabelSettings = ImageLabelSettings.default)
+                               imageSettings: ImageLabelSettings = ImageLabelSettings.default,
+                               imageEffects: Vector[ButtonImageEffect] = ComponentCreationDefaults.asButtonImageEffects)
 	extends ImageButtonSettingsLike[ImageButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
+	override def self: ImageButtonSettings = this
+	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
+	override def withImageEffects(effects: Vector[ButtonImageEffect]) = copy(imageEffects = effects)
 	override def withImageSettings(settings: ImageLabelSettings) = copy(imageSettings = settings)
 }
 
@@ -124,13 +133,13 @@ trait ImageButtonSettingsWrapper[+Repr] extends ImageButtonSettingsLike[Repr]
 	// IMPLEMENTED	--------------------
 	
 	override def buttonSettings = settings.buttonSettings
+	override def imageEffects = settings.imageEffects
 	override def imageSettings = settings.imageSettings
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withImageSettings(settings: ImageLabelSettings) =
-		mapSettings { _.withImageSettings(settings) }
-	
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withImageEffects(effects: Vector[ButtonImageEffect]) = mapSettings { _.withImageEffects(effects) }
+	override def withImageSettings(settings: ImageLabelSettings) = mapSettings { _.withImageSettings(settings) }
 	
 	
 	// OTHER	--------------------
@@ -163,7 +172,14 @@ trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr] wit
 	  * @return A new image button
 	  */
 	def apply[U](images: ButtonImageSet)(action: => U) =
-		new ImageButton(parentHierarchy, images, settings, allowsUpscaling)(action)
+		new ImageButton(parentHierarchy, images ++ settings.imageEffects, settings, allowsUpscaling)(action)
+	/**
+	  * Creates a new image button
+	  * @param image The image to display on this button
+	  * @param action Action that will be triggered when this button is pressed
+	  * @return A new image button
+	  */
+	def apply[U](image: Image)(action: => U): ImageButton = apply(ButtonImageSet(image))(action)
 }
 
 /**
@@ -206,11 +222,11 @@ case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, con
 	def icon[U](icon: SingleColorIcon, color: Option[ColorRole] = None, preferredShade: ColorLevel = Standard)
 	           (action: => U) =
 	{
-		val images = color match {
-			case Some(color) => icon.asButton(context.color.preferring(preferredShade)(color))
-			case None => icon.asButton.contextual
+		val image = color match {
+			case Some(color) => icon(color)
+			case None => icon.contextual
 		}
-		apply(images)(action)
+		apply(image)(action)
 	}
 	
 	/**
@@ -257,6 +273,8 @@ case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	
 	// IMPLEMENTED	---------------------------
 	
+	override def self: ImageButtonFactory = this
+	
 	override def withContext(context: ColorContext) =
 		ContextualImageButtonFactory(parentHierarchy, context, settings)
 	
@@ -273,6 +291,8 @@ case class ImageButtonSetup(settings: ImageButtonSettings = ImageButtonSettings.
 		with FromContextComponentFactoryFactory[ColorContext, ContextualImageButtonFactory]
 {
 	// IMPLEMENTED	--------------------
+	
+	override def self: ImageButtonSetup = this
 	
 	override def apply(hierarchy: ComponentHierarchy) = ImageButtonFactory(hierarchy, settings)
 	
@@ -324,7 +344,7 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	/**
 	  * The overall shade of this button (calculated based on the focused-state)
 	  */
-	def shade = images.focusImage.shade
+	def shade = images.focus.shade
 	
 	
 	// IMPLEMENTED	-----------------------------

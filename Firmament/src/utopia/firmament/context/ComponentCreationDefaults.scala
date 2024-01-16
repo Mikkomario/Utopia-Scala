@@ -1,5 +1,7 @@
 package utopia.firmament.context
 
+import utopia.firmament.image.ButtonImageEffect
+import utopia.firmament.image.ButtonImageEffect.{Highlight, LowerAlphaOnDisabled}
 import utopia.firmament.model.Margins
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
@@ -73,4 +75,17 @@ object ComponentCreationDefaults
 	  * Used, for example, when creating contextual buttons.
 	  */
 	var marginsToBorderWidth: Margins => Double = _.verySmall
+	
+	/**
+	  * Effects to apply to all images that appear within buttons
+	  * (NB: Doesn't apply to buttons completely consisting of an image label).
+	  * See [[asButtonImageEffects]]
+	  */
+	var inButtonImageEffects = Vector[ButtonImageEffect](LowerAlphaOnDisabled())
+	/**
+	  * Effects that apply to all images that are converted into buttons without placing them in
+	  * another frame / setting.
+	  * See [[inButtonImageEffects]]
+	  */
+	var asButtonImageEffects = Vector[ButtonImageEffect](LowerAlphaOnDisabled(), Highlight())
 }

@@ -206,26 +206,12 @@ object ComponentFactoryWriter
 	private def factoryLike(factory: ComponentFactory, componentType: ScalaType, settingsWrapperType: ScalaType)
 	                       (implicit naming: NamingRules, setup: ProjectSetup) =
 	{
-		// Defines the abstract parentHierarchy property, but only for regular components
-		val props = {
-			if (factory.isContainer)
-				Vector()
-			else
-				Vector(
-					PropertyDeclaration.newAbstract("parentHierarchy", componentHierarchy,
-						description = s"The component hierarchy, to which created ${
-							factory.componentName.pluralDoc
-						} will be attached",
-						isProtected = true)
-				)
-		}
 		TraitDeclaration(
 			name = (factory.componentName + "FactoryLike").className,
 			genericTypes = Vector(repr),
-			extensions = settingsWrapperType(reprType) +:
-				factory.containerType.map[Extension] { _.factoryTrait(componentType, componentLike) }.toVector,
-			
-			properties = props,
+			extensions = (settingsWrapperType(reprType): Extension) +:
+				factory.containerType.map[Extension] { _.factoryTrait(componentType, componentLike) }.toVector :+
+				partOfHierarchy,
 			description = s"Common trait for factories that are used for constructing ${factory.componentName.pluralDoc}",
 			author = factory.author,
 			since = DeclarationDate.versionedToday
@@ -346,6 +332,8 @@ object ComponentFactoryWriter
 			else
 				Vector()
 		}
+		// If no "FactoryLike" trait is applied, extends PartOfComponentHierarchy
+		val hierarchyExtension = if (factory.onlyContextual) Some(partOfHierarchy: Extension) else None
 		ClassDeclaration(
 			name = name,
 			genericTypes = genericTypes,
@@ -359,7 +347,8 @@ object ComponentFactoryWriter
 				Parameter(prop.name.prop, prop.dataType, prop.defaultValue, description = prop.description)
 			},
 			// TODO: Add support for contextual ReachFactoryTrait variants
-			extensions = Vector(factoryLikeType(factoryType), contextualParent),
+			extensions = Vector[Extension](factoryLikeType(factoryType), contextualParent) ++ hierarchyExtension,
+			properties = Vector(ComputedProperty("self", isOverridden = true)("this")),
 			// Implements the required setters
 			methods = Set(
 				withContextMethod,

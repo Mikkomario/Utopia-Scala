@@ -3,6 +3,8 @@
 ## v1.2 (in development)
 Supports **Flow v2.3**
 ### Breaking changes
+- **Image** to **ButtonImageSet** -related effects are now separately added to image button (-like) factories
+  - The default effects applied are determined by **ComponentCreationDefaults**
 - Renamed **LayeredView** trait to **Layers**
   - Also, the trait no longer accepts a generic type parameter
 ### Bugfixes
@@ -17,6 +19,7 @@ Supports **Flow v2.3**
   - Currently only the static container version is available
 - **ImageLabel** factories can now more easily be converted to **ViewImageLabel** factories by calling `.toViewFactory`
   - Similar addition was made to **ImageAndTextLabel**, as well as **ImageAndTextButton**
+- Added **MousePositionDrawer**, which may be used for debugging mouse-related bugs
 ### Other changes
 - Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
   with the cost of less accurate cursor color

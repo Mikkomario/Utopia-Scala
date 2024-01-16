@@ -40,6 +40,7 @@ object ReachPackages
 		
 		lazy val context = base/"context"
 		lazy val components = base/"component"
+		lazy val template = components/"template"
 		lazy val hierarchies = components/"hierarchy"
 		lazy val factories = components/"factory"
 		lazy val contextualFactories = factories/"contextual"
