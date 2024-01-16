@@ -81,6 +81,8 @@
   - Added `.skipWait()` utility function
 - **MatrixLike**
   - Added `.indicesAroundIterator(...)` for iterating over an area around a certain position
+- **MappingCacheView**
+  - Added `.toCache`
 - **MayStopChanging**
   - Added a couple of "onceNotChanging" method variants
 - **Model** (object)

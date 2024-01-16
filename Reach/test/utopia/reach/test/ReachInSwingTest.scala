@@ -1,6 +1,5 @@
 package utopia.reach.test
 
-import utopia.firmament.component.Component
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.genesis.event.MouseButtonStateEvent
@@ -60,16 +59,21 @@ object ReachInSwingTest extends App
 	{
 		private val clicksCounter = EventfulPointer(0)
 		
-		private val panel = new JPanel(null)
+		private val outerPanel = new JPanel(null)
+		private val innerPanel = new JPanel(null)
+		outerPanel.add(innerPanel)
 		
+		outerPanel.setBackground(Color.magenta.toAwt)
 		clicksCounter.addContinuousListenerAndSimulateEvent(-1) { clicks =>
 			val color = if (clicks.newValue % 2 == 0) Color.yellow else Color.cyan
-			panel.setBackground(color.toAwt)
+			innerPanel.setBackground(color.toAwt)
 		}
 		
-		setContentPane(panel)
-		setSize(300, 200)
-		panel.setSize(300, 200)
+		setContentPane(outerPanel)
+		setSize(300, 300)
+		outerPanel.setSize(300, 300)
+		innerPanel.setLocation(30, 30)
+		innerPanel.setSize(240, 240)
 		setLocationRelativeTo(null)
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
 		
@@ -110,8 +114,8 @@ object ReachInSwingTest extends App
 				println("Canvas detached")
 		}
 		
-		println(panel.getWidth)
+		println(innerPanel.getWidth)
 		
-		panel.add(canvas.component)
+		innerPanel.add(canvas.component)
 	}
 }

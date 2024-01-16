@@ -1,12 +1,11 @@
 package utopia.reach.test
 
 import utopia.firmament.context.TextContext
-import utopia.firmament.image.SingleColorIconCache
+import utopia.firmament.image.ImageCache
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
-import utopia.flow.async.process.{Delay, Loop, Wait}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -47,7 +46,7 @@ object InputWindowTest extends App
 	
 	Changing.listenerDebuggingLimit = 100
 	
-	val icons = new SingleColorIconCache("Reach/test-images", Some(Size.square(32)))
+	val icons = ImageCache.icons("Reach/test-images", Some(Size.square(32)))
 	val selectedBoxIcon = icons("check-box-selected.png")
 	val unselectedBoxIcon = icons("check-box-empty.png")
 	
@@ -179,21 +178,9 @@ object InputWindowTest extends App
 	
 	start()
 	
-	// Displays a number of windows sequentially (testing memory use)
-	Iterator.continually {
-		val window = TestWindows.display()
-		Wait(0.5.seconds)
-		printMemoryStatus()
-		window.close()
-		System.gc()
-		Wait(0.3.seconds)
-	}.take(40).foreach { _ => () }
-	
 	// Displays a dialog
-	/*
 	val result = TestWindows.displayBlocking().get
 	println(s"Dialog completed with result: $result")
 	
 	println(result("durationSeconds").getLong.seconds.description)
-	 */
 }

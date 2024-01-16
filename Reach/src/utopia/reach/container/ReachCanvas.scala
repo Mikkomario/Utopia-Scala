@@ -190,7 +190,7 @@ object ReachCanvas
 	
 	// NESTED   ----------------------------
 	
-	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: Component, attachedFlag: ResettableFlag,
+	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: ResettableFlag,
 	                                     absolutePositionView: Resettable)
 	                                    (implicit exc: ExecutionContext)
 		extends AncestorListener
@@ -226,7 +226,7 @@ object ReachCanvas
 		
 		override def ancestorAdded(event: AncestorEvent) = {
 			attachedFlag.set()
-			parentPointer.value = Some(event.getAncestor)
+			parentPointer.value = Some(canvas.component.getParent)
 		}
 		override def ancestorRemoved(event: AncestorEvent) = {
 			parentPointer.value = None

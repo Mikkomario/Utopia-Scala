@@ -10,11 +10,14 @@ Supports **Flow v2.3**
 - Renamed all **ButtonImageSet** properties
   - E.g. `.defaultImage` is now `.default`
 - Renamed `.withLowPriority` to `.lowPriority` in **StackLength** and **StackSize**
+- Deprecated **SingleColorIconCache** in favor of the new **ImageCache**
 - Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
 - Deprecated `Border.square(Double, Color)`, as this was a duplicate of `.symmetric(Double, Color)`
 ### New features
 - **ButtonImageSet** now supports combined image effects
   - This includes a new effect called **ChangeSize**, which modifies image/icon size based on button state
+- Added **ImageCache** class, which supports a larger variety of image- and icon-reading processes 
+  than the previously used **SingleColorIconCache**
 - Added **FromColorFactory** trait
 ### New methods
 - **ButtonImageSet**

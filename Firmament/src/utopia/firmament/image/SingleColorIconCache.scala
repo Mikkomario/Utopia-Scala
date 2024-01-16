@@ -22,6 +22,7 @@ import scala.concurrent.duration.FiniteDuration
   * @param exc Implicit execution context used for scheduling cache releases
  * @param log Implicit logging implementation for possible icon read failures
   */
+@deprecated("Please use ImageCache.icons(...) instead", "v1.1.1")
 class SingleColorIconCache(val imageReadDirectory: Path, standardIconSize: Option[Size] = None,
 						   cacheDuration: FiniteDuration = 3.minutes)
                           (implicit exc: ExecutionContext, log: Logger)

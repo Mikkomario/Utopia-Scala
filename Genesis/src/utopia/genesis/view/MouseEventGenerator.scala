@@ -34,7 +34,7 @@ class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: 
         case window: java.awt.Window =>
             val insets = window.getInsets
             Vector2D(-insets.left, -insets.top)
-        case c => Vector2D.zero
+        case _ => Vector2D.zero
     }
     
     // Generated events are fired one at a time using an event queue
