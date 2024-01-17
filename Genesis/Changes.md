@@ -8,6 +8,7 @@
 ### Bugfixes
 - **MouseEventGenerator** that's directly attached to a **java.awt.Window** now accounts for the window insets
 - Fixed **Image**`.cropped`, which would previously crop too much
+- `Image.crop(Insets)` now makes sure the specified insets are positive
 ### New methods
 - **Image**
   - Added `.withCanvasSize(Size)` function, which adds padding or crops the image in order to get it to the desired size

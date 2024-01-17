@@ -430,11 +430,12 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  */
 	def crop(insets: Insets) = source match {
 		case Some(img) =>
-			val totalInsets = insets.total
-			if (totalInsets.width > width || totalInsets.height > height)
+			val positiveInsets = insets.positive
+			val totalInsets = positiveInsets.total
+			if (totalInsets.width >= width || totalInsets.height >= height)
 				Image.empty
 			else
-				_subImage(img, (Bounds(Point.origin, size) - insets) / scaling)
+				_subImage(img, (Bounds(Point.origin, size) - positiveInsets) / scaling)
 		case None => this
 	}
 	/**
