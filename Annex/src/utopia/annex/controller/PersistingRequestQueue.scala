@@ -139,6 +139,10 @@ trait PersistingRequestQueue extends RequestQueue
 		// Pushes the request to the queue
 		val resultFuture = pushRequest
 		
+		// Updates the sent flag once the request completes
+		// TODO: Could also log possible errors, but no logging implementation is available here
+		resultFuture.onComplete { _ => sentFlag.set() }
+		
 		// Stores the persisted model in the container while appropriate
 		storedModelPointer.addListenerAndSimulateEvent(None) { e =>
 			e.oldValue.foreach(removePersistedRequest)
