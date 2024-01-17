@@ -141,7 +141,7 @@ object LengthExtensions
 		 * @param f A function for converting a static length to a stack length
 		 * @return Stack insets based on these insets
 		 */
-		def toStackInsets(f: Double => StackLength) = StackInsets(i.amounts.map { case (d, l) => d -> f(l) })
+		def toStackInsets(f: Double => StackLength) = StackInsets(i.sides.map { case (d, l) => d -> f(l) })
 		
 		/**
 		 * Creates a set of stack insets by combining these insets with another set of insets and using the specified merge function
@@ -150,7 +150,7 @@ object LengthExtensions
 		 * @return A new set of stack insets
 		 */
 		def toStackInsetsWith(other: Insets)(f: (Double, Double) => StackLength) = stack.StackInsets(
-			(i.amounts.keySet ++ other.amounts.keySet).map { d => d -> f(i(d), other(d)) }.toMap)
+			(i.sides.keySet ++ other.sides.keySet).map { d => d -> f(i(d), other(d)) }.toMap)
 	}
 	
 	implicit class StackConvertibleSize(val s: Size) extends AnyVal

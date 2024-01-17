@@ -5,6 +5,12 @@ Supports **Flow v2.3**
 ### Breaking changes
 - **Image** to **ButtonImageSet** -related effects are now separately added to image button (-like) factories
   - The default effects applied are determined by **ComponentCreationDefaults**
+- **ImageAndTextLabel** and related classes now support common insets, 
+  as well as custom margin between the image and the text
+  - The factory classes were modified in order to support this, 
+    so both the construction syntax and the outcome may vary from previous
+- Refactored **ImageAndTextButton** (including the view-based version) to utilize the new label syntax
+  - Construction syntax, as well as the output will vary from the previous version
 - Renamed **LayeredView** trait to **Layers**
   - Also, the trait no longer accepts a generic type parameter
 ### Bugfixes
@@ -20,6 +26,9 @@ Supports **Flow v2.3**
 - **ImageLabel** factories can now more easily be converted to **ViewImageLabel** factories by calling `.toViewFactory`
   - Similar addition was made to **ImageAndTextLabel**, as well as **ImageAndTextButton**
 - Added **MousePositionDrawer**, which may be used for debugging mouse-related bugs
+### New methods
+- **Stack** (factory)
+  - Added `.withMargin(Option[SizeCategory])`
 ### Other changes
 - Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
   with the cost of less accurate cursor color

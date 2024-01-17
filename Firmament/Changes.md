@@ -1,7 +1,9 @@
 # Utopia Firmament - List of Changes
 
-## v1.1.1 (in development)
+## v1.2 (in development)
 Supports **Flow v2.3**
+### Breaking changes
+- Modified **StackInsets** class hierarchy, which may also affect some method calls  
 ### Deprecations
 - Deprecated **ButtonImageSet** constructors
   - The image effects are now applied **after** the initial (identity) set has been created
@@ -13,6 +15,8 @@ Supports **Flow v2.3**
 - Deprecated **SingleColorIconCache** in favor of the new **ImageCache**
 - Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
 - Deprecated `Border.square(Double, Color)`, as this was a duplicate of `.symmetric(Double, Color)`
+### Bugfixes
+- Fixed certain issues with cropped image drawing due to rounding errors
 ### New features
 - **ButtonImageSet** now supports combined image effects
   - This includes a new effect called **ChangeSize**, which modifies image/icon size based on button state
@@ -20,12 +24,16 @@ Supports **Flow v2.3**
   than the previously used **SingleColorIconCache**
 - Added **FromColorFactory** trait
 ### New methods
+- **Border** (object)
+  - Added `.apply(Double, Color)`
 - **ButtonImageSet**
   - Added mapping functions for individual images
 - **ComponentCreationDefaults**
   - Added `.inButtonImageEffects` and `.asButtonImageEffects`
 - **SingleColorIcon**
   - Added more color-based apply functions to button-related factories
+- **StackLength**
+  - Added `&&(StackLength)`
 ### Other changes
 - The image effects listed in **ComponentCreationDefaults** now affect **SingleColorIcon** **ButtonImageSet** 
   conversion functions

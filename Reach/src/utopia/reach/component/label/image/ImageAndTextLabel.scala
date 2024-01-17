@@ -5,7 +5,9 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.firmament.model.enumeration.SizeCategory
+import utopia.firmament.model.enumeration.SizeCategory.Small
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.eventful.Fixed
@@ -13,35 +15,38 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
+import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory, Mixed}
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory, Mixed, UnresolvedFramedFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.label.image.ImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.container.multi.Stack
 
-class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualImageAndTextLabelFactory]
-{
-	override def withContext(context: TextContext) =
-		ContextualImageAndTextLabelFactory(parentHierarchy, context)
-}
-
 /**
   * Common trait for image and text label factories and settings
+  * @tparam ImgSettings Type of image label settings wrapped
   * @tparam Repr Implementing factory/settings type
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
+trait ImageAndTextLabelSettingsLike[ImgSettings <: ImageLabelSettingsLike[ImgSettings], +Repr]
+	extends CustomDrawableFactory[Repr] with FromAlignmentFactory[Repr] with UnresolvedFramedFactory[Repr]
 {
+	import UnresolvedFramedFactory.sides
+	
 	// ABSTRACT	--------------------
 	
 	/**
 	  * Settings that affect the wrapped image label
 	  */
-	def imageSettings: ImageLabelSettings
+	def imageSettings: ImgSettings
 	
+	/**
+	  * The total margin placed between the image and the text. None if no margin is placed.
+	  */
+	def separatingMargin: Option[SizeCategory]
 	/**
 	  * Whether the text and image should be forced to have equal width or height, depending on the layout
 	  */
@@ -51,6 +56,13 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  */
 	def isHint: Boolean
 	
+	/**
+	  * The total margin placed between the image and the text. None if no margin is placed.
+	  * @param margin New separating margin to use.
+	  * The total margin placed between the image and the text. None if no margin is placed.
+	  * @return Copy of this factory with the specified separating margin
+	  */
+	def withSeparatingMargin(margin: Option[SizeCategory]): Repr
 	/**
 	  * Whether the text and image should be forced to have equal width or height, depending on the layout
 	  * @param force Whether Fit layout should be forced
@@ -62,13 +74,21 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  * @param settings New image settings to use
 	  * @return Copy of these settings with the specified underlying image settings
 	  */
-	def withImageSettings(settings: ImageLabelSettings): Repr
+	def withImageSettings(settings: ImgSettings): Repr
 	/**
 	  * Whether this factory constructs hint labels. Affects text opacity.
 	  * @param isHint Whether text should be drawn as a hint (partially transparent)
 	  * @return Copy of this factory with the specified setting
 	  */
 	def withIsHint(isHint: Boolean): Repr
+	
+	/**
+	  * Modifies both the separating margin, as well as the insets at the same time
+	  * @param separatingMargin Separating margin to place
+	  * @param insets (Common) insets to place
+	  * @return Copy of this factory with the specified margins
+	  */
+	protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr
 	
 	
 	// COMPUTED	--------------------
@@ -99,6 +119,10 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
 	
 	/**
+	  * @return Copy of this factory that doesn't place any margin between the image and the text
+	  */
+	def withoutSeparatingMargin = withSeparatingMargin(None)
+	/**
 	  * Copy of this factory that forces Fit layout
 	  */
 	def forcingEqualBreadth = withForceEqualBreadth(force = true)
@@ -107,11 +131,38 @@ trait ImageAndTextLabelSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  */
 	def hint = withIsHint(isHint = true)
 	
+	/**
+	  * @return Copy of this factory that uses low-priority constraints for the image size
+	  */
+	def withLowPriorityImageSize = withImageUsesLowPrioritySize(lowPriority = true)
+	/**
+	  * @return Copy of this factory that doesn't place any insets around the image
+	  */
+	def withoutImageInsets = withImageInsets(StackInsets.zero)
+	
+	/**
+	  * @return Copy of this factory with no margins placed between the image and the text, and no margins placed
+	  *         ouside of them (except for the specified text insets and image insets)
+	  */
+	def withoutMargins = _withMargins(None, sides.empty)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def apply(alignment: Alignment): Repr = withImageAlignment(alignment.opposite)
+	
 	
 	// OTHER	--------------------
 	
+	def withSeparatingMargin(margin: SizeCategory): Repr = withSeparatingMargin(Some(margin))
+	/**
+	  * @param margin The size of the margin to place between the image and the text, as well as around both
+	  * @return Copy of this factory with the specified margin applied
+	  */
+	def withMargin(margin: SizeCategory) = _withMargins(Some(margin), sides.symmetric(Left(margin)))
+	
 	def mapImageInsets(f: StackInsets => StackInsetsConvertible) = mapImageSettings { _.mapInsets(f) }
-	def mapImageSettings(f: ImageLabelSettings => ImageLabelSettings) = withImageSettings(f(imageSettings))
+	def mapImageSettings(f: ImgSettings => ImgSettings) = withImageSettings(f(imageSettings))
 	def mapImageAlignment(f: Alignment => Alignment) = withImageAlignment(f(imageAlignment))
 	def mapImageScaling(f: Double => Double) = withImageScaling(f(imageScaling))
 	
@@ -154,11 +205,14 @@ object ImageAndTextLabelSettings
 	// ATTRIBUTES	--------------------
 	
 	val default = apply()
+	
+	private val defaultImageSettings = ImageLabelSettings.default.right
 }
 /**
   * Combined settings used when constructing image and text labels
   * @param customDrawers     Custom drawers to assign to created components
   * @param imageSettings     Settings that affect the wrapped image label
+  * @param separatingMargin The total margin placed between the image and the text. None if no margin is placed.
   * @param forceEqualBreadth Whether the text and image should be forced to have equal width or height,
   *                          depending on the layout
   * @param isHint            Whether this factory constructs hint labels. Affects text opacity.
@@ -166,22 +220,25 @@ object ImageAndTextLabelSettings
   * @since 01.06.2023, v1.1
   */
 case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
-                                     imageSettings: ImageLabelSettings = ImageLabelSettings.default,
+                                     imageSettings: ImageLabelSettings = defaultImageSettings,
+                                     separatingMargin: Option[SizeCategory] = Some(Small),
+                                     insets: UnresolvedStackInsets = UnresolvedFramedFactory.sides.symmetric(Left(Small)),
                                      forceEqualBreadth: Boolean = false,
                                      isHint: Boolean = false)
-	extends ImageAndTextLabelSettingsLike[ImageAndTextLabelSettings]
+	extends ImageAndTextLabelSettingsLike[ImageLabelSettings, ImageAndTextLabelSettings]
 {
 	// COMPUTED ------------------------
 	
 	/**
 	  * @return A copy of these settings that may be used in constructing pointer-based image-and-text labels
 	  */
-	def toViewSettings = ViewImageAndTextLabelSettings(customDrawers, imageSettings.toViewSettings,
-		forceEqualBreadth = forceEqualBreadth)
+	def toViewSettings = ViewImageAndTextLabelSettings(customDrawers, imageSettings.toViewSettings, separatingMargin,
+		insets, Fixed(isHint), forceEqualBreadth = forceEqualBreadth)
 	
 	
 	// IMPLEMENTED	--------------------
 	
+	override def withInsets(insets: UnresolvedStackInsets): ImageAndTextLabelSettings = copy(insets = insets)
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageAndTextLabelSettings =
 		copy(customDrawers = drawers)
 	override def withForceEqualBreadth(force: Boolean): ImageAndTextLabelSettings =
@@ -189,6 +246,12 @@ case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vecto
 	override def withImageSettings(settings: ImageLabelSettings): ImageAndTextLabelSettings =
 		copy(imageSettings = settings)
 	override def withIsHint(isHint: Boolean): ImageAndTextLabelSettings = copy(isHint = isHint)
+	override def withSeparatingMargin(margin: Option[SizeCategory]) =
+		copy(separatingMargin = margin)
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory],
+	                                    insets: UnresolvedStackInsets): ImageAndTextLabelSettings =
+		copy(separatingMargin = separatingMargin, insets = insets)
 }
 
 /**
@@ -197,7 +260,7 @@ case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vecto
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsLike[Repr]
+trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsLike[ImageLabelSettings, Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -215,16 +278,24 @@ trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsL
 	// IMPLEMENTED	--------------------
 	
 	override def customDrawers = settings.customDrawers
+	override def separatingMargin = settings.separatingMargin
 	override def forceEqualBreadth: Boolean = settings.forceEqualBreadth
 	override def imageSettings: ImageLabelSettings = settings.imageSettings
 	override def isHint: Boolean = settings.isHint
+	override def insets: UnresolvedStackInsets = settings.insets
 	
+	override def withInsets(insets: UnresolvedStackInsets): Repr = mapSettings { _.withInsets(insets) }
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withForceEqualBreadth(force: Boolean): Repr = mapSettings { _.withForceEqualBreadth(force) }
 	override def withImageSettings(settings: ImageLabelSettings): Repr =
 		mapSettings { _.withImageSettings(settings) }
 	override def withIsHint(isHint: Boolean): Repr = mapSettings { _.withIsHint(isHint) }
+	override def withSeparatingMargin(margin: Option[SizeCategory]) =
+		mapSettings { _.withSeparatingMargin(margin) }
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
+		mapSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
 	
 	
 	// OTHER	--------------------
@@ -246,6 +317,8 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  */
 	def toViewFactory: ContextualViewImageAndTextLabelFactory =
 		ContextualViewImageAndTextLabelFactory(parentHierarchy, Fixed(context), settings.toViewSettings)
+	
+	private def resolveInsets = resolveInsetsIn(context)
 	
 	
 	// IMPLEMENTED  ----------------
@@ -283,7 +356,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return A new label
 	  */
 	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString) =
-		new ImageAndTextLabel(parentHierarchy, context, image, text, settings)
+		new ImageAndTextLabel(parentHierarchy, context, image, text, settings, resolveInsets)
 	
 	/**
 	  * Creates a new label that contains both an image and text
@@ -322,6 +395,14 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 		mapImageSettings { _.withColor(context.color.preferring(preferredShade)(role)) }.apply(icon, text)
 }
 
+@deprecated("Deprecated for removal", "v1.2")
+class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
+	extends FromContextFactory[TextContext, ContextualImageAndTextLabelFactory]
+{
+	override def withContext(context: TextContext) =
+		ContextualImageAndTextLabelFactory(parentHierarchy, context)
+}
+
 /**
   * Used for defining image and text label creation settings outside of the component building process
   * @author Mikko Hilpinen
@@ -355,30 +436,53 @@ object ImageAndTextLabel extends ImageAndTextLabelSetup()
   */
 class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContext,
                         image: Either[Image, SingleColorIcon], text: LocalizedString,
-                        settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
+                        settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
+                        commonInsets: StackInsets)
 	extends ReachComponentWrapper
 {
 	// ATTRIBUTES	------------------------------
 	
+	// TODO: Apply the hint to the image label also
 	override protected val wrapped = {
 		// If one of the provided items is empty, only creates one component
 		if (image.either.isEmpty)
-			TextLabel(parentHierarchy).withContext(context)
+			TextLabel(parentHierarchy).withContext(context.mapTextInsets { _ && commonInsets })
 				.withIsHint(settings.isHint).withAdditionalCustomDrawers(settings.customDrawers)
 				.apply(text)
 		else if (text.isEmpty)
 			ImageLabel.withSettings(settings.imageSettings)
 				.withAdditionalCustomDrawers(settings.customDrawers)
+				.mapInsets { _ && commonInsets }
 				.apply(parentHierarchy).withContext(context)
 				.apply(image)
 		else {
+			val textAlignment = context.textAlignment
+			val imageAlignment = textAlignment.opposite
+			// Applies the common insets and removes insets between the text and the image
+			val appliedImageSettings = settings.imageSettings.mapInsets { default =>
+				StackInsets.fromFunction { dir =>
+					if (imageAlignment.movesTowards(dir))
+						StackLength.fixedZero
+					else
+						default(dir) && commonInsets(dir)
+				}
+			}
+			// WET WET
+			val appliedContext = context.mapTextInsets { default =>
+				StackInsets.fromFunction { dir =>
+					if (textAlignment.movesTowards(dir))
+						StackLength.fixedZero
+					else
+						default(dir) && commonInsets(dir)
+				}
+			}
+			
 			// Wraps the components in a stack
-			Stack(parentHierarchy).withContext(context)
-				// TODO: Add option to customize stack margin
-				.withCustomDrawers(settings.customDrawers).withoutMargin
+			Stack(parentHierarchy).withContext(appliedContext)
+				.withCustomDrawers(settings.customDrawers).withMargin(settings.separatingMargin)
 				.buildPair(Mixed, context.textAlignment, settings.forceEqualBreadth) { factories =>
 					Pair(
-						factories(ImageLabel.withSettings(settings.imageSettings))(image),
+						factories(ImageLabel.withSettings(appliedImageSettings))(image),
 						factories(TextLabel).withIsHint(settings.isHint)(text)
 					)
 				}

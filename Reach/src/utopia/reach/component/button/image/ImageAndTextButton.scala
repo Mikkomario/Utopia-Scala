@@ -6,7 +6,7 @@ import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.NotEmpty
@@ -16,13 +16,15 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FramedFactory, FromContextComponentFactoryFactory}
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsLike, ImageLabelSettings}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
+
 /**
   * Common trait for image and text button factories and settings
   * @tparam Repr Implementing factory/settings type
@@ -30,7 +32,7 @@ import utopia.reach.focus.FocusListener
   * @since 01.06.2023, v1.1
   */
 trait ImageAndTextButtonSettingsLike[+Repr]
-	extends FramedFactory[Repr] with ButtonSettingsLike[Repr] with ImageAndTextLabelSettingsLike[Repr]
+	extends ButtonSettingsLike[Repr] with ImageAndTextLabelSettingsLike[ImageLabelSettings, Repr]
 		with AppliesButtonImageEffectsFactory[Repr]
 {
 	// ABSTRACT	--------------------
@@ -69,7 +71,12 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	override def hotKeys: Set[HotKey] = buttonSettings.hotKeys
 	override def imageSettings = labelSettings.imageSettings
 	override def isHint = labelSettings.isHint
+	override def separatingMargin: Option[SizeCategory] = labelSettings.separatingMargin
+	override def insets: UnresolvedStackInsets = labelSettings.insets
 	
+	override def withInsets(insets: UnresolvedStackInsets): Repr = mapLabelSettings { _.withInsets(insets) }
+	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
+		mapLabelSettings { _.withSeparatingMargin(margin) }
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
 	override def withEnabledPointer(p: Changing[Boolean]) =
@@ -82,6 +89,9 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	override def withImageSettings(settings: ImageLabelSettings) =
 		withLabelSettings(labelSettings.withImageSettings(settings))
 	override def withIsHint(hint: Boolean) = withLabelSettings(labelSettings.withIsHint(hint))
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
+		mapLabelSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
 	
 	
 	// OTHER	--------------------
@@ -100,15 +110,13 @@ object ImageAndTextButtonSettings
 
 /**
   * Combined settings used when constructing image and text buttons
-  * @param insets Insets to place around created components
   * @param buttonSettings Wrapped general button settings
   * @param labelSettings Wrapped settings for label construction
   * @param imageEffects Effects applied to generated image sets
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ImageAndTextButtonSettings(insets: StackInsets = StackInsets.any,
-                                      buttonSettings: ButtonSettings = ButtonSettings.default,
+case class ImageAndTextButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.default,
                                       labelSettings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
                                       imageEffects: Vector[ButtonImageEffect] = ComponentCreationDefaults.inButtonImageEffects)
 	extends ImageAndTextButtonSettingsLike[ImageAndTextButtonSettings]
@@ -119,7 +127,6 @@ case class ImageAndTextButtonSettings(insets: StackInsets = StackInsets.any,
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
 	override def withImageEffects(effects: Vector[ButtonImageEffect]) = copy(imageEffects = effects)
-	override def withInsets(insets: StackInsetsConvertible) = copy(insets = insets.toInsets)
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) = copy(labelSettings = settings)
 }
 
@@ -147,14 +154,12 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
 	
 	override def buttonSettings: ButtonSettings = settings.buttonSettings
 	override def imageEffects = settings.imageEffects
-	override def insets: StackInsets = settings.insets
 	override def labelSettings = settings.labelSettings
 	
 	override def withButtonSettings(settings: ButtonSettings): Repr =
 		mapSettings { _.withButtonSettings(settings) }
 	override def withImageEffects(effects: Vector[ButtonImageEffect]) =
 		mapSettings { _.withImageEffects(effects) }
-	override def withInsets(insets: StackInsetsConvertible) = mapSettings { _.withInsets(insets) }
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) =
 		mapSettings { _.withLabelSettings(settings) }
 	
@@ -322,30 +327,13 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	override val focusId = hashCode()
 	
 	override protected val wrapped = {
+		// Adds space for the borders
 		val borderWidth = context.buttonBorderWidth
-		// Decreases the insets that separate the text and the image
-		val actualContext = context.mapTextInsets { original =>
-			val smallDirections = context.textAlignment.directions
-			original.mapWithDirection { (side, len) =>
-				if (smallDirections.contains(side))
-					len/2
-				else
-					len + borderWidth + settings.insets(side)
-			}
-		}
+		val appliedLabelSettings = settings.labelSettings
+			.mapInsets { _.map { _.mapBoth { _.more } { _ + borderWidth } } }
 		// Prepares the component factory
-		val factory = ImageAndTextLabel(settings.labelSettings)
-			.withContext(parentHierarchy, actualContext)
-			// Again, decreases the insets
-			.mapImageInsets { original =>
-				val smallDirections = context.textAlignment.opposite.directions
-				original.mapWithDirection { (side, len) =>
-					if (smallDirections.contains(side))
-						len / 2
-					else
-						len + borderWidth + settings.insets(side)
-				}
-			}
+		val factory = ImageAndTextLabel(appliedLabelSettings)
+			.withContext(parentHierarchy, context)
 			// Adds state-based background-drawing
 			.withCustomBackgroundDrawer(
 				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)))

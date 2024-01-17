@@ -22,6 +22,12 @@ object Border
 	// OTHER	-----------------------------
 	
 	/**
+	  * @param width Border width (applied to all sides)
+	  * @param color Border color
+	  * @return A new symmetric set of borders
+	  */
+	def apply(width: Double, color: Color): Border = symmetric(width, color)
+	/**
 	  * Creates a new border
 	  * @param insets Border insets
 	  * @param color Border color

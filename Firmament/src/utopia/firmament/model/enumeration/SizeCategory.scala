@@ -1,6 +1,10 @@
 package utopia.firmament.model.enumeration
 
 import utopia.firmament.model.enumeration.SizeCategory.Custom
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 /**
@@ -8,7 +12,7 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
   * @author Mikko Hilpinen
   * @since 3.5.2023, v1.1
   */
-trait SizeCategory extends LinearSizeAdjustable[SizeCategory]
+trait SizeCategory extends LinearSizeAdjustable[SizeCategory] with Steppable[SizeCategory]
 {
 	// ABSTRACT ------------------------
 	
@@ -35,6 +39,8 @@ trait SizeCategory extends LinearSizeAdjustable[SizeCategory]
 	override def self: SizeCategory = this
 	
 	override def *(mod: Double): SizeCategory = Custom(impact * mod)
+	
+	override def is(extreme: Extreme): Boolean = false
 }
 
 object SizeCategory
@@ -45,22 +51,47 @@ object SizeCategory
 	case object Medium extends SizeCategory
 	{
 		override val impact: Double = 0.0
+		
+		override def next(direction: Sign): SizeCategory = direction match {
+			case Positive => Small
+			case Negative => Large
+		}
 	}
 	case object Small extends SizeCategory
 	{
 		override val impact: Double = -1.0
+		
+		override def next(direction: Sign): SizeCategory = direction match {
+			case Positive => Medium
+			case Negative => VerySmall
+		}
 	}
 	case object VerySmall extends SizeCategory
 	{
 		override val impact: Double = -2.0
+		
+		override def next(direction: Sign): SizeCategory = direction match {
+			case Positive => Small
+			case Negative => Custom(-3.0)
+		}
 	}
 	case object Large extends SizeCategory
 	{
 		override val impact: Double = 1.0
+		
+		override def next(direction: Sign): SizeCategory = direction match {
+			case Positive => VeryLarge
+			case Negative => Medium
+		}
 	}
 	case object VeryLarge extends SizeCategory
 	{
 		override val impact: Double = 2.0
+		
+		override def next(direction: Sign): SizeCategory = direction match {
+			case Positive => Custom(3.0)
+			case Negative => Large
+		}
 	}
 	
 	/**
@@ -68,4 +99,7 @@ object SizeCategory
 	  * @param impact Custom impact to apply, where 0 is no impact, 1 is one step larger and -1 is one step smaller.
 	  */
 	case class Custom(impact: Double) extends SizeCategory
+	{
+		override def next(direction: Sign): SizeCategory = Custom(impact + direction.modifier)
+	}
 }

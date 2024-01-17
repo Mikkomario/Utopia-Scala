@@ -6,17 +6,22 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.enumeration.SizeCategory
+import utopia.firmament.model.enumeration.SizeCategory.{Medium, Small}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.reach.component.factory.UnresolvedFramedFactory.sides
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
+import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.label.image.ViewImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.container.multi.Stack
@@ -28,93 +33,67 @@ import utopia.reach.container.multi.Stack
   * @since 30.05.2023, v1.1
   */
 trait ViewImageAndTextLabelSettingsLike[+Repr]
-	extends CustomDrawableFactory[Repr] with FromAlignmentFactory[Repr]
+	extends ImageAndTextLabelSettingsLike[ViewImageLabelSettings, Repr] with CustomDrawableFactory[Repr]
+		with FromAlignmentFactory[Repr]
 {
-	// ABSTRACT	--------------------
-	
-	protected def imageSettings: ViewImageLabelSettings
-	/**
-	  * Whether the image and the text should be forced to have equal height or width (depending on the
-	  * alignment used)
-	  */
-	protected def forceEqualBreadth: Boolean
+	// ABSTRACT --------------------
 	
 	/**
-	  * Whether the image and the text should be forced to have equal height or width (depending on the
-	  * alignment used)
-	  * @param force New force equal breadth to use.
-	  *              Whether the image and the text should be forced to have equal height or width (depending on the
-	  *              alignment used)
-	  * @return Copy of this factory with the specified force equal breadth
+	  * @return A pointer that determines whether this label is a hint or a fully visible / standard label
 	  */
-	def withForceEqualBreadth(force: Boolean): Repr
+	def isHintPointer: Changing[Boolean]
 	/**
-	  * @param settings New image settings to use.
-	  * @return Copy of this factory with the specified image settings
+	  * @param p A pointer that determines whether this is a hint label (true) or a regular label (false)
+	  * @return Copy of this factory that uses the specified hint pointer
 	  */
-	def withImageSettings(settings: ViewImageLabelSettings): Repr
+	def withIsHintPointer(p: Changing[Boolean]): Repr
 	
 	
 	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this factory that forces the text and the image to have the same breadth
-	  *         (i.e. height or width, depending on alignment)
-	  */
-	def forcingEqualBreadth = withForceEqualBreadth(force = true)
-	/**
-	  * @return Copy of this factory that uses low-priority constraints for the image size
-	  */
-	def withLowPriorityImageSize = withImageUsesLowPrioritySize(lowPriority = true)
-	
-	/**
-	  * @return Copy of this factory that doesn't place any insets around the image
-	  */
-	def withoutImageInsets = withImageInsets(StackInsets.zero)
-	
-	/**
 	  * insets pointer from the wrapped view image label settings
 	  */
-	protected def imageInsetsPointer = imageSettings.insetsPointer
+	def imageInsetsPointer = imageSettings.insetsPointer
 	/**
 	  * alignment pointer from the wrapped view image label settings
 	  */
-	protected def imageAlignmentPointer = imageSettings.alignmentPointer
+	def imageAlignmentPointer = imageSettings.alignmentPointer
 	/**
 	  * color overlay pointer from the wrapped view image label settings
 	  */
-	protected def imageColorOverlayPointer = imageSettings.colorOverlayPointer
+	def imageColorOverlayPointer = imageSettings.colorOverlayPointer
 	/**
 	  * image scaling pointer from the wrapped view image label settings
 	  */
-	protected def imageScalingPointer = imageSettings.imageScalingPointer
-	/**
-	  * uses low priority size from the wrapped view image label settings
-	  */
-	protected def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
+	def imageScalingPointer = imageSettings.imageScalingPointer
 	
 	
 	// IMPLEMENTED  ----------------
 	
-	override def apply(alignment: Alignment): Repr = withImageAlignment(alignment.opposite)
+	override def isHint: Boolean = isHintPointer.value
+	override def withIsHint(isHint: Boolean): Repr = withIsHintPointer(Fixed(isHint))
 	
+	override def mapImageAlignment(f: Alignment => Alignment) = mapImageAlignmentPointer { _.map(f) }
+	override def mapImageScaling(f: Double => Double) = mapImageScalingPointer { _.map(f) }
+	override def mapImageInsets(f: StackInsets => StackInsetsConvertible) =
+		mapImageInsetsPointer { _.map { f(_).toInsets } }
+	
+	override def withImageAlignment(alignment: Alignment) = withImageAlignmentPointer(Fixed(alignment))
+	override def withImageScaling(scaling: Double) = withImageScalingPointer(Fixed(scaling))
+	override def withImageColorOverlay(color: Option[Color]) = withImageColorOverlayPointer(color.map(Fixed.apply))
 	
 	// OTHER	--------------------
 	
+	def mapIsHintPointer(f: Changing[Boolean] => Changing[Boolean]) = withIsHintPointer(f(isHintPointer))
 	def mapImageAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
 		withImageAlignmentPointer(f(imageAlignmentPointer))
-	def mapImageAlignment(f: Alignment => Alignment) = mapImageAlignmentPointer { _.map(f) }
 	def mapImageColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
 		withImageColorOverlayPointer(f(imageColorOverlayPointer))
 	def mapImageScalingPointer(f: Changing[Double] => Changing[Double]) =
 		withImageScalingPointer(f(imageScalingPointer))
-	def mapImageScaling(f: Double => Double) = mapImageScalingPointer { _.map(f) }
 	def mapImageInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) =
 		withImageInsetsPointer(f(imageInsetsPointer))
-	def mapImageInsets(f: StackInsets => StackInsets) = mapImageInsetsPointer { _.map(f) }
-	
-	def mapImageSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) =
-		withImageSettings(f(imageSettings))
 	
 	/**
 	  * @param p Pointer that determines the image drawing location within this component
@@ -122,11 +101,6 @@ trait ViewImageAndTextLabelSettingsLike[+Repr]
 	  */
 	def withImageAlignmentPointer(p: Changing[Alignment]) =
 		withImageSettings(imageSettings.withAlignmentPointer(p))
-	/**
-	  * @param alignment Alignment to use when drawing the image
-	  * @return Copy of this factory with the specified image-drawing alignment
-	  */
-	def withImageAlignment(alignment: Alignment) = withImageAlignmentPointer(Fixed(alignment))
 	/**
 	  * @param p Pointer that, when defined, places a color overlay over the drawn image
 	  * @return Copy of this factory with the specified image color overlay pointer
@@ -150,11 +124,6 @@ trait ViewImageAndTextLabelSettingsLike[+Repr]
 	def withImageScalingPointer(p: Changing[Double]) =
 		withImageSettings(imageSettings.withImageScalingPointer(p))
 	/**
-	  * @param scaling Scaling to apply to the drawn image
-	  * @return Copy of this factory with the specified image scaling
-	  */
-	def withImageScaling(scaling: Double) = withImageScalingPointer(Fixed(scaling))
-	/**
 	  * @param p Pointer that determines the insets placed around the image
 	  * @return Copy of this factory with the specified image insets pointer
 	  */
@@ -165,19 +134,15 @@ trait ViewImageAndTextLabelSettingsLike[+Repr]
 	  * @return copy of this factory with the specified insets used
 	  */
 	def withImageInsets(insets: StackInsetsConvertible) = withImageInsetsPointer(Fixed(insets.toInsets))
-	/**
-	  * @param lowPriority Whether this label should use low priority size constraints
-	  * @return Copy of this factory with the specified image uses low priority size
-	  */
-	def withImageUsesLowPrioritySize(lowPriority: Boolean) =
-		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
 }
 
 object ViewImageAndTextLabelSettings
 {
 	// ATTRIBUTES	--------------------
 	
-	val default = apply(imageSettings = ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right)))
+	val default = apply()
+	
+	private val defaultImageSettings = ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right))
 }
 /**
   * Combined settings used when constructing view image and text labels
@@ -187,16 +152,27 @@ object ViewImageAndTextLabelSettings
   * @since 30.05.2023, v1.1
   */
 case class ViewImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
-                                         imageSettings: ViewImageLabelSettings = ViewImageLabelSettings.default,
+                                         imageSettings: ViewImageLabelSettings = defaultImageSettings,
+                                         separatingMargin: Option[SizeCategory] = Some(Small),
+                                         insets: UnresolvedStackInsets = sides.symmetric(Left(Medium)),
+                                         isHintPointer: Changing[Boolean] = AlwaysFalse,
                                          forceEqualBreadth: Boolean = false)
 	extends ViewImageAndTextLabelSettingsLike[ViewImageAndTextLabelSettings]
 {
 	// IMPLEMENTED	--------------------
 	
+	override def withIsHintPointer(p: Changing[Boolean]): ViewImageAndTextLabelSettings = copy(isHintPointer = p)
+	override def withSeparatingMargin(margin: Option[SizeCategory]): ViewImageAndTextLabelSettings =
+		copy(separatingMargin = margin)
 	override def withForceEqualBreadth(force: Boolean) = copy(forceEqualBreadth = force)
 	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageAndTextLabelSettings =
 		copy(customDrawers = drawers)
+	override def withInsets(insets: UnresolvedStackInsets): ViewImageAndTextLabelSettings = copy(insets = insets)
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory],
+	                                    insets: UnresolvedStackInsets): ViewImageAndTextLabelSettings =
+		copy(separatingMargin = separatingMargin, insets = insets)
 }
 
 /**
@@ -223,14 +199,24 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	// IMPLEMENTED	--------------------
 	
 	override def customDrawers = settings.customDrawers
-	override protected def forceEqualBreadth = settings.forceEqualBreadth
-	override protected def imageSettings = settings.imageSettings
+	override def forceEqualBreadth = settings.forceEqualBreadth
+	override def imageSettings = settings.imageSettings
+	override def isHintPointer: Changing[Boolean] = settings.isHintPointer
+	override def separatingMargin: Option[SizeCategory] = settings.separatingMargin
+	override def insets: UnresolvedStackInsets = settings.insets
 	
+	override def withIsHintPointer(p: Changing[Boolean]): Repr = mapSettings { _.withIsHintPointer(p) }
+	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
+		mapSettings { _.withSeparatingMargin(margin) }
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withForceEqualBreadth(force: Boolean) = mapSettings { _.withForceEqualBreadth(force) }
 	override def withImageSettings(settings: ViewImageLabelSettings) =
 		mapSettings { _.withImageSettings(settings) }
+	override def withInsets(insets: UnresolvedStackInsets): Repr = mapSettings { _.withInsets(insets) }
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
+		mapSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
 	
 	
 	// OTHER	--------------------
@@ -245,6 +231,11 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewImageAndTextLabelFactory]
 {
+	// COMPUTED ----------------------
+	
+	private def resolveInsets = resolveVariableInsets(contextPointer, parentHierarchy)
+	
+	
 	// IMPLEMENTED  ------------------
 	
 	override def withContextPointer(p: Changing[TextContext]): ContextualViewImageAndTextLabelFactory =
@@ -299,7 +290,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	                          displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
 	{
 		val label = new ViewImageAndTextLabel[A](parentHierarchy, contextPointer, itemPointer, imagePointer,
-			imageSettings, displayFunction, customDrawers, forceEqualBreadth)
+			settings, resolveInsets, displayFunction)
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>
 				if (e.values.isAsymmetricBy { _.background })
@@ -404,24 +395,34 @@ object ViewImageAndTextLabel extends ViewImageAndTextLabelSetup()
 class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                                val itemPointer: Changing[A],
                                imgPointer: Either[Changing[SingleColorIcon], Changing[Image]],
-                               imageSettings: ViewImageLabelSettings,
-                               displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-                               additionalDrawers: Vector[CustomDrawer] = Vector(),
-                               forceEqualBreadth: Boolean = false)
+                               settings: ViewImageAndTextLabelSettings,
+                               commonInsetsPointer: Changing[StackInsets],
+                               displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	// ATTRIBUTES	-------------------------------
 	
 	override protected val wrapped = {
 		// TODO: Uses a static context here
-		// TODO: Allow margin customization
+		// Calculates the actual insets for the image & text label
+		val textAlignment = contextPointer.value.textAlignment
+		val imageAlignment = textAlignment.opposite
+		
+		val imageInsetsPointer = settings.imageInsetsPointer
+			.mergeWith(commonInsetsPointer) { (a, b) => (a && b) -- imageAlignment.directions }
+		val appliedContextPointer = contextPointer.mergeWith(commonInsetsPointer) { (c, insets) =>
+			c.mapTextInsets { tInsets => (tInsets && insets) -- textAlignment.directions }
+		}
+		
 		Stack.withContext(parentHierarchy, contextPointer.value)
-			.withoutMargin.withCustomDrawers(additionalDrawers)
-			.buildPair(Mixed, contextPointer.value.textAlignment, forceFitLayout = forceEqualBreadth) { factories =>
+			.withMargin(settings.separatingMargin)
+			.withCustomDrawers(settings.customDrawers)
+			.buildPair(Mixed, textAlignment, forceFitLayout = settings.forceEqualBreadth) { factories =>
 				val imageLabel = factories(ViewImageLabel).withContextPointer(contextPointer)
-					.withSettings(imageSettings)
+					.withSettings(settings.imageSettings)
+					.withInsetsPointer(imageInsetsPointer)
 					.iconOrImagePointer(imgPointer)
-				val textLabel = factories(ViewTextLabel).withContextPointer(contextPointer)
+				val textLabel = factories(ViewTextLabel).withContextPointer(appliedContextPointer)
 					.apply(itemPointer, displayFunction)
 				Pair(imageLabel, textLabel)
 			}

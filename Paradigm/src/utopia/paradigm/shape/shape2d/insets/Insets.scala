@@ -8,8 +8,16 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import scala.collection.immutable.HashMap
 
-object Insets extends InsetsFactory[Double, Insets]
+object Insets extends SidesFactory[Double, Insets]
 {
+    // TYPES    ----------------------------
+    
+    /**
+      * A builder that generates insets
+      */
+    type InsetsBuilder = SidedBuilder[Double, Insets]
+    
+    
     // ATTRIBUTES   ------------------------
     
     /**
@@ -20,7 +28,7 @@ object Insets extends InsetsFactory[Double, Insets]
     
     // IMPLEMENTED  ------------------------
     
-    override def withAmounts(amounts: Map[Direction2D, Double]): Insets = apply(amounts)
+    override def withSides(sides: Map[Direction2D, Double]): Insets = apply(sides)
     
     
     // OTHER    ----------------------------
@@ -35,6 +43,9 @@ object Insets extends InsetsFactory[Double, Insets]
       * @param size the total size of the insets
       */
     def symmetric(size: HasDoubleDimensions): Insets = symmetric(size(X) / 2, size(Y) / 2)
+    
+    @deprecated("Please use .withSides(Map) or .apply(Map) instead", "v1.5")
+    def withAmounts(sides: Map[Direction2D, Double]): Insets = apply(sides)
 }
 
 /**
@@ -42,7 +53,7 @@ object Insets extends InsetsFactory[Double, Insets]
 * @author Mikko Hilpinen
 * @since Genesis 25.3.2019
 **/
-case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, Size, Insets]
+case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Double, Size, Insets]
 {
     // ATTRIBUTES   --------------
     
@@ -64,12 +75,14 @@ case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, 
     /**
       * @return A non-negative version of these insets
       */
-    def positive = Insets(amounts.map { case (k, v) => k -> (v max 0) })
-    
+    def positive = Insets(sides.map { case (k, v) => k -> (v max 0) })
     /**
       * @return Copy of these insets where every value is rounded to the nearest integer
       */
-    def round = copy(amounts.view.mapValues { _.round.toDouble }.toMap)
+    def round = copy(sides.view.mapValues { _.round.toDouble }.toMap)
+    
+    @deprecated("Please use .sides instead", "v1.5")
+    def amounts = sides
     
     
     // IMPLEMENTED  --------------
@@ -78,9 +91,11 @@ case class Insets(amounts: Map[Direction2D, Double]) extends InsetsLike[Double, 
     
     override protected def zeroLength = 0.0
     
-    override protected def withAmounts(newAmounts: Map[Direction2D, Double]) = Insets(newAmounts)
-    override protected def make2D(horizontal: Double, vertical: Double) = Size(horizontal, vertical)
+    override def total: Size = Size(totalAlong(X), totalAlong(Y))
     
-    override protected def plus(first: Double, second: Double) = first + second
+    override protected def join(a: Double, b: Double): Double = a + b
+    override protected def subtract(from: Double, amount: Double): Double = from - amount
     override protected def multiply(a: Double, multiplier: Double) = a * multiplier
+    
+    override protected def withSides(sides: Map[Direction2D, Double]): Insets = Insets(sides)
 }

@@ -2,6 +2,7 @@ package utopia.firmament.model.stack
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.firmament.model.stack.LengthPriority.{Expanding, Low, Normal, Shrinking}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.combine.{Combinable, Subtractable}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -320,6 +321,12 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A decreased version of this stack length (min, optimal and max adjusted, if present). Minimum won't go below 0
 	  */
 	def -(length: Double): StackLength = this + (-length)
+	
+	/**
+	  * @param other Another length
+	  * @return Combination between these lengths, attempting to fulfill the conditions of both
+	  */
+	def &&(other: StackLength) = StackLength.combine(Pair(this, other))
 	
 	/**
 	  * Combines this stack length with another in order to create a stack size

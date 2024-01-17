@@ -9,5 +9,15 @@ import utopia.paradigm.shape.template.vector.NumericVectorFactory
   */
 trait Sized[+Repr] extends SizedLike[Double, Size, Repr] with HasSize
 {
+	// COMPUTED -----------------------
+	
+	/**
+	  * @return Copy of this item where its width and height are rounded to nearest integer values
+	  */
+	def roundSize = mapSize { _.round }
+	
+	
+	// IMPLEMENTED  -------------------
+	
 	override protected def sizeFactory: NumericVectorFactory[Double, Size] = Size
 }

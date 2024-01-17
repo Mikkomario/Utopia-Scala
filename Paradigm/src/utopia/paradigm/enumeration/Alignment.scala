@@ -2,6 +2,7 @@ package utopia.paradigm.enumeration
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.sign.SignOrZero
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
@@ -138,6 +139,19 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	
 	
 	// OTHER	----------------
+	
+	/**
+	  * @param direction Targeted direction
+	  * @return Positive if this alignment moves items towards that direction,
+	  *         Negative if this alignment moves items to the opposite direction,
+	  *         Neutral if this alignment doesn't move items on that axis
+	  */
+	def apply(direction: Direction2D): SignOrZero = apply(direction.axis).direction * direction.sign
+	/**
+	  * @param direction Targeted direction
+	  * @return Whether this alignment moves items towards that direction
+	  */
+	def movesTowards(direction: Direction2D) = apply(direction) == Positive
 	
 	/**
 	  * @param axis An axis

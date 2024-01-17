@@ -273,7 +273,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	}
 	
 	private val field = AwtEventThread.blocking { new CustomTextField() }
-	private val defaultBorder = Border.square(1, textColor.timesAlpha(0.625))
+	private val defaultBorder = Border(1, textColor.timesAlpha(0.625))
 	
 	private var isDisplayingPrompt = initialText.isEmpty && prompt.isDefined
 	private var enterListeners = Vector[A => Unit]()

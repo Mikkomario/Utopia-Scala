@@ -201,8 +201,8 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	
 	override def toShape: Shape = {
 		val c = corners
-		val x = c.map { _.x.toInt }.toArray
-		val y = c.map { _.y.toInt }.toArray
+		val x = c.map { _.x.round.toInt }.toArray
+		val y = c.map { _.y.round.toInt }.toArray
 		
 		new java.awt.Polygon(x, y, c.size)
 	}

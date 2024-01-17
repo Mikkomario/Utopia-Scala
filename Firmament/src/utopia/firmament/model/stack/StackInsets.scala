@@ -1,21 +1,27 @@
 package utopia.firmament.model.stack
 
-import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D}
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.insets.{Insets, InsetsFactory, InsetsLike}
+import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D}
+import utopia.paradigm.shape.shape2d.insets.{Insets, ScalableSidesLike, SidedBuilder, SidesFactory}
 
-object StackInsets extends InsetsFactory[StackLength, StackInsets]
+object StackInsets extends SidesFactory[StackLength, StackInsets]
 {
+	// TYPES    ---------------------------
+	
+	/**
+	  * A builder that generates StackInsets
+	  */
+	type StackInsetsBuilder = SidedBuilder[StackLength, StackInsets]
+	
+	
 	// ATTRIBUTES	-----------------------
 	
 	/**
 	  * A set of insets where each side has "any" length (0 or more, preferring 0)
 	  */
 	val any = symmetric(StackLength.any)
-	
 	/**
 	  * A set of insets where each side is fixed to 0
 	  */
@@ -24,7 +30,7 @@ object StackInsets extends InsetsFactory[StackLength, StackInsets]
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def withAmounts(amounts: Map[Direction2D, StackLength]): StackInsets = apply(amounts)
+	override def withSides(sides: Map[Direction2D, StackLength]): StackInsets = apply(sides)
 	
 	
 	// OTHER	---------------------------
@@ -42,10 +48,12 @@ object StackInsets extends InsetsFactory[StackLength, StackInsets]
   * @author Mikko Hilpinen
   * @since 2.2.2020, Reflection v1
   */
-case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLike[StackLength, StackSize, StackInsets]
-	with StackInsetsConvertible
+case class StackInsets(sides: Map[Direction2D, StackLength])
+	extends ScalableSidesLike[StackLength, StackSize, StackInsets] with StackInsetsConvertible
 {
 	// ATTRIBUTES	-----------------------
+	
+	override lazy val dimensions = super.dimensions
 	
 	/**
 	  * The optimal insets within these insets
@@ -55,6 +63,8 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  * The minimum insets within these insets
 	  */
 	lazy val min = mapToInsets { _.min }
+	
+	override lazy val total: StackSize = StackSize(totalAlong(X), totalAlong(Y))
 	
 	
 	// COMPUTED	---------------------------
@@ -106,18 +116,24 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  */
 	def noLimits = map { _.noLimits }
 	
+	@deprecated("Please use .sides instead", "v1.5")
+	def amounts = sides
+	
 	
 	// IMPLEMENTED	-----------------------
 	
 	override def self = this
 	
+	override protected def zeroLength = StackLength.fixedZero
+	
+	override protected def join(a: StackLength, b: StackLength): StackLength = a + b
+	override protected def subtract(from: StackLength, amount: StackLength): StackLength = from - amount
+	override protected def multiply(a: StackLength, multiplier: Double)  = a * multiplier
+	
+	override protected def withSides(sides: Map[Direction2D, StackLength]): StackInsets = StackInsets(sides)
+	
 	@deprecated("There's no need to call this method since 'this' already does this", "v2")
 	override def toInsets = this
-	override protected def withAmounts(newAmounts: Map[Direction2D, StackLength]) = StackInsets(newAmounts)
-	override protected def zeroLength  = StackLength.fixedZero
-	override protected def plus(first: StackLength, second: StackLength)  = first + second
-	override protected def multiply(a: StackLength, multiplier: Double)  = a * multiplier
-	override protected def make2D(horizontal: StackLength, vertical: StackLength)  = StackSize(horizontal, vertical)
 	
 	
 	// OTHER	---------------------------
@@ -128,16 +144,11 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	  */
 	def +(amount: Double) = if (amount == 0) this else map { _ + amount }
 	/**
-	  * @param other Length increase affecting each side of these insets
-	  * @return A copy of these insets with each side increased
-	  */
-	def +(other: StackLength) = map { _ + other }
-	/**
 	  * @param other A set of insets
 	  * @return A copy of these insets which have been increased by the other set of insets
 	  */
-	def +(other: Insets) = withAmounts(
-		(amounts.keySet ++ other.amounts.keySet).map { dir => dir -> (apply(dir) + other(dir)) }.toMap)
+	def +(other: Insets) =
+		withSides((sides.keySet ++ other.sides.keySet).map { dir => dir -> (apply(dir) + other(dir)) }.toMap)
 	/**
 	  * @param amount Length decrease affecting each side of these insets
 	  * @return A copy of these insets with each side decreased
@@ -150,11 +161,17 @@ case class StackInsets(amounts: Map[Direction2D, StackLength]) extends InsetsLik
 	def -(other: Insets) = this + (-other)
 	
 	/**
+	  * @param other Another set of insets
+	  * @return Combination between these insets, which attempts to fulfill the conditions in both
+	  */
+	def &&(other: StackInsets) = mergeWith(other) { _ && _ }
+	
+	/**
 	  * Converts these stack insets to normal insets
 	  * @param f A mapping function
 	  * @return A set of insets with mapped side values
 	  */
-	def mapToInsets(f: StackLength => Double) = Insets(amounts.map { case (d, l) => d -> f(l) })
+	def mapToInsets(f: StackLength => Double) = Insets(sides.map { case (d, l) => d -> f(l) })
 	
 	/**
 	  * @param direction Target direction

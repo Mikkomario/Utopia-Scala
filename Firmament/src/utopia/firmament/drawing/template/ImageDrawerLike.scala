@@ -46,14 +46,16 @@ trait ImageDrawerLike extends CustomDrawer
 			// Default case: No upscaling used or required
 			if (!useUpscaling || defaultSize.existsDimensionWith(bounds.size) { _ >= _ }) {
 				// Downscales if necessary
-				Some(bounds.size - insets.min.total).filter { _.sign.isPositive }.map { image.fittingWithin(_) }
+				Some(bounds.size - insets.min.total)
+					.filter { _.sign.isPositive }
+					.map { image.fittingWithin(_).roundSize }
 			}
 			else {
 				// Case: Upscaling is required (still limited by original image resolution,
 				// unless original image is already over source resolution)
 				val imageSize = (bounds.size - insets.mapToInsets { l => l.max.getOrElse(l.optimal) }.total) topLeft
 					(image.size bottomRight image.sourceResolution)
-				Some(image.fittingWithin(imageSize, maximize = true))
+				Some(image.fittingWithin(imageSize, maximize = true).roundSize)
 			}
 		}
 		
@@ -62,7 +64,7 @@ trait ImageDrawerLike extends CustomDrawer
 			val position = alignment.positionWithInsets(img.size, bounds, insets, fitWithinBounds = false).position
 			// Since 'position' represents the desired top left corner of the drawn image,
 			// has to adjust according to image origin
-			img.drawWith(drawer, position + image.origin)
+			img.drawWith(drawer, (position + img.origin).round)
 		}
 	}
 }

@@ -412,6 +412,14 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	  */
 	def withMargin(margin: SizeCategory): ContextualStackFactory[N] = withMargin(context.scaledStackMargin(margin))
 	/**
+	  * @param margin Size of margins to apply. None if no margins should be added at all.
+	  * @return Copy of this factory with the specified margin size.
+	  */
+	def withMargin(margin: Option[SizeCategory]): ContextualStackFactory[N] = margin match {
+		case Some(margin) => withMargin(margin)
+		case None => withoutMargin
+	}
+	/**
 	  * @param cap New size of margins to place at each end of this stack (general)
 	  * @return Copy of this factory that uses the specified cap size
 	  */

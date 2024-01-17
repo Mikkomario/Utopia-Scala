@@ -1,25 +1,26 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{FramedFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageLabelSettings}
+import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
 import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
@@ -31,47 +32,19 @@ import utopia.reach.focus.FocusListener
   * @since 31.05.2023, v1.1
   */
 trait ViewImageAndTextButtonSettingsLike[+Repr]
-	extends ButtonSettingsLike[Repr] with FramedFactory[Repr] with CustomDrawableFactory[Repr]
+	extends ButtonSettingsLike[Repr] with ViewImageAndTextLabelSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
 	
-	protected def imageSettings: ViewImageLabelSettings
 	protected def buttonSettings: ButtonSettings
+	protected def labelSettings: ViewImageAndTextLabelSettings
 	
 	/**
 	  * @param settings New button settings to use.
 	  * @return Copy of this factory with the specified button settings
 	  */
 	def withButtonSettings(settings: ButtonSettings): Repr
-	/**
-	  * @param settings New image settings to use.
-	  * @return Copy of this factory with the specified image settings
-	  */
-	def withImageSettings(settings: ViewImageLabelSettings): Repr
-	
-	
-	// COMPUTED	--------------------
-	
-	/**
-	  * insets pointer from the wrapped view image label settings
-	  */
-	def imageInsetsPointer = imageSettings.insetsPointer
-	/**
-	  * alignment pointer from the wrapped view image label settings
-	  */
-	def imageAlignmentPointer = imageSettings.alignmentPointer
-	/**
-	  * color overlay pointer from the wrapped view image label settings
-	  */
-	def imageColorOverlayPointer = imageSettings.colorOverlayPointer
-	/**
-	  * image scaling pointer from the wrapped view image label settings
-	  */
-	def imageImageScalingPointer = imageSettings.imageScalingPointer
-	/**
-	  * uses low priority size from the wrapped view image label settings
-	  */
-	def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
+	def withLabelSettings(settings: ViewImageAndTextLabelSettings): Repr
 	
 	
 	// IMPLEMENTED  -----------------
@@ -80,86 +53,58 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	def hotKeys = buttonSettings.hotKeys
 	def focusListeners = buttonSettings.focusListeners
 	
+	override def isHintPointer: Changing[Boolean] = labelSettings.isHintPointer
+	override def imageSettings: ViewImageLabelSettings = labelSettings.imageSettings
+	override def separatingMargin: Option[SizeCategory] = labelSettings.separatingMargin
+	override def forceEqualBreadth: Boolean = labelSettings.forceEqualBreadth
+	override def customDrawers: Vector[CustomDrawer] = labelSettings.customDrawers
+	override def insets: UnresolvedStackInsets = labelSettings.insets
+	
 	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
 	def withFocusListeners(listeners: Vector[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
+	override def withIsHintPointer(p: Changing[Boolean]): Repr = mapLabelSettings { _.withIsHintPointer(p) }
+	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
+		mapLabelSettings { _.withSeparatingMargin(margin) }
+	override def withForceEqualBreadth(force: Boolean): Repr = mapLabelSettings { _.withForceEqualBreadth(force) }
+	override def withImageSettings(settings: ViewImageLabelSettings): Repr =
+		mapLabelSettings { _.withImageSettings(settings) }
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+		mapLabelSettings { _.withCustomDrawers(drawers) }
+	override def withInsets(insets: UnresolvedStackInsets): Repr = mapLabelSettings { _.withInsets(insets) }
+	
+	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
+		mapLabelSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
+	
 	
 	// OTHER	--------------------
 	
 	def mapButtonSettings(f: ButtonSettings => ButtonSettings) = withButtonSettings(f(buttonSettings))
-	
-	def mapImageAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
-		withImageAlignmentPointer(f(imageAlignmentPointer))
-	def mapImageColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
-		withImageColorOverlayPointer(f(imageColorOverlayPointer))
-	def mapImageImageScalingPointer(f: Changing[Double] => Changing[Double]) =
-		withImageImageScalingPointer(f(imageImageScalingPointer))
-	def mapImageInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) =
-		withImageInsetsPointer(f(imageInsetsPointer))
-	
-	def mapImageSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) =
-		withImageSettings(f(imageSettings))
-	
-	/**
-	  * @param p Pointer that determines the image drawing location within this component
-	  * @return Copy of this factory with the specified image alignment pointer
-	  */
-	def withImageAlignmentPointer(p: Changing[Alignment]) =
-		withImageSettings(imageSettings.withAlignmentPointer(p))
-	def withImageAlignment(alignment: Alignment) = withImageAlignmentPointer(Fixed(alignment))
-	/**
-	  * @param p Pointer that, when defined, places a color overlay over the drawn image
-	  * @return Copy of this factory with the specified image color overlay pointer
-	  */
-	def withImageColorOverlayPointer(p: Option[Changing[Color]]) =
-		withImageSettings(imageSettings.withColorOverlayPointer(p))
-	/**
-	  * @param p Pointer that determines image scaling, in addition to the original image scaling
-	  * @return Copy of this factory with the specified image image scaling pointer
-	  */
-	def withImageImageScalingPointer(p: Changing[Double]) =
-		withImageSettings(imageSettings.withImageScalingPointer(p))
-	/**
-	  * @param p Pointer that determines the insets placed around the image
-	  * @return Copy of this factory with the specified image insets pointer
-	  */
-	def withImageInsetsPointer(p: Changing[StackInsets]) = withImageSettings(imageSettings
-		.withInsetsPointer(p))
-	/**
-	  * @param lowPriority Whether this label should use low priority size constraints
-	  * @return Copy of this factory with the specified image uses low priority size
-	  */
-	def withImageUsesLowPrioritySize(lowPriority: Boolean) =
-		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
+	def mapLabelSettings(f: Mutate[ViewImageAndTextLabelSettings]) = withLabelSettings(f(labelSettings))
 }
 
 object ViewImageAndTextButtonSettings
 {
 	// ATTRIBUTES	--------------------
 	
-	val default = apply(ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right)))
+	val default = apply()
 }
 /**
   * Combined settings used when constructing view image and text buttons
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ViewImageAndTextButtonSettings(imageSettings: ViewImageLabelSettings = ViewImageLabelSettings.default,
-                                          buttonSettings: ButtonSettings = ButtonSettings.default,
-                                          insets: StackInsets = StackInsets.any,
-                                          customDrawers: Vector[CustomDrawer] = Vector.empty)
+case class ViewImageAndTextButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.default,
+                                          labelSettings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
 	extends ViewImageAndTextButtonSettingsLike[ViewImageAndTextButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
-	override def withInsets(insets: StackInsetsConvertible): ViewImageAndTextButtonSettings =
-		copy(insets = insets.toInsets)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageAndTextButtonSettings =
-		copy(customDrawers = drawers)
+	override def withLabelSettings(settings: ViewImageAndTextLabelSettings): ViewImageAndTextButtonSettings =
+		copy(labelSettings = settings)
 }
 
 /**
@@ -186,15 +131,11 @@ trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButto
 	// IMPLEMENTED	--------------------
 	
 	override def buttonSettings = settings.buttonSettings
-	override def imageSettings = settings.imageSettings
-	override def insets: StackInsets = settings.insets
-	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
-	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withImageSettings(settings: ViewImageLabelSettings) =
-		mapSettings { _.withImageSettings(settings) }
-	override def withInsets(insets: StackInsetsConvertible): Repr = mapSettings { _.withInsets(insets) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	
+	override protected def labelSettings: ViewImageAndTextLabelSettings = settings.labelSettings
+	override def withLabelSettings(settings: ViewImageAndTextLabelSettings): Repr =
+		mapSettings { _.withLabelSettings(settings) }
 	
 	
 	// OTHER	--------------------
@@ -391,25 +332,16 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 	val colorPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
 	
 	override protected val wrapped = {
-		// Adds additional text insets
-		val labelContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { c =>
-			c.mapTextInsets { _ + settings.insets.withoutSides(c.textAlignment.directions) + c.buttonBorderWidth }
-		}
-		// Adds additional image insets
-		val labelImageSettings = settings.imageSettings
-			.mapInsetsPointer { _.mergeWith(contextPointer) { (base, context) =>
-				base + settings.insets.withoutSides(context.textAlignment.opposite.directions) +
-					context.buttonBorderWidth
-			} }
+		// Adds (fixed) space for borders
+		val initialBorderWidth = contextPointer.value.buttonBorderWidth
+		val appliedLabelSettings = settings.labelSettings
+			.mapInsets { _.map { _.mapBoth { _.more } { _ + initialBorderWidth } } }
 		
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
-		// TODO: Add forceEqualBreadth option (if needed)
-		ViewImageAndTextLabel.withContext(parentHierarchy, labelContextPointer).withImageSettings(labelImageSettings)
-			.withCustomDrawers(
-				ButtonBackgroundViewDrawer(colorPointer, statePointer,
-					contextPointer.mapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth }
-				) +: settings.customDrawers
-			)
+		
+		ViewImageAndTextLabel.withContext(parentHierarchy, contextPointer).withSettings(appliedLabelSettings)
+			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer,
+				contextPointer.mapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth }))
 			.apply(contentPointer, imagePointer, displayFunction)
 	}
 	

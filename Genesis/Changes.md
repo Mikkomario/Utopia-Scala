@@ -18,6 +18,7 @@
   - Added `.averageShade`
 ### Other changes
 - **Image**`.crop(...)` & `.subImage(...)` now use rounding
+- **Image**`.cropped` now preserves 1 extra pixel on each side
 - **DrawSettings** now extends **ScopeUsable**
 - Scala version updated to 2.13.12
 

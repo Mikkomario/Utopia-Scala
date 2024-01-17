@@ -85,6 +85,8 @@ sealed trait SignOrZero
 		case Negative => -this
 	}
 	
+	override def *(mod: Sign): SignOrZero = super[Reversible].*(mod)
+	
 	
 	// OTHER    -------------------------
 	

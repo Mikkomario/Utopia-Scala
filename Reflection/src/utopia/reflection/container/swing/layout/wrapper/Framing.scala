@@ -92,7 +92,7 @@ class Framing[C <: ReflectionStackable with AwtComponentRelated](initialComponen
 	  * @param color Color to use when drawing the background
 	  */
 	def addRoundedBackgroundDrawing(color: Color) = {
-		insets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match {
+		insets.lengthsIterator.map { _.optimal }.filter { _ > 0.0 }.minOption match {
 			case Some(minSide) => addCustomDrawer(RoundedBackgroundDrawer.withRadius(color, minSide, Normal))
 			case None => addCustomDrawer(RoundedBackgroundDrawer.withFactor(color, 0.25, Normal))
 		}

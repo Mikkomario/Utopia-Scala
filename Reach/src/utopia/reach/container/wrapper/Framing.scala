@@ -87,7 +87,7 @@ object ContextualFramingFactory
 		  */
 		def rounded(background: Color) = {
 			// The rounding amount is based on insets
-			val drawer = f.insets.lengths.map { _.optimal }.filter { _ > 0.0 }.minOption match {
+			val drawer = f.insets.lengthsIterator.map { _.optimal }.filter { _ > 0.0 }.minOption match {
 				case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(background, minSideLength)
 				// If the insets default to 0, uses solid background drawing instead
 				case None => BackgroundDrawer(background)
