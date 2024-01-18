@@ -2,7 +2,6 @@ package utopia.reach.container
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
-import utopia.firmament.component.Component
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
@@ -134,6 +133,12 @@ object ReachCanvas
 	  *                                   Default = false = focus is enabled.
 	  *                                   content component that this canvas will wrap.
 	  *                                   May return an additional result, which will be returned by this function also.
+	  * @param disableMouse               If this is set to true, mouse events are not processed by this canvas element.
+	  *                                   It might be useful to set this to true in situations where you want to
+	  *                                   process component's mouse events in another way
+	  *                                   (since AWT so intelligently doesn't propagate mouse events to parent
+	  *                                   components if there exists a mouse listener in the child component).
+	  *                                   Default = false.
 	  * @param exc                        Implicit execution context
 	  * @param log                        Implicit logging implementation for some error cases
 	  * @tparam C Type of the component wrapped by this canvas
@@ -143,7 +148,8 @@ object ReachCanvas
 	def forSwing[C <: ReachComponentLike, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
 	                                         cursors: Option[CursorSet] = None,
 	                                         revalidateListener: ReachCanvas => Unit = _ => (),
-	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
+	                                         disableMouse: Boolean = false)
 	                                        (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
 	                                        (implicit exc: ExecutionContext, log: Logger) =
 	{
@@ -177,7 +183,8 @@ object ReachCanvas
 				canvas.updateLayout()
 			}(createContent)
 			componentPointer.set(canvas.component)
-			val tracker = new SwingAttachmentTracker(actorHandler, canvas, attachmentPointer, absoluteParentPositionView)
+			val tracker = new SwingAttachmentTracker(actorHandler, canvas, attachmentPointer,
+				absoluteParentPositionView, mouseDisabled = disableMouse)
 			canvas.component.addAncestorListener(tracker)
 			
 			// Initializes canvas size
@@ -191,13 +198,44 @@ object ReachCanvas
 	// NESTED   ----------------------------
 	
 	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: ResettableFlag,
-	                                     absolutePositionView: Resettable)
+	                                     absolutePositionView: Resettable, mouseDisabled: Boolean)
 	                                    (implicit exc: ExecutionContext)
 		extends AncestorListener
 	{
 		// ATTRIBUTES   --------------------
 		
-		private val parentPointer = EventfulPointer.empty[java.awt.Component]()
+		// In some circumstances, mouse event generation is disabled altogether
+		private val parentPointer = {
+			if (mouseDisabled)
+				None
+			else {
+				val p = EventfulPointer.empty[java.awt.Component]()
+				new SwingMouseEventConverter(actorHandler, canvas, p)
+				Some(p)
+			}
+		}
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def ancestorAdded(event: AncestorEvent) = {
+			attachedFlag.set()
+			parentPointer.foreach { _.value = Some(canvas.component.getParent) }
+		}
+		override def ancestorRemoved(event: AncestorEvent) = {
+			parentPointer.foreach { _.value = None }
+			attachedFlag.reset()
+		}
+		
+		override def ancestorMoved(event: AncestorEvent) = absolutePositionView.reset()
+	}
+	
+	private class SwingMouseEventConverter(actorHandler: ActorHandler, canvas: ReachCanvas,
+	                                       parentPointer: Changing[Option[java.awt.Component]])
+	                                      (implicit exc: ExecutionContext)
+	{
+		// ATTRIBUTES   -----------------------
+		
 		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator(_) } }
 		
 		
@@ -220,20 +258,6 @@ object ReachCanvas
 				actorHandler += generator
 			}
 		}
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def ancestorAdded(event: AncestorEvent) = {
-			attachedFlag.set()
-			parentPointer.value = Some(canvas.component.getParent)
-		}
-		override def ancestorRemoved(event: AncestorEvent) = {
-			parentPointer.value = None
-			attachedFlag.reset()
-		}
-		
-		override def ancestorMoved(event: AncestorEvent) = absolutePositionView.reset()
 	}
 }
 

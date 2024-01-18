@@ -77,8 +77,8 @@ object ReachInSwingTest extends App
 		setLocationRelativeTo(null)
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
 		
-		private val canvas = ReachCanvas.forSwing(baseContext.actorHandler, Fixed(Color.transparentBlack), TestCursors.cursors,
-			disableFocus = true) { hierarchy =>
+		private val canvas = ReachCanvas.forSwing(baseContext.actorHandler, Fixed(Color.transparentBlack),
+			TestCursors.cursors, disableFocus = true) { hierarchy =>
 			AlignFrame(hierarchy).withContext(baseContext.against(Color.yellow).forTextComponents)(Center)
 				.withBackground(Secondary)
 				.build(ViewTextLabel) { labelF =>
