@@ -8,6 +8,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.Flag
 
@@ -108,18 +109,24 @@ trait PersistingRequestQueue extends RequestQueue
 	def start(handlers: Iterable[PersistedRequestHandler]) = {
 		val persistedModels = requestContainer.current
 		val errors = persistedModels.flatMap { requestModel =>
-			handlers.view.filter { _.shouldHandle(requestModel) }.tryFindMap { h => h.factory(requestModel)
-				.map { r => h -> r } } match {
-					case Success((handler, request)) =>
-						super.push(request).onComplete { result =>
-							// Once result is received, removes the persisted request and lets the handler
-							// handle the response
-							removePersistedRequest(requestModel)
-							result.foreach { handler.handle(requestModel, request, _) }
-						}
-						None
-					case Failure(error) => Some(error)
-				}
+			NotEmpty(handlers.caching.filter { _.shouldHandle(requestModel) }) match {
+				case Some(handlers) =>
+					handlers.tryFindMap { h => h.factory(requestModel)
+						.map { r => h -> r } } match {
+						case Success((handler, request)) =>
+							super.push(request).onComplete { result =>
+								// Once result is received, removes the persisted request and lets the handler
+								// handle the response
+								removePersistedRequest(requestModel)
+								result.foreach { handler.handle(requestModel, request, _) }
+							}
+							None
+						case Failure(error) => Some(error)
+					}
+				case None =>
+					Some(new NoSuchElementException(
+						s"No request handler is able to process persisted request: $requestModel"))
+			}
 		}
 		// If some requests were removed from the container, saves its status immediately
 		if (persistedModels.nonEmpty)

@@ -223,7 +223,7 @@ case class Image private(override protected val source: Option[BufferedImage], o
 				val minX = px.columnIndices.find { x => colRange.exists { y => px(x, y).visible } }.get
 				val maxX = px.columnIndices.findLast { x => colRange.exists { y => px(x, y).visible } }.get
 				// Returns the cropped image, preserves the origin
-				crop(Insets(minX - 1, px.width - maxX - 2, minY - 1, px.height - maxY - 2))
+				crop(Insets(minX - 1, px.width - maxX - 2, minY - 1, px.height - maxY - 2) * scaling)
 			// Case: No visible pixels found => returns an empty image
 			case None => Image.empty
 		}
