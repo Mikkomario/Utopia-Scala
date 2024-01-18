@@ -112,6 +112,7 @@ trait ImageAndTextLabelSettingsLike[ImgSettings <: ImageLabelSettingsLike[ImgSet
 	/**
 	  * color overlay from the wrapped image label settings
 	  */
+	// FiXME: Nullpointer here
 	def imageColorOverlay = imageSettings.colorOverlay
 	/**
 	  * uses low priority size from the wrapped image label settings
@@ -204,9 +205,9 @@ object ImageAndTextLabelSettings
 {
 	// ATTRIBUTES	--------------------
 	
-	val default = apply()
-	
 	private val defaultImageSettings = ImageLabelSettings.default.right
+	
+	val default = apply()
 }
 /**
   * Combined settings used when constructing image and text labels

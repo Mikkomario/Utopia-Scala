@@ -1,11 +1,10 @@
 package utopia.reach.test
 
-import utopia.firmament.image.SingleColorIcon
-import utopia.genesis.image.Image
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.util.logging.SysErrLogger
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reach.cursor.CursorSet
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}
-import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
 
 import java.nio.file.Path
 
@@ -17,15 +16,10 @@ import java.nio.file.Path
 object TestCursors
 {
 	private val cursorsDirectory: Path = "Reach/test-images"
-	lazy val cursors: Option[CursorSet] = Image.readFrom(cursorsDirectory/"cursor-arrow.png").toOption.map { arrowImage =>
-		val arrowCursor = Cursor(SingleColorIcon(arrowImage.withSourceResolutionOrigin(Point(7, 4))), drawEdges = true)
-		val handImage = Image.readFrom(cursorsDirectory/"cursor-hand.png").toOption.map { i =>
-			SingleColorIcon(i.withSourceResolutionOrigin(Point(9, 1))) }
-		val textImage = Image.readFrom(cursorsDirectory/"cursor-text.png").toOption.map { i =>
-			SingleColorIcon(i.withCenterOrigin) }
-		
-		CursorSet(Vector(Interactive -> handImage, Text -> textImage)
-			.flatMap { case (cursorType, cursor) => cursor.map { cursorType -> Cursor(_, drawEdges = true) } }
-			.toMap[CursorType, Cursor] + (Default -> arrowCursor), arrowCursor)
-	}
+	
+	val cursors = CursorSet.loadIcons(Map(
+		Default -> (cursorsDirectory/"cursor-arrow.png", Point(7, 4)),
+		Interactive -> (cursorsDirectory/"cursor-hand.png", Point(9, 1)),
+		Text -> (cursorsDirectory/"cursor-text.png", Point(12, 12))
+	), drawEdgesFor = Set(Default, Interactive, Text)).logToOption(SysErrLogger)
 }

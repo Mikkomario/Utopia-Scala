@@ -32,6 +32,8 @@ Supports **Flow v2.3**
 ### Other changes
 - Cursor shade-detection algorithm is now much simpler, resulting in faster code and smaller memory use, 
   with the cost of less accurate cursor color
+- **SelectableTextLabel** now selects the words only 
+  when clicking twice on the same spot within a short (0.5 s) period of time.
 - Added a couple of new utility functions to button factories
 - **Checkbox** cursor shade calculation is now faster
 - Scala version updated to 2.13.12

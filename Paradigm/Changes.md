@@ -34,14 +34,19 @@
 - **Bounds**
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Color**
-  - Added `.visible` and `.invisible`
-  - Added `.highlightedBy(Double)`
+  - Class
+    - Added `.visible` and `.invisible`
+    - Added `.highlightedBy(Double)`
+  - Object
+    - Added `.weighedAverage(Iterable)`
 - **DimensionalFactory**
   - Added a new `.twice(D)` constructor
 - **Distance** (object)
   - Added `.ofKilometers(Double)`
 - **NumericVectorLike**
   - Added `.mapLength(...)`
+- **Rgb** (object)
+  - Added `.average(Iterable)` and `.weighedAverage(Iterable)`
 - **Sized**
   - Added `.roundSize`
 ### Other changes
@@ -50,6 +55,7 @@
 - **Polygonic**`.toShape` now applies rounding
 - **Distance** now extends **MayBeAboutZero**
 - Improved **Distance** `.toString`
+- Refactored `Color.average(Iterable)`
 - Scala version updated to 2.13.12
 
 ## v1.4 - 27.09.2023

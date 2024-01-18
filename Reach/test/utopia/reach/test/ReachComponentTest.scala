@@ -68,7 +68,7 @@ object ReachComponentTest extends App
 								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
 							val closeButton = closeButtonFactory.sizeChanging
 								.apply(SingleColorIcon(
-									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty)),
+									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty).cropped),
 									"Close (esc)") { windowPointer.value.foreach { _.close() } }
 							/*
 							val closeButton = factories.mapContext { _ / Primary }(TextButton)

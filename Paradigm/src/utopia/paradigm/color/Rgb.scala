@@ -1,5 +1,6 @@
 package utopia.paradigm.color
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
@@ -103,7 +104,6 @@ object Rgb extends SureFromModelFactory[Rgb]
 	  * @return A new RGB Color
 	  */
 	def gray(luminosity: Double) = withRatios(RgbChannel.values.map { _ -> luminosity }.toMap)
-	
 	/**
 	 * Creates a grayscale color
 	 * @param value Color value [0, 255] where 0 is black and 255 is white
@@ -117,14 +117,12 @@ object Rgb extends SureFromModelFactory[Rgb]
 	  * @return A new RGB color
 	  */
 	def withRatios(ratios: Map[RgbChannel, Double]) = new Rgb(ratios.view.mapValues(inRange).toMap)
-	
 	/**
 	  * Creates a new RGB with color values
 	  * @param values Values per channel [0, 255]
 	  * @return A new RGB color
 	  */
 	def withValues(values: Map[RgbChannel, Int]) = withRatios(values.view.mapValues { _.toDouble / maxValue }.toMap)
-	
 	/**
 	  * Creates a new RGB with color values
 	  * @param r Red value [0, 255]
@@ -133,6 +131,41 @@ object Rgb extends SureFromModelFactory[Rgb]
 	  * @return A new RGB color
 	  */
 	def withValues(r: Int, g: Int, b: Int): Rgb = withValues(HashMap(Red -> r, Green -> g, Blue -> b))
+	
+	/**
+	 * @param colors Colors to average
+	 * @return The average between the specified RGB values. Black if the collection was empty.
+	 */
+	def average(colors: Iterable[Rgb]) = {
+		colors.emptyOneOrMany match {
+			case None => black
+			case Some(Left(only)) => only
+			case Some(Right(colors)) =>
+				val count = colors.size
+				apply(colors.map { _.ratios }
+					.foldLeft(Map[RgbChannel, Double]()) { (combined, color) => combined.mergeWith(color) { _ + _ } }
+					.view.mapValues { _ / count }.toMap)
+		}
+	}
+	/**
+	 * @param colors Colors, each also having a weight modifier
+	 * @return Weighed average between the specified RGB values. Black if the collection was empty.
+	 */
+	def weighedAverage(colors: Iterable[(Rgb, Double)]) = {
+		val countingColors = colors.filter { _._2 != 0.0 }
+		countingColors.emptyOneOrMany match {
+			case None => black
+			case Some(Left(only)) => only._1
+			case Some(Right(colors)) =>
+				val totalWeight = colors.map { _._2 }.sum
+				if (totalWeight == 0.0)
+					black
+				else
+					apply(colors.map { case (color, weight) => color.ratios.view.mapValues { _ * weight }.toMap }
+						.foldLeft(Map[RgbChannel, Double]()) { (combined, color) => combined.mergeWith(color) { _ + _ } }
+						.view.mapValues { _ / totalWeight }.toMap)
+		}
+	}
 	
 	private def inRange(ratio: Double) = 0.0 max ratio min 1.0
 }
@@ -249,14 +282,12 @@ case class Rgb private(override val ratios: Map[RgbChannel, Double])
 	  * @return An average between these two colors on each RGB channel
 	  */
 	def average(another: Rgb) = mergeWith(another) { (a, b) => (a + b) / 2 }
-	
 	/**
 	  * @param another Another RGB
 	  * @param weight Weight modifier assigned to THIS color
 	  * @return An average between these two colors on each RGB channel
 	  */
 	def average(another: Rgb, weight: Double) = mergeWith(another) { (a, b) => (a * weight + b) / (1 + weight) }
-	
 	/**
 	  * @param another Another RGB
 	  * @param myWeight Weight modifier assigned to THIS color

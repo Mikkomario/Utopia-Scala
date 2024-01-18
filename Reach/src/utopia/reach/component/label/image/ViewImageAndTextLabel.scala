@@ -140,9 +140,9 @@ object ViewImageAndTextLabelSettings
 {
 	// ATTRIBUTES	--------------------
 	
-	val default = apply()
-	
 	private val defaultImageSettings = ViewImageLabelSettings(alignmentPointer = Fixed(Alignment.Right))
+	
+	val default = apply()
 }
 /**
   * Combined settings used when constructing view image and text labels

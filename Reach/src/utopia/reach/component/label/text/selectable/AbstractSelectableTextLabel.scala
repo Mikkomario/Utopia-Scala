@@ -9,6 +9,8 @@ import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
@@ -438,6 +440,9 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	{
 		// ATTRIBUTES	---------------------------------
 		
+		private val doubleClickThreshold = 0.5.seconds
+		private var lastClickTime = Now.toInstant
+		
 		// Is only interested in left mouse button presses inside this component's area
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
 			MouseEvent.isOverAreaFilter(bounds)
@@ -448,6 +453,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		override def onMouseButtonState(event: MouseButtonStateEvent) = {
 			draggingMouse = true
 			updateCaret(event.mousePosition, KeyListener.keyStatus.shift)
+			lastClickTime = Now
 			Some(ConsumeEvent("EditableTextLabel clicked"))
 		}
 		
@@ -480,8 +486,9 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 								case None => Some(previousCaretIndex -> newCaretIndex)
 							}
 					}
-					// If same caret position is clicked twice, expands the selection to the word around
-					else if (previousCaretIndex == newCaretIndex) {
+					// If same caret position is clicked twice within a short period of time,
+					// expands the selection to the word around
+					else if (previousCaretIndex == newCaretIndex && Now - lastClickTime < doubleClickThreshold) {
 						val newSelectionStart = skipWord(previousCaretIndex, Negative).getOrElse(previousCaretIndex)
 						val newSelectionEnd = skipWord(previousCaretIndex, Positive).getOrElse(previousCaretIndex)
 						if (newSelectionStart != newSelectionEnd)

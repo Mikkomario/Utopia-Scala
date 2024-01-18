@@ -17,7 +17,7 @@ object ImageCropTest extends App
 	ParadigmDataType.setup()
 	
 	private val directory: Path = "Genesis/test-images"
-	private val originalPath = directory/"check-box-empty.png"
+	private val originalPath = directory/"speech-bubble.png"
 	private val editPath = originalPath.withMappedFileName { fName =>
 		s"${fName.untilLast(".")}-cropped.${fName.afterLast(".")}"
 	}

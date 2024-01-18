@@ -153,17 +153,27 @@ object Color
 			transparentBlack
 		else {
 			// Combines the total rgb and alpha values of the colors (weights by color alpha)
-			val totals = RgbChannel.values.map { _ -> Pointer(0.0) }.toMap
-			var totalAlpha = 0.0
-			colors.foreach { color =>
-				color.ratios.foreach { case (channel, ratio) => totals(channel).update { _ + ratio * color.alpha } }
-				totalAlpha += color.alpha
-			}
-			// Calculates the average value
-			if (totalAlpha == 0.0)
-				transparentBlack
+			val alpha = colors.iterator.map { _.alpha }.sum / colors.size
+			if (alpha == 0.0)
+				Rgb.average(colors.map { _.rgb }).withAlpha(alpha)
 			else
-				apply(Rgb.withRatios(totals.view.mapValues { _.value / totalAlpha }.toMap), totalAlpha / colors.size)
+				Rgb.weighedAverage(colors.map { c => c.rgb -> c.alpha }).withAlpha(alpha)
+		}
+	}
+	/**
+	 * @param colors A set of colors, each with a weight modifier assigned to it
+	 * @return A weighed average between the specified colors
+	 */
+	def weighedAverage(colors: Iterable[(Color, Double)]) = {
+		// Converts all weights to positive by inverting some of the colors
+		val correctSignColors = colors.filter { _._2 != 0.0 }
+			.map { case (c, wt) => if (wt < 0.0) c.inverted -> (-wt) else c -> wt }
+		val totalWeight = correctSignColors.iterator.map { _._2 }.sum
+		if (totalWeight == 0.0)
+			average(colors.map { _._1 })
+		else {
+			val alpha = correctSignColors.iterator.map { case (color, wt) => color.alpha * wt }.sum / totalWeight
+			Rgb.weighedAverage(correctSignColors.map { case (c, wt) => c.rgb -> (c.alpha * wt) }).withAlpha(alpha)
 		}
 	}
 	
@@ -379,7 +389,6 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 		else
 			Color(Right(rgb.average(other.rgb, alpha / other.alpha)), (alpha + other.alpha) / 2)
 	}
-	
 	/**
 	  * @param other Another color
 	  * @param weight A weight modifier for <b>this</b> color
