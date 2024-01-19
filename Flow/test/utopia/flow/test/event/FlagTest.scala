@@ -72,7 +72,7 @@ object FlagTest extends App
 	val ni3 = !i3 // Initially true
 	val pi1 = EventfulPointer(false)
 	val piv1: FlagLike = pi1.readOnly // Initially false
-	val and2 = ni3 && piv1 // Initially false
+	val and2 = piv1 && ni3 // Initially false
 	ni2.removeListener(updateLastEventListener)
 	and2.addListener(updateLastEventListener)
 	lastEvent = false

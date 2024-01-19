@@ -312,7 +312,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * A flag that contains true whenever this window is fully visible
 	  * (i.e. open, visible and not minimized)
 	  */
-	val fullyVisibleFlag = _visibleFlag.mergeWith(_minimizedFlag) { _ && !_ }
+	val fullyVisibleFlag = (_visibleFlag && (!_minimizedFlag)) && (!_closedFlag)
 	
 	/**
 	  * A future that resolves once this window is displayed for the first time
@@ -325,7 +325,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * From first visible = true to the closing of this window, this flag contains true.
 	  * After the closing of this window, this flag contains false.
 	  */
-	lazy val openFlag = _openedFlag.mergeWith(_closedFlag) { _ && !_ }
+	lazy val openFlag = _openedFlag && (!_closedFlag)
 	
 	// Merges the position and size in order to form bounds
 	// Provides a separate interface for users

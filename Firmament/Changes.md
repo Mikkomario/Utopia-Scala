@@ -37,6 +37,8 @@ Supports **Flow v2.3**
 ### Other changes
 - The image effects listed in **ComponentCreationDefaults** now affect **SingleColorIcon** **ButtonImageSet** 
   conversion functions
+- **Window**`.fullyVisibleFlag` now becomes permanently false when the window is closed
+- Slightly refactored **Window**`.openFlag` so that it becomes permanently false once the window is closed
 - Scala version updated to 2.13.12
 
 ## v1.1 - 27.09.2023
