@@ -253,7 +253,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	/**
 	  * Pointer containing the current (measured) text
 	  */
-	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) =>
+	val textPointer = contentPointer.mergeWithWhile(stylePointer, parentHierarchy.linkPointer) { (content, style) =>
 		measure(displayFunction(content), style)
 	}
 	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer(textPointer, stylePointer)
@@ -269,11 +269,11 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 			revalidate()
 	}
 	// Style changes (color & alignment) also trigger a revalidation / repaint
-	stylePointer.addListener { event =>
+	stylePointer.addListenerWhile(parentHierarchy.linkPointer) { event =>
 		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
 			repaint(Priority.Low)
 	}
-	allowTextShrinkPointer.addContinuousAnyChangeListener { revalidate() }
+	allowTextShrinkPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
 	
 	
 	// IMPLEMENTED	-------------------------------------

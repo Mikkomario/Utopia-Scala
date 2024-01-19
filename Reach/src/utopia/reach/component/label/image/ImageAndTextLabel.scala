@@ -6,7 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.enumeration.SizeCategory.Small
+import utopia.firmament.model.enumeration.SizeCategory.{Small, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
@@ -205,6 +205,7 @@ object ImageAndTextLabelSettings
 {
 	// ATTRIBUTES	--------------------
 	
+	private val defaultInsets = UnresolvedFramedFactory.sides.horizontal(Left(Small)).withVertical(Left(VerySmall))
 	private val defaultImageSettings = ImageLabelSettings.default.right
 	
 	val default = apply()
@@ -223,7 +224,7 @@ object ImageAndTextLabelSettings
 case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
                                      imageSettings: ImageLabelSettings = defaultImageSettings,
                                      separatingMargin: Option[SizeCategory] = Some(Small),
-                                     insets: UnresolvedStackInsets = UnresolvedFramedFactory.sides.symmetric(Left(Small)),
+                                     insets: UnresolvedStackInsets = ImageAndTextLabelSettings.defaultInsets,
                                      forceEqualBreadth: Boolean = false,
                                      isHint: Boolean = false)
 	extends ImageAndTextLabelSettingsLike[ImageLabelSettings, ImageAndTextLabelSettings]

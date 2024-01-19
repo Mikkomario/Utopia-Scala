@@ -2,7 +2,10 @@ package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ScrollingContext, TextContext}
+import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.model.Border
+import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -13,7 +16,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.HandlerType
-import utopia.paradigm.color.ColorShade
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -101,10 +104,9 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				sameItemCheck)
 				{ fieldContext =>
-					// FIXME: This label acquires way too large vertical margins at some point
 					val label = ViewTextLabel
 						.withContextPointer(fieldContext.parentHierarchy, fieldContext.contextPointer)
-						.mapContext { _.withHorizontallyExpandingText }
+						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
 						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
 						.apply(valuePointer, displayFunction)
 					// Makes sure the label doesn't have to resize itself when displaying various options

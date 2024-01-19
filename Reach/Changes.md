@@ -16,6 +16,7 @@ Supports **Flow v2.3**
 ### Bugfixes
 - **ReachCanvas** in Swing context now properly fires mouse events
 - Fixed cursor shade calculation in **MutableImageButton**, **ViewImageButton** and **SelectionList**
+- Fixed an issue where drop-downs would expand too much vertically
 ### New features
 - Added support for cursors with edges
   - To use this, specify the `drawEdgesFor` -parameter in `CursorSet.loadIcons(...)` or use 
@@ -35,6 +36,8 @@ Supports **Flow v2.3**
 - **SelectableTextLabel** now selects the words only 
   when clicking twice on the same spot within a short (0.5 s) period of time.
 - Added a couple of new utility functions to button factories
+- Multiple view-based components now use slightly more optimized pointer-mapping 
+  by checking the hierarchy link condition before applying the effects
 - **Checkbox** cursor shade calculation is now faster
 - Scala version updated to 2.13.12
 

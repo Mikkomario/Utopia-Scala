@@ -145,6 +145,7 @@ object InputWindowTest extends App
 			val okButton = model.WindowButtonBlueprint[Model]("OK", role = Secondary, isDefault = true) { promise =>
 				input.toOption.foreach(promise.trySuccess)
 			}
+			// NB: Correct way here would be to test that the check box doesn't have focus
 			Vector(okButton) -> AlwaysTrue
 		}
 		

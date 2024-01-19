@@ -38,6 +38,7 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.FieldWithSelectionPopup.ignoreFocusAfterCloseDuration
 import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory, SelectionListSettings}
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
@@ -462,6 +463,11 @@ case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSetting
 
 object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
 {
+	// ATTRIBUTES   ----------------
+	
+	private val ignoreFocusAfterCloseDuration = 0.2.seconds
+	
+	
 	// OTHER	--------------------
 	
 	def apply(settings: FieldWithSelectionPopupSettings) = withSettings(settings)
@@ -493,6 +499,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	// ATTRIBUTES	------------------------------
 	
 	private implicit val equals: EqualsFunction[A] = sameItemCheck.getOrElse(EqualsFunction.default)
+	
+	// Tracks close time in order to now immediately open the pop-up afterwards
+	private var lastPopupCloseTime = Now.toInstant
 	
 	// Tracks the last selected value in order to return selection when content is updated
 	private val lastSelectedValuePointer = Pointer.empty[A]()
@@ -598,7 +607,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
 	focusPointer.addContinuousListenerAndSimulateEvent(false) { e =>
-		if (e.newValue) openPopup() else cachedPopup.foreach { _.visible = false }
+		if (e.newValue) {
+			if (Now - lastPopupCloseTime > ignoreFocusAfterCloseDuration)
+				openPopup()
+		}
+		else
+			cachedPopup.foreach { _.visible = false }
 	}
 	
 	
@@ -689,6 +703,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 						case None => makeMainContent(factories)
 					}
 				}
+		}
+		// Remembers when the pop-up closes
+		popup.fullyVisibleFlag.addListener { e =>
+			if (!e.newValue)
+				lastPopupCloseTime = Now
 		}
 		// When the mouse is released, hides the pop-up
 		// Also hides when not in focus, and on some key-presses

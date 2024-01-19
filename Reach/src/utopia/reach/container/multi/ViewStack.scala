@@ -315,12 +315,12 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy,
 	// INITIAL CODE	-------------------------------
 	
 	// Updates components list when component pointers get updated
-	componentData.map { _._2 }.foreach { _.addListener(resetActiveComponentsOnChange) }
+	componentData.map { _._2 }.foreach { _.addListenerWhile(parentHierarchy.linkPointer)(resetActiveComponentsOnChange) }
 	// Revalidates this component on other layout changes
-	directionPointer.addListener(revalidateOnChange)
-	layoutPointer.addListener(revalidateOnChange)
-	marginPointer.addListener(revalidateOnChange)
-	capPointer.addListener(revalidateOnChange)
+	directionPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	layoutPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	marginPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	capPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
 	
 	
 	// IMPLEMENTED	-------------------------------

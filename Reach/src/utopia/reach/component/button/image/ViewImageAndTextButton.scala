@@ -322,7 +322,9 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 	
 	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val statePointer = baseStatePointer
-		.mergeWith(settings.enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
+		.mergeWithWhile(settings.enabledPointer, parentHierarchy.linkPointer) { (state, enabled) =>
+			state + (Disabled -> !enabled)
+		}
 	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	override val focusId = hashCode()
 	
