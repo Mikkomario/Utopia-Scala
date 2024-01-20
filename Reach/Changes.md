@@ -18,6 +18,8 @@ Supports **Flow v2.3**
 - Fixed cursor shade calculation in **MutableImageButton**, **ViewImageButton** and **SelectionList**
 - Fixed an issue where drop-downs would expand too much vertically
 ### New features
+- Added **DragToResize** utility tool, which allows the user to 
+  resize borderless windows and other components using the mouse
 - Added support for cursors with edges
   - To use this, specify the `drawEdgesFor` -parameter in `CursorSet.loadIcons(...)` or use 
     `Cursor(SingleColorIcon, Boolean)`

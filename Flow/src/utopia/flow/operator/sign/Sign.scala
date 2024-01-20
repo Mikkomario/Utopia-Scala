@@ -1,7 +1,7 @@
 package utopia.flow.operator.sign
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.ordering.RichComparable
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
@@ -9,6 +9,7 @@ import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator.sign.UncertainSign.CertainSign
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Scalable
+import utopia.flow.operator.enumeration.End.{First, Last}
 
 import scala.concurrent.duration.Duration
 
@@ -161,6 +162,17 @@ sealed trait Sign extends SignOrZero with Reversible[Sign]
 	  * @return The extreme on this side
 	  */
 	def extreme: Extreme
+	/**
+	  * @return The end that matches this sign (First for Negative, Last for Positive)
+	  */
+	def end: End
+	
+	/**
+	  * @tparam A Type of ordered item
+	  * @return An ordering that ascends to this sign's direction.
+	  *         I.e. For Positive, returns the natural ordering and for Negative, returns the reversed ordering.
+	  */
+	def toOrdering[A](implicit natural: Ordering[A]): Ordering[A]
 	
 	
 	// IMPLEMENTED --------------------------
@@ -254,6 +266,10 @@ object Sign
 		case Min => Negative
 		case Max => Positive
 	}
+	def apply(end: End): Sign = end match {
+		case First => Negative
+		case Last => Positive
+	}
 	/**
 	  * @param positiveCondition A condition for returning Positive
 	  * @return Positive if condition was true, Negative otherwise
@@ -272,9 +288,12 @@ object Sign
 		override def isPositive = true
 		override def modifier = 1
 		override def extreme = Max
+		override def end: End = Last
 		
 		override def unary_- = Negative
 		override def self = this
+		
+		override def toOrdering[A](implicit natural: Ordering[A]): Ordering[A] = natural
 		
 		override def compareTo(o: SignOrZero) = o match {
 			case Positive => 0
@@ -292,9 +311,12 @@ object Sign
 		override def isPositive = false
 		override def modifier = -1
 		override def extreme = Min
+		override def end: End = First
 		
 		override def unary_- = Positive
 		override def self = this
+		
+		override def toOrdering[A](implicit natural: Ordering[A]): Ordering[A] = natural.reverse
 		
 		override def compareTo(o: SignOrZero) = o match {
 			case Negative => 0

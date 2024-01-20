@@ -32,6 +32,7 @@
 - **Bounded**
   - Added new method variants: `.enlarged(Double)` and `.shrunk(Double)`
 - **Bounds**
+  - Added `.apply(Direction2D)`
   - Added `.relativize(...)` and `.relativeToAbsolute(...)` methods that perform **Bounds**-based coordinate conversions
 - **Color**
   - Class
@@ -39,6 +40,8 @@
     - Added `.highlightedBy(Double)`
   - Object
     - Added `.weighedAverage(Iterable)`
+- **ColorSet**
+  - Added a new constructor variant: `.apply(Color, Double)`
 - **DimensionalFactory**
   - Added a new `.twice(D)` constructor
 - **Distance** (object)

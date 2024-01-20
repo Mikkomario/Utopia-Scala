@@ -208,6 +208,14 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     // OTHER    --------------------
     
     /**
+      * @param side Targeted side
+      * @return The coordinate of these bounds at that side.
+      *         E.g. if called for Left, returns the left side X coordinate.
+      *         If called for Bottom, returns the bottom Y coordinate.
+      */
+    def apply(side: Direction2D): Double = apply(side.axis)(side.sign.end)
+    
+    /**
       * @param insets Insets to add to these bounds
       * @return A copy of these bounds with specified insets added to the sides
       */

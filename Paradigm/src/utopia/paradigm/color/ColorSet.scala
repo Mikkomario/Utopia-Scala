@@ -41,18 +41,27 @@ object ColorSet
 	// OTHER	---------------------------
 	
 	/**
+	 * @param default  The default color shade
+	 * @param variance Amount of "impact" applied when switching shade to lighter or darker.
+	 *                 Default = 2.0 = 2 standard highlight levels
+	 * @return A color set based on the specified color with standard variance
+	 */
+	def apply(default: Color, variance: Double = 2.0): ColorSet =
+		apply(default, default.lightenedBy(variance), default.darkenedBy(variance))
+	/**
 	  * @param default Default color
 	  * @param light Lighter version of the default color
 	  * @param dark Darker version of the default color
 	  * @return A color set
 	  */
-	def apply(default: Color, light: Color, dark: Color): ColorSet = apply(default, Map(Light -> light, Dark -> dark))
+	def apply(default: Color, light: Color, dark: Color): ColorSet =
+		apply(default, Map[ColorShade, Color](Light -> light, Dark -> dark))
 	
 	/**
 	  * @param color A color
 	  * @return A color set that only uses that single color
 	  */
-	def invariant(color: Color) = apply(color, Map())
+	def invariant(color: Color) = apply(color, Map[ColorShade, Color]())
 	
 	/**
 	  * Converts a set of hexes into a color set

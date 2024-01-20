@@ -101,7 +101,11 @@
 - **Seq** (**CollectionExtensions**)
   - Added `.appendIfDistinct(...)`
 - **Sign**
-  - Added new `*` variant
+  - Object
+    - Added `.apply(End)`
+  - Class
+    - Added `.end` and `.toOrdering`
+    - Added new `*` variant
 - **SpanLike**
   - Added `.withEnd(A, End)`, as well as multiple map end variations
 - **String** (**StringExtensions**)
