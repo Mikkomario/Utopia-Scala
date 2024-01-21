@@ -6,7 +6,7 @@ import utopia.firmament.model.Border
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reach.component.label.empty.EmptyLabel
-import utopia.reach.cursor.DragToResize
+import utopia.reach.cursor.{DragTo, DragToResize}
 import utopia.reach.window.ReachWindow
 
 /**
@@ -28,7 +28,8 @@ object DragToResizeWindowTest extends App
 	window.setToExitOnClose()
 	
 	println(window.content.stackSize)
-	DragToResize.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
+	DragTo.resize.repositioningWindow.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
+	// DragToResize.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
 	
 	start()
 	window.display(centerOnParent = true)
