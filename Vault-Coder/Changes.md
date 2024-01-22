@@ -1,7 +1,7 @@
 # Utopia Vault Coder
 
 ## v1.10.1 (in development)
-Parent module updates
+This update contains some new data types, some bugfixes and some quality-of-life improvements.
 ### Bugfixes
 - Fixed `.toModel` generation involving optional enumeration values
 - Fixed generated Scala type of **DateRange**

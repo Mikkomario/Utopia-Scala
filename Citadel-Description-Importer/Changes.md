@@ -1,6 +1,7 @@
 # Utopia Description Importer - List of changes
 
 ## v1.0.4 (in development)
+Removing deprecated parts of this tool.
 ### Breaking changes
 - Removed support for device models that were deprecated earlier
 

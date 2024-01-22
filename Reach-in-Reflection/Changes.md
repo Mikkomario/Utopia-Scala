@@ -1,6 +1,7 @@
 # Reach in Reflection - List of Changes
 
 ## v1.0.2 (in development)
+Scala version update
 ### Other changes
 - Scala version updated to 2.13.12
 

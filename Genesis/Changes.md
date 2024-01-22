@@ -1,6 +1,8 @@
 # Utopia Genesis - List of Changes
 
 ## v3.5 (in development)
+This update focuses on Image classes. Specifically, Image-cropping was tested and improved and some image-color 
+utility-functions were added.
 ### Breaking changes
 - Added abstract function `.shade` to **ImageLike**
   - Only causes build errors within custom subclasses

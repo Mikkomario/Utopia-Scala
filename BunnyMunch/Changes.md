@@ -1,6 +1,7 @@
 # Utopia BunnyMunch - List of Changes
 
 ## v1.0.4 (in development)
+Scala version updated.
 ### Other changes
 - Scala version updated to 2.13.12
 

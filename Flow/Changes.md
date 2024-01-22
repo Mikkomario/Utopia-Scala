@@ -1,10 +1,16 @@
 # Utopia Flow - List of Changes
 
 ## v2.3 (in development)
+This update contains a very large number of new methods, features and bugfixes. 
+The most major updates concern:
+- **Changing**: Further optimization, especially around cases where changing stops
+- **TimedTask**: Support for cancellation & rescheduling
+- **Matrices**: Major optimization & refactoring
+- **TwoThreadBuffer** & **PrePollingIterator** (both new): Tools for asynchronous iteration
 ### Breaking changes
 - Divided the `operator` package into multiple sub-packages
 - Rewrote large portions of **TimedTask** and **TimedTasks** classes in order to add support for task rescheduling
-- Multiple breaking changes concerning Changing
+- Multiple breaking changes concerning **Changing**
   - The abstract functions `.isChanging` and `.mayStopChanging` were replaced with `.destiny`
   - The abstract function `_addListenerOfPriority(...)` no longer needs to account for the case
   where the item has already stopped from changing, as it will only be called for still-changing items
@@ -32,7 +38,7 @@
 - **PostponingProcess** now properly reacts to wait time change events that occur during the function run
 - `PairingIterator.apply(IterableOnce)` now pre-polls the first item in order to avoid wrong sequencing between 
   `hasNext` and `next()`
-- The following Changing implementations now properly take into account 
+- The following **Changing** implementations now properly take into account 
   the listening condition for the purposes of stopping changing: **LightMergeMirror**, **MergeMirror**
 ### New Features
 - **TimedTask** and **TimedTasks** now support pointer-based task-rescheduling

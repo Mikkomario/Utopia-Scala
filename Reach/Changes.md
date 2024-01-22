@@ -1,7 +1,13 @@
 # Utopia Reach - List of Changes
 
 ## v1.2 (in development)
-Supports **Flow v2.3**
+This update focuses on image-drawing, especially in buttons. 
+Following the changes in **Firmament**, button image effects are applied differently. 
+Also, the generated **ImageAndTextButtons** will now look different because of the insets updates.
+
+Other new features may also be of interest to you: Support for borderless window-resizing & 
+repositioning with **DragTo**, cursors with automatically drawn edges and a **Layers** container for 
+overlapping components (such as inner dialogs (coming later)).
 ### Breaking changes
 - **Image** to **ButtonImageSet** -related effects are now separately added to image button (-like) factories
   - The default effects applied are determined by **ComponentCreationDefaults**

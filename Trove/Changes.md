@@ -1,6 +1,7 @@
 # Utopia Trove - List of Changes
 
 ## v1.1.8 (in development)
+Cleaned up the code a little.
 ### Breaking changes
 - Removed classes that were deprecated at version v1.1 or earlier
 ### Other changes

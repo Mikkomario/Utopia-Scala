@@ -1,7 +1,9 @@
 # Utopia Courier - List of Changes
 
 ## v1.1 (in development)
-Folder-targeting
+A major update for the email-reading side. 
+This update introduces more advanced folder-targeting and email deletion support. 
+Some new fields and data types are also added.
 ### Breaking changes
 - Targeted folder or folders are now specified using a **TargetFolders** instance 
   instead of simply using a folder name, as before
@@ -16,7 +18,6 @@ Folder-targeting
   - This feature breaks use-cases where `new EmailReader(...)` is called directly.
 ### New features
 - It is now possible to target multiple folders when reading email
-- Added support for pointer-based email deletion
 ### New Methods
 - **EmailBuilder**
   - Added `.mapResult(...)`

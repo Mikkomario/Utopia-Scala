@@ -1,6 +1,12 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.5 (in development)
+This update contains some major refactoring in the following classes / concepts:
+- **Rotation**, which was separated into directional and non-directional rotation classes
+- **Insets**, which were partially rewritten and split into multiple traits
+- **Distance**, which received some utility updates, as well as testing
+
+Other updates are mostly new utility functions to existing classes.
 ### Breaking changes
 - Practically rewrote the **Rotation** class
   - The previous **Rotation** implementation is now named **DirectionalRotation**

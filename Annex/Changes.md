@@ -1,7 +1,10 @@
 # Utopia Annex - List of Changes
 
 ## v1.7 (in development)
-Supports **Flow v2.3**
+This update focuses on persisting request handling (i.e. offline support across use-sessions). 
+Specifically, it adds a new type of request: **RequestSeed**, which may be useful in request-chaining across sessions.
+
+Other updates consist mostly on style updates.
 ### Breaking changes
 - **ApiRequest** no longer requires property `persistingModel: Option[Model]`. 
   This is now defined in **Persisting** and **ConsistentlyPersisting**, which you may extend if you want the 
@@ -30,7 +33,7 @@ Supports **Flow v2.3**
   - Added `.isAlive` and `.isDead`
 ### Other changes
 - **PersistingRequestQueue**`.start(...)` is now public instead of protected
-- Schrödinger now uses `.mapUntil(...)` to form its derived pointers
+- **Schrödinger** now uses `.mapUntil(...)` to form its derived pointers
 - Scala version updated to 2.13.12
 
 ## v1.6 - 27.09.2023

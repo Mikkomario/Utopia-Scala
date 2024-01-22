@@ -1,12 +1,13 @@
 # Utopia Access - List of Changes
 
 ## v1.5 (in development)
-Supports **Flow v2.3**
+This update, while quite small in scale, contains a very important bugfix to the **Headers** class. 
+Some functions and classes have also been updated to match the more recent (Flow) style.
 ### Breaking changes
 - **Headers**`.apply(String)` and other header-retrieving functions now return a **String** instead of an **Option**
 - `.isTemporary` and `.doNotRepeat` in **Status** are now of type **UncertainBoolean** instead of **Boolean**
 ### Bugfixes
-- Header-retrieving functions didn't work at all because of a casing issue - fixed
+- **Header**-retrieving functions didn't work at all because of a casing issue - fixed
 ### Other changes
 - Scala version updated to 2.13.12
 

@@ -1,7 +1,10 @@
 # Utopia Terra - list of changes
 
 ## v1.1 (in development)
-TODO: Document Rotation changes, WorldPointOps changes etc.
+As expected, the first post-release update contains major refactoring, as well as some bugfixes. 
+Expect heavy refactoring if you were using v1.0 before. 
+Other than that, you might enjoy the new interface, as well as the new **GridArea** **WorldView**, which 
+is suitable for small-scale GPS-tracking (e.g. tracking positions around a city or something like that).
 ### Breaking changes
 - Greatly refactored most of the model classes
   - Renamed **CirclePoint** to **AerialCirclePoint**

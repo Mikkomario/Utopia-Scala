@@ -5,8 +5,6 @@ Supports **Flow v2.3**
 
 ## v1.9.1 - 27.09.2023
 Rebuild due to parent module changes.
-
-## v1.9.1 (in development)
 ### Breaking changes
 - Removed deprecated functions
 ### Other changes

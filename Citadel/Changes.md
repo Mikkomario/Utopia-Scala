@@ -1,6 +1,7 @@
 # Utopia Disciple - List of changes
 
 ## v2.1.6 (in development)
+Scala version update & cleanup.
 ### Breaking changes
 - Removed all deprecated classes and functions
 ### Other changes

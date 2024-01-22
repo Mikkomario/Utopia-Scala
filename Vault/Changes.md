@@ -1,7 +1,7 @@
 # Utopia Vault - List of Changes
 
 ## v1.18 (in development)
-Supports **Flow v2.3**
+This update focuses on improving grouped (i.e. multi-joined) result parsing.
 ### Breaking changes
 - Renamed **View**`.globalCondition` to `.accessCondition`
 - Removed all classes and functions that were deprecated at v1.14 or earlier

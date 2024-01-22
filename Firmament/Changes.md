@@ -1,7 +1,8 @@
 # Utopia Firmament - List of Changes
 
 ## v1.2 (in development)
-Supports **Flow v2.3**
+Redesigned & rewrote how image effects are applied to buttons. 
+Also refactored **StackInsets** a lot. Added a new version of image-caching as well.
 ### Breaking changes
 - Modified **StackInsets** class hierarchy, which may also affect some method calls  
 ### Deprecations
@@ -16,7 +17,7 @@ Supports **Flow v2.3**
 - Renamed `.withDefaultPriority` to `.normalPriority` in **StackLength**
 - Deprecated `Border.square(Double, Color)`, as this was a duplicate of `.symmetric(Double, Color)`
 ### Bugfixes
-- Fixed certain issues with cropped image drawing due to rounding errors
+- Fixed certain issues with image drawing that were due to rounding errors
 ### New features
 - **ButtonImageSet** now supports combined image effects
   - This includes a new effect called **ChangeSize**, which modifies image/icon size based on button state
