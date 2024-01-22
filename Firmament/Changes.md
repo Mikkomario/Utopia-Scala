@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.2 (in development)
+## v1.2 - 22.01.2024
 Redesigned & rewrote how image effects are applied to buttons. 
 Also refactored **StackInsets** a lot. Added a new version of image-caching as well.
 ### Breaking changes

@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v2.1.6 (in development)
+## v2.1.6 - 22.01.2024
 Supports **Flow v2.3**, **Vault v1.18** and **Annex v1.7**
 ### Other changes
 - Scala version updated to 2.13.12

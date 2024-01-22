@@ -1,6 +1,6 @@
 # Utopia Terra - list of changes
 
-## v1.1 (in development)
+## v1.1 - 22.01.2024
 As expected, the first post-release update contains major refactoring, as well as some bugfixes. 
 Expect heavy refactoring if you were using v1.0 before. 
 Other than that, you might enjoy the new interface, as well as the new **GridArea** **WorldView**, which 

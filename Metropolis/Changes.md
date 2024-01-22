@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.2.2 (in development)
+## v2.2.2 - 22.01.2024
 Supports **Flow v2.3**
 ### Breaking changes
 - Removed all deprecated classes and functions

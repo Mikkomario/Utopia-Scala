@@ -1,6 +1,6 @@
 # Utopia Scribe Core - list of changes
 
-## v1.0.1 (in development)
+## v1.0.1 - 22.01.2024
 This update focuses on enabling you to print error data to console as well as to the default target (server database).
 ### New features
 - Added **ConsoleScribe** class that writes detailed issue data to the console, 

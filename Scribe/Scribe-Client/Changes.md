@@ -1,6 +1,6 @@
 # Utopia Scribe Client - list of changes
 
-## v1.0.1 (in development)
+## v1.0.1 - 22.01.2024
 Supports **Annex v1.7**
 ### Other changes
 - Scala version updated to 2.13.12

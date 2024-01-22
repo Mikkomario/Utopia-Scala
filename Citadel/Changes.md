@@ -1,6 +1,6 @@
 # Utopia Disciple - List of changes
 
-## v2.1.6 (in development)
+## v2.1.6 - 22.01.2024
 Scala version update & cleanup.
 ### Breaking changes
 - Removed all deprecated classes and functions

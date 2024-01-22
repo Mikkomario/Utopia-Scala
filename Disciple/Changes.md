@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.6.3 (in development)
+## v1.6.3 - 22.01.2024
 Supports **Flow v2.3**
 ### Breaking changes
 - Removed functions that were deprecated at v1.3

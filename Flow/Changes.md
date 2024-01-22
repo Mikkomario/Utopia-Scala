@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.3 (in development)
+## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 
 The most major updates concern:
 - **Changing**: Further optimization, especially around cases where changing stops

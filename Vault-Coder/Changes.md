@@ -1,6 +1,6 @@
 # Utopia Vault Coder
 
-## v1.10.1 (in development)
+## v1.10.1 - 22.01.2024
 This update contains some new data types, some bugfixes and some quality-of-life improvements.
 ### Bugfixes
 - Fixed `.toModel` generation involving optional enumeration values

@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.5 (in development)
+## v1.5 - 22.01.2024
 This update contains some major refactoring in the following classes / concepts:
 - **Rotation**, which was separated into directional and non-directional rotation classes
 - **Insets**, which were partially rewritten and split into multiple traits

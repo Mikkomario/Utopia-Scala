@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.7 (in development)
+## v1.7 - 22.01.2024
 This update focuses on persisting request handling (i.e. offline support across use-sessions). 
 Specifically, it adds a new type of request: **RequestSeed**, which may be useful in request-chaining across sessions.
 

@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.18 (in development)
+## v1.18 - 22.01.2024
 This update focuses on improving grouped (i.e. multi-joined) result parsing.
 ### Breaking changes
 - Renamed **View**`.globalCondition` to `.accessCondition`

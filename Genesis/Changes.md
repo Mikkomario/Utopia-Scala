@@ -1,6 +1,6 @@
 # Utopia Genesis - List of Changes
 
-## v3.5 (in development)
+## v3.5 - 22.01.2024
 This update focuses on Image classes. Specifically, Image-cropping was tested and improved and some image-color 
 utility-functions were added.
 ### Breaking changes

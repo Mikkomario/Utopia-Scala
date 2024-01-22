@@ -1,6 +1,6 @@
 # Utopia Courier - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 22.01.2024
 A major update for the email-reading side. 
 This update introduces more advanced folder-targeting and email deletion support. 
 Some new fields and data types are also added.
