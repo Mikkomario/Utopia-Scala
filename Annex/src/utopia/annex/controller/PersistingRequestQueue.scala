@@ -107,7 +107,7 @@ trait PersistingRequestQueue extends RequestQueue
 	  * @return A list of errors that occurred while parsing the requests
 	  */
 	def start(handlers: Iterable[PersistedRequestHandler]) = {
-		val persistedModels = requestContainer.current
+		val persistedModels = requestContainer.pointer.popAll()
 		val errors = persistedModels.flatMap { requestModel =>
 			NotEmpty(handlers.caching.filter { _.shouldHandle(requestModel) }) match {
 				case Some(handlers) =>
@@ -115,9 +115,7 @@ trait PersistingRequestQueue extends RequestQueue
 						.map { r => h -> r } } match {
 						case Success((handler, request)) =>
 							super.push(request).onComplete { result =>
-								// Once result is received, removes the persisted request and lets the handler
-								// handle the response
-								removePersistedRequest(requestModel)
+								// Once result is received, lets the handler handle the response
 								result.foreach { handler.handle(requestModel, request, _) }
 							}
 							None
