@@ -40,8 +40,7 @@ object GridArea extends VectorDistanceConversion
   * @param origin The location of the "origin" of this grid area, matching the (0,0) vector coordinate.
   *               Please note that locations far from the origin will be more inaccurate.
   */
-// TODO: Add publicly accessible origin property
-class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
+class GridArea(val origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
 {
 	// ATTRIBUTES   ------------------
 	
@@ -91,8 +90,8 @@ class GridArea(origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfac
 		val northSouthPosition = vectorLengthToLatitudeRotation(vector.x)
 		// Converts vector length (Y) to latitude angular travel first
 		// and then corrects for the difference in radii between the latitude and longitude circles
-		val simulatedLatitudeRotationOfX = vectorLengthToLatitudeRotation(vector.y)
-		val eastWestArcLength = simulatedLatitudeRotationOfX.arcLengthOver(globeVectorRadius)
+		val simulatedLatitudeRotationOfY = vectorLengthToLatitudeRotation(vector.y)
+		val eastWestArcLength = simulatedLatitudeRotationOfY.arcLengthOver(globeVectorRadius)
 		val eastWestPosition = EastWest.rotation.forArcLength(eastWestArcLength, eastWestRadiusAtOrigin)
 		
 		// Converts from relative-to-origin space to relative to (0,0) lat long -space

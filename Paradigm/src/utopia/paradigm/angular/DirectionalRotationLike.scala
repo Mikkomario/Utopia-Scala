@@ -93,12 +93,7 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 	
 	def *(modifier: Double) =
 		if (modifier >= 0) copy(absolute * modifier) else copy(absolute * (-1 * modifier), reverseDirection = true)
-	def +(other: C) = {
-		if (direction == other.direction)
-			copy(absolute + other.absolute)
-		else
-			this - other.absolute
-	}
+	def +(other: C) = this + other.unidirectional
 	
 	
 	// OTHER	--------------------------

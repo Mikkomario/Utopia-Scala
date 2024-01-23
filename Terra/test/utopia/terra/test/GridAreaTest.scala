@@ -54,7 +54,7 @@ object GridAreaTest extends App
 		println(s"1 degree latitude S = ${ oneDegreeLatitudeSouth.vector }")
 		println(s"1 degree longitude E = ${ oneDegreeLongEast.vector }")
 		
-		assert(origin.latLong == LatLong.origin)
+		assert(origin.latLong == LatLong.origin, s"${origin.latLong} vs ${LatLong.origin}")
 		assert(oneDegreeLatitudeNorth.vector ~== Vector2D(-unit))
 		assert(oneDegreeLatitudeSouth.vector ~== Vector2D(unit))
 	}
@@ -70,6 +70,14 @@ object GridAreaTest extends App
 		
 		println(s"Aerial Lahti point: $aerialLahti")
 		// println(s"Vector distance between Lahti and Helsinki = ${lahti - helsinki}")
+		
+		// Testing long-distance vector conversion
+		/*
+		println("\nTesting long-distance conversion")
+		val mitadDeMundo = LatLong.degrees(0.008413412505267285, -78.45801858003267)
+		val mitadVector = grid.latLongToVector(mitadDeMundo)
+		println(s"$mitadDeMundo => $mitadVector => ${ grid.vectorToLatLong(mitadVector) }")
+		 */
 	}
 	
 	val cloncurryLatLong = LatLong.degrees(-20.7110, 140.5050)
