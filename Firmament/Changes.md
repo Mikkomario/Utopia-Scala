@@ -1,5 +1,11 @@
 # Utopia Firmament - List of Changes
 
+## v1.2.1 (in development)
+### Other changes
+- GUI element highlighting is now less pronounced after the first stage.
+  - E.g. When button is pressed with a mouse, the pressed stage more resembles the hover stage,
+    while still being noticeably different
+
 ## v1.2 - 22.01.2024
 Redesigned & rewrote how image effects are applied to buttons. 
 Also refactored **StackInsets** a lot. Added a new version of image-caching as well.

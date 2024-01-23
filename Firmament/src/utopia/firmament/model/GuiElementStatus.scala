@@ -39,6 +39,23 @@ object GuiElementStatus
   */
 case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[GuiElementStatus]
 {
+	// ATTRIBUTES   -------------------
+	
+	/**
+	  * @return The intensity of this status, where 0 is no effect.
+	  *         May be positive or negative.
+	  */
+	lazy val intensity = {
+		val default = implicitStates.iterator.map { _.effect.modifier }.sum
+		if (default > 1.0)
+			1.0 + (default - 1.0) * 0.5
+		else if (default < -1.0)
+			-1.0 - (default + 1.0) * 0.5
+		else
+			default
+	}
+	
+	
 	// COMPUTED -----------------------
 	
 	/**
@@ -47,21 +64,9 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	def implicitStates = states ++ states.flatMap { _.impliedStates }
 	
 	/**
-	  * @return The intensity of this status, where 0 is no effect.
-	  *         May be positive or negative.
-	  */
-	def intensity = implicitStates.iterator.map { _.effect.modifier }.sum
-	
-	/**
 	  * @return Hover effect alpha value to use with this status
 	  */
-	def hoverAlpha = {
-		val i = intensity
-		if (i > 0)
-			0.2 + (i - 1) * 0.1
-		else
-			0
-	}
+	def hoverAlpha = if (intensity > 0) intensity * 0.2 else 0
 	
 	
 	// IMPLEMENTED  -------------------

@@ -1,5 +1,10 @@
 # Utopia Flow - List of Changes
 
+## v2.3.1 (in development)
+### New methods
+- **ResettableFlag**
+  - Added `.switch()`
+
 ## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 
 The most major updates concern:

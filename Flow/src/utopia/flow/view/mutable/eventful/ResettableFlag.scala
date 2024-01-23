@@ -87,4 +87,13 @@ trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
 	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	  * Reverses the current value of this flag
+	  * @return The new value in this flag
+	  */
+	def switch() = updateAndGet { !_ }
 }

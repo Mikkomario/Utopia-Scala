@@ -1,5 +1,7 @@
 # Utopia Reach - List of Changes
 
+## v1.2.1 (in development)
+
 ## v1.2 - 22.01.2024
 This update focuses on image-drawing, especially in buttons. 
 Following the changes in **Firmament**, button image effects are applied differently. 
