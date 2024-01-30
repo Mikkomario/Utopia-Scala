@@ -1,6 +1,7 @@
 package utopia.genesis.graphics
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.ScopeUsable
 import utopia.paradigm.color.Color
 
 import java.awt.{BasicStroke, Graphics2D, Paint}
@@ -45,6 +46,7 @@ object StrokeSettings
   * @since 29.1.2022, v2.6.3
   */
 case class StrokeSettings(_color: Either[java.awt.Paint, Color], strokeWidth: Double, isRounded: Boolean)
+	extends ScopeUsable[StrokeSettings]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -90,6 +92,16 @@ case class StrokeSettings(_color: Either[java.awt.Paint, Color], strokeWidth: Do
 	  * @return A copy of these settings where strokes are sharp
 	  */
 	def sharp = if (isRounded) copy(isRounded = false) else this
+	
+	/**
+	  * @return A set of draw-settings that wraps this set of StrokeSettings
+	  */
+	def toDrawSettings = DrawSettings.strokeToDraw(this)
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def self: StrokeSettings = this
 	
 	
 	// OTHER    -------------------------------

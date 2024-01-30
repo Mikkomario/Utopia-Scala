@@ -894,6 +894,7 @@ object FileExtensions
 		  * @param append Whether the lines should be appended to the end of the existing data (true) or whether
 		  *               to overwrite the current contents of the file (false). Default = false.
 		  * @param codec  Encoding used (implicit)
+		  * @return This path. Failure if writing failed.
 		  */
 		def writeLines(lines: IterableOnce[String], append: Boolean = false)(implicit codec: Codec) = {
 			Try {
@@ -906,31 +907,30 @@ object FileExtensions
 								}
 							}
 					}
-			}
+			}.map { _ => p  }
 		}
 		/**
 		  * Writes into this file with a function. An output stream is opened for the duration of the function.
 		  * @param writer A writer function that uses an output stream (may throw)
-		  * @return This path. Failure if writing function threw or stream couldn't be opened
+		  * @return Writer function result. Failure if writing function threw or stream couldn't be opened
 		  */
-		def writeWith[U](writer: BufferedOutputStream => U) = _writeWith(append = false)(writer)
+		def writeWith[A](writer: BufferedOutputStream => A) = _writeWith(append = false)(writer)
 		/**
 		  * Writes a file using a function.
 		  * A PrintWriter instance is acquired for the duration of the function execution.
 		  * @param writer A function that uses a PrintWriter and then returns
 		  * @param codec  Implicit codec used when writing the file
-		  * @tparam U Arbitrary result type
-		  * @return This path. Failure if the writing process, or the function, threw an exception.
+		  * @tparam A Writer function result type
+		  * @return Writer function result. Failure if the writing process, or the function, threw an exception.
 		  */
-		def writeUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+		def writeUsing[A](writer: PrintWriter => A)(implicit codec: Codec) =
 			_writeUsing(append = false)(writer)
-		def _writeUsing[U](append: Boolean)(writer: PrintWriter => U)(implicit codec: Codec) =
+		def _writeUsing[A](append: Boolean)(writer: PrintWriter => A)(implicit codec: Codec) =
 			_writeWith(append) { stream =>
 				stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
 			}
-		private def _writeWith[U](append: Boolean)(writer: BufferedOutputStream => U) =
+		private def _writeWith[A](append: Boolean)(writer: BufferedOutputStream => A) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
-				.map { _ => p }
 		/**
 		  * Writes into this file by reading data from a reader.
 		  * @param reader Reader that supplies the data
@@ -1014,54 +1014,57 @@ object FileExtensions
 		  * @param copyPath Path of the edited copy
 		  * @param f        A function that uses the specified file editor to perform the edits
 		  * @param codec    Implicit codec to use when writing the new file
-		  * @tparam U Arbitrary function result type
-		  * @return Edited copy path. Failure if this path was a directory or didn't exist,
+		  * @tparam A Writer function result type
+		  * @return Write function result. Failure if this path was a directory or didn't exist,
 		  *         or if the writing or reading failed.
 		  */
-		def editToCopy[U](copyPath: Path)(f: FileEditor => U)(implicit codec: Codec) = {
+		def editToCopy[A](copyPath: Path)(f: FileEditor => A)(implicit codec: Codec) = {
 			// Makes sure this is an existing regular file
 			if (isDirectory)
 				Failure(new IOException("Directories can't be edited using .editToCopy(...)"))
 			else if (notExists)
 				Failure(new FileNotFoundException(s"$p doesn't exists and therefore can't be edited"))
 			else
-			// Writes into the new file using an editor and the specified controlling function
+				// Writes into the new file using an editor and the specified controlling function
 				copyPath.writeUsing { writer =>
 					IterateLines.fromPath(p) { linesIterator =>
 						val editor = new FileEditor(linesIterator.pollable, writer)
-						f(editor)
+						val result = f(editor)
 						// Remaining non-edited lines are copied as is
 						editor.flush()
+						result
 					}
-				}
+				}.flatten
 		}
 		/**
 		  * Edits this file, saving the edited copy as a separate file in the same directory
 		  * @param copyName Name of the edited copy file (extension isn't required)
 		  * @param f        A function that uses the specified file editor to perform the edits
 		  * @param codec    Implicit codec to use when writing the new file
-		  * @tparam U Arbitrary function result type
-		  * @return Edited copy path. Failure if this path was a directory or didn't exist,
+		  * @tparam A Arbitrary function result type
+		  * @return Writer function result type. Failure if this path was a directory or didn't exist,
 		  *         or if the writing or reading failed.
 		  */
-		def editToCopy[U](copyName: String)(f: FileEditor => U)(implicit codec: Codec): Try[Path] =
+		def editToCopy[A](copyName: String)(f: FileEditor => A)(implicit codec: Codec): Try[A] =
 			editToCopy(withFileName(copyName))(f)
 		/**
 		  * Edits the contents of this file. The edits actualize at the end of this method call.
 		  * @param f     A function that uses a file editor to make the edits
 		  * @param codec Implicit codec used when writing the new version
-		  * @tparam U Arbitrary function result type
-		  * @return This path. Failure if this file was not editable (e.g. non-existing or a directory) or if
+		  * @tparam A Writer function result type
+		  * @return Writer function result.
+		  *         Failure if this file was not editable (e.g. non-existing or a directory) or if
 		  *         reading, writing, or replacing failed
 		  */
-		def edit[U](f: FileEditor => U)(implicit codec: Codec) = {
+		def edit[A](f: FileEditor => A)(implicit codec: Codec) = {
 			// Finds a copy name that hasn't been taken yet
 			val (fileNamePart, extensionPart) = fileName.splitAtLast(".").toTuple
 			// Writes to copy by editing the original
-			editToCopy(withFileName(s"$fileNamePart-temp.$extensionPart").unique)(f)
-				.flatMap { copyPath =>
+			val copyPath = withFileName(s"$fileNamePart-temp.$extensionPart").unique
+			editToCopy(copyPath)(f)
+				.flatMap { result =>
 					// Replaces the original with the copy
-					copyPath.rename(fileName, allowOverwrite = true)
+					copyPath.rename(fileName, allowOverwrite = true).map { _ => result }
 				}
 		}
 		

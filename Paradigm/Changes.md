@@ -4,6 +4,11 @@
 ### Bugfixes
 - Fixed **DirectionalRotationLike** `+(C)` implementation, which would previously combine opposite rotations in cases 
   where the first rotation was negative
+### New methods
+- **Bounds** (object)
+  - Added `.aroundPoints(IterableOnce[HasDoubleDimensions])`
+- **Size** (object)
+  - Added `.fullHd`
 
 ## v1.5 - 22.01.2024
 This update contains some major refactoring in the following classes / concepts:

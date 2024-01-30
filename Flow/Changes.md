@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
-## v2.3.1 (in development)
+## v2.4 (in development)
+### Breaking changes
+- The write functions in **FileExtensions**, which accept a function, now return the return value of that 
+  function, and no longer the path itself.
 ### New methods
 - **ResettableFlag**
   - Added `.switch()`

@@ -1,20 +1,18 @@
 package utopia.nexus.http
 
-import scala.language.postfixOps
 import utopia.access.http.ContentCategory._
-import utopia.flow.parse.AutoClose._
-import utopia.flow.parse.file.FileExtensions._
+import utopia.access.http.{ContentType, Headers}
 import utopia.flow.collection.CollectionExtensions._
-
-import java.io.{BufferedReader, File, FileOutputStream, OutputStream}
-import utopia.access.http.ContentType
-import utopia.access.http.Headers
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Model
-
-import scala.util.{Success, Try}
-import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.XmlReader
+
+import java.io.{BufferedReader, OutputStream}
+import scala.language.postfixOps
+import scala.util.{Success, Try}
 
 /**
 * This class represents a body send along with a request. These bodies can only be read once.
@@ -75,17 +73,16 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
     def bufferedXml = buffered { XmlReader.parseWith(_) }
     
     /**
-     * Writes the contents of this body into an output stream. Best performance is
-     * achieved if the output stream is buffered.
+     * Writes the contents of this body into an output stream.
+      * Best performance is achieved when the output stream is buffered.
      */
-    def writeTo(output: OutputStream) =
-    {
+    def writeTo(output: OutputStream) = {
         // See: https://stackoverflow.com/questions/6927873/
         // how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
-          reader.tryConsume(r => Iterator
-                  .continually (r.read)
-                  .takeWhile (-1 !=)
-                  .foreach (output.write))
+        reader.tryConsume(r => Iterator
+            .continually (r.read)
+            .takeWhile (-1 !=)
+            .foreach (output.write))
     }
     
     /**
@@ -93,5 +90,6 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
      * @param path Path where to write the stream contents
      * @return Provided path. Failure if writing failed.
      */
-    def writeTo(path: java.nio.file.Path): Try[java.nio.file.Path] = path.writeWith { stream => writeTo(stream) }
+    def writeTo(path: java.nio.file.Path): Try[java.nio.file.Path] =
+        path.writeWith { stream => writeTo(stream) }.map { _ => path }
 }

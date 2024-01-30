@@ -1,5 +1,12 @@
 # Utopia Genesis - List of Changes
 
+## v3.5.1 (in development)
+### New methods
+- **StrokeSettings**
+  - Added `.toDrawSettings`
+### Other changes
+- **StrokeSettings** now extends **ScopeUsable**
+
 ## v3.5 - 22.01.2024
 This update focuses on Image classes. Specifically, Image-cropping was tested and improved and some image-color 
 utility-functions were added.

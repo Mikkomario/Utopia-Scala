@@ -7,8 +7,6 @@ import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.sign.SignedOrZero
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.SizeType
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -28,6 +26,11 @@ object Size extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size]
      * A zero size
      */
     override val zero = Size(0, 0)
+    
+    /**
+      * Size that matches 1080p, or 1920 x 1080 pixels
+      */
+    lazy val fullHd = apply(1920, 1080)
     
     
     // IMPLEMENTED  --------------------------

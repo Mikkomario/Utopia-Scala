@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4.bounds
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -23,7 +24,7 @@ import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.vector.NumericVectorFactory
+import utopia.paradigm.shape.template.vector.{DoubleVector, NumericVectorFactory}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, HasDimensions}
 
 import java.awt.geom.RoundRectangle2D
@@ -95,7 +96,23 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
             between(topLeft, bottomRight)
         }
     }
-    
+    /**
+      * @param points A collection of 2D points
+      * @return A set of bounds that just covers each one of those points.
+      *         If the specified set of points was empty, returns Bounds.zero.
+      */
+    def aroundPoints(points: IterableOnce[HasDoubleDimensions]) = {
+        val iter = points.iterator
+        iter.nextOption() match {
+            case Some(first) =>
+                val minMax = iter.foldLeft(Pair.twice(DoubleVector.from(first))) { (minMax, next) =>
+                    Pair(minMax.first.topLeft(next), minMax.second.bottomRight(next))
+                }
+                fromFunction2D { axis => NumericSpan(minMax.map { _(axis) }) }
+            case None => Bounds.zero
+        }
+    }
+        
     /**
      * Creates a rectangle around line so that the line becomes one of the rectangle's diagonals
      */
