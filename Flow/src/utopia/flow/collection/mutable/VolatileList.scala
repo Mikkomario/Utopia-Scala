@@ -18,7 +18,7 @@ object VolatileList
      */
     def apply[T](item: T) = new VolatileList[T](Vector(item))
     
-	def apply[T](items: IterableOnce[T]) = new VolatileList[T](items.iterator.to(Vector))
+	def apply[T](items: IterableOnce[T]) = new VolatileList[T](Vector.from(items))
 	
     /**
      * Creates a new list with multiple items

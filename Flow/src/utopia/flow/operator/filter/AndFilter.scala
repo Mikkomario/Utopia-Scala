@@ -1,4 +1,4 @@
-package utopia.inception.util
+package utopia.flow.operator.filter
 
 object AndFilter
 {
@@ -17,7 +17,7 @@ object AndFilter
  * @author Mikko Hilpinen
  * @since 21.1.2017
  */
-class AndFilter[-T](filters: Iterable[Filter[T]]) extends Filter[T]
+case class AndFilter[-T](filters: Iterable[Filter[T]]) extends Filter[T]
 {
 	override def apply(item: T) = filters.forall { _(item) }
 }

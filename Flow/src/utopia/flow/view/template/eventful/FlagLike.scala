@@ -12,7 +12,11 @@ object FlagLike
 	// Wraps any Changing[Boolean] into a more specific FlagLike
 	implicit def wrap(c: Changing[Boolean]): FlagLike = c match {
 		case f: FlagLike => f
-		case o => new FlagLikeWrapper(o)
+		case o =>
+			o.fixedValue match {
+				case Some(fixed) => if (fixed) AlwaysTrue else AlwaysFalse
+				case None => new FlagLikeWrapper(o)
+			}
 	}
 	
 	

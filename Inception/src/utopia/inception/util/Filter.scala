@@ -4,6 +4,8 @@ import scala.language.implicitConversions
 
 object Filter
 {
+	// IMPLICIT ----------------------
+	
 	implicit def apply[A](f: A => Boolean): Filter[A] = (item: A) => f(item)
 	
 	def functionAsFilter[T](f: T => Boolean): Filter[T] = (item: T) => f(item)
@@ -33,21 +35,21 @@ trait Filter[-T]
 	/**
 	  * @return A negation of this filter
 	  */
-	def unary_! = NotFilter(this)
+	def unary_! : Filter[T] = NotFilter(this)
 	
 	/**
 	  * @param other Another filter
 	  * @tparam B Filtered item type
 	  * @return A filter that accepts an item if any of these does
 	  */
-	def ||[B <: T](other: Filter[B]) = OrFilter(this, other)
+	def ||[B <: T](other: Filter[B]): Filter[B] = OrFilter(this, other)
 	
 	/**
 	  * @param other Another filter
 	  * @tparam B Filtered item type
 	  * @return A filter that accepts an item if both of these do
 	  */
-	def &&[B <: T](other: Filter[B]) = AndFilter(this, other)
+	def &&[B <: T](other: Filter[B]): Filter[B] = AndFilter(this, other)
 	
 	
 	// OTHER	-------------------

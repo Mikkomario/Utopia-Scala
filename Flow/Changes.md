@@ -7,6 +7,9 @@
 ### New methods
 - **ResettableFlag**
   - Added `.switch()`
+### Other changes
+- Minor optimization to **FlagLike** -wrapping
+- Minor optimization to **VolatileList** -constructing
 
 ## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 

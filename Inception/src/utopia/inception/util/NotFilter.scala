@@ -17,7 +17,9 @@ object NotFilter
   * @author Mikko Hilpinen
   * @since 5.4.2019, v2+
   */
-class NotFilter[-T](val original: Filter[T]) extends Filter[T]
+class NotFilter[-T](original: Filter[T]) extends Filter[T]
 {
 	override def apply(item: T) = !original(item)
+	
+	override def unary_! = original
 }

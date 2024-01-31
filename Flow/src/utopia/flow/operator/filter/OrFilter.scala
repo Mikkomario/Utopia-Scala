@@ -1,4 +1,4 @@
-package utopia.inception.util
+package utopia.flow.operator.filter
 
 object OrFilter
 {
@@ -18,7 +18,7 @@ object OrFilter
  * @author Mikko Hilpinen
  * @since 17.10.2016
  */
-class OrFilter[-T](filters: Iterable[Filter[T]]) extends Filter[T]
+case class OrFilter[-T](filters: Iterable[Filter[T]]) extends Filter[T]
 {
 	override def apply(item: T) = filters.exists { _(item) }
 }
