@@ -62,39 +62,41 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	}
 	
 	/**
-	  * @param headers A set of indexed headers
-	  * @return Whether this line specifies the header names at those locations
+	  * @param headers A set of headers
+	  * @return Whether all of those headers can be found from this line (as cell values)
 	  */
-	def matchesHeaders(headers: Headers) = headers.keyToIndex
-		.forall { case (header, index) => apply(index).getString ~== header }
+	def listsHeaders(headers: UnallocatedHeaders) = headers.areFoundFrom(cells.map { _.value.getString })
 	/**
-	  * @param headerNames A set of header names
-	  * @return Whether all of those header names can be found from this line (as cell values)
+	  * @param headers A set of already located headers
+	  * @return Whether this line matches those headers (i.e. lists all the same keys in some form at the same indices)
 	  */
-	def listsHeaders(headerNames: Iterable[String]) = {
-		val listedNames = cells.map { _.value.getString }
-		headerNames.forall { header => listedNames.exists { _ ~== header } }
+	def matchesHeaders(headers: Headers) = headers.keyToIndex.forall { case (header, index) =>
+		apply(index).string.forall { value =>
+			(value ~== header) || headers.alternativeKeys.get(value.toLowerCase).exists { _ ~== header }
+		}
 	}
+	
 	/**
 	  * Searches for the specified headers on this line and locates their cell-indices.
 	  * Unlike [[completeHeaders()]], this function only reads / matches the specified headers.
-	  * @param headerNames Names of the headers to include in the result.
-	  *                    Expects a complete set of used header names.
+	  * @param headers Headers to include in the result.
+	  *                Expects a complete set of used header names.
 	  * @return Headers where each of the specified name matches a cell index.
 	  *         None if this line didn't contain all of the specified headers.
 	  */
-	def locateHeaders(headerNames: Iterable[String]) = {
+	def locateHeaders(headers: UnallocatedHeaders) = {
 		val builder = new VectorBuilder[(String, Int)]()
 		val potentialHeaders = cells.map { c => c.value.getString -> c.index(direction) }
-		val isApplicable = headerNames.forall { header =>
-			potentialHeaders.find { _._1 ~== header } match {
+		// Each key must be found from the specified headers. Otherwise the process terminates.
+		val isApplicable = headers.headers.forall { case (header, altForms) =>
+			potentialHeaders.find { case (key, _) => (key ~== header) || altForms.exists { _ ~== key } } match {
 				case Some((_, index)) =>
 					builder += (header -> index)
 					true
 				case None => false
 			}
 		}
-		if (isApplicable) Some(Headers(builder.result().toMap)) else None
+		if (isApplicable) Some(Headers(builder.result().toMap, headers.secondaryToPrimary)) else None
 	}
 	/**
 	  * Completes, if possible, a partial set of headers to match the cell values in this row
@@ -102,14 +104,20 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	  * @return Complete set of headers from this line.
 	  *         None if this line didn't contain all of the specified headers.
 	  */
-	// TODO: Consider adding support for PropertyDeclaration in order to support alternative header names
-	def completeHeaders(partialHeaders: Iterable[String]) = {
+	def completeHeaders(partialHeaders: UnallocatedHeaders) = {
 		val potentialHeaders = cells.map { c => c.value.getString -> c.index(direction) }
-		// All specified headers must be found
-		val isComplete = partialHeaders.forall { header => potentialHeaders.exists { _._1 ~== header } }
-		// If the specified headers were found, completes the other headers
-		if (isComplete)
-			Some(Headers(potentialHeaders.toMap))
+		val listedValues = potentialHeaders.map { _._1 }
+		
+		// Case: This is the header row => Forms the complete headers
+		if (partialHeaders.areFoundFrom(listedValues)) {
+			// Finds the primary form and possible alternatives for each listed key
+			val (headers, alternatives) = potentialHeaders.splitMap { case (key, index) =>
+				val (header, alternatives) = partialHeaders(key)
+				(header -> index) -> alternatives.map { _.toLowerCase -> header }
+			}
+			Some(Headers(headers.toMap, alternatives.flatten.toMap))
+		}
+		// Case: This is not the header row
 		else
 			None
 	}

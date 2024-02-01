@@ -9,6 +9,7 @@ When it comes to Excel-parsing, here are the main features:
 - Access specific spreadsheets without fully knowing their index, or even their name
 - Automatically identify the header row
 - Automatically convert rows into Models that support soft typing
+- Support for alternative header names (which are automatically resolved)
 
 ## Implementation hints
 Currently supported file types are **.xls** and **.xlsx**

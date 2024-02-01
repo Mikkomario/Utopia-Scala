@@ -109,7 +109,7 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	}
 	/**
 	  * Iterates the rows in this spread-sheet as converted to models.
-	  * @param headers Names of the headers, which are used as model property names.
+	  * @param headers Headers, which are used as model property names.
 	  *                Expects a full list. I.e. other headers won't be read / accessible.
 	  * @param preLoadModels Whether all cell values should be read immediately.
 	  *                If false (default), the resulting model may only be used while the cells are available
@@ -119,11 +119,11 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	  *         Rows before and including the actual header row are not included in this iterator.
 	  * @see [[modelsIteratorCompletingHeaders]]
 	  */
-	def modelsIteratorLocatingHeaders(headers: Iterable[String], preLoadModels: Boolean = false) =
+	def modelsIteratorLocatingHeaders(headers: UnallocatedHeaders, preLoadModels: Boolean = false) =
 		_modelsIterator(preLoadModels) { _.locateHeaders(headers) }
 	/**
 	  * Iterates the rows in this spread-sheet as converted to models.
-	  * @param partialHeaders Names of the headers, which must appear on the header row.
+	  * @param partialHeaders Headers which must appear on the header row.
 	  *                       Other values listed on that row will be converted to headers, also.
 	  *                       (I.e. this list doesn't need to include all the used headers,
 	  *                       just the ones used for locating the header row).
@@ -138,7 +138,7 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	  * @return An iterator that yields models, each parsed from a row by mapping its values to the specified headers.
 	  *         Rows before and including the actual header row are not included in this iterator.
 	  */
-	def modelsIteratorCompletingHeaders(partialHeaders: Iterable[String], preLoadModels: Boolean = false) =
+	def modelsIteratorCompletingHeaders(partialHeaders: UnallocatedHeaders, preLoadModels: Boolean = false) =
 		_modelsIterator(preLoadModels) { _.completeHeaders(partialHeaders) }
 	
 	private def _modelsIterator(preLoadModels: Boolean = false)(rowToHeaders: LinearCellGroup => Option[Headers]) =

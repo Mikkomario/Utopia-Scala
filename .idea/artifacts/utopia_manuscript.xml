@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-manuscript">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_manuscript</output-path>
+    <root id="archive" name="utopia-manuscript.jar">
+      <element id="module-output" name="Manuscript" />
+    </root>
+  </artifact>
+</component>
