@@ -47,7 +47,7 @@ object ClassReader
 		// Parses custom data types (must succeed)
 		root("data_types", "types").getModel.properties.tryMap { c =>
 			c.value.model
-				.toTry { DataTypeException(
+				.toTry { new DataTypeException(
 					s"Custom data types must be presented as json objects. '$v' is not a model.") }
 				.flatMap(CustomPropertyType.apply)
 				.map { c.name.toLowerCase -> _ }

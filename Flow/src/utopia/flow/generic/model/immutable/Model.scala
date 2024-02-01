@@ -156,13 +156,12 @@ class Model private(override val propertyMap: Map[String, Constant],
     
     override def self: Model = this
     
-    protected override def equalsProperties: Iterable[Any] = Vector(propertyMap)
-    
-    override def toValue = new Value(Some(this), ModelType)
-    
     override def nonEmpty = !isEmpty
     
+    protected override def equalsProperties: Iterable[Any] = Vector(propertyMap)
     override implicit def equalsFunction: EqualsFunction[Model] = Model.similarProperties
+    
+    override def toValue = new Value(Some(this), ModelType)
     
     override def newProperty(attName: String) = propFactory(attName)
     

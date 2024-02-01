@@ -29,7 +29,7 @@ object ComponentImagesTest extends App
 		.use { implicit txc =>
 			// Creates the image to draw
 			val originComponent = TextLabel.contextual("This is to be drawn as an image")
-			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, colorScheme.secondary)))
+			originComponent.addCustomDrawer(BorderDrawer(Border(2, colorScheme.secondary)))
 			originComponent.setToOptimalSize()
 			val image = originComponent.toImage
 

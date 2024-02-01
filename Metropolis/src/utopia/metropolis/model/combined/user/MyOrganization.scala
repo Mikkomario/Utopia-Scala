@@ -25,11 +25,11 @@ object MyOrganization extends FromModelFactory[MyOrganization]
 	
 	override def apply(model: template.ModelLike[Property]) =
 		// Validates the model
-		schema.validate(model).toTry.flatMap { valid =>
+		schema.validate(model).flatMap { valid =>
 			// Parses organization data
 			DescribedOrganization(valid("organization").getModel).flatMap { organization =>
 				// Parses user-related data
-				idSchema.validate(valid("user").getModel).toTry.map { userModel =>
+				idSchema.validate(valid("user").getModel).map { userModel =>
 					val roles = userModel("roles").getVector.flatMap { _.model }
 						.flatMap { UserRoleWithRights(_).toOption }.toSet
 					MyOrganization(userModel("id"), organization, roles)

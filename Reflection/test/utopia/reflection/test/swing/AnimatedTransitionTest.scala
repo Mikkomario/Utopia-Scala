@@ -33,7 +33,7 @@ object AnimatedTransitionTest extends App
 		.use { implicit txc =>
 			// Creates the component to display
 			val originComponent = TextLabel.contextual("I'm Animated :)")
-			originComponent.addCustomDrawer(BorderDrawer(Border.square(2, txc.color.secondary)))
+			originComponent.addCustomDrawer(BorderDrawer(Border(2, txc.color.secondary)))
 			originComponent.addResizeListener { e => println(s"Component size changed: $e") }
 			
 			// Creates the transition components

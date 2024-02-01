@@ -16,7 +16,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 {
 	private val schema = ModelDeclaration(PropertyDeclaration("familiarity_id", IntType))
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		// Either language id or language code must be specified
 		val languageId = valid("language_id").int
 		val languageCode = valid("language_code").string.flatMap { _.trim.notEmpty }

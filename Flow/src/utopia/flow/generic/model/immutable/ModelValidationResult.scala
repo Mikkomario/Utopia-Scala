@@ -6,6 +6,7 @@ import utopia.flow.generic.model.template.Property
 
 import scala.util.{Failure, Success}
 
+@deprecated("Deprecated for removal, because most (if not all) use-cases simply called .toTry and treated this as a Try", "v2.4")
 object ModelValidationResult
 {
 	/**
@@ -48,6 +49,7 @@ object ModelValidationResult
   * @param invalidConversions Properties that failed to convert to desired data type
  *  @param missingChildren Missing declared child declarations
   */
+@deprecated("Deprecated for removal, because most (if not all) use-cases simply called .toTry and treated this as a Try", "v2.4")
 case class ModelValidationResult private(original: template.ModelLike[Property], success: Option[Model] = None,
                                          missingProperties: Set[PropertyDeclaration] = Set(),
                                          invalidConversions: Set[(Constant, DataType)] = Set(),

@@ -46,8 +46,7 @@ object ConversionHandler
 	  * @return The value casted to the target data type or any of the sub types of the target data
 	  *         type. None if the casting failed or was not possible to begin with.
 	  */
-	def cast(value: Value, toType: DataType) =
-	{
+	def cast(value: Value, toType: DataType) = {
 		// An empty value doens't need to be modified
 		if (value.isEmpty)
 			Some(Value.emptyWithType(toType))
@@ -58,7 +57,6 @@ object ConversionHandler
 		else
 			_cast(value, toType.subTypes :+ toType)
 	}
-	
 	/**
 	  * Casts the value to a value of any of the provided data types
 	  * @param value       The value that is being casted
@@ -201,7 +199,7 @@ object ConversionHandler
 		def apply(value: Value) =
 		{
 			if (!(value isOfType conversion.source))
-				throw DataTypeException(s"Input of ${ value.description } in conversion $conversion")
+				throw new DataTypeException(s"Input of ${ value.description } in conversion $conversion")
 			caster.cast(value, conversion.target)
 		}
 	}

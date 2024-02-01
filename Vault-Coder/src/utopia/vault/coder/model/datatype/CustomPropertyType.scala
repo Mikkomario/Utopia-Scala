@@ -38,7 +38,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 	// IMPLEMENTED  -------------------------
 	
 	override def apply(model: ModelLike[Property]) =
-		schema.validate(model).toTry.flatMap { model =>
+		schema.validate(model).flatMap { model =>
 			// from_value, from_values and to_value must all exist and contain the appropriate parameter placeholder
 			ensureFunctions(model, Vector("from_value", "to_value", "option_from_value")).flatMap { _ =>
 				// There must be either "parts" -property (multi-column) or "sql" property (single-column)
@@ -119,7 +119,7 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 		private val schema = ModelDeclaration("type" -> StringType, "sql" -> StringType)
 		
 		override def apply(model: ModelLike[Property]) =
-			schema.validate(model).toTry.flatMap { model =>
+			schema.validate(model).flatMap { model =>
 			// extract, extract_from_option must exist and contain the appropriate parameter placeholder ($v)
 			ensureFunctions(model, Vector("extract", "extract_from_option")).map { _ =>
 				val toValueInput: CodePiece = model("to_value")

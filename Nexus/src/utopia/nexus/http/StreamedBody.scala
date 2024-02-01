@@ -53,7 +53,7 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
             if (v.isEmpty)
                 Success(Model.empty)
             else
-                v.model.toTry { DataTypeException(s"${v.description} can't be converted to model") }
+                v.model.toTry { new DataTypeException(s"${v.description} can't be converted to model") }
         } } }
     
     /**
@@ -64,7 +64,7 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
             if (v.isEmpty)
                 Success(Vector())
             else
-                v.vector.toTry { DataTypeException(s"${v.description} can't be converted to a vector") }
+                v.vector.toTry { new DataTypeException(s"${v.description} can't be converted to a vector") }
         } }
     
     /**

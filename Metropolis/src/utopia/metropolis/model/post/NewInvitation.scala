@@ -18,7 +18,7 @@ object NewInvitation extends FromModelFactory[NewInvitation]
 	private val schema = ModelDeclaration("recipient_email" -> StringType, "role_id" -> IntType)
 	
 	override def apply(model: ModelLike[Property]) = {
-		schema.validate(model).toTry.flatMap { model =>
+		schema.validate(model).flatMap { model =>
 			// Makes sure the email address formatting is correct
 			val emailAddress = model("recipient_email").getString
 			if (MetropolisRegex.email(emailAddress)) {

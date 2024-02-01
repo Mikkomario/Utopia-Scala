@@ -1,5 +1,7 @@
 package utopia.manuscript.test
 
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.manuscript.excel.Excel
 import utopia.manuscript.excel.SheetTarget.FirstSheet
@@ -15,6 +17,7 @@ import java.time.LocalDate
 object ExcelParseTest extends App
 {
 	ParadigmDataType.setup()
+	private val schema = ModelDeclaration("index" -> IntType, "key" -> StringType)
 	
 	Excel.open("Manuscript/data/test-material/test.xlsx") { excel =>
 		val sheet = excel(FirstSheet).get
@@ -32,7 +35,7 @@ object ExcelParseTest extends App
 		assert(m1("key").getString == "Width")
 		assert(m1("Value").getInt == 10)
 		
-		val m2 = models(2)
+		val m2 = schema.validate(models(2)).get
 		assert(m2("index").getInt == 3)
 		assert(m2("key").getString == "Height", m2("key").getString)
 		assert(m2("value").getDouble == 8.3)

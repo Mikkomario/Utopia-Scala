@@ -1,8 +1,8 @@
 package utopia.flow.generic.factory
 
+import utopia.flow.generic.factory.PropertyFactory.MappingFactory
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.{DataType, Variable}
-import utopia.flow.generic.model.template.Property
 
 import scala.language.implicitConversions
 
@@ -32,15 +32,15 @@ object PropertyFactory
 	val forVariables = apply { Variable(_, _) }
 	
 	
-	// IMPLICIT    ------------------------
+	// IMPLICIT ------------------------
 	
 	/**
 	  * Creates a new property factory by wrapping a function
-	  * @param f A function to wrap
+	  * @param f A function that accepts property name and proposed value (which may be empty), and yields a property
 	  * @tparam A Type of properties created
-	  * @return A new property factory that utilizes the specified function
+	  * @return A new property factory that utilizes the specified functions
 	  */
-	implicit def apply[A <: Property](f: (String, Value) => A): PropertyFactory[A] = new _PropertyFactory[A](f)
+	implicit def apply[A](f: (String, Value) => A): PropertyFactory[A] = new _PropertyFactory[A](f)
 	
 	
 	// OTHER    ------------------------
@@ -59,8 +59,8 @@ object PropertyFactory
 	  * @tparam A Type of generated properties
 	  * @return A new property factory
 	  */
-	def withDefault[A <: Property](defaultValue: Value, requireCastingSuccess: Boolean = false)
-	                  (f: (String, Value) => A) =
+	def withDefault[A](defaultValue: Value, requireCastingSuccess: Boolean = false)(f: (String, Value) => A) =
+	{
 		apply { (name, value) =>
 			val actualValue = value.notEmpty match {
 				case Some(value) =>
@@ -69,6 +69,8 @@ object PropertyFactory
 			}
 			f(name, actualValue)
 		}
+	}
+	
 	/**
 	  * Creates a new constant property factory that uses a default value instead of an empty value
 	  * @param defaultValue The default value to assign when an empty value is proposed.
@@ -110,8 +112,7 @@ object PropertyFactory
 	  * @tparam A Type of generated properties
 	  * @return A new property factory
 	  */
-	def castingTo[A <: Property](targetType: DataType, requireCastingSuccess: Boolean = false)
-	                (f: (String, Value) => A) =
+	def castingTo[A](targetType: DataType, requireCastingSuccess: Boolean = false)(f: (String, Value) => A) =
 		apply { (name, value) =>
 			val actualValue = value.castTo(targetType)
 				.getOrElse { if (requireCastingSuccess) Value.emptyWithType(targetType) else value }
@@ -137,17 +138,24 @@ object PropertyFactory
 	
 	// NESTED   ------------------------
 	
-	private class _PropertyFactory[A <: Property](f: (String, Value) => A) extends PropertyFactory[A]
+	private class _PropertyFactory[A](f: (String, Value) => A) extends PropertyFactory[A]
 	{
 		override def apply(propertyName: String, value: Value) = f(propertyName, value)
+	}
+	
+	private class MappingFactory[-O, +R](wrapped: PropertyFactory[O], f: O => R) extends PropertyFactory[R]
+	{
+		override def apply(propertyName: String, value: Value) = f(wrapped(propertyName, value))
 	}
 }
 
 /**
   * Used for generating properties for models
   */
-trait PropertyFactory[+A <: Property]
+trait PropertyFactory[+A]
 {
+	// ABSTRACT ------------------------
+	
 	/**
 	  * Generates a new property
 	  * @param propertyName The name for the new property
@@ -155,4 +163,14 @@ trait PropertyFactory[+A <: Property]
 	  * @return Generated property
 	  */
 	def apply(propertyName: String, value: Value = Value.empty): A
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	  * @param f A mapping function for the generated properties
+	  * @tparam B Type of the mapping results
+	  * @return A factory that processes the results of this factory using the specified function
+	  */
+	def mapResult[B](f: A => B): PropertyFactory[B] = new MappingFactory[A, B](this, f)
 }

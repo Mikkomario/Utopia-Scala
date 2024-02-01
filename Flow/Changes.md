@@ -2,11 +2,27 @@
 
 ## v2.4 (in development)
 ### Breaking changes
+- **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
 - The write functions in **FileExtensions**, which accept a function, now return the return value of that 
   function, and no longer the path itself.
+### Deprecations
+- Deprecated **ModelValidationResult** (now replaced with **Try**)
+- Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
 ### New methods
+- **PropertyFactory**
+  - Added `.mapResult(...)`
 - **ResettableFlag**
   - Added `.switch()`
+### Other changes
+- Rewrote the `.validate(AnyModel)` function in **ModelDeclaration**, so that it:
+  - Uses `.apply(...)` instead of `.containsNonEmpty(...)` when testing for the required properties
+    - This is in order to support lazily generated properties (i.e. non-default property factories)
+  - Only applies non-required property declarations on-demand (when / if those properties are requested)
+    - This also means that these properties won't appear in the resulting model's defined properties until 
+      they're specifically requested using `.apply(...)`
+  - `.apply(...)` in the resulting model also supports alternative property names
+  - The resulting model still utilizes the original model's property factory
+- The generic type parameter in **PropertyFactory** is no longer restricted 
 
 ## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 
