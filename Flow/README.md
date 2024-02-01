@@ -81,9 +81,6 @@ extension (**TimeExtensions**)
 Hints and advice to help you get started and to get most out of Utopia Flow
 
 ### What you should know before using Flow
-When you use **Flow** or its sub-modules, you want to call `utopia.flow.generic.model.mutable.DataType.setup()` at the
-beginning or your App.
-
 When you wish to instantiate typeless values, please enable implicit value conversions by adding 
 `import utopia.flow.generic.casting.ValueConversions._`
 
