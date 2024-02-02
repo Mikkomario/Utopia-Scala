@@ -9,6 +9,8 @@ import utopia.inception.util.Filter
   */
 trait EventHandler2[Listener <: Handleable2, -Event] extends Handler2[Listener]
 {
+	// ABSTRACT -----------------------
+	
 	/**
 	  * Finds an event filter for the specified listener
 	  * @param listener A listener
@@ -22,6 +24,9 @@ trait EventHandler2[Listener <: Handleable2, -Event] extends Handler2[Listener]
 	  * @param event An event
 	  */
 	protected def deliver(listener: Listener, event: Event): Unit
+	
+	
+	// OTHER    ----------------------
 	
 	/**
 	  * Distributes an event between the listeners
