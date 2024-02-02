@@ -41,7 +41,7 @@ object StackTrace extends FromModelFactory[StackTrace]
 	// IMPLEMENTED  ----------------
 	
 	override def apply(model: ModelLike[Property]): Try[StackTrace] =
-		schema.validate(model).toTry.map { model =>
+		schema.validate(model).map { model =>
 			apply(model("file"), model("class"), model("method"), model("line"),
 				model("cause").model.flatMap { apply(_).toOption })
 		}

@@ -20,7 +20,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		if (valid("method").string.forall { _ ~== Delete.toString })
 			Success(apply(valid("path").getString))
 		else

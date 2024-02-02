@@ -18,7 +18,7 @@ object InvitationResponseSpirit extends FromModelFactory[InvitationResponseSpiri
 	// IMPLEMENTED	-------------------------
 	
 	override def apply(model: ModelLike[Property]) = NewInvitationResponse(model).flatMap { response =>
-		schema.validate(model).toTry.map { valid => InvitationResponseSpirit(valid("invitation_id").getInt, response) }
+		schema.validate(model).map { valid => InvitationResponseSpirit(valid("invitation_id").getInt, response) }
 	}
 	
 	

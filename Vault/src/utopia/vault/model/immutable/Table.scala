@@ -202,5 +202,5 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	  * @param model A model to validate
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
-	def validate(model: ModelLike[Property]) = toModelDeclaration.validate(model).toTry
+	def validate(model: ModelLike[Property]) = toModelDeclaration.validate(model)
 }

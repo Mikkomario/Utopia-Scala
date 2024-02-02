@@ -16,10 +16,10 @@ object NewDescription extends FromModelFactory[NewDescription]
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		val languageId = valid("language_id").getInt
 		// All specified descriptions must adhere to description schema
-		valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel).toTry }.map { descriptionModels =>
+		valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel) }.map { descriptionModels =>
 			// NB: If there are multiple descriptions for a single role, only one of those is preserved
 			NewDescription(languageId, descriptionModels.map { dm => dm("role_id").getInt -> dm("text").getString }.toMap)
 		}

@@ -1,15 +1,17 @@
 package utopia.flow.generic.model.immutable
 
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.generic.model.{immutable, template}
-import utopia.flow.generic.model.mutable.{DataType, Variable}
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.error.DataTypeException
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.factory.PropertyFactory.ConstantFactory
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.{DataType, Variable}
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.operator.equality.EqualsExtensions._
 
-import scala.collection.immutable.VectorBuilder
+import scala.util.{Failure, Try}
 
 object ModelDeclaration
 {
@@ -82,7 +84,23 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                                     childDeclarations: Map[String, ModelDeclaration])
     extends ModelConvertible
 {
+    // ATTRIBUTES   -----------
+    
+    // First set contains declarations for optional properties
+    // Second set contains the required properties
+    private lazy val groupedDeclarations = declarations.divideBy { _.isRequired }
+    
+    
     // COMP. PROPERTIES    ----
+    
+    /**
+      * @return Declarations for properties that must contain a non-empty value
+      */
+    def requiredDeclarations = groupedDeclarations.second
+    /**
+      * @return Declarations for properties that are optional, and those that provide a default value
+      */
+    def optionalDeclarations = groupedDeclarations.first
     
     /**
      * The names of the properties declared in this declaration
@@ -214,102 +232,76 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @param model Model being tested
       * @return Whether the model is likely to be valid
       */
-    def isProbablyValid(model: template.ModelLike[Property]) =
-    {
-        // Checks whether there are any missing or empty required properties
-        declarations.filterNot { _.hasDefault }.forall { declaration => model(declaration.names).isDefined } &&
-            childDeclarations.keys.forall { childName => model.containsNonEmpty(childName) }
+    def isProbablyValid(model: AnyModel): Boolean = {
+        requiredDeclarations.forall { dec => model(dec.names).nonEmpty } &&
+            childDeclarations.keysIterator.forall { childName => model(childName).nonEmpty }
     }
     
     /**
-      * Checks the provided model whether all declared (non-default) properties have non-empty values and can be casted
-      * to declared type
+      * Checks the provided model whether all required properties have non-empty values and can be casted
+      * to declared type.
+      * Also applies alternative names, data-type casting and default values to the optional properties.
       * @param model Model to be validated
-      * @return Validation results that either contain the modified model or a reason for validation failure (either
-      *         missing properties or failed casting)
+      * @return Validated (immutable) model.
+      *         Failure if some of the required properties were missing,
+      *         were empty or couldn't be cast to the correct data type.
       */
-    def validate(model: template.ModelLike[Property]): ModelValidationResult = {
+    def validate(model: AnyModel): Try[Model] = {
+        // Retrieves the values of all required properties in order to make sure they're correctly defined
+        val requiredMapping = requiredDeclarations.map { d => d -> model(d.names) }
         // First checks for missing attributes
-        val missing = declarations.filter { d => d.names.forNone(model.containsNonEmpty) }
-        val (missingNonDefaults, missingDefaults) = missing.divideBy { d => d.hasDefault || d.isOptional }.toTuple
-        
-        // Declarations with default values are replaced with their defaults
-        if (missingNonDefaults.nonEmpty)
-            ModelValidationResult.missing(model, missingNonDefaults)
+        val missing = requiredMapping.filter { _._2.isEmpty }
+        // Case: Some required properties are missing => Fails
+        if (missing.nonEmpty) {
+            Failure(new IllegalArgumentException(
+                s"The required properties [${ missing.map { _._1.name }.mkString(", ") }] were missing from $model"))
+        }
         else {
-            // Tries to convert all declared model properties to required types
-            // and checks that each declared (non-default) property has been defined
-            val keepBuilder = new VectorBuilder[Constant]()
-            // Contains also whether the property is optional
-            val castBuilder = new VectorBuilder[(Constant, Boolean)]()
-            val castFailedBuilder = new VectorBuilder[(Constant, DataType)]()
-    
-            model.nonEmptyProperties.foreach { att =>
-                find(att.name) match {
-                    case Some(declaration) =>
-                        att.value.castTo(declaration.dataType) match {
-                            // Case: Casting succeeded
-                            case Some(castValue) =>
-                                castBuilder += (Constant(declaration.name, castValue) -> declaration.isOptional)
-                            // Case: Casting failed
-                            case None =>
-                                castFailedBuilder += (Constant(declaration.name, att.value) -> declaration.dataType)
+            // Casts all required property values to their correct types
+            // Fails if any of the casts failed
+            requiredMapping
+                .tryMap { case (d, value) =>
+                    value.castTo(d.dataType)
+                        .toTry {
+                            new DataTypeException(
+                                s"Cannot cast ${ value.description } to the required type ${ d.dataType } in property ${ d.name }")
                         }
-                    // Case: No declaration for this property => keeps it (unless it is later used for a child)
-                    case None =>
-                        if (childDeclarations.keys.forall { _ !~== att.name })
-                            keepBuilder += Constant(att.name, att.value)
+                        .map { Constant(d.name, _) }
                 }
-            }
-            
-            // If all values could be cast, proceeds to create the model, otherwise fails
-            val castFailed = castFailedBuilder.result()
-            if (castFailed.isEmpty)
-            {
-                // Makes sure all required values have a non-empty value associated with them
-                // (works for strings, models and vectors)
-                val castValues = castBuilder.result()
-                val emptyValues = castValues.filter { case (c, optional) => !optional && valueIsEmpty(c.value) }
-                
-                if (emptyValues.nonEmpty)
-                    ModelValidationResult.missing(model,
-                        declarations.filter { d =>
-                            emptyValues.exists { case (c, optional) => !optional && d.names.exists { _ ~== c.name } }
-                        })
-                else
-                {
-                    val resultConstants = keepBuilder.result() ++ castValues.map { _._1 } ++
-                        missingDefaults.map { d => Constant(d.name, d.defaultValue) }
-                    
-                    // Also validates all declared children
-                    val missingChildren = childDeclarations
-                        .filterNot { case (childName, _) => model.containsNonEmpty(childName) }
-                    if (missingChildren.nonEmpty)
-                        ModelValidationResult.missingChildren(model, missingChildren)
-                    else
-                    {
-                        val childResults = childDeclarations.iterator.map { case (childName, childDeclaration) =>
-                            val childProp = model.get(childName)
-                            val result = childProp.value.model match {
-                                case Some(childModel) => childDeclaration.validate(childModel)
-                                case None => ModelValidationResult.castFailed(model,
-                                    Set(immutable.Constant(childProp.name, childProp.value) -> ModelType))
+                .flatMap { cast =>
+                    // Makes sure all required values have a non-empty value associated with them
+                    // (works for strings, models and vectors)
+                    val emptyConstants = cast.filter { c => valueIsEmpty(c.value) }
+                    if (emptyConstants.nonEmpty)
+                        Failure(new IllegalArgumentException(s"The following required properties were empty: ${
+                            emptyConstants.map { _.name }
+                        }"))
+                    else {
+                        // Validates the child models, also
+                        childDeclarations.toVector
+                            .tryMap { case (propName, declaration) =>
+                                val value = model(propName)
+                                value.model
+                                    .toTry {
+                                        new IllegalArgumentException(
+                                            s"Value (${value.description}) for a child model $propName was missing or could not be cast.")
+                                    }
+                                    .map { (propName, declaration, _) }
                             }
-                            childName -> result
-                        }.collectTo { _._2.isFailure }
-                        childResults.lastOption.filter { _._2.isFailure } match {
-                            case Some((_, childFailure)) => childFailure
-                            case None =>
-                                ModelValidationResult.success(model,
-                                    Model.withConstants(resultConstants ++
-                                        childResults.map { case (childName, result) =>
-                                           Constant(childName, result.success.get) }))
-                        }
+                            .flatMap { children =>
+                                children
+                                    .tryMap { case (childName, declaration, childModel) =>
+                                        declaration.validate(childModel)
+                                            .map { validChild => Constant(childName, validChild) }
+                                    }
+                                    .map { validChildren =>
+                                        // Generates & casts the remaining values on-demand
+                                        Model.withConstants(cast.toVector ++ validChildren,
+                                            new ValidatedPropertyFactory(model))
+                                    }
+                            }
                     }
                 }
-            }
-            else
-                ModelValidationResult.castFailed(model, castFailed.toSet)
         }
     }
     
@@ -357,14 +349,14 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @param actualize A function that accepts a (modified) property name and value and yields a property
       * @tparam P Type of properties generated by this factory (via the specified function)
       */
-    class DeclaredPropertyFactory[+P <: Property](disableDefaultValues: Boolean = false)(actualize: (String, Value) => P)
+    class DeclaredPropertyFactory[+P](disableDefaultValues: Boolean = false)(actualize: (String, Value) => P)
         extends PropertyFactory[P]
     {
+        // IMPLEMENTED  --------------------------
+        
         override def apply(propertyName: String, value: Value) = {
             // Finds the applicable property declaration
-            declarations.find { _.name ~== propertyName }
-                .orElse { declarations.find { _.alternativeNames.exists { _ ~== propertyName } } } match
-            {
+            find(propertyName) match {
                 // Case: Pre-declared property
                 case Some(declaration) =>
                     val actualValue = {
@@ -382,6 +374,25 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                 // Case: Other property => Passes it as is
                 case None => actualize(propertyName, value)
             }
+        }
+    }
+    
+    class ValidatedPropertyFactory(source: AnyModel) extends ConstantFactory
+    {
+        override def apply(propertyName: String, value: Value) = find(propertyName) match {
+            // Case: Declared property =>
+            // Makes sure the value is of correct datatype, and also utilizes the default value, if necessary
+            case Some(declaration) =>
+                // Order of priority is: 1) Specified value, 2) Value from the source model, 3) Declared default value
+                val actualValue = value.notEmpty.flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
+                    .orElse {
+                        source(declaration.names).notEmpty
+                            .flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
+                    }
+                    .getOrElse(declaration.defaultValue)
+                Constant(propertyName, actualValue)
+            // Case: Non-declared property => Uses the specified value (if not empty) or consults the source model
+            case None => Constant(propertyName, value.nonEmptyOrElse { source(propertyName) })
         }
     }
 }

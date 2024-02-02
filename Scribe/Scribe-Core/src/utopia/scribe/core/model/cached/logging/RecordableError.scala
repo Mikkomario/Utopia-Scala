@@ -26,7 +26,7 @@ object RecordableError extends FromModelFactory[RecordableError]
 	// IMPLEMENTED  -------------------
 	
 	override def apply(model: ModelLike[Property]): Try[RecordableError] =
-		schema.validate(model).toTry.flatMap { model =>
+		schema.validate(model).flatMap { model =>
 			StackTrace(model("stackTrace").getModel).map { stack =>
 				apply(model("className"), stack, model("cause").model.flatMap { apply(_).toOption }, model("message"))
 			}

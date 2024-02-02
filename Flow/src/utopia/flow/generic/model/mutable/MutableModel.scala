@@ -1,13 +1,12 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.event.listener.{ChangeListener, PropertyChangeListener}
-import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
 import utopia.flow.event.model.PropertyChangeEvent.{PropertyAdded, PropertyRemoved, PropertySwapped, PropertyValueChange}
-import utopia.flow.generic.model.immutable.{Constant, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
 import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.model.immutable
+import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.template.ModelLike
 
 object MutableModel
 {

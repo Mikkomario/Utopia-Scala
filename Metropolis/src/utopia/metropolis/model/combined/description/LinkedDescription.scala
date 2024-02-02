@@ -21,7 +21,7 @@ object LinkedDescription extends FromModelFactory[LinkedDescription]
 	// IMPLEMENTED  ------------------------------
 	
 	override def apply(model: template.ModelLike[Property]) =
-		linkSchema.validate(model).toTry.flatMap { model =>
+		linkSchema.validate(model).flatMap { model =>
 			Description(model).map { description =>
 				LinkedDescription(description, model("link_id"), model("target_id"))
 			}

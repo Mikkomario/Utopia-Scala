@@ -34,5 +34,5 @@ class ModelsFileContainer(fileLocation: Path, saveLogic: SaveTiming = Immediate)
 	override protected def itemToValue(item: Model) = item
 	
 	override protected def itemFromValue(value: Value) = value.model.toTry {
-		DataTypeException(s"Can't parse ${value.description} to model") }
+		new DataTypeException(s"Can't parse ${value.description} to model") }
 }

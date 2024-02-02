@@ -28,5 +28,5 @@ trait FromModelFactoryWithSchema[+A] extends FromModelFactory[A]
 	
 	// IMPLEMENTED	------------------
 	
-	override def apply(model: template.ModelLike[Property]) = schema.validate(model).toTry.map(fromValidatedModel)
+	override def apply(model: template.ModelLike[Property]) = schema.validate(model).map(fromValidatedModel)
 }

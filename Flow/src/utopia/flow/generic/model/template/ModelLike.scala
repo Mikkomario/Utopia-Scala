@@ -1,11 +1,9 @@
 package utopia.flow.generic.model.template
 
-import utopia.flow.collection.template.MapAccess
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.ModelLike.nestingRegex
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Regex
 
@@ -65,7 +63,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 		val allProps = propertyMap
 		propertyOrder.flatMap(allProps.get)
 	}
-	
 	/**
 	  * @return An ordered iterator that returns the properties within this model.
 	  */
@@ -208,10 +205,9 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	
 	/**
 	 * @param propName Name of the targeted property
-	 * @return Value of the targeted property, but only if such a property exists and contains a non-empty value.
-	 *         None otherwise.
+	 * @return Value of the targeted property, but only if it is non-empty.
 	 */
-	def nonEmpty(propName: String) = existing(propName).flatMap { _.value.notEmpty }
+	def nonEmpty(propName: String) = apply(propName).notEmpty
 	/**
 	 * @param propNames Names of the targeted properties
 	 * @return Value of the first targeted property that contains a non-empty value.
@@ -262,5 +258,5 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * @param propName Name of the targeted property (case-insensitive)
 	  * @return Whether this model contains a non-empty property with the specified name
 	  */
-	def containsNonEmpty(propName: String) = propertyMap.get(propName.toLowerCase).exists { _.nonEmpty }
+	def containsNonEmpty(propName: String) = existing(propName).exists { _.nonEmpty }
 }

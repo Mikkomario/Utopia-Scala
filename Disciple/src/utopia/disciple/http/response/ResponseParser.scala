@@ -145,7 +145,7 @@ object ResponseParser
 	def tryModelWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
 		defaultOnEmpty(Model.empty) { (stream, headers, _) =>
 			parseValue(stream, headers, parsers).flatMap { v =>
-				v.castTo(ModelType).toTry { DataTypeException(s"Can't cast ${ v.description } to a model") }
+				v.castTo(ModelType).toTry { new DataTypeException(s"Can't cast ${ v.description } to a model") }
 					.map { _.getModel }
 			}
 		}

@@ -44,7 +44,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: ModelLike[Property]): Try[ClientIssue] = schema.validate(model).toTry.flatMap { model =>
+	override def apply(model: ModelLike[Property]): Try[ClientIssue] = schema.validate(model).flatMap { model =>
 		val versionStr = model("version").getString
 		Version.findFrom(versionStr).toTry { new ModelValidationFailedException(
 			s"Specified version '$versionStr' can't be parsed into a version") }

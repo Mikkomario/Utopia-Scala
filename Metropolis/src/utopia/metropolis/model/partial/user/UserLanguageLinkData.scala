@@ -36,7 +36,7 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
 	def apply(userId: Int, model: ModelLike[Property]): Try[UserLanguageLinkData] =
-		withoutUserSchema.validate(model).toTry.map { valid =>
+		withoutUserSchema.validate(model).map { valid =>
 			UserLanguageLinkData(userId, valid("language_id"), valid("familiarity_id"))
 		}
 }

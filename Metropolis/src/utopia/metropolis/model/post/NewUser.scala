@@ -15,7 +15,7 @@ object NewUser extends FromModelFactory[NewUser]
 {
 	private val schema = ModelDeclaration("name" -> StringType, "password" -> StringType, "languages" -> VectorType)
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).toTry.flatMap { valid =>
+	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		// Languages must be parseable
 		valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
 			// Also, email address must be valid (if specified)

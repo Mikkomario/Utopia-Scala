@@ -37,7 +37,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: template.ModelLike[Property]) = schema.validate(model).toTry.flatMap { model =>
+	override def apply(model: template.ModelLike[Property]) = schema.validate(model).flatMap { model =>
 		val amount = model("amount").getDouble
 		model("duration").duration match {
 			case Some(duration) => Success(apply(amount, duration))

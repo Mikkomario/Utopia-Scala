@@ -28,7 +28,7 @@ object Rectangle extends FromModelFactory[Rectangle]
 	val schema = ModelDeclaration("topLeft" -> PointType, "top" -> Vector2DType, "rightEdgeLength" -> DoubleType)
 	
 	override def apply(model: template.ModelLike[Property]): Try[Rectangle] = {
-		schema.validate(model).toTry.map { valid =>
+		schema.validate(model).map { valid =>
 			Rectangle(valid("topLeft").getPoint, valid("top").getVector2D, valid("rightEdgeLength").getDouble)
 		}
 	}

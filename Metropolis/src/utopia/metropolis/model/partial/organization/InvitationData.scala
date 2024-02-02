@@ -17,7 +17,7 @@ object InvitationData extends FromModelFactory[InvitationData]
 		"starting_role_id" -> IntType, "expires" -> InstantType)
 	
 	override def apply(model: ModelLike[Property]) =
-		schema.validate(model).toTry.map { model =>
+		schema.validate(model).map { model =>
 			InvitationData(model("organization_id"), model("starting_role_id"), model("expires"),
 				model("recipient_id"), model("recipient_email"), model("message"), model("sender_id"),
 				model("created"))

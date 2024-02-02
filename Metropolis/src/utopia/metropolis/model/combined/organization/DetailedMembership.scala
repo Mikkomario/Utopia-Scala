@@ -17,7 +17,7 @@ object DetailedMembership extends FromModelFactory[DetailedMembership]
 	
 	// Validates model, then parses membership and settings (if possible)
 	override def apply(model: ModelLike[Property]) =
-		schema.validate(model).toTry.flatMap { valid =>
+		schema.validate(model).flatMap { valid =>
 			Membership(valid).flatMap { membership =>
 				UserSettings(valid("user_data").getModel).map { settings =>
 					// Finally parses user roles data

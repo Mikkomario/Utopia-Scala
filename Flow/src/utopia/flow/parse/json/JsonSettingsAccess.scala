@@ -65,7 +65,7 @@ class JsonSettingsAccess(rootDirectory: Path = "", fileNameRegex: Regex = defaul
 			// Case: Suitable files available =>
 			// Finds the first file that can be successfully parsed and contains the required properties
 			else
-				targetFilesIterator.map { jsonReader(_).flatMap { m => schema.validate(m.getModel).toTry } }
+				targetFilesIterator.map { jsonReader(_).flatMap { m => schema.validate(m.getModel) } }
 					.trySucceedOnce.toTry
 		}
 	}

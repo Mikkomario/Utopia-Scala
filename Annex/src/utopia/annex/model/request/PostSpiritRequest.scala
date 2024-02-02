@@ -42,7 +42,7 @@ object PostSpiritRequest
 	private case class PostRequestFactory[+S <: Spirit with ModelConvertible](spiritFactory: FromModelFactory[S])
 		extends FromModelFactory[PostSpiritRequest[S]]
 	{
-		override def apply(model: ModelLike[Property]) = baseSchema.validate(model).toTry.flatMap { valid =>
+		override def apply(model: ModelLike[Property]) = baseSchema.validate(model).flatMap { valid =>
 			spiritFactory(valid("spirit").getModel).map { spirit =>
 				PostSpiritRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))
 			}

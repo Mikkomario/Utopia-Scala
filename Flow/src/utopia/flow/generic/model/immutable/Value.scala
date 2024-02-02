@@ -287,5 +287,5 @@ case class Value(content: Option[Any], dataType: DataType)
         tryPair.flatMap { p => first(p.first).flatMap { f => second(p.second).map { f -> _ } } }
     
     private def getTry[A](value: Option[A])(dataType: => String) =
-        value.toTry { DataTypeException(s"Can't cast $description to $dataType") }
+        value.toTry { new DataTypeException(s"Can't cast $description to $dataType") }
 }
