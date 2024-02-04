@@ -190,12 +190,6 @@ object Key
 		// The letter keys are identified with upper key characters
 		def apply(char: Char): CharKey = _CharKey(if (char.isLetter) char.toUpper else char)
 		
-		def digit(digit: Int) = {
-			if (digit < 0 || digit > 9)
-				throw new IllegalArgumentException(s"Only digits from 0 to 9 are supported (proposed $digit)")
-			apply(digit.toString.head)
-		}
-		
 		
 		// NESTED   --------------------------
 		
@@ -217,7 +211,7 @@ object Key
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def index = char.toInt
+		override def index = java.awt.event.KeyEvent.getExtendedKeyCodeForChar(char)
 	}
 	
 	case class DigitKey(digit: Byte) extends CharKey
