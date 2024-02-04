@@ -71,6 +71,11 @@ object SheetTarget
 	  * @return Target that reads a sheet with that name
 	  */
 	def name(name: String) = SheetWithName(name)
+	/**
+	  * @param string String to search from spread-sheet names
+	  * @return A target that selects a sheet which contains the specified string
+	  */
+	def containing(string: String) = SheetContaining(string)
 	
 	
 	// NESTED   --------------------------
@@ -206,6 +211,15 @@ object SheetTarget
 			else
 				findSimilar(filtered, maxVariance - 1)
 		}
+	}
+	
+	case class SheetContaining(string: String) extends SheetTarget
+	{
+		override def apply(sheetNames: Seq[String]): Try[Int] =
+			sheetNames.findIndexWhere { _.containsIgnoreCase(string) }
+				.toTry { new NoSuchElementException(
+					s"None of the specified sheet names contained the searched string '$string'. Searched from: ${
+						sheetNames.map { n => s"'$n'" }.mkString(", ") }") }
 	}
 	
 	private class OrTarget(primary: SheetTarget, secondary: SheetTarget) extends SheetTarget
