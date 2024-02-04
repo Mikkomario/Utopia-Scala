@@ -7,5 +7,7 @@ package utopia.inception.util
  */
 object AnyFilter extends Filter[Any]
 {
+	// IMPLEMENTED  -------------------
+	
 	override def apply(item: Any) = true
 }

@@ -8,6 +8,8 @@
 ### Deprecations
 - Deprecated **ModelValidationResult** (now replaced with **Try**)
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
+### New features
+- Added the (rewritten) **Filter** class from the **Inception** module
 ### New methods
 - **PropertyFactory**
   - Added `.mapResult(...)`
@@ -24,6 +26,7 @@
   - The resulting model still utilizes the original model's property factory
 - The generic type parameter in **PropertyFactory** is no longer restricted
 - Minor optimization to **FlagLike** -wrapping
+- Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to **VolatileList** -constructing
 
 ## v2.3 - 22.01.2024

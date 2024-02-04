@@ -1,46 +1,47 @@
 package utopia.genesis.util
 
-import java.util.concurrent.TimeUnit
+import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.time.TimeExtensions._
 
-import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 object Fps
 {
+	// ATTRIBUTES   --------------------------
+	
 	/**
 	  * The default actions / frames per second value (60)
 	  */
 	val default = Fps(60)
+	
+	
+	// IMPLICIT -----------------------------
+	
+	implicit def numberToFps(n: Int): Fps = apply(n)
 }
 
 /**
-  * Represents frames per second
+  * Represents a frames-per-second value
   * @author Mikko Hilpinen
   * @since 15.4.2019, v2+
   * @param fps The frames / actions per second value of this FPS
   */
-case class Fps(fps: Int)
+case class Fps(fps: Int) extends SelfComparable[Fps] with LinearScalable[Fps]
 {
 	// ATTRIBUTES	-----------------
 	
 	/**
 	  * The interval between iterations
 	  */
-	val interval = FiniteDuration((1000.0 / fps * 1000000).toLong, TimeUnit.NANOSECONDS)
+	val interval = 1.seconds / fps
 	
 	
-	// OPERATORS	-----------------
+	// IMPLEMENTED  -----------------
 	
-	/**
-	  * Multiplies this FPS
-	  * @param multiplier A multiplier
-	  * @return Multiplied value
-	  */
-	def *(multiplier: Double) = Fps((fps * multiplier).toInt)
+	override def self = this
 	
-	/**
-	  * Divides this FPS
-	  * @param divider A divider
-	  * @return A divided value
-	  */
-	def /(divider: Double) = Fps((fps / divider).toInt)
+	override def compareTo(o: Fps) = fps - o.fps
+	
+	override def *(multiplier: Double) = Fps((fps * multiplier).round.toInt)
 }

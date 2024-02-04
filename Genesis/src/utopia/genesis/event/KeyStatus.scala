@@ -42,17 +42,14 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
      * Whether the left arrow key is down
      */
     def left = apply(KeyEvent.VK_LEFT)
-    
     /**
      * Whether the right arrow key is down
      */
     def right = apply(KeyEvent.VK_RIGHT)
-    
     /**
      * Whether the up arrow key is down
      */
     def up = apply(KeyEvent.VK_UP)
-    
     /**
      * Whether the down arrow key is down
      */
@@ -67,7 +64,6 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
       * @return Whether a control key is down
       */
     def control = apply(KeyEvent.VK_CONTROL)
-    
     /**
       * @return Whether a shift key is down
       */
@@ -82,13 +78,11 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
      * @return whether a key matching the index is down at any location
      */
     def apply(index: Int) = status.contains(index)
-    
     /**
      * Checks the status of a single key at a specific key location
      * @return Whether the key with the specified index and location is currently down / pressed
      */
     def apply(index: Int, location: KeyLocation) = status.get(index).exists { _.contains(location) }
-    
     /**
      * Checks the status of a key indicated by a specific character
      * @return Whether a key indicated by the character is currently down / pressed
@@ -108,8 +102,7 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
       * @param other Another key status
       * @return A key status with both of these statuses' keys down
       */
-    def ||(other: KeyStatus) =
-    {
+    def ||(other: KeyStatus) = {
         // Separates the indices into three categories
         val myIndicesBuilder = new VectorBuilder[Int]()
         val otherIndicesBuilder = new VectorBuilder[Int]()
@@ -129,14 +122,12 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
         
         new KeyStatus(buffer.result().toMap)
     }
-    
     /**
       * Combines two key statuses so that a key is down only when it's down in both of these statuses
       * @param other Another key status
       * @return A key status with only common keys down
       */
-    def &&(other: KeyStatus) =
-    {
+    def &&(other: KeyStatus) = {
         // Only preserves locations also present in the other status. Filters out empty vectors
         val newStatus = status.map { case (index, locations) => index -> locations.filter { other(index, _) } }
             .filterNot { _._2.isEmpty }
@@ -152,21 +143,18 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
       * @param newStatus New key status
       * @return A copy of this KyeStatus with specified status added
       */
-    def withStatus(index: Int, location: KeyLocation, newStatus: Boolean) =
-    {
+    def withStatus(index: Int, location: KeyLocation, newStatus: Boolean) = {
         // If already has specified status, no change is done
         if (apply(index, location) == newStatus)
             this
         // If a new key is being added, simply updates the locations
-        else if (newStatus)
-        {
+        else if (newStatus) {
             if (status.contains(index))
                 new KeyStatus(status + (index -> (status(index) + location)))
             else
                 new KeyStatus(status + (index -> Set(location)))
         }
-        else
-        {
+        else {
             // If a key is being removed, either removes list altogether or shortens it
             // No 0 sized lists are left
             val oldLocations = status(index)
@@ -182,26 +170,25 @@ case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
       * @param location Target key location (default = standard)
       * @return A copy of this key status with specified key down
       */
-    def withKeyDown(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, newStatus = true)
-    
+    def withKeyDown(index: Int, location: KeyLocation = KeyLocation.Standard) =
+        withStatus(index, location, newStatus = true)
     /**
       * @param index Target key index
       * @param location Target key location (default = standard)
       * @return A copy of this key status with specified key released / up
       */
-    def withKeyReleased(index: Int, location: KeyLocation = KeyLocation.Standard) = withStatus(index, location, newStatus = false)
+    def withKeyReleased(index: Int, location: KeyLocation = KeyLocation.Standard) =
+        withStatus(index, location, newStatus = false)
     
     /**
       * @param previous Previous key status
       * @return A key status that only contains keys that were pressed down since the last status
       */
-    def keyPressesSince(previous: KeyStatus) =
-    {
+    def keyPressesSince(previous: KeyStatus) = {
         val newStatus = status.map { case (index, locations) => index -> locations.filterNot { previous(index, _) } }
             .filterNot { _._2.isEmpty }
         new KeyStatus(newStatus)
     }
-    
     /**
       * @param previous The previous key status
       * @return A map of key index -> key locations of the keys that were released since the last status

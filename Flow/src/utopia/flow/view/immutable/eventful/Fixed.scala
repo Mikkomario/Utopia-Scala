@@ -30,7 +30,19 @@ case class Fixed[+A](override val value: A) extends Changing[A]
   * A pointer that always contains 'true'
   */
 object AlwaysTrue extends Fixed(true) with FlagLike
+{
+	override def unary_! = AlwaysFalse
+	
+	override def &&(other: Changing[Boolean]) = other
+	override def ||(other: Changing[Boolean]) = this
+}
 /**
   * A pointer that always contains 'false'
   */
 object AlwaysFalse extends Fixed(false) with FlagLike
+{
+	override def unary_! = AlwaysTrue
+	
+	override def &&(other: Changing[Boolean]) = this
+	override def ||(other: Changing[Boolean]) = other
+}

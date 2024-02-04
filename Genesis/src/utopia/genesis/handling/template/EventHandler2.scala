@@ -1,6 +1,6 @@
 package utopia.genesis.handling.template
 
-import utopia.inception.util.Filter
+import utopia.flow.operator.filter.Filter
 
 /**
   * Event handlers distribute events for the handleable instances

@@ -14,7 +14,13 @@ abstract class AbstractHandler2[A <: Handleable2](initialItems: IterableOnce[A] 
 	/**
 	  * A pointer that contains the currently attached items in this handler
 	  */
-	protected val itemsPointer = VolatileList(initialItems)
+	protected val itemsPointer = VolatileList[A]()
+	
+	
+	// INITIAL CODE ------------------------
+	
+	// Attaches the initial items
+	this ++= initialItems
 	
 	
 	// IMPLEMENTED  ------------------------

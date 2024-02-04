@@ -17,7 +17,12 @@ trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 	// ABSTRACT ------------------------
 	
 	/**
-	  * @return Current list of the items handled
+	  * @return Current list of the items handled.
+	  *         This list will be automatically updated, so that it will only contain items that are currently active
+	  *         (whose handleCondition allows it).
+	  *
+	  *         The sub-classes should only add or remove items from this collection via this interface
+	  *         (i.e. using +=, -= etc. functions)
 	  */
 	protected def items: Iterable[A]
 	
