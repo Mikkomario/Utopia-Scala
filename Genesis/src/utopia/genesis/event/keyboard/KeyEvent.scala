@@ -1,8 +1,8 @@
 package utopia.genesis.event.keyboard
 
 import utopia.flow.operator.filter.{Filter, RejectAll}
-import utopia.genesis.event.{KeyLocation, KeyStatus}
-import utopia.genesis.event.keyboard.Key.{ArrowKey, Control, Shift}
+import utopia.genesis.event.KeyLocation
+import utopia.genesis.event.keyboard.Key.{ArrowKey, CharKey, Control, Shift}
 import utopia.paradigm.enumeration.Direction2D
 
 object KeyEvent
@@ -19,9 +19,10 @@ object KeyEvent
 	
 	/**
 	  * Common trait for factory-like classes that support key-event -based filtering
+	  * @tparam E Type of filtered event
 	  * @tparam A Type of generated items
 	  */
-	trait KeyFilteringFactory[+A]
+	trait KeyFilteringFactory[+E <: KeyEvent, +A]
 	{
 		// ABSTRACT -------------------------
 		
@@ -29,7 +30,7 @@ object KeyEvent
 		  * @param filter A filter to apply
 		  * @return An item with that filter applied
 		  */
-		protected def withFilter(filter: KeyEventFilter): A
+		protected def withFilter(filter: Filter[E]): A
 		
 		
 		// COMPUTED   ---------------------
@@ -55,7 +56,7 @@ object KeyEvent
 		  * @param key The targeted key
 		  * @return An item that only accepts events concerning the specified key
 		  */
-		def key(key: Key) = withFilter { _.index == key.index }
+		def key(key: Key) = withFilter { _.concernsKey(key) }
 		/**
 		  * @param keys Targeted keys
 		  * @return An item that only accepts events that concern one of the specified keys
@@ -71,7 +72,7 @@ object KeyEvent
 		  * @param character A character (key)
 		  * @return An item that only accepts events concerning that character-key
 		  */
-		def char(character: Char) = withFilter { _.isCharacter(character) }
+		def char(character: Char) = withFilter { _.concernsChar(character) }
 		/**
 		  * @param characters Character keys
 		  * @return An item that only accepts events concerning those character-keys
@@ -80,7 +81,7 @@ object KeyEvent
 			if (characters.isEmpty)
 				withFilter(RejectAll)
 			else
-				withFilter { e => characters.exists(e.isCharacter) }
+				withFilter { e => characters.exists(e.concernsChar) }
 		}
 		/**
 		  * @return An item that only accepts events concerning the specified character-keys
@@ -93,20 +94,19 @@ object KeyEvent
 		  */
 		def arrow(direction: Direction2D) = key(ArrowKey(direction))
 		
-		// TODO: Refactor to use the new Key class (requires refactored KeyState class)
 		/**
-		  * @param keyIndex Index of the targeted key (see [[java.awt.event.KeyEvent]])
+		  * @param key Targeted key
 		  * @return An item that only accepts events while the specified key is held down
 		  *         (i.e. accepts key-combos involving that key)
 		  */
-		def whileKeyDown(keyIndex: Int) = withFilter { _.keyStatus(keyIndex) }
+		def whileKeyDown(key: Key) = withFilter { _.keyboardState(key) }
 		/**
-		  * @param keyIndex Index of the targeted key (see [[java.awt.event.KeyEvent]])
+		  * @param key Targeted keyboard key
 		  * @param location Location where the key must be pressed
 		  * @return An item that only accepts events while the specified key is held down
 		  *         (i.e. accepts key-combos involving that key)
 		  */
-		def whileKeyDown(keyIndex: Int, location: KeyLocation) = withFilter { _.keyStatus(keyIndex, location) }
+		def whileKeyDown(key: Key, location: KeyLocation) = withFilter { _.keyboardState(key, location) }
 		
 		private def indices(indices: IterableOnce[Int]) = {
 			val actualIndices = Set.from(indices) - java.awt.event.KeyEvent.VK_UNDEFINED
@@ -115,6 +115,11 @@ object KeyEvent
 			else
 				withFilter(RejectAll)
 		}
+	}
+	
+	object KeyEventFilter extends KeyFilteringFactory[KeyEvent, KeyEventFilter]
+	{
+		override protected def withFilter(filter: KeyEventFilter): KeyEventFilter = filter
 	}
 }
 
@@ -132,16 +137,27 @@ trait KeyEvent
 	  */
 	def index: Int
 	/**
-	  * @return The keyboard state at (i.e. immediately after) this event
+	  * @return The keyboard state immediately after this event
 	  */
-	def keyStatus: KeyStatus
+	def keyboardState: KeyboardState
 	
 	
 	// OTHER    -----------------------
 	
 	/**
+	  * @param key A keyboard key
+	  * @return Whether this event concerns the specified key
+	  */
+	def concernsKey(key: Key) = index == key.index
+	/**
 	  * @param char A character on a keyboard
 	  * @return Whether this event concerns the specified character key
 	  */
-	def isCharacter(char: Char): Boolean = index == java.awt.event.KeyEvent.getExtendedKeyCodeForChar(char)
+	def concernsChar(char: Char): Boolean = concernsKey(CharKey(char))
+	
+	/**
+	  * Checks whether the event concerns a specific character key
+	  */
+	@deprecated("Replaced with concernsChar(Char)", "v3.6")
+	def isCharacter(char: Char) = concernsChar(char)
 }

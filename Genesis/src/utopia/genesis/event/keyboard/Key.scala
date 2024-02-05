@@ -131,6 +131,18 @@ object Key
 			case Direction2D.Left => LeftArrow
 			case Direction2D.Right => RightArrow
 		}
+		
+		/**
+		  * @param index A key index
+		  * @param includeNumpad Whether to count/include numpad-arrows (default = false)
+		  * @return Arrow key that matches that index. None if no arrow key matches that index.
+		  */
+		def apply(index: Int, includeNumpad: Boolean = false) = {
+			if (includeNumpad)
+				values.find { k => k.index == index || k.onNumpad.index == index }
+			else
+				values.find { _.index == index }
+		}
 	}
 	trait ArrowKey extends Key
 	{
