@@ -1,4 +1,4 @@
-package utopia.genesis.event.keyboard
+package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.enumeration.Direction2D

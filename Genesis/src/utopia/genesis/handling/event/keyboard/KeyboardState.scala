@@ -1,9 +1,9 @@
-package utopia.genesis.event.keyboard
+package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.genesis.event.KeyLocation
 import utopia.genesis.event.KeyLocation.Standard
-import utopia.genesis.event.keyboard.Key.CharKey
+import utopia.genesis.handling.event.keyboard.Key.CharKey
 
 import java.awt.event.KeyEvent
 import scala.annotation.unused

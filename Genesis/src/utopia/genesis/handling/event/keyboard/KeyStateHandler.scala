@@ -1,7 +1,6 @@
-package utopia.genesis.handling.keyboard
+package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.genesis.event.keyboard.KeyStateEvent2
 import utopia.genesis.handling.template.{DeepHandler2, EventHandler2, Handleable2}
 
 /**

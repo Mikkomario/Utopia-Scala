@@ -1,6 +1,6 @@
 package utopia.genesis.event
 
-import utopia.genesis.handling.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
 

@@ -1,14 +1,13 @@
-package utopia.genesis.handling.keyboard
+package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.KeyLocation
-import utopia.genesis.event.keyboard.KeyEvent.KeyFilteringFactory
-import utopia.genesis.event.keyboard.{Key, KeyStateEvent2}
-import utopia.genesis.handling.keyboard.KeyStateListener2.KeyStateEventFilter
+import KeyEvent.KeyFilteringFactory
+import utopia.genesis.handling.event.ListenerFactory
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.genesis.handling.template.Handleable2
 
 import scala.annotation.unused
@@ -123,28 +122,20 @@ object KeyStateListener2
     
     case class KeyStateListenerFactory(condition: FlagLike = AlwaysTrue,
                                        filter: KeyStateEventFilter = AcceptAll)
-        extends KeyStateFilteringFactory[KeyStateListenerFactory]
+        extends ListenerFactory[KeyStateEvent2, KeyStateListener2, KeyStateListenerFactory]
+            with KeyStateFilteringFactory[KeyStateListenerFactory]
     {
         // IMPLEMENTED  ---------------------
         
-        /**
-          * @param filter A filter applied to incoming events.
-          *               Only events accepted by this filter will trigger this listener / wrapped function.
-          * @return Copy of this factory that applies the specified filter to the created listeners.
-          *         If there were already other filters specified, combines these filters with logical and.
-          */
-        override def withFilter(filter: KeyStateEventFilter) = copy(filter = this.filter && filter)
-            
-        
-        // OTHER    -------------------------
-        
-        /**
-          * @param f Function called when a key event is received
-          * @tparam U Arbitrary function result type
-          * @return A new listener that calls the specified function
-          *         when the conditions listed in this factory are met.
-          */
-        def apply[U](f: KeyStateEvent2 => U): KeyStateListener2 = new _KeyStateListener[U](condition, filter, f)
+        override def usingFilter(filter: Filter[KeyStateEvent2]): KeyStateListenerFactory = copy(filter = filter)
+        override def usingCondition(condition: Changing[Boolean]): KeyStateListenerFactory = copy(condition = condition)
+	    
+	    override def apply[U](f: KeyStateEvent2 => U): KeyStateListener2 = new _KeyStateListener[U](condition, filter, f)
+	    
+	    override protected def withFilter(filter: Filter[KeyStateEvent2]): KeyStateListenerFactory = filtering(filter)
+	    
+	    
+	    // OTHER    -------------------------
         
         /**
           * Creates a new listener that receives one event, after which it stops receiving events
@@ -154,26 +145,12 @@ object KeyStateListener2
           */
         def once[U](f: KeyStateEvent2 => U): KeyStateListener2 = {
             val completionFlag = Flag()
-            listeningWhile(!completionFlag) { event =>
+            conditional(!completionFlag) { event =>
                 f(event)
                 completionFlag.set()
             }
         }
         
-        /**
-          * @param condition A condition that must be met for this listener to receive event data
-          * @return Copy of this factory that applies this filter to created listeners.
-          *         If there was a condition already in place, both of these conditions will be applied
-          *         (using logical and).
-          */
-        def listeningWhile(condition: Changing[Boolean]) =
-            copy(condition = this.condition && condition)
-        
-        /**
-          * @param f A mapping function to apply to the current event-filter used by this factory
-          * @return Copy of this factory with the mapped filter applied
-          */
-        def mapFilter(f: Mutate[KeyStateEventFilter]) = copy(filter = f(filter))
         /**
           * @param f A function that accepts the KeyStateEventFilter object and yields a suitable filter to add
           *          to this factory
@@ -194,19 +171,19 @@ object KeyStateListener2
 }
 
 /**
- * Common trait for listeners that are interested in receiving events concerning keyboard state changes
- * @author Mikko Hilpinen
- * @since 22.2.2017
- */
+  * Common trait for listeners that are interested in receiving events concerning keyboard state changes
+  * @author Mikko Hilpinen
+  * @since 22.2.2017
+  */
 trait KeyStateListener2 extends Handleable2
 {
     /**
-     * This method will be called when the keyboard state changes, provided this items handling state allows it.
+      * This method will be called when the keyboard state changes, provided this items handling state allows it.
       * @param event The key-state event that just occurred
-     */
+      */
     def onKeyState(event: KeyStateEvent2): Unit
     /**
-     * This listener will only be called for events accepted by this filter.
-     */
+      * This listener will only be called for events accepted by this filter.
+      */
     def keyStateEventFilter: KeyStateEventFilter
 }

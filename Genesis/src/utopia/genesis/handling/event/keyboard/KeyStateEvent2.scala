@@ -1,9 +1,9 @@
-package utopia.genesis.event.keyboard
+package utopia.genesis.handling.event.keyboard
 
 import utopia.genesis.event.KeyLocation
-import utopia.genesis.event.keyboard.Key.{ArrowKey, DownArrow, LeftArrow, RightArrow, UpArrow}
-import utopia.genesis.event.keyboard.KeyEvent.KeyEventFilter
-import utopia.genesis.handling.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, DownArrow, LeftArrow, RightArrow, UpArrow}
+import utopia.genesis.handling.event.keyboard.KeyEvent.KeyEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
 
