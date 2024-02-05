@@ -104,7 +104,7 @@ case class MouseButtonStateEvent(buttonIndex: Int, isDown: Boolean, override val
     
     override def consumed(event: ConsumeEvent) = if (isConsumed) this else copy(consumeEvent = Some(event))
     
-    override def me = this
+    override def self = this
     
     def mapPosition(f: Point => Point) = copy(mousePosition = f(mousePosition))
     

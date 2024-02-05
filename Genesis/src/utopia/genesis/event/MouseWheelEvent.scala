@@ -21,7 +21,7 @@ case class MouseWheelEvent(wheelTurn: Double, override val mousePosition: Point,
 {
 	override def consumed(event: ConsumeEvent) = if (isConsumed) this else copy(consumeEvent = Some(event))
 	
-	override def me = this
+	override def self = this
 	
 	override def mapPosition(f: Point => Point) = copy(mousePosition = f(mousePosition))
 }
