@@ -5,7 +5,7 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.ConsumeEvent
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilterableFactory
+import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
 import utopia.genesis.handling.event.{ConsumeChoice, ListenerFactory}
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -80,7 +80,7 @@ object MouseWheelListener2
     
     // NESTED   ----------------------
     
-    trait MouseWheelFilterableFactory[+A] extends MouseFilterableFactory[MouseWheelEvent2, A]
+    trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent2, A]
     {
         // COMPUTED ------------------
         
@@ -109,7 +109,7 @@ object MouseWheelListener2
             withFilter { e => Sign.of(e.wheelTurn) == rotationDirection.sign }
     }
     
-    object MouseWheelEventFilter extends MouseWheelFilterableFactory[MouseWheelEventFilter]
+    object MouseWheelEventFilter extends MouseWheelFilteringFactory[MouseWheelEventFilter]
     {
         // IMPLEMENTED  --------------
         
@@ -127,7 +127,7 @@ object MouseWheelListener2
     
     case class MouseWheelListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseWheelEventFilter = AcceptAll)
         extends ListenerFactory[MouseWheelEvent2, MouseWheelListenerFactory]
-            with MouseWheelFilterableFactory[MouseWheelListenerFactory]
+            with MouseWheelFilteringFactory[MouseWheelListenerFactory]
     {
         // IMPLEMENTED  --------------
         

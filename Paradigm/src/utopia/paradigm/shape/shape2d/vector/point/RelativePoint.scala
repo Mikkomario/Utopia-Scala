@@ -3,7 +3,6 @@ package utopia.paradigm.shape.shape2d.vector.point
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.{Combinable, LinearScalable, Subtractable}
 import utopia.flow.operator.equality.EqualsBy
-import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.OriginType
 import utopia.paradigm.enumeration.OriginType.{Absolute, Relative}
@@ -13,6 +12,14 @@ import scala.language.implicitConversions
 
 object RelativePoint
 {
+	// ATTRIBUTES   -------------------
+	
+	/**
+	  * (0,0) absolute & relative position
+	  */
+	val origin = apply(Point.origin, Point.origin)
+	
+	
 	// IMPLICIT -----------------------
 	
 	implicit def convertToRelative(p: RelativePoint): Point = p.relative

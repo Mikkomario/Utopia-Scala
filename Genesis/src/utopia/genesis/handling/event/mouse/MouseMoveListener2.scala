@@ -4,7 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilterableFactory
+import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -96,7 +96,7 @@ object MouseMoveListener2
     
     // NESTED   ----------------------
     
-    trait MouseMoveFilteringFactory[+E <: MouseMoveEventLike[_], +A] extends MouseFilterableFactory[E, A]
+    trait MouseMoveFilteringFactory[+E <: MouseMoveEventLike[_], +A] extends MouseFilteringFactory[E, A]
     {
         // COMPUTED ------------------
         

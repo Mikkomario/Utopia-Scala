@@ -7,8 +7,15 @@
 ### New methods
 - **Bounds** (object)
   - Added `.aroundPoints(IterableOnce[HasDoubleDimensions])`
+- **RelativePoint**
+  - Object
+    - Added `.origin`
+  - Class
+    - Added `.apply(OriginType)`
 - **Size** (object)
   - Added `.fullHd`
+### Other changes
+- Slightly refactored **RelativePoint** mapping logic
 
 ## v1.5 - 22.01.2024
 This update contains some major refactoring in the following classes / concepts:

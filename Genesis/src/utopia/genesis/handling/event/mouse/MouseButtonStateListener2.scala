@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{ConsumeEvent, MouseButton}
 import utopia.genesis.handling.event.{ConsumeChoice, ListenerFactory}
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilterableFactory
+import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.shape.shape2d.area.Area2D
 
@@ -155,7 +155,7 @@ object MouseButtonStateListener2
     
     // NESTED   --------------------
     
-    trait MouseButtonFilteringFactory[+E <: MouseButtonStateEventLike[_], +Repr] extends MouseFilterableFactory[E, Repr]
+    trait MouseButtonFilteringFactory[+E <: MouseButtonStateEventLike[_], +Repr] extends MouseFilteringFactory[E, Repr]
     {
         /**
           * @return An item that only accepts events concerning the left mouse button
