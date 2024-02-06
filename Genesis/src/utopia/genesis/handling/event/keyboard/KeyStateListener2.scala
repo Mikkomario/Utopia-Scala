@@ -122,7 +122,7 @@ object KeyStateListener2
     
     case class KeyStateListenerFactory(condition: FlagLike = AlwaysTrue,
                                        filter: KeyStateEventFilter = AcceptAll)
-        extends ListenerFactory[KeyStateEvent2, KeyStateListener2, KeyStateListenerFactory]
+        extends ListenerFactory[KeyStateEvent2, KeyStateListenerFactory]
             with KeyStateFilteringFactory[KeyStateListenerFactory]
     {
         // IMPLEMENTED  ---------------------
@@ -130,12 +130,17 @@ object KeyStateListener2
         override def usingFilter(filter: Filter[KeyStateEvent2]): KeyStateListenerFactory = copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): KeyStateListenerFactory = copy(condition = condition)
 	    
-	    override def apply[U](f: KeyStateEvent2 => U): KeyStateListener2 = new _KeyStateListener[U](condition, filter, f)
-	    
 	    override protected def withFilter(filter: Filter[KeyStateEvent2]): KeyStateListenerFactory = filtering(filter)
 	    
 	    
 	    // OTHER    -------------------------
+        
+        /**
+          * @param f A function to call when a key state event occurs
+          * @tparam U Arbitrary function result type
+          * @return A listener that wraps the specified function and uses this factory's conditions & filters
+          */
+        def apply[U](f: KeyStateEvent2 => U): KeyStateListener2 = new _KeyStateListener[U](condition, filter, f)
         
         /**
           * Creates a new listener that receives one event, after which it stops receiving events

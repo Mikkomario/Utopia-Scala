@@ -6,6 +6,8 @@ import utopia.genesis.handling.event.ConsumeChoice
 
 object Consumable
 {
+	// ATTRIBUTES   -----------------
+	
 	@deprecated("Please use .unconsumedFilter instead", "v3.6")
 	val notConsumedFilter: utopia.inception.util.Filter[Consumable[_]] = !_.isConsumed
 	/**

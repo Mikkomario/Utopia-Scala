@@ -107,6 +107,17 @@ object KeyEvent
 		  *         (i.e. accepts key-combos involving that key)
 		  */
 		def whileKeyDown(key: Key, location: KeyLocation) = withFilter { _.keyboardState(key, location) }
+		/**
+		  * @param key Targeted keyboard key
+		  * @return An item that only accepts events while the specified key is in the released state
+		  */
+		def whileKeyReleased(key: Key) = withFilter { !_.keyboardState(key) }
+		/**
+		  * @param key Targeted keyboard key
+		  * @param location Specific location of the targeted key
+		  * @return An item that only accepts events while the specified key is in the released state
+		  */
+		def whileKeyReleased(key: Key, location: KeyLocation) = withFilter { !_.keyboardState(key, location) }
 		
 		private def indices(indices: IterableOnce[Int]) = {
 			val actualIndices = Set.from(indices) - java.awt.event.KeyEvent.VK_UNDEFINED

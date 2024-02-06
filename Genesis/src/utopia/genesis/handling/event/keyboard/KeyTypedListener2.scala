@@ -35,13 +35,22 @@ object KeyTypedListener2
     // NESTED   --------------------------
     
     case class KeyTypedListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
-        extends ListenerFactory[KeyTypedEvent2, KeyTypedListener2, KeyTypedListenerFactory]
+        extends ListenerFactory[KeyTypedEvent2, KeyTypedListenerFactory]
     {
+        // IMPLEMENTED  ------------------
+        
         override def usingFilter(filter: Filter[KeyTypedEvent2]): KeyTypedListenerFactory = copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): KeyTypedListenerFactory = copy(condition = condition)
         
-        override def apply[U](f: KeyTypedEvent2 => U): KeyTypedListener2 =
-            new _KeyTypedListener[U](condition, filter, f)
+        
+        // OTHER    ----------------------
+        
+        /**
+          * @param f A function to call upon key typed -events
+          * @tparam U Arbitrary function result type
+          * @return A listener that calls the specified function, after applying this factory's conditions & filters
+          */
+        def apply[U](f: KeyTypedEvent2 => U): KeyTypedListener2 = new _KeyTypedListener[U](condition, filter, f)
     }
     
     private class _KeyTypedListener[U](override val handleCondition: FlagLike,

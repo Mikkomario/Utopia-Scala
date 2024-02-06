@@ -7,10 +7,9 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 /**
   * Common trait for factories used for creating event listeners
   * @tparam Event Type of events received
-  * @tparam A Type of listeners created
   * @tparam Repr Type of this factory
   */
-trait ListenerFactory[Event, +A, +Repr]
+trait ListenerFactory[Event, +Repr]
 {
     // ABSTRACT --------------------------
     
@@ -33,14 +32,6 @@ trait ListenerFactory[Event, +A, +Repr]
       * @return Copy of this factory that uses (only) the specified condition for managing listening-states
       */
     def usingCondition(condition: Changing[Boolean]): Repr
-    
-    /**
-      * @param f Function called when an event is received
-      * @tparam U Arbitrary function result type
-      * @return A new listener that calls the specified function
-      *         when the conditions listed in this factory are met.
-      */
-    def apply[U](f: Event => U): A
     
     
     // OTHER    -------------------------

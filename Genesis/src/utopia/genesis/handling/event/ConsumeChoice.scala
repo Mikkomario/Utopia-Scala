@@ -28,6 +28,18 @@ object ConsumeChoice
 	implicit def preserveByDefault(@unused u: Unit): ConsumeChoice = Preserve
 	
 	
+	// OTHER    -----------------------
+	
+	/**
+	  * @param event A consume event. None if chose not to consume.
+	  * @return A consume choice that yields the specified event.
+	  */
+	def apply(event: Option[ConsumeEvent]): ConsumeChoice = event match {
+		case Some(event) => Consume(event)
+		case None => Preserve
+	}
+	
+	
 	// NESTED   -----------------------
 	
 	/**
@@ -52,6 +64,17 @@ object ConsumeChoice
 	  */
 	case class Consume(consumeEvent: ConsumeEvent) extends ConsumeChoice
 	{
+		// IMPLEMENTED  --------------------
+		
 		override def eventIfConsumed: Option[ConsumeEvent] = Some(consumeEvent)
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		  * @param condition A condition for consuming
+		  * @return Copy of this choice which is switched to Preserve if the specified condition is met
+		  */
+		def butOnlyIf(condition: Boolean): ConsumeChoice = if (condition) this else Preserve
 	}
 }
