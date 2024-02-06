@@ -3,6 +3,7 @@ package utopia.genesis.event
 import utopia.flow.operator.filter.Filter
 import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.genesis.handling.event.ConsumeChoice
+import utopia.genesis.handling.event.ConsumeChoice.Preserve
 
 object Consumable
 {
@@ -70,18 +71,18 @@ trait Consumable[+Repr]
 	  * @param listeners Listeners to inform
 	  * @param deliver A function which delivers this event to a listener
 	  * @tparam L Type of listeners used
-	  * @return Copy of this event after the deliveries.
+	  * @return Copy of this event after the deliveries, plus a consume choice to forward, if necessary.
 	  *         If one of the listeners consumed this event, returns the consumed copy. Otherwise returns this event.
 	  */
 	def distributeAmong[L](listeners: IterableOnce[L])(deliver: (L, Repr) => ConsumeChoice) = {
 		val listenerIter = listeners.iterator
 		// Case: No listeners to inform => No-op
 		if (!listenerIter.hasNext)
-			self
+			self -> Preserve
 		// Case: Already consumed => Won't bother tracking further consume events
 		else if (isConsumed) {
 			listenerIter.foreach { deliver(_, self) }
-			self
+			self -> Preserve
 		}
 		// Case: Not yet consumed => Prepares for a possible consume event
 		else {
@@ -97,7 +98,7 @@ trait Consumable[+Repr]
 				if (consumeEventPointer.value.isEmpty)
 					consumeEventPointer.value = response.eventIfConsumed
 			}
-			eventPointer.value
+			eventPointer.value -> ConsumeChoice(consumeEventPointer.value)
 		}
 	}
 	

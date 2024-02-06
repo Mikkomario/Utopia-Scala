@@ -97,12 +97,14 @@ object Angle extends RotationFactory[Angle]
      * @param direction Target direction
      * @return The angle that will take an object towards specified direction
      */
-    def towards(direction: Direction2D) = direction match {
+    def apply(direction: Direction2D) = direction match {
         case Direction2D.Right => right
         case Direction2D.Down => down
         case Direction2D.Left => left
         case Direction2D.Up => up
     }
+    @deprecated("Renamed to .apply(Direction2D)", "v3.6")
+    def towards(direction: Direction2D) = apply(direction)
     
     /**
       * @param angles A number of angles

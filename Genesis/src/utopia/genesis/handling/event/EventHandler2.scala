@@ -1,6 +1,7 @@
-package utopia.genesis.handling.template
+package utopia.genesis.handling.event
 
 import utopia.flow.operator.filter.Filter
+import utopia.genesis.handling.template.{Handleable2, Handler2}
 
 /**
   * Event handlers distribute events for the handleable instances
@@ -32,5 +33,5 @@ trait EventHandler2[Listener <: Handleable2, -Event] extends Handler2[Listener]
 	  * Distributes an event between the listeners
 	  * @param event An event
 	  */
-	def distribute(event: Event): Any = items.foreach { l => if (filterOf(l)(event)) deliver(l, event) }
+	def distribute(event: Event): Unit = items.foreach { l => if (filterOf(l)(event)) deliver(l, event) }
 }

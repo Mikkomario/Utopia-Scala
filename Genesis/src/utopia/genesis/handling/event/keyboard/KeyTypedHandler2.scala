@@ -1,7 +1,8 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.genesis.handling.template.{DeepHandler2, EventHandler2, Handleable2}
+import utopia.genesis.handling.event.EventHandler2
+import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
 /**
   * A handler used for distributing key typed -events

@@ -3,6 +3,8 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.Filter
 import utopia.genesis.event.MouseButton
 import utopia.genesis.event.MouseButton.Middle
+import utopia.paradigm.enumeration.OriginType
+import utopia.paradigm.enumeration.OriginType.Relative
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
@@ -196,9 +198,11 @@ trait MouseEvent2[+Repr]
     // OTHER    ----------------------
     
     /**
-      * Checks whether the mouse cursor is currently over the specified (relative) area
+      * @param area Targeted area
+      * @param areaType Whether the specified area is absolute or relative (default)
+      * @return Whether the mouse cursor is currently over the specified area
       */
-    def isOver(area: Area2D) = area.contains(position.relative)
+    def isOver(area: Area2D, areaType: OriginType = Relative) = area.contains(position(areaType))
     /**
      * Checks whether the mouse cursor is currently over the specified (relative) area
      */
@@ -206,9 +210,10 @@ trait MouseEvent2[+Repr]
     def isOverArea(area: Area2D) = isOver(area)
     /**
       * @param area Targeted relative area
+      * @param areaType Whether the specified area is absolute or relative (default)
       * @return Whether this event's mouse position is outside of the specified area
       */
-    def isOutside(area: Area2D) = !isOver(area)
+    def isOutside(area: Area2D, areaType: OriginType = Relative) = !isOver(area, areaType)
     /**
       * @param area an area (relative)
       * @return Whether the mouse is currently outside of that area
@@ -224,15 +229,24 @@ trait MouseEvent2[+Repr]
     def positionOverArea(area: Bounds) = mousePosition - area.position
     
     /**
-      * @param amount Amount of translation applied to this event's position
-      * @return A copy of this event with translated position
+      * @param f A mapping function for this event's position
+      * @return Copy of this event with mapped position
       */
-    def translated(amount: HasDoubleDimensions) = withPosition(position + amount)
+    def mapPosition(f: RelativePoint => RelativePoint) = withPosition(f(position))
     
     /**
-      * @param origin New origin, relative to the current origin
-      * @return A copy of this event where positions are relative to the specified origin.
-      *         The absolute position is preserved, however
+      * @param transition Amount of translation applied to this event's position
+      * @return A copy of this event with translated position
       */
-    def relativeTo(origin: Point) = withPosition(position.mapRelative { _ - origin })
+    def translated(transition: HasDoubleDimensions) = mapPosition { _ + transition }
+    
+    /**
+      * @param origin New origin
+      * @param originType Whether the specified origin is in the same relative space as this event (default),
+      *                   or whether it is in the absolute space.
+      * @return A copy of this event where positions are relative to the specified origin.
+      *         The absolute position is preserved.
+      */
+    def relativeTo(origin: Point, originType: OriginType = Relative) =
+        mapPosition { _.relativeTo(origin, originType) }
 }
