@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{ConsumeEvent, MouseButton}
 import utopia.genesis.handling.event.{ConsumeChoice, ListenerFactory}
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseEventFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilterableFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.shape.shape2d.area.Area2D
 
@@ -19,7 +19,7 @@ object MouseButtonStateListener2
     /**
       * Filter applied over mouse button state events
       */
-    type MouseButtonStateEventFilter = Filter[MouseButtonStateEvent2]
+    type MouseButtonStateEventFilter = Filter[MouseButtonStateEventLike[_]]
     
     
     // ATTRIBUTES   ----------------
@@ -155,7 +155,7 @@ object MouseButtonStateListener2
     
     // NESTED   --------------------
     
-    trait MouseButtonFilteringFactory[+Repr] extends MouseEventFilteringFactory[MouseButtonStateEvent2, Repr]
+    trait MouseButtonFilteringFactory[+E <: MouseButtonStateEventLike[_], +Repr] extends MouseFilterableFactory[E, Repr]
     {
         /**
           * @return An item that only accepts events concerning the left mouse button
@@ -186,11 +186,6 @@ object MouseButtonStateListener2
           * @return An item that only accepts events concerning right mouse button releases
           */
         def rightReleased = withFilter { e => e.concernsRight && e.released }
-        
-        /**
-          * @return An item that only accepts events that haven't been consumed yet
-          */
-        def unconsumed = withFilter { _.unconsumed }
         
         /**
           * @param button Targeted mouse button
@@ -225,11 +220,12 @@ object MouseButtonStateListener2
         def buttonReleased(button: MouseButton) = withFilter { e => e.button == button && e.released }
     }
     
-    object MouseButtonStateEventFilter extends MouseButtonFilteringFactory[MouseButtonStateEventFilter]
+    object MouseButtonStateEventFilter
+        extends MouseButtonFilteringFactory[MouseButtonStateEventLike[_], MouseButtonStateEventFilter]
     {
         // IMPLEMENTED  ---------------------
         
-        override protected def withFilter(filter: Filter[MouseButtonStateEvent2]): MouseButtonStateEventFilter = filter
+        override protected def withFilter(filter: MouseButtonStateEventFilter): MouseButtonStateEventFilter = filter
         
         
         // OTHER    -------------------------
@@ -238,14 +234,22 @@ object MouseButtonStateListener2
           * @param f A filter function for mouse button state events
           * @return A filter that uses the specified function
           */
-        def apply(f: MouseButtonStateEvent2 => Boolean): MouseButtonStateEventFilter = Filter(f)
+        def apply(f: MouseButtonStateEventLike[_] => Boolean): MouseButtonStateEventFilter = Filter(f)
     }
     
     case class MouseButtonStateListenerFactory(condition: FlagLike = AlwaysTrue,
-                                               filter: MouseButtonStateEventFilter = AcceptAll)
+                                               filter: Filter[MouseButtonStateEvent2] = AcceptAll)
         extends ListenerFactory[MouseButtonStateEvent2, MouseButtonStateListenerFactory]
-            with MouseButtonFilteringFactory[MouseButtonStateListenerFactory]
+            with MouseButtonFilteringFactory[MouseButtonStateEvent2, MouseButtonStateListenerFactory]
     {
+        // COMPUTED -------------------------
+        
+        /**
+          * @return An item that only accepts events that haven't been consumed yet
+          */
+        def unconsumed = withFilter { _.unconsumed }
+        
+        
         // IMPLEMENTED  ---------------------
         
         override def usingFilter(filter: Filter[MouseButtonStateEvent2]): MouseButtonStateListenerFactory =
@@ -268,7 +272,7 @@ object MouseButtonStateListener2
     }
     
     private class _MouseButtonStateListener(override val handleCondition: FlagLike,
-                                            override val mouseButtonStateEventFilter: MouseButtonStateEventFilter,
+                                            override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2],
                                             f: MouseButtonStateEvent2 => ConsumeChoice)
         extends MouseButtonStateListener2
     {

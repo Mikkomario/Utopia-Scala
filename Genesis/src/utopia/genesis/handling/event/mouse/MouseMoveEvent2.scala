@@ -1,11 +1,57 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.filter.Filter
+import utopia.genesis.handling.event.mouse.MouseMoveListener2.MouseMoveEventFilter
+import utopia.paradigm.motion.motion1d.LinearVelocity
+import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import scala.concurrent.duration.FiniteDuration
 
-// TODO: Add deprecated utility functions from MouseMoveEvent
+object MouseMoveEvent2
+{
+	// COMPUTED -----------------------
+	
+	/**
+	  * @return Access point for constructing mouse move -event filters
+	  */
+	def filter = MouseMoveEventFilter
+	
+	
+	// OTHER    ----------------------
+	
+	/**
+	  * Creates an event filter that only accepts mouse events originating from the mouse entering
+	  * the specified area
+	  * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered
+	  */
+	@deprecated("Please use .filter.entered(Area2D) instead", "v3.6")
+	def enterAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent2] = e => e.enteredArea(getArea)
+	/**
+	  * Creates an event filter that only accepts mouse events originating from the mouse exiting the
+	  * specified area
+	  * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered.
+	  */
+	@deprecated("Please use .filter.exited(Area2D) instead", "v3.6")
+	def exitedAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent2] = e => e.exitedArea(getArea)
+	/**
+	  * @param area The followed area (call-by-name)
+	  * @return A filter that only accepts events where the mouse entered or exited the specified area
+	  */
+	@deprecated("Please use .filter.enteredOrExited(Area2D) instead", "v3.6")
+	def enteredOrExitedAreaFilter(area: => Area2D): Filter[MouseMoveEvent2] = { e =>
+		val a = area
+		Pair(e.mousePosition, e.previousMousePosition).isAsymmetricBy(a.contains)
+	}
+	
+	/**
+	  * Creates an event filter that only accepts events where the mouse cursor moved with enough
+	  * speed
+	  */
+	@deprecated("Please use .filter.velocityOver(LinearVelocity) instead", "v3.6")
+	def minVelocityFilter(minVelocity: LinearVelocity): Filter[MouseMoveEvent2] = { e => e.velocity.linear >= minVelocity }
+}
 
 /**
   * An event generated whenever the mouse (cursor) moves
@@ -23,21 +69,9 @@ case class MouseMoveEvent2(positions: Pair[RelativePoint], duration: FiniteDurat
 	
 	// IMPLEMENTED  --------------------------
 	
-	@deprecated("This function only affects the new mouse position. Please use .withPositions(Pair) instead")
-	override def withPosition(position: RelativePoint): MouseMoveEvent2 =
-		copy(positions = positions.withSecond(position))
-	/**
-	  * @param f A mapping function for relative mouse coordinates
-	  * @return Copy of this event with both movement start and movement end positions mapped
-	  */
-	override def mapPosition(f: RelativePoint => RelativePoint) = withPositions(positions.map(f))
-	
-	
-	// OTHER    ------------------------------
-	
 	/**
 	  * @param positions New mouse positions (start & end) to assign
 	  * @return Copy of this event with the specified positions
 	  */
-	def withPositions(positions: Pair[RelativePoint]) = copy(positions = positions)
+	override def withPositions(positions: Pair[RelativePoint]) = copy(positions = positions)
 }

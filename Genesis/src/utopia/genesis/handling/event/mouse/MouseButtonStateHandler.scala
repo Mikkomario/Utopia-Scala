@@ -1,6 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.flow.operator.filter.Filter
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.genesis.handling.event.{ConsumableEventHandler2, ConsumeChoice}
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
@@ -11,9 +11,11 @@ import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
   */
 class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateListener2] = Vector.empty)
 	extends DeepHandler2[MouseButtonStateListener2](initialListeners)
-		with ConsumableEventHandler2[MouseButtonStateListener2, MouseButtonStateEvent2]
+		with ConsumableEventHandler2[MouseButtonStateListener2, MouseButtonStateEvent2] with MouseButtonStateListener2
 {
 	// IMPLEMENTED  ---------------------
+	
+	override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
 	
 	override protected def filterOf(listener: MouseButtonStateListener2): Filter[MouseButtonStateEvent2] =
 		listener.mouseButtonStateEventFilter
@@ -24,4 +26,6 @@ class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateLis
 		case l: MouseButtonStateListener2 => Some(l)
 		case _ => None
 	}
+	
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = distribute(event)._2
 }

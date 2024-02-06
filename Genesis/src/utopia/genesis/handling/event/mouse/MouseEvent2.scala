@@ -79,7 +79,7 @@ object MouseEvent2
     
     // NESTED   ---------------------
     
-    trait MouseEventFilteringFactory[+E <: MouseEvent2[_], +Repr]
+    trait MouseFilterableFactory[+E <: MouseEvent2[_], +Repr]
     {
         // ABSTRACT -----------------
         
@@ -131,7 +131,7 @@ object MouseEvent2
         def whileButtonReleased(button: MouseButton) = withFilter { !_.buttonStates(button) }
     }
     
-    object MouseEventFilter extends MouseEventFilteringFactory[MouseEvent2[_], MouseEventFilter]
+    object MouseEventFilter extends MouseFilterableFactory[MouseEvent2[_], MouseEventFilter]
     {
         // IMPLEMENTED  ---------------
         

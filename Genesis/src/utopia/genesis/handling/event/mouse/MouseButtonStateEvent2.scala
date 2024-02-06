@@ -17,17 +17,12 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 17.2.2017
  */
-case class MouseButtonStateEvent2(button: MouseButton, override val position: RelativePoint,
+case class MouseButtonStateEvent2(override val button: MouseButton, override val position: RelativePoint,
                                   override val buttonStates: MouseButtonStates,
-                                  override val consumeEvent: Option[ConsumeEvent], pressed: Boolean)
-    extends MouseEvent2[MouseButtonStateEvent2] with Consumable[MouseButtonStateEvent2]
+                                  override val consumeEvent: Option[ConsumeEvent], override val pressed: Boolean)
+    extends MouseButtonStateEventLike[MouseButtonStateEvent2] with Consumable[MouseButtonStateEvent2]
 {
     // COMPUTED PROPERTIES    ------------
-    
-    /**
-      * @return Whether the mouse button was released / whether this event was triggered by a mouse button release
-      */
-    def released = !pressed
     
     @deprecated("Please use .pressed instead", "v3.6")
     def isDown = pressed
@@ -52,19 +47,6 @@ case class MouseButtonStateEvent2(button: MouseButton, override val position: Re
       */
     @deprecated("Please use .button.index instead", "v3.6")
     def buttonIndex = button.index
-    
-    /**
-      * @return Whether this event was triggered by the left mouse button
-      */
-    def concernsLeft = concerns(Left)
-    /**
-      * @return Whether this event was triggered by the right mouse button
-      */
-    def concernsRight = concerns(Right)
-    /**
-      * @return Whether this event was triggered by the middle mouse button
-      */
-    def concernsMiddle = concerns(Middle)
     
     /**
      * Whether this event concerns the left mouse button
@@ -97,11 +79,6 @@ case class MouseButtonStateEvent2(button: MouseButton, override val position: Re
     
     // OTHER METHODS    ------------------
     
-    /**
-      * @param button A mouse button
-      * @return Whether this event relates to / describes that button
-      */
-    def concerns(button: MouseButton) = this.button == button
     /**
      * Checks whether this mouse event concerns the specified mouse button
      */

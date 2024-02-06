@@ -28,6 +28,12 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
       */
     def duration: FiniteDuration
     
+    /**
+      * @param positions New mouse positions (start & end) to assign
+      * @return Copy of this event with the specified positions
+      */
+    def withPositions(positions: Pair[RelativePoint]): Repr
+    
     
     // COMPUTED     -----------
     
@@ -50,7 +56,7 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
       */
     def previousPosition = positions.first
     @deprecated("Please use .previousPosition instead", "v3.6")
-    def previousMousePosition = previousPosition
+    def previousMousePosition = previousPosition.relative
     
     /**
       * @return Previously recorded absolute mouse position (meaning a position in the screen pixel coordinate system)
@@ -62,6 +68,14 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
     // IMPLEMENTED  ---------------------
     
     override def position: RelativePoint = positions.second
+    
+    @deprecated("This function only affects the new mouse position. Please use .withPositions(Pair) instead")
+    override def withPosition(position: RelativePoint): Repr = withPositions(positions.withSecond(position))
+    /**
+      * @param f A mapping function for relative mouse coordinates
+      * @return Copy of this event with both movement start and movement end positions mapped
+      */
+    override def mapPosition(f: RelativePoint => RelativePoint) = withPositions(positions.map(f))
     
     
     // OTHER METHODS    -----------------
@@ -104,4 +118,12 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
     def enteredArea(area: Area2D) = entered(area)
     @deprecated("Please use .exited(Area2D) instead", "v3.6")
     def exitedArea(area: Area2D) = exited(area)
+    /**
+      * @param area Targeted area
+      * @param areaType Whether the specified area is in the relative coordinate space (default),
+      *                 or whether it is in the absolute coordinate space.
+      * @return Whether the mouse moved into or out from the specified area during this event
+      */
+    def enteredOrExited(area: Area2D, areaType: OriginType = Relative) =
+        positions.isAsymmetricBy { p => area.contains(p(areaType)) }
 }
