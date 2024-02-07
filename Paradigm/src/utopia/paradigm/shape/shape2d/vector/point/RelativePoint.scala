@@ -65,6 +65,8 @@ object RelativePoint
 	
 	private class _RelativePoint(override val relative: Point, override val absolute: Point) extends RelativePoint
 	{
+		override def onlyAbsolute: RelativePoint = new _RelativePoint(absolute, absolute)
+		
 		override def map(f: Point => Point): RelativePoint = new _RelativePoint(f(relative), f(absolute))
 		override def withRelative(newRelative: Point): RelativePoint = new _RelativePoint(newRelative, absolute)
 	}
@@ -84,6 +86,13 @@ object RelativePoint
 		
 		override def relative: Point = lazyRelative.value
 		override def absolute: Point = lazyAbsolute.value
+		
+		override def onlyAbsolute: RelativePoint = lazyAbsolute.current match {
+			case Some(absolute) => new _RelativePoint(absolute, absolute)
+			case None => new LazyRelativePoint(lazyAbsolute, lazyAbsolute)
+		}
+		
+		override def anchor = super.anchor
 		
 		override def withRelative(newRelative: Point): RelativePoint = lazyAbsolute.current match {
 			case Some(absolute) => new _RelativePoint(newRelative, absolute)
@@ -122,6 +131,12 @@ trait RelativePoint
 	 * @return This point as an absolute point
 	 */
 	def absolute: Point
+	
+	/**
+	  * @return Copy of this point that has no separate relative component
+	  *         (i.e. the relative point is the same as the absolute point)
+	  */
+	def onlyAbsolute: RelativePoint
 	
 	/**
 	  * Changes this point's relative representation, without affecting its absolute position

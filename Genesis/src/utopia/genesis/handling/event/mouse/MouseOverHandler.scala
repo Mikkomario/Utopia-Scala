@@ -78,8 +78,7 @@ class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener2] = Vect
 	override def act(duration: FiniteDuration): Unit = {
 		// Informs each mouse-over-item that the mouse is still hovering over them
 		entries.foreach { case (listener, enterTime) =>
-			// FIXME: Apply the common mouse button states here
-			val event = MouseOverEvent(lastPosition, MouseButtonStates.default, duration, Now - enterTime)
+			val event = MouseOverEvent(lastPosition, CommonMouseEvents.buttonStates, duration, Now - enterTime)
 			if (listener.mouseOverEventFilter(event))
 				listener.onMouseOver(event)
 		}

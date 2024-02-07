@@ -11,6 +11,7 @@
   - Object
     - Added `.origin`
   - Class
+    - Added `.onlyAbsolute`
     - Added `.apply(OriginType)`
 - **Size** (object)
   - Added `.fullHd`

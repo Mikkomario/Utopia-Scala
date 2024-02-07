@@ -424,6 +424,18 @@ trait Changing[+A] extends Any with View[A]
 	  * @param f A function to be performed, when/if appropriate
 	  */
 	def onceChangingStops[U](f: => U): Unit = addChangingStoppedListenerAndSimulateEvent(ChangingStoppedListener(f))
+	/**
+	  * Runs the specified function once/if this pointer stops from changing
+	  * (i.e. when/if [[mayChange]] becomes false), but only if the changing stops at a specific value
+	  * @param value Targeted value
+	  * @param f Function to run once/if this item reaches the specified final value
+	  * @tparam B Type of the targeted value
+	  * @tparam U Arbitrary function result type
+	  */
+	def onceFixedAt[B >: A, U](value: B)(f: => U): Unit = onceChangingStops {
+		if (this.value == value)
+			f
+	}
 	
 	/**
 	  * Registers a new high-priority listener to be informed whenever this item's value changes.

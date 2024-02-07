@@ -12,6 +12,8 @@
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
 ### New methods
+- **Changing**
+  - Added `.onceFixedAt(...)`
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **ResettableFlag**

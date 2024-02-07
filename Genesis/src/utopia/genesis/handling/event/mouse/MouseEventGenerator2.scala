@@ -92,7 +92,25 @@ class MouseEventGenerator2(c: Component, activeCondition: Changing[Boolean] = Al
     private var buttonStates = MouseButtonStates.default
     
     
+    // INITIAL CODE ------------------
+    
+    activeCondition.onceFixedAt(false) { stop() }
+    
+    
     // COMPUTED ----------------------
+    
+    /**
+      * @return A flag that contains true once this generator has been stopped
+      */
+    def stoppedFlag = stopFlag.view
+    /**
+      * @return True if this generator has been stopped
+      */
+    def hasStopped = stopFlag.value
+    /**
+      * @return True if this generator has not been stopped (i.e. is or will be still generating events)
+      */
+    def hasNotStopped = !hasStopped
     
     /**
       * @return A handler that distributes generated mouse move events
