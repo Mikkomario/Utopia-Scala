@@ -1,15 +1,32 @@
 package utopia.genesis.handling.event.keyboard
 
+import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.genesis.handling.event.EventHandler2
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
+object KeyStateHandler extends FromCollectionFactory[KeyStateListener2, KeyStateHandler]
+{
+	// IMPLEMENTED  ------------------------
+	
+	override def from(items: IterableOnce[KeyStateListener2]): KeyStateHandler = apply(items)
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param listeners Listeners to place on this handler, initially
+	  * @return A handler with the specified items
+	  */
+	def apply(listeners: IterableOnce[KeyStateListener2]) = new KeyStateHandler(listeners)
+}
+
 /**
   * A handler that distributes key-state events
   * @author Mikko Hilpinen
-  * @since 03/02/2024, v3.6
+  * @since 03/02/2024, v4.0
   */
-class KeyStateHandler(initialListeners: IterableOnce[KeyStateListener2] = Vector.empty)
+class KeyStateHandler(initialListeners: IterableOnce[KeyStateListener2] = Iterable.empty)
 	extends DeepHandler2[KeyStateListener2](initialListeners)
 		with EventHandler2[KeyStateListener2, KeyStateEvent2] with KeyStateListener2
 {

@@ -1,9 +1,25 @@
 package utopia.genesis.handling.action
 
+import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
 import scala.concurrent.duration.FiniteDuration
 
+object ActorHandler2 extends FromCollectionFactory[Actor2, ActorHandler2]
+{
+	// IMPLEMENTED  ------------------------
+	
+	override def from(items: IterableOnce[Actor2]): ActorHandler2 = new ActorHandler2(items)
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param actors Actors for this handler to manage
+	  * @return A new actor handler
+	  */
+	def apply(actors: IterableOnce[Actor2]) = new ActorHandler2(actors)
+}
 
 /**
   * Actor handlers are used for handling multiple actors as a single actor

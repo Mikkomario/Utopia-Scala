@@ -10,7 +10,7 @@ import scala.collection.mutable
   * Typically handlers are used for distributing events.
   * Handlers are mutable in nature.
   * @author Mikko Hilpinen
-  * @since 30/01/2024, v3.6
+  * @since 30/01/2024, v4.0
   */
 trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 {

@@ -5,7 +5,7 @@ import utopia.flow.collection.mutable.VolatileList
 /**
   * An abstract implementation of the Handler trait
   * @author Mikko Hilpinen
-  * @since 30/01/2024, v3.6
+  * @since 30/01/2024, v4.0
   */
 abstract class AbstractHandler2[A <: Handleable2](initialItems: IterableOnce[A] = Vector.empty) extends Handler2[A]
 {

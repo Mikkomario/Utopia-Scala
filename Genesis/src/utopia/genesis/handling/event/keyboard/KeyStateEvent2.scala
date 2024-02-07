@@ -14,22 +14,22 @@ object KeyStateEvent2
     /**
       * This event filter only accepts events caused by key presses
       */
-    @deprecated("Please use KeyStateEventFilter.pressed instead", "v3.6")
+    @deprecated("Please use KeyStateEventFilter.pressed instead", "v4.0")
     def wasPressedFilter: KeyStateEventFilter = KeyStateEventFilter.pressed
     /**
       * This event filter only accepts events caused by key releases
       */
-    @deprecated("Please use KeyStateEventFilter.released instead", "v3.6")
+    @deprecated("Please use KeyStateEventFilter.released instead", "v4.0")
     def wasReleasedFilter = KeyStateEventFilter.released
     /**
       * This filter only accepts arrow key events
       */
-    @deprecated("Please use KeyEventFilter.anyArrow instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.anyArrow instead", "v4.0")
     def arrowKeysFilter = KeyEventFilter.anyArrow
     /**
       * This event filter only accepts key events while control key is being held down (includes presses of ctrl key itself)
       */
-    @deprecated("Please use KeyEventFilter.whileControlDown instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.whileControlDown instead", "v4.0")
     def controlDownFilter = KeyEventFilter.whileControlDown
     
     
@@ -46,63 +46,63 @@ object KeyStateEvent2
     /**
       * This event filter only accepts events for the specified key index
       */
-    @deprecated("Please use KeyEventFilter.key(Key) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.key(Key) instead", "v4.0")
     def keyFilter(index: Int) = KeyEventFilter.key(Key(index))
     /**
       * This event filter only accepts events for the specified key index + location
       */
-    @deprecated("Please use KeyStateEventFilter.specificKey(Key, KeyLocation) instead", "v3.6")
+    @deprecated("Please use KeyStateEventFilter.specificKey(Key, KeyLocation) instead", "v4.0")
     def keyFilter(index: Int, location: KeyLocation) = KeyStateEventFilter.specificKey(Key(index), location)
     /**
       * @param acceptedKeys Keys that are accepted by the filter
       * @return Event filter that only accepts events concerning specified keys
       */
-    @deprecated("Please use KeyEventFilter.keys(IterableOnce) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.keys(IterableOnce) instead", "v4.0")
     def keysFilter(acceptedKeys: Set[Int]) = KeyEventFilter.keys(acceptedKeys.map(Key.apply))
     /**
       * This event filter only accepts events for the specified key indices
       */
-    @deprecated("Please use KeyEventFilter.keys(...) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.keys(...) instead", "v4.0")
     def keysFilter(firstIndex: Int, secondIndex: Int, moreIndices: Int*): KeyEventFilter =
         keysFilter(Set(firstIndex, secondIndex) ++ moreIndices)
     /**
       * @param notAcceptedKeys Keys that are not accepted by the filter
       * @return A filter that accepts events for all keys except those specified
       */
-    @deprecated("Please use !KeyEventFilter.keys(IterableOnce) instead", "v3.6")
+    @deprecated("Please use !KeyEventFilter.keys(IterableOnce) instead", "v4.0")
     def notKeysFilter(notAcceptedKeys: Set[Int]) = !keysFilter(notAcceptedKeys)
     
     /**
       * @param direction An arrow key direction
       * @return A filter that only accepts events concerning that arrow key
       */
-    @deprecated("Please use KeyEventFilter.arrow(Direction2D) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.arrow(Direction2D) instead", "v4.0")
     def arrowKeyFilter(direction: Direction2D) = KeyEventFilter.arrow(direction)
     
     /**
       * This event filter only accepts events for the specified character key
       */
-    @deprecated("Please use KeyEventFilter.char(Char) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.char(Char) instead", "v4.0")
     def charFilter(char: Char) = KeyEventFilter.char(char)
     /**
       * @param acceptedChars Characters that are accepted by the filter
       * @return Event filter that only accepts events concerning specified characters
       */
-    @deprecated("Please use KeyEventFilter.chars(Iterable) instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.chars(Iterable) instead", "v4.0")
     def charsFilter(acceptedChars: Iterable[Char]) = KeyEventFilter.chars(acceptedChars)
     
     /**
       * @param char Target combo character
       * @return A filter that only accepts events where control is being held down while specified character key is pressed
       */
-    @deprecated("Please use KeyEventFilter.char(Char) && KeyEventFilter.whileControlDown instead", "v3.6")
+    @deprecated("Please use KeyEventFilter.char(Char) && KeyEventFilter.whileControlDown instead", "v4.0")
     def controlCharComboFilter(char: Char) = KeyEventFilter.char(char) && KeyEventFilter.whileControlDown
     
     /**
       * @param direction Arrow key direction
       * @return A key code matching that arrow key
       */
-    @deprecated("Please use ArrowKey(Direction2D).index instead", "v3.6")
+    @deprecated("Please use ArrowKey(Direction2D).index instead", "v4.0")
     def arrowKeyIndex(direction: Direction2D) = ArrowKey(direction).index
 }
 
@@ -119,13 +119,13 @@ case class KeyStateEvent2(index: Int, location: KeyLocation, keyboardState: Keyb
 {
     // COMPUTED ---------------------
     
-    @deprecated("Renamed to .pressed", "v3.6")
+    @deprecated("Renamed to .pressed", "v4.0")
     def isDown = pressed
     /**
       * @return Whether the key was just released
       */
     def released = !pressed
-    @deprecated("Renamed to .released", "v3.6")
+    @deprecated("Renamed to .released", "v4.0")
     def isReleased = !isDown
     
     /**

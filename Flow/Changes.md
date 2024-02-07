@@ -10,6 +10,7 @@
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
 ### New features
 - Added the (rewritten) **Filter** class from the **Inception** module
+- Added **FromCollectionFactory** trait
 ### New methods
 - **PropertyFactory**
   - Added `.mapResult(...)`

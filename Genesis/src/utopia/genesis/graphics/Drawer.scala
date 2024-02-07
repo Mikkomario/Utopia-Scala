@@ -7,7 +7,7 @@ import utopia.paradigm.shape.shape2d.ShapeConvertible
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
-import java.awt.{Font, Graphics2D, RenderingHints, Shape}
+import java.awt.{AlphaComposite, Font, Graphics2D, RenderingHints, Shape}
 
 object Drawer
 {
@@ -51,7 +51,14 @@ class Drawer(protected override val graphics: LazyGraphics)
 	  */
 	def clear(area: Bounds) = {
 		val a = area.round
-		graphics.value.clearRect(a.position.x.toInt, a.position.y.toInt, a.width.toInt, a.height.toInt)
+		val g = graphics.value
+		val originalComposite = g.getComposite
+		
+		// Paints with composite: clear
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR))
+		g.fillRect(a.position.x.toInt, a.position.y.toInt, a.width.toInt, a.height.toInt)
+		// Resets the composite for further drawing
+		g.setComposite(originalComposite)
 	}
 	
 	/**

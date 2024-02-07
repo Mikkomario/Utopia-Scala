@@ -5,7 +5,7 @@ import utopia.flow.view.template.eventful.FlagLike
 /**
   * Common trait for items which may be placed within handlers
   * @author Mikko Hilpinen
-  * @since 30/01/2024, v3.6
+  * @since 30/01/2024, v4.0
   */
 trait Handleable2
 {

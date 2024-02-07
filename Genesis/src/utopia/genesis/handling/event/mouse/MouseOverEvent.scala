@@ -8,7 +8,7 @@ import scala.concurrent.duration.FiniteDuration
 /**
   * These events are fired when the mouse hovers over an object
   * @author Mikko Hilpinen
-  * @since 06/02/2024, v3.6
+  * @since 06/02/2024, v4.0
   * @param position Current mouse hover position
   * @param buttonStates Current mouse button states
   * @param duration Duration since the last event / check (based on action events)

@@ -55,13 +55,13 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
       * @return The mouse position before this movement
       */
     def previousPosition = positions.first
-    @deprecated("Please use .previousPosition instead", "v3.6")
+    @deprecated("Please use .previousPosition instead", "v4.0")
     def previousMousePosition = previousPosition.relative
     
     /**
       * @return Previously recorded absolute mouse position (meaning a position in the screen pixel coordinate system)
       */
-    @deprecated("Please use .previousPosition.absolute instead", "v3.6")
+    @deprecated("Please use .previousPosition.absolute instead", "v4.0")
     def previousAbsoluteMousePosition = previousPosition.absolute
     
     
@@ -90,7 +90,7 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
     /**
      * Checks whether the mouse position was previously over a specified area
      */
-    @deprecated("Please use .startedOver(Area2D) instead", "v3.6")
+    @deprecated("Please use .startedOver(Area2D) instead", "v4.0")
     def wasOverArea(area: Area2D) = startedOver(area)
     /**
       * @param area Targeted area
@@ -114,9 +114,9 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
       * @return Whether the mouse exited the specified area during this movement
       */
     def exited(area: Area2D, areaType: OriginType = Relative) = startedOver(area, areaType) && isOutside(area, areaType)
-    @deprecated("Please use .entered(Area2D) instead", "v3.6")
+    @deprecated("Please use .entered(Area2D) instead", "v4.0")
     def enteredArea(area: Area2D) = entered(area)
-    @deprecated("Please use .exited(Area2D) instead", "v3.6")
+    @deprecated("Please use .exited(Area2D) instead", "v4.0")
     def exitedArea(area: Area2D) = exited(area)
     /**
       * @param area Targeted area

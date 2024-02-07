@@ -21,13 +21,17 @@ import java.awt.image.{BufferedImage, BufferedImageOp}
 object MutableImage
 {
 	/**
+	  * @return A new empty mutable image
+	  */
+	def empty = new MutableImage(None)
+	
+	/**
 	  * Creates a new empty image
 	  * @param size The size of this image (in pixels)
 	  * @param background Background color for this image (default = fully transparent black)
 	  * @return A new image
 	  */
-	def canvas(size: Size, background: Color = Color.transparentBlack) =
-	{
+	def canvas(size: Size, background: Color = Color.transparentBlack) = {
 		implicit val ds: DrawSettings = DrawSettings.onlyFill(background)
 		val source = new BufferedImage(size.width.round.toInt, size.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
 		Drawer(source.createGraphics()).consume { _.draw(Bounds(Point.origin, size)) }
@@ -86,6 +90,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	// IMPLEMENTED	-------------------------------
 	
 	override def source = _source
+	override def isEmpty = source.isEmpty
 	
 	override def alpha = _alpha
 	def alpha_=(newAlpha: Double) = _alpha = (newAlpha max 0.0) min 1.0
@@ -103,8 +108,6 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	
 	override def bounds = Bounds(-origin, size)
 	
-	override def isEmpty = source.isEmpty
-	
 	override def pixels = pixelsCache.value
 	
 	
@@ -115,13 +118,11 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param mod Size scaling factor
 	  */
 	def *=(mod: Double) = scaling *= mod
-	
 	/**
 	  * Scales the size of this image
 	  * @param mod Size scaling factor
 	  */
 	def *=(mod: HasDoubleDimensions) = scaling *= mod
-	
 	/**
 	  * Divides the size of this image
 	  * @param div Size divider
@@ -145,19 +146,16 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param f A mapping function for specified origin in source resolution. Uses None when origin is not specified.
 	  */
 	def updateSpecifiedOrigin(f: Option[Point] => Option[Point]) = specifiedOrigin = f(specifiedOrigin)
-	
 	/**
 	  * Maps the origin of this image in source resolution context
 	  * @param f A mapping function for this image's source resolution origin
 	  */
 	def updateSourceResolutionOrigin(f: Point => Point) = sourceResolutionOrigin = f(sourceResolutionOrigin)
-	
 	/**
 	  * Maps the origin of this image in scaled context
 	  * @param f A mapping function for this image's origin
 	  */
 	def updateOrigin(f: Point => Point) = origin = f(origin)
-	
 	/**
 	  * Places the origin of this image to the current image center
 	  */
@@ -167,12 +165,10 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * Downscales this image to 100% scaling or under
 	  */
 	def downscale() = scaling = scaling.map { _ min 1 }
-	
 	/**
 	  * Upscales this image to 100% scaling or above
 	  */
 	def upscale() = scaling = scaling.map { _ max 1 }
-	
 	/**
 	  * Removes all scaling, resulting in size equal to source resolution
 	  */
@@ -184,20 +180,17 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param area Area to fill
 	  */
 	def resizeToFill(area: Size) = if (size.nonZero) *=((area / size).xyPair.max)
-	
 	/**
 	  * Resizes this image to exactly fit the specified area. Preserves shape, though, which may cause this image to
 	  * shrink inside the area along one axis
 	  * @param area Area to fit to
 	  */
 	def resizeToFit(area: Size) = if (size.nonZero) *=((area / size).xyPair.min)
-	
 	/**
 	  * Makes sure this image fills the specified area. If this image is already larger than the area, does nothing
 	  * @param area Area to fill
 	  */
 	def expandToFill(area: Size) = if (!area.fitsWithin(size)) resizeToFill(area)
-	
 	/**
 	  * Makes sure this image fits into the specified area. If this image is already smaller than the area, does nothing
 	  * @param area Area to fit into
@@ -211,13 +204,11 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  */
 	def limitAlong(side: Axis2D, maxLength: Double) =
 		if (size(side) > maxLength) shrinkToFit(size.withDimension(side(maxLength)))
-	
 	/**
 	  * Places a width limitation for this image. Preserves shape.
 	  * @param maxWidth Maximum allowed width.
 	  */
 	def limitWidth(maxWidth: Double) = limitAlong(X, maxWidth)
-	
 	/**
 	  * Places a height limitation for this image. Preserves shape.
 	  * @param maxHeight Maximum allowed height.
@@ -241,7 +232,6 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  */
 	@deprecated("Please use .updatePixels(...) instead", "v3.2")
 	def updatePixelTable(f: Pixels => Pixels) = updatePixels(f)
-	
 	/**
 	  * Maps all of the pixels in this image
 	  * @param f A function for mapping pixel colors
@@ -257,7 +247,6 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param f A function for mapping pixel colors, also accepts pixel location (in source resolution context)
 	  */
 	def updatePixelPoints(f: (Color, Point) => Color) = updatePixels { _.mapPoints(f) }
-	
 	/**
 	  * Maps pixels in this image in a specified area
 	  * @param area Targeted area inside this image (in scaled context), where (0,0) is at the top-left corner
@@ -386,4 +375,56 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  */
 	def paintOver[U](paint: Drawer => U) =
 		source.foreach { target => Drawer(target.createGraphics()).consume(paint) }
+	
+	/**
+	  * Clears a region within this image
+	  * @param subRegion A sub-region within this image that should be cleared
+	  */
+	def clearRegion(subRegion: Bounds) =
+		(subRegion / scaling).overlapWith(Bounds(Point.origin, sourceResolution))
+			.foreach { area => paintOver { _.clear(area) } }
+	
+	/**
+	  * Changes the actual size of the wrapped image
+	  * @param newSourceResolution New image size to apply
+	  * @param originalContentBounds Bounds of the original image within the new image
+	  */
+	def changeSourceResolution(newSourceResolution: Size, originalContentBounds: Bounds) = {
+		// Case: Switching to a negative or zero size => Discards all image data
+		if (newSourceResolution.isNotPositive)
+			_source = None
+		else {
+			// Prepares the new image
+			val newSource = new BufferedImage(newSourceResolution.width.round.toInt,
+				newSourceResolution.height.round.toInt, BufferedImage.TYPE_INT_ARGB)
+			// Paints the old image into the new image
+			_source.foreach { old =>
+				Drawer(newSource.createGraphics()).consume { drawer =>
+					// Case: No scaling applied => Draws the old image as is
+					if (sourceResolution == originalContentBounds.size)
+						drawer.drawAwtImage(old, originalContentBounds.position)
+					// Case: Scaling applied => Repositions and scales, then draws
+					else
+						drawer.translated(originalContentBounds.position)
+							.scaled(originalContentBounds.size / sourceResolution)
+							.drawAwtImage(old)
+				}
+			}
+			_source = Some(newSource)
+			pixelsCache.reset()
+		}
+	}
+	
+	/**
+	  * Changes this image's source resolution (i.e. the real size).
+	  * Discards all image data in the process.
+	  * @param newSourceResolution New size to assign.
+	  */
+	def resetAndResize(newSourceResolution: Size) = {
+		if (newSourceResolution.isNotPositive)
+			_source = None
+		else
+			_source = Some(new BufferedImage(newSourceResolution.width.round.toInt,
+				newSourceResolution.height.round.toInt, BufferedImage.TYPE_INT_ARGB))
+	}
 }

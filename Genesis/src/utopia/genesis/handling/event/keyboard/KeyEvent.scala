@@ -137,7 +137,7 @@ object KeyEvent
 /**
   * Common trait for keyboard key -related events
   * @author Mikko Hilpinen
-  * @since 03/02/2024, v3.6
+  * @since 03/02/2024, v4.0
   */
 trait KeyEvent
 {
@@ -169,6 +169,6 @@ trait KeyEvent
 	/**
 	  * Checks whether the event concerns a specific character key
 	  */
-	@deprecated("Replaced with concernsChar(Char)", "v3.6")
+	@deprecated("Replaced with concernsChar(Char)", "v4.0")
 	def isCharacter(char: Char) = concernsChar(char)
 }

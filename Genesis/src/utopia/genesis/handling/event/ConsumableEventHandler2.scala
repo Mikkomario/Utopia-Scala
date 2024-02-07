@@ -8,7 +8,7 @@ import utopia.genesis.handling.template.{Handleable2, Handler2}
 /**
   * A common trait for event-distributing handlers that deal with consumable events
   * @author Mikko Hilpinen
-  * @since 05/02/2024, v3.6
+  * @since 05/02/2024, v4.0
   */
 trait ConsumableEventHandler2[Listener <: Handleable2, Event <: Consumable[Event]] extends Handler2[Listener]
 {

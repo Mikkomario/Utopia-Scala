@@ -14,7 +14,7 @@ trait MouseButton extends EqualsBy
     
     // COMPUTED --------------------
     
-    @deprecated("Please use .index instead", "v3.6")
+    @deprecated("Please use .index instead", "v4.0")
     def buttonIndex = index
     
     
@@ -41,7 +41,7 @@ object MouseButton
     
     // COMPUTED ---------------------
     
-    @deprecated("Please use .standardValues instead", "v3.6")
+    @deprecated("Please use .standardValues instead", "v4.0")
     def values = standardValues
     
     
@@ -58,7 +58,7 @@ object MouseButton
       * (left, right, middle)
       * @param buttonIndex the index of the button
       */
-    @deprecated("Please use .apply(Int) instead", "v3.6")
+    @deprecated("Please use .apply(Int) instead", "v4.0")
     def forIndex(buttonIndex: Int) = standardValues.find { _.index == buttonIndex }
     
     

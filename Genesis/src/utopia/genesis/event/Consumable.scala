@@ -9,7 +9,7 @@ object Consumable
 {
 	// ATTRIBUTES   -----------------
 	
-	@deprecated("Please use .unconsumedFilter instead", "v3.6")
+	@deprecated("Please use .unconsumedFilter instead", "v4.0")
 	val notConsumedFilter: utopia.inception.util.Filter[Consumable[_]] = !_.isConsumed
 	/**
 	  * A filter that only accepts unconsumed items
@@ -108,7 +108,7 @@ trait Consumable[+Repr]
 	  * @param take Performs a single operation on this consumable item. Returns a consume event if this event is / was consumed.
 	  * @return Whether this event should now be considered consumed
 	  */
-	@deprecated("Please convert to using distributeAmong(...) instead", "v3.6")
+	@deprecated("Please convert to using distributeAmong(...) instead", "v4.0")
 	def handleWith(hasNext: => Boolean)(take: Repr => Option[ConsumeEvent]): Option[ConsumeEvent] = {
 		if (isConsumed) {
 			while (hasNext) { take(self) }
@@ -136,7 +136,7 @@ trait Consumable[+Repr]
 	  * @tparam L The type of the listeners
 	  * @return Whether this event should now be considered consumed
 	  */
-	@deprecated("Please convert to using distributeAmong(...) instead", "v3.6")
+	@deprecated("Please convert to using distributeAmong(...) instead", "v4.0")
 	def distributeAmong[L](listeners: Seq[L])(call: (L, Repr) => Option[ConsumeEvent]) = {
 		var nextIndex = 0
 		def hasNext = nextIndex < listeners.size

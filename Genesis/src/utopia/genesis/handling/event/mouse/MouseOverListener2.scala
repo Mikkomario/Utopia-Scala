@@ -123,7 +123,7 @@ object MouseOverListener2
 /**
   * Common trait for classes which are interested in receiving events while the mouse cursor hovers over them
   * @author Mikko Hilpinen
-  * @since 06/02/2024, v3.6
+  * @since 06/02/2024, v4.0
   */
 trait MouseOverListener2 extends Handleable2 with Area2D
 {

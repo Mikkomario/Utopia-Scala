@@ -30,17 +30,17 @@ object MouseEvent2
     /**
     * This filter only accepts mouse events where the left mouse button is pressed down
     */
-    @deprecated("Please use .filter.whileLeftDown instead", "v3.6")
+    @deprecated("Please use .filter.whileLeftDown instead", "v4.0")
     def isLeftDownFilter = filter.whileLeftDown
     /**
       * This filter only accepts mouse events where the right mouse button is pressed down
       */
-    @deprecated("Please use .filter.whileRightDown instead", "v3.6")
+    @deprecated("Please use .filter.whileRightDown instead", "v4.0")
     def isRightDownFilter = filter.whileRightDown
     /**
       * This filter only accepts mouse events where the middle mouse button is pressed down
       */
-    @deprecated("Please use .filter.whileMiddleDown instead", "v3.6")
+    @deprecated("Please use .filter.whileMiddleDown instead", "v4.0")
     def isMiddleDownFilter = filter.whileMiddleDown
     
     
@@ -50,20 +50,20 @@ object MouseEvent2
       * This filter only accepts mouse events where the mouse cursor is over the specified area
       * @param getArea A function for calculating the target area. Will be called each time an event is being filtered.
       */
-    @deprecated("Please use .filter.over(Area2D) instead", "v3.6")
+    @deprecated("Please use .filter.over(Area2D) instead", "v4.0")
     def isOverAreaFilter(getArea: => Area2D) = filter.over(getArea)
     /**
       * @param area Tested area (call-by-name)
       * @return A filter that only accepts events that occur outside the specified area
       */
-    @deprecated("Please use .filter.outside(Area2D) instead", "v3.6")
+    @deprecated("Please use .filter.outside(Area2D) instead", "v4.0")
     def isOutsideAreaFilter(area: => Area2D) = filter.outside(area)
     
     /**
       * This filter only accepts events where a mouse button with the specified index has the
       * specified status (down (true) or up (false))
       */
-    @deprecated("Deprecated for removal. Use filter.whileButtonDown(MouseButton) or .whileButtonReleased(MouseButton) instead.", "v3.6")
+    @deprecated("Deprecated for removal. Use filter.whileButtonDown(MouseButton) or .whileButtonReleased(MouseButton) instead.", "v4.0")
     def buttonStatusFilter(buttonIndex: Int, requiredStatus: Boolean) =
         filter { _.buttonStates(buttonIndex) == requiredStatus }
     /**
@@ -72,7 +72,7 @@ object MouseEvent2
       * @param requiredStatus The status the button must have in order for the event to be included.
       * Defaults to true (down)
       */
-    @deprecated("Deprecated for removal. Use filter.whileButtonDown(MouseButton) or .whileButtonReleased(MouseButton) instead.", "v3.6")
+    @deprecated("Deprecated for removal. Use filter.whileButtonDown(MouseButton) or .whileButtonReleased(MouseButton) instead.", "v4.0")
     def buttonStatusFilter(button: MouseButton, requiredStatus: Boolean = true) =
         filter { _.buttonStates(button) == requiredStatus }
     
@@ -180,18 +180,18 @@ trait MouseEvent2[+Repr]
     /**
       * @return The current (relative) mouse position
       */
-    @deprecated("Please use .position instead", "v3.6")
+    @deprecated("Please use .position instead", "v4.0")
     def mousePosition: Point = position.relative
     /**
       * @return Mouse position in the current screen coordinate system (in pixels)
       */
-    @deprecated("Please use .position.absolute instead", "v3.6")
+    @deprecated("Please use .position.absolute instead", "v4.0")
     def absoluteMousePosition: Point = position.absolute
     
     /**
       * @return The current mouse button status
       */
-    @deprecated("Please use .buttonStates instead", "v3.6")
+    @deprecated("Please use .buttonStates instead", "v4.0")
     def buttonStatus = buttonStates
     
     
@@ -206,7 +206,7 @@ trait MouseEvent2[+Repr]
     /**
      * Checks whether the mouse cursor is currently over the specified (relative) area
      */
-    @deprecated("Please use .isOver(Area2D) instead", "v3.6")
+    @deprecated("Please use .isOver(Area2D) instead", "v4.0")
     def isOverArea(area: Area2D) = isOver(area)
     /**
       * @param area Targeted relative area
@@ -218,14 +218,14 @@ trait MouseEvent2[+Repr]
       * @param area an area (relative)
       * @return Whether the mouse is currently outside of that area
       */
-    @deprecated("Please use .isOutside(Area2D) instead", "v3.6")
+    @deprecated("Please use .isOutside(Area2D) instead", "v4.0")
     def isOutsideArea(area: Area2D) = isOutside(area)
     
     /**
       * @param area Target area
       * @return Mouse position relative to the specified area
       */
-    @deprecated("Deprecated for removal", "v3.6")
+    @deprecated("Deprecated for removal", "v4.0")
     def positionOverArea(area: Bounds) = mousePosition - area.position
     
     /**

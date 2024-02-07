@@ -59,6 +59,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	// Area being drawn currently -> queued areas
 	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Vector[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
+	// TODO: Consider using a MutableImage as a buffer?
 	private val bufferPointer = VolatileOption[Image]()
 	// None while overfilled, a vector of update images otherwise
 	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
@@ -289,8 +290,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		}
 	}
 	
-	private def paintArea(drawer: Drawer, region: Bounds) =
-	{
+	private def paintArea(drawer: Drawer, region: Bounds) = {
 		// First draws the component region to a separate image
 		val buffered = {
 			val base = component.regionToImage(region)

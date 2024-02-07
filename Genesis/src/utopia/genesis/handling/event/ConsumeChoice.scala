@@ -8,7 +8,7 @@ import scala.language.implicitConversions
 /**
   * Represents a (listener's) choice to either consume an item, or to keep it unconsumed
   * @author Mikko Hilpinen
-  * @since 05/02/2024, v3.6
+  * @since 05/02/2024, v4.0
   */
 sealed trait ConsumeChoice
 {

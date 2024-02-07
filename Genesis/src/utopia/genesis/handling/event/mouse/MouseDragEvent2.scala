@@ -50,7 +50,7 @@ case class MouseDragEvent2(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2,
 	 */
 	def isDragStart = pressed && dragOrigin.relative == lastMove.previousPosition.relative
 	
-	@deprecated("Please use .startKeyboardState instead", "v3.6")
+	@deprecated("Please use .startKeyboardState instead", "v4.0")
 	def startKeyStatus = startKeyboardState
 	
 	

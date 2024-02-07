@@ -53,7 +53,7 @@ object MouseWheelListener2
       * @param f A function that will be called on wheel rotations
       * @return A new mouse event listener
       */
-    @deprecated("Please use .usingFilter(Filter)(...) instead", "v3.6")
+    @deprecated("Please use .usingFilter(Filter)(...) instead", "v4.0")
     def apply(filter: Filter[MouseWheelEvent2] = AcceptAll)
              (f: MouseWheelEvent2 => Option[ConsumeEvent]): MouseWheelListener2 =
         unconditional.usingFilter(filter) { e => ConsumeChoice(f(e)) }
@@ -64,7 +64,7 @@ object MouseWheelListener2
       * @param f A function that will be called on wheel rotations
       * @return A new mouse event listener
       */
-    @deprecated("Please use .over(Area2D)(...) instead", "v3.6")
+    @deprecated("Please use .over(Area2D)(...) instead", "v4.0")
     def onWheelInsideArea(getArea: => Area2D)(f: MouseWheelEvent2 => Option[ConsumeEvent]) =
         apply { e => e.isOverArea(getArea) }(f)
     /**
@@ -73,7 +73,7 @@ object MouseWheelListener2
       * @param f A function that will be called on wheel rotations
       * @return A new mouse event listener
       */
-    @deprecated("Please use .over(Area2D)(...) instead", "v3.6")
+    @deprecated("Please use .over(Area2D)(...) instead", "v4.0")
     def onWheelInsideAreaNoConsume(getArea: => Area2D)(f: MouseWheelEvent2 => Unit) =
         onWheelInsideArea(getArea) { e => f(e); None }
     
@@ -162,7 +162,7 @@ object MouseWheelListener2
 /**
   * Common trait for classes which want to be notified when the mouse wheel rotates
   * @author Mikko Hilpinen
-  * @since 6.2.2024, v3.6
+  * @since 6.2.2024, v4.0
   */
 trait MouseWheelListener2 extends Handleable2
 {

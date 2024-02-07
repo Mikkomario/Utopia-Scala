@@ -33,7 +33,7 @@ object MouseButtonStates
 /**
  * Represents a snapshot of a mouse's button status, recording the buttons that were held down during the capture time.
  * @author Mikko Hilpinen
- * @since 18.2.2017, refactored 5.2.2024, v3.6
+ * @since 18.2.2017, refactored 5.2.2024, v4.0
  */
 case class MouseButtonStates(buttonsPressed: Set[MouseButton])
 {
@@ -59,12 +59,12 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
     /**
       * @return Whether this status is empty (no mouse button is currently down)
       */
-    @deprecated("Please use .areAllReleased instead", "v3.6")
+    @deprecated("Please use .areAllReleased instead", "v4.0")
     def isEmpty = areAllReleased
     /**
       * @return Whether one or more mouse buttons are currently held down
       */
-    @deprecated("Please use .areSomePressed instead", "v3.6")
+    @deprecated("Please use .areSomePressed instead", "v4.0")
     def isAnyButtonPressed = areSomePressed
 	
 	/**
@@ -83,28 +83,28 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
     /**
      * Whether the left mouse button is currently being held down
      */
-    @deprecated("Please use .left instead", "v3.6")
+    @deprecated("Please use .left instead", "v4.0")
     def isLeftDown = apply(Left)
     /**
      * Whether the right mouse button is currently being held down
      */
-    @deprecated("Please use .right instead", "v3.6")
+    @deprecated("Please use .right instead", "v4.0")
     def isRightDown = apply(Right)
     /**
      * Whether the middle mouse button is currently being held down
      */
-    @deprecated("Please use .middle instead", "v3.6")
+    @deprecated("Please use .middle instead", "v4.0")
     def isMiddleDown = apply(Middle)
     
     /**
       * @return The mouse buttons that are currently considered to be down
       */
-    @deprecated("Please use .buttonsPressed instead", "v3.6")
+    @deprecated("Please use .buttonsPressed instead", "v4.0")
     def downButtons = buttonsPressed
     /**
       * @return The mouse buttons that are currently considered to be up
       */
-    @deprecated("Deprecated for removal", "v3.6")
+    @deprecated("Deprecated for removal", "v4.0")
     def upButtons = MouseButton.standardValues.toSet -- buttonsPressed
     
     /**
@@ -196,13 +196,13 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
       * @param previous Previous mouse button status
       * @return Mouse button indices released since the previous status
       */
-    @deprecated("Please use .buttonsReleasedSince(MouseButtonStates) instead", "v3.6")
+    @deprecated("Please use .buttonsReleasedSince(MouseButtonStates) instead", "v4.0")
     def releasedIndicesSince(previous: MouseButtonStates) = previous.pressesSince(this).downIndices
     /**
       * @param previous Previous mouse button status
       * @return Mouse buttons that were released since the previous status
       */
-    @deprecated("Please use .buttonsReleasedSince(MouseButtonState) instead", "v3.6")
+    @deprecated("Please use .buttonsReleasedSince(MouseButtonState) instead", "v4.0")
     def releasedButtonsSince(previous: MouseButtonStates) = buttonsReleasedSince(previous)
     
     
@@ -226,7 +226,7 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
       * @param status new status for the target button
       * @return A copy of this mouse button status with specified status
       */
-    @deprecated("Please use .withButtonState(MouseButton, Boolean) instead", "v3.6")
+    @deprecated("Please use .withButtonState(MouseButton, Boolean) instead", "v4.0")
     def withStatus(buttonIndex: Int, status: Boolean) =
 	    withButtonState(MouseButton(buttonIndex), status)
 	/**
@@ -234,7 +234,7 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
 	  * @param status new status for the target button
 	  * @return A copy of this mouse button status with specified status
 	  */
-	@deprecated("Please use .withButtonState(MouseButton, Boolean) instead", "v3.6")
+	@deprecated("Please use .withButtonState(MouseButton, Boolean) instead", "v4.0")
 	def withStatus(button: MouseButton, status: Boolean): MouseButtonStates = withButtonState(button, status)
     /**
       * @param button Target button

@@ -26,20 +26,20 @@ object MouseMoveEvent2
 	  * the specified area
 	  * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered
 	  */
-	@deprecated("Please use .filter.entered(Area2D) instead", "v3.6")
+	@deprecated("Please use .filter.entered(Area2D) instead", "v4.0")
 	def enterAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent2] = e => e.enteredArea(getArea)
 	/**
 	  * Creates an event filter that only accepts mouse events originating from the mouse exiting the
 	  * specified area
 	  * @param getArea A function for calculating the target area. Will be called each time an event needs to be filtered.
 	  */
-	@deprecated("Please use .filter.exited(Area2D) instead", "v3.6")
+	@deprecated("Please use .filter.exited(Area2D) instead", "v4.0")
 	def exitedAreaFilter(getArea: => Area2D): Filter[MouseMoveEvent2] = e => e.exitedArea(getArea)
 	/**
 	  * @param area The followed area (call-by-name)
 	  * @return A filter that only accepts events where the mouse entered or exited the specified area
 	  */
-	@deprecated("Please use .filter.enteredOrExited(Area2D) instead", "v3.6")
+	@deprecated("Please use .filter.enteredOrExited(Area2D) instead", "v4.0")
 	def enteredOrExitedAreaFilter(area: => Area2D): Filter[MouseMoveEvent2] = { e =>
 		val a = area
 		Pair(e.mousePosition, e.previousMousePosition).isAsymmetricBy(a.contains)
@@ -49,14 +49,14 @@ object MouseMoveEvent2
 	  * Creates an event filter that only accepts events where the mouse cursor moved with enough
 	  * speed
 	  */
-	@deprecated("Please use .filter.velocityOver(LinearVelocity) instead", "v3.6")
+	@deprecated("Please use .filter.velocityOver(LinearVelocity) instead", "v4.0")
 	def minVelocityFilter(minVelocity: LinearVelocity): Filter[MouseMoveEvent2] = { e => e.velocity.linear >= minVelocity }
 }
 
 /**
   * An event generated whenever the mouse (cursor) moves
   * @author Mikko Hilpinen
-  * @since 06/02/2024, v3.6
+  * @since 06/02/2024, v4.0
   */
 case class MouseMoveEvent2(positions: Pair[RelativePoint], duration: FiniteDuration, buttonStates: MouseButtonStates)
 	extends MouseMoveEventLike[MouseMoveEvent2]

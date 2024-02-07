@@ -28,7 +28,7 @@ object KeyboardState
 /**
  * This immutable class is used for keeping record of keyboard button states.
  * @author Mikko Hilpinen
- * @since 21.2.2017, rewritten 4.2.2024, v3.6
+ * @since 21.2.2017, rewritten 4.2.2024, v4.0
  */
 case class KeyboardState(downIndices: Map[Int, Set[KeyLocation]])
 {
@@ -51,39 +51,39 @@ case class KeyboardState(downIndices: Map[Int, Set[KeyLocation]])
     /**
      * Whether the left arrow key is down
      */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def left = apply(KeyEvent.VK_LEFT)
     /**
      * Whether the right arrow key is down
      */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def right = apply(KeyEvent.VK_RIGHT)
     /**
      * Whether the up arrow key is down
      */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def up = apply(KeyEvent.VK_UP)
     /**
      * Whether the down arrow key is down
      */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def down = apply(KeyEvent.VK_DOWN)
     
     /**
      * Whether the space bar is down
      */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def space = apply(KeyEvent.VK_SPACE)
     
     /**
       * @return Whether a control key is down
       */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def control = apply(KeyEvent.VK_CONTROL)
     /**
       * @return Whether a shift key is down
       */
-    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v3.6")
+    @deprecated("Deprecated for removal. With the introduction of Key class, these helpers should be redundant", "v4.0")
     def shift = apply(KeyEvent.VK_SHIFT)
     
     
