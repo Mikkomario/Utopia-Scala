@@ -1,5 +1,9 @@
 # Utopia Courier - List of Changes
 
+## v1.1.1 (in development)
+### Bugfixes
+- Email reading would previously fail (at least in some situations) because of a message-indexing failure
+
 ## v1.1 - 22.01.2024
 A major update for the email-reading side. 
 This update introduces more advanced folder-targeting and email deletion support. 
