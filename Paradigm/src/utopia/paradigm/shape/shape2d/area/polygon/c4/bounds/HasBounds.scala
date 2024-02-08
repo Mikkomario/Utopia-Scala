@@ -51,6 +51,10 @@ trait HasBounds extends HasSize with Area2D
 	def bottomRight = Point(bounds.dimensions.map { _.max })
 	
 	/**
+	  * @return The center point of this item
+	  */
+	def center = Point(bounds.dimensions.map { r => (r.start + r.end) / 2.0 })
+	/**
 	  * @return A point at the center of this item vertically, at the left horizontally
 	  */
 	def centerLeft = topLeft + Y(height / 2)

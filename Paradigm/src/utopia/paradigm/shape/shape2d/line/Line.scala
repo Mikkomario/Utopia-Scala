@@ -105,6 +105,7 @@ case class Line(override val ends: Pair[Point])
     
     override def start = ends.first
     override def end = ends.second
+    override def center = ends.merge { _ + _ } / 2.0
     
     override def bounds = Bounds.between(start, end)
     

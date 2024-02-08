@@ -111,7 +111,7 @@ trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 					Detach
 				// Case: Default => Adds the item
 				else {
-					this += item
+					addOneUnconditionally(item)
 					Continue
 				}
 			}

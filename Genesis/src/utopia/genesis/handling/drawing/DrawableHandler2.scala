@@ -7,9 +7,13 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Priority2.Normal
-import utopia.genesis.graphics.{DrawLevel2, DrawOrder, Drawer, PaintManager2, Priority2}
+import utopia.genesis.graphics.{DrawLevel2, DrawOrder, DrawSettings, Drawer, PaintManager2, Priority2, StrokeSettings}
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.event.keyboard.Key.FunctionKey
+import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 import utopia.genesis.image.MutableImage
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -63,11 +67,14 @@ object DrawableHandler2 extends FromCollectionFactory[Drawable2, DrawableHandler
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
+// TODO: Add FPS limiting
 class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
                        initialItems: IterableOnce[Drawable2] = Vector.empty)
 	extends DeepHandler2[Drawable2](initialItems) with Drawable2 with PaintManager2
 {
 	// ATTRIBUTES   --------------------------
+	
+	implicit private val testDs: DrawSettings = StrokeSettings(Color.red)
 	
 	private val groupedItemsPointer = itemsPointer.readOnly
 		.map { _.groupBy { _.drawOrder.level }.withDefaultValue(Vector.empty) }
@@ -107,8 +114,12 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 	override def draw(drawer: Drawer, bounds: Bounds) = paintWith(drawer)
 	override def paintWith(drawer: Drawer) = {
 		drawer.clippingBounds match {
-			case Some(clip) => _paint(drawer, clip)
-			case None => layers.reverseIterator.foreach { _.paintWith(drawer) }
+			case Some(clip) =>
+				println(s"Painting clip: $clip")
+				_paint(drawer, clip)
+			case None =>
+				println("Painting all")
+				layers.reverseIterator.foreach { _.paintWith(drawer) }
 		}
 	}
 	
@@ -173,7 +184,9 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		// INITIAL CODE ---------------------
 		
+		updateDrawBounds()
 		drawBoundsPointer.addContinuousListener { e =>
+			println(e.newValue)
 			e.oldValue.overlapWith(e.newValue) match {
 				case Some(overlap) => buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
 				case None => buffer.resetAndResize(e.newValue.size)
@@ -207,12 +220,18 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		// OTHER    ---------------------
 		
-		def paintWith(drawer: Drawer) = buffer.drawWith(drawer)
+		def paintWith(drawer: Drawer) = {
+			drawBounds.foreach { bounds =>
+				buffer.drawWith(drawer, bounds.position)
+				drawer.draw(bounds.shrunk(4.0))
+			}
+		}
 		
 		// TODO: Consider using a more optimized reset function
 		def resetBuffer() = buffer.paintOver { drawer =>
 			drawer.clear(Bounds(Point.origin, buffer.size))
-			orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds) }
+			val translation = drawBoundsPointer.value.position
+			orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
 		}
 		def updateBuffer(region: Bounds) = {
 			// Determines the targeted area within the buffer image

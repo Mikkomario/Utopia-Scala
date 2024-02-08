@@ -41,6 +41,7 @@ object HasMutableBounds
 * @author Mikko Hilpinen
 * @since 26.2.2019
 **/
+// TODO: Extend HasMutableSize
 trait HasMutableBounds extends HasBounds
 {
     // ABSTRACT    ------------------------
@@ -97,7 +98,6 @@ trait HasMutableBounds extends HasBounds
     def topRight_=(p: Point) = position = p - X(width)
     def bottomRight_=(p: Point) = position = p - size
     def bottomLeft_=(p: Point) = position = p - Y(height)
-    def center = position + size / 2
     def center_=(p: Point) = position = p - size / 2
     
     

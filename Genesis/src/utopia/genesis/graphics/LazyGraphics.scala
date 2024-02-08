@@ -18,6 +18,7 @@ object LazyGraphics
 	  * @param graphics Graphics instance to wrap (lazily called)
 	  * @return A lazy graphics instance
 	  */
+	// FIXME: Assign clip bounds here
 	def apply(graphics: => ClosingGraphics) = new LazyGraphics(Left(Lazy(graphics)))
 	
 	/**

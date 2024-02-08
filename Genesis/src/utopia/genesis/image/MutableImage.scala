@@ -44,6 +44,7 @@ object MutableImage
   * @author Mikko Hilpinen
   * @since 25.11.2020, v2.4
   */
+// TODO: Extend HasMutableSize (NB: Changes preserveShape default values!)
 class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2D = Vector2D.identity,
 				   initialAlpha: Double = 1.0, initialOrigin: Option[Point] = None)
 	extends ImageLike

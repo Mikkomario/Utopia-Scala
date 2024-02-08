@@ -4,9 +4,15 @@
 ### Bugfixes
 - Fixed **DirectionalRotationLike** `+(C)` implementation, which would previously combine opposite rotations in cases 
   where the first rotation was negative
+### New features
+- Added **HasMutableSize** trait
 ### New methods
+- **Bounded**
+  - Added `.withCenter`
 - **Bounds** (object)
   - Added `.aroundPoints(IterableOnce[HasDoubleDimensions])`
+- **HasBounds**
+  - Added `.center`
 - **RelativePoint**
   - Object
     - Added `.origin`

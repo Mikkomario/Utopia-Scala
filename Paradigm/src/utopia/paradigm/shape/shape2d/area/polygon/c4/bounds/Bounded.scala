@@ -95,6 +95,11 @@ trait Bounded[+Repr] extends HasBounds with Sized[Repr]
 		else
 			withBounds(Bounds(bottomRight - size, size))
 	}
+	/**
+	  * @param center A new center point to assign
+	  * @return Copy of this item with the center placed at the specified point
+	  */
+	def withCenter(center: Point) = translated(center - bounds.center)
 	
 	/**
 	  * Creates a copy of this item that has been positioned within the specified bounds using a specific alignment.

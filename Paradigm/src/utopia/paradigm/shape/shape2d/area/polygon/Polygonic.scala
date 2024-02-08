@@ -84,19 +84,6 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	def collisionAxes = edges.distinctWith { _ isParallelWith _ }.map { _.normal2D }
 	
 	/**
-	  * @return The center point of this shape
-	  */
-	def center = {
-		val c = corners
-		if (c.isEmpty)
-			Point.origin
-		else {
-			val total = c.reduce { _ + _ }
-			total / c.size
-		}
-	}
-	
-	/**
 	  * @return The length of the longest edge in this polygon
 	  */
 	def maxEdgeLength = edges.map { _.length }.maxOption.getOrElse(0.0)
@@ -187,6 +174,19 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	
 	
 	// IMPLEMENTED	------------
+	
+	/**
+	  * @return The center point of this shape
+	  */
+	override def center = {
+		val c = corners
+		if (c.isEmpty)
+			Point.origin
+		else {
+			val total = c.reduce { _ + _ }
+			total / c.size
+		}
+	}
 	
 	/**
 	  * @return The bounds around this polygonic instance

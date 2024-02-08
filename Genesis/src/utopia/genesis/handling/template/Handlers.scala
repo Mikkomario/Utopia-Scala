@@ -52,7 +52,7 @@ object Handlers extends FromCollectionFactory[Handler2[_ <: Handleable2], Handle
   * @author Mikko Hilpinen
   * @since 30/01/2024, v4.0
   */
-trait Handlers extends mutable.Growable[Handleable2]
+trait Handlers extends mutable.Growable[Handleable2] with Iterable[AnyHandler]
 {
 	// ABSTRACT ----------------------
 	
@@ -63,6 +63,9 @@ trait Handlers extends mutable.Growable[Handleable2]
 	
 	
 	// IMPLEMENTED  ------------------
+	
+	override def iterator: Iterator[AnyHandler] = handlers.iterator
+	override def knownSize = handlers.knownSize
 	
 	override def addOne(elem: Handleable2) = {
 		handlers.foreach { _ ?+= elem }
