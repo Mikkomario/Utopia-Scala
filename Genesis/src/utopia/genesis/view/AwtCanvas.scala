@@ -15,6 +15,10 @@ import javax.swing.JPanel
 /**
  * Visualizes a set of drawable components within an AWT/Swing panel.
   * This panel rescales itself when the size changes to display only the specified view world area.
+  *
+  * NB: Currently this class only seems to work properly on undecorated windows.
+  * If you have an idea what might be causing issues with decorated windows, please let me know.
+  *
  * @author Mikko Hilpinen
  * @since 28.12.2016
   * @param originalViewSize The original size of the "view world" displayed in this canvas

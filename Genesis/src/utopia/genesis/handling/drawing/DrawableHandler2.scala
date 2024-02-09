@@ -10,6 +10,7 @@ import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics._
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 import utopia.genesis.image.MutableImage
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -143,10 +144,8 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 			.foldLeftIterator[Option[Bounds]](Some(region)) { (region, layer) => region.flatMap(layer.cover) }
 			.takeWhile { _.isDefined }.toVector.flatten
 		// Paints the targeted layers from bottom to top
-		layers.zip(paintRegions).reverseIterator.foreach { case (layer, region) =>
-			// TODO: Check whether there is a more efficient way to do this than to just use clip
-			layer.paintWith(drawer.clippedToBounds(region))
-		}
+		layers.zip(paintRegions).reverseIterator
+			.foreach { case (layer, region) => layer.paintWith(drawer, Some(region)) }
 	}
 	
 	private def updateDrawBounds() = _drawBoundsPointer.value = Bounds.around(layers.flatMap { _.drawBounds })
@@ -185,6 +184,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		updateDrawBounds()
 		drawBoundsPointer.addContinuousListener { e =>
+			println(s"New draw bounds = ${e.newValue}")
 			e.oldValue.overlapWith(e.newValue) match {
 				case Some(overlap) => buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
 				case None => buffer.resetAndResize(e.newValue.size)
@@ -218,7 +218,22 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		// OTHER    ---------------------
 		
-		def paintWith(drawer: Drawer) = drawBounds.foreach { bounds => buffer.drawWith(drawer, bounds.position) }
+		def paintWith(drawer: Drawer, subRegion: Option[Bounds] = None) = drawBounds.foreach { bounds =>
+			subRegion match {
+				// Case: Drawing a sub-region => Only paints part of the buffer image
+				case Some(region) =>
+					bounds.overlapWith(region).foreach { overlap =>
+						if (overlap == bounds)
+							buffer.drawWith(drawer, bounds.position)
+						else {
+							val relativeArea = overlap - bounds.position
+							buffer.drawSubImageWith(drawer, relativeArea, bounds.position)
+						}
+					}
+				// Case: Drawing the whole image
+				case None => buffer.drawWith(drawer, bounds.position)
+			}
+		}
 		
 		// TODO: Consider using a more optimized reset function
 		def resetBuffer() = buffer.paintOver { drawer =>

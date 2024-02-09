@@ -95,7 +95,9 @@ object MouseTest3 extends App
 			}
 		}
 		private val colorPointer = colorAnglePointer.map[Color] { Hsl(_) }
-		private val shapeCache = Cache.onlyLatest { b: Bounds => Circle(b.center, b.size.minDimension / 2.0) }
+		private val shapeCache = Cache.onlyLatest { b: Bounds =>
+			Circle(b.center, b.size.minDimension / 2.0)
+		}
 		
 		private var _repaintListeners = Vector.empty[RepaintListener]
 		
@@ -124,7 +126,7 @@ object MouseTest3 extends App
 		
 		override def onMouseMove(event: MouseMoveEvent2): Unit = {
 			if (event.buttonStates.left)
-				colorAnglePointer.update { _ + Rotation.circles(0.01).clockwise }
+				colorAnglePointer.update { _ + Rotation.circles(0.001).clockwise * event.transition.length }
 			positionPointer.value = event.position
 		}
 		override def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice =

@@ -98,6 +98,35 @@ class Drawer(protected override val graphics: LazyGraphics)
 		
 		graphics.value.drawImage(image, position.x.round.toInt, position.y.round.toInt, null)
 	}
+	/**
+	  * Draws a rectangular region of an image.
+	  * If the specified regions are of different sizes, scales the image to fit the specified area.
+	  * @param image Image to draw
+	  * @param sourceArea The area within the 'image' that should be drawn, in pixels.
+	  *                   Relative to the top left corner of that image.
+	  * @param targetArea The area that will be covered by the resulting image on screen.
+	  *                   Relative to this drawer's (0,0) coordinates.
+	  * @return True if the drawing has already completed
+	  */
+	def drawAwtSubImage(image: java.awt.Image, sourceArea: Bounds, targetArea: Bounds) = {
+		graphics.value.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+		graphics.value.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+		graphics.value.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+		
+		val sp1 = sourceArea.topLeftCorner
+		val sp2 = sourceArea.bottomRightCorner
+		val tp1 = targetArea.topLeftCorner
+		val tp2 = targetArea.bottomRightCorner
+		graphics.value.drawImage(image,
+			tp1.x.round.toInt, tp1.y.round.toInt, tp2.x.round.toInt, tp2.y.round.toInt,
+			sp1.x.round.toInt, sp1.y.round.toInt, sp2.x.round.toInt, sp2.y.round.toInt,
+			null)
+		/*
+		// TODO: Remove tests
+		graphics.value.setColor(Color.cyan.toAwt)
+		graphics.value.drawRect(tp1.x.toInt, tp1.y.toInt, (tp2.x - tp1.x).toInt, (tp2.y - tp1.y).toInt)
+		true*/
+	}
 	
 	/**
 	  * Copies a region of the drawn area to another location

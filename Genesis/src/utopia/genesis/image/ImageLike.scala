@@ -189,4 +189,21 @@ trait ImageLike extends HasSize
 			transformedDrawer.drawAwtImage(s)
 		}
 	}
+	/**
+	  * Draws a region of this image using the specified drawer.
+	  * @param drawer A drawer
+	  * @param subRegion Region of this image that will be drawn, relative to the top left corner of this image.
+	  * @param position The position where **this image's origin** is drawn (default = (0,0)).
+	  * @return Whether the region was fully drawn already
+	  */
+	def drawSubImageWith(drawer: Drawer, subRegion: Bounds, position: Point = Point.origin) = {
+		source.forall { img =>
+			// Determines the targeted area within the source resolution
+			val drawnRegion = subRegion / scaling
+			// Places the drawn area so that it matches this image's scaling
+			// and so that this image's origin will be placed at the specified point
+			val targetArea = subRegion + (position - origin)
+			drawer.drawAwtSubImage(img, drawnRegion, targetArea)
+		}
+	}
 }
