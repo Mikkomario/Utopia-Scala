@@ -325,7 +325,7 @@ class EmailReader[A](settings: ReadSettings,
 		// Sometimes message deletions are queued to be completed later
 		private lazy val deletionQueuePointer = VolatileList[(Folder, Message)]()
 		
-		override def hasNext: Boolean = queuedFailures.hasNext || openFolder.exists { _._2 > nextMessageIndex } ||
+		override def hasNext: Boolean = queuedFailures.hasNext || openFolder.exists { _._2 >= nextMessageIndex } ||
 			openNextFolder()
 		
 		
@@ -336,7 +336,7 @@ class EmailReader[A](settings: ReadSettings,
 			// Case: A failure was queued => Returns the queued failure
 			case Some(error) => Failure(error)
 			case None =>
-				openFolder.filter { _._2 > nextMessageIndex } match {
+				openFolder.filter { _._2 >= nextMessageIndex } match {
 					// Case: A folder has been opened (as expected) => Reads the next message from the folder
 					case Some((folder, _)) =>
 						val message = Try {
@@ -457,7 +457,8 @@ class EmailReader[A](settings: ReadSettings,
 										true
 								}
 							// Case: No more folders available
-							case None => false
+							case None =>
+								false
 						}
 				}
 			}
