@@ -20,7 +20,7 @@ trait MouseButton extends EqualsBy
     
     // IMPLEMENTED  ----------------
     
-    override protected def equalsProperties: Iterable[Any] = Some(index)
+    override protected def equalsProperties= Vector(index)
 }
 
 /**

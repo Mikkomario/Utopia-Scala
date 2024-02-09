@@ -30,7 +30,7 @@ trait DoubleWorldPointOps[+V <: DoubleVectorLike[V], P, +Aerial, +T]
 	
 	// IMPLEMENTED  ------------------
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(vector, worldView)
+	override protected def equalsProperties: Seq[Any] = Vector(vector, worldView)
 	
 	override def +(other: LatLongRotation): P = at(latLong + other)
 	override def +(vectorTravel: DoubleVector): P = at(vector + vectorTravel)

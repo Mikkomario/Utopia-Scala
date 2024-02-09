@@ -169,15 +169,15 @@ object MouseButtonStateListener2
         /**
           * @return An item that only accepts events concerning the left mouse button
           */
-        def left = button(MouseButton.Left)
+        def left = apply(MouseButton.Left)
         /**
           * @return An item that only accepts events concerning the right mouse button
           */
-        def right = button(MouseButton.Right)
+        def right = apply(MouseButton.Right)
         /**
           * @return An item that only accepts events concerning the middle mouse button
           */
-        def middle = button(MouseButton.Middle)
+        def middle = apply(MouseButton.Middle)
         
         /**
           * @return An item that only accepts events concerning left mouse button presses
@@ -200,12 +200,12 @@ object MouseButtonStateListener2
           * @param button Targeted mouse button
           * @return An item that only accepts events concerning that mouse button
           */
-        def button(button: MouseButton) = withFilter { _.button == button }
+        def apply(button: MouseButton) = withFilter { _.button == button }
         /**
           * @param buttons Targeted mouse buttons
           * @return An item that only accepts events concerning those mouse buttons
           */
-        def buttons(buttons: Set[MouseButton]) = {
+        def apply(buttons: Set[MouseButton]) = {
             if (buttons.isEmpty)
                 withFilter(RejectAll)
             else
@@ -214,8 +214,8 @@ object MouseButtonStateListener2
         /**
           * @return An item that only accepts events concerning the specified mouse buttons
           */
-        def buttons(button1: MouseButton, button2: MouseButton, more: MouseButton*): Repr =
-            buttons(Set(button1, button2) ++ more)
+        def apply(button1: MouseButton, button2: MouseButton, more: MouseButton*): Repr =
+            apply(Set(button1, button2) ++ more)
         
         /**
           * @param button Targeted button

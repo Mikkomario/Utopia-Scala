@@ -7,13 +7,9 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Priority2.Normal
-import utopia.genesis.graphics.{DrawLevel2, DrawOrder, DrawSettings, Drawer, PaintManager2, Priority2, StrokeSettings}
-import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.handling.event.keyboard.Key.FunctionKey
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.graphics._
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 import utopia.genesis.image.MutableImage
-import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -74,8 +70,6 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 {
 	// ATTRIBUTES   --------------------------
 	
-	implicit private val testDs: DrawSettings = StrokeSettings(Color.red)
-	
 	private val groupedItemsPointer = itemsPointer.readOnly
 		.map { _.groupBy { _.drawOrder.level }.withDefaultValue(Vector.empty) }
 	
@@ -114,12 +108,8 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 	override def draw(drawer: Drawer, bounds: Bounds) = paintWith(drawer)
 	override def paintWith(drawer: Drawer) = {
 		drawer.clippingBounds match {
-			case Some(clip) =>
-				println(s"Painting clip: $clip")
-				_paint(drawer, clip)
-			case None =>
-				println("Painting all")
-				layers.reverseIterator.foreach { _.paintWith(drawer) }
+			case Some(clip) => _paint(drawer, clip)
+			case None => layers.reverseIterator.foreach { _.paintWith(drawer) }
 		}
 	}
 	
@@ -173,12 +163,21 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		private val itemsPointer = groupedItemsPointer.map { _(level) }
 		private val orderedItemsPointer = itemsPointer.map { _.sortBy { _.drawOrder.orderIndex } }
 		
+		private var extensionsCount = 0
+		
 		val drawBoundsPointer = EventfulPointer(Bounds.zero)
 		private val boundsListener = ChangeListener[Bounds] { e =>
 			// Extends the draw bounds, if necessary
-			extendDrawBounds(e.newValue)
+			if (extensionsCount > 100) {
+				extensionsCount = 0
+				updateDrawBounds()
+			}
+			else {
+				extensionsCount += 1
+				extendDrawBounds(e.newValue)
+			}
 			// Repaints the changed area
-			repaint(Bounds.around(e.values))
+			repaint(Bounds.around(e.values).round)
 		}
 		
 		
@@ -186,7 +185,6 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		updateDrawBounds()
 		drawBoundsPointer.addContinuousListener { e =>
-			println(e.newValue)
 			e.oldValue.overlapWith(e.newValue) match {
 				case Some(overlap) => buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
 				case None => buffer.resetAndResize(e.newValue.size)
@@ -220,12 +218,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		// OTHER    ---------------------
 		
-		def paintWith(drawer: Drawer) = {
-			drawBounds.foreach { bounds =>
-				buffer.drawWith(drawer, bounds.position)
-				drawer.draw(bounds.shrunk(4.0))
-			}
-		}
+		def paintWith(drawer: Drawer) = drawBounds.foreach { bounds => buffer.drawWith(drawer, bounds.position) }
 		
 		// TODO: Consider using a more optimized reset function
 		def resetBuffer() = buffer.paintOver { drawer =>
@@ -240,6 +233,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 			// Determines which items to re-draw
 			val targetItems = orderedItemsPointer.value.map { a => a -> a.drawBounds }
 				.filter { _._2.overlapsWith(region) }
+			
 			// Updates the buffer
 			buffer.paintOver { drawer =>
 				// Clears the previous drawings
@@ -339,7 +333,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 					case Some(region) => region + drawBounds.position
 					case None => drawBounds
 				}
-				Layer.this.repaint(repaintBounds, priority)
+				Layer.this.repaint(repaintBounds.round, priority)
 			}
 		}
 	}

@@ -18,14 +18,17 @@ object LazyGraphics
 	  * @param graphics Graphics instance to wrap (lazily called)
 	  * @return A lazy graphics instance
 	  */
-	// FIXME: Assign clip bounds here
-	def apply(graphics: => ClosingGraphics) = new LazyGraphics(Left(Lazy(graphics)))
+	def apply(graphics: ClosingGraphics) = {
+		new LazyGraphics(Left(Lazy.initialized(graphics)),
+			// Assigns the original clipping, so that clipBounds will yield a realistic value
+			newClipping = Option(graphics.getClipBounds).map { r => LazyClip(Bounds(r)) })
+	}
 	
 	/**
 	  * @param graphics a (root level) graphics instance to wrap (called lazily)
 	  * @return A lazy graphics instance
 	  */
-	def wrap(graphics: => Graphics2D): LazyGraphics = apply(ClosingGraphics(graphics))
+	def wrap(graphics: Graphics2D): LazyGraphics = apply(ClosingGraphics(graphics))
 }
 
 /**
@@ -215,7 +218,6 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	  */
 	  // FIXME: Doesn't work
 	def withClip(clipping: => Polygonic): LazyGraphics = withClip(LazyClip(clipping))
-	
 	/**
 	  * @param clippingBounds A new set of clipping bounds. Should be set within this instance's transformation context.
 	  * @return A copy of this graphics instance where clipping is reduced to the specified bounds.

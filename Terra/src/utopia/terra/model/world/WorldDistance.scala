@@ -177,7 +177,7 @@ trait WorldDistance
 	override def self: WorldDistance = this
 	override def zero: WorldDistance = WorldDistance.zero
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(vectorLength)
+	override protected def equalsProperties: Seq[Any] = Vector(vectorLength)
 	
 	override def toString = distance.toString
 	

@@ -28,5 +28,5 @@ trait MapPointLike[V, +Repr] extends Combinable[MapPoint[V], Repr] with LinearSc
 	
 	// IMPLEMENTED  -----------------------
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(vector, mapLocation)
+	override protected def equalsProperties: Seq[Any] = Vector(vector, mapLocation)
 }

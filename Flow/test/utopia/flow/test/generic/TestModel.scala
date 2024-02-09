@@ -42,5 +42,5 @@ class TestModel(val name: String, val level: Int = 1, val stats: Map[String, Int
     override def toModel = Model(Vector("name" -> name, "level" -> level, 
             "stats" -> Model.fromMap(stats), "title" -> title))
     
-    protected override def equalsProperties: Iterable[Any] = Vector(name, level, stats, title)
+    protected override def equalsProperties: Seq[Any] = Vector(name, level, stats, title)
 }

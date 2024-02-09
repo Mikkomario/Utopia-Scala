@@ -63,7 +63,7 @@ case class NamespacedString(local: String)(implicit val namespace: Namespace)
 	
 	// IMPLEMENTED  -----------------------------
 	
-	protected override def equalsProperties: Iterable[Any] = Vector(local, namespace)
+	protected override def equalsProperties: Seq[Any] = Vector(local, namespace)
 	
 	override def toString = if (hasNamespace) s"$namespace:$local" else local
 	

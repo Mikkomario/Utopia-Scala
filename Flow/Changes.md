@@ -3,11 +3,16 @@
 ## v2.4 (in development)
 ### Breaking changes
 - **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
+- **EqualsBy**`.equalsProperties` now returns **Seq** instead of **Iterable**
 - The write functions in **FileExtensions**, which accept a function, now return the return value of that 
   function, and no longer the path itself.
 ### Deprecations
 - Deprecated **ModelValidationResult** (now replaced with **Try**)
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
+### Bugfixes
+- **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
+  The new implementation works the same way, regardless of compared collection type 
+  (although it now requires **Seq** to be used)
 ### New features
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait

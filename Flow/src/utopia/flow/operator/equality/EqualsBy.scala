@@ -15,7 +15,7 @@ trait EqualsBy extends Equals
 	  * of same class, which also have equal properties are considered equal.
 	  * The ordering of the properties must also match.
 	  */
-	protected def equalsProperties: Iterable[Any]
+	protected def equalsProperties: Seq[Any]
 	
 	
 	// IMPLEMENTED METHODS    ------------
@@ -26,7 +26,23 @@ trait EqualsBy extends Equals
 	
 	// Default implementation is: canEqual(a) && hashCode() == a.hashCode()
 	override def equals(a: Any) = a match {
-		case eb: EqualsBy => equalsProperties == eb.equalsProperties
+		case eb: EqualsBy =>
+			val props1 = equalsProperties
+			val props2 = eb.equalsProperties
+			val s1 = props1.knownSize
+			val s2 = props2.knownSize
+			if (s1 != s2 && s1 >= 0 && s2 >= 0)
+				false
+			else {
+				val iter1 = props1.iterator
+				val iter2 = props2.iterator
+				var equal = true
+				while (equal && iter1.hasNext && iter2.hasNext) {
+					if (iter1.next() != iter2.next())
+						equal = false
+				}
+				equal && !iter1.hasNext && !iter2.hasNext
+			}
 		case _ => false
 	}
 }

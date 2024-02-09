@@ -42,5 +42,5 @@ class RoundingPoint private(override val dimensions: Dimensions[RoundingDouble])
 {
 	override def self: RoundingPoint = this
 	override protected def factory: RoundingVectorFactory[RoundingPoint] = RoundingPoint
-	override protected def equalsProperties: Iterable[Any] = dimensions
+	override protected def equalsProperties: Seq[Any] = dimensions
 }

@@ -48,5 +48,5 @@ trait CompassRotationLike[+Direction <: Signed[Direction] with CompassDirection,
 	override def isZero = value.isZero
 	override def nonZero = value.nonZero
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(unidirectional)
+	override protected def equalsProperties: Seq[Any] = Vector(unidirectional)
 }

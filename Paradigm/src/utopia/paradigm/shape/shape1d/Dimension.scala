@@ -34,7 +34,7 @@ object Dimension
 		extends Dimension[A] with EqualsBy
 	{
 		override def zeroValue: A = lazyZero.value
-		override protected def equalsProperties: Iterable[Any] = Vector(lazyZero.value, value, axis)
+		override protected def equalsProperties: Seq[Any] = Vector(lazyZero.value, value, axis)
 	}
 }
 

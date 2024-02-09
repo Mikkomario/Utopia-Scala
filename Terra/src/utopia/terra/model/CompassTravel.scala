@@ -52,7 +52,7 @@ class CompassTravel(val compassAxis: CompassAxis, val distance: WorldDistance)
 	override def value: WorldDistance = distance
 	override def zeroValue: WorldDistance = WorldDistance.zero
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(compassAxis, distance)
+	override protected def equalsProperties: Seq[Any] = Vector(compassAxis, distance)
 	
 	override def zero: CompassTravel = new CompassTravel(compassAxis, WorldDistance.zero)
 	override def isAboutZero: Boolean = distance.isAboutZero

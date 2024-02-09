@@ -44,5 +44,5 @@ class RoundingVector2D private(override val dimensions: Dimensions[RoundingDoubl
 	override def self: RoundingVector2D = this
 	override protected def factory: RoundingVectorFactory[RoundingVector2D] = RoundingVector2D
 	
-	override protected def equalsProperties: Iterable[Any] = dimensions
+	override protected def equalsProperties: Seq[Any] = dimensions
 }

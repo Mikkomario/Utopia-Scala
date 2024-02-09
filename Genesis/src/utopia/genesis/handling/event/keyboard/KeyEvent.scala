@@ -38,7 +38,7 @@ object KeyEvent
 		/**
 		  * An item that only accepts arrow key -related events
 		  */
-		def anyArrow = keys(ArrowKey.values.toSet)
+		def anyArrow = apply(ArrowKey.values.toSet)
 		
 		/**
 		  * An item that only applies while the control key (at any location) is down
@@ -56,17 +56,17 @@ object KeyEvent
 		  * @param key The targeted key
 		  * @return An item that only accepts events concerning the specified key
 		  */
-		def key(key: Key) = withFilter { _.concernsKey(key) }
+		def apply(key: Key) = withFilter { _.concernsKey(key) }
 		/**
 		  * @param keys Targeted keys
 		  * @return An item that only accepts events that concern one of the specified keys
 		  */
-		def keys(keys: IterableOnce[Key]) = indices(keys.iterator.map { _.index })
+		def apply(keys: IterableOnce[Key]) = indices(keys.iterator.map { _.index })
 		/**
 		  * @return An item that only accepts events that concern one of the specified keys
 		  */
-		def keys(keyIndex1: Key, keyIndex2: Key, moreIndices: Key*): A =
-			keys(Set(keyIndex1, keyIndex2) ++ moreIndices)
+		def apply(keyIndex1: Key, keyIndex2: Key, moreIndices: Key*): A =
+			apply(Set(keyIndex1, keyIndex2) ++ moreIndices)
 		
 		/**
 		  * @param character A character (key)
@@ -92,7 +92,7 @@ object KeyEvent
 		  * @param direction Arrow key direction
 		  * @return An item that only accepts events concerning the targeted arrow key
 		  */
-		def arrow(direction: Direction2D) = key(ArrowKey(direction))
+		def arrow(direction: Direction2D) = apply(ArrowKey(direction))
 		
 		/**
 		  * @param key Targeted key

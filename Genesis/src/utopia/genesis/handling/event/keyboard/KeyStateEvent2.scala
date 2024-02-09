@@ -47,7 +47,7 @@ object KeyStateEvent2
       * This event filter only accepts events for the specified key index
       */
     @deprecated("Please use KeyEventFilter.key(Key) instead", "v4.0")
-    def keyFilter(index: Int) = KeyEventFilter.key(Key(index))
+    def keyFilter(index: Int) = KeyEventFilter.apply(Key(index))
     /**
       * This event filter only accepts events for the specified key index + location
       */
@@ -58,7 +58,7 @@ object KeyStateEvent2
       * @return Event filter that only accepts events concerning specified keys
       */
     @deprecated("Please use KeyEventFilter.keys(IterableOnce) instead", "v4.0")
-    def keysFilter(acceptedKeys: Set[Int]) = KeyEventFilter.keys(acceptedKeys.map(Key.apply))
+    def keysFilter(acceptedKeys: Set[Int]) = KeyEventFilter.apply(acceptedKeys.map(Key.apply))
     /**
       * This event filter only accepts events for the specified key indices
       */

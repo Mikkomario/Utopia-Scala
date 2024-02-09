@@ -267,7 +267,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	
 	override def toInsets = StackInsets.symmetric(this)
 	
-	protected def equalsProperties: Iterable[Any] = Vector(min, optimal, max, priority)
+	protected def equalsProperties: Seq[Any] = Vector(min, optimal, max, priority)
 	
 	override def toString = {
 		val s = new StringBuilder()

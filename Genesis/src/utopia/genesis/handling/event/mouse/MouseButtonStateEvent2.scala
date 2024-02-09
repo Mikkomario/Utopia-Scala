@@ -49,12 +49,12 @@ object MouseButtonStateEvent2
       * This filter only accepts button events for the specific button index
       */
     @deprecated("Please use .filter.button(MouseButton) instead", "v4.0")
-    def buttonFilter(buttonIndex: Int) = filter.button(MouseButton(buttonIndex))
+    def buttonFilter(buttonIndex: Int) = filter.apply(MouseButton(buttonIndex))
     /**
       * This filter only accepts button events for the specific mouse button
       */
     @deprecated("Please use .filter.button(MouseButton)  instead", "v4.0")
-    def buttonFilter(button: MouseButton) = filter.button(button)
+    def buttonFilter(button: MouseButton) = filter.apply(button)
 }
 
 /**

@@ -197,7 +197,7 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	
 	override def empty = withDimensions(Vector())
 	
-	override protected def equalsProperties: Iterable[Any] = zeroValue +: values
+	override protected def equalsProperties: Seq[Any] = zeroValue +: values
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
 		withDimensions(Vector.from(coll))
