@@ -1,10 +1,10 @@
 package utopia.reach.drawing
 
-import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.Priority2.Normal
+import utopia.genesis.graphics.{Drawer, Priority2}
 import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.reach.drawing.Priority.Normal
 
 /**
   * A common trait for classes which manage and optimize component painting
@@ -29,7 +29,7 @@ trait PaintManager
 	  *                 faster / prioritized painting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def paint(region: Option[Bounds] = None, priority: Priority = Normal): Unit
+	def paint(region: Option[Bounds] = None, priority: Priority2 = Normal): Unit
 	
 	/**
 	  * Requests a repaint of (a portion of) the managed region
@@ -39,7 +39,7 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaint(region: Option[Bounds] = None, priority: Priority = Normal): Unit
+	def repaint(region: Option[Bounds] = None, priority: Priority2 = Normal): Unit
 	
 	/**
 	  * Shifts a sub-region in the managed area to a new location
@@ -64,7 +64,7 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaintRegion(region: Bounds, priority: Priority = Normal) = repaint(Some(region), priority)
+	def repaintRegion(region: Bounds, priority: Priority2 = Normal) = repaint(Some(region), priority)
 	
 	/**
 	  * Requests a repaint of the managed region
@@ -72,5 +72,5 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaintAll(priority: Priority = Normal) = repaint(None, priority)
+	def repaintAll(priority: Priority2 = Normal) = repaint(None, priority)
 }

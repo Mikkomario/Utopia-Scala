@@ -37,7 +37,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
-import utopia.reach.drawing.Priority.High
+import utopia.genesis.graphics.Priority2.High
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 /**

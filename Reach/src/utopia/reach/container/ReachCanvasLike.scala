@@ -1,6 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.genesis.graphics.Priority2
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -8,6 +9,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager
 import utopia.reach.drawing.{PaintManager, Priority}
+
 import scala.collection.immutable.VectorBuilder
 
 /**
@@ -113,7 +115,7 @@ trait ReachCanvasLike
 	  * @param area Area to paint again
 	  * @param priority Priority to use for this repaint. The high level priority areas are painted first.
 	  */
-	def repaint(area: Bounds, priority: Priority = Priority.Normal) =
+	def repaint(area: Bounds, priority: Priority2 = Priority2.Normal) =
 		currentPainter.foreach { _.repaintRegion(area, priority) }
 	
 	/**

@@ -2,6 +2,7 @@
 
 ## v4.0 (in development)
 Handler update
+Remember MutableImage changes (once added) and the new drawSubImage -feature
 
 ## v3.5.1 (in development)
 ### New methods

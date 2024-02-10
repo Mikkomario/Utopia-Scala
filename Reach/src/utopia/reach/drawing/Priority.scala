@@ -7,6 +7,7 @@ import utopia.flow.operator.ordering.SelfComparable
   * @author Mikko Hilpinen
   * @since 25.11.2020, v0.1
   */
+@deprecated("Deprecated for removal, moved to Genesis", "v1.3")
 sealed trait Priority extends SelfComparable[Priority]
 {
 	// ABSTRACT	-----------------------------
@@ -22,6 +23,7 @@ sealed trait Priority extends SelfComparable[Priority]
 	override def compareTo(o: Priority) = index - o.index
 }
 
+@deprecated("Deprecated for removal, moved to Genesis", "v1.3")
 object Priority
 {
 	// ATTRIBUTES	------------------------

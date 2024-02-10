@@ -12,7 +12,7 @@ import utopia.inception.handling.HandlerType
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
-import utopia.reach.drawing.Priority.High
+import utopia.genesis.graphics.Priority2.High
 
 import java.awt.event.KeyEvent
 

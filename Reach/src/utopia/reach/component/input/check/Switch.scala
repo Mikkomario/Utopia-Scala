@@ -31,7 +31,7 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextCompo
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
-import utopia.reach.drawing.Priority.VeryHigh
+import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.reach.focus.FocusListener
 
 import java.awt.event.KeyEvent

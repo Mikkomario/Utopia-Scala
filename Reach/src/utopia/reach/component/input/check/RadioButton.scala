@@ -22,7 +22,7 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableCont
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
-import utopia.reach.drawing.Priority.High
+import utopia.genesis.graphics.Priority2.High
 import utopia.reach.focus.FocusListener
 
 import scala.language.implicitConversions

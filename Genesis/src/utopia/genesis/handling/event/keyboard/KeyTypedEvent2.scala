@@ -10,7 +10,7 @@ package utopia.genesis.handling.event.keyboard
   * @param index The key index associated with this event
   * @param keyboardState The state of the keyboard immediately after this event
  */
-case class KeyTypedEvent2(typedChar: Char, index: Int, keyboardState: KeyboardState)
+case class KeyTypedEvent2(typedChar: Char, index: Int, keyboardState: KeyboardState) extends KeyEvent
 {
 	/**
 	  * @return The digit typed, if the typed character was a digit. None otherwise.

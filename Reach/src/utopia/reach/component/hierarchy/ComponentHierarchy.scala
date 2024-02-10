@@ -3,14 +3,13 @@ package utopia.reach.component.hierarchy
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.FontMetricsWrapper
+import utopia.genesis.graphics.Priority2.Normal
+import utopia.genesis.graphics.{FontMetricsWrapper, Priority2}
 import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
-import utopia.reach.drawing.Priority
-import utopia.reach.drawing.Priority.Normal
 
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
@@ -197,14 +196,14 @@ trait ComponentHierarchy
 	  * @param priority Priority used for this repaint operation. Higher priority areas are painted first
 	  *                 (default = Normal)
 	  */
-	def repaint(area: => Bounds, priority: Priority = Normal) = {
+	def repaint(area: => Bounds, priority: Priority2 = Normal) = {
 		if (isLinked)
 			top.repaint(area + positionToTopModifier, priority)
 	}
 	/**
 	  * Repaints the bottom component
 	  */
-	def repaintBottom(priority: Priority = Normal) = {
+	def repaintBottom(priority: Priority2 = Normal) = {
 		if (isLinked)
 			parent match {
 				case Left(canvas) => canvas.repaint()

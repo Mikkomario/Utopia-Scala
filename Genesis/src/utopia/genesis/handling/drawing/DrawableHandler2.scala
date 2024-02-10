@@ -4,13 +4,13 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics._
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 import utopia.genesis.image.MutableImage
-import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -100,19 +100,15 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 	
 	override def repaint(region: Option[Bounds], priority: Priority2) = {
 		region match {
-			case Some(region) => layers.foreach { _.updateBuffer(region) }
+			case Some(region) => layers.foreach { _.queueBufferUpdate(region, priority) }
 			case None => layers.foreach { _.resetBuffer() }
 		}
 		requestParentRepaint(region, priority)
 	}
 	
-	override def draw(drawer: Drawer, bounds: Bounds) = paintWith(drawer)
-	override def paintWith(drawer: Drawer) = {
-		drawer.clippingBounds match {
-			case Some(clip) => _paint(drawer, clip)
-			case None => layers.reverseIterator.foreach { _.paintWith(drawer) }
-		}
-	}
+	override def draw(drawer: Drawer, bounds: Bounds) =
+		_paint(drawer, (bounds.position - drawBounds.position).toVector)
+	override def paintWith(drawer: Drawer) = _paint(drawer)
 	
 	// TODO: Optimize at some point
 	override def shift(originalArea: Bounds, transition: Vector2D) = {
@@ -138,14 +134,27 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 	private def requestParentRepaint(subRegion: Option[Bounds], priority: Priority2 = Normal) =
 		super[Drawable2].repaint(subRegion, priority)
 	
-	private def _paint(drawer: Drawer, region: Bounds) = {
+	private def _paint(drawer: Drawer, translation: Vector2D = Vector2D.zero) = {
+		drawer.clippingBounds match {
+			case Some(clip) =>
+				// Checks which layers to paint
+				val paintRegions = coveringLayers
+					.foldLeftIterator[Option[Bounds]](Some(clip)) { (region, layer) => region.flatMap(layer.cover) }
+					.takeWhile { _.isDefined }.toVector.flatten
+				// Paints the targeted layers from bottom to top
+				layers.zip(paintRegions).reverseIterator
+					.foreach { case (layer, region) => layer.paintWith(drawer, Some(region), translation) }
+			case None => layers.reverseIterator.foreach { _.paintWith(drawer, translation = translation) }
+		}
+	}
+	private def paintRegion(drawer: Drawer, region: Bounds, translation: Vector2D = Vector2D.zero) = {
 		// Checks which layers to paint
 		val paintRegions = coveringLayers
 			.foldLeftIterator[Option[Bounds]](Some(region)) { (region, layer) => region.flatMap(layer.cover) }
 			.takeWhile { _.isDefined }.toVector.flatten
 		// Paints the targeted layers from bottom to top
 		layers.zip(paintRegions).reverseIterator
-			.foreach { case (layer, region) => layer.paintWith(drawer, Some(region)) }
+			.foreach { case (layer, region) => layer.paintWith(drawer, Some(region), translation) }
 	}
 	
 	private def updateDrawBounds() = _drawBoundsPointer.value = Bounds.around(layers.flatMap { _.drawBounds })
@@ -158,6 +167,8 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		// ATTRIBUTES   -------------------
 		
 		private val buffer = MutableImage.empty
+		// Contains the queued area to repaint
+		private val queuedBufferUpdatePointer = Pointer.empty[Bounds]()
 		
 		private val itemsPointer = groupedItemsPointer.map { _(level) }
 		private val orderedItemsPointer = itemsPointer.map { _.sortBy { _.drawOrder.orderIndex } }
@@ -184,9 +195,10 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		updateDrawBounds()
 		drawBoundsPointer.addContinuousListener { e =>
-			println(s"New draw bounds = ${e.newValue}")
 			e.oldValue.overlapWith(e.newValue) match {
-				case Some(overlap) => buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
+				case Some(overlap) =>
+					dequeueBufferUpdates()
+					buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
 				case None => buffer.resetAndResize(e.newValue.size)
 			}
 		}
@@ -218,30 +230,55 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		// OTHER    ---------------------
 		
-		def paintWith(drawer: Drawer, subRegion: Option[Bounds] = None) = drawBounds.foreach { bounds =>
-			subRegion match {
-				// Case: Drawing a sub-region => Only paints part of the buffer image
-				case Some(region) =>
-					bounds.overlapWith(region).foreach { overlap =>
-						if (overlap == bounds)
-							buffer.drawWith(drawer, bounds.position)
-						else {
-							val relativeArea = overlap - bounds.position
-							buffer.drawSubImageWith(drawer, relativeArea, bounds.position)
+		def paintWith(drawer: Drawer, subRegion: Option[Bounds] = None, translation: Vector2D = Vector2D.zero) =
+			drawBounds.foreach { bounds =>
+				// Position where the top left corner of the painted image will be placed
+				val targetPosition = bounds.position + translation
+				// Makes sure the buffer is up-to-date
+				dequeueBufferUpdates()
+				subRegion match {
+					// Case: Drawing a sub-region => Only paints part of the buffer image
+					case Some(region) =>
+						bounds.overlapWith(region).foreach { overlap =>
+							if (overlap == bounds)
+								buffer.drawWith(drawer, targetPosition)
+							else {
+								val relativeArea = overlap - bounds.position
+								buffer.drawSubImageWith(drawer, relativeArea, targetPosition)
+							}
 						}
-					}
-				// Case: Drawing the whole image
-				case None => buffer.drawWith(drawer, bounds.position)
+					// Case: Drawing the whole image
+					case None => buffer.drawWith(drawer, targetPosition)
+				}
 			}
-		}
 		
 		// TODO: Consider using a more optimized reset function
-		def resetBuffer() = buffer.paintOver { drawer =>
-			drawer.clear(Bounds(Point.origin, buffer.size))
-			val translation = drawBoundsPointer.value.position
-			orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+		def resetBuffer() = {
+			queuedBufferUpdatePointer.clear()
+			buffer.paintOver { drawer =>
+				drawer.clear(Bounds(Point.origin, buffer.size))
+				val translation = drawBoundsPointer.value.position
+				orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+			}
 		}
-		def updateBuffer(region: Bounds) = {
+		def queueBufferUpdate(region: Bounds, priority: Priority2) = {
+			// Case: High priority => Pre-draws the buffer
+			if (priority > Normal) {
+				val actualRegion = queuedBufferUpdatePointer.pop() match {
+					case Some(queued) => Bounds.around(Pair(queued, region))
+					case None => region
+				}
+				updateBuffer(actualRegion)
+			}
+			// Case: Normal or low priority => Queues a buffer update
+			else
+				queuedBufferUpdatePointer.update {
+					case Some(queued) => Some(Bounds.around(Pair(queued, region)))
+					case None => Some(region)
+				}
+		}
+		private def dequeueBufferUpdates() = queuedBufferUpdatePointer.pop().foreach(updateBuffer)
+		private def updateBuffer(region: Bounds) = {
 			// Determines the targeted area within the buffer image
 			val translation = drawBoundsPointer.value.position
 			val relativeRegion = region - translation
@@ -324,7 +361,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		}
 		
 		private def repaint(region: Bounds, priority: Priority2 = Normal) = {
-			updateBuffer(region)
+			queueBufferUpdate(region, priority)
 			requestParentRepaint(Some(region), priority)
 		}
 		

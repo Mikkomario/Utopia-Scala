@@ -32,7 +32,7 @@ import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenCompon
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
-import utopia.reach.drawing.Priority.High
+import utopia.genesis.graphics.Priority2.High
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 
 /**

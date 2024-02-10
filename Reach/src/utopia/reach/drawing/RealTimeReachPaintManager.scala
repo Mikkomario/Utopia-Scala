@@ -5,7 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.{Drawer, Priority2}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis2D
@@ -57,7 +57,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	private lazy val jComponent = canvas.component
 	
 	// Area being drawn currently -> queued areas
-	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Vector[Bounds]])](None -> Map())
+	private val queuePointer = Volatile[(Option[Bounds], Map[Priority2, Vector[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	// TODO: Consider using a MutableImage as a buffer?
 	private val bufferPointer = VolatileOption[Image]()
@@ -85,7 +85,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		flatten().drawWith(drawer, component.position)
 	}
 	
-	override def paint(region: Option[Bounds], priority: Priority): Unit = {
+	override def paint(region: Option[Bounds], priority: Priority2): Unit = {
 		// May have to repaint if component size had changed since the last paint
 		checkForSizeChanges()
 		// Makes sure the image buffer is up to date
@@ -100,7 +100,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		}
 	}
 	
-	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match {
+	override def repaint(region: Option[Bounds], priority: Priority2) = region.map { _.ceil } match {
 		case Some(region) =>
 			// Extends the queue. May start the drawing process as well
 			val firstDrawArea = queuePointer.mutate { case (processing, queue) =>
@@ -272,7 +272,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 				}
 				nextArea = queuePointer.mutate { case (_, queue) =>
 					// Picks the next highest priority area (preferring smaller areas)
-					Priority.descending.find(queue.contains) match {
+					Priority2.descending.find(queue.contains) match {
 						case Some(targetPriority) =>
 							val options = queue(targetPriority)
 							if (options.size > 1) {
