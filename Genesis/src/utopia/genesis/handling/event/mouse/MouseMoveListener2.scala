@@ -50,6 +50,7 @@ object MouseMoveListener2
     
     // OTHER    ----------------------
     
+    /*
     /**
       * Creates a new mouse move listener that calls the specified function
       * @param filter A filter that determines which events trigger the function (default = no filtering)
@@ -59,21 +60,22 @@ object MouseMoveListener2
     @deprecated("Please use .filtering(Filter).apply(...) instead", "v4.0")
     def apply(filter: Filter[MouseMoveEvent2] = AcceptAll)(f: MouseMoveEvent2 => Unit): MouseMoveListener2 =
         unconditional.usingFilter(filter)(f)
-    
+    */
     /**
       * Creates a new mouse move listener that calls specified function on drags (with left mouse button)
       * @param f A function that is called on mouse events
       * @return A new mouse move listener
       */
     @deprecated("Please use .whileLeftDown(...) instead", "v4.0")
-    def onLeftDragged(f: MouseMoveEvent2 => Unit) = apply(MouseEvent2.filter.whileLeftDown)(f)
+    def onLeftDragged(f: MouseMoveEvent2 => Unit) = unconditional.filtering(MouseEvent2.filter.whileLeftDown)(f)
     /**
       * Creates a new mouse move listener that calls specified function on drags (with right mouse button)
       * @param f A function that is called on mouse events
       * @return A new mouse move listener
       */
     @deprecated("Please use .whileRightDown(...) instead", "v4.0")
-    def onRightDragged(f: MouseMoveEvent2 => Unit) = apply(MouseEvent2.filter.whileRightDown)(f)
+    def onRightDragged(f: MouseMoveEvent2 => Unit) =
+        unconditional.filtering(MouseEvent2.filter.whileRightDown)(f)
     
     /**
       * Creates a new mouse move listener that calls specified function each time mouse enters specified area
@@ -83,7 +85,7 @@ object MouseMoveListener2
       */
     @deprecated("Please use .entered(...) instead", "v4.0")
     def onEnter(getArea: => Area2D)(f: MouseMoveEvent2 => Unit) =
-        apply { e => e.entered(getArea) }(f)
+        unconditional.filtering { e => e.entered(getArea) }(f)
     /**
       * Creates a new mouse move listener that calls specified function each time mouse exits specified area
       * @param getArea a function for calculating the target area
@@ -91,7 +93,7 @@ object MouseMoveListener2
       * @return A new mouse move listener
       */
     @deprecated("Please use .exited(...) instead", "v4.0")
-    def onExit(getArea: => Area2D)(f: MouseMoveEvent2 => Unit) = apply { e => e.exited(getArea) }(f)
+    def onExit(getArea: => Area2D)(f: MouseMoveEvent2 => Unit) = unconditional.filtering { e => e.exited(getArea) }(f)
     
     
     // NESTED   ----------------------

@@ -28,7 +28,6 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.Adjustment
 
-import javax.swing.{JFrame, WindowConstants}
 import scala.concurrent.ExecutionContext
 
 /**
@@ -72,7 +71,10 @@ object MouseTest3 extends App
 	KeyboardEvents += KeyStateListener2.apply(Key.Esc).pressed { _ => window.dispose() }
 	
 	// Adds a view to the test component
-	handlers += new Repositioner(TestItem, Left(Fixed(Point(200, 200)), Fixed(Size(20, 20))))
+	private val repositioner = new Repositioner(TestItem, Left(Fixed(Point(200, 200)), Fixed(Size(20, 20))))
+	handlers += repositioner
+	private val repositionedHandlers = repositioner.setupMouseEvents(handlers, disableMouseToWrapped = true)
+	repositionedHandlers += MouseMoveListener2.apply { e => println(e.position.relative) }
 	
 	// Starts the event-delivery
 	actionLoop.runAsync()

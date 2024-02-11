@@ -24,7 +24,7 @@ import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.vector.{DoubleVector, NumericVectorFactory}
+import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike, NumericVectorFactory}
 import utopia.paradigm.shape.template.{Dimensional, Dimensions, HasDimensions}
 
 import java.awt.geom.RoundRectangle2D
@@ -290,7 +290,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param point A point to convert into the relative coordinate system
       * @return A relative representation of the specified point
       */
-    def relativize(point: Point) =
+    def relativize[P <: DoubleVectorLike[P]](point: P): P =
         point.mergeWith(this) { (coordinate, area) => (coordinate - area.start) / area.length }
     /**
       * Converts an absolute set of bounds to a set of bounds that is relative to this set of bounds.
@@ -316,7 +316,8 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
       * @param line A line to convert into the relative coordinate system
       * @return A relative representation of the specified line
       */
-    def relativize(line: Line): Line = line.mapEnds(relativize)
+    //noinspection ConvertibleToMethodValue
+    def relativize(line: Line): Line = line.mapEnds { relativize(_) }
     
     /**
       * Converts a point in the relative coordinate system to a point in the absolute coordinate system.

@@ -62,4 +62,6 @@ case class MouseDragEvent2(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2,
 	
 	override def withPositions(positions: Pair[RelativePoint]): MouseDragEvent2 =
 		copy(lastMove = lastMove.withPositions(positions))
+	override def mapPosition(f: RelativePoint => RelativePoint) =
+		copy(dragOrigin = f(dragOrigin), lastMove = lastMove.mapPosition(f))
 }
