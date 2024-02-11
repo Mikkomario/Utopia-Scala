@@ -3,7 +3,7 @@ package utopia.genesis.graphics
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.transform.{AffineTransformable, LinearTransformable, Transformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
 
 import java.awt.{AlphaComposite, Font, RenderingHints}
@@ -13,7 +13,7 @@ import java.awt.{AlphaComposite, Font, RenderingHints}
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-trait GraphicsContextLike[+Repr] extends LinearTransformable[Repr] with AffineTransformable[Repr]
+trait GraphicsContextLike[+Repr] extends Transformable[Repr]
 {
 	// ABSTRACT -------------------------------
 	

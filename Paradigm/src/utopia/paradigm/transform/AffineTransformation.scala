@@ -84,12 +84,20 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
     def isLinear = translation.isZero
     
     /**
+      * @return Whether this is an identity transform. I.e. that it preserves the transformed item as it is.
+      */
+    def isIdentity = isLinear && linear.isIdentity
+    
+    /**
      * The translation component of this transformation as a point
      */
     def position = translation.toPoint
     
     
     // IMPLEMENTED  -----------------
+    
+    override def identity: Matrix3D = toMatrix
+    override def affineIdentity: Matrix3D = toMatrix
     
     override def scaling = linear.scaling
     override def shear = linear.shear
@@ -113,7 +121,7 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
         AnimatedAffineTransformation { p => transformation(p)(toMatrix) }
     
     
-    // OPERATORS    -----------------
+    // OTHER    -----------------
     
     /**
      * A negative copy of this transformation. Please note that this is not the inverse of this transformation, as
@@ -139,9 +147,6 @@ case class AffineTransformation(translation: Vector2D, linear: LinearTransformat
       * @param vector a (relative) vector that will be transformed to this coordinate system
       */
     def apply[V <: AffineTransformable[V]](vector: V) = vector * toMatrix
-    
-    
-    // OTHER METHODS    -------------
     
     /**
       * Inverse transforms the specified vector, negating the effects of this transformation / coordinate system

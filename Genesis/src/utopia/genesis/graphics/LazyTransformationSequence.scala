@@ -3,8 +3,8 @@ package utopia.genesis.graphics
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.Transformable
 
 object LazyTransformationSequence
 {
@@ -28,8 +28,7 @@ object LazyTransformationSequence
   * @param transformation A transformation to apply on top of the parent sequence
   */
 class LazyTransformationSequence(val parent: Option[LazyTransformationSequence], transformation: Matrix3D)
-	extends Lazy[Matrix3D]
-		with LinearTransformable[LazyTransformationSequence] with AffineTransformable[LazyTransformationSequence]
+	extends Lazy[Matrix3D] with Transformable[LazyTransformationSequence]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -50,6 +49,8 @@ class LazyTransformationSequence(val parent: Option[LazyTransformationSequence],
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override def identity: LazyTransformationSequence = this
 	
 	override def current = cache.current
 	override def value: Matrix3D = cache.value

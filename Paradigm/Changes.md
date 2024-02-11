@@ -1,6 +1,9 @@
 # Utopia Paradigm - List of Changes
 
-## v1.5.1 (in development)
+## v1.6 (in development)
+### Breaking changes
+- **LinearTransformable** now requires implementation of `.identity`. Similarly, 
+  **AffineTransformable** requires the implementation of `.affineIdentity`.
 ### Bugfixes
 - Fixed **DirectionalRotationLike** `+(C)` implementation, which would previously combine opposite rotations in cases 
   where the first rotation was negative
@@ -22,6 +25,8 @@
 - **Size** (object)
   - Added `.fullHd`
 ### Other changes
+- Removed certain unnecessary transformations by adding a check for identity transforms in 
+  **LinearTransformable** and **AffineTransformable**.
 - Slightly refactored **RelativePoint** mapping logic
 
 ## v1.5 - 22.01.2024

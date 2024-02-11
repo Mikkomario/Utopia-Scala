@@ -3,8 +3,8 @@ package utopia.genesis.graphics
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.Transformable
 
 object LazyClip
 {
@@ -21,7 +21,7 @@ object LazyClip
   * @since 28.1.2022, v2.6.3
   */
 class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
-	extends Lazy[Polygonic] with LinearTransformable[LazyClip] with AffineTransformable[LazyClip]
+	extends Lazy[Polygonic] with Transformable[LazyClip]
 {
 	// ATTRIBUTES   -----------------------------
 	
@@ -69,6 +69,8 @@ class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
 	
 	
 	// IMPLEMENTED  -----------------------------
+	
+	override def identity: LazyClip = this
 	
 	override def value = cache.value
 	override def current = cache.current

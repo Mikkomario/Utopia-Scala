@@ -164,12 +164,10 @@ class Matrix2D private(override val columns: Dimensions[Vector2D])
 	  * @return An inverse of this matrix / transformation. When this matrix is multiplied with its inverse, that
 	  *         yields an identity matrix.
 	  */
-	override lazy val inverse =
-	{
+	override lazy val inverse = {
 		if (determinant == 0.0)
 			None
-		else
-		{
+		else {
 			Some(Matrix2D(
 				apply(1, 1), -apply(1, 0),
 				-apply(0, 1), apply(0, 0)
@@ -204,6 +202,9 @@ class Matrix2D private(override val columns: Dimensions[Vector2D])
 	// IMPLEMENTED	----------------------------
 	
 	override def self = this
+	override def identity: Matrix2D = this
+	override def affineIdentity: Matrix3D = to3D
+	
 	override protected def equalsProperties = dimensions
 	
 	// This matrix uses coordinates (column (x), row (y))

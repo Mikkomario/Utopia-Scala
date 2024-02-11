@@ -37,7 +37,8 @@ object CollisionShape
  * with a polygon
  */
 case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Circle],
-                          circleToPolygonEdges: Int) extends Transformable[CollisionShape]
+                          circleToPolygonEdges: Int)
+    extends Transformable[CollisionShape]
 {
     // ATTRIBUTES    -------------------------
     
@@ -64,6 +65,8 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
     
     
     // IMPLEMENTED METHODS    ----------------
+    
+    override def identity: CollisionShape = this
     
     override def transformedWith(transformation: Matrix3D) = {
         val transformedPolygons = convexPolygons.map { _ * transformation }

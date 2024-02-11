@@ -13,6 +13,12 @@ trait AffineTransformable[+Transformed]
 	// ABSTRACT	--------------------------
 	
 	/**
+	  * @return Copy of this item with an identity transformation applied to it.
+	  *         May return this item, if applicable.
+	  */
+	def affineIdentity: Transformed
+	
+	/**
 	  * @param transformation An affine transformation matrix to apply to this instance
 	  * @return A transformed copy of this instance
 	  */
@@ -25,7 +31,12 @@ trait AffineTransformable[+Transformed]
 	  * @param transformation A transformation to apply to this item
 	  * @return A transformed copy of this item
 	  */
-	def transformedWith(transformation: AffineTransformation): Transformed = transformedWith(transformation.toMatrix)
+	def transformedWith(transformation: AffineTransformation): Transformed = {
+		if (transformation.isIdentity)
+			affineIdentity
+		else
+			transformedWith(transformation.toMatrix)
+	}
 	
 	/**
 	  * @param transformation An affine transformation matrix to apply to this instance
@@ -36,11 +47,16 @@ trait AffineTransformable[+Transformed]
 	  * @param transformation Transformation to apply to this instance
 	  * @return A transformed copy of this instance
 	  */
-	def *(transformation: AffineTransformation) = transformedWith(transformation.toMatrix)
+	def *(transformation: AffineTransformation) = transformedWith(transformation)
 	
 	/**
 	  * @param translation Amount of translation to apply
 	  * @return A translated copy of this instance
 	  */
-	def translated(translation: HasDoubleDimensions) = transformedWith(Matrix3D.translation(translation))
+	def translated(translation: HasDoubleDimensions) = {
+		if (translation.xyPair.forall { _ == 0.0 })
+			affineIdentity
+		else
+			transformedWith(Matrix3D.translation(translation))
+	}
 }

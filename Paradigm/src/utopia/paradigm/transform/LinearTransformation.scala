@@ -110,6 +110,9 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity,
     
     // IMPLEMENTED  -----------------
     
+    override def identity: Matrix2D = toMatrix
+    override def affineIdentity: Matrix3D = toMatrix.to3D
+    
     override def toString = {
         val segments = new VectorBuilder[String]
         if (scaling != Vector2D.identity)

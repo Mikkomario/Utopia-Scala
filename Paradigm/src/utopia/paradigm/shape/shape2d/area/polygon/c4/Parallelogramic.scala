@@ -84,6 +84,8 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	// IMPLEMENTED	--------------
 	
+	override def identity = this
+	
 	override def corners = LazyVector.fromFunctions(
 		() => topLeftCorner,
 		() => topRightCorner,

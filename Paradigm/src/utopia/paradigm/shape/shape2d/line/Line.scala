@@ -98,6 +98,8 @@ case class Line(override val ends: Pair[Point])
     
     // IMPLEMENTED METHODS    ----------
     
+    override def identity: Line = this
+    
     override implicit def n: Fractional[Double] = DoubleIsFractional
     
     override protected def factory = Line

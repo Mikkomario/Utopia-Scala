@@ -10,9 +10,13 @@ import utopia.paradigm.shape.shape3d.Matrix3D
   * @author Mikko Hilpinen
   * @since Genesis 26.12.2020, v2.4
   */
-trait Transformable[+Transformed] extends LinearTransformable[Transformed] with AffineTransformable[Transformed]
-	with AnimatedLinearTransformable[Animation[Transformed]] with AnimatedAffineTransformable[Animation[Transformed]]
+trait Transformable[+Transformed]
+	extends LinearTransformable[Transformed] with AffineTransformable[Transformed]
+		with AnimatedLinearTransformable[Animation[Transformed]]
+		with AnimatedAffineTransformable[Animation[Transformed]]
 {
+	override def affineIdentity: Transformed = identity
+	
 	override def transformedWith(transformation: Animation[Matrix2D]) =
 		transformation.map(transformedWith)
 	

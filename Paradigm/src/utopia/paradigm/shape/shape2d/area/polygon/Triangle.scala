@@ -24,7 +24,8 @@ object Triangle
   * @param side1 The first side of this triangle as a vector
   * @param side2 The second side of this triangle as a vector
   */
-case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Polygonic with Transformable[Triangle]
+case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
+	extends Polygonic with Transformable[Triangle]
 {
 	// ATTRIBUTES   ----------------
 	
@@ -32,6 +33,8 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D) extends Pol
 	
 	
 	// IMPLEMENTED	----------------
+	
+	override def identity = this
 	
 	override def center = super[Polygonic].center
 	

@@ -113,42 +113,36 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * Divides this polygon into convex portions. Each of the returned parts is convex and can
 	  * be used in collision checks
 	  */
-	def convexParts: Vector[Polygonic] =
-	{
+	def convexParts: Vector[Polygonic] = {
 		val c = corners
 		
 		if (c.size < 3 || isConvex)
 			Vector(this)
-		else
-		{
+		else {
 			val dir = rotationDirection
 			val r = rotations
 			
 			val firstBrokenIndex = r.indexWhere { _.direction != dir }
 			
 			// Tries to find another (non-sequential) broken index
-			val secondBrokenIndex =
-			{
+			val secondBrokenIndex = {
 				if (firstBrokenIndex < c.size - 1)
 					rotations.indexWhere({ _.direction != dir }, firstBrokenIndex + 1)
 				else
 					-1
 			}
 			
-			if (secondBrokenIndex >= 0)
-			{
+			if (secondBrokenIndex >= 0) {
 				// If a second index was found, cuts the polygon between the two indices
 				val (firstPart, secondPart) = cutBetween(firstBrokenIndex, secondBrokenIndex)
 				firstPart.convexParts ++ secondPart.convexParts
 			}
-			else
-			{
+			else {
 				// If there is only one broken index, cuts the polygon so that the part becomes convex
 				val brokenVertex = vertex(firstBrokenIndex)
 				val incomeAngle = side(firstBrokenIndex - 1).direction
 				
-				val remainingOutcomeIndex =
-				{
+				val remainingOutcomeIndex = {
 					if (firstBrokenIndex < c.size - 2)
 						c.indexWhere(vertex => { (Line(brokenVertex, vertex).direction - incomeAngle).direction == rotationDirection },
 							firstBrokenIndex + 2)
@@ -156,13 +150,11 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 						-1
 				}
 				
-				if (remainingOutcomeIndex >= 0)
-				{
+				if (remainingOutcomeIndex >= 0) {
 					val (firstPart, secondPart) = cutBetween(firstBrokenIndex, remainingOutcomeIndex)
 					firstPart.convexParts ++ secondPart.convexParts
 				}
-				else
-				{
+				else {
 					val outcomeIndex = c.indexWhere {
 						vertex => (Line(brokenVertex, vertex).direction - incomeAngle).direction == rotationDirection }
 					val (firstPart, secondPart) = cutBetween(outcomeIndex, firstBrokenIndex)
@@ -174,6 +166,8 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	
 	
 	// IMPLEMENTED	------------
+	
+	override def identity = this
 	
 	/**
 	  * @return The center point of this shape
@@ -228,8 +222,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * @param index Index of the vertex (may even be negative or out of bounds, in which case loops around)
 	  * @return A vertex (corner) of this polygonic instance from the specified index
 	  */
-	def vertex(index: Int) =
-	{
+	def vertex(index: Int) = {
 		val c = corners
 		if (index >= 0)
 			c(index % c.size)
@@ -253,8 +246,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * @param index Vertex index
 	  * @return The two sides that are connected to the specified vertex, except that both will start from the specified vertex
 	  */
-	def sidesFrom(index: Int) =
-	{
+	def sidesFrom(index: Int) = {
 		val start = vertex(index)
 		Line(start, vertex(index - 1)) -> Line(start, vertex(index + 1))
 	}
@@ -269,8 +261,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * @param index Index of the corner
 	  * @return The rotation at the specified corner of this polygonic shape
 	  */
-	def rotation(index: Int) =
-	{
+	def rotation(index: Int) = {
 		val v0 = vertex(index - 1)
 		val v1 = vertex(index)
 		val v2 = vertex(index + 1)
@@ -304,8 +295,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * @param index2 The index of the second common index (> index 1 + 1)
 	  * @return Two polygon pieces
 	  */
-	def cutBetween(index1: Int, index2: Int) =
-	{
+	def cutBetween(index1: Int, index2: Int) = {
 		val c = corners
 		
 		val cutVertices = c.slice(index1, index2 + 1)

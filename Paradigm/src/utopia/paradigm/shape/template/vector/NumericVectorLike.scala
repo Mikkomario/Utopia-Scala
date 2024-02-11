@@ -122,6 +122,8 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	
 	// IMPLEMENTED	-----------------
 	
+	override def identity: FromDoubles = toDoublePrecision
+	
 	override def length = math.sqrt(n.toDouble(this dot this))
 	
 	override def isAboutZero = dimensions.forall { _ ~== n.zero }

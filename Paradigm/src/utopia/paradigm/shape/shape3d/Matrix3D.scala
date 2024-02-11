@@ -7,7 +7,7 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions, MatrixLike}
-import utopia.paradigm.transform.{AffineTransformable, JavaAffineTransformConvertible, LinearTransformable}
+import utopia.paradigm.transform.{AffineTransformable, JavaAffineTransformConvertible, Transformable}
 
 import java.awt.geom.AffineTransform
 import scala.collection.BuildFrom
@@ -96,8 +96,8 @@ object Matrix3D extends DimensionsWrapperFactory[Vector3D, Matrix3D]
   * @since Genesis 15.7.2020, v2.3
   */
 class Matrix3D private(override val columns: Dimensions[Vector3D])
-	extends MatrixLike[Vector3D, Matrix3D] with AffineTransformable[Matrix3D]
-		with JavaAffineTransformConvertible with LinearTransformable[Matrix3D] with EqualsBy
+	extends MatrixLike[Vector3D, Matrix3D] with Transformable[Matrix3D]
+		with JavaAffineTransformConvertible with EqualsBy
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -108,8 +108,7 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	  * be mirrored along an axis. If determinant is 0, it means that this transformation reduces the shape to
 	  * a 2D plane, 1D line or 0D point.
 	  */
-	override lazy val determinant =
-	{
+	override lazy val determinant = {
 		// Starts by finding the row with most zeros
 		val referenceRowIndex = rows.indices.maxBy { i => row(i).dimensions.count { _ == 0.0 } }
 		val referenceRow = row(referenceRowIndex)
@@ -140,8 +139,7 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	  * An inverted copy of this matrix. The inverse matrix represents an inverse transformation of this transformation.
 	  * Multiplying this matrix with the inverse matrix yields an identity matrix.
 	  */
-	override lazy val inverse =
-	{
+	override lazy val inverse = {
 		// Inverse matrix is this matrix's adjugate divided by this matrix's determinant
 		if (determinant == 0.0)
 			None
@@ -167,8 +165,7 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	  * @return A copy of this matrix that has first been transposed, with then each value replaced by the determinant
 	  *         of their corresponding minor 2x2 matrix, with cofactors.
 	  */
-	def adjugate =
-	{
+	def adjugate = {
 		val t = transposed
 		t.mapWithIndices { (_, colId, rowId) =>
 			val minorDeterminant = t.dropTo2D(colId, rowId).determinant
@@ -195,14 +192,14 @@ class Matrix3D private(override val columns: Dimensions[Vector3D])
 	
 	// IMPLEMENTED	------------------------------
 	
+	override def self = this
+	override def identity: Matrix3D = this
+	
 	override protected def equalsProperties = dimensions
 	
 	override def withDimensions(newDimensions: Dimensions[Vector3D]) = Matrix3D(newDimensions)
 	
-	override def self = this
-	
 	override def transformedWith(transformation: Matrix3D) = transformation(this)
-	
 	override def transformedWith(transformation: Matrix2D) = transformation.to3D(this)
 	
 	/**

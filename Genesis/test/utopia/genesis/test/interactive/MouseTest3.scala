@@ -5,13 +5,13 @@ import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.MouseButton
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
-import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener}
+import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener, Repositioner}
 import utopia.genesis.handling.event.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
@@ -70,6 +70,9 @@ object MouseTest3 extends App
 	// Adds the test component
 	handlers += TestItem
 	KeyboardEvents += KeyStateListener2.apply(Key.Esc).pressed { _ => window.dispose() }
+	
+	// Adds a view to the test component
+	handlers += new Repositioner(TestItem, Left(Fixed(Point(200, 200)), Fixed(Size(20, 20))))
 	
 	// Starts the event-delivery
 	actionLoop.runAsync()

@@ -29,6 +29,7 @@ class Drawer(protected override val graphics: LazyGraphics)
 	// IMPLEMENTED  --------------------------
 	
 	override def self = this
+	override def identity: Drawer = this
 	
 	override protected def withGraphics(newGraphics: LazyGraphics) = new Drawer(newGraphics)
 	

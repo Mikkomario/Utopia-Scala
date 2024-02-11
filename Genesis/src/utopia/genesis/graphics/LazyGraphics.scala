@@ -2,12 +2,12 @@ package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.Color
-import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable}
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.Transformable
 
 import java.awt.{Font, Graphics2D, Toolkit}
 import scala.util.Try
@@ -48,8 +48,7 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
                    newTransformation: Option[Lazy[Matrix3D]] = None,
                    mutation: Option[ClosingGraphics => Unit] = None, newClipping: Option[LazyClip] = None,
                    isClippingDisabled: Boolean = false)
-	extends AutoCloseable with Lazy[ClosingGraphics]
-		with LinearTransformable[LazyGraphics] with AffineTransformable[LazyGraphics]
+	extends AutoCloseable with Lazy[ClosingGraphics] with Transformable[LazyGraphics]
 {
 	// ATTRIBUTES   -------------------------------
 	
@@ -178,6 +177,8 @@ class LazyGraphics(parent: Either[Lazy[ClosingGraphics], LazyGraphics],
 	
 	
 	// IMPLEMENTED  -----------------------------
+	
+	override def identity: LazyGraphics = this
 	
 	override def current = clippedCache.current
 	override def value = clippedCache.value

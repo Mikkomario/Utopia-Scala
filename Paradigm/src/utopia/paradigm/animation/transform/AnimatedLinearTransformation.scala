@@ -98,6 +98,9 @@ case class AnimatedLinearTransformation(f: Double => Matrix2D) extends Animation
 {
 	// IMPLEMENTED	-------------------------
 	
+	override def identity: AnimatedLinearTransformation = this
+	override def affineIdentity: AnimatedAffineTransformation = AnimatedAffineTransformation { f(_).to3D }
+	
 	override def apply(progress: Double) = f(progress)
 	
 	override def transformedWith(transformation: Matrix2D) =
