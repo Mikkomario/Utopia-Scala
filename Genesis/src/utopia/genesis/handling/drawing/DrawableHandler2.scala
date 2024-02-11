@@ -238,16 +238,18 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 							oldBounds.overlapWith(newBounds) match {
 								// Case: Overlap => Resizes image, keeping image data
 								case Some(overlap) =>
-									dequeueBufferUpdates()
-									buffer.changeSourceResolution(newBounds.size, overlap - oldBounds.position)
+									accessBuffer { buffer =>
+										dequeueBufferUpdates(buffer)
+										buffer.changeSourceResolution(newBounds.size, overlap - oldBounds.position)
+									}
 								// Case: No overlap => Generates a new image
-								case None => buffer.resetAndResize(newBounds.size)
+								case None => resetAndResizeBuffer(newBounds.size)
 							}
 						// Case: Acquired bounds => Generates a new image
-						case None => buffer.resetAndResize(newBounds.size)
+						case None => resetAndResizeBuffer(newBounds.size)
 					}
 				// Case: Not drawn any more => Discards buffered image information
-				case None => buffer.resetAndResize(Size.empty)
+				case None => resetAndResizeBuffer()
 			}
 		}
 		
@@ -286,20 +288,22 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 				// Position where the top left corner of the painted image will be placed
 				val targetPosition = bounds.position + translation
 				// Makes sure the buffer is up-to-date
-				dequeueBufferUpdates()
-				subRegion match {
-					// Case: Drawing a sub-region => Only paints part of the buffer image
-					case Some(region) =>
-						bounds.overlapWith(region).foreach { overlap =>
-							if (overlap == bounds)
-								buffer.drawWith(drawer, targetPosition)
-							else {
-								val relativeArea = overlap - bounds.position
-								buffer.drawSubImageWith(drawer, relativeArea, targetPosition)
+				accessBuffer { buffer =>
+					dequeueBufferUpdates(buffer)
+					subRegion match {
+						// Case: Drawing a sub-region => Only paints part of the buffer image
+						case Some(region) =>
+							bounds.overlapWith(region).foreach { overlap =>
+								if (overlap == bounds)
+									buffer.drawWith(drawer, targetPosition)
+								else {
+									val relativeArea = overlap - bounds.position
+									buffer.drawSubImageWith(drawer, relativeArea, targetPosition)
+								}
 							}
-						}
-					// Case: Drawing the whole image
-					case None => buffer.drawWith(drawer, targetPosition)
+						// Case: Drawing the whole image
+						case None => buffer.drawWith(drawer, targetPosition)
+					}
 				}
 			}
 		
@@ -308,14 +312,18 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 			queuedBufferUpdatePointer.clear()
 			clipPointer match {
 				// Case: Clipping applied => Repaints the clip area
-				case Some(clipPointer) => drawBounds.flatMap { _.overlapWith(clipPointer.value) }.foreach(updateBuffer)
+				case Some(clipPointer) =>
+					drawBounds.flatMap { _.overlapWith(clipPointer.value) }
+						.foreach { region => accessBuffer { updateBuffer(_, region) } }
 				// Case: No clipping => Repaints the whole draw bounds
 				case None =>
 					drawBounds.foreach { bounds =>
-						buffer.paintOver { drawer =>
-							drawer.clear(Bounds(Point.origin, buffer.size))
-							val translation = bounds.position
-							orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+						accessBuffer { buffer =>
+							buffer.paintOver { drawer =>
+								drawer.clear(Bounds(Point.origin, buffer.size))
+								val translation = bounds.position
+								orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+							}
 						}
 					}
 			}
@@ -327,7 +335,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 					case Some(queued) => Bounds.around(Pair(queued, region))
 					case None => region
 				}
-				clip(actualRegion).foreach(updateBuffer)
+				clip(actualRegion).foreach { region => accessBuffer { updateBuffer(_, region) } }
 			}
 			// Case: Normal or low priority => Queues a buffer update
 			else
@@ -336,8 +344,9 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 					case None => Some(region)
 				}
 		}
-		private def dequeueBufferUpdates() = queuedBufferUpdatePointer.pop().flatMap(clip).foreach(updateBuffer)
-		private def updateBuffer(region: Bounds) = {
+		private def dequeueBufferUpdates(buffer: MutableImage) =
+			queuedBufferUpdatePointer.pop().flatMap(clip).foreach { updateBuffer(buffer, _) }
+		private def updateBuffer(buffer: MutableImage, region: Bounds) = {
 			drawBounds.foreach { bounds =>
 				// Determines the targeted area within the buffer image
 				val translation = bounds.position
@@ -357,6 +366,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 				}
 			}
 		}
+		private def resetAndResizeBuffer(newSize: Size = Size.zero) = accessBuffer { _.resetAndResize(newSize) }
 		
 		/**
 		  * Checks whether this layer fully or partially covers the specified region with opaque elements
@@ -442,6 +452,9 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 			// Case: No draw bounds previously => Assigns new bounds, if they fit within the current clip zone
 			case None => clip(newArea)
 		}
+		
+		// Facilitates protected access to the buffer property
+		private def accessBuffer[A](f: MutableImage => A): A = this.synchronized { f(buffer) }
 		
 		
 		// NESTED   ---------------------
