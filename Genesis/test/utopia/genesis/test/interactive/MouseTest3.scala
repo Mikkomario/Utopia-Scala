@@ -11,7 +11,7 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.MouseButton
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
-import utopia.genesis.handling.drawing.{Drawable2, RepaintListener}
+import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener}
 import utopia.genesis.handling.event.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
@@ -44,7 +44,8 @@ object MouseTest3 extends App
 	implicit val exc: ExecutionContext = new ThreadPool("Genesis-Mouse-Test")
 	
 	// Creates the GUI
-	private val canvas = new AwtCanvas(Size(640, 480))
+	// Applies clipping at the edges
+	private val canvas = new AwtCanvas(Size(640, 480), DrawableHandler2.clippedTo(Bounds(20, 20, 600, 440)).empty)
 	private val window = new MainFrame(canvas, Size(640, 480), "Test", borderless = true)
 	
 	/*

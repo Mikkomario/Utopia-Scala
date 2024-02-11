@@ -16,4 +16,16 @@ trait Handleable2
 	  *         The [[Handler2]] implementations *should* respect this condition.
 	  */
 	def handleCondition: FlagLike
+	
+	
+	// COMPUTED --------------------
+	
+	/**
+	  * @return Whether it is okay to handle / interact with this item at this time
+	  */
+	def mayBeHandled = handleCondition.value
+	/**
+	  * @return Whether it is not okay to handle / interact with this item at this time
+	  */
+	def mayNotBeHandled = !mayBeHandled
 }

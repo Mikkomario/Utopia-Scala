@@ -4,6 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -14,34 +15,30 @@ import utopia.genesis.image.MutableImage
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 
-object DrawableHandler2 extends FromCollectionFactory[Drawable2, DrawableHandler2]
+import scala.annotation.unused
+
+object DrawableHandler2
 {
-	// IMPLEMENTED  ----------------------
-	
-	override def from(items: IterableOnce[Drawable2]): DrawableHandler2 = apply(items)
-	
-	
-	// OTHER    --------------------------
+	// ATTRIBUTES   ----------------------
 	
 	/**
-	  * @param items Drawable items to place in this handler, initially
-	  * @param drawOrder Draw order used when using this handler as a Drawable item
-	  * @return A new handler with the specified items
+	  * A default-state factory for DrawableHandlers
 	  */
-	def apply(items: IterableOnce[Drawable2], drawOrder: DrawOrder = DrawOrder.default) =
-		new DrawableHandler2(drawOrder, items)
+	val factory = DrawableHandlerFactory()
 	
-	/**
-	  * @param drawOrder Draw order to use for the resulting handler(s), when they're used as Drawable items
-	  * @return A factory for constructing handlers with that draw order
-	  */
-	def apply(drawOrder: DrawOrder) = DrawableHandlerFactory(drawOrder)
+	
+	// IMPLICIT --------------------------
+	
+	implicit def objectToFactory(@unused o: DrawableHandler2.type): DrawableHandlerFactory = factory
 		
 	
 	// NESTED   --------------------------
 	
-	case class DrawableHandlerFactory(drawOrder: DrawOrder = DrawOrder.default)
+	case class DrawableHandlerFactory(clipPointer: Option[Changing[Bounds]] = None,
+	                                  visiblePointer: Changing[Boolean] = AlwaysTrue,
+	                                  drawOrder: DrawOrder = DrawOrder.default)
 		extends FromCollectionFactory[Drawable2, DrawableHandler2]
 	{
 		// IMPLEMENTED  ------------------
@@ -52,10 +49,35 @@ object DrawableHandler2 extends FromCollectionFactory[Drawable2, DrawableHandler
 		// OTHER    ----------------------
 		
 		/**
+		  * @param p A pointer that determines the area that's visible at any time
+		  * @return Copy of this factory that only draws within the area specified by that pointer
+		  */
+		def withClipPointer(p: Changing[Bounds]) = copy(clipPointer = Some(p))
+		/**
+		  * @param clipBounds The only area allowed to be drawn by this handler
+		  * @return Copy of this factory that only draws to that area
+		  */
+		def clippedTo(clipBounds: Bounds) = withClipPointer(Fixed(clipBounds))
+		
+		/**
+		  * @param p A pointer that determines when this handler may be drawn
+		  * @return Copy of this factory that only allows the handlers to be drawn while the specified pointer
+		  *         contains true.
+		  */
+		def withVisibilityPointer(p: Changing[Boolean]) = copy(visiblePointer = p)
+		
+		/**
+		  * @param drawLevel Targeted drawing level
+		  * @return Copy of this factory where the handler contents will be drawn on the specified level
+		  *         (if used as a Drawable)
+		  */
+		def drawnTo(drawLevel: DrawOrder) = copy(drawOrder = drawLevel)
+		
+		/**
 		  * @param items Items to place on this handler, initially
 		  * @return A handler managing the specified items
 		  */
-		def apply(items: IterableOnce[Drawable2]) = DrawableHandler2(items, drawOrder)
+		def apply(items: IterableOnce[Drawable2]) = new DrawableHandler2(clipPointer, visiblePointer, drawOrder, items)
 	}
 }
 
@@ -65,9 +87,10 @@ object DrawableHandler2 extends FromCollectionFactory[Drawable2, DrawableHandler
   * @since 06/02/2024, v4.0
   */
 // TODO: Add FPS limiting
-class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
+class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
+                       override val drawOrder: DrawOrder = DrawOrder.default,
                        initialItems: IterableOnce[Drawable2] = Vector.empty)
-	extends DeepHandler2[Drawable2](initialItems) with Drawable2 with PaintManager2
+	extends DeepHandler2[Drawable2](initialItems, visiblePointer) with Drawable2 with PaintManager2
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -89,16 +112,20 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 	layers.foreach { _.drawBoundsPointer.addListener(updateDrawBoundsListener) }
 	updateDrawBounds()
 	
+	// Whenever clipping changes, updates the layer draw areas
+	clipPointer.foreach { _.addListenerWhile(handleCondition) { _ =>
+		layers.foreach { _.updateDrawBounds() }
+	} }
+	
 	
 	// IMPLEMENTED  --------------------------
 	
 	override def opaque = false
-	
 	override def drawBoundsPointer: Changing[Bounds] = _drawBoundsPointer.readOnly
 	
 	override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 	
-	override def repaint(region: Option[Bounds], priority: Priority2) = {
+	override def repaint(region: Option[Bounds], priority: Priority2) = clip(region).foreach { region =>
 		region match {
 			case Some(region) => layers.foreach { _.queueBufferUpdate(region, priority) }
 			case None => layers.foreach { _.resetBuffer() }
@@ -135,7 +162,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		super[Drawable2].repaint(subRegion, priority)
 	
 	private def _paint(drawer: Drawer, translation: Vector2D = Vector2D.zero) = {
-		drawer.clippingBounds match {
+		clip(drawer.clippingBounds).foreach {
 			case Some(clip) =>
 				// Checks which layers to paint
 				val paintRegions = coveringLayers
@@ -147,17 +174,25 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 			case None => layers.reverseIterator.foreach { _.paintWith(drawer, translation = translation) }
 		}
 	}
-	private def paintRegion(drawer: Drawer, region: Bounds, translation: Vector2D = Vector2D.zero) = {
-		// Checks which layers to paint
-		val paintRegions = coveringLayers
-			.foldLeftIterator[Option[Bounds]](Some(region)) { (region, layer) => region.flatMap(layer.cover) }
-			.takeWhile { _.isDefined }.toVector.flatten
-		// Paints the targeted layers from bottom to top
-		layers.zip(paintRegions).reverseIterator
-			.foreach { case (layer, region) => layer.paintWith(drawer, Some(region), translation) }
-	}
 	
 	private def updateDrawBounds() = _drawBoundsPointer.value = Bounds.around(layers.flatMap { _.drawBounds })
+	
+	// Determines the targeted region after clipping
+	// Contains None if repaint is not needed (i.e. outside of clip)
+	// Contains Some(Some) if a sub-region should be repainted
+	// Contains Some(None) if everything should be repainted
+	private def clip(region: Option[Bounds]) = clipPointer match {
+		case Some(clipPointer) =>
+			region match {
+				case Some(region) => region.overlapWith(clipPointer.value).map { Some(_) }
+				case None => Some(Some(clipPointer.value))
+			}
+		case None => Some(region)
+	}
+	private def clip(region: Bounds) = clipPointer match {
+		case Some(clipPointer) => region.overlapWith(clipPointer.value)
+		case None => Some(region)
+	}
 	
 	
 	// NESTED   ---------------------------
@@ -175,7 +210,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		private var extensionsCount = 0
 		
-		val drawBoundsPointer = EventfulPointer(Bounds.zero)
+		val drawBoundsPointer = EventfulPointer.empty[Bounds]()
 		private val boundsListener = ChangeListener[Bounds] { e =>
 			// Extends the draw bounds, if necessary
 			if (extensionsCount > 100) {
@@ -195,11 +230,24 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		updateDrawBounds()
 		drawBoundsPointer.addContinuousListener { e =>
-			e.oldValue.overlapWith(e.newValue) match {
-				case Some(overlap) =>
-					dequeueBufferUpdates()
-					buffer.changeSourceResolution(e.newValue.size, overlap - e.oldValue.position)
-				case None => buffer.resetAndResize(e.newValue.size)
+			e.newValue match {
+				case Some(newBounds) =>
+					e.oldValue match {
+						// Case: Change in bounds => Checks for overlap
+						case Some(oldBounds) =>
+							oldBounds.overlapWith(newBounds) match {
+								// Case: Overlap => Resizes image, keeping image data
+								case Some(overlap) =>
+									dequeueBufferUpdates()
+									buffer.changeSourceResolution(newBounds.size, overlap - oldBounds.position)
+								// Case: No overlap => Generates a new image
+								case None => buffer.resetAndResize(newBounds.size)
+							}
+						// Case: Acquired bounds => Generates a new image
+						case None => buffer.resetAndResize(newBounds.size)
+					}
+				// Case: Not drawn any more => Discards buffered image information
+				case None => buffer.resetAndResize(Size.empty)
 			}
 		}
 		
@@ -225,11 +273,14 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		
 		def items = itemsPointer.value
 		
-		def drawBounds = if (items.nonEmpty) Some(drawBoundsPointer.value) else None
+		def drawBounds = if (items.nonEmpty) drawBoundsPointer.value else None
 		
 		
 		// OTHER    ---------------------
 		
+		def updateDrawBounds() = drawBoundsPointer.value = clip(Bounds.around(items.map { _.drawBounds }))
+		
+		// Assumes that clipping is already applied when selecting subRegion
 		def paintWith(drawer: Drawer, subRegion: Option[Bounds] = None, translation: Vector2D = Vector2D.zero) =
 			drawBounds.foreach { bounds =>
 				// Position where the top left corner of the painted image will be placed
@@ -255,10 +306,18 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		// TODO: Consider using a more optimized reset function
 		def resetBuffer() = {
 			queuedBufferUpdatePointer.clear()
-			buffer.paintOver { drawer =>
-				drawer.clear(Bounds(Point.origin, buffer.size))
-				val translation = drawBoundsPointer.value.position
-				orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+			clipPointer match {
+				// Case: Clipping applied => Repaints the clip area
+				case Some(clipPointer) => drawBounds.flatMap { _.overlapWith(clipPointer.value) }.foreach(updateBuffer)
+				// Case: No clipping => Repaints the whole draw bounds
+				case None =>
+					drawBounds.foreach { bounds =>
+						buffer.paintOver { drawer =>
+							drawer.clear(Bounds(Point.origin, buffer.size))
+							val translation = bounds.position
+							orderedItemsPointer.value.foreach { d => d.draw(drawer, d.drawBounds - translation) }
+						}
+					}
 			}
 		}
 		def queueBufferUpdate(region: Bounds, priority: Priority2) = {
@@ -268,7 +327,7 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 					case Some(queued) => Bounds.around(Pair(queued, region))
 					case None => region
 				}
-				updateBuffer(actualRegion)
+				clip(actualRegion).foreach(updateBuffer)
 			}
 			// Case: Normal or low priority => Queues a buffer update
 			else
@@ -277,24 +336,25 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 					case None => Some(region)
 				}
 		}
-		private def dequeueBufferUpdates() = queuedBufferUpdatePointer.pop().foreach(updateBuffer)
+		private def dequeueBufferUpdates() = queuedBufferUpdatePointer.pop().flatMap(clip).foreach(updateBuffer)
 		private def updateBuffer(region: Bounds) = {
-			// Determines the targeted area within the buffer image
-			val translation = drawBoundsPointer.value.position
-			val relativeRegion = region - translation
-			// Determines which items to re-draw
-			val targetItems = orderedItemsPointer.value.map { a => a -> a.drawBounds }
-				.filter { _._2.overlapsWith(region) }
-			
-			// Updates the buffer
-			buffer.paintOver { drawer =>
-				// Clears the previous drawings
-				drawer.clear(relativeRegion)
-				// Draws the targeted items
-				if (targetItems.nonEmpty)
+			drawBounds.foreach { bounds =>
+				// Determines the targeted area within the buffer image
+				val translation = bounds.position
+				val relativeRegion = region - translation
+				// Determines which items to re-draw
+				val targetItems = orderedItemsPointer.value.map { a => a -> a.drawBounds }
+					.filter { _._2.overlapsWith(region) }
+				
+				// Updates the buffer
+				buffer.paintOver { drawer =>
+					// Clears the previous drawings
+					drawer.clear(relativeRegion)
+					// Draws the targeted items (uses clipping)
 					drawer.clippedToBounds(relativeRegion).use { drawer =>
 						targetItems.foreach { case (item, bounds) => item.draw(drawer, bounds - translation) }
 					}
+				}
 			}
 		}
 		
@@ -361,18 +421,27 @@ class DrawableHandler2(override val drawOrder: DrawOrder = DrawOrder.default,
 		}
 		
 		private def repaint(region: Bounds, priority: Priority2 = Normal) = {
-			queueBufferUpdate(region, priority)
-			requestParentRepaint(Some(region), priority)
+			clip(region).foreach { clipped =>
+				queueBufferUpdate(clipped, priority)
+				requestParentRepaint(Some(clipped), priority)
+			}
 		}
 		
-		private def extendDrawBounds(newArea: Bounds) = drawBoundsPointer.update { current =>
-			if (current.contains(newArea))
-				current
-			else
-				Bounds.around(Pair(current, newArea))
+		private def extendDrawBounds(newArea: Bounds) = drawBoundsPointer.update {
+			case Some(current) =>
+				// Case: Draw bounds don't extend with this update
+				if (current.contains(newArea))
+					Some(current)
+				else
+					Some(clip(newArea) match {
+						// Case: Draw bounds extend => Updates the area
+						case Some(newArea) => Bounds.around(Pair(current, newArea))
+						// Case: Extension is out of clip area => Not applied
+						case None => current
+					})
+			// Case: No draw bounds previously => Assigns new bounds, if they fit within the current clip zone
+			case None => clip(newArea)
 		}
-		
-		private def updateDrawBounds() = drawBoundsPointer.value = Bounds.around(items.map { _.drawBounds })
 		
 		
 		// NESTED   ---------------------
