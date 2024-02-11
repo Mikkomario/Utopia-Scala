@@ -26,7 +26,7 @@ import javax.swing.JPanel
   * @param scalingPolicy How this panel handles scaling
   * @param clearPrevious Whether the results of previous draws should be cleared before the next redraw (default = true)
  */
-class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler2 = DrawableHandler2.empty,
+class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler2,
                 val scalingPolicy: ScalingPolicy = Project, clearPrevious: Boolean = true)
     extends JPanel(null)
 {

@@ -101,7 +101,8 @@ trait Steppable[+Repr <: Steppable[Repr]]
 	/**
 	  * @param direction Targeted direction
 	  * @return An iterator that continually returns more and more extreme values towards that direction,
-	  *         until reaching the most extreme value (which it is not guaranteed to do)
+	  *         until reaching the most extreme value (which it is not guaranteed to do).
+	  *         This item is not included in the returned collection.
 	  */
 	def stepper(direction: Sign) =
 		OptionsIterator.iterate(nextOption(direction)) { _.nextOption(direction) }

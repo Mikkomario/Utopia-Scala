@@ -9,6 +9,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.MouseButton
+import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener, Repositioner}
@@ -44,7 +45,8 @@ object MouseTest3 extends App
 	
 	// Creates the GUI
 	// Applies clipping at the edges
-	private val canvas = new AwtCanvas(Size(640, 480), DrawableHandler2.clippedTo(Bounds(20, 20, 600, 440)).empty)
+	private val canvas = new AwtCanvas(Size(640, 480),
+		DrawableHandler2.clippedTo(Bounds(20, 20, 600, 440)).withFpsLimit(90, Normal).empty)
 	private val window = new MainFrame(canvas, Size(640, 480), "Test", borderless = true)
 	
 	/*

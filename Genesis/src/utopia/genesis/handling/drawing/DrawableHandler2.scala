@@ -1,44 +1,57 @@
 package utopia.genesis.handling.drawing
 
+import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
+import utopia.flow.async.process.{PostponingProcess, WaitTarget}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.Priority2.Normal
+import utopia.genesis.graphics.Priority2.{High, Normal, VeryLow}
 import utopia.genesis.graphics._
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 import utopia.genesis.image.MutableImage
+import utopia.genesis.util.Fps
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.annotation.unused
+import scala.concurrent.ExecutionContext
 
 object DrawableHandler2
 {
-	// ATTRIBUTES   ----------------------
-	
-	/**
-	  * A default-state factory for DrawableHandlers
-	  */
-	val factory = DrawableHandlerFactory()
-	
-	
 	// IMPLICIT --------------------------
 	
-	implicit def objectToFactory(@unused o: DrawableHandler2.type): DrawableHandlerFactory = factory
+	implicit def objectToFactory(@unused o: DrawableHandler2.type)
+	                            (implicit exc: ExecutionContext, log: Logger): DrawableHandlerFactory =
+		DrawableHandlerFactory()
 		
 	
 	// NESTED   --------------------------
 	
+	/**
+	  * @param clipPointer Pointer that determines draw clipping area
+	  * @param visiblePointer Pointer that determines when this handler may be drawn
+	  * @param drawOrder Applied draw order when this handler is used as a Drawable instance
+	  * @param exc Implicit execution context used when queing delayed repaints
+	  * @param log Logging implementation for catching errors in queued repaints
+	  */
 	case class DrawableHandlerFactory(clipPointer: Option[Changing[Bounds]] = None,
 	                                  visiblePointer: Changing[Boolean] = AlwaysTrue,
+	                                  fpsLimits: Map[Priority2, Fps] = Map(), preDrawPriority: Priority2 = High,
 	                                  drawOrder: DrawOrder = DrawOrder.default)
+	                                 (implicit exc: ExecutionContext, log: Logger)
 		extends FromCollectionFactory[Drawable2, DrawableHandler2]
 	{
 		// IMPLEMENTED  ------------------
@@ -67,6 +80,66 @@ object DrawableHandler2
 		def withVisibilityPointer(p: Changing[Boolean]) = copy(visiblePointer = p)
 		
 		/**
+		  * Overwrites this factory's current FPS limits.
+		  * @param fpsLimits New FPS limits to assign.
+		  *                  The keys are the priorities from which these limits apply.
+		  *                  The values are the maximum FPS values allowed for those priorities.
+		  *
+		  *                  Not all keys need to be defined.
+		  *                  Lower priority keys will be populated automatically with higher priority values
+		  *                  if left empty.
+		  *
+		  * @return Copy of this factory that applies the specified limits
+		  */
+		def withFpsLimits(fpsLimits: Map[Priority2, Fps]) = {
+			// Case: No limits
+			if (fpsLimits.isEmpty)
+				copy(fpsLimits = fpsLimits)
+			else {
+				// Assigns the missing priorities
+				val maxPrio = fpsLimits.keys.max
+				val appliedLimits = maxPrio.lessIterator
+					.foldLeftIterator(maxPrio -> fpsLimits(maxPrio)) { case ((_, higher), prio) =>
+						// Uses assigned value if possible, otherwise copies higher priority value
+						val appliedLimit = fpsLimits.getOrElse(prio, higher)
+						prio -> appliedLimit
+					}
+					.toMap
+				copy(fpsLimits = appliedLimits)
+			}
+		}
+		/**
+		  * Assigns a new FPS limit value
+		  * @param limit Assigned FPS limit
+		  * @param startingFrom Largest draw-priority for which this limit applies.
+		  *                     Default = one priority lower than the (high) pre-draw priority.
+		  * @return Copy of this factory that applies the specified FPS limit
+		  */
+		def withFpsLimit(limit: Fps, startingFrom: Priority2 = preDrawPriority.less) =
+			mapFpsLimits { oldLimits =>
+				oldLimits.map { case (prio, oldLimit) =>
+					val appliedLimit = if (prio <= startingFrom) oldLimit min limit else oldLimit
+					prio -> appliedLimit
+				} ++ startingFrom.andSmaller.filterNot(oldLimits.contains).map { _ -> limit }
+			}
+		/**
+		  * Modifies the applied FPS limits
+		  * @param f A function which modifies FPS limits.
+		  *          Priorities not listed by the function result will be automatically populated with higher
+		  *          priority values, if applicable.
+		  * @return Copy of this factory that uses modified FPS limits
+		  */
+		def mapFpsLimits(f: Mutate[Map[Priority2, Fps]]) = withFpsLimits(f(fpsLimits))
+		
+		/**
+		  * @param priority Priority that acts as the threshold for pre-drawing.
+		  *                 Pre-drawing means that the requested repaints are buffered immediately,
+		  *                 in order to possibly make the painting faster.
+		  * @return Copy of this factory with the specified pre-draw setting
+		  */
+		def preDrawingAt(priority: Priority2) = copy(preDrawPriority = priority)
+		
+		/**
 		  * @param drawLevel Targeted drawing level
 		  * @return Copy of this factory where the handler contents will be drawn on the specified level
 		  *         (if used as a Drawable)
@@ -77,7 +150,8 @@ object DrawableHandler2
 		  * @param items Items to place on this handler, initially
 		  * @return A handler managing the specified items
 		  */
-		def apply(items: IterableOnce[Drawable2]) = new DrawableHandler2(clipPointer, visiblePointer, drawOrder, items)
+		def apply(items: IterableOnce[Drawable2]) =
+			new DrawableHandler2(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
 	}
 }
 
@@ -86,13 +160,15 @@ object DrawableHandler2
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-// TODO: Add FPS limiting
 class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
-                       override val drawOrder: DrawOrder = DrawOrder.default,
-                       initialItems: IterableOnce[Drawable2] = Vector.empty)
+                       override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority2, Fps] = Map(),
+                       preDrawPriority: Priority2 = High, initialItems: IterableOnce[Drawable2] = Vector.empty)
+                      (implicit exc: ExecutionContext, log: Logger)
 	extends DeepHandler2[Drawable2](initialItems, visiblePointer) with Drawable2 with PaintManager2
 {
 	// ATTRIBUTES   --------------------------
+	
+	private var _repaintListeners = Vector.empty[RepaintListener]
 	
 	private val groupedItemsPointer = itemsPointer.readOnly
 		.map { _.groupBy { _.drawOrder.level }.withDefaultValue(Vector.empty) }
@@ -101,10 +177,29 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	private val layers = DrawLevel2.values.reverse.map { new Layer(_) }
 	private val coveringLayers = layers.dropRight(1)
 	
-	private var _repaintListeners = Vector.empty[RepaintListener]
-	
 	private val _drawBoundsPointer = EventfulPointer(Bounds.zero)
 	private val updateDrawBoundsListener = ChangeListener.onAnyChange { updateDrawBounds() }
+	
+	// If used, contains: 1) Time to next repaint, 2) Repaint bounds, and 3) repaint priority
+	// Contains None while no repaint has been requested
+	private val queuedRepaintPointer = {
+		if (fpsLimits.isEmpty)
+			None
+		else
+			Some(VolatileOption[(WaitTarget, Option[Bounds], Priority2)]((UntilNotified, None, VeryLow)))
+	}
+	private val repaintWaitPointer = queuedRepaintPointer.map { _.strongMap {
+		case Some((time, _ , _)) => time
+		case None => UntilNotified
+	} }
+	// Process that performs the delayed repaint
+	private val repaintProcess = repaintWaitPointer.map { p =>
+		PostponingProcess(p, shutdownReaction = Some(Cancel)) { _ =>
+			queuedRepaintPointer.foreach { _.pop().foreach { case (_, region, priority) =>
+				super[Drawable2].repaint(region, priority)
+			} }
+		}
+	}
 	
 	
 	// INITIAL CODE --------------------------
@@ -116,6 +211,16 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	clipPointer.foreach { _.addListenerWhile(handleCondition) { _ =>
 		layers.foreach { _.updateDrawBounds() }
 	} }
+	
+	// Starts delayed repaint processing while handleable, if applicable
+	repaintProcess.foreach { process =>
+		handleCondition.addContinuousListener { e =>
+			if (e.newValue)
+				process.runAsync()
+			else
+				process.stopIfRunning()
+		}
+	}
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -158,8 +263,45 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	
 	// OTHER    ---------------------------
 	
-	private def requestParentRepaint(subRegion: Option[Bounds], priority: Priority2 = Normal) =
-		super[Drawable2].repaint(subRegion, priority)
+	private def requestParentRepaint(subRegion: Option[Bounds], priority: Priority2 = Normal) = {
+		// Checks whether an FPS-limit applies to this priority
+		fpsLimits.get(priority) match {
+			// Case: FPS limit applies => Queues the repaint asynchronously
+			case Some(fpsLimit) =>
+				queuedRepaintPointer.foreach { _.update {
+					// Case: There was already a repaint queued => May update the queued repaint
+					case Some((previousTime, previousRegion, previousPriority)) =>
+						// Selects the earlier repaint time
+						val newTime = previousTime.endTime match {
+							case Some(previousEnd) => Until(previousEnd min (Now + fpsLimit.interval))
+							case None => WaitDuration(fpsLimit.interval)
+						}
+						// Makes sure both regions are covered
+						val newRegion = previousRegion
+							.flatMap { r1 => subRegion.map { r2 => Bounds.around(Pair(r1, r2)) } }
+						// Uses the highest available priority
+						val newPriority = previousPriority max priority
+						Some((newTime, newRegion, newPriority))
+					// Case: No repaint was queued previously => Queues the new repaint
+					case None => Some((WaitDuration(fpsLimit.interval), subRegion, priority))
+				} }
+			// Case: No FPS limit applies => Requests the repaint immediately
+			case None => immediatelyRequestParentRepaint(subRegion, priority)
+		}
+	}
+	private def immediatelyRequestParentRepaint(subRegion: Option[Bounds], priority: Priority2 = Normal) = {
+		// Checks whether a repaint had been queued previously, and clears the queue
+		val (appliedRegion, appliedPriority) = queuedRepaintPointer.flatMap { _.pop() } match {
+			// Case: Repaint had been queued => Includes the queued area and uses the highest available priority
+			case Some((_, queuedRegion, queuedPriority)) =>
+				val combinedRegion = subRegion.flatMap { r1 => queuedRegion.map { r2 => Bounds.around(Pair(r1, r2)) } }
+				val prio = priority max queuedPriority
+				combinedRegion -> prio
+			// Case: No repaint queued => Delivers requested repaint to parent
+			case None => subRegion -> priority
+		}
+		super[Drawable2].repaint(appliedRegion, appliedPriority)
+	}
 	
 	private def _paint(drawer: Drawer, translation: Vector2D = Vector2D.zero) = {
 		clip(drawer.clippingBounds).foreach {
@@ -330,7 +472,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 		}
 		def queueBufferUpdate(region: Bounds, priority: Priority2) = {
 			// Case: High priority => Pre-draws the buffer
-			if (priority > Normal) {
+			if (priority >= preDrawPriority) {
 				val actualRegion = queuedBufferUpdatePointer.pop() match {
 					case Some(queued) => Bounds.around(Pair(queued, region))
 					case None => region
