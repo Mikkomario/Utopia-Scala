@@ -5,7 +5,8 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
-import utopia.genesis.handling.event.{ConsumeChoice, ListenerFactory}
+import utopia.genesis.handling.event.ListenerFactory
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.template.vector.DoubleVector

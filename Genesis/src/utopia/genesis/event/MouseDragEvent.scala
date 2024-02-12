@@ -1,9 +1,11 @@
 package utopia.genesis.event
 
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.util.Filter
 import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseDragEvent
 {
 	/**
@@ -55,6 +57,7 @@ object MouseDragEvent
  * @param startKeyStatus Keyboard status at drag start
  * @param isDown Whether the mouse button is currently down (false at the end of the drag, otherwise true)
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent, button: MouseButton,
                           startKeyStatus: KeyStatus = GlobalKeyboardEventHandler.keyStatus, isDown: Boolean = true)
 	extends MouseEvent[MouseDragEvent]

@@ -8,6 +8,7 @@ import utopia.paradigm.shape.shape3d.Matrix3D
  * Cameras are used for viewing the game world from a different angle
  * (relative view) and projecting that view to a certain shape in the 'absolute' super view.
  */
+@deprecated("Deprecated for removal. Replaced with Repositioner.", "v4.0")
 abstract class Camera[+H <: DrawableHandler](makeHandler: (Drawer => Drawer) => H)
 {
     // ATTRIBUTES    ------------------------

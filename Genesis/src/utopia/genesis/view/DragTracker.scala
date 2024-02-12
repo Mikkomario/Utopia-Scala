@@ -1,7 +1,9 @@
 package utopia.genesis.view
 
 import utopia.flow.view.mutable.Pointer
-import utopia.genesis.event.{ConsumeEvent, KeyStatus, MouseButton, MouseButtonStateEvent, MouseDragEvent, MouseMoveEvent}
+import utopia.genesis.event.{KeyStatus, MouseButtonStateEvent, MouseDragEvent, MouseMoveEvent}
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.genesis.handling.{MouseButtonStateListener, MouseDragListener, MouseMoveListener}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
@@ -12,6 +14,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener with MouseMoveListener
 {
 	// ATTRIBUTES   --------------------

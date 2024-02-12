@@ -3,6 +3,7 @@ package utopia.genesis.handling
 import utopia.genesis.event.KeyStateEvent
 import utopia.inception.handling.{Handler, HandlerType}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case object KeyStateHandlerType extends HandlerType
 {
 	/**
@@ -14,6 +15,7 @@ case object KeyStateHandlerType extends HandlerType
 /**
   * Key state handlers distribute key state events among multiple listeners
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait KeyStateHandler extends EventHandler[KeyStateListener, KeyStateEvent] with KeyStateListener
 {
 	override def handlerType = KeyStateHandlerType

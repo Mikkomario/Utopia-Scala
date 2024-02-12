@@ -5,6 +5,7 @@ import scala.language.implicitConversions
 import utopia.genesis.event.KeyTypedEvent
 import utopia.inception.handling.Handleable
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyTypedListener
 {
     // IMPLICIT -----------------------------
@@ -37,6 +38,7 @@ object KeyTypedListener
  * @author Mikko Hilpinen
  * @since 23.2.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait KeyTypedListener extends Handleable
 {
     /**

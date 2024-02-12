@@ -29,7 +29,8 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType

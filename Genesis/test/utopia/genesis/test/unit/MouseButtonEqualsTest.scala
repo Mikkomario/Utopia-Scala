@@ -1,6 +1,6 @@
 package utopia.genesis.test.unit
 
-import utopia.genesis.event.MouseButton
+import utopia.genesis.handling.event.mouse.MouseButton
 
 /**
   * Tests mouse button equality check

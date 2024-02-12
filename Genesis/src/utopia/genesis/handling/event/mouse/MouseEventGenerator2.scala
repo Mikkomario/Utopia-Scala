@@ -7,7 +7,6 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.MouseButton
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.shape.shape2d.vector.Vector2D

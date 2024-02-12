@@ -9,6 +9,7 @@ import utopia.inception.handling.Handleable
  * @author Mikko Hilpinen
  * @since 28.12.2016
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait Drawable extends Handleable
 {
     /**

@@ -10,6 +10,7 @@ import scala.concurrent.duration.FiniteDuration
  * hovering over the instance. In order to work, the listener needs to receive both mouse movement
  * and action events
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseOverListener extends MouseMoveListener with Actor
 {
     // ATTRIBUTES    -----------

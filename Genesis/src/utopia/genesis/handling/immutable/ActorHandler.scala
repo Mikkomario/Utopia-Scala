@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.handling.Actor
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object ActorHandler
 {
 	/**
@@ -36,5 +37,6 @@ object ActorHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class ActorHandler(initialElements: IterableOnce[Actor] = Vector()) extends
 	Handler[Actor](initialElements) with handling.ActorHandler with Handleable

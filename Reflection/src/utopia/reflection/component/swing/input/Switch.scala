@@ -4,7 +4,7 @@ import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreati
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
@@ -23,6 +23,7 @@ import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point

@@ -1,6 +1,4 @@
-package utopia.genesis.handling.event
-
-import utopia.genesis.event.ConsumeEvent
+package utopia.genesis.handling.event.consume
 
 import scala.annotation.unused
 import scala.language.implicitConversions

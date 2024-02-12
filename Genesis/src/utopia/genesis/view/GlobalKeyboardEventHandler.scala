@@ -4,8 +4,9 @@ import utopia.flow.async.context.ActionQueue
 
 import java.awt.event.KeyEvent
 import java.awt.KeyboardFocusManager
-import utopia.genesis.event.KeyLocation.Standard
-import utopia.genesis.event.{KeyLocation, KeyStateEvent, KeyStatus, KeyTypedEvent}
+import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
+import utopia.genesis.event.{KeyStateEvent, KeyStatus, KeyTypedEvent}
+import utopia.genesis.handling.event.keyboard.KeyLocation
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
 import utopia.genesis.handling.mutable
 import utopia.inception.handling.Handleable
@@ -18,6 +19,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 12.9.2020, v2.4
   */
+@deprecated("Deprecated for removal. Replaced with KeyboardEvents", "v4.0")
 object GlobalKeyboardEventHandler
 {
 	// ATTRIBUTES	------------------

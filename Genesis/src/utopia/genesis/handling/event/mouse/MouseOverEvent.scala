@@ -1,6 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.genesis.event.{Consumable, ConsumeEvent}
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import scala.concurrent.duration.FiniteDuration

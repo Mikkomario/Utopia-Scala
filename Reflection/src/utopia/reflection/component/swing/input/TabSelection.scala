@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{ConsumeEvent, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.text.Font
@@ -22,6 +22,7 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import scala.collection.immutable.HashMap

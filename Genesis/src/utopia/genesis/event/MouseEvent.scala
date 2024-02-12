@@ -1,12 +1,14 @@
 package utopia.genesis.event
 
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.inception.util.Filter
-import utopia.genesis.event.MouseButton._
+import utopia.genesis.handling.event.mouse.MouseButton._
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseEvent
 {
     /**
@@ -57,6 +59,7 @@ object MouseEvent
  * @author Mikko Hilpinen
  * @since 19.2.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseEvent[+Repr]
 {
     // ABSTRACT ----------------------

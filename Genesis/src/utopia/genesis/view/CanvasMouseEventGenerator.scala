@@ -9,5 +9,6 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
+@deprecated("Deprecated for removal.", "v4.0")
 class CanvasMouseEventGenerator(canvas: Canvas)(implicit exc: ExecutionContext)
 	extends MouseEventGenerator(canvas, canvas.scaling)

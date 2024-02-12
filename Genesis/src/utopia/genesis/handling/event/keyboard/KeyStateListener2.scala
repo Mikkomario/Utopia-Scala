@@ -4,7 +4,6 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyLocation
 import KeyEvent.KeyFilteringFactory
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter

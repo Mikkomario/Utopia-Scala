@@ -1,5 +1,6 @@
 package utopia.firmament.drawing.template
 
+@deprecated("Deprecated for removal. Moved to Genesis.", "v4.0")
 object DrawLevel
 {
 	/**
@@ -42,6 +43,7 @@ object DrawLevel
   * @author Mikko Hilpinen
   * @since 29.4.2019, Reflection v1+
   */
+@deprecated("Deprecated for removal. Moved to Genesis.", "v4.0")
 sealed trait DrawLevel extends Equals with Ordered[DrawLevel]
 {
 	def index: Int

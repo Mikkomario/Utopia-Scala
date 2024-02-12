@@ -14,8 +14,9 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{Consumable, ConsumeEvent, KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType

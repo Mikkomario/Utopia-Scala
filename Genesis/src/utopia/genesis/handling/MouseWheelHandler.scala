@@ -3,6 +3,7 @@ package utopia.genesis.handling
 import utopia.genesis.event.MouseWheelEvent
 import utopia.inception.handling.{Handler, HandlerType}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case object MouseWheelHandlerType extends HandlerType
 {
 	/**
@@ -11,6 +12,7 @@ case object MouseWheelHandlerType extends HandlerType
 	override def supportedClass = classOf[MouseWheelListener]
 }
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseWheelHandler extends ConsumableEventHandler[MouseWheelListener, MouseWheelEvent] with MouseWheelListener
 {
 	override def handlerType = MouseWheelHandlerType

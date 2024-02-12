@@ -1,7 +1,7 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.genesis.event.MouseButton._
-import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButton}
+import MouseButton._
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 /**

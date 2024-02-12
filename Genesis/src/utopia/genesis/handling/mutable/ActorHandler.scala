@@ -3,6 +3,7 @@ package utopia.genesis.handling.mutable
 import utopia.genesis.handling
 import utopia.inception.handling.mutable.DeepHandler
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object ActorHandler
 {
     /**
@@ -29,4 +30,5 @@ object ActorHandler
  * @author Mikko Hilpinen
  * @since 23.12.2016
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class ActorHandler(initialElements: IterableOnce[handling.Actor]) extends DeepHandler[handling.Actor](initialElements) with handling.ActorHandler

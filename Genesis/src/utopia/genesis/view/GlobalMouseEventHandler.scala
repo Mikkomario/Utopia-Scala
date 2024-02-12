@@ -1,7 +1,9 @@
 package utopia.genesis.view
 
 import utopia.flow.view.mutable.Pointer
-import utopia.genesis.event.{ConsumeEvent, KeyStatus, MouseButton, MouseButtonStateEvent, MouseDragEvent, MouseMoveEvent}
+import utopia.genesis.event.{KeyStatus, MouseButtonStateEvent, MouseDragEvent, MouseMoveEvent}
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.genesis.handling.{MouseButtonStateListener, MouseDragListener, MouseMoveListener, MouseWheelListener, mutable}
 import utopia.inception.handling.{Handleable, HandlerType}
 import utopia.inception.handling.mutable.HandlerRelay
@@ -12,6 +14,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
   * @author Mikko Hilpinen
   * @since 12.9.2020, v2.4
   */
+@deprecated("Deprecated for removal. Replaced with CommonMouseEvents.", "v4.0")
 object GlobalMouseEventHandler
 {
 	// ATTRIBUTES	--------------------------------

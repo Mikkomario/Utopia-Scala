@@ -1,8 +1,7 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.Filter
-import utopia.genesis.event.MouseButton
-import utopia.genesis.event.MouseButton.Middle
+import MouseButton.Middle
 import utopia.paradigm.enumeration.OriginType
 import utopia.paradigm.enumeration.OriginType.Relative
 import utopia.paradigm.shape.shape2d.area.Area2D

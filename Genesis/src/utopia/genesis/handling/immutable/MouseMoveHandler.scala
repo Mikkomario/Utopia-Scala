@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.handling.MouseMoveListener
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseMoveHandler
 {
 	/**
@@ -36,5 +37,6 @@ object MouseMoveHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class MouseMoveHandler(initialElements: IterableOnce[MouseMoveListener])
 	extends Handler[MouseMoveListener](initialElements) with handling.MouseMoveHandler with Handleable

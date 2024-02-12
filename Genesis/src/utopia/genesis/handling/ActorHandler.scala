@@ -9,6 +9,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 23.12.2016
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case object ActorHandlerType extends HandlerType
 {
 	override def supportedClass = classOf[Actor]
@@ -19,6 +20,7 @@ case object ActorHandlerType extends HandlerType
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait ActorHandler extends Handler[Actor] with Actor
 {
 	/**

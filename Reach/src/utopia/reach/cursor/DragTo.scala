@@ -9,7 +9,8 @@ import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.GlobalMouseEventHandler

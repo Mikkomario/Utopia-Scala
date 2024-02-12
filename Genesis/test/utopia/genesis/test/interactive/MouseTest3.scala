@@ -8,12 +8,11 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.MouseButton
 import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener, Repositioner}
-import utopia.genesis.handling.event.ConsumeChoice
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._

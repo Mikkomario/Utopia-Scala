@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 20.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Please use DrawableCanvas in Reach instead.", "v4.0")
 class DefaultSetup(initialGameWorldSize: Size, title: String, val maxFPS: Fps = Fps.default)
 				  (implicit context: ExecutionContext, logger: Logger)
 	extends Setup

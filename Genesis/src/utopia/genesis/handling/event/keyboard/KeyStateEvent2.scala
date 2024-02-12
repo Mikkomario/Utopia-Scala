@@ -1,6 +1,5 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.genesis.event.KeyLocation
 import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.KeyEvent.KeyEventFilter
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter

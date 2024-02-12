@@ -6,6 +6,7 @@ import utopia.inception.util.{AnyFilter, Filter}
 
 import scala.language.implicitConversions
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseDragListener
 {
 	// IMPLICIT ----------------------
@@ -47,6 +48,7 @@ object MouseDragListener
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseDragListener extends Handleable
 {
 	// ABSTRACT ----------------------------

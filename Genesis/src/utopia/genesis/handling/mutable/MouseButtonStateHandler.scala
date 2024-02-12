@@ -3,7 +3,7 @@ package utopia.genesis.handling.mutable
 import utopia.genesis.handling
 import utopia.inception.handling.mutable.DeepHandler
 
-
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseButtonStateHandler
 {
 	def apply(elements: IterableOnce[handling.MouseButtonStateListener] = Vector()) = new MouseButtonStateHandler(elements)
@@ -20,5 +20,6 @@ object MouseButtonStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class MouseButtonStateHandler(initialElements: IterableOnce[handling.MouseButtonStateListener])
 	extends DeepHandler[handling.MouseButtonStateListener](initialElements) with handling.MouseButtonStateHandler

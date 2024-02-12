@@ -19,6 +19,7 @@ import scala.ref.WeakReference
   * @param comp The target component
   * @param maxFPS Maximum frames (paints) per second (default = 60)
   */
+@deprecated("Deprecated for removal. This approach is no longer necessary with the new drawing system.", "v4.0")
 class RepaintLoop(comp: Component, val maxFPS: Fps = Fps.default)(implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {

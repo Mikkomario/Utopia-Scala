@@ -1,5 +1,6 @@
 package utopia.genesis.event
 
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
@@ -13,6 +14,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
   * @param buttonStatus Current mouse button status
   * @param consumeEvent An event concerning this event's consuming. None if not consumed yet (default)
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class MouseWheelEvent(wheelTurn: Double, override val mousePosition: Point,
 						   override val absoluteMousePosition: Point,
 						   override val buttonStatus: MouseButtonStatus,

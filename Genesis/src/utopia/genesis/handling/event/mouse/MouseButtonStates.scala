@@ -1,7 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.genesis.event.MouseButton
-import utopia.genesis.event.MouseButton._
+import MouseButton._
 
 object MouseButtonStates
 {

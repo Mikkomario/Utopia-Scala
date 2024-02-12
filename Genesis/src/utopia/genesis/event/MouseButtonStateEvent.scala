@@ -1,9 +1,12 @@
 package utopia.genesis.event
 
-import utopia.genesis.event.MouseButton._
+import utopia.genesis.handling.event.mouse.MouseButton._
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.inception.util.Filter
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseButtonStateEvent
 {
     /**
@@ -54,6 +57,7 @@ object MouseButtonStateEvent
  * @author Mikko Hilpinen
  * @since 17.2.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class MouseButtonStateEvent(buttonIndex: Int, isDown: Boolean, override val mousePosition: Point,
                                  override val absoluteMousePosition: Point,
                                  override val buttonStatus: MouseButtonStatus,

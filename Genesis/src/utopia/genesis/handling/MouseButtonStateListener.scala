@@ -1,10 +1,13 @@
 package utopia.genesis.handling
 
-import utopia.genesis.event.{ConsumeEvent, MouseButton, MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.inception.handling.Handleable
 import utopia.inception.util.{AnyFilter, Filter}
 import utopia.paradigm.shape.shape2d.area.Area2D
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseButtonStateListener
 {
     /**
@@ -126,6 +129,7 @@ object MouseButtonStateListener
  * @author Mikko Hilpinen
  * @since 18.2.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseButtonStateListener extends Handleable
 {
     // ABSTRACT ---------------------------

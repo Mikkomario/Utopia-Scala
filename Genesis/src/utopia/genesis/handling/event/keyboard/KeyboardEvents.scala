@@ -1,8 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
-import utopia.genesis.event.KeyLocation
-import utopia.genesis.event.KeyLocation.Standard
+import KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable2, Handlers}
 import utopia.inception.handling.Handleable
 

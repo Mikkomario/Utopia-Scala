@@ -10,6 +10,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 23.12.2016
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait Actor extends Handleable
 {
     // ABSTRACT ------------------

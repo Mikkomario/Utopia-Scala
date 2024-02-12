@@ -6,8 +6,8 @@ import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.ConsumeEvent
 import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}

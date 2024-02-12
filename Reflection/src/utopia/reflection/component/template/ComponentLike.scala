@@ -1,10 +1,11 @@
 package utopia.reflection.component.template
 
 import utopia.firmament.component.HasMutableBounds
-import java.awt.FontMetrics
 
+import java.awt.FontMetrics
 import utopia.paradigm.color.Color
 import utopia.genesis.event._
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{KeyStateListener, KeyTypedListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.inception.handling.Handleable

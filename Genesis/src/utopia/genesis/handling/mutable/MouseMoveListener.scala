@@ -9,6 +9,7 @@ import utopia.inception.handling.mutable.Handleable
   * @author Mikko Hilpinen
   * @since 20.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseMoveListener extends handling.MouseMoveListener with Handleable
 {
 	/**

@@ -4,8 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.MouseButton
-import utopia.genesis.handling.event.ConsumeChoice
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.{KeyboardEvents, KeyboardState}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 

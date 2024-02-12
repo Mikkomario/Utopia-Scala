@@ -9,6 +9,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.duration.FiniteDuration
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseMoveEvent
 {
     // OTHER METHODS    ------------
@@ -51,7 +52,7 @@ object MouseMoveEvent
  * @author Mikko Hilpinen
  * @since 10.1.2017
  */
-// TODO: Convert into a trait
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class MouseMoveEvent(override val mousePosition: Point, previousMousePosition: Point,
                           override val absoluteMousePosition: Point,
                           override val buttonStatus: MouseButtonStatus,

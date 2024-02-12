@@ -6,8 +6,10 @@ package utopia.genesis.view
  * @author Mikko Hilpinen
  * @since 28.12.2016
  */
+@deprecated("Deprecated for removal. Replaced with FillAreaLogic.", "v4.0")
 sealed trait ScalingPolicy
 
+@deprecated("Deprecated for removal. Replaced with FillAreaLogic.", "v4.0")
 object ScalingPolicy
 {
     /**

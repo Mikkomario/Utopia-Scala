@@ -1,7 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.collection.immutable.Pair
-import utopia.genesis.event.MouseButton
 import utopia.genesis.handling.event.keyboard.KeyboardState
 import utopia.genesis.handling.event.mouse.MouseDragListener2.MouseDragEventFilter
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint

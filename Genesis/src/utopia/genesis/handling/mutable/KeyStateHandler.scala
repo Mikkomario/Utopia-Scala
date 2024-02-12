@@ -3,6 +3,7 @@ package utopia.genesis.handling.mutable
 import utopia.genesis.handling
 import utopia.inception.handling.mutable.DeepHandler
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyStateHandler
 {
 	def apply(elements: IterableOnce[handling.KeyStateListener] = Vector()) = new KeyStateHandler(elements)
@@ -19,6 +20,7 @@ object KeyStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class KeyStateHandler(initialElements: IterableOnce[handling.KeyStateListener])
 	extends DeepHandler[handling.KeyStateListener](initialElements) with handling.KeyStateHandler
 {

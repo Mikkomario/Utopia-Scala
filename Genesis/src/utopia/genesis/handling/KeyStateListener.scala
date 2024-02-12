@@ -7,6 +7,7 @@ import utopia.genesis.event.KeyStateEvent
 import utopia.inception.handling.{Handleable, Mortal}
 import utopia.inception.util.{AnyFilter, Filter}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyStateListener
 {
     implicit def functionToListener(f: KeyStateEvent => Unit): KeyStateListener = apply()(f)
@@ -99,6 +100,7 @@ object KeyStateListener
  * @author Mikko Hilpinen
  * @since 22.2.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait KeyStateListener extends Handleable
 {
     /**

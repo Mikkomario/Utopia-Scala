@@ -3,7 +3,7 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.event.ConsumeChoice
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.template.{Handleable2, Handlers}
 
 import scala.collection.mutable

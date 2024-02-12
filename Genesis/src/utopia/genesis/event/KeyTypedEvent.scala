@@ -9,6 +9,7 @@ package utopia.genesis.event
   * @param index The key index associated with this event
   * @param keyStatus The keyboard status during this event
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class KeyTypedEvent(typedChar: Char, index: Int, keyStatus: KeyStatus)
 {
 	/**

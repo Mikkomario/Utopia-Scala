@@ -4,6 +4,7 @@ import utopia.genesis.event.MouseDragEvent
 import utopia.inception.handling.HandlerType
 import utopia.inception.util.Filter
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case object MouseDragHandlerType extends HandlerType
 {
 	override lazy val supportedClass: Class[_] = classOf[MouseDragListener]
@@ -14,6 +15,7 @@ case object MouseDragHandlerType extends HandlerType
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseDragHandler extends EventHandler[MouseDragListener, MouseDragEvent] with MouseDragListener
 {
 	override def handlerType = MouseDragHandlerType

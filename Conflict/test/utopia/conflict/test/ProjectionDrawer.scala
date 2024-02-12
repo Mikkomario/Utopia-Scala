@@ -1,7 +1,8 @@
 package utopia.conflict.test
 
-import utopia.genesis.event.{MouseButton, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{Drawer, StrokeSettings}
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.genesis.handling.mutable.MouseButtonStateListener
 import utopia.genesis.handling.{Drawable, MouseMoveListener}
 import utopia.paradigm.color.Color

@@ -1,10 +1,12 @@
 package utopia.genesis.handling
 
-import utopia.genesis.event.{ConsumeEvent, MouseWheelEvent}
+import utopia.genesis.event.MouseWheelEvent
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.inception.handling.Handleable
 import utopia.inception.util.{AnyFilter, Filter}
 import utopia.paradigm.shape.shape2d.area.Area2D
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseWheelListener
 {
     /**
@@ -39,6 +41,7 @@ object MouseWheelListener
  * This trait is implemented by classes which are interested in being notified when the mouse wheel
  * is rotated
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseWheelListener extends Handleable
 {
     /**

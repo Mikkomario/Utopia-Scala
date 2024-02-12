@@ -1,7 +1,6 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{Filter, RejectAll}
-import utopia.genesis.event.KeyLocation
 import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, CharKey, Control, Shift}
 import utopia.paradigm.enumeration.Direction2D
 

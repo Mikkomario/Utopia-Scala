@@ -1,5 +1,6 @@
 package utopia.genesis.event
 
+import utopia.genesis.handling.event.keyboard.KeyLocation
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
@@ -8,6 +9,7 @@ import java.awt.event.KeyEvent
 import utopia.inception.util.Filter
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyStateEvent
 {
     // ATTRIBUTES   -------------------------
@@ -111,6 +113,7 @@ object KeyStateEvent
   * @param location The specific location where the key was changed
   * @param keyStatus The current overall key status
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case class KeyStateEvent(index: Int, location: KeyLocation, isDown: Boolean, keyStatus: KeyStatus)
 {
     // COMPUTED ---------------------

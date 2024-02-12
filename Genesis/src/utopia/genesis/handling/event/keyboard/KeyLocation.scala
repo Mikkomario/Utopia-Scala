@@ -1,4 +1,4 @@
-package utopia.genesis.event
+package utopia.genesis.handling.event.keyboard
 
 import java.awt.event.KeyEvent
 

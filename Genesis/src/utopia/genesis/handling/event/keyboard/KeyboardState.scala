@@ -1,8 +1,8 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.event.KeyLocation
-import utopia.genesis.event.KeyLocation.Standard
+import KeyLocation.Standard
+import utopia.genesis.handling.event.keyboard
 import utopia.genesis.handling.event.keyboard.Key.CharKey
 
 import java.awt.event.KeyEvent
@@ -123,7 +123,7 @@ case class KeyboardState(downIndices: Map[Int, Set[KeyLocation]])
       */
     def +(key: (Key, KeyLocation)) = withKeyDown(key._1, key._2)
     /**
-      * @param key A key (assumed to be at the [[utopia.genesis.event.KeyLocation.Standard]] location)
+      * @param key A key (assumed to be at the [[keyboard.KeyLocation.Standard]] location)
       * @return Copy of this state with the specified key pressed down
       */
     def +(key: Key) = withKeyDown(key)
@@ -133,7 +133,7 @@ case class KeyboardState(downIndices: Map[Int, Set[KeyLocation]])
       */
     def -(key: (Key, KeyLocation)) = withKeyReleased(key._1, key._2)
     /**
-      * @param key A key (assumed to be at the [[utopia.genesis.event.KeyLocation.Standard]] location)
+      * @param key A key (assumed to be at the [[keyboard.KeyLocation.Standard]] location)
       * @return Copy of this state with the specified key released
       */
     def -(key: Key) = withKeyReleased(key)

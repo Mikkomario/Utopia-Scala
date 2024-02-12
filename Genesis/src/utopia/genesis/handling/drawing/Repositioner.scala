@@ -4,8 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.{DrawOrder, Drawer}
-import utopia.genesis.handling.event.ConsumeChoice
-import utopia.genesis.handling.event.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.enumeration.FillAreaLogic.{Fit, ScalePreservingShape}

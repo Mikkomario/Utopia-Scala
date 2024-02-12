@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.handling.KeyStateListener
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyStateHandler
 {
 	/**
@@ -36,5 +37,6 @@ object KeyStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class KeyStateHandler(initialElements: IterableOnce[KeyStateListener])
 	extends Handler[KeyStateListener](initialElements) with handling.KeyStateHandler with Handleable

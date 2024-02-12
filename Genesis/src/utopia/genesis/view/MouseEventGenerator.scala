@@ -25,6 +25,7 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class MouseEventGenerator(c: Component, scaling: => Double = 1.0)(implicit exc: ExecutionContext)
     extends Actor with Mortal with Killable
 {

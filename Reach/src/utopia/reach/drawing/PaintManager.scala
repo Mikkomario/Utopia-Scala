@@ -11,6 +11,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
   * @author Mikko Hilpinen
   * @since 25.11.2020, v0.1
   */
+@deprecated("Deprecated for removal. Moved to Genesis.", "v4.0")
 trait PaintManager
 {
 	// ABSTRACT	------------------------------

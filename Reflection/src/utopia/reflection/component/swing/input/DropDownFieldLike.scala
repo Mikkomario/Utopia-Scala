@@ -4,7 +4,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import java.awt.event.KeyEvent
 import utopia.paradigm.color.Color
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButtonStateEvent}
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -26,6 +26,7 @@ import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext

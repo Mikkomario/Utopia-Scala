@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.genesis.handling.event.{ConsumableEventHandler2, ConsumeChoice}
+import utopia.genesis.handling.event.consume.{ConsumableEventHandler2, ConsumeChoice}
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
 object MouseWheelHandler2 extends FromCollectionFactory[MouseWheelListener2, MouseWheelHandler2]

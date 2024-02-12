@@ -5,6 +5,7 @@ package utopia.genesis.util
  * @author Mikko Hilpinen
  * @since 28.12.2016
  */
+@deprecated("Deprecated for removal. Replaced with DrawOrder.", "v4.0")
 object DepthRange
 {
     /**

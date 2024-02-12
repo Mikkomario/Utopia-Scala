@@ -3,7 +3,9 @@ package utopia.reflection.component.swing.button
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.mouse.MouseButton
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType

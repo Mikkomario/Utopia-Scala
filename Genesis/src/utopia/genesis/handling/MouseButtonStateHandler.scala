@@ -3,6 +3,7 @@ package utopia.genesis.handling
 import utopia.genesis.event.MouseButtonStateEvent
 import utopia.inception.handling.{Handler, HandlerType}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 case object MouseButtonStateHandlerType extends HandlerType
 {
 	/**
@@ -14,6 +15,7 @@ case object MouseButtonStateHandlerType extends HandlerType
 /**
   * Key state handlers distribute key state events among multiple listeners
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseButtonStateHandler extends ConsumableEventHandler[MouseButtonStateListener, MouseButtonStateEvent]
 	with MouseButtonStateListener
 {

@@ -5,7 +5,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{ConsumeEvent, KeyStateEvent, MouseButton, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
@@ -13,6 +13,8 @@ import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.mouse.MouseButton
 
 import java.awt.event.KeyEvent
 

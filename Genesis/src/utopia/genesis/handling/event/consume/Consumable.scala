@@ -1,9 +1,8 @@
-package utopia.genesis.event
+package utopia.genesis.handling.event.consume
 
 import utopia.flow.operator.filter.Filter
 import utopia.flow.view.mutable.eventful.SettableOnce
-import utopia.genesis.handling.event.ConsumeChoice
-import utopia.genesis.handling.event.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 
 object Consumable
 {

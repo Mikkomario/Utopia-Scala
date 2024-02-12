@@ -5,6 +5,7 @@ import utopia.inception.handling.Handleable
 import utopia.inception.util.{AnyFilter, Filter}
 import utopia.paradigm.shape.shape2d.area.Area2D
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseMoveListener
 {
     /**
@@ -52,6 +53,7 @@ object MouseMoveListener
  * @author Mikko Hilpinen
  * @since 21.1.2017
  */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait MouseMoveListener extends Handleable
 {
     /**

@@ -1,8 +1,11 @@
 package utopia.genesis.event
 
+import utopia.genesis.handling.event.keyboard.KeyLocation
+
 import scala.collection.immutable.{HashMap, VectorBuilder}
 import java.awt.event.KeyEvent
 
+@deprecated("Replaced with a KeyboardState.", "v4.0")
 object KeyStatus
 {
     /**
@@ -24,6 +27,7 @@ object KeyStatus
  * @author Mikko Hilpinen
  * @since 21.2.2017
  */
+@deprecated("Replaced with KeyboardState.", "v4.0")
 case class KeyStatus private(private val status: Map[Int, Set[KeyLocation]])
 {
     // COMPUTED PROPERTIES    -------

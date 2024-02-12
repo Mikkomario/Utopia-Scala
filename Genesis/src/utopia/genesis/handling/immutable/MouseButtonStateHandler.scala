@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.handling.MouseButtonStateListener
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object MouseButtonStateHandler
 {
 	/**
@@ -36,5 +37,6 @@ object MouseButtonStateHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class MouseButtonStateHandler(initialElements: IterableOnce[MouseButtonStateListener])
 	extends Handler[MouseButtonStateListener](initialElements) with handling.MouseButtonStateHandler with Handleable

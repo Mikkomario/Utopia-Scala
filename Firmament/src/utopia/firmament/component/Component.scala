@@ -2,6 +2,7 @@ package utopia.firmament.component
 
 import utopia.genesis.event._
 import utopia.genesis.graphics.FontMetricsWrapper
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.mutable._
 import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.text.Font

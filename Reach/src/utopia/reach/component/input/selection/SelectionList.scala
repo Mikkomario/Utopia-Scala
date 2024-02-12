@@ -16,7 +16,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{Consumable, ConsumeEvent, MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
@@ -38,6 +38,7 @@ import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsL
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 /**

@@ -8,6 +8,7 @@ import utopia.inception.util.Filter
   * @author Mikko Hilpinen
   * @since 10.5.2019, v1+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait EventHandler[Listener <: Handleable, Event] extends Handler[Listener]
 {
 	/**

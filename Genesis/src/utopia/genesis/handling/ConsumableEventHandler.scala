@@ -1,6 +1,6 @@
 package utopia.genesis.handling
 
-import utopia.genesis.event.{Consumable, ConsumeEvent}
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.inception.handling.Handleable
 
 /**
@@ -8,6 +8,7 @@ import utopia.inception.handling.Handleable
   * @author Mikko Hilpinen
   * @since 10.5.2019, v1+
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 trait ConsumableEventHandler[Listener <: Handleable, Event <: Consumable[Event]] extends EventHandler[Listener, Event]
 {
 	// ABSTRACT	---------------------

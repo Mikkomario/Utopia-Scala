@@ -1,7 +1,9 @@
 package utopia.genesis.event
 
-import utopia.genesis.event.MouseButton._
+import utopia.genesis.handling.event.mouse.MouseButton
+import utopia.genesis.handling.event.mouse.MouseButton._
 
+@deprecated("Replaced with MouseButtonStates", "v4.0")
 object MouseButtonStatus
 {
     /**
@@ -40,6 +42,7 @@ object MouseButtonStatus
  * @author Mikko Hilpinen
  * @since 18.2.2017
  */
+@deprecated("Replaced with MouseButtonStates", "v4.0")
 case class MouseButtonStatus private(downIndices: Set[Int])
 {
     // COMPUTED PROPERTIES    ------

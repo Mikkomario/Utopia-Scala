@@ -4,9 +4,9 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.ConsumeEvent
+import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
-import utopia.genesis.handling.event.{ConsumeChoice, ListenerFactory}
+import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.VerticalDirection

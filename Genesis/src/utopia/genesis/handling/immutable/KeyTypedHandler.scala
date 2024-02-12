@@ -4,6 +4,7 @@ import utopia.genesis.handling
 import utopia.genesis.handling.KeyTypedListener
 import utopia.inception.handling.immutable.{Handleable, Handler}
 
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 object KeyTypedHandler
 {
 	val empty = new KeyStateHandler(Vector())
@@ -19,5 +20,6 @@ object KeyTypedHandler
   * This is an immutable implementation of the KeyTypedHandler trait
   * @param initialElements Elements placed in this handler
   */
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
 class KeyTypedHandler(initialElements: IterableOnce[KeyTypedListener])
 	extends Handler[KeyTypedListener](initialElements) with handling.KeyTypedHandler with Handleable
