@@ -88,8 +88,7 @@ object StackLength
 			lengths.head
 		else if (lengths.size == 2)
 			lengths.head combineWith lengths(1)
-		else
-		{
+		else {
 			val newMin = lengths.map { _.min }.max
 			val newMax = lengths.flatMap { _.max }.minOption
 			
@@ -408,8 +407,18 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 			}
 		}
 		val newMax = Vector(max, other.max).flatten.reduceOption { _ min _ }
+		
+		val priorities = Pair(priority, other.priority)
+		// Assigns shrinking, if possible. Avoids expansion, unless both options support it.
+		val newPriority = {
+			val mayShrink = newMin < newOptimal && priorities.exists { _.shrinksFirst }
+			val mayExpand = newMax.forall { _ > newOptimal } && priorities.forall { _.expandsFirst }
+			LengthPriority(shouldShrinkFirst = mayShrink, shouldExpandFirst = mayExpand)
+		}
+		/*
 		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
 			optimal, priority, other.optimal, other.priority)
+		 */
 		
 		StackLength(newMin, newOptimal, newMax, newPriority)
 	}
@@ -429,9 +438,18 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 			else
 				optimal
 		}
+		val priorities = Pair(priority, other.priority)
+		// Assigns expansion, if possible
+		// Avoids shrinking, unless listed by both options
+		val newPriority = {
+			val mayShrink = newMin < newOptimal && priorities.forall { _.shrinksFirst }
+			val mayExpand = newMax.forall { _ > newOptimal } && priorities.exists { _.expandsFirst }
+			LengthPriority(shouldShrinkFirst = mayShrink, shouldExpandFirst = mayExpand)
+		}
+		/*
 		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
 			optimal, priority, other.optimal, other.priority)
-		
+		*/
 		StackLength(newMin, newOptimal, newMax, newPriority)
 	}
 	/**
@@ -451,8 +469,8 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 			else
 				optimal
 		}
-		val newPriority = StackLength.combinedPriority(newMin, newOptimal, newMax,
-			optimal, priority, other.optimal, other.priority)
+		val newPriority = StackLength.combinedPriority(
+			newMin, newOptimal, newMax, optimal, priority, other.optimal, other.priority)
 		
 		// Optimal is limited by maximum length
 	    if (newMax.exists { _ < newOptimal })

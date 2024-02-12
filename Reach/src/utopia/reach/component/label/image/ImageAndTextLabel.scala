@@ -448,13 +448,13 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 	override protected val wrapped = {
 		// If one of the provided items is empty, only creates one component
 		if (image.either.isEmpty)
-			TextLabel(parentHierarchy).withContext(context.mapTextInsets { _ && commonInsets })
+			TextLabel(parentHierarchy).withContext(context.mapTextInsets { _ max commonInsets })
 				.withIsHint(settings.isHint).withAdditionalCustomDrawers(settings.customDrawers)
 				.apply(text)
 		else if (text.isEmpty)
 			ImageLabel.withSettings(settings.imageSettings)
 				.withAdditionalCustomDrawers(settings.customDrawers)
-				.mapInsets { _ && commonInsets }
+				.mapInsets { _ max commonInsets }
 				.apply(parentHierarchy).withContext(context)
 				.apply(image)
 		else {
@@ -466,7 +466,7 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 					if (imageAlignment.movesTowards(dir))
 						StackLength.fixedZero
 					else
-						default(dir) && commonInsets(dir)
+						default(dir) max commonInsets(dir)
 				}
 			}
 			// WET WET
@@ -475,7 +475,7 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContex
 					if (textAlignment.movesTowards(dir))
 						StackLength.fixedZero
 					else
-						default(dir) && commonInsets(dir)
+						default(dir) max commonInsets(dir)
 				}
 			}
 			

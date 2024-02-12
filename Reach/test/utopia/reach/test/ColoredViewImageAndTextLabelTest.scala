@@ -1,6 +1,8 @@
 package utopia.reach.test
 
+import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.model.Border
 import utopia.flow.async.process.Loop
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
@@ -36,7 +38,10 @@ object ColoredViewImageAndTextLabelTest extends App
 		framingF.build(ViewImageAndTextLabel) { labelF =>
 			val f = labelF.withBackground(Color.yellow)
 			println(f.customDrawers)
-			f.icon(itemPointer, imagePointer)
+			val label = f.mapContext { _.withTextExpandingToRight }
+				.withCustomDrawer(BorderDrawer(Border(1.0, Color.red))).icon(itemPointer, imagePointer)
+			println(label.stackSize)
+			label
 		}
 	}
 	

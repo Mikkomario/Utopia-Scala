@@ -409,9 +409,9 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPoint
 		val imageAlignment = textAlignment.opposite
 		
 		val imageInsetsPointer = settings.imageInsetsPointer
-			.mergeWith(commonInsetsPointer) { (a, b) => (a && b) -- imageAlignment.directions }
+			.mergeWith(commonInsetsPointer) { (a, b) => (a max b) -- imageAlignment.directions }
 		val appliedContextPointer = contextPointer.mergeWith(commonInsetsPointer) { (c, insets) =>
-			c.mapTextInsets { tInsets => (tInsets && insets) -- textAlignment.directions }
+			c.mapTextInsets { tInsets => (tInsets max insets) -- textAlignment.directions }
 		}
 		
 		Stack.withContext(parentHierarchy, contextPointer.value)
