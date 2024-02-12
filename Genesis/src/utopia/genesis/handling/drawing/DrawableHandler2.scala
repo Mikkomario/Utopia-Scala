@@ -62,12 +62,14 @@ object DrawableHandler2
 		// OTHER    ----------------------
 		
 		/**
-		  * @param p A pointer that determines the area that's visible at any time
-		  * @return Copy of this factory that only draws within the area specified by that pointer
+		  * @param p A pointer that determines the area that's visible at any time.
+		  *          This pointer will also dictate the draw bounds of this handler.
+		  * @return Copy of this factory that only draws within the area specified by that pointer.
 		  */
 		def withClipPointer(p: Changing[Bounds]) = copy(clipPointer = Some(p))
 		/**
-		  * @param clipBounds The only area allowed to be drawn by this handler
+		  * @param clipBounds The only area allowed to be drawn by this handler.
+		  *                   This will also dictate the draw bounds of this handler.
 		  * @return Copy of this factory that only draws to that area
 		  */
 		def clippedTo(clipBounds: Bounds) = withClipPointer(Fixed(clipBounds))
@@ -177,8 +179,8 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	private val layers = DrawLevel2.values.reverse.map { new Layer(_) }
 	private val coveringLayers = layers.dropRight(1)
 	
-	private val _drawBoundsPointer = EventfulPointer(Bounds.zero)
-	private val updateDrawBoundsListener = ChangeListener.onAnyChange { updateDrawBounds() }
+	private val _drawBoundsPointer = clipPointer.toRight { EventfulPointer(Bounds.zero) }
+	override val drawBoundsPointer: Changing[Bounds] = _drawBoundsPointer.either.readOnly
 	
 	// If used, contains: 1) Time to next repaint, 2) Repaint bounds, and 3) repaint priority
 	// Contains None while no repaint has been requested
@@ -204,8 +206,11 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	
 	// INITIAL CODE --------------------------
 	
-	layers.foreach { _.drawBoundsPointer.addListener(updateDrawBoundsListener) }
-	updateDrawBounds()
+	_drawBoundsPointer.leftOption.foreach { pointer =>
+		val updateDrawBoundsListener = ChangeListener.onAnyChange { updateDrawBounds(pointer) }
+		layers.foreach { _.drawBoundsPointer.addListener(updateDrawBoundsListener) }
+		updateDrawBounds(pointer)
+	}
 	
 	// Whenever clipping changes, updates the layer draw areas
 	clipPointer.foreach { _.addListenerWhile(handleCondition) { _ =>
@@ -226,7 +231,6 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	// IMPLEMENTED  --------------------------
 	
 	override def opaque = false
-	override def drawBoundsPointer: Changing[Bounds] = _drawBoundsPointer.readOnly
 	
 	override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 	
@@ -317,7 +321,9 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 		}
 	}
 	
-	private def updateDrawBounds() = _drawBoundsPointer.value = Bounds.around(layers.flatMap { _.drawBounds })
+	// Accepts the mutable draw bounds -pointer
+	private def updateDrawBounds(pointer: Pointer[Bounds]) =
+		pointer.value = Bounds.around(layers.flatMap { _.drawBounds })
 	
 	// Determines the targeted region after clipping
 	// Contains None if repaint is not needed (i.e. outside of clip)

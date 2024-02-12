@@ -14,6 +14,7 @@
   The new implementation works the same way, regardless of compared collection type 
   (although it now requires **Seq** to be used)
 ### New features
+- Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
 ### New methods
