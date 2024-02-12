@@ -1,9 +1,12 @@
 package utopia.reach.test
 
+import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.color.ColorShade.Light
 import utopia.reach.component.button.text.TextButton
@@ -25,7 +28,7 @@ object SelectionListTest extends App
 	import ReachTestContext._
 	
 	// Data
-	val contentPointer = new EventfulPointer(Vector(1, 2, 3, 4, 5, 6, 7))
+	val contentPointer = new EventfulPointer(Vector(1, 2, 34, 45, 567, 6, 7890))
 	val valuePointer = new EventfulPointer[Option[Int]](Some(2))
 	
 	val mainBg = colors.gray.default
@@ -41,20 +44,27 @@ object SelectionListTest extends App
 					// Framing
 					framingF.withBackground(Primary, Light).small.build(SelectionList) { listF =>
 						// Selection list
-						listF.apply(contentPointer, valuePointer, alternativeKeyCondition = true) { (hierarchy, item: Int) =>
+						val list = listF.apply(contentPointer, valuePointer,
+							alternativeKeyCondition = true) { (hierarchy, item: Int) =>
 							MutableViewTextLabel(hierarchy).withContext(listF.contextPointer.value)
-								.mapTextInsets { _.mapRight { _ + margins.large } }
+								.mapTextInsets { _.mapRight { i => (i + margins.large).noMax.expanding } }
+								.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))
 								.apply(item, DisplayFunction.interpolating("Label %s"))
 						}
+						list -> list
 					}
 				}
 				// 2: Button
 				val button = factories.withContext(baseContext.against(mainBg).forTextComponents / Primary)(TextButton)
 					.apply("Button") { println("Button Pressed") }
 				
-				Vector(scroll.parent, button)
+				Vector(scroll.parent, button) -> scroll.result
 			}
 		}
+	}
+	
+	window.result.children.foreach { c =>
+		println(s"${c.getClass.getSimpleName}: ${c.stackSize}")
 	}
 	
 	// Changes content based on digit key-presses

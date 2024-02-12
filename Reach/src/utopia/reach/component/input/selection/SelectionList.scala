@@ -476,7 +476,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	  * @return Whether this list is completely empty
 	  */
 	def isEmpty = content.isEmpty
-	
 	/**
 	  * @return Whether this list contains selectable items
 	  */
@@ -486,7 +485,6 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	  * @return A pointer to this list's focus state
 	  */
 	def focusPointer = focusTracker.focusPointer
-	
 	/**
 	  * @return Whether this list has currently focus
 	  */
@@ -500,22 +498,19 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	// IMPLEMENTED	--------------------------------
 	
-	// Focus may enter if there are items to select
-	override def allowsFocusEnter = nonEmpty
-	
-	override def allowsFocusLeave = true
-	
+	override protected def wrapped: ReachComponent = stack
 	override protected def drawable: MutableCustomDrawable = stack
 	
-	override protected def wrapped: ReachComponent = stack
-	
-	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
+	// Focus may enter if there are items to select
+	override def allowsFocusEnter = nonEmpty
+	override def allowsFocusLeave = true
 	
 	override def cursorType = if (isEmpty) Default else Interactive
-	
 	override def cursorBounds = boundsInsideTop
 	
 	override def cursorToImage(cursor: Cursor, position: Point) = cursor.over(contextBackgroundPointer.value.shade)
+	
+	override def repaint() = super[MutableCustomDrawableWrapper].repaint()
 	
 	
 	// NESTED	------------------------------------
@@ -546,16 +541,14 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// IMPLEMENTED	----------------------------
 		
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (event.isOverArea(bounds))
 				relativeMousePositionPointer.value = Some(event.mousePosition - position)
 			else
 				relativeMousePositionPointer.value = None
 		}
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def onMouseButtonState(event: MouseButtonStateEvent) = {
 			if (!hasFocus)
 				requestFocus()
 			pressedDisplay = hoverComponentPointer.value

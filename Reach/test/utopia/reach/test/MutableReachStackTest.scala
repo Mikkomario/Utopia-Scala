@@ -1,16 +1,21 @@
 package utopia.reach.test
 
 import utopia.firmament.controller.data.ContainerContentDisplayer
+import utopia.firmament.drawing.immutable.BorderDrawer
+import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.event.KeyTypedEvent
 import utopia.genesis.handling.KeyTypedListener
 import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.MutableStack
 import utopia.reach.window.ReachWindow
+
+import scala.util.Random
 
 /**
   * Tests mutable Reach stack implementation and the new version of container content displayer.
@@ -38,12 +43,16 @@ object MutableReachStackTest extends App
 	val dataPointer = new EventfulPointer[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
 		implicit val c: ReachCanvas = window.canvas
-		Open.withContext(windowContext.withHorizontallyCenteredText)(MutableViewTextLabel) { labelF =>
-			labelF.withBackground(Secondary)(i)
-		}
+		Open
+			.withContext(windowContext.withHorizontallyCenteredText.withHorizontallyExpandingText)
+			.apply(MutableViewTextLabel) { labelF =>
+				labelF.withBackground(Secondary)
+					.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))(i)
+			}
 	}
 	
 	// Displays the window
+	window.setToCloseOnEsc()
 	window.setToExitOnClose()
 	window.centerOnParent()
 	window.display()
@@ -54,10 +63,17 @@ object MutableReachStackTest extends App
 	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent =>
 		if (event.typedChar.isDigit) {
 			val newIndex = event.typedChar.asDigit
-			if (newIndex >= lastIndex)
-				dataPointer.value = (lastIndex to newIndex).toVector
-			else
-				dataPointer.value = (newIndex to lastIndex).reverseIterator.toVector
+			val newDigits = {
+				if (newIndex >= lastIndex)
+					(lastIndex to newIndex).toVector
+				else
+					(newIndex to lastIndex).reverseIterator.toVector
+			}
+			dataPointer.value = newDigits.map { i =>
+				val length = 1 + Random.nextInt(6)
+				val tensMod = (math.pow(10, length - 1)).toInt
+				i * tensMod + Random.nextInt(tensMod)
+			}
 			lastIndex = newIndex
 		}
 	}
