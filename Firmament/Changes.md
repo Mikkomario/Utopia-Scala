@@ -1,7 +1,11 @@
 # Utopia Firmament - List of Changes
 
 ## v1.2.1 (in development)
+### New methods
+- **StackInsets**
+  - Added `.min(StackInsets)` and `.max(StackInsets)`
 ### Other changes
+- **StackLength**`.min(StackLength)` and `.max(StackLength)` now prioritize shrinking or expanding based on their direction
 - GUI element highlighting is now less pronounced after the first stage.
   - E.g. When button is pressed with a mouse, the pressed stage more resembles the hover stage,
     while still being noticeably different

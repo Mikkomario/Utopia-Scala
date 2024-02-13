@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
 ## v1.2.1 (in development)
+### Bugfixes
+- Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
 
 ## v1.2 - 22.01.2024
 This update focuses on image-drawing, especially in buttons. 

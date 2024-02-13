@@ -164,7 +164,27 @@ case class StackInsets(sides: Map[Direction2D, StackLength])
 	  * @param other Another set of insets
 	  * @return Combination between these insets, which attempts to fulfill the conditions in both
 	  */
-	def &&(other: StackInsets) = mergeWith(other) { _ && _ }
+	def &&(other: StackInsets) = mergeWith(other) { (a, b) =>
+		/*
+		val defaultMerge = a && b
+		// Preserves expanding insets, even when expansion is not listed in both
+		if (a.priority.expandsFirst || b.priority.expandsFirst)
+			defaultMerge.expanding
+		else
+			defaultMerge
+		 */
+		a && b
+	}
+	/**
+	  * @param other Another set of insets
+	  * @return A combination of these insets that selects the smaller applicable value
+	  */
+	def min(other: StackInsets) = mergeWith(other) { _ min _ }
+	/**
+	  * @param other Another set of insets
+	  * @return A combination of these insets that selects the larger applicable value
+	  */
+	def max(other: StackInsets) = mergeWith(other) { _ max _ }
 	
 	/**
 	  * Converts these stack insets to normal insets
