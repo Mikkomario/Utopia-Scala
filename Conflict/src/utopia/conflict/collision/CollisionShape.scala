@@ -10,6 +10,16 @@ import utopia.paradigm.shape.shape3d.Matrix3D
 
 object CollisionShape
 {
+    // ATTRIBUTES   ---------------------
+    
+    /**
+      * An empty collision shape
+      */
+    val empty = CollisionShape(Vector.empty, Vector.empty, 1)
+    
+    
+    // OTHER    ------------------------
+    
     /**
      * Wraps a polygon into a collision shape
      */
@@ -129,9 +139,10 @@ case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Cir
         bounds.checkCollisionWith(other.bounds)
     
     // TODO: Instead of combining the collisions, one could filter only those which push the shapes apart
-    private def checkPolygonCollisionWith(other: CollisionShape) = convexPolygons.flatMap { 
-            myPolygon => other.convexPolygons.flatMap { 
-            myPolygon.checkCollisionWithConvex(_) } }.reduceOption { _ + _ }
+    private def checkPolygonCollisionWith(other: CollisionShape) =
+        convexPolygons.flatMap { myPolygon =>
+            other.convexPolygons.flatMap { myPolygon.checkCollisionWithConvex(_) }
+        }.reduceOption { _ + _ }
             
     private def checkCircleCollisionWith(other: CollisionShape) = circles.flatMap { 
             myCircle => other.circles.flatMap { myCircle.checkCollisionWith(_) } }.reduceOption { _ + _ }

@@ -11,6 +11,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
+@deprecated("Replaced with a new version", "v1.5")
 trait CollisionListener extends Handleable
 {
     // ABSTRACT METHODS & PROPERTIES    ----------------

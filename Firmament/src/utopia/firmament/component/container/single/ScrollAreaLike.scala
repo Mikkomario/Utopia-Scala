@@ -11,6 +11,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event._
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling._
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.immutable.Handleable

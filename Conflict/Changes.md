@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.5 (in development)
+Refactoring based on Genesis changes
+
 ## v1.4.5 - 22.01.2024
 Supports **Flow v2.3**
 ### Other changes

@@ -8,6 +8,7 @@ import utopia.inception.handling.Handleable
  * @author Mikko Hilpinen
  * @since 2.8.2017
  */
+@deprecated("Replaced with CanCollideWith", "v1.5")
 trait Collidable extends Handleable
 {
     // ABSTRACT METHODS / PROPERTIES    --------------------------

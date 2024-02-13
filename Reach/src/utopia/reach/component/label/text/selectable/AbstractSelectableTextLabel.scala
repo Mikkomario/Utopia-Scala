@@ -28,6 +28,7 @@ import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
 import utopia.genesis.graphics.Priority2.VeryHigh
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 
 import java.awt.Toolkit
