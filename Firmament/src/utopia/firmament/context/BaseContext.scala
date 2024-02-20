@@ -3,7 +3,7 @@ package utopia.firmament.context
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
 import utopia.firmament.model.stack.StackLength
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
@@ -24,7 +24,7 @@ object BaseContext
 	  * @param localizer Localization implementation to use (implicit)
 	  * @return A new base context
 	  */
-	def apply(actorHandler: ActorHandler, font: Font, colorScheme: ColorScheme, margins: Margins,
+	def apply(actorHandler: ActorHandler2, font: Font, colorScheme: ColorScheme, margins: Margins,
 	          stackMargins: Option[StackLength] = None, contrastStandard: ColorContrastStandard = Minimum,
 	          allowImageUpscaling: Boolean = false)(implicit localizer: Localizer): BaseContext =
 		_BaseContext(actorHandler, localizer, font, colorScheme, margins, stackMargins, contrastStandard,
@@ -33,7 +33,7 @@ object BaseContext
 	
 	// NESTED   --------------------------------------
 	
-	private case class _BaseContext(actorHandler: ActorHandler, localizer: Localizer, font: Font, colors: ColorScheme,
+	private case class _BaseContext(actorHandler: ActorHandler2, localizer: Localizer, font: Font, colors: ColorScheme,
 	                                margins: Margins, customStackMargins: Option[StackLength],
 	                                contrastStandard: ColorContrastStandard, allowImageUpscaling: Boolean)
 		extends BaseContext

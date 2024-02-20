@@ -23,6 +23,7 @@ import utopia.flow.view.template.eventful.FlagLike._
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -124,7 +125,7 @@ object Window
 	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
-	def apply(container: java.awt.Container, content: Stackable, eventActorHandler: ActorHandler,
+	def apply(container: java.awt.Container, content: Stackable, eventActorHandler: ActorHandler2,
 	          parent: Option[java.awt.Window], title: LocalizedString = LocalizedString.empty,
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
 	          getAnchor: Bounds => Point = _.center, icon: Image = ComponentCreationDefaults.windowIcon,
@@ -255,7 +256,7 @@ object Window
   *               as well as possible window initialization warnings.
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
-             eventActorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
+             eventactorHandler: ActorHandler2, resizeLogic: WindowResizePolicy = Program,
              screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
              initialIcon: Image = ComponentCreationDefaults.windowIcon,
              maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
@@ -505,8 +506,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Once this window is open, starts event handling
 		openedFuture.foreach { _ =>
 			// Starts mouse listening (which is active only while visible)
+			// FIXME: Swap mouse event generator logic and add the new generator to the actor handler (and remove upon close)
 			val mouseEventGenerator = new MouseEventGenerator(container)
-			eventActorHandler += mouseEventGenerator
+			// eventActorHandler += mouseEventGenerator
 			// Mouse movement events are only enabled while this window is in focus (unless not focusable)
 			val mouseMoveEventsEnabledFilter: Filter[Any] = {
 				if (isFocusable)
@@ -528,7 +530,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			
 			// Quits event listening once this window closes
 			closeFuture.onComplete { _ =>
-				eventActorHandler -= mouseEventGenerator
+				// eventActorHandler -= mouseEventGenerator
 				mouseEventGenerator.kill()
 				keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
 				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)

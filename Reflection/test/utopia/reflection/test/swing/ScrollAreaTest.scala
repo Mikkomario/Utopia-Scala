@@ -1,28 +1,28 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{ActorLoop, KeyStateListener}
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.StackInsets
-import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.test.TestContext._
-import utopia.genesis.text.FontStyle.Plain
-import utopia.paradigm.enumeration.Alignment
 
 import java.awt.event.KeyEvent
 import java.util.concurrent.TimeUnit
@@ -55,7 +55,7 @@ object ScrollAreaTest extends App
 	val stack = Stack.rowWithItems(columns, 16.fixed, 4.fixed)
 	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkened
 
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 
 	// Creates the scroll area
 	val barDrawer = BoxScrollBarDrawer.roundedBarOnly(Color.black.withAlpha(0.55))
@@ -64,7 +64,7 @@ object ScrollAreaTest extends App
 	scrollArea addConstraint MaxOptimalLengthModifier(480).symmetric
 
 	// Creates the frame and displays it
-	val actionLoop = new ActorLoop(actorHandler)
+	val actionLoop = new ActionLoop(actorHandler)
 
 	val frame = Frame.windowed(scrollArea, "Scroll View Test", User)
 	frame.setToExitOnClose()

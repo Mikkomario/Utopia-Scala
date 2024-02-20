@@ -2,9 +2,10 @@ package utopia.reflection.component.swing.animation
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -14,7 +15,6 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
-import utopia.firmament.model.stack.StackSize
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,12 +43,12 @@ object AnimatedVisibility
   * @author Mikko Hilpinen
   * @since 19.4.2020, v1.2
   */
-class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler,
-											transitionAxis: Option[Axis2D] = None,
-											initialState: VisibilityState = Invisible,
-											duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-											maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
-											useFading: Boolean = true)
+class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler2,
+                                            transitionAxis: Option[Axis2D] = None,
+                                            initialState: VisibilityState = Invisible,
+                                            duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                            maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
+                                            useFading: Boolean = true)
 										   (implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated with SwingComponentRelated
 {

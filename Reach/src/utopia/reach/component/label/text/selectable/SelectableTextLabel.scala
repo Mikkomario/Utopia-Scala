@@ -4,7 +4,7 @@ import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -284,7 +284,7 @@ object SelectableTextLabel extends SelectableTextLabelSetup()
   */
 class SelectableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                           val textPointer: Changing[LocalizedString], settings: SelectableTextLabelSettings)
-	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer, textPointer, settings)
+	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer, textPointer, AlwaysTrue, settings)
 {
 	// COMPUTED ------------------------------
 	
@@ -297,8 +297,6 @@ class SelectableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: C
 	
 	
 	// IMPLEMENTED  --------------------------------
-	
-	override def selectable = text.nonEmpty
 	
 	override def allowsFocusLeave = true
 }

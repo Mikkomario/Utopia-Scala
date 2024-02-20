@@ -1,16 +1,16 @@
 package utopia.reflection.test
 
 import utopia.firmament.context.{AnimationContext, BaseContext, ScrollingContext}
+import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.text.Font
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.genesis.text.FontStyle.Plain
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.{ColorScheme, ColorSet}
-import utopia.firmament.localization.{Localizer, NoLocalization}
+import utopia.paradigm.generic.ParadigmDataType
 
 import scala.concurrent.ExecutionContext
 
@@ -23,7 +23,7 @@ object TestContext
 {
 	ParadigmDataType.setup()
 	
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 	val colorScheme = ColorScheme.default ++
 		ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)

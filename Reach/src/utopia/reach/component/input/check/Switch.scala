@@ -4,16 +4,18 @@ import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, KeyStateListener}
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
@@ -21,17 +23,16 @@ import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorRole, ColorShade}
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
-import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.reach.focus.FocusListener
 
 import java.awt.event.KeyEvent
@@ -168,7 +169,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @return A new switch
 	  */
-	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
+	protected def _apply(actorHandler: ActorHandler2, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	                     valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
 	                     shade: => ColorShade = Light,
@@ -256,7 +257,7 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @return A new switch
 	  */
-	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
+	def apply(actorHandler: ActorHandler2, color: Color, knobDiameter: Double,
 	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
 	          shade: => ColorShade = Light,
@@ -300,7 +301,7 @@ object Switch extends SwitchSetup()
   * @author Mikko Hilpinen
   * @since 19.11.2020, v0.1
   */
-class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
+class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler2, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
@@ -361,24 +362,24 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	// NESTED	------------------------------------
 	
-	private object SwitchDrawer extends CustomDrawer with Actor
+	private object SwitchDrawer extends CustomDrawer with Actor2
 	{
 		// ATTRIBUTES	-------------
 		
+		private val progressPointer = Volatile(1.0)
+		override val handleCondition: FlagLike = progressPointer.map { _ < 1.0 }
+		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (value) 1.0 else 0.0)
-		private var currentProgress: Double = 1.0
 		
 		
 		// COMPUTED	-----------------
 		
-		private def state = currentAnimation(currentProgress)
+		private def state = currentAnimation(progressPointer.value)
 		
 		
 		// IMPLEMENTED	-------------
 		
 		override def opaque = false
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = currentProgress < 1.0
 		
 		override def drawLevel = Normal
 		
@@ -451,7 +452,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		override def act(duration: FiniteDuration) = {
 			val increment = duration / animationDuration
-			currentProgress = (currentProgress + increment) min 1.0
+			progressPointer.update { p => (p + increment) min 1.0 }
 			repaint(VeryHigh)
 		}
 		
@@ -464,7 +465,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 			if (startValue != newTarget) {
 				val transition = newTarget - startValue
 				currentAnimation = Animation { p => startValue + p * transition }.projectileCurved
-				currentProgress = 0.0
+				progressPointer.value = 0.0
 			}
 		}
 	}

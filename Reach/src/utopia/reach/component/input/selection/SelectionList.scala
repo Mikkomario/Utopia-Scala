@@ -7,7 +7,6 @@ import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener}
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
@@ -17,8 +16,11 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.Priority2.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
@@ -33,12 +35,9 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
-import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
-import utopia.genesis.graphics.Priority2.High
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 /**
@@ -214,7 +213,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  * @return A new list
 	  */
 	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
+	(actorHandler: ActorHandler2, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -264,7 +263,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
+	(actorHandler: ActorHandler2, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -384,7 +383,7 @@ object SelectionList extends SelectionListSetup()
   * @since 19.12.2020, v0.1
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
-(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
+(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler2, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
  marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],

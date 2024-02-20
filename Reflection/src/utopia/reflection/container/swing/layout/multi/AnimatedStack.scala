@@ -5,17 +5,17 @@ import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreatio
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.firmament.model.stack.StackLength
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.component.swing.animation.AnimatedVisibility
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.AnimatedChangesContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.stack.StackLength
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -87,12 +87,12 @@ object AnimatedStack
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Axis2D,
-									   margin: StackLength = StackLength.any,
-									   cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
-									   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-									   maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
-									   fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
+class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler2, direction: Axis2D,
+                                       margin: StackLength = StackLength.any,
+                                       cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
+                                       animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                       maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
+                                       fadingIsEnabled: Boolean = true)(implicit val executionContext: ExecutionContext)
 	extends AnimatedChangesContainer[C, Stack[AnimatedVisibility[C]]](
 		new Stack[AnimatedVisibility[C]](direction, margin, cap, layout), actorHandler, Some(direction), animationDuration,
 		maxRefreshRate, fadingIsEnabled)

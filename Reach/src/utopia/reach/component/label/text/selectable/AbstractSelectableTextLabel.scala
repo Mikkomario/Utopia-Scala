@@ -7,17 +7,20 @@ import utopia.firmament.drawing.view.SelectableTextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event._
+import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.handling._
+import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
@@ -27,8 +30,6 @@ import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
-import utopia.genesis.graphics.Priority2.VeryHigh
-import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
 
 import java.awt.Toolkit
@@ -45,7 +46,7 @@ import scala.util.Try
 // TODO: Create a password mode where text is not displayed nor copyable
 abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
                                            contextPointer: Changing[TextContext],
-                                           textPointer: Changing[LocalizedString],
+                                           textPointer: Changing[LocalizedString], selectableFlag: Changing[Boolean],
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                            enabledPointer: Changing[Boolean] = AlwaysTrue)
 	extends CustomDrawReachComponent with TextComponent with Focusable with CursorDefining
@@ -110,22 +111,20 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	override val focusListeners: Seq[FocusListener] = FocusHandler +: settings.focusListeners
 	override val customDrawers: Vector[CustomDrawer] = mainDrawer +: settings.customDrawers
 	
-	
-	// ABSTRACT -----------------------------------
-	
-	/**
-	  * @return Whether text in this label can currently be selected
-	  */
-	def selectable: Boolean
+	private lazy val interActiveFlag = FocusHandler.focusPointer && selectableFlag
 	
 	
 	// COMPUTED	-----------------------------------
 	
 	/**
+	  * @return Whether text in this label can currently be selected
+	  */
+	def selectable: Boolean = selectableFlag.value
+	
+	/**
 	  * @return A pointer to this label's focus state
 	  */
 	def focusPointer = FocusHandler.focusPointer
-	
 	/**
 	  * @return Whether this label is currently the focused component
 	  */
@@ -334,11 +333,13 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		// ATTRIBUTES	--------------------------
 		
 		private val _focusPointer = new EventfulPointer(false)
+		/**
+		  * A pointer that contains true while this component is in focus
+		  */
+		val focusPointer: FlagLike = _focusPointer.readOnly
 		
 		
 		// COMPUTED	------------------------------
-		
-		def focusPointer = _focusPointer.readOnly
 		
 		def focus = _focusPointer.value
 		private def focus_=(newState: Boolean) = _focusPointer.value = newState
@@ -362,7 +363,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	}
 	
 	// Switches between visible and invisible caret
-	private object CaretBlinker extends Actor
+	private object CaretBlinker extends Actor2
 	{
 		// ATTRIBUTES	--------------------------
 		
@@ -371,6 +372,8 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// IMPLEMENTED	--------------------------
 		
+		override def handleCondition: FlagLike = interActiveFlag
+		
 		override def act(duration: FiniteDuration) = {
 			passedDuration += duration
 			if (passedDuration >= settings.caretBlinkFrequency) {
@@ -378,8 +381,6 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 				caretVisibilityPointer.update { !_ }
 			}
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus && selectable
 		
 		
 		// OTHER	------------------------------

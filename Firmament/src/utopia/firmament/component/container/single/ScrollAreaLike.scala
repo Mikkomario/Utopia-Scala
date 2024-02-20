@@ -1,18 +1,20 @@
 package utopia.firmament.component.container.single
 
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
-import utopia.firmament.drawing.template.DrawLevel.Foreground
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.ScrollBarBounds
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.event._
+import utopia.genesis.graphics.DrawLevel2.Foreground
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling._
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis._
@@ -325,7 +327,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * setupMouseHandling is called
 	  * @param actorHandler The actor handler that will deliver action events
 	  */
-	private def setupAnimatedScrolling(actorHandler: ActorHandler) = {
+	private def setupAnimatedScrolling(actorHandler: ActorHandler2) = {
 		if (scroller.isEmpty) {
 			val newScroller = new AnimatedScroller
 			scroller = Some(newScroller)
@@ -347,8 +349,8 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * @param dragDuration The maximum drag duration when concerning velocity tracking (default = 0.5 seconds)
 	  * @param velocityMod A modifier applied to velocity (default = 1.0)
 	  */
-	protected def setupMouseHandling(actorHandler: ActorHandler, scrollPerWheelClick: Double,
-									 dragDuration: FiniteDuration = 300.millis, velocityMod: Double = 1.0) =
+	protected def setupMouseHandling(actorHandler: ActorHandler2, scrollPerWheelClick: Double,
+	                                 dragDuration: FiniteDuration = 300.millis, velocityMod: Double = 1.0) =
 	{
 		setupAnimatedScrolling(actorHandler)
 		val listener = new MouseListener(scrollPerWheelClick, dragDuration, velocityMod, scroller.get)
@@ -452,29 +454,34 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	// NESTED CLASSES	-----------------------
 	
-	private class AnimatedScroller extends Actor with Handleable
+	private class AnimatedScroller extends Actor2
 	{
 		// ATTRIBUTES	-----------------------
 		
-		var velocity = Velocity2D.zero
+		private val velocityPointer = EventfulPointer(Velocity2D.zero)
+		override val handleCondition: FlagLike = velocityPointer.map { _.amount.nonZero }
+		
+		
+		// COMPUTED ---------------------------
+		
+		def velocity = velocityPointer.value
+		def velocity_=(newVelocity: Velocity2D) = velocityPointer.value = newVelocity
 		
 		
 		// IMPLEMENTED	-----------------------
 		
 		override def act(duration: FiniteDuration) = {
-			if (!velocity.amount.isZero) {
-				// Calculates the amount of scrolling and velocity after applying friction
-				val (transition, newVelocity) = velocity(duration, -friction.abs, preserveDirection = true)
-				
-				// Applies velocity
-				if (allows2DScrolling)
-					scroll(transition, animated = false)
-				else
-					axes.foreach { axis => scroll(transition.projectedOver(axis), animated = false) }
-				
-				// Applies friction to velocity
-				velocity = newVelocity
-			}
+			// Calculates the amount of scrolling and velocity after applying friction
+			val (transition, newVelocity) = velocity(duration, -friction.abs, preserveDirection = true)
+			
+			// Applies velocity
+			if (allows2DScrolling)
+				scroll(transition, animated = false)
+			else
+				axes.foreach { axis => scroll(transition.projectedOver(axis), animated = false) }
+			
+			// Applies friction to velocity
+			velocity = newVelocity
 			
 			// TODO: Should probably stop momentum once edge of scroll area is reached
 		}

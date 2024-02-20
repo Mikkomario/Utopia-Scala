@@ -1,8 +1,9 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.async.Volatile
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
 import utopia.paradigm.animation.Animation
@@ -12,7 +13,6 @@ import utopia.reflection.component.swing.template.{AwtComponentRelated, Stackabl
 import utopia.reflection.component.template.layout.stack.AnimatedTransitionLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.stack.StackSize
 import utopia.reflection.util.ComponentToImage
 
 import scala.concurrent.duration.FiniteDuration
@@ -40,9 +40,9 @@ object AnimatedSwitchPanel
   * @author Mikko Hilpinen
   * @since 19.4.2020, v1.2
   */
-class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: ActorHandler,
-											 duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-											 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
+class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: ActorHandler2,
+                                             duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                             maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 											(implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated with SwingComponentRelated
 {

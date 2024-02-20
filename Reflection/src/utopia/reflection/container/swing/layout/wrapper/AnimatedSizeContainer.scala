@@ -1,17 +1,17 @@
 package utopia.reflection.container.swing.layout.wrapper
 
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
+import utopia.firmament.model.stack.StackSize
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.genesis.handling.Actor
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.util.Fps
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.path.ProjectilePath
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.firmament.model.stack.StackSize
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -26,7 +26,7 @@ object AnimatedSizeContainer
 	  * @tparam C Type of container content
 	  * @return Newly created container
 	  */
-	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler,
+	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler2,
 								 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 								 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 		new AnimatedSizeContainer[C](actorHandler, component, transitionDuration, maxRefreshRate)
@@ -48,9 +48,9 @@ object AnimatedSizeContainer
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initialContent: C,
-											   transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-											   maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
+class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler2, initialContent: C,
+                                               transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                               maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	--------------------
@@ -170,20 +170,19 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	// NESTED	-------------------------
 	
-	private object SizeUpdater extends Actor with Handleable
+	private object SizeUpdater extends Actor2
 	{
-		override def act(duration: FiniteDuration) =
-		{
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def act(duration: FiniteDuration) = {
 			// Advances, and may conclude process
 			timePassed += duration
-			if (timePassed >= transitionDuration)
-			{
+			if (timePassed >= transitionDuration) {
 				transitioning = false
 				revalidate()
 			}
 			// Has a limit on revalidation calls during transition.
-			else if (timePassed >= nextRevalidationThreshold)
-			{
+			else if (timePassed >= nextRevalidationThreshold) {
 				nextRevalidationThreshold = timePassed + maxRefreshRate.interval
 				revalidate()
 			}

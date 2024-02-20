@@ -1,7 +1,7 @@
 package utopia.reach.context
 
 import utopia.firmament.context.{TextContext, WindowContext}
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -34,7 +34,7 @@ object ReachWindowContext
 	  * @param background Window background color
 	  * @return A Reach window context that uses the specified actor handler and default settings
 	  */
-	def apply(actorHandler: ActorHandler, background: Color): ReachWindowContext =
+	def apply(actorHandler: ActorHandler2, background: Color): ReachWindowContext =
 		apply(WindowContext(actorHandler), background)
 	
 	

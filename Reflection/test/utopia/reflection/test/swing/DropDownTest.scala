@@ -1,18 +1,17 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.text.Font
 import utopia.reflection.component.swing.input.JDropDownWrapper
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.model.stack.StackInsets
-import utopia.genesis.text.FontStyle.Plain
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.reflection.test.TestContext._
 
 import scala.collection.immutable.HashMap
@@ -53,8 +52,8 @@ object DropDownTest extends App
 	}
 
 	// Creates the frame and displays it
-	val actorHandler = ActorHandler()
-	val actionLoop = new ActorLoop(actorHandler)
+	val actorHandler = ActorHandler2()
+	val actionLoop = new ActionLoop(actorHandler)
 
 	val frame = Frame.windowed(stack, "Drop Down Test", User)
 	frame.setToExitOnClose()

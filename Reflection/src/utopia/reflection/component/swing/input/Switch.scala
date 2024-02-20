@@ -1,32 +1,34 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, ActorHandlerType, MouseButtonStateListener}
+import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Axis.Y
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
-import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.event.StackHierarchyListener
-import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reflection.component.swing.label.EmptyLabel
+import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.event.StackHierarchyListener
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -58,9 +60,9 @@ object Switch
   * @author Mikko Hilpinen
   * @since 4.5.2019, v1+
   */
-class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
-			 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-			 initialState: Boolean = false)
+class Switch(actorHandler: ActorHandler2, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
+             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+             initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
 		with ReflectionStackable
 {
@@ -126,17 +128,14 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
 	{
-		if (newAttachmentStatus != _attached)
-		{
+		if (newAttachmentStatus != _attached) {
 			_attached = newAttachmentStatus
-			if (newAttachmentStatus)
-			{
+			if (newAttachmentStatus) {
 				actorHandler += SwitchDrawer2
 				valuePointer.addListener(StatusChangeListener)
 				addMouseButtonListener(ClickHandler)
 			}
-			else
-			{
+			else {
 				actorHandler -= SwitchDrawer2
 				valuePointer.removeListener(StatusChangeListener)
 				removeMouseListener(ClickHandler)
@@ -169,30 +168,28 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		override def onChangeEvent(event: ChangeEvent[Boolean]) = SwitchDrawer2.updateTarget(event.newValue)
 	}
 	
-	private object SwitchDrawer2 extends CustomDrawer with Actor
+	private object SwitchDrawer2 extends CustomDrawer with Actor2
 	{
 		// ATTRIBUTES	-------------
 		
+		private val progressPointer = Volatile(1.0)
+		override val handleCondition: FlagLike = progressPointer.map { _ < 1.0 }
+		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)
-		private var currentProgress: Double = 1.0
 		
 		
 		// COMPUTED	-----------------
 		
-		private def state = currentAnimation(currentProgress)
+		private def state = currentAnimation(progressPointer.value)
 		
 		
 		// IMPLEMENTED	-------------
 		
 		override def opaque = false
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) =
-			if (handlerType == ActorHandlerType) currentProgress < 1.0 else true
-		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			val x = state
 			
 			// Calculates necessary bounds information
@@ -216,22 +213,20 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		
 		override def act(duration: FiniteDuration) = {
 			val increment = duration / animationDuration
-			currentProgress = (currentProgress + increment) min 1.0
+			progressPointer.update { p => (p + increment) min 1.0 }
 			repaint()
 		}
 		
 		
 		// OTHER	-----------------
 		
-		def updateTarget(newStatus: Boolean) =
-		{
+		def updateTarget(newStatus: Boolean) = {
 			val startValue = state
 			val newTarget = if (newStatus) 1.0 else 0.0
-			if (startValue != newTarget)
-			{
+			if (startValue != newTarget) {
 				val transition = newTarget - startValue
 				currentAnimation = Animation { p => startValue + p * transition }.projectileCurved
-				currentProgress = 0.0
+				progressPointer.value = 0.0
 			}
 		}
 	}

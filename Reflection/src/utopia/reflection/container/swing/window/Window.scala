@@ -2,30 +2,32 @@ package utopia.reflection.container.swing.window
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.stack.Constrainable
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.WindowResizePolicy
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
-import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler}
+import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseEventGenerator2}
+import utopia.genesis.handling.mutable.KeyStateHandler
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
-import utopia.reflection.component.swing.button.ButtonLike
-import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.WindowResizePolicy
-import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.swing.button.ButtonLike
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.layout.stack.ReflectionStackable
+import utopia.reflection.container.swing.AwtContainerRelated
+import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
 import scala.concurrent.{ExecutionContext, Promise}
@@ -306,18 +308,20 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  * Starts mouse event generation for this window
 	  * @param actorHandler An ActorHandler that generates the necessary action events
 	  */
-	def startEventGenerators(actorHandler: ActorHandler)(implicit exc: ExecutionContext) =
+	def startEventGenerators(actorHandler: ActorHandler2)(implicit exc: ExecutionContext) =
 	{
 		if (generatorActivated.set()) {
 			// Starts mouse listening
-			val mouseEventGenerator = new MouseEventGenerator(content.component)
+			val mouseEventGenerator = new MouseEventGenerator2(content.component)
 			actorHandler += mouseEventGenerator
+			// TODO: Replace with new listener classes
+			/*
 			mouseEventGenerator.buttonHandler += MouseButtonStateListener() { e =>
 				content.distributeMouseButtonEvent(e); None }
 			mouseEventGenerator.moveHandler += MouseMoveListener() { content.distributeMouseMoveEvent(_) }
 			mouseEventGenerator.wheelHandler += MouseWheelListener() { content.distributeMouseWheelEvent(_) }
-			
-			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+			 */
+			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			
 			// Starts key listening
 			GlobalKeyboardEventHandler += keyStateHandler
@@ -325,9 +329,8 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 			// Quits event listening once this window finally closes
 			uponCloseAction.setOne(() => {
 				actorHandler -= mouseEventGenerator
-				mouseEventGenerator.kill()
 				GlobalKeyboardEventHandler -= keyStateHandler
-				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
+				CommonMouseEvents.removeGenerator(mouseEventGenerator)
 			})
 		}
 	}

@@ -1,23 +1,22 @@
 package utopia.reflection.test.swing
 
-import utopia.paradigm.color.Color
-import utopia.paradigm.generic.ParadigmDataType
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
+import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.input.Switch
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.model.stack.StackInsets
-import utopia.genesis.text.FontStyle.Plain
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.enumeration.Direction2D
 import utopia.reflection.test.TestContext._
 
 /**
@@ -38,7 +37,7 @@ object SwitchTest extends App
 	labels.foreach { l => l.alignTo(Direction2D.Right) }
 
 	// Creates the switches
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 
 	val enabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
 	val disabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red)
@@ -59,7 +58,7 @@ object SwitchTest extends App
 	val stack = Stack.columnWithItems(Vector(enabledStack, disabledStack, disabledStack2), 8.downscaling)
 
 	// Creates the frame and displays it
-	val actionLoop = new ActorLoop(actorHandler)
+	val actionLoop = new ActionLoop(actorHandler)
 
 	val framing = stack.inRoundedFraming(16.any, Color.white)
 	framing.background = Color.gray(0.66)

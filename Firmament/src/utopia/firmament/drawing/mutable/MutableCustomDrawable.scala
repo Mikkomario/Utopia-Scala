@@ -1,8 +1,8 @@
 package utopia.firmament.drawing.mutable
 
-import utopia.genesis.graphics.Drawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer, DrawLevel}
+import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.{DrawLevel2, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
@@ -44,6 +44,6 @@ trait MutableCustomDrawable extends CustomDrawable
 	  *               (can't be seen through). Default = false.
 	  * @param f A drawing function
 	  */
-	def addCustomDrawer(drawLevel: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
+	def addCustomDrawer(drawLevel: DrawLevel2 = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): Unit =
 		addCustomDrawer(CustomDrawer(drawLevel, opaque)(f))
 }

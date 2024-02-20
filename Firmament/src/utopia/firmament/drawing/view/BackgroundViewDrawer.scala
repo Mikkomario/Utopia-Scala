@@ -3,7 +3,7 @@ package utopia.firmament.drawing.view
 import utopia.flow.view.immutable.View
 import utopia.paradigm.color.Color
 import utopia.firmament.drawing.template.BackgroundDrawerLike
-import utopia.firmament.drawing.template.DrawLevel.Background
+import utopia.genesis.graphics.DrawLevel2.Background
 
 /**
   * A pointer-based background drawer

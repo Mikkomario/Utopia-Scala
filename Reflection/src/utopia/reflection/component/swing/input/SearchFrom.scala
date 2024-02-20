@@ -2,22 +2,22 @@ package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.reflection.component.swing.label.{ItemLabel, ViewLabel}
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 import scala.concurrent.ExecutionContext
 
@@ -178,7 +178,7 @@ object SearchFrom
   * @param itemToSearchString Function for converting a selectable item to searchable string. Used when filtering items.
   */
 class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
-(searchField: TextField[String], override protected val noResultsView: AwtStackable, actorHandler: ActorHandler,
+(searchField: TextField[String], override protected val noResultsView: AwtStackable, actorHandler: ActorHandler2,
  selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  searchIcon: Option[Image] = None, searchIconInsets: StackInsets = StackInsets.any,
  override val contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),

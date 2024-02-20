@@ -4,7 +4,7 @@ import utopia.firmament.component.container.many.MultiContainer
 import utopia.firmament.component.stack.StackSizeCalculating
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.genesis.graphics.DrawLevel2.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._

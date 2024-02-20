@@ -3,36 +3,37 @@ package utopia.reflection.component.swing.input
 import utopia.firmament.component.input.InputWithPointer
 import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{Actor, KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.path.{ProjectilePath, SegmentedPath}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.reflection.component.swing.label.EmptyLabel
-import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
-import utopia.reflection.component.template.Focusable
-import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
-import utopia.firmament.model.stack.StackLength
-import utopia.flow.operator.sign.Sign
-import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.swing.label.EmptyLabel
+import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
+import utopia.reflection.component.template.Focusable
+import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -377,11 +378,10 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	  *                  (default = smooth animation finish)
 	  * @param animationDuration Duration of the complete knob transition (default = global default value)
 	  */
-	def enableAnimations(actorHandler: ActorHandler, curvature: AnyAnimation[Double] = ProjectilePath(),
+	def enableAnimations(actorHandler: ActorHandler2, curvature: AnyAnimation[Double] = ProjectilePath(),
 	                     animationDuration: Duration = ComponentCreationDefaults.transitionDuration) =
 	{
-		if (animator.isEmpty)
-		{
+		if (animator.isEmpty) {
 			// the new animator will take care of the repaint calls so previously installed listener is
 			// no longer required
 			progressPointer.removeListener(defaultRepainter)
@@ -390,8 +390,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			animator = Some(newAnimator)
 			
 			// Animations are active only while this slider is attached to the main stack hierarchy
-			addStackHierarchyChangeListener(isAttached =>
-			{
+			addStackHierarchyChangeListener(isAttached => {
 				if (isAttached)
 					actorHandler += newAnimator
 				else
@@ -461,45 +460,51 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	// NESTED   -----------------------------
 	
 	private class Animator(curve: AnyAnimation[Double], animationDuration: Duration)
-		extends Actor with ChangeListener[Double]
+		extends Actor2 with ChangeListener[Double]
 	{
 		// ATTRIBUTES   ---------------------
+		
+		private val movingFlag = ResettableFlag()
+		override val handleCondition: FlagLike = movingFlag.view
 		
 		private var passedDuration = animationDuration
 		private var startProgress = progressPointer.value
 		private var targetProgress = startProgress
-		private var isMoving = false
 		
 		
 		// COMPUTED -------------------------
 		
-		def calculatedProgress = if (isMoving) startProgress +
-			curve(passedDuration / animationDuration) * (targetProgress - startProgress) else targetProgress
+		private def moving = movingFlag.value
+		
+		def calculatedProgress = {
+			if (moving) startProgress +
+				curve(passedDuration / animationDuration) * (targetProgress - startProgress)
+			else
+				targetProgress
+		}
 		
 		
 		// IMPLEMENTED  ---------------------
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			passedDuration = (passedDuration + duration) min animationDuration
 			if (passedDuration >= animationDuration)
-				isMoving = false
+				movingFlag.reset()
 			repaint()
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isMoving
 		
 		override def onChangeEvent(event: ChangeEvent[Double]) = {
 			if (pressed) {
 				targetProgress = event.newValue
-				if (!isMoving)
+				if (!moving)
 					repaint()
 			}
 			else {
 				startProgress = calculatedProgress
 				targetProgress = event.newValue
 				passedDuration = Duration.Zero
-				isMoving = true
+				movingFlag.set()
+				Continue
 			}
 		}
 	}
@@ -510,8 +515,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		override def drawLevel = Normal
 		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
+		override def draw(drawer: Drawer, bounds: Bounds) = {
 			val knobRadius = ((targetKnobDiameter min bounds.height) min bounds.width) / 2.0
 			val lineStartX = bounds.leftX + knobRadius
 			val lineWidth = bounds.width - knobRadius * 2

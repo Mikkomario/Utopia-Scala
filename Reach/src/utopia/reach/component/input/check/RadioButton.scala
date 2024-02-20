@@ -3,7 +3,7 @@ package utopia.reach.component.input.check
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{GuiElementStatus, HotKey, StandardSizeAdjustable}

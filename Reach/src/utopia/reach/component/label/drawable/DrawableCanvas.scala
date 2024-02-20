@@ -1,6 +1,6 @@
 package utopia.reach.component.label.drawable
 
-import utopia.firmament.drawing.template.DrawLevel
+import utopia.genesis.graphics.DrawLevel2
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
@@ -56,9 +56,9 @@ class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaP
 	// Matches the visual size with the actual size of this component
 	override def updateLayout() = visualSizePointer.update()
 	
-	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = {
+	override def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds]) = {
 		// Draws the content on the normal draw level
-		if (drawLevel == DrawLevel.Normal) {
+		if (drawLevel == DrawLevel2.Normal) {
 			// Always clips to this component's bounds, at least
 			val clip = clipZone match {
 				case Some(clip) => bounds.overlapWith(clip)

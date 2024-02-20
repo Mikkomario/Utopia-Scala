@@ -1,7 +1,7 @@
 package utopia.firmament.drawing.template
 
-import utopia.genesis.graphics.Drawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.{DrawLevel2, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 object CustomDrawer
@@ -14,10 +14,10 @@ object CustomDrawer
 	  * @param f A function
 	  * @return A new custom drawer that calls that function
 	  */
-	def apply(level: DrawLevel = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): CustomDrawer =
+	def apply(level: DrawLevel2 = Normal, opaque: Boolean = false)(f: (Drawer, Bounds) => Unit): CustomDrawer =
 		new FunctionalCustomDrawer(level, opaque)(f)
 	
-	private class FunctionalCustomDrawer(override val drawLevel: DrawLevel, override val opaque: Boolean)
+	private class FunctionalCustomDrawer(override val drawLevel: DrawLevel2, override val opaque: Boolean)
 	                                    (f: (Drawer, Bounds) => Unit) extends CustomDrawer
 	{
 		override def draw(drawer: Drawer, bounds: Bounds) = f(drawer, bounds)
@@ -42,7 +42,7 @@ trait CustomDrawer
 	/**
 	  * @return The level where this drawer will be drawn
 	  */
-	def drawLevel: DrawLevel
+	def drawLevel: DrawLevel2
 	
 	/**
 	  * Performs the drawing

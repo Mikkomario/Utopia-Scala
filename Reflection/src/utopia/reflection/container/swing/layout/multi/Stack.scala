@@ -2,22 +2,22 @@ package utopia.reflection.container.swing.layout.multi
 
 import utopia.firmament.context.BaseContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable}
 import utopia.reflection.container.stack.template.layout.ReflectionStackLike
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.firmament.model.stack.StackLength
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.collection.immutable.VectorBuilder
 
@@ -244,7 +244,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     {
         override def opaque = true
     
-        override def drawLevel = DrawLevel.Background
+        override def drawLevel = DrawLevel2.Background
     
         override def draw(drawer: Drawer, bounds: Bounds) = {
             if (count > 1) {

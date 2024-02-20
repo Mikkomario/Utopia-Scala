@@ -3,6 +3,8 @@
 ## v4.0 (in development)
 Handler update
 Remember MutableImage changes (once added) and the new drawSubImage -feature
+### Breaking changes
+- **Animator**'s handling states can't be mutated anymore
 
 ## v3.5.1 (in development)
 ### New methods

@@ -1,27 +1,26 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.localization.{Localizer, NoLocalization}
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.EventfulPointer
-
-import java.nio.file.Paths
-import utopia.paradigm.color.Color
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.localization.{Localizer, NoLocalization}
-import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.StackInsets
-import utopia.genesis.text.FontStyle.Plain
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext._
+
+import java.nio.file.Paths
 
 /**
   * Used for visually testing buttons
@@ -56,7 +55,7 @@ object ButtonTest extends App
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)
 
 		// Creates progress bar
-		val actorHandler = ActorHandler()
+		val actorHandler = ActorHandler2()
 
 		val bar = new ProgressBar(actorHandler, 160.any x 12.downscaling, Color.gray(0.7), Color.magenta,
 			progressPointer)
@@ -64,7 +63,7 @@ object ButtonTest extends App
 		content.background = Color.cyan
 
 		// Creates the frame and displays it
-		val actionLoop = new ActorLoop(actorHandler)
+		val actionLoop = new ActionLoop(actorHandler)
 		val framing = content.framed(16.any x 8.any)
 		framing.background = Color.white
 		val frame = Frame.windowed(framing, "Button Test", User)

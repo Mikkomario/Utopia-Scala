@@ -1,11 +1,12 @@
 package utopia.firmament.drawing.view
 
-import utopia.flow.view.immutable.View
-import utopia.genesis.image.Image
-import utopia.firmament.drawing.template.{DrawLevel, ImageDrawerLike}
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.paradigm.enumeration.Alignment
+import utopia.firmament.drawing.template.ImageDrawerLike
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.view.immutable.View
+import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.image.Image
+import utopia.paradigm.enumeration.Alignment
 
 object ImageViewDrawer
 {
@@ -20,7 +21,7 @@ object ImageViewDrawer
 	  * @return A new image drawer
 	  */
 	def withStaticStyle(imagePointer: View[Image], insets: StackInsets = StackInsets.any,
-	                    alignment: Alignment = Alignment.Center, drawLevel: DrawLevel = Normal,
+	                    alignment: Alignment = Alignment.Center, drawLevel: DrawLevel2 = Normal,
 	                    useUpscaling: Boolean = true) =
 		apply(imagePointer, View.fixed(insets), View.fixed(alignment), drawLevel, useUpscaling)
 }
@@ -32,7 +33,7 @@ object ImageViewDrawer
   */
 case class ImageViewDrawer(imagePointer: View[Image], insetsPointer: View[StackInsets] = View.fixed(StackInsets.any),
                            alignmentPointer: View[Alignment] = View.fixed(Alignment.Center),
-                           override val drawLevel: DrawLevel = Normal,
+                           override val drawLevel: DrawLevel2 = Normal,
                            override val useUpscaling: Boolean = true)
 	extends ImageDrawerLike
 {

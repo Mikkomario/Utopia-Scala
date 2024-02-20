@@ -2,26 +2,24 @@ package utopia.reflection.component.swing.display
 
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
-import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.Actor
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.inception.handling.immutable.Handleable
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
-import utopia.firmament.model.stack.StackSize
-import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -47,7 +45,7 @@ object ProgressBar
   * @author Mikko Hilpinen
   * @since 1.8.2019, v1+
   */
-class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
+class ProgressBar(actorHandler: ActorHandler2, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
                   progressPointer: Changing[Double],
                   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends ReflectionStackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
@@ -60,7 +58,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	private val label = StackSpace.drawingWith(ProgressDrawer, _stackSize)
 	
 	// Used for holding visible completion status, can be listened
-	private val isCompletedFlag = new VolatileFlag(progress >= 1)
+	private val isCompletedFlag = VolatileFlag(progress >= 1)
 	
 	
 	// INITIAL CODE ----------------------
@@ -70,14 +68,12 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	// Enables or disables animations based on whether this component is added to the main stack hierarchy
 	addStackHierarchyChangeListener { isAttached =>
 		// May enable or disable animations
-		if (isAttached)
-		{
+		if (isAttached) {
 			progressPointer.removeListener(InvisibleProgressListener)
 			actorHandler += ProgressDrawer
 			progressPointer.addListener(TargetUpdateListener)
 		}
-		else
-		{
+		else {
 			actorHandler -= ProgressDrawer
 			progressPointer.removeListener(TargetUpdateListener)
 			
@@ -134,35 +130,33 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		}
 	}
 	
-	private object ProgressDrawer extends CustomDrawer with Actor with Handleable
+	private object ProgressDrawer extends CustomDrawer with Actor2
 	{
 		// ATTRIBUTES	------------------
 		
+		private val animationProgressPointer = Volatile(1.0)
+		override val handleCondition: FlagLike = animationProgressPointer.map { _ <= 1.0 }
+		
 		private var currentProgressAnimation: AnyAnimation[Double] = Animation.fixed(progress)
-		private var currentAnimationProgress: Double = 1.0
 		
 		
 		// COMPUTED	----------------------
 		
-		private def displayedProgress = currentProgressAnimation(currentAnimationProgress)
+		private def displayedProgress = currentProgressAnimation(animationProgressPointer.value)
 		
 		
 		// IMPLEMENTED	------------------
 		
 		override def opaque = false
 		
-		override def act(duration: FiniteDuration) =
-		{
+		override def act(duration: FiniteDuration) = {
 			// Progresses the progress animation
-			if (currentAnimationProgress < 1.0)
-			{
-				val increase = duration / animationDuration
-				currentAnimationProgress = (currentAnimationProgress + increase) min 1.0
-				repaint()
-				
-				if (currentAnimationProgress >= 1 && displayedProgress >= 1)
-					isCompletedFlag.set()
-			}
+			val increase = duration / animationDuration
+			val newProgress = animationProgressPointer.updateAndGet { p => (p + increase) min 1.0 }
+			repaint()
+			
+			if (newProgress >= 1 && displayedProgress >= 1)
+				isCompletedFlag.set()
 		}
 		
 		override def drawLevel = Normal
@@ -197,15 +191,13 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		// OTHER	------------------------
 		
-		def updateTargetProgress(newTarget: Double) =
-		{
+		def updateTargetProgress(newTarget: Double) = {
 			val startingValue = displayedProgress
 			// Will not update past 0 or 100%
 			val transition = ((newTarget min 1.0) max 0.0) - startingValue
-			if (transition != 0)
-			{
+			if (transition != 0) {
 				currentProgressAnimation = Animation { p => startingValue + p * transition }.projectileCurved
-				currentAnimationProgress = 0.0
+				animationProgressPointer.value = 0.0
 			}
 		}
 	}

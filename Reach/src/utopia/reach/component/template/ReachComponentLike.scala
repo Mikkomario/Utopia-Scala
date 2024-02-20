@@ -1,8 +1,8 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.Stackable
-import utopia.firmament.drawing.template.DrawLevel
-import utopia.firmament.drawing.template.DrawLevel.{Background, Foreground, Normal}
+import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.DrawLevel2.{Background, Foreground, Normal}
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.util.logging.Logger
@@ -62,7 +62,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  *                  foreground is drawn above child components)
 	  * @param clipZone  Limited drawing area. The drawing should be clipped / limited to that area, if specified.
 	  */
-	def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
+	def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds] = None): Unit
 	
 	
 	// COMPUTED	------------------------

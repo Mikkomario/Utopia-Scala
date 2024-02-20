@@ -5,9 +5,9 @@ import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.color.{Color, Hsl}
+import utopia.paradigm.color.Hsl
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -161,14 +161,14 @@ case class InitializedContextualScrollViewFactory[N](parentHierarchy: ComponentH
   * @since 9.12.2020, v0.1
   */
 class ScrollView(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-				 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
-				 override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
-				 override val scrollBarMargin: Size = Size.zero,
-				 scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
-				 override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
-				 additionalDrawers: Vector[CustomDrawer] = Vector(),
-				 override val limitsToContentSize: Boolean = false,
-				 override val scrollBarIsInsideContent: Boolean = true)
+                 actorHandler: ActorHandler2, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
+                 override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
+                 override val scrollBarMargin: Size = Size.zero,
+                 scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
+                 override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
+                 additionalDrawers: Vector[CustomDrawer] = Vector(),
+                 override val limitsToContentSize: Boolean = false,
+                 override val scrollBarIsInsideContent: Boolean = true)
 	extends CustomDrawReachComponent with ScrollViewLike[ReachComponentLike]
 {
 	// ATTRIBUTES	----------------------------

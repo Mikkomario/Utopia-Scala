@@ -4,7 +4,7 @@ import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.animation.AnimatedVisibility
@@ -42,7 +42,7 @@ object AnimatedChangesContainer
   * @since 20.4.2020, v1.2
   */
 class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
-(protected val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Option[Axis2D] = None,
+(protected val container: Wrapped, actorHandler: ActorHandler2, transitionAxis: Option[Axis2D] = None,
  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
  maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate, fadingIsEnabled: Boolean = true)
 (implicit exc: ExecutionContext)

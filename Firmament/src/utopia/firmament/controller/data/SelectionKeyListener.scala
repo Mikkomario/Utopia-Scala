@@ -1,12 +1,14 @@
 package utopia.firmament.controller.data
 
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.{Actor, ActorHandlerType, KeyStateListener}
+import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.{ActorHandlerType, KeyStateListener}
 import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 
@@ -96,7 +98,7 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
                            initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
                            minScrollDelay: Duration = 0.05.seconds)
                           (moveSelection: Int => Unit)
-	extends KeyStateListener with Actor with Handleable
+	extends KeyStateListener with Actor2
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -109,6 +111,8 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 	// IMPLEMENTED	-----------------------------
 	
 	override val keyStateEventFilter = KeyStateEvent.keysFilter(nextKeyCode, prevKeyCode)
+	
+	override def handleCondition: FlagLike = AlwaysTrue
 	
 	override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
 		// Action events are received only when a button is being held down
@@ -137,17 +141,19 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 	}
 	
 	override def act(duration: FiniteDuration) = {
-		// Moves towards the next "tick"
-		remainingDelay -= duration
-		
-		// Checks whether there should be any, or multiple, "ticks" during this action event
-		var move = 0
-		while (remainingDelay <= Duration.Zero) {
-			move += 1
-			remainingDelay += nextDelay max minScrollDelay
-			nextDelay *= scrollDelayModifier
+		if (buttonDown) {
+			// Moves towards the next "tick"
+			remainingDelay -= duration
+			
+			// Checks whether there should be any, or multiple, "ticks" during this action event
+			var move = 0
+			while (remainingDelay <= Duration.Zero) {
+				move += 1
+				remainingDelay += nextDelay max minScrollDelay
+				nextDelay *= scrollDelayModifier
+			}
+			if (move != 0)
+				moveSelection(currentDirection * move)
 		}
-		if (move != 0)
-			moveSelection(currentDirection * move)
 	}
 }

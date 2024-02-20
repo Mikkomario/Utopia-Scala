@@ -1,8 +1,7 @@
 package utopia.reflection.util
 
 import utopia.flow.util.logging.Logger
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 
@@ -13,11 +12,11 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1+
   */
-class SingleFrameSetup(actorHandler: ActorHandler, frame: Frame[_])(implicit exc: ExecutionContext, logger: Logger)
+class SingleFrameSetup(actorHandler: ActorHandler2, frame: Frame[_])(implicit exc: ExecutionContext, logger: Logger)
 {
 	// ATTRIBUTES	--------------------
 	
-	private lazy val actionLoop = new ActorLoop(actorHandler)
+	private lazy val actionLoop = new ActionLoop(actorHandler)
 	
 	private var started = false
 	

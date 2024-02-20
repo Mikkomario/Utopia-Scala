@@ -14,7 +14,7 @@ import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.reflection.component.swing.label.{ImageLabel, ItemLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
@@ -23,6 +23,7 @@ import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reflection.text.Prompt
 
@@ -117,7 +118,7 @@ object DropDown
   * @since 14.3.2020, v1
   */
 class DropDown[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
+(actorHandler: ActorHandler2, override protected val noResultsView: AwtStackable, icon: Image,
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
  defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
  textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,

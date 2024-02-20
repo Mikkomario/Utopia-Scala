@@ -26,6 +26,7 @@ import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.event.consume.ConsumeEvent
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
@@ -44,7 +45,7 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context (used in pop-up)
   */
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
+(actorHandler: ActorHandler2, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
  displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
  override val valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),

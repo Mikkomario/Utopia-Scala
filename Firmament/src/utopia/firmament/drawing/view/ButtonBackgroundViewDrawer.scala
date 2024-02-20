@@ -1,12 +1,12 @@
 package utopia.firmament.drawing.view
 
-import utopia.firmament.drawing.template.DrawLevel.Background
-import utopia.firmament.drawing.template.{BorderDrawerLike, DrawLevel}
+import utopia.firmament.drawing.template.BorderDrawerLike
 import utopia.firmament.model.enumeration.GuiElementState.Activated
 import utopia.firmament.model.{Border, GuiElementStatus}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.graphics.DrawLevel2.Background
+import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
@@ -24,7 +24,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePointer: Changing[GuiElementStatus],
                                       borderWidthPointer: Changing[Double] = Fixed(0.0),
                                       colorChangeIntensity: Double = 1.0,
-                                      borderColorIntensity: Double = 1.0, override val drawLevel: DrawLevel = Background)
+                                      borderColorIntensity: Double = 1.0, override val drawLevel: DrawLevel2 = Background)
 	extends BorderDrawerLike
 {
 	// ATTRIBUTES	------------------------------

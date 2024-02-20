@@ -1,9 +1,12 @@
 package utopia.genesis.animation.animator
 
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.caching.ResettableVolatileLazy
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.Drawable
-import utopia.genesis.handling.mutable.Actor
+import utopia.genesis.handling.action.Actor2
+import utopia.inception.handling.HandlerType
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -13,7 +16,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since 18.8.2019, v2.1+
   * @tparam A Type of animation result that is also drawn
   */
-abstract class Animator[A] extends Actor with Drawable
+abstract class Animator[A] extends Actor2 with Drawable
 {
 	// TODO: Add animation events
 	// ATTRIBUTES	-------------------
@@ -61,8 +64,7 @@ abstract class Animator[A] extends Actor with Drawable
 	  * Changes this animation's progress
 	  * @param newProgress The new progress of this animation
 	  */
-	def progress_=(newProgress: Double) =
-	{
+	def progress_=(newProgress: Double) = {
 		_progress = newProgress * animationDuration
 		cached.reset()
 	}
@@ -75,22 +77,22 @@ abstract class Animator[A] extends Actor with Drawable
 	
 	// IMPLEMENTED	--------------------
 	
-	override def act(duration: FiniteDuration) =
-	{
+	override def handleCondition: FlagLike = AlwaysTrue
+	
+	override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
+	
+	override def act(duration: FiniteDuration) = {
 		// Advances animation progress
 		val mod = speedModifier
-		if (mod != 0)
-		{
+		if (mod != 0) {
 			val ad = animationDuration
-			if (allowsRepeat)
-			{
+			if (allowsRepeat) {
 				_progress += duration * mod
 				// Resets progress if past animation duration
 				while (_progress > ad) { _progress -= ad }
 				cached.reset()
 			}
-			else if (_progress < ad)
-			{
+			else if (_progress < ad) {
 				val proposedProgress = _progress + duration * mod
 				if (proposedProgress > ad)
 					_progress = ad
@@ -109,8 +111,7 @@ abstract class Animator[A] extends Actor with Drawable
 	/**
 	  * Resets the current animation progress
 	  */
-	def reset() =
-	{
+	def reset() = {
 		_progress = Duration.Zero
 		cached.reset()
 	}

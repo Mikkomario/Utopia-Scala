@@ -1,10 +1,10 @@
 package utopia.reach.drawing
 
-import utopia.firmament.drawing.template.DrawLevel.Foreground
-import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.event.MouseMoveEvent
-import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.graphics.DrawLevel2.Foreground
+import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
 import utopia.genesis.handling.MouseMoveListener
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.Color
@@ -48,7 +48,7 @@ class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]]
 	// IMPLEMENTED  ----------------------
 	
 	override def opaque: Boolean = false
-	override def drawLevel: DrawLevel = Foreground
+	override def drawLevel: DrawLevel2 = Foreground
 	
 	override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
 	

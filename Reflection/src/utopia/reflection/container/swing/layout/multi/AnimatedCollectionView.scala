@@ -4,14 +4,14 @@ import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreatio
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.firmament.model.stack.StackLength
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.template.layout.ReflectionCollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -43,12 +43,12 @@ object AnimatedCollectionView
  * @author Mikko Hilpinen
  * @since 24.4.2020, v1.2
  */
-class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowAxis: Axis2D, initialRowSplitThreshold: Double,
-												margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
-												forceEqualRowLength: Boolean = false,
-												animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-											   maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
-												useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
+class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler2, rowAxis: Axis2D, initialRowSplitThreshold: Double,
+                                                margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
+                                                forceEqualRowLength: Boolean = false,
+                                                animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                                maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
+                                                useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
 	extends ReflectionCollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper
 		with SwingComponentRelated with AwtContainerRelated with MutableCustomDrawableWrapper
 {

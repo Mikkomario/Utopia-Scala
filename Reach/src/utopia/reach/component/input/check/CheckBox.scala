@@ -4,7 +4,7 @@ import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Background
+import utopia.genesis.graphics.DrawLevel2.Background
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.LengthExtensions._

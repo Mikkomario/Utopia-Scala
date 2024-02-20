@@ -1,5 +1,9 @@
 # Utopia Reflection - List of Changes
 
+## v2.1.2 (in development)
+### Other changes
+- Removed some classes that were deprecated at v2.0 (or earlier)
+
 ## v2.1.1 - 22.01.2024
 Supports **Flow v2.3** and **Paradigm** v1.5
 ### Breaking changes

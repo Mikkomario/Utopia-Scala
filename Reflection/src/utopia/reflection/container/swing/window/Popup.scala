@@ -1,9 +1,11 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
@@ -11,15 +13,13 @@ import utopia.inception.handling.Mortal
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.TopLeft
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{Never, WhenAnyKeyPressed, WhenClickedOutside, WhenEscPressed, WhenFocusLost}
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.firmament.localization.LocalString._
-import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.event.{WindowEvent, WindowFocusListener}
 import scala.concurrent.ExecutionContext
@@ -48,7 +48,7 @@ object Popup
 	  */
 	def apply[C <: AwtContainerRelated with ReflectionStackable](context: ReflectionComponentLike with AwtComponentRelated,
 	                                                             content: C,
-	                                                             actorHandler: ActorHandler,
+	                                                             actorHandler: ActorHandler2,
 	                                                             autoCloseLogic: PopupAutoCloseLogic = Never,
 	                                                             resizeAlignment: Alignment = TopLeft)
 	                                                            (getTopLeft: (Size, Size) => Point)

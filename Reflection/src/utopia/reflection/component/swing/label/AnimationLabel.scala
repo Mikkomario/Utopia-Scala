@@ -2,18 +2,18 @@ package utopia.reflection.component.swing.label
 
 import utopia.firmament.context.{BaseContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.Actor
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.util.Fps
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.enumeration.Alignment
@@ -40,7 +40,7 @@ object AnimationLabel
 	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
-	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation],
+	def withRotatingImage(actorHandler: ActorHandler2, image: Image, rotation: TimedAnimation[DirectionalRotation],
 	                      alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
 		val animator = TransformingImageAnimator(image, rotation.map { Matrix2D.rotation(_).to3D })
@@ -57,7 +57,7 @@ object AnimationLabel
 	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @return A new label
 	  */
-	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps,
+	def withSprite(actorHandler: ActorHandler2, strip: Strip, animationSpeed: Fps,
 				   alignment: Alignment = Center) =
 	{
 		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed))
@@ -104,7 +104,7 @@ object AnimationLabel
   * @param alignment Alignment used when positioning the drawn content
   * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
   */
-class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
+class AnimationLabel[A](actorHandler: ActorHandler2, animator: Animator[A], override val stackSize: StackSize,
                         drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
 	extends Label with ReflectionStackable
 {
@@ -167,10 +167,12 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 		}
 	}
 	
-	private object Repainter extends Actor
+	private object Repainter extends Actor2
 	{
 		private val threshold = maxFps.interval
 		private var lastDraw = Now - threshold
+		
+		override def handleCondition: FlagLike = AlwaysTrue
 		
 		override def act(duration: FiniteDuration) = {
 			val time = Instant.now()
@@ -178,7 +180,5 @@ class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], overr
 				repaint()
 			lastDraw = time
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = visible
 	}
 }

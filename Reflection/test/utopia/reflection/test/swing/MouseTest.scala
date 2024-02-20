@@ -1,15 +1,15 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.component.HasMutableBounds
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.genesis.event.{MouseEvent, MouseMoveEvent}
 import utopia.genesis.handling._
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.inception.handling.immutable.Handleable
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.test.TestContext._
 
 import java.awt.Color
@@ -61,8 +61,8 @@ object MouseTest extends App
 	frame.addKeyStateListener(KeyStateListener()(println))
 	
 	// Starts the program
-	val actorHandler = ActorHandler()
-	val actorLoop = new ActorLoop(actorHandler)
+	val actorHandler = ActorHandler2()
+	val actorLoop = new ActionLoop(actorHandler)
 	
 	frame.startEventGenerators(actorHandler)
 	actorLoop.runAsync()

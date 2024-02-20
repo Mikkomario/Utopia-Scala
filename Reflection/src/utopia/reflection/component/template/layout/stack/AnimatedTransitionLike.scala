@@ -1,22 +1,22 @@
 package utopia.reflection.component.template.layout.stack
 
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.Actor
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.animation.{Animation, AnimationLike}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentWrapper
 import utopia.reflection.event.TransitionState
 import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
-import utopia.firmament.model.stack.StackSize
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import java.time.Instant
 import scala.concurrent.Promise
@@ -120,10 +120,9 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	  * Starts this transition progress
 	  * @return A future of transition completion
 	  */
-	def start(actorHandler: ActorHandler) =
+	def start(actorHandler: ActorHandler2) =
 	{
-		if (_state == NotStarted)
-		{
+		if (_state == NotStarted) {
 			// Starts transition & revalidation loop
 			_state = Ongoing
 			actorHandler += new Animator(actorHandler)
@@ -147,14 +146,14 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 		}
 	}
 	
-	private class Animator(handler: ActorHandler) extends Actor with Handleable
+	private class Animator(handler: ActorHandler2) extends Actor2
 	{
-		override def act(duration: FiniteDuration) =
-		{
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def act(duration: FiniteDuration) = {
 			// Advances the animation, may also finish transition and/or trigger component update
 			passedDuration += duration
-			if (passedDuration >= AnimatedTransitionLike.this.duration)
-			{
+			if (passedDuration >= AnimatedTransitionLike.this.duration) {
 				_state = Finished
 				handler -= this
 				passedDuration = AnimatedTransitionLike.this.duration
@@ -163,8 +162,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 				revalidate()
 				repaint()
 			}
-			else if (passedDuration > nextUpdateThreshold)
-			{
+			else if (passedDuration > nextUpdateThreshold) {
 				nextUpdateThreshold = passedDuration + maxRefreshRate.interval
 				cachedImages.reset()
 				revalidate()

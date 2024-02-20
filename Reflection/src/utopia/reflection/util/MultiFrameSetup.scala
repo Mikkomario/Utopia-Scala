@@ -1,8 +1,7 @@
 package utopia.reflection.util
 
 import utopia.flow.util.logging.Logger
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Window
 
@@ -13,11 +12,11 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 17.12.2019, v1+
   */
-class MultiFrameSetup(actorHandler: ActorHandler)(implicit exc: ExecutionContext, logger: Logger)
+class MultiFrameSetup(actorHandler: ActorHandler2)(implicit exc: ExecutionContext, logger: Logger)
 {
 	// ATTRIBUTES	--------------------
 	
-	private lazy val actionLoop = new ActorLoop(actorHandler)
+	private lazy val actionLoop = new ActionLoop(actorHandler)
 	
 	private var started = false
 	
@@ -27,10 +26,8 @@ class MultiFrameSetup(actorHandler: ActorHandler)(implicit exc: ExecutionContext
 	/**
 	 * Starts this setup
 	 */
-	def start() =
-	{
-		if (!started)
-		{
+	def start() = {
+		if (!started) {
 			started = true
 			actionLoop.runAsync()
 			StackHierarchyManager.startRevalidationLoop()
@@ -41,8 +38,7 @@ class MultiFrameSetup(actorHandler: ActorHandler)(implicit exc: ExecutionContext
 	  * Starts this setup and displays the frame
 	  * @param exc Implicit asynchronous execution context
 	  */
-	def display(frame: Window[_])(implicit exc: ExecutionContext) =
-	{
+	def display(frame: Window[_])(implicit exc: ExecutionContext) = {
 		start()
 		frame.startEventGenerators(actorHandler)
 		frame.visible = true

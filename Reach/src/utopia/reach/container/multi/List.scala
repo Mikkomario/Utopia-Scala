@@ -3,7 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.context.ColorContext
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.template.DrawLevel.Normal
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackLength, StackSize}

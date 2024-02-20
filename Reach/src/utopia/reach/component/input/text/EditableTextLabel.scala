@@ -326,7 +326,9 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                         val textPointer: EventfulPointer[String] = new EventfulPointer(""))
 	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
-		textPointer.strongMap { _.noLanguageLocalizationSkipped }, settings.labelSettings, settings.enabledPointer)
+		textPointer.strongMap { _.noLanguageLocalizationSkipped },
+		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledPointer, settings.labelSettings,
+		settings.enabledPointer)
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -358,11 +360,6 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	
 	
 	// IMPLEMENTED	-------------------------------
-	
-	/**
-	  * @return Whether text in this label can currently be selected
-	  */
-	def selectable = settings.allowsSelectionWhileDisabled || enabled
 	
 	override def allowsFocusLeave = {
 		// Checks with focus leave conditions

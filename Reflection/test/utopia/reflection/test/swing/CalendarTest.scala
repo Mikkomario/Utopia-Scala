@@ -1,24 +1,23 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.reflection.component.swing.input.{Calendar, JDropDownWrapper}
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.wrapper.Framing
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.reflection.test.TestContext._
-import utopia.genesis.text.FontStyle.Plain
 
 import java.nio.file.Paths
 import java.time.{Month, Year}
@@ -53,8 +52,8 @@ object CalendarTest extends App
 	calendar.valuePointer.addContinuousListener { e => println(s"New selected date: ${ e.newValue }") }
 	
 	// Creates the frame and displays it
-	val actorHandler = ActorHandler()
-	val actionLoop = new ActorLoop(actorHandler)
+	val actorHandler = ActorHandler2()
+	val actionLoop = new ActionLoop(actorHandler)
 	
 	val framing = Framing.symmetric(calendar, 24.downscaling.square)
 	framing.background = Color.white

@@ -1,26 +1,27 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.event._
 import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.handling.Drawable
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.mutable._
-import utopia.genesis.handling.{ActorLoop, Drawable}
 import utopia.genesis.util.Fps
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
-import utopia.reflection.component.swing.display.ScrollCanvas
-import utopia.reflection.container.stack.StackHierarchyManager
-import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.swing.display.ScrollCanvas
+import utopia.reflection.container.stack.StackHierarchyManager
+import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.test.TestContext._
 
 import java.awt.event.KeyEvent
@@ -35,13 +36,15 @@ object ScrollCanvasTest extends App
 	ParadigmDataType.setup()
 	
 	// Creates the handlers
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 	val drawHandler = DrawableHandler()
 	val mouseButtonHandler = MouseButtonStateHandler()
 	val mouseWheelHandler = MouseWheelHandler()
 	val mouseMoveHandler = MouseMoveHandler()
 	
-	val handlers = HandlerRelay(actorHandler, drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)
+	// FIXME: Create a new set of handlers, which includes
+	//  (actorHandler, drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)
+	val handlers = HandlerRelay(drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)
 	
 	// Creates the drawable items
 	val worldSize = Size(320, 320)
@@ -59,7 +62,7 @@ object ScrollCanvasTest extends App
 	mouseWheelHandler += zoomer
 	
 	// Creates the frame and displays it
-	val actionLoop = new ActorLoop(actorHandler)
+	val actionLoop = new ActionLoop(actorHandler)
 	
 	val framing = canvas.framed(0.any x 0.any)
 	framing.background = Color.blue

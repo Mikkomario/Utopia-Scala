@@ -2,29 +2,29 @@ package utopia.reflection.component.swing.display
 
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
+import utopia.firmament.model.stack.StackSize
+import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling._
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.util.Fps
 import utopia.genesis.view.RepaintLoop
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-import utopia.firmament.drawing.template.DrawLevel.Normal
-import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.reflection.component.swing.template._
-import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
-import utopia.reflection.container.swing.Panel
-import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
-import utopia.firmament.model.stack.StackSize
-import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.swing.template._
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf, ReflectionStackable}
+import utopia.reflection.container.swing.Panel
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 
 import scala.concurrent.ExecutionContext
 
@@ -71,7 +71,7 @@ object ScrollCanvas
   * @param scrollBarIsInsideContent Whether the scroll bar should be placed inside (true) or outside (false) of drawn
   *                                 content (default = false)
   */
-class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
+class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler2,
                    val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
                    val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,

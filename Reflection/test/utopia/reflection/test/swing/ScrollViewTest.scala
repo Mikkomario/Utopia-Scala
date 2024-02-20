@@ -1,35 +1,35 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
+import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
+import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{ActorLoop, KeyStateListener, MouseButtonStateListener}
+import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.text.Font
+import utopia.genesis.text.FontStyle.Plain
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
-import utopia.firmament.drawing.template.{CustomDrawer, DrawLevel}
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.firmament.component.display.Refreshable
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.StackInsets
-import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.reflection.test.TestContext._
-import utopia.genesis.text.FontStyle.Plain
-import utopia.paradigm.enumeration.Alignment.Center
 
 import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
@@ -60,14 +60,14 @@ object ScrollViewTest extends App
 		label
 	}
 	
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 	
 	// Creates the main stack
 	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)
 	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkenedBy(1.2)
 	
 	// Adds content management
-	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) => d.draw(b) }
+	val selectionDrawer = CustomDrawer(DrawLevel2.Foreground) { (d, b) => d.draw(b) }
 	
 	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.valuePointer.addContinuousListener { i => println(s"Selected ${ i.newValue }") }
@@ -84,7 +84,7 @@ object ScrollViewTest extends App
 	scrollView.addHeightConstraint(MaxOptimalLengthModifier(480))
 	
 	// Creates the frame and displays it
-	val actionLoop = new ActorLoop(actorHandler)
+	val actionLoop = new ActionLoop(actorHandler)
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()
