@@ -2,6 +2,16 @@
 
 ## v1.5 (in development)
 Refactoring based on Genesis changes
+### Breaking changes
+- Removed the **DefaultSetup** class
+  - No replacement has been added yet
+  - For the time being, please use **DrawableCanvas** in **Reach** instead, and set the collision systems manually
+- **CollidableHandler** classes were replaced with **CollisionTargetHandler**
+- **Collidable** was replaced with **CanCollideWith**
+- **CollisionHandler** class was completely rewritten
+  - The new implementation is mutable. Immutable version was removed.
+### Other
+- This release has not been properly tested. Exercise discretion.
 
 ## v1.4.5 - 22.01.2024
 Supports **Flow v2.3**
