@@ -94,7 +94,7 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
 		"variantDetails" -> variantDetails, "error" -> error, "message" -> message,
-		"storeDurations" -> storeDuration.ends, "instances" -> instances
+		"occurrenceDetails" -> occurrenceDetails, "storeDurations" -> storeDuration.ends, "instances" -> instances
 	)
 	
 	override def toString = {
