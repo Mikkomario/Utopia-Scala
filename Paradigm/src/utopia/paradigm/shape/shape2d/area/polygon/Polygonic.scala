@@ -42,19 +42,22 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 		if (c.isEmpty)
 			Vector()
 		else
-			(c :+ c.head).paired.map { p => Line(p.first, p.second) }
+			(c :+ c.head).paired.map { Line(_) }
 	}
 	/**
 	  * @return The edges of this shape in order. Same as sides, except in vector form
 	  */
 	def edges = sides.map { _.vector }
 	/**
-	  * @return The rotations at each corner of this shape
+	  * @return The rotations at each corner of this shape.
+	  *         The first rotation is the one happening in corner / vertex at index 0
+	  *         and the last rotation is the one happening at the last corner / vertex.
+	  *         The resulting collection is of equal size to the number of corners.
 	  */
 	def rotations = {
 		val e = sides
 		if (e.nonEmpty)
-			(e :+ e.head).paired.map { p => p.second.direction - p.first.direction }
+			(e.last +: e).paired.map { p => p.second.direction - p.first.direction }
 		else
 			Vector()
 	}
@@ -75,7 +78,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def isConvex = {
 		val dir = rotationDirection
-		rotations.forall { _.direction == dir }
+		rotations.forall { r => r.nonZero && r.direction == dir }
 	}
 	
 	/**
@@ -115,51 +118,71 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def convexParts: Vector[Polygonic] = {
 		val c = corners
+		println(s"\nFinding convex parts from ${ c.mkString(" -> ") } ($rotationDirection)")
 		
-		if (c.size < 3 || isConvex)
+		if (c.size < 3) {
+			println("Too small a polygon")
 			Vector(this)
+		}
 		else {
 			val dir = rotationDirection
 			val r = rotations
 			
-			val firstBrokenIndex = r.indexWhere { _.direction != dir }
-			
-			// Tries to find another (non-sequential) broken index
-			val secondBrokenIndex = {
-				if (firstBrokenIndex < c.size - 1)
-					rotations.indexWhere({ _.direction != dir }, firstBrokenIndex + 1)
-				else
-					-1
-			}
-			
-			if (secondBrokenIndex >= 0) {
-				// If a second index was found, cuts the polygon between the two indices
-				val (firstPart, secondPart) = cutBetween(firstBrokenIndex, secondBrokenIndex)
-				firstPart.convexParts ++ secondPart.convexParts
-			}
-			else {
-				// If there is only one broken index, cuts the polygon so that the part becomes convex
-				val brokenVertex = vertex(firstBrokenIndex)
-				val incomeAngle = side(firstBrokenIndex - 1).direction
-				
-				val remainingOutcomeIndex = {
-					if (firstBrokenIndex < c.size - 2)
-						c.indexWhere(vertex => { (Line(brokenVertex, vertex).direction - incomeAngle).direction == rotationDirection },
-							firstBrokenIndex + 2)
-					else
-						-1
-				}
-				
-				if (remainingOutcomeIndex >= 0) {
-					val (firstPart, secondPart) = cutBetween(firstBrokenIndex, remainingOutcomeIndex)
-					firstPart.convexParts ++ secondPart.convexParts
-				}
-				else {
-					val outcomeIndex = c.indexWhere {
-						vertex => (Line(brokenVertex, vertex).direction - incomeAngle).direction == rotationDirection }
-					val (firstPart, secondPart) = cutBetween(outcomeIndex, firstBrokenIndex)
-					firstPart.convexParts ++ secondPart.convexParts
-				}
+			// Checks whether there are any spots within this polygon where the rotation direction changes
+			// (indicates non-convexity)
+			r.findIndexWhere { r => r.nonZero && r.direction != dir } match {
+				case Some(firstBrokenIndex) =>
+					// Tries to find another (non-sequential) broken index
+					val secondBrokenIndex = {
+						if (firstBrokenIndex < c.size - 1)
+							Some(rotations.indexWhere({ r => r.nonZero && r.direction != dir }, firstBrokenIndex + 1))
+								.filter { _ >= 0 }
+						else
+							None
+					}
+					
+					secondBrokenIndex match {
+						// Case: Second broken index was found =>
+						// Cuts this polygon between these two indices and continues recursively
+						case Some(secondBrokenIndex) =>
+							println(s"Cuts between $firstBrokenIndex and $secondBrokenIndex")
+							val (firstPart, secondPart) = cutBetween(firstBrokenIndex, secondBrokenIndex)
+							firstPart.convexParts ++ secondPart.convexParts
+						// Case: Only one broken index found =>
+						// Cuts this polygon at that location so that the remaining parts become convex
+						case None =>
+							val brokenVertex = vertex(firstBrokenIndex)
+							val incomeAngle = side(firstBrokenIndex - 1).direction
+							
+							val remainingOutcomeIndex = {
+								if (firstBrokenIndex < c.size - 2)
+									c.indexWhere({ vertex =>
+										val rotation = Line(brokenVertex, vertex).direction - incomeAngle
+										rotation.isZero || rotation.direction == rotationDirection
+									}, firstBrokenIndex + 2)
+								else
+									-1
+							}
+							
+							if (remainingOutcomeIndex >= 0) {
+								println(s"Remaining outcome index = $remainingOutcomeIndex; Cuts between $firstBrokenIndex & $remainingOutcomeIndex")
+								val (firstPart, secondPart) = cutBetween(firstBrokenIndex, remainingOutcomeIndex)
+								firstPart.convexParts ++ secondPart.convexParts
+							}
+							else {
+								// WET WET (needs refactoring)
+								val outcomeIndex = c.indexWhere { vertex =>
+									val rotation = Line(brokenVertex, vertex).direction - incomeAngle
+									rotation.isZero || rotation.direction == rotationDirection
+								}
+								val (firstPart, secondPart) = cutBetween(outcomeIndex, firstBrokenIndex)
+								println(s"Outcome index = $outcomeIndex; Cuts between $firstBrokenIndex & $outcomeIndex")
+								firstPart.convexParts ++ secondPart.convexParts
+							}
+					}
+				case None =>
+					println("Convex")
+					Vector(this)
 			}
 		}
 	}

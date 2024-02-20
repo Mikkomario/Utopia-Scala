@@ -6,12 +6,14 @@ import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Triangle}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.Parallelogram
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.transform.AffineTransformation
 
 /**
  * This test is for some intersection methods and other shape (line, circle) specific methods
@@ -145,6 +147,35 @@ object ShapeTest extends App
     
     assert(l2.start ~== Point(4, 4), l2)
     assert(l2.end ~== Point(4, 6), l2)
+    
+    // Tests triangle sides and convex parts
+    val t1 = Triangle.withCorners(Point.origin, Point(10, 0), Point(0, 10))
+    val t1Rot = t1.rotationDirection
+    
+    assert(t1.corners.toSet == Set(Point.origin, Point(10, 0), Point(0, 10)))
+    assert(t1.sides.toSet == Set(Line(
+        Point.origin, Point(10, 0)), Line(Point(10, 0), Point(0, 10)), Line(Point(0, 10), Point.origin)))
+    assert(t1.rotations.forall { _.direction == t1Rot })
+    assert(t1.convexParts == Vector(t1))
+    
+    // Tests Polygon convexParts
+    val simplePolygon = Polygon(Point(-32, -32), Point(0, 64), Point(32, 32), Point.origin)
+    val transformedPolygon = AffineTransformation(Vector2D(30, 30), scaling = Vector2D(2, 2)).transform(simplePolygon)
+    val nonConvexPolygon = Polygon(Point(-32, -32), Point(-0.5), Point(-32, 32), Point(32, 32), Point(0.5), Point(32, -32))
+    
+    assert(simplePolygon.corners == Vector(Point(-32, -32), Point(0, 64), Point(32, 32), Point.origin))
+    /*
+    simplePolygon.sides.foreach { line => println(s"\t- $line (${ line.direction })") }
+    simplePolygon.rotations.foreach { r => println(s"=> $r") }
+    println(simplePolygon.rotationDirection)
+     */
+    assert(simplePolygon.convexParts == Vector(simplePolygon), simplePolygon.convexParts)
+    assert(transformedPolygon.convexParts == Vector(transformedPolygon))
+    
+    assert(nonConvexPolygon.convexParts.toSet == Set(
+        Polygon(Point(-32, -32), Point(-0.5), Point(0.5), Point(32, -32)),
+        Polygon(Point(-0.5), Point(-32, 32), Point(32, 32), Point(0.5))
+    ), nonConvexPolygon.convexParts)
     
     println("Success!")
 }
