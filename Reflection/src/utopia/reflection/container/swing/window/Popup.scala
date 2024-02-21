@@ -2,13 +2,17 @@ package utopia.reflection.container.swing.window
 
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.flow.operator.filter.Filter
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.template.Handleable2
 import utopia.genesis.util.Screen
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.Mortal
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Alignment
@@ -68,10 +72,9 @@ object Popup
 		newWindow.position = newPosition topLeft maxPosition
 		
 		// Determines auto close logic
-		// FIXME: HideOnOutsideClickListener triggers immediately
 		autoCloseLogic match {
 			case WhenFocusLost => newWindow.component.addWindowFocusListener(new HideOnFocusLostListener(newWindow))
-			case WhenClickedOutside => GlobalMouseEventHandler += new HideOnOutsideClickListener(newWindow)
+			case WhenClickedOutside => CommonMouseEvents += new HideOnOutsideClickListener(newWindow)
 			case WhenAnyKeyPressed => GlobalKeyboardEventHandler += new HideOnKeyPressListener(newWindow)
 			case WhenEscPressed => newWindow.setToCloseOnEsc()
 			case _ => ()
@@ -133,7 +136,7 @@ object Popup
 		}
 	}
 	
-	private trait HideActionListener extends Handleable with Mortal
+	private trait HideActionListener extends Handleable with Mortal with Handleable2
 	{
 		// ABSTRACT	--------------------------
 		
@@ -142,24 +145,27 @@ object Popup
 		
 		// IMPLEMENTED	----------------------
 		
+		override def handleCondition: FlagLike = popup.closedFlag
+		
 		override def isDead = popup.isClosed
 	}
 	
-	private class HideOnOutsideClickListener(override val popup: Window[_]) extends MouseButtonStateListener
-		with HideActionListener
+	private class HideOnOutsideClickListener(override val popup: Window[_])
+		extends MouseButtonStateListener2 with HideActionListener
 	{
 		// ATTRIBUTES	----------------------
 		
 		private val actionThreshold = Now + 0.1.seconds
 		
+		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] =
+			MouseButtonStateListener2.filter.pressed
+		
 		
 		// IMPLEMENTED	----------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
-			if (popup.visible && Now > actionThreshold && !popup.bounds.contains(event.absoluteMousePosition))
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			if (popup.visible && Now > actionThreshold && !popup.bounds.contains(event.position.absolute))
 				popup.close()
-			None
 		}
 	}
 	

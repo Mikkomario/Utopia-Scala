@@ -4,6 +4,12 @@
 Handler update
 Remember MutableImage changes (once added) and the new drawSubImage -feature
 ### Breaking changes
+- Removed the **DefaultSetup** class
+  - For the time being, the setup must be done manually
+  - It is recommended to use **Reach**'s **DrawableCanvas** instead of the standard **Genesis** setup
+- Removed **CanvasMouseEventGenerator**
+  - Please use standard **MouseEventGenerator** instead (which doesn't support scaling out-of-the-box, however)
+- Replaced **GlobalMouseEventHandler** with **CommonMouseEvents**
 - **Animator**'s handling states can't be mutated anymore
 
 ## v3.5.1 (in development)

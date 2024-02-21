@@ -9,6 +9,7 @@ import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.Flag
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
 import utopia.genesis.handling.action.ActorHandler2
@@ -31,7 +32,7 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 
 import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters.SeqHasAsJava
 import scala.util.Try
 
@@ -93,11 +94,10 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	
 	private val cachedStackSize = ResettableLazy { calculatedStackSizeWithConstraints }
 	private val generatorActivated = new VolatileFlag()
-	private val closePromise = Promise[Unit]()
 	
 	private val uponCloseAction = VolatileOption[() => Unit]()
 	
-	private var closed = false
+	private val _closedFlag = Flag()
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
@@ -156,9 +156,13 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	def insets = Insets of component.getInsets
 	
 	/**
+	  * @return Flag that contains true once this window closes
+	  */
+	def closedFlag = _closedFlag
+	/**
 	  * @return A future of this window's closing
 	  */
-	def closeFuture = closePromise.future
+	def closeFuture = _closedFlag.future
 	
 	/**
 	  * @return Whether this is the currently focused window
@@ -168,7 +172,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	/**
 	  * @return Whether this window has already been closed
 	  */
-	def isClosed = closed
+	def isClosed = _closedFlag.isSet
 	
 	
 	// IMPLEMENTED    --------------
@@ -532,12 +536,10 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 		
 		override def windowClosing(e: WindowEvent) = handleClosing()
 		
-		private def handleClosing() =
-		{
+		private def handleClosing() = {
 			// Performs a closing action, if one is queued
 			uponCloseAction.pop().foreach { _() }
-			closed = true
-			closePromise.trySuccess(())
+			_closedFlag.set()
 			
 			// Removes this window from the stack hierarchy (may preserve a portion of the content by detaching it first)
 			detachFromMainStackHierarchy()

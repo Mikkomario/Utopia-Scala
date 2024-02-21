@@ -2,6 +2,7 @@
 
 ## v2.1.2 (in development)
 ### Other changes
+- Pop-up windows now close (if specified to do so) only on mouse-presses, not on mouse-releases
 - Removed some classes that were deprecated at v2.0 (or earlier)
 
 ## v2.1.1 - 22.01.2024

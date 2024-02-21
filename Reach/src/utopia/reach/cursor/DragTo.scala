@@ -6,20 +6,17 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{NumericSpan, Span}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.MouseMoveEvent
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
-import utopia.genesis.handling.{MouseMoveHandlerType, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.genesis.util.Screen
-import utopia.genesis.view.GlobalMouseEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -343,14 +340,14 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			drag = Some((absoluteMousePosition, getBounds(), component.stackSize,
 				Bounds(Point.origin, getArea()), directions))
 			CommonMouseEvents += ReleaseListener
-			GlobalMouseEventHandler += DragListener
+			CommonMouseEvents += DragListener
 			Consume("drag-start")
 		}
 		
 		
 		// NESTED   ------------------------
 		
-		private object DragListener extends MouseMoveListener
+		private object DragListener extends MouseMoveListener2
 		{
 			// ATTRIBUTES   ----------------
 			
@@ -362,7 +359,10 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			
 			// IMPLEMENTED  ----------------
 			
-			override def onMouseMove(event: MouseMoveEvent): Unit = {
+			override def handleCondition: FlagLike = draggingFlag
+			override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+			
+			override def onMouseMove(event: MouseMoveEvent2): Unit = {
 				// Applies the drag
 				drag.foreach { case (absoluteOrigin, originalBounds, stackSize, maxBounds, directions) =>
 					val totalDrag = event.absoluteMousePosition - absoluteOrigin
@@ -438,11 +438,6 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 				}
 			}
 			
-			override def allowsHandlingFrom(handlerType: HandlerType): Boolean = handlerType match {
-				case MouseMoveHandlerType => drag.isDefined
-				case _ => true
-			}
-			
 			
 			// OTHER    --------------------------
 			
@@ -468,7 +463,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 				drag = None
 				CommonMouseEvents -= this
-				GlobalMouseEventHandler -= MouseListener.DragListener
+				CommonMouseEvents -= MouseListener.DragListener
 			}
 		}
 	}

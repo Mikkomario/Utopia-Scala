@@ -33,7 +33,7 @@ import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
