@@ -14,7 +14,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
-class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener2 with MouseMoveListener
+class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener with MouseMoveListener
 {
 	// ATTRIBUTES   --------------------
 	
@@ -26,10 +26,10 @@ class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener2
 	
 	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
+	override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
-	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 		dragPointers.get(event.button).foreach { pointer =>
 			// Case: Mouse button pressed => Prepares a drag
 			if (event.pressed)

@@ -13,8 +13,8 @@ import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
@@ -200,7 +200,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			popup.relayAwtKeyEventsTo(mainDisplay)
 			popup.addKeyStateListener(
 				KeyStateListener.pressed(Tab, Enter, Esc) { _ => if (popup.isFocusedWindow) popup.close() })
-			popup.addMouseButtonListener(MouseButtonStateListener2.released { _ =>
+			popup.addMouseButtonListener(MouseButtonStateListener.released { _ =>
 				if (popup.isFocusedWindow)
 					popup.close()
 			})
@@ -217,7 +217,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// NESTED	-------------------------------
 	
-	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener2
+	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		
@@ -225,7 +225,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		override val keyStateEventFilter = KeyStateEvent.filter.pressed && !KeyStateEvent.filter(Set(Esc, Tab))
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && MouseButtonStateEventFilter.over(mainDisplay.bounds)
+			MouseButtonStateEvent.filter.leftPressed && MouseButtonStateEventFilter.over(mainDisplay.bounds)
 		
 		
 		// IMPLEMENTED  -----------------------
@@ -235,7 +235,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 				displayPopup()
 		}
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Grabs focus if possible
 			if (!mainDisplay.isInFocus)
 				mainDisplay.requestFocusInWindow()

@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateListener
-import utopia.genesis.handling.event.mouse.{MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -49,10 +49,10 @@ object MouseTest extends App
 	
 	// Sets up mouse listening
 	items.head.addMouseMoveListener(new MouseEnterExitListener(items.head))
-	items(1).addMouseMoveListener(MouseMoveListener.filtering(MouseEvent2.filter.over(items(1).bounds)) { e =>
+	items(1).addMouseMoveListener(MouseMoveListener.filtering(MouseEvent.filter.over(items(1).bounds)) { e =>
 		println(s"Moving ${e.position.relative}")
 	})
-	items(2).addMouseButtonListener(MouseButtonStateListener2
+	items(2).addMouseButtonListener(MouseButtonStateListener
 		.leftPressed.over(items(2).bounds) { e => println(e.position.relative) })
 	items(2).addMouseWheelListener(MouseWheelListener.over(items(2).bounds) { e => println(e.wheelTurn) })
 	

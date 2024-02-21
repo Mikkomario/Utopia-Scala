@@ -16,7 +16,7 @@ import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.RightArrow
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.angular.Rotation
@@ -88,7 +88,7 @@ object ScrollViewTest extends App
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()
-	frame.addMouseButtonListener(MouseButtonStateListener2.unconditional { event => println(event) })
+	frame.addMouseButtonListener(MouseButtonStateListener.unconditional { event => println(event) })
 	
 	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()

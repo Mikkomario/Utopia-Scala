@@ -6,14 +6,14 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
 import scala.language.implicitConversions
 
-object MouseButtonStateListener2
+object MouseButtonStateListener
 {
     // TYPES    --------------------
     
@@ -41,7 +41,7 @@ object MouseButtonStateListener2
     
     // IMPLICIT --------------------
     
-    implicit def objectToFactory(@unused o: MouseButtonStateListener2.type): MouseButtonStateListenerFactory =
+    implicit def objectToFactory(@unused o: MouseButtonStateListener.type): MouseButtonStateListenerFactory =
         unconditional
     
     
@@ -54,7 +54,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .buttonPressed(MouseButton)(...) instead.", "v4.0")
-    def onButtonPressed(button: MouseButton)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onButtonPressed(button: MouseButton)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         unconditional.buttonPressed(button) { e => ConsumeChoice(f(e)) }
     /**
       * Creates a simple mouse button state listener that is called when left mouse button is pressed
@@ -62,14 +62,14 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .leftPressed(...) instead.", "v4.0")
-    def onLeftPressed(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) = onButtonPressed(MouseButton.Left)(f)
+    def onLeftPressed(f: MouseButtonStateEvent => Option[ConsumeEvent]) = onButtonPressed(MouseButton.Left)(f)
     /**
       * Creates a simple mouse button state listener that is called when right mouse button is pressed
       * @param f A function that will be called
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .rightPressed(...) instead.", "v4.0")
-    def onRightPressed(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) = onButtonPressed(MouseButton.Right)(f)
+    def onRightPressed(f: MouseButtonStateEvent => Option[ConsumeEvent]) = onButtonPressed(MouseButton.Right)(f)
     
     /**
       * Creates a new simple mouse button state listener that is called on mouse button releases
@@ -78,7 +78,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .buttonReleased(MouseButton)(...) instead.", "v4.0")
-    def onButtonReleased(button: MouseButton)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onButtonReleased(button: MouseButton)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         unconditional.buttonReleased(button) { e => ConsumeChoice(f(e)) }
     /**
       * Creates a simple mouse button state listener that is called when left mouse button is released
@@ -86,14 +86,14 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .leftReleased(...) instead.", "v4.0")
-    def onLeftReleased(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) = onButtonReleased(MouseButton.Left)(f)
+    def onLeftReleased(f: MouseButtonStateEvent => Option[ConsumeEvent]) = onButtonReleased(MouseButton.Left)(f)
     /**
       * Creates a simple mouse button state listener that is called when right mouse button is released
       * @param f A function that will be called
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .rightReleased(...) instead.", "v4.0")
-    def onRightReleased(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) = onButtonReleased(MouseButton.Right)(f)
+    def onRightReleased(f: MouseButtonStateEvent => Option[ConsumeEvent]) = onButtonReleased(MouseButton.Right)(f)
     
     /**
       * Creates a simple mouse button state listener that is called when a mouse button is pressed within a certain area
@@ -103,7 +103,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .buttonPressed(MouseButton).over(Area2D)(...) instead.", "v4.0")
-    def onButtonPressedInside(button: MouseButton)(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onButtonPressedInside(button: MouseButton)(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         unconditional.buttonPressed(button).filtering(filter.over(getArea)) { e => ConsumeChoice(f(e)) }
     /**
       * Creates a simple mouse button state listener that is called when the left mouse button is pressed within a certain area
@@ -112,7 +112,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .leftPressed.over(Area2D)(...) instead.", "v4.0")
-    def onLeftPressedInside(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onLeftPressedInside(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         onButtonPressedInside(MouseButton.Left)(getArea)(f)
     /**
       * Creates a simple mouse button state listener that is called when the right mouse button is pressed within a certain area
@@ -121,7 +121,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .rightPressed.over(Area2D)(...) instead.", "v4.0")
-    def onRightPressedInside(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onRightPressedInside(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         onButtonPressedInside(MouseButton.Right)(getArea)(f)
     
     /**
@@ -132,7 +132,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .buttonReleased(MouseButton).over(Area2D)(...) instead.", "v4.0")
-    def onButtonReleasedInside(button: MouseButton)(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onButtonReleasedInside(button: MouseButton)(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         unconditional.buttonReleased(button).filtering(filter.over(getArea)) { e => ConsumeChoice(f(e)) }
     /**
       * Creates a simple mouse button state listener that is called when the left mouse button is released within a certain area
@@ -141,7 +141,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .leftReleased.over(Area2D)(...) instead.", "v4.0")
-    def onLeftReleasedInside(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onLeftReleasedInside(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         onButtonReleasedInside(MouseButton.Left)(getArea)(f)
     /**
       * Creates a simple mouse button state listener that is called when the right mouse button is released within a certain area
@@ -150,7 +150,7 @@ object MouseButtonStateListener2
       * @return A new mouse button state listener
       */
     @deprecated("Deprecated for removal. Please use .rightReleased.over(Area2D)(...) instead.", "v4.0")
-    def onRightReleasedInside(getArea: => Area2D)(f: MouseButtonStateEvent2 => Option[ConsumeEvent]) =
+    def onRightReleasedInside(getArea: => Area2D)(f: MouseButtonStateEvent => Option[ConsumeEvent]) =
         onButtonReleasedInside(MouseButton.Right)(getArea)(f)
     
     
@@ -271,9 +271,9 @@ object MouseButtonStateListener2
     }
     
     case class MouseButtonStateListenerFactory(condition: FlagLike = AlwaysTrue,
-                                               filter: Filter[MouseButtonStateEvent2] = AcceptAll)
-        extends ListenerFactory[MouseButtonStateEvent2, MouseButtonStateListenerFactory]
-            with MouseButtonFilteringFactory[MouseButtonStateEvent2, MouseButtonStateListenerFactory]
+                                               filter: Filter[MouseButtonStateEvent] = AcceptAll)
+        extends ListenerFactory[MouseButtonStateEvent, MouseButtonStateListenerFactory]
+            with MouseButtonFilteringFactory[MouseButtonStateEvent, MouseButtonStateListenerFactory]
     {
         // COMPUTED -------------------------
         
@@ -285,12 +285,12 @@ object MouseButtonStateListener2
         
         // IMPLEMENTED  ---------------------
         
-        override def usingFilter(filter: Filter[MouseButtonStateEvent2]): MouseButtonStateListenerFactory =
+        override def usingFilter(filter: Filter[MouseButtonStateEvent]): MouseButtonStateListenerFactory =
             copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): MouseButtonStateListenerFactory =
             copy(condition = condition)
         
-        override protected def withFilter(filter: Filter[MouseButtonStateEvent2]): MouseButtonStateListenerFactory =
+        override protected def withFilter(filter: Filter[MouseButtonStateEvent]): MouseButtonStateListenerFactory =
             copy(filter = this.filter && filter)
             
         
@@ -300,16 +300,16 @@ object MouseButtonStateListener2
           * @param f A function to call on mouse button state events
           * @return A listener that calls the specified function, also applying this factory's conditions & filters
           */
-        def apply(f: MouseButtonStateEvent2 => ConsumeChoice): MouseButtonStateListener2 =
+        def apply(f: MouseButtonStateEvent => ConsumeChoice): MouseButtonStateListener =
             new _MouseButtonStateListener(condition, filter, f)
     }
     
     private class _MouseButtonStateListener(override val handleCondition: FlagLike,
-                                            override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2],
-                                            f: MouseButtonStateEvent2 => ConsumeChoice)
-        extends MouseButtonStateListener2
+                                            override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent],
+                                            f: MouseButtonStateEvent => ConsumeChoice)
+        extends MouseButtonStateListener
     {
-        override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = f(event)
+        override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = f(event)
     }
 }
 
@@ -318,7 +318,7 @@ object MouseButtonStateListener2
  * @author Mikko Hilpinen
  * @since 18.2.2017
  */
-trait MouseButtonStateListener2 extends Handleable2
+trait MouseButtonStateListener extends Handleable2
 {
     // ABSTRACT ---------------------------
     
@@ -326,7 +326,7 @@ trait MouseButtonStateListener2 extends Handleable2
       * The filter applied to the incoming mouse button events.
       * This listener will only be informed about the events accepted by the filter.
       */
-    def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2]
+    def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent]
     
     /**
      * This method will be called in order to inform this listener about a new mouse button event
@@ -335,13 +335,13 @@ trait MouseButtonStateListener2 extends Handleable2
      * @param event The mouse event that occurred
       * @return This listener's choice on whether it will or won't consume the specified event
      */
-    def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice
+    def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice
     
     
     // OTHER    ---------------------------
     
     @deprecated("Please use .onMouseButtonStateEvent(MouseButtonStateEvent) instead", "v4.0")
-    def onMouseButtonState(event: MouseButtonStateEvent2): Option[ConsumeEvent] =
+    def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent] =
         onMouseButtonStateEvent(event).eventIfConsumed
 }
 

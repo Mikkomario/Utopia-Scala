@@ -26,7 +26,7 @@ trait Component extends HasMutableBounds
     /**
       * @return A handler used for distributing mouse button events within this component
       */
-    def mouseButtonHandler: MouseButtonStateHandler2
+    def mouseButtonHandler: MouseButtonStateHandler
     /**
       * @return A handler used for distributing mouse move events within this component
       */
@@ -77,9 +77,9 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseButtonEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
+    def distributeMouseButtonEvent(event: MouseButtonStateEvent): ConsumeChoice = {
         // Informs children first
-        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseButtonStateEvent2](event) { _.distributeMouseButtonEvent(_) }
+        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseButtonStateEvent](event) { _.distributeMouseButtonEvent(_) }
         
         // Then informs own handler
         childrenChoice || mouseButtonHandler.onMouseButtonStateEvent(eventAfterChildren)
@@ -116,7 +116,7 @@ trait Component extends HasMutableBounds
       * Adds a new mouse button listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseButtonListener(listener: MouseButtonStateListener2) =
+    def addMouseButtonListener(listener: MouseButtonStateListener) =
         mouseButtonHandler += listener
     /**
       * Adds a new mouse move listener to this wrapper
@@ -194,8 +194,8 @@ trait Component extends HasMutableBounds
         }
     }
     
-    private def distributeConsumableMouseEvent[E <: MouseEvent2[E] with Consumable[E]](event: E)
-                                                                                      (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
+    private def distributeConsumableMouseEvent[E <: MouseEvent[E] with Consumable[E]](event: E)
+                                                                                     (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
     {
         val myBounds = bounds
         if (myBounds.contains(event.mousePosition)) {

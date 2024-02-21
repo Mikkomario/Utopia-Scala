@@ -14,7 +14,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 10.1.2017
  */
-trait MouseMoveEventLike[+Repr] extends MouseEvent2[Repr]
+trait MouseMoveEventLike[+Repr] extends MouseEvent[Repr]
 {
     // ABSTRACT -------------------------
     

@@ -15,7 +15,7 @@ import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -146,16 +146,16 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	// NESTED CLASSES	-------------
 	
-	private object ClickHandler extends MouseButtonStateListener2
+	private object ClickHandler extends MouseButtonStateListener
 	{
 		// Only listens to left mouse button presses inside switch area
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(bounds)
+			MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(bounds)
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		// When this switch is pressed, changes its state
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Only enabled items are interactive
 			if (enabled) {
 				value = !value

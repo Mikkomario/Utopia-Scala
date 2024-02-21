@@ -19,7 +19,7 @@ import scala.concurrent.duration.FiniteDuration
 case class MouseOverEvent(override val position: RelativePoint, override val buttonStates: MouseButtonStates,
                           duration: FiniteDuration, totalDuration: FiniteDuration,
                           override val consumeEvent: Option[ConsumeEvent] = None)
-	extends MouseEvent2[MouseOverEvent] with Consumable[MouseOverEvent]
+	extends MouseEvent[MouseOverEvent] with Consumable[MouseOverEvent]
 {
 	override def self: MouseOverEvent = this
 	

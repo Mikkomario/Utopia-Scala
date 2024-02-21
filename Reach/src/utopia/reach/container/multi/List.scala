@@ -20,7 +20,7 @@ import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -121,9 +121,9 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 			stack += selector
 			// Also adds item selection on left mouse press
 			val locations = StackItemAreas(stack)
-			stack.addMouseButtonListener(MouseButtonStateListener2
-				.filtering(MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter &&
-					MouseEvent2.filter.over(stack.bounds))
+			stack.addMouseButtonListener(MouseButtonStateListener
+				.filtering(MouseButtonStateEvent.filter.leftPressed && Consumable.unconsumedFilter &&
+					MouseEvent.filter.over(stack.bounds))
 				{ e =>
 					locations.itemNearestTo(e.position - stack.position)
 						.flatMap { c => rowsWithIndices.find { _._1 == c } } match
@@ -229,7 +229,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],
                        selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
-	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener2
+	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener
 {
 	// ATTRIBUTES	----------------------------------
 	
@@ -303,7 +303,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 		}
 	}
 	
-	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		if (event.released)
 			mousePressed = false
 		// else if (stack.exists { s => event.isOverArea(s.bounds) })

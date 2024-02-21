@@ -246,7 +246,7 @@ object ReachCanvas
 		generatorPointer.addContinuousListener { event =>
 			event.oldValue.foreach { _.stop() }
 			event.newValue.foreach { generator =>
-				generator.buttonHandler += MouseButtonStateListener2.unconditional { event =>
+				generator.buttonHandler += MouseButtonStateListener.unconditional { event =>
 					canvas.distributeMouseButtonEvent(event)
 				}
 				generator.moveHandler += MouseMoveListener.unconditional(canvas.distributeMouseMoveEvent)
@@ -336,7 +336,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		case Left(v) => Left(View { v.value + position })
 	}
 	
-	override lazy val mouseButtonHandler = MouseButtonStateHandler2()
+	override lazy val mouseButtonHandler = MouseButtonStateHandler()
 	override lazy val mouseMoveHandler = MouseMoveHandler()
 	override lazy val mouseWheelHandler = MouseWheelHandler()
 	
@@ -466,7 +466,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	// Distributes the events via the canvas content element, but transforms the coordinates relative to this canvas
-	override def distributeMouseButtonEvent(event: MouseButtonStateEvent2) = {
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) = {
 		super.distributeMouseButtonEvent(event) match {
 			case consume: Consume =>
 				val newEvent = event.consumed(consume.consumeEvent)

@@ -25,7 +25,7 @@ object MouseWheelEvent
 case class MouseWheelEvent(wheelTurn: Double, override val position: RelativePoint,
                            override val buttonStates: MouseButtonStates,
                            override val consumeEvent: Option[ConsumeEvent] = None)
-	extends MouseEvent2[MouseWheelEvent] with Consumable[MouseWheelEvent]
+	extends MouseEvent[MouseWheelEvent] with Consumable[MouseWheelEvent]
 {
 	override def self = this
 	

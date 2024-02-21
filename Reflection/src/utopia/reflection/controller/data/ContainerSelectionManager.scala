@@ -16,7 +16,7 @@ import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -237,15 +237,15 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		}
 	}
 	
-	private class MouseHandler(val consumeEvents: Boolean) extends MouseButtonStateListener2
+	private class MouseHandler(val consumeEvents: Boolean) extends MouseButtonStateListener
 	{
 		// Only considers left mouse button presses inside stack bounds
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftPressed &&
-			MouseEvent2.filter.over(container.bounds)
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftPressed &&
+			MouseEvent.filter.over(container.bounds)
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			val nearest = container.itemNearestTo(event.position.relative - container.position)
 			nearest.foreach(selectDisplay)
 			

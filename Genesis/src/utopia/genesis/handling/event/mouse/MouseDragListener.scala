@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.{Key, KeyLocation}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonFilteringFactory
 import utopia.genesis.handling.event.mouse.MouseMoveListener.MouseMoveFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.angular.{Angle, Rotation}

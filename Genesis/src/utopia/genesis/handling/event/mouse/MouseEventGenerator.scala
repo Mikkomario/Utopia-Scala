@@ -63,7 +63,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
     private val lazyMoveHandler = Lazy { MouseMoveHandler.empty }
     private val lazyButtonHandler = Lazy {
         component.foreach { _.addMouseListener(MouseButtonEventReceiver) }
-        MouseButtonStateHandler2.empty
+        MouseButtonStateHandler.empty
     }
     private val lazyWheelHandler = Lazy {
         component.foreach { _.addMouseWheelListener(MouseWheelEventReceiver) }
@@ -183,7 +183,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
             if (handleCondition.value)
                 lazyButtonHandler.current.foreach { handler =>
                     oldButtonStates.buttonsPressed.foreach { releasedButton =>
-                        val event = MouseButtonStateEvent2(releasedButton, position, buttonStates, None,
+                        val event = MouseButtonStateEvent(releasedButton, position, buttonStates, None,
                             pressed = false)
                         eventQueue.push { handler.onMouseButtonStateEvent(event) }
                     }
@@ -224,7 +224,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
             buttonStates = buttonStates.withButtonState(button, pressed)
             if (handleCondition.value)
                 lazyButtonHandler.current.foreach { handler =>
-                    val newEvent = MouseButtonStateEvent2(button, position, buttonStates, None, pressed = pressed)
+                    val newEvent = MouseButtonStateEvent(button, position, buttonStates, None, pressed = pressed)
                     // Distributes the event asynchronously
                     eventQueue.push { handler.onMouseButtonStateEvent(newEvent) }
                 }

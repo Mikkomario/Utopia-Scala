@@ -5,7 +5,7 @@ import utopia.firmament.component.Component
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent2, MouseButtonStateHandler2, MouseButtonStates, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent, MouseButtonStateHandler, MouseButtonStates, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -42,7 +42,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     private val cachedSize = MutableLazy { Size(component.getWidth, component.getHeight) }
     
     // Handlers for distributing events
-    override val mouseButtonHandler = MouseButtonStateHandler2()
+    override val mouseButtonHandler = MouseButtonStateHandler()
     override val mouseMoveHandler = MouseMoveHandler()
     override val mouseWheelHandler = MouseWheelHandler()
     
@@ -228,7 +228,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
         private def updateMouseButtonStatus(e: MouseEvent, newStatus: Boolean) = {
             currentButtonStatus += (MouseButton(e.getButton) -> newStatus)
             val eventPosition = positionOfEvent(e)
-            val event = MouseButtonStateEvent2(MouseButton(e.getButton),
+            val event = MouseButtonStateEvent(MouseButton(e.getButton),
                 RelativePoint.absoluteByRelative(eventPosition) { absolutePosition + _ }, currentButtonStatus,
                 None, pressed = newStatus)
             distributeMouseButtonEvent(event)

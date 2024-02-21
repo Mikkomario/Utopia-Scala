@@ -4,7 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.mouse.MouseEvent2.MouseFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -67,7 +67,7 @@ object MouseMoveListener
       * @return A new mouse move listener
       */
     @deprecated("Please use .whileLeftDown(...) instead", "v4.0")
-    def onLeftDragged(f: MouseMoveEvent => Unit) = unconditional.filtering(MouseEvent2.filter.whileLeftDown)(f)
+    def onLeftDragged(f: MouseMoveEvent => Unit) = unconditional.filtering(MouseEvent.filter.whileLeftDown)(f)
     /**
       * Creates a new mouse move listener that calls specified function on drags (with right mouse button)
       * @param f A function that is called on mouse events
@@ -75,7 +75,7 @@ object MouseMoveListener
       */
     @deprecated("Please use .whileRightDown(...) instead", "v4.0")
     def onRightDragged(f: MouseMoveEvent => Unit) =
-        unconditional.filtering(MouseEvent2.filter.whileRightDown)(f)
+        unconditional.filtering(MouseEvent.filter.whileRightDown)(f)
     
     /**
       * Creates a new mouse move listener that calls specified function each time mouse enters specified area

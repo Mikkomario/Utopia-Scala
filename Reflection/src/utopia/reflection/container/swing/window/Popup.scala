@@ -8,7 +8,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.genesis.handling.template.Handleable2
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Alignment
@@ -145,19 +145,19 @@ object Popup
 	}
 	
 	private class HideOnOutsideClickListener(override val popup: Window[_])
-		extends MouseButtonStateListener2 with HideActionListener
+		extends MouseButtonStateListener with HideActionListener
 	{
 		// ATTRIBUTES	----------------------
 		
 		private val actionThreshold = Now + 0.1.seconds
 		
-		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] =
-			MouseButtonStateListener2.filter.pressed
+		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
+			MouseButtonStateListener.filter.pressed
 		
 		
 		// IMPLEMENTED	----------------------
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			if (popup.visible && Now > actionThreshold && !popup.bounds.contains(event.position.absolute))
 				popup.close()
 		}

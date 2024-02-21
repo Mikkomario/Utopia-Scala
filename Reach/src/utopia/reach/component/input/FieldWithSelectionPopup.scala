@@ -32,7 +32,7 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
@@ -732,11 +732,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// NESTED	---------------------------------
 	
-	private object PopupHideMouseListener extends MouseButtonStateListener2
+	private object PopupHideMouseListener extends MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.left
 		
 		// Only closes the pop-up on mouse release if it was visible on the previous mouse press
 		private val closeOnReleaseFlag = ResettableFlag()
@@ -746,7 +746,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
 			if (event.pressed) {
 				closeOnReleaseFlag.value = cachedPopup.exists { _.isFullyVisible }

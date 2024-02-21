@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.enumeration.Alignment.Center
@@ -86,7 +86,7 @@ object ReachInSwingTest extends App
 						.withCustomDrawer(new MousePositionDrawer(componentP, 3.0))
 						.apply(textPointer)
 					componentP.set(label)
-					label.addMouseButtonListener(MouseButtonStateListener2.leftPressed { event =>
+					label.addMouseButtonListener(MouseButtonStateListener.leftPressed { event =>
 						if (label.bounds.contains(event.position))
 							clicksCounter.update { _ + 1 }
 						else
@@ -100,7 +100,7 @@ object ReachInSwingTest extends App
 		canvas.position = Point(20, 100)
 		canvas.size = Size(200, 50)
 		canvas.updateLayout()
-		canvas.child.addMouseButtonListener(MouseButtonStateListener2.leftPressed { event =>
+		canvas.child.addMouseButtonListener(MouseButtonStateListener.leftPressed { event =>
 			println(s"Align frame Mouse: ${event.position.relative}")
 		})
 		

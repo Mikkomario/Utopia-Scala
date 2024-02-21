@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.color.ColorShade
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.contextual.VariableContextualFactory
@@ -168,19 +168,19 @@ private object FieldFocusMouseListener
 	// Time before pop-up visibility may be swapped
 	private val visibilityChangeThreshold = 0.2.seconds
 }
-private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener2
+private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener
 {
 	// ATTRIBUTES	-------------------
 	
 	override val mouseButtonStateEventFilter =
-		MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(field.bounds)
+		MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(field.bounds)
 	
 	
 	// IMPLEMENTED	-------------------
 	
 	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		// Requests focus or opens the field, except when the pop-up was just closed
 		if (field.field.hasFocus && field.popUpVisibilityLastChangedPointer.value < Now - visibilityChangeThreshold)
 			field.openPopup()

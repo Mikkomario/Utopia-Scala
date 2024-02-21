@@ -10,7 +10,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseMoveEvent, MouseMoveListener}
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
@@ -185,12 +185,12 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	}
 	
 	private class ButtonMouseListener(statePointer: Pointer[GuiElementStatus])
-		extends MouseButtonStateListener2 with MouseMoveListener
+		extends MouseButtonStateListener with MouseMoveListener
 	{
 		// ATTRIBUTES	----------------------------
 		
 		// Only listens to left mouse button presses & releases
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.left
 		// Listens to mouse enters & exits
 		override val mouseMoveEventFilter = MouseMoveEvent.filter.enteredOrExited(bounds)
 		
@@ -206,7 +206,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override def handleCondition: FlagLike = enabledPointer
 		
 		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			if (down) {
 				if (event.released) {
 					trigger()

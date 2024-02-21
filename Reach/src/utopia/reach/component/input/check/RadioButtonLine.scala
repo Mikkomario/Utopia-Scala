@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -81,7 +81,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 					.withIsHintPointer(settings.enabledPointer.lightMap { !_ })
 					.text(labelText)
 				// Clicking the label triggers the button
-				label.addMouseButtonListener(MouseButtonStateListener2.leftPressed.over { label.bounds } { _ =>
+				label.addMouseButtonListener(MouseButtonStateListener.leftPressed.over { label.bounds } { _ =>
 					radioButton.select()
 					radioButton.requestFocus()
 					Consume("Radio button selected via label")

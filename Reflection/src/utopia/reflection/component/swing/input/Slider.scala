@@ -21,7 +21,7 @@ import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -540,19 +540,19 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		}
 	}
 	
-	private object MousePressListener extends MouseButtonStateListener2
+	private object MousePressListener extends MouseButtonStateListener
 	{
 		// ATTRIBUTES   -----------------------
 		
 		override val handleCondition: FlagLike = notPressedPointer && enabledPointer
 		
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(bounds)
+			MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(bounds)
 		
 		
 		// IMPLEMENTED  -----------------------
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			progressPointer.value = progressForX(event.position.x - x)
 			pressed = true
 			if (!isInFocus)
@@ -576,11 +576,11 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		}
 	}
 	
-	private object CommonMouseDragListener extends MouseButtonStateListener2 with MouseMoveListener
+	private object CommonMouseDragListener extends MouseButtonStateListener with MouseMoveListener
 	{
 		// ATTRIBUTES   -------------------
 		
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftReleased
 		
 		
 		// IMPLEMENTED  -------------------
@@ -588,7 +588,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		override def handleCondition: FlagLike = pressedPointer
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			pressed = false
 			// Slides to the closest sticky point, if there is one
 			if (stickyPoints.nonEmpty)

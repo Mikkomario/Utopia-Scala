@@ -9,14 +9,14 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
-object MouseEvent2
+object MouseEvent
 {
     // TYPES    ----------------------
     
     /**
       * A filter applied to any kind of mouse events
       */
-    type MouseEventFilter = Filter[MouseEvent2[_]]
+    type MouseEventFilter = Filter[MouseEvent[_]]
     
     
     // COMPUTED ---------------------
@@ -78,7 +78,7 @@ object MouseEvent2
     
     // NESTED   ---------------------
     
-    trait MouseFilteringFactory[+E <: MouseEvent2[_], +Repr]
+    trait MouseFilteringFactory[+E <: MouseEvent[_], +Repr]
     {
         // ABSTRACT -----------------
         
@@ -130,11 +130,11 @@ object MouseEvent2
         def whileButtonReleased(button: MouseButton) = withFilter { !_.buttonStates(button) }
     }
     
-    object MouseEventFilter extends MouseFilteringFactory[MouseEvent2[_], MouseEventFilter]
+    object MouseEventFilter extends MouseFilteringFactory[MouseEvent[_], MouseEventFilter]
     {
         // IMPLEMENTED  ---------------
         
-        override protected def withFilter(filter: Filter[MouseEvent2[_]]): MouseEventFilter = filter
+        override protected def withFilter(filter: Filter[MouseEvent[_]]): MouseEventFilter = filter
         
         
         // OTHER    -------------------
@@ -143,7 +143,7 @@ object MouseEvent2
           * @param f A filter function for mouse events
           * @return A filter based on that function
           */
-        def apply(f: MouseEvent2[_] => Boolean): MouseEventFilter = Filter(f)
+        def apply(f: MouseEvent[_] => Boolean): MouseEventFilter = Filter(f)
     }
 }
 
@@ -152,7 +152,7 @@ object MouseEvent2
  * @author Mikko Hilpinen
  * @since 19.2.2017
  */
-trait MouseEvent2[+Repr]
+trait MouseEvent[+Repr]
 {
     // ABSTRACT ----------------------
     

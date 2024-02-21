@@ -15,7 +15,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener, MouseMoveEvent, MouseMoveListener}
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
@@ -262,7 +262,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 	
 	// NESTED   ---------------------------
 	
-	private object MouseListener extends MouseButtonStateListener2
+	private object MouseListener extends MouseButtonStateListener
 	{
 		// ATTRIBUTES   -------------------------
 		
@@ -275,7 +275,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		private val draggingFlag: FlagLike = dragPointer.map { _.isDefined }
 		
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter
+			MouseButtonStateEvent.filter.leftPressed && Consumable.unconsumedFilter
 			
 		
 		// COMPUTED -----------------------------
@@ -290,7 +290,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		// Case: Mouse pressed
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			val componentBounds = component.bounds
 			// Case: Mouse pressed within the component => Checks whether pressed at the drag-area
 			// TODO: Could add external borders here
@@ -448,11 +448,11 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			}
 		}
 		
-		private object ReleaseListener extends MouseButtonStateListener2
+		private object ReleaseListener extends MouseButtonStateListener
 		{
 			// ATTRIBUTES   ------------------
 			
-			override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
+			override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftReleased
 			
 			
 			// IMPLEMENTED  ------------------
@@ -460,7 +460,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			override def handleCondition: FlagLike = draggingFlag
 			
 			// Stops the drag
-			override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 				drag = None
 				CommonMouseEvents -= this
 				CommonMouseEvents -= MouseListener.DragListener

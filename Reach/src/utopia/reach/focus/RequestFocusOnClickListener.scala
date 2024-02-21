@@ -3,7 +3,7 @@ package utopia.reach.focus
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.reach.component.template.ReachComponentLike
 
 /**
@@ -15,19 +15,19 @@ import utopia.reach.component.template.ReachComponentLike
   */
 class RequestFocusOnClickListener(component: FocusRequestable with ReachComponentLike,
                                   enabledFlag: FlagLike = AlwaysTrue)
-	extends MouseButtonStateListener2
+	extends MouseButtonStateListener
 {
 	// ATTRIBUTES   -----------------------------
 	
 	override val mouseButtonStateEventFilter =
-		MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(component.bounds)
+		MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(component.bounds)
 	
 	
 	// IMPLEMENTED  -----------------------------
 	
 	override def handleCondition: FlagLike = enabledFlag
 	
-	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		component.requestFocus()
 		Preserve
 	}

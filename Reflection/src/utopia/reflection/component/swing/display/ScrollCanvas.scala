@@ -43,7 +43,7 @@ object ScrollCanvas
 	  * @param context Component creation context (implicit)
 	  * @return A new scroll canvas
 	  */
-	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler2,
+	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler,
 	               contentMouseMoveHandler: MouseMoveHandler, contentMouseWheelHandler: MouseWheelHandler,
 	               maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContext) =
 	{
@@ -74,7 +74,7 @@ object ScrollCanvas
   *                                 content (default = false)
   */
 class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
-                   val contentMouseButtonHandler: MouseButtonStateHandler2, val contentMouseMoveHandler: MouseMoveHandler,
+                   val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
                    val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
                    scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
@@ -153,17 +153,17 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	
 	// NESTED CLASSES	--------------------
 	
-	private class MouseEventHandler extends MouseButtonStateListener2 with MouseMoveListener with MouseWheelListener
+	private class MouseEventHandler extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener
 	{
 		// IMPLEMENTED	--------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
+		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			contentMouseButtonHandler.onMouseButtonStateEvent(event.mapPosition { _.mapRelative(convertMousePosition) })
 		}
 		override def onMouseMove(event: MouseMoveEvent) =

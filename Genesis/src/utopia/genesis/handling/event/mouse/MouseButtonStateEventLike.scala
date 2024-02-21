@@ -10,7 +10,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 6.2.2024, v4.0
  */
-trait MouseButtonStateEventLike[+Repr] extends MouseEvent2[Repr]
+trait MouseButtonStateEventLike[+Repr] extends MouseEvent[Repr]
 {
     // ABSTRACT --------------------------
     

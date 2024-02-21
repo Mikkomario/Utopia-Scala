@@ -15,7 +15,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
@@ -209,12 +209,12 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 		}
 	}
 	
-	private class LabelMouseListener(val label: TextLabel) extends MouseButtonStateListener2
+	private class LabelMouseListener(val label: TextLabel) extends MouseButtonStateListener
 	{
 		// ATTRIBUTES	----------
 		
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(label.bounds)
+			MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(label.bounds)
 		
 		
 		// IMPLEMENTED	---------
@@ -222,7 +222,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		// When pressed, selects the label
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) =
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) =
 		{
 			val newValue = labels.find { _._2 == label }.map { _._1 }
 			if (newValue.isDefined) {

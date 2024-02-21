@@ -96,13 +96,13 @@ object MouseTest3 extends App
 	}
 	
 	private object TestItem
-		extends Drawable2 with MouseMoveListener with MouseWheelListener with MouseButtonStateListener2
+		extends Drawable2 with MouseMoveListener with MouseWheelListener with MouseButtonStateListener
 	{
 		// ATTRIBUTES   ---------------
 		
 		private val radiusAdjustment = Adjustment(0.1)
-		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] =
-			MouseButtonStateEvent2.filter(MouseButton.Left, MouseButton.Right)
+		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
+			MouseButtonStateEvent.filter(MouseButton.Left, MouseButton.Right)
 		override val mouseMoveEventFilter: Filter[MouseMoveEvent] = !MouseMoveEvent.filter.whileRightDown
 		
 		private val radiusPointer = EventfulPointer(32.0)
@@ -152,7 +152,7 @@ object MouseTest3 extends App
 		}
 		override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice =
 			radiusPointer.update { _ * radiusAdjustment(-event.wheelTurn) }
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 			val dir = event.button match {
 				case MouseButton.Left => Clockwise
 				case MouseButton.Right => Counterclockwise

@@ -17,7 +17,7 @@ import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse._
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
@@ -496,7 +496,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
 	                            val velocityMod: Double, val scroller: AnimatedScroller)
-		extends MouseButtonStateListener2 with MouseMoveListener with MouseWheelListener
+		extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -510,9 +510,9 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		private var velocities = Vector[(Instant, Velocity2D, FiniteDuration)]()
 		
 		// Listens to left mouse presses & releases
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftPressed
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftPressed
 		// Only listens to wheel events inside component bounds
-		override val mouseWheelEventFilter = Consumable.unconsumedFilter && MouseEvent2.filter.over(bounds)
+		override val mouseWheelEventFilter = Consumable.unconsumedFilter && MouseEvent.filter.over(bounds)
 		
 		
 		// IMPLEMENTED	-----------------------
@@ -520,7 +520,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		override def handleCondition: FlagLike = AlwaysTrue
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Performs some calculations in this component's context
 			val relativeEvent = event.relativeTo(position)
 			
@@ -589,7 +589,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		/**
 		  * Listens to global mouse release events
 		  */
-		object MouseReleaseListener extends MouseButtonStateListener2
+		object MouseReleaseListener extends MouseButtonStateListener
 		{
 			// ATTRIBUTES   ------------------------
 			
@@ -600,7 +600,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			
 			override def handleCondition: FlagLike = AlwaysTrue
 			
-			override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 				// When mouse is released, stops dragging. May apply scrolling velocity
 				isDraggingBar = false
 				if (isDraggingContent) {

@@ -40,7 +40,7 @@ object ScrollCanvasTest extends App
 	// Creates the handlers
 	val actorHandler = ActorHandler()
 	val drawHandler = DrawableHandler()
-	val mouseButtonHandler = MouseButtonStateHandler2()
+	val mouseButtonHandler = MouseButtonStateHandler()
 	val mouseWheelHandler = MouseWheelHandler()
 	val mouseMoveHandler = MouseMoveHandler()
 	
@@ -80,7 +80,7 @@ object ScrollCanvasTest extends App
 	println(StackHierarchyManager.description)
 }
 
-private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener2
+private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener
 {
 	// ATTRIBUTES	---------------------
 	
@@ -89,7 +89,7 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	private var circle = Circle(position, 128)
 	
 	override val mouseButtonStateEventFilter = Consumable.unconsumedFilter &&
-		MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(circle)
+		MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(circle)
 	
 	
 	// IMPLEMENTED	---------------------
@@ -98,7 +98,7 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	
 	override def draw(drawer: Drawer) = drawer.draw(circle)
 	
-	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		circle = Circle(position, circle.radius * 0.8)
 		Consume("Circle was clicked")
 	}
@@ -111,7 +111,7 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 	private var listening = false
 	
 	// Only listens to mouse wheel events while cursor is inside canvas
-	override val mouseWheelEventFilter = MouseEvent2.filter.over(Bounds(Point.origin, canvas.worldSize))
+	override val mouseWheelEventFilter = MouseEvent.filter.over(Bounds(Point.origin, canvas.worldSize))
 	override val keyStateEventFilter = KeyStateEvent.filter(Control)
 	
 	

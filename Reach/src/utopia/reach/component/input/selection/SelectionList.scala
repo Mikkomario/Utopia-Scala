@@ -23,7 +23,7 @@ import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -514,7 +514,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	// NESTED	------------------------------------
 	
-	private object LocalMouseListener extends MouseMoveListener with MouseButtonStateListener2
+	private object LocalMouseListener extends MouseMoveListener with MouseButtonStateListener
 	{
 		// ATTRIBUTES	----------------------------
 		
@@ -526,7 +526,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// Only listens to left mouse button presses which haven't been consumed yet
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter
+			MouseButtonStateEvent.filter.leftPressed && Consumable.unconsumedFilter
 		
 		
 		// COMPUTED	--------------------------------
@@ -550,7 +550,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 				relativeMousePositionPointer.value = None
 		}
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Only listens to mouse presses while the mouse is over this component
 			if (relativeMousePosition.isDefined) {
 				if (!hasFocus)
@@ -582,13 +582,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		}
 	}
 	
-	private object CommonMouseReleaseListener extends MouseButtonStateListener2
+	private object CommonMouseReleaseListener extends MouseButtonStateListener
 	{
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftReleased
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) =
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) =
 			LocalMouseListener.release()
 	}
 	

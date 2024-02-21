@@ -105,7 +105,7 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	  * Starts delivering of transformed mouse events to the wrapped wrapped item and/or possibly other items.
 	  * @param parentHandlers The handlers that will deliver mouse events to be converted.
 	  *                       The supported (& expected) handler types are:
-	  *                             - [[MouseButtonStateHandler2]]
+	  *                             - [[MouseButtonStateHandler]]
 	  *                             - [[MouseMoveHandler]]
 	  *                             - [[MouseWheelHandler]]
 	  *                             - [[MouseDragHandler]]
@@ -120,7 +120,7 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	def setupMouseEvents(parentHandlers: Handlers, disableMouseToWrapped: Boolean = false) = {
 		// If the wrapped item supports mouse events, starts delivering them to that item as well (unless disabled)
 		if (!disableMouseToWrapped && (wrapped.isInstanceOf[MouseMoveListener] ||
-			wrapped.isInstanceOf[MouseButtonStateListener2] || wrapped.isInstanceOf[MouseWheelListener] ||
+			wrapped.isInstanceOf[MouseButtonStateListener] || wrapped.isInstanceOf[MouseWheelListener] ||
 			wrapped.isInstanceOf[MouseDragListener]))
 			mouseHandler.handlers += wrapped
 		
@@ -134,11 +134,11 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	// NESTED   -----------------------
 	
 	private class RepositionedMouseHandler
-		extends MouseMoveListener with MouseWheelListener with MouseDragListener with MouseButtonStateListener2
+		extends MouseMoveListener with MouseWheelListener with MouseDragListener with MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		
-		private val buttonHandler = MouseButtonStateHandler2.empty
+		private val buttonHandler = MouseButtonStateHandler.empty
 		private val moveHandler = MouseMoveHandler.empty
 		private val wheelHandler = MouseWheelHandler.empty
 		private val dragHandler = MouseDragHandler.empty
@@ -152,12 +152,12 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
+		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 			if (buttonHandler.mayBeHandled)
 				buttonHandler.onMouseButtonStateEvent(event.mapPosition { _.map(toView) })
 			else

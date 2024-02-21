@@ -2,10 +2,10 @@ package utopia.genesis.handling.event.mouse
 
 import MouseButton._
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
-object MouseButtonStateEvent2
+object MouseButtonStateEvent
 {
     // COMPUTED --------------------------
     
@@ -68,10 +68,10 @@ object MouseButtonStateEvent2
  * @author Mikko Hilpinen
  * @since 17.2.2017
  */
-case class MouseButtonStateEvent2(override val button: MouseButton, override val position: RelativePoint,
-                                  override val buttonStates: MouseButtonStates,
-                                  override val consumeEvent: Option[ConsumeEvent], override val pressed: Boolean)
-    extends MouseButtonStateEventLike[MouseButtonStateEvent2] with Consumable[MouseButtonStateEvent2]
+case class MouseButtonStateEvent(override val button: MouseButton, override val position: RelativePoint,
+                                 override val buttonStates: MouseButtonStates,
+                                 override val consumeEvent: Option[ConsumeEvent], override val pressed: Boolean)
+    extends MouseButtonStateEventLike[MouseButtonStateEvent] with Consumable[MouseButtonStateEvent]
 {
     // COMPUTED PROPERTIES    ------------
     
@@ -125,7 +125,7 @@ case class MouseButtonStateEvent2(override val button: MouseButton, override val
     override def consumed(event: ConsumeEvent) =
         if (isConsumed) this else copy(consumeEvent = Some(event))
     
-    override def withPosition(position: RelativePoint): MouseButtonStateEvent2 = copy(position = position)
+    override def withPosition(position: RelativePoint): MouseButtonStateEvent = copy(position = position)
     
     
     // OTHER METHODS    ------------------

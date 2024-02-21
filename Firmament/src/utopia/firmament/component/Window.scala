@@ -267,7 +267,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 {
 	// ATTRIBUTES   ----------------
 	
-	override val mouseButtonHandler = MouseButtonStateHandler2()
+	override val mouseButtonHandler = MouseButtonStateHandler()
 	override val mouseMoveHandler = MouseMoveHandler()
 	override val mouseWheelHandler = MouseWheelHandler()
 	
@@ -514,7 +514,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			eventActorHandler += mouseEventGenerator
 			// Mouse movement events are only enabled while this window is in focus (unless not focusable)
 			val movementsEnabledPointer = if (isFocusable) fullyVisibleAndFocusedFlag else fullyVisibleFlag
-			mouseEventGenerator.buttonHandler += MouseButtonStateListener2.conditional(fullyVisibleFlag) { e =>
+			mouseEventGenerator.buttonHandler += MouseButtonStateListener.conditional(fullyVisibleFlag) { e =>
 				content.distributeMouseButtonEvent(e)
 			}
 			mouseEventGenerator.moveHandler += MouseMoveListener
@@ -782,7 +782,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def updateLayout() = content.size = size - insets.total
 	
 	// When distributing events, accounts for the difference in coordinate systems (based on insets)
-	override def distributeMouseButtonEvent(event: MouseButtonStateEvent2) =
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
 		super.distributeMouseButtonEvent(event.translated(-insets.toPoint))
 	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
 		super.distributeMouseMoveEvent(event.translated(-insets.toPoint))
@@ -906,7 +906,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	def setToCloseWhenClickedOutside(activationDelay: Duration = Duration.Zero) = {
 		activationDelay.finite.foreach { delay =>
 			val threshold = Now + delay
-			addMouseButtonListener(MouseButtonStateListener2
+			addMouseButtonListener(MouseButtonStateListener
 				.leftPressed.filtering { _ => Now > threshold }.outside(bounds) { _ => close() })
 		}
 	}
