@@ -14,7 +14,7 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateHandler, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator, MouseMoveListener2, MouseWheelListener}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator, MouseMoveListener, MouseWheelListener}
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -326,7 +326,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 			actorHandler += mouseEventGenerator
 			mouseEventGenerator.buttonHandler += MouseButtonStateListener2
 				.unconditional { e => content.distributeMouseButtonEvent(e) }
-			mouseEventGenerator.moveHandler += MouseMoveListener2.unconditional { content.distributeMouseMoveEvent(_) }
+			mouseEventGenerator.moveHandler += MouseMoveListener.unconditional { content.distributeMouseMoveEvent(_) }
 			mouseEventGenerator.wheelHandler += MouseWheelListener.unconditional { content.distributeMouseWheelEvent(_) }
 			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			

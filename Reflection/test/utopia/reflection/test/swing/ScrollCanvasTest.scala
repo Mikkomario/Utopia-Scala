@@ -42,7 +42,7 @@ object ScrollCanvasTest extends App
 	val drawHandler = DrawableHandler()
 	val mouseButtonHandler = MouseButtonStateHandler2()
 	val mouseWheelHandler = MouseWheelHandler()
-	val mouseMoveHandler = MouseMoveHandler2()
+	val mouseMoveHandler = MouseMoveHandler()
 	
 	// FIXME: Create a new set of handlers, which includes
 	//  (actorHandler, drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)

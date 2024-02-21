@@ -20,7 +20,7 @@ import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -229,7 +229,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],
                        selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
-	extends CustomDrawer with MouseMoveListener2 with MouseButtonStateListener2
+	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener2
 {
 	// ATTRIBUTES	----------------------------------
 	
@@ -265,7 +265,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 	override def drawLevel = Normal
 	
 	override def handleCondition: FlagLike = AlwaysTrue
-	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {
 		def draw(highlightLevel: Double, area: Bounds) =
@@ -292,7 +292,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 		}
 	}
 	
-	override def onMouseMove(event: MouseMoveEvent2) = {
+	override def onMouseMove(event: MouseMoveEvent) = {
 		stack.foreach { stack =>
 			if (event.isOver(stack.bounds))
 				relativeMousePositionPointer.value = Some(event.position - stack.position)

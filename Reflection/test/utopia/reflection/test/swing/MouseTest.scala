@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateListener
-import utopia.genesis.handling.event.mouse.{MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2, MouseWheelListener}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener, MouseWheelListener}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.label.Label
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -22,13 +22,13 @@ import java.awt.Color
   */
 object MouseTest extends App
 {
-	private class MouseEnterExitListener(val area: HasMutableBounds) extends MouseMoveListener2
+	private class MouseEnterExitListener(val area: HasMutableBounds) extends MouseMoveListener
 	{
-		override val mouseMoveEventFilter = MouseMoveEvent2.filter.enteredOrExited(area.bounds)
+		override val mouseMoveEventFilter = MouseMoveEvent.filter.enteredOrExited(area.bounds)
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onMouseMove(event: MouseMoveEvent2) = println("Mouse entered or exited area")
+		override def onMouseMove(event: MouseMoveEvent) = println("Mouse entered or exited area")
 	}
 	
 	// Creates the basic components & wrap as Stackable
@@ -49,7 +49,7 @@ object MouseTest extends App
 	
 	// Sets up mouse listening
 	items.head.addMouseMoveListener(new MouseEnterExitListener(items.head))
-	items(1).addMouseMoveListener(MouseMoveListener2.filtering(MouseEvent2.filter.over(items(1).bounds)) { e =>
+	items(1).addMouseMoveListener(MouseMoveListener.filtering(MouseEvent2.filter.over(items(1).bounds)) { e =>
 		println(s"Moving ${e.position.relative}")
 	})
 	items(2).addMouseButtonListener(MouseButtonStateListener2

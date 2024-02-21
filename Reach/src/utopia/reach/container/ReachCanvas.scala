@@ -249,7 +249,7 @@ object ReachCanvas
 				generator.buttonHandler += MouseButtonStateListener2.unconditional { event =>
 					canvas.distributeMouseButtonEvent(event)
 				}
-				generator.moveHandler += MouseMoveListener2.unconditional(canvas.distributeMouseMoveEvent)
+				generator.moveHandler += MouseMoveListener.unconditional(canvas.distributeMouseMoveEvent)
 				generator.wheelHandler += MouseWheelListener.unconditional(canvas.distributeMouseWheelEvent)
 				actorHandler += generator
 			}
@@ -337,7 +337,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	override lazy val mouseButtonHandler = MouseButtonStateHandler2()
-	override lazy val mouseMoveHandler = MouseMoveHandler2()
+	override lazy val mouseMoveHandler = MouseMoveHandler()
 	override lazy val mouseWheelHandler = MouseWheelHandler()
 	
 	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
@@ -479,7 +479,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 				}
 		}
 	}
-	override def distributeMouseMoveEvent(event: MouseMoveEvent2) = {
+	override def distributeMouseMoveEvent(event: MouseMoveEvent) = {
 		super.distributeMouseMoveEvent(event)
 		currentContent.foreach { _.distributeMouseMoveEvent(event.relativeTo(position)) }
 	}
@@ -584,7 +584,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		}
 	}
 	
-	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener2
+	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener
 	{
 		// ATTRIBUTES	-----------------------------
 		
@@ -620,9 +620,9 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		// IMPLEMENTED	-----------------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			val newPosition = event.position - position
 			mousePositionPointer.update { lastPosition =>
 				if (newPosition.distanceFrom(lastPosition) >= minCursorDistance)

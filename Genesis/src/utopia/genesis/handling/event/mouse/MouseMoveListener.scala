@@ -16,7 +16,7 @@ import utopia.paradigm.shape.shape2d.area.Area2D
 import scala.annotation.unused
 import scala.language.implicitConversions
 
-object MouseMoveListener2
+object MouseMoveListener
 {
     // TYPES    ----------------------
     
@@ -45,7 +45,7 @@ object MouseMoveListener2
     
     // IMPLICIT ----------------------
     
-    implicit def objectToFactory(@unused o: MouseMoveListener2.type): MouseMoveEventListenerFactory = unconditional
+    implicit def objectToFactory(@unused o: MouseMoveListener.type): MouseMoveEventListenerFactory = unconditional
     
     
     // OTHER    ----------------------
@@ -67,14 +67,14 @@ object MouseMoveListener2
       * @return A new mouse move listener
       */
     @deprecated("Please use .whileLeftDown(...) instead", "v4.0")
-    def onLeftDragged(f: MouseMoveEvent2 => Unit) = unconditional.filtering(MouseEvent2.filter.whileLeftDown)(f)
+    def onLeftDragged(f: MouseMoveEvent => Unit) = unconditional.filtering(MouseEvent2.filter.whileLeftDown)(f)
     /**
       * Creates a new mouse move listener that calls specified function on drags (with right mouse button)
       * @param f A function that is called on mouse events
       * @return A new mouse move listener
       */
     @deprecated("Please use .whileRightDown(...) instead", "v4.0")
-    def onRightDragged(f: MouseMoveEvent2 => Unit) =
+    def onRightDragged(f: MouseMoveEvent => Unit) =
         unconditional.filtering(MouseEvent2.filter.whileRightDown)(f)
     
     /**
@@ -84,7 +84,7 @@ object MouseMoveListener2
       * @return A new mouse move listener
       */
     @deprecated("Please use .entered(...) instead", "v4.0")
-    def onEnter(getArea: => Area2D)(f: MouseMoveEvent2 => Unit) =
+    def onEnter(getArea: => Area2D)(f: MouseMoveEvent => Unit) =
         unconditional.filtering { e => e.entered(getArea) }(f)
     /**
       * Creates a new mouse move listener that calls specified function each time mouse exits specified area
@@ -93,7 +93,7 @@ object MouseMoveListener2
       * @return A new mouse move listener
       */
     @deprecated("Please use .exited(...) instead", "v4.0")
-    def onExit(getArea: => Area2D)(f: MouseMoveEvent2 => Unit) = unconditional.filtering { e => e.exited(getArea) }(f)
+    def onExit(getArea: => Area2D)(f: MouseMoveEvent => Unit) = unconditional.filtering { e => e.exited(getArea) }(f)
     
     
     // NESTED   ----------------------
@@ -215,16 +215,16 @@ object MouseMoveListener2
     }
     
     case class MouseMoveEventListenerFactory(condition: FlagLike = AlwaysTrue,
-                                             filter: Filter[MouseMoveEvent2] = AcceptAll)
-        extends ListenerFactory[MouseMoveEvent2, MouseMoveEventListenerFactory]
-            with MouseMoveFilteringFactory[MouseMoveEvent2, MouseMoveEventListenerFactory]
+                                             filter: Filter[MouseMoveEvent] = AcceptAll)
+        extends ListenerFactory[MouseMoveEvent, MouseMoveEventListenerFactory]
+            with MouseMoveFilteringFactory[MouseMoveEvent, MouseMoveEventListenerFactory]
     {
         // IMPLEMENTED  -------------------
         
-        override protected def withFilter(filter: Filter[MouseMoveEvent2]): MouseMoveEventListenerFactory =
+        override protected def withFilter(filter: Filter[MouseMoveEvent]): MouseMoveEventListenerFactory =
             copy(filter = this.filter && filter)
         
-        override def usingFilter(filter: Filter[MouseMoveEvent2]): MouseMoveEventListenerFactory =
+        override def usingFilter(filter: Filter[MouseMoveEvent]): MouseMoveEventListenerFactory =
             copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): MouseMoveEventListenerFactory =
             copy(condition = condition)
@@ -237,15 +237,15 @@ object MouseMoveListener2
           * @return A listener that calls the specified function for events accepted by this factory's filter,
           *         while the listening condition allows it.
           */
-        def apply(f: MouseMoveEvent2 => Unit): MouseMoveListener2 = new _MouseMoveListener(condition, filter, f)
+        def apply(f: MouseMoveEvent => Unit): MouseMoveListener = new _MouseMoveListener(condition, filter, f)
     }
     
     private class _MouseMoveListener(override val handleCondition: FlagLike,
-                                     override val mouseMoveEventFilter: Filter[MouseMoveEvent2],
-                                     f: MouseMoveEvent2 => Unit)
-        extends MouseMoveListener2
+                                     override val mouseMoveEventFilter: Filter[MouseMoveEvent],
+                                     f: MouseMoveEvent => Unit)
+        extends MouseMoveListener
     {
-        override def onMouseMove(event: MouseMoveEvent2): Unit = f(event)
+        override def onMouseMove(event: MouseMoveEvent): Unit = f(event)
     }
 }
 
@@ -254,20 +254,20 @@ object MouseMoveListener2
  * @author Mikko Hilpinen
  * @since 21.1.2017
  */
-trait MouseMoveListener2 extends Handleable2
+trait MouseMoveListener extends Handleable2
 {
     /**
      * This filter is applied over mouse move events the listener would receive.
       * Only events accepted by this filter should be delivered to this listener.
      */
-    def mouseMoveEventFilter: Filter[MouseMoveEvent2]
+    def mouseMoveEventFilter: Filter[MouseMoveEvent]
     
     /**
      * This method is used for informing this listener of new mouse events.
       * This method should only be called for events that are accepted by this listener's event filter.
      * @param event The event that occurred.
      */
-    def onMouseMove(event: MouseMoveEvent2): Unit
+    def onMouseMove(event: MouseMoveEvent): Unit
 }
 
 

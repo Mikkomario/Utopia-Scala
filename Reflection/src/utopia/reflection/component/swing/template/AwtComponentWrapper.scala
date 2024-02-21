@@ -5,7 +5,7 @@ import utopia.firmament.component.Component
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent2, MouseButtonStateHandler2, MouseButtonStates, MouseMoveHandler2, MouseWheelHandler}
+import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent2, MouseButtonStateHandler2, MouseButtonStates, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -43,7 +43,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     
     // Handlers for distributing events
     override val mouseButtonHandler = MouseButtonStateHandler2()
-    override val mouseMoveHandler = MouseMoveHandler2()
+    override val mouseMoveHandler = MouseMoveHandler()
     override val mouseWheelHandler = MouseWheelHandler()
     
     override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)

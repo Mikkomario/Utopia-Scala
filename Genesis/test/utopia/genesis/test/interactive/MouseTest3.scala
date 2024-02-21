@@ -75,7 +75,7 @@ object MouseTest3 extends App
 	private val repositioner = new Repositioner(TestItem, Left(Fixed(Point(200, 200)), Fixed(Size(20, 20))))
 	handlers += repositioner
 	private val repositionedHandlers = repositioner.setupMouseEvents(handlers, disableMouseToWrapped = true)
-	repositionedHandlers += MouseMoveListener2.apply { e => println(e.position.relative) }
+	repositionedHandlers += MouseMoveListener.apply { e => println(e.position.relative) }
 	
 	// Starts the event-delivery
 	actionLoop.runAsync()
@@ -96,14 +96,14 @@ object MouseTest3 extends App
 	}
 	
 	private object TestItem
-		extends Drawable2 with MouseMoveListener2 with MouseWheelListener with MouseButtonStateListener2
+		extends Drawable2 with MouseMoveListener with MouseWheelListener with MouseButtonStateListener2
 	{
 		// ATTRIBUTES   ---------------
 		
 		private val radiusAdjustment = Adjustment(0.1)
 		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] =
 			MouseButtonStateEvent2.filter(MouseButton.Left, MouseButton.Right)
-		override val mouseMoveEventFilter: Filter[MouseMoveEvent2] = !MouseMoveEvent2.filter.whileRightDown
+		override val mouseMoveEventFilter: Filter[MouseMoveEvent] = !MouseMoveEvent.filter.whileRightDown
 		
 		private val radiusPointer = EventfulPointer(32.0)
 		private val positionPointer = EventfulPointer(Point.origin)
@@ -145,7 +145,7 @@ object MouseTest3 extends App
 		override def removeRepaintListener(listener: RepaintListener): Unit =
 			_repaintListeners = _repaintListeners.filterNot { _ == listener }
 		
-		override def onMouseMove(event: MouseMoveEvent2): Unit = {
+		override def onMouseMove(event: MouseMoveEvent): Unit = {
 			if (event.buttonStates.left)
 				colorAnglePointer.update { _ + Rotation.circles(0.001).clockwise * event.transition.length }
 			positionPointer.value = event.position

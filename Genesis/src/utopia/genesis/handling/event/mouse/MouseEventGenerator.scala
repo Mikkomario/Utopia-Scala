@@ -60,7 +60,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
     
     private val componentPointer = WeakReference(c)
     
-    private val lazyMoveHandler = Lazy { MouseMoveHandler2.empty }
+    private val lazyMoveHandler = Lazy { MouseMoveHandler.empty }
     private val lazyButtonHandler = Lazy {
         component.foreach { _.addMouseListener(MouseButtonEventReceiver) }
         MouseButtonStateHandler2.empty
@@ -159,7 +159,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
                     
                     // Informs the handler only if one has been generated
                     lazyMoveHandler.current.foreach { handler =>
-                        val event = MouseMoveEvent2(Pair(previousMousePosition, position), duration, buttonStates)
+                        val event = MouseMoveEvent(Pair(previousMousePosition, position), duration, buttonStates)
                         eventQueue.push { handler.onMouseMove(event) }
                     }
                 }

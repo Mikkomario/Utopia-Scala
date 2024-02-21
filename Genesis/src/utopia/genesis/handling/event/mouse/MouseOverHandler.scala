@@ -48,7 +48,7 @@ object MouseOverHandler
   */
 class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Iterable.empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener2
+	extends DeepHandler2[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -71,9 +71,9 @@ class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Itera
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
-	override def onMouseMove(event: MouseMoveEvent2): Unit = {
+	override def onMouseMove(event: MouseMoveEvent): Unit = {
 		// Updates the mouse position
 		lastPosition = event.position
 		

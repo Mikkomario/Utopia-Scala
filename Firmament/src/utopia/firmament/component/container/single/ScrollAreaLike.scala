@@ -496,7 +496,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
 	                            val velocityMod: Double, val scroller: AnimatedScroller)
-		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener
+		extends MouseButtonStateListener2 with MouseMoveListener with MouseWheelListener
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -518,7 +518,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		// IMPLEMENTED	-----------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			// Performs some calculations in this component's context
@@ -549,7 +549,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			}
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			// If dragging scroll bar, scrolls the content
 			if (isDraggingBar) {
 				val newBarOrigin = event.position.relative - bounds.position - barDragPosition

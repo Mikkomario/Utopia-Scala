@@ -22,7 +22,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	private var _buttonStates = MouseButtonStates.default
 	
 	private val buttonHandler = MouseButtonStateHandler2.empty
-	private val moveHandler = MouseMoveHandler2.empty
+	private val moveHandler = MouseMoveHandler.empty
 	private val wheelHandler = MouseWheelHandler.empty
 	private val dragHandler = MouseDragHandler.empty
 	
@@ -31,7 +31,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  */
 	val handlers = Handlers(buttonHandler, moveHandler, wheelHandler, dragHandler)
 	
-	private val dragTracker = new DragTracker2(AbsolutizingListener)
+	private val dragTracker = new DragTracker(AbsolutizingListener)
 	
 	
 	// INITIAL CODE --------------------------------
@@ -99,7 +99,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  * @param listener A mouse move listener
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def registerMoveListener(listener: MouseMoveListener2) =
+	def registerMoveListener(listener: MouseMoveListener) =
 		moveHandler += listener
 	/**
 	  * Registers a new mouse wheel listener to this handler
@@ -152,14 +152,14 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	// NESTED   -------------------------
 	
 	private object AbsolutizingListener
-		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener with MouseDragListener
+		extends MouseButtonStateListener2 with MouseMoveListener with MouseWheelListener with MouseDragListener
 	{
 		// IMPLEMENTED  -----------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
@@ -169,7 +169,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 			_buttonStates += event
 			buttonHandler.onMouseButtonStateEvent(absolutize(event))
 		}
-		override def onMouseMove(event: MouseMoveEvent2): Unit = moveHandler.onMouseMove(absolutize(event))
+		override def onMouseMove(event: MouseMoveEvent): Unit = moveHandler.onMouseMove(absolutize(event))
 		override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice =
 			wheelHandler.onMouseWheelRotated(absolutize(event))
 		override def onMouseDrag(event: MouseDragEvent): Unit = dragHandler.onMouseDrag(absolutize(event))

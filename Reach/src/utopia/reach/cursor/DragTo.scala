@@ -15,7 +15,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
@@ -347,7 +347,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		
 		// NESTED   ------------------------
 		
-		private object DragListener extends MouseMoveListener2
+		private object DragListener extends MouseMoveListener
 		{
 			// ATTRIBUTES   ----------------
 			
@@ -360,9 +360,9 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			// IMPLEMENTED  ----------------
 			
 			override def handleCondition: FlagLike = draggingFlag
-			override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+			override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 			
-			override def onMouseMove(event: MouseMoveEvent2): Unit = {
+			override def onMouseMove(event: MouseMoveEvent): Unit = {
 				// Applies the drag
 				drag.foreach { case (absoluteOrigin, originalBounds, stackSize, maxBounds, directions) =>
 					val totalDrag = event.absoluteMousePosition - absoluteOrigin

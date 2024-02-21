@@ -14,12 +14,12 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
-class DragTracker2(listener: MouseDragListener) extends MouseButtonStateListener2 with MouseMoveListener2
+class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener2 with MouseMoveListener
 {
 	// ATTRIBUTES   --------------------
 	
 	private val dragPointers = MouseButton.standardValues
-		.map { b => b -> Pointer.empty[(DragStart, Option[MouseMoveEvent2])]() }.toMap
+		.map { b => b -> Pointer.empty[(DragStart, Option[MouseMoveEvent])]() }.toMap
 	
 	
 	// IMPLEMENTED  --------------------
@@ -27,7 +27,7 @@ class DragTracker2(listener: MouseDragListener) extends MouseButtonStateListener
 	override def handleCondition: FlagLike = AlwaysTrue
 	
 	override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
-	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
 	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
 		dragPointers.get(event.button).foreach { pointer =>
@@ -47,7 +47,7 @@ class DragTracker2(listener: MouseDragListener) extends MouseButtonStateListener
 	}
 	
 	// Updates mouse positions and generates drag events
-	override def onMouseMove(event: MouseMoveEvent2): Unit = {
+	override def onMouseMove(event: MouseMoveEvent): Unit = {
 		val events = dragPointers.flatMap { case (button, pointer) =>
 			pointer.updateAndGet { _.map { case (start, _) => start -> Some(event) } }
 				.map { case (start, _) => MouseDragEvent(start.position, event, button, start.keyState) }

@@ -268,7 +268,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	// ATTRIBUTES   ----------------
 	
 	override val mouseButtonHandler = MouseButtonStateHandler2()
-	override val mouseMoveHandler = MouseMoveHandler2()
+	override val mouseMoveHandler = MouseMoveHandler()
 	override val mouseWheelHandler = MouseWheelHandler()
 	
 	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
@@ -517,7 +517,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			mouseEventGenerator.buttonHandler += MouseButtonStateListener2.conditional(fullyVisibleFlag) { e =>
 				content.distributeMouseButtonEvent(e)
 			}
-			mouseEventGenerator.moveHandler += MouseMoveListener2
+			mouseEventGenerator.moveHandler += MouseMoveListener
 				.conditional(movementsEnabledPointer)(content.distributeMouseMoveEvent)
 			mouseEventGenerator.wheelHandler += MouseWheelListener
 				.conditional(fullyVisibleFlag)(content.distributeMouseWheelEvent)
@@ -784,7 +784,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	// When distributing events, accounts for the difference in coordinate systems (based on insets)
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent2) =
 		super.distributeMouseButtonEvent(event.translated(-insets.toPoint))
-	override def distributeMouseMoveEvent(event: MouseMoveEvent2) =
+	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
 		super.distributeMouseMoveEvent(event.translated(-insets.toPoint))
 	override def distributeMouseWheelEvent(event: MouseWheelEvent) =
 		super.distributeMouseWheelEvent(event.translated(-insets.toPoint))

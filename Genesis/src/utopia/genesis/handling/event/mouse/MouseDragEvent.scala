@@ -26,7 +26,7 @@ object MouseDragEvent
  * @param pressed Whether the associated mouse button is still pressed.
   *                False if the button was released, which also signals the end of the drag.
  */
-case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2, override val button: MouseButton,
+case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent, override val button: MouseButton,
                           startKeyboardState: KeyboardState, override val pressed: Boolean = true)
 	extends MouseMoveEventLike[MouseDragEvent] with MouseButtonStateEventLike[MouseDragEvent]
 {

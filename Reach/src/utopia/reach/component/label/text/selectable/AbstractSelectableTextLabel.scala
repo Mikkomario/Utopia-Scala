@@ -23,7 +23,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents, KeyboardState}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -434,7 +434,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
 	}
 	
-	private object MouseListener extends MouseButtonStateListener2 with MouseMoveListener2
+	private object MouseListener extends MouseButtonStateListener2 with MouseMoveListener
 	{
 		// ATTRIBUTES	---------------------------------
 		
@@ -449,7 +449,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		// IMPLEMENTED	---------------------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			draggingFlag.set()
@@ -458,7 +458,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 			Consume("EditableTextLabel clicked")
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (draggingFlag.isSet)
 				updateCaret(event.position, selectArea = true)
 		}

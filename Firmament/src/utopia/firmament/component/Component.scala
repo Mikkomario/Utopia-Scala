@@ -30,7 +30,7 @@ trait Component extends HasMutableBounds
     /**
       * @return A handler used for distributing mouse move events within this component
       */
-    def mouseMoveHandler: MouseMoveHandler2
+    def mouseMoveHandler: MouseMoveHandler
     /**
       * @return A handler used for distributing mouse wheel events within this component
       */
@@ -90,11 +90,11 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseMoveEvent(event: MouseMoveEvent2): Unit = {
+    def distributeMouseMoveEvent(event: MouseMoveEvent): Unit = {
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
-        distributeEvent[MouseMoveEvent2](event, e => Vector(e.mousePosition, e.previousMousePosition),
+        distributeEvent[MouseMoveEvent](event, e => Vector(e.mousePosition, e.previousMousePosition),
             _.relativeTo(_), _.distributeMouseMoveEvent(_))
     }
     /**
@@ -122,7 +122,7 @@ trait Component extends HasMutableBounds
       * Adds a new mouse move listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseMoveListener(listener: MouseMoveListener2) = mouseMoveHandler += listener
+    def addMouseMoveListener(listener: MouseMoveListener) = mouseMoveHandler += listener
     /**
       * Adds a new mouse wheel listener to this wrapper
       * @param listener A new listener

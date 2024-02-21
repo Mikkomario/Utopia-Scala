@@ -9,7 +9,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -194,14 +194,14 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		}
 	}
 	
-	private object ButtonMouseListener extends MouseButtonStateListener2 with MouseMoveListener2
+	private object ButtonMouseListener extends MouseButtonStateListener2 with MouseMoveListener
 	{
 		// ATTRIBUTES   ---------------
 		
 		// Only listens to left mouse button presses & releases
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
 		// Listens to mouse enters & exits
-		override val mouseMoveEventFilter = MouseMoveEvent2.filter.enteredOrExited(bounds)
+		override val mouseMoveEventFilter = MouseMoveEvent.filter.enteredOrExited(bounds)
 		
 		
 		// IMPLEMENTED	--------------
@@ -232,7 +232,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		}
 		
 		// When mouse enters, brightens, when mouse leaves, returns
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (enabled) {
 				if (event.isOver(bounds))
 					state += Hover

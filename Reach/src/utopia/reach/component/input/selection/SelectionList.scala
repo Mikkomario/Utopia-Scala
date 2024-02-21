@@ -23,7 +23,7 @@ import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -514,7 +514,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	// NESTED	------------------------------------
 	
-	private object LocalMouseListener extends MouseMoveListener2 with MouseButtonStateListener2
+	private object LocalMouseListener extends MouseMoveListener with MouseButtonStateListener2
 	{
 		// ATTRIBUTES	----------------------------
 		
@@ -541,9 +541,9 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		// IMPLEMENTED	----------------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			if (event.isOver(bounds))
 				relativeMousePositionPointer.value = Some(event.position - position)
 			else

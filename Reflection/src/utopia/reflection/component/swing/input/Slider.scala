@@ -21,7 +21,7 @@ import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -561,13 +561,13 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		}
 	}
 	
-	private object MouseOverListener extends MouseMoveListener2
+	private object MouseOverListener extends MouseMoveListener
 	{
 		override def handleCondition: FlagLike = enabledPointer
 		
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
-		override def onMouseMove(event: MouseMoveEvent2) = {
+		override def onMouseMove(event: MouseMoveEvent) = {
 			val b = bounds
 			if (event.entered(b))
 				state += Hover
@@ -576,7 +576,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		}
 	}
 	
-	private object CommonMouseDragListener extends MouseButtonStateListener2 with MouseMoveListener2
+	private object CommonMouseDragListener extends MouseButtonStateListener2 with MouseMoveListener
 	{
 		// ATTRIBUTES   -------------------
 		
@@ -586,7 +586,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		// IMPLEMENTED  -------------------
 		
 		override def handleCondition: FlagLike = pressedPointer
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			pressed = false
@@ -596,7 +596,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			Consume("Slider grab released")
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent2) =
+		override def onMouseMove(event: MouseMoveEvent) =
 			progressPointer.value = progressForX(event.position.absolute.x - absolutePosition.x)
 	}
 	
