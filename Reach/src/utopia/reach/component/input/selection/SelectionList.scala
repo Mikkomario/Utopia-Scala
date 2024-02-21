@@ -22,8 +22,8 @@ import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -438,7 +438,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	addHierarchyListener { isAttached =>
 		if (isAttached) {
-			GlobalKeyboardEventHandler += keyListener
+			KeyboardEvents += keyListener
 			CommonMouseEvents += CommonMouseReleaseListener
 			actorHandler += keyListener
 			addCustomDrawer(SelectionDrawer)
@@ -449,7 +449,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 			enableFocusHandling()
 		}
 		else {
-			GlobalKeyboardEventHandler -= keyListener
+			KeyboardEvents -= keyListener
 			CommonMouseEvents -= CommonMouseReleaseListener
 			actorHandler -= keyListener
 			removeCustomDrawer(SelectionDrawer)

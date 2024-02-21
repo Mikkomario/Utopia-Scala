@@ -1,26 +1,24 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.model.enumeration.StackLayout.Leading
+import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.genesis.handling.event.keyboard.Key.Control
+import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
 import utopia.paradigm.color.ColorRole.{Gray, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.component.swing.input.{TabSelection, TextField}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.enumeration.WindowResizePolicy.User
-import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-
-import java.awt.event.KeyEvent
 
 /**
   * This is a simple test implementation of text fields with content filtering
@@ -78,7 +76,7 @@ object TextFieldTest extends App
 						(productField, amountField, priceField)
 					}
 				// amountField.textPointer.addContinuousListener { println(_) }
-				GlobalKeyboardEventHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_CONTROL) { _ => println(amountField.value) }
+				KeyboardEvents += KeyStateListener2.pressed(Control) { _ => println(amountField.value) }
 				
 				// Pairs the fields with matching labels
 				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutTextInsets.use { implicit labelC =>

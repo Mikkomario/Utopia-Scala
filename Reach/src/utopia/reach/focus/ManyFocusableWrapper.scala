@@ -21,16 +21,14 @@ trait ManyFocusableWrapper extends FocusRequestable with FocusTracking
 	
 	// IMPLEMENTED	--------------------
 	
-	override def requestFocus(forceFocusLeave: Boolean, forceFocusEnter: Boolean) =
-	{
+	override def requestFocus(forceFocusLeave: Boolean, forceFocusEnter: Boolean) = {
 		val targets = focusTargets
 		// If one of the items already has focus, does nothing
 		if (targets.exists { _.hasFocus })
 			true
 		else
 			// Moves the focus to the first available item
-			targets.headOption match
-			{
+			targets.headOption match {
 				case Some(target) => target.requestFocus(forceFocusLeave, forceFocusEnter)
 				case None => false
 			}

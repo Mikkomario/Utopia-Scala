@@ -5,16 +5,16 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event._
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.Control
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.util.Fps
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.immutable.Handleable
 import utopia.inception.handling.mutable.HandlerRelay
 import utopia.paradigm.color.Color
@@ -27,8 +27,6 @@ import utopia.reflection.component.swing.display.ScrollCanvas
 import utopia.reflection.container.stack.StackHierarchyManager
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.test.TestContext._
-
-import java.awt.event.KeyEvent
 
 /**
   * This is a simple test implementation of scroll view
@@ -62,7 +60,7 @@ object ScrollCanvasTest extends App
 	
 	// Adds mouse wheel handling (zoom)
 	private val zoomer = new Zoomer(canvas)
-	GlobalKeyboardEventHandler += zoomer
+	KeyboardEvents += zoomer
 	mouseWheelHandler += zoomer
 	
 	// Creates the frame and displays it
@@ -106,7 +104,7 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	}
 }
 
-private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener with Handleable
+private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener2
 {
 	// ATTRIBUTES	---------------
 	
@@ -114,6 +112,7 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 	
 	// Only listens to mouse wheel events while cursor is inside canvas
 	override val mouseWheelEventFilter = MouseEvent2.filter.over(Bounds(Point.origin, canvas.worldSize))
+	override val keyStateEventFilter = KeyStateEvent2.filter(Control)
 	
 	
 	// IMPLEMENTED	---------------
@@ -129,7 +128,5 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 			Preserve
 	}
 	
-	override def keyStateEventFilter = KeyStateEvent.keyFilter(KeyEvent.VK_CONTROL)
-	
-	override def onKeyState(event: KeyStateEvent) = listening = event.isDown
+	override def onKeyState(event: KeyStateEvent2) = listening = event.pressed
 }

@@ -8,10 +8,10 @@ import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
 import utopia.genesis.util.{Fps, Screen}
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.DistanceExtensions._
@@ -64,7 +64,7 @@ object ReachTestContext
 	
 	// INIITAL CODE -----------------------
 	
-	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
+	KeyboardEvents.specifyExecutionContext(exc)
 	
 	
 	// OTHER    --------------------------

@@ -8,12 +8,10 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
@@ -246,7 +244,8 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
                           options: Vector[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                           hotKeys: Map[A, Set[HotKey]] = Map())
-	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A] with ManyFocusableWrapper
+	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A]
+		with ManyFocusableWrapper
 {
 	// ATTRIBUTES	------------------------
 	
@@ -270,6 +269,11 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
 			lines.map { _.parent } -> lines.map { _.result }
 		}.parentAndResult
 	
+	/**
+	  * Pointer that contains true while any button in this group has focus
+	  */
+	lazy val focusPointer = focusTargets.map { _.focusPointer }.reduceOption { _ || _ }.getOrElse(AlwaysFalse)
+	
 	
 	// INITIAL CODE	------------------------
 	
@@ -277,9 +281,9 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
 	if (buttons.size > 1) {
 		addHierarchyListener { isAttached =>
 			if (isAttached)
-				GlobalKeyboardEventHandler += ArrowKeyListener
+				KeyboardEvents += ArrowKeyListener
 			else
-				GlobalKeyboardEventHandler -= ArrowKeyListener
+				KeyboardEvents -= ArrowKeyListener
 		}
 	}
 	
@@ -287,21 +291,27 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
 	// IMPLEMENTED	------------------------
 	
 	override protected def wrapped = _wrapped
-	
 	override protected def focusTargets = buttons
+	
+	override def hasFocus = focusPointer.value
 	
 	
 	// NESTED	----------------------------
 	
-	private object ArrowKeyListener extends KeyStateListener
+	private object ArrowKeyListener extends KeyStateListener2
 	{
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.arrowKeysFilter
+		// ATTRIBUTES   --------------------
 		
-		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(settings.axis).foreach { direction =>
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter.anyArrow
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def handleCondition: FlagLike = focusPointer
+		
+		override def onKeyState(event: KeyStateEvent2) = event.arrowAlong(settings.axis).foreach { direction =>
 			if (moveFocusInside(direction.sign, forceFocusLeave = true))
 				buttons.find { _.hasFocus }.foreach { _.select() }
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus
 	}
 }

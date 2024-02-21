@@ -5,14 +5,12 @@ import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.action.Actor2
-import utopia.genesis.handling.{ActorHandlerType, KeyStateListener}
-import utopia.inception.handling.HandlerType
+import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 
-import java.awt.event.KeyEvent
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object SelectionKeyListener
@@ -32,8 +30,9 @@ object SelectionKeyListener
 	  */
 	def vertical(listenEnabledCondition: => Boolean = true, initialScrollDelay: Duration = 0.4.seconds,
 				 scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
-				(moveSelection: Int => Unit) = new SelectionKeyListener(KeyEvent.VK_DOWN, KeyEvent.VK_UP,
-		listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
+				(moveSelection: Int => Unit) =
+		new SelectionKeyListener(DownArrow, UpArrow, listenEnabledCondition, initialScrollDelay, scrollDelayModifier,
+			minScrollDelay)(moveSelection)
 	
 	/**
 	  * Creates a new horizontally moving selection key listener. Remember to add it to both an <b>ActorHandler</b> and
@@ -50,8 +49,9 @@ object SelectionKeyListener
 	  */
 	def horizontal(listenEnabledCondition: => Boolean = true, initialScrollDelay: Duration = 0.4.seconds,
 				   scrollDelayModifier: Double = 0.8, minScrollDelay: Duration = 0.05.seconds)
-				  (moveSelection: Int => Unit) = new SelectionKeyListener(KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
-		listenEnabledCondition, initialScrollDelay, scrollDelayModifier, minScrollDelay)(moveSelection)
+				  (moveSelection: Int => Unit) =
+		new SelectionKeyListener(LeftArrow, RightArrow, listenEnabledCondition, initialScrollDelay, scrollDelayModifier,
+			minScrollDelay)(moveSelection)
 	
 	/**
 	  * Creates a new selection key listener. Remember to add it to both an <b>ActorHandler</b> and
@@ -82,8 +82,8 @@ object SelectionKeyListener
   * KeyStateHandler <b>and</b> ActorHandler
   * @author Mikko Hilpinen
   * @since 14.11.2019, Reflection v1
-  * @param nextKeyCode Key code for moving selection forward (default = down)
-  * @param prevKeyCode Key code for moving selection backward (default = up)
+  * @param nextKey Key for moving selection forward (default = down)
+  * @param prevKey Key for moving selection backward (default = up)
   * @param listenEnabledCondition A function that is used for testing whether button presses should be recognized
   *                               (default = always true)
   * @param initialScrollDelay Delay after key becomes pressed, before selection is moved automatically (provided that
@@ -93,12 +93,13 @@ object SelectionKeyListener
   * @param minScrollDelay Minimum delay between each selection move (default = 0.05 seconds)
   * @param moveSelection A function for moving selection by specified amount
   */
-class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int = KeyEvent.VK_UP,
+// TODO: Consider managing action-event receiving manually from within this class
+class SelectionKeyListener(nextKey: Key = DownArrow, prevKey: Key = UpArrow,
                            listenEnabledCondition: => Boolean = true,
                            initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
                            minScrollDelay: Duration = 0.05.seconds)
                           (moveSelection: Int => Unit)
-	extends KeyStateListener with Actor2
+	extends KeyStateListener2 with Actor2
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -107,23 +108,17 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 	private var nextDelay = initialScrollDelay
 	private var remainingDelay = nextDelay
 	
+	override val keyStateEventFilter = KeyStateEvent2.filter(nextKey, prevKey)
+	
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override val keyStateEventFilter = KeyStateEvent.keysFilter(nextKeyCode, prevKeyCode)
-	
 	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
-		// Action events are received only when a button is being held down
-		case ActorHandlerType => buttonDown
-		case _ => true
-	}
-	
-	override def onKeyState(event: KeyStateEvent) = {
-		val direction = if (event.index == nextKeyCode) Positive else Negative
+	override def onKeyState(event: KeyStateEvent2) = {
+		val direction = if (event.index == nextKey.index) Positive else Negative
 		// Case: Key press
-		if (event.isDown) {
+		if (event.pressed) {
 			// Key presses may be ignored if a special condition is not met
 			if (listenEnabledCondition) {
 				currentDirection = direction
@@ -141,6 +136,7 @@ class SelectionKeyListener(nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int
 	}
 	
 	override def act(duration: FiniteDuration) = {
+		// Action events are processed only when a button is being held down
 		if (buttonDown) {
 			// Moves towards the next "tick"
 			remainingDelay -= duration

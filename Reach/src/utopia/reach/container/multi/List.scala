@@ -14,15 +14,13 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -145,9 +143,9 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 				rowsWithResults.map { case (_, result) => result.context.rowIndex -> result.action }.toMap)
 			stack.addHierarchyListener { isAttached =>
 				if (isAttached)
-					GlobalKeyboardEventHandler += keyListener
+					KeyboardEvents += keyListener
 				else
-					GlobalKeyboardEventHandler -= keyListener
+					KeyboardEvents -= keyListener
 			}
 		}
 		
@@ -181,11 +179,18 @@ case class ContextualListFactory(factory: ListFactory, context: ColorContext)
 			context.smallStackMargin, edgeMargins, customDrawers, focusListeners)(fill)
 }
 
-private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
-                                   focusStatePointer: View[Boolean], actions: Map[Int, () => Unit])
-	extends KeyStateListener
+private object SelectionKeyListener
 {
 	private val triggerKeys = Set(KeyEvent.VK_ENTER, KeyEvent.VK_SPACE)
+}
+private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
+                                   focusPointer: FlagLike, actions: Map[Int, () => Unit])
+	extends KeyStateListener2
+{
+	import SelectionKeyListener._
+	
+	
+	// COMPUTED -----------------------
 	
 	def selectedIndex = selectedIndexPointer.value
 	def selectedIndex_=(newValue: Int) = selectedIndexPointer.value = newValue
@@ -193,10 +198,15 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 	def pressed = keyPressedPointer.value
 	def pressed_=(newState: Boolean) = keyPressedPointer.value = newState
 	
-	override def onKeyState(event: KeyStateEvent) =
-	{
-		if (event.isDown)
-		{
+	
+	// IMPLEMENTED  -------------------
+	
+	// Only listens to events while has focus
+	override def handleCondition: FlagLike = focusPointer
+	override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
+	
+	override def onKeyState(event: KeyStateEvent2) = {
+		if (event.pressed) {
 			// Checks for trigger keys
 			if (triggerKeys.contains(event.index))
 				pressed = true
@@ -208,16 +218,12 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 					case _ => ()
 				}
 		}
-		else if (triggerKeys.contains(event.index) && pressed)
-		{
+		else if (triggerKeys.contains(event.index) && pressed) {
 			// Triggers the action
 			actions.get(selectedIndex).foreach { _() }
 			pressed = false
 		}
 	}
-	
-	// Only listens to events while has focus
-	override def allowsHandlingFrom(handlerType: HandlerType) = focusStatePointer.value
 }
 
 private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],

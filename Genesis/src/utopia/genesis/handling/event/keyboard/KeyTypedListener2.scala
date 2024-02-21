@@ -4,6 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.ListenerFactory
+import utopia.genesis.handling.event.keyboard.KeyEvent.KeyFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 
 import scala.annotation.unused
@@ -36,11 +37,15 @@ object KeyTypedListener2
     
     case class KeyTypedListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
         extends ListenerFactory[KeyTypedEvent2, KeyTypedListenerFactory]
+            with KeyFilteringFactory[KeyTypedEvent2, KeyTypedListenerFactory]
     {
         // IMPLEMENTED  ------------------
         
         override def usingFilter(filter: Filter[KeyTypedEvent2]): KeyTypedListenerFactory = copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): KeyTypedListenerFactory = copy(condition = condition)
+        
+        override protected def withFilter(filter: Filter[KeyTypedEvent2]): KeyTypedListenerFactory =
+            copy(filter = this.filter && filter)
         
         
         // OTHER    ----------------------

@@ -15,15 +15,13 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -286,6 +284,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	private val notPressedPointer = !pressedPointer
 	private val enabledPointer: FlagLike = statePointer.map { _ isNot Disabled }
 	private val focusPointer: FlagLike = statePointer.map { _ is Focused }
+	private val focusedAndEnabledPointer = focusPointer && enabledPointer
 	
 	
 	// INITIAL CODE -------------------------
@@ -304,11 +303,11 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	addStackHierarchyChangeListener { isAttached =>
 		if (isAttached) {
 			CommonMouseEvents += CommonMouseDragListener
-			GlobalKeyboardEventHandler += KeyPressListener
+			KeyboardEvents += KeyPressListener
 		}
 		else {
 			CommonMouseEvents -= CommonMouseDragListener
-			GlobalKeyboardEventHandler -= KeyPressListener
+			KeyboardEvents -= KeyPressListener
 		}
 	}
 	
@@ -554,7 +553,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		// IMPLEMENTED  -----------------------
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
-			progressPointer.value = progressForX(event.mousePosition.x - x)
+			progressPointer.value = progressForX(event.position.x - x)
 			pressed = true
 			if (!isInFocus)
 				requestFocusInWindow()
@@ -570,9 +569,9 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		override def onMouseMove(event: MouseMoveEvent2) = {
 			val b = bounds
-			if (event.enteredArea(b))
+			if (event.entered(b))
 				state += Hover
-			else if (event.exitedArea(b))
+			else if (event.exited(b))
 				state -= Hover
 		}
 	}
@@ -601,21 +600,24 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			progressPointer.value = progressForX(event.position.absolute.x - absolutePosition.x)
 	}
 	
-	private object KeyPressListener extends KeyStateListener
+	private object KeyPressListener extends KeyStateListener2
 	{
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.keysFilter(KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT)
+		// ATTRIBUTES   --------------------
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(RightArrow, LeftArrow)
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def handleCondition: FlagLike = focusedAndEnabledPointer
+		
+		override def onKeyState(event: KeyStateEvent2) = {
 			val direction = if (event.index == KeyEvent.VK_RIGHT) Positive else Negative
 			if (stickyPoints.nonEmpty)
 				progressPointer.value = nextStickyPointInDirection(direction)
 			else
 				progressPointer.value = ((progressPointer.value + arrowMovement * direction.modifier) max 0.0) min 1.0
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus && enabled
 	}
 	
 	private object ComponentFocusListener extends FocusListener

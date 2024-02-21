@@ -4,8 +4,7 @@ import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.KeyTypedListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.handling.event.keyboard.{KeyTypedListener2, KeyboardEvents}
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.color.ColorShade.Light
@@ -47,7 +46,7 @@ object SelectionListTest extends App
 						val list = listF.apply(contentPointer, valuePointer,
 							alternativeKeyCondition = true) { (hierarchy, item: Int) =>
 							MutableViewTextLabel(hierarchy).withContext(listF.contextPointer.value)
-								.mapTextInsets { _.mapRight { i => (i + margins.large) }.expandingToRight }
+								.mapTextInsets { _.mapRight { i => i + margins.large }.expandingToRight }
 								.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))
 								.apply(item, DisplayFunction.interpolating("Label %s"))
 						}
@@ -68,7 +67,7 @@ object SelectionListTest extends App
 	}
 	
 	// Changes content based on digit key-presses
-	GlobalKeyboardEventHandler += KeyTypedListener { event =>
+	KeyboardEvents += KeyTypedListener2.unconditional { event =>
 		event.digit.foreach { i => contentPointer.value = (1 to i).toVector }
 	}
 	

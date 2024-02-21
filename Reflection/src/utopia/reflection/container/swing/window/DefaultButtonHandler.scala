@@ -1,10 +1,9 @@
 package utopia.reflection.container.swing.window
 
-import java.awt.event.KeyEvent
-
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
-import utopia.inception.handling.HandlerType
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.handling.event.keyboard.Key.Enter
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2}
 import utopia.reflection.component.swing.button.ButtonLike
 
 object DefaultButtonHandler
@@ -27,15 +26,18 @@ object DefaultButtonHandler
   * @param defaultButton The button that will be triggered on enter
   * @param allButtons All buttons in a window
   */
-class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Iterable[ButtonLike])(
-	triggerCondition: => Boolean) extends KeyStateListener
+class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Iterable[ButtonLike])
+                          (triggerCondition: => Boolean)
+	extends KeyStateListener2
 {
-	// Only listens to events while a) none of the buttons is in focus and b) additional focus condition
-	override def allowsHandlingFrom(handlerType: HandlerType) = allButtons.forall { !_.isInFocus } && triggerCondition
-	
 	// Only triggers on enter
-	override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.keyFilter(KeyEvent.VK_ENTER)
+	override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(Enter)
 	
-	// If no button has focus, triggers the default button
-	override def onKeyState(event: KeyStateEvent) = if (allButtons.forall {!_.isInFocus }) defaultButton.trigger()
+	override def handleCondition: FlagLike = AlwaysTrue
+	
+	override def onKeyState(event: KeyStateEvent2) = {
+		// Only listens to events while a) none of the buttons is in focus and b) additional focus condition
+		if (allButtons.forall {!_.isInFocus } && triggerCondition)
+			defaultButton.trigger()
+	}
 }

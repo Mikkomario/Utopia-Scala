@@ -17,18 +17,17 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event._
 import utopia.genesis.graphics.Priority2.VeryHigh
-import utopia.genesis.handling._
 import utopia.genesis.handling.action.Actor2
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents, KeyboardState}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.focus.{Focusable, FocusableWithState}
+import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
@@ -48,7 +47,8 @@ import scala.util.Try
 // TODO: Create a password mode where text is not displayed nor copyable
 abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
                                            contextPointer: Changing[TextContext],
-                                           textPointer: Changing[LocalizedString], selectableFlag: Changing[Boolean],
+                                           textPointer: Changing[LocalizedString],
+                                           val selectableFlag: FlagLike,
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                            enabledPointer: Changing[Boolean] = AlwaysTrue)
 	extends CustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
@@ -194,7 +194,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		addHierarchyListener { isAttached =>
 			if (isAttached) {
 				enableFocusHandling()
-				GlobalKeyboardEventHandler.register(KeyListener)
+				KeyboardEvents += KeyListener
 				CommonMouseEvents += CommonMouseReleaseListener
 				actorHandler += CaretBlinker
 				parentCanvas.cursorManager.foreach { _ += this }
@@ -202,7 +202,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 			else {
 				disableFocusHandling()
 				CommonMouseEvents -= CommonMouseReleaseListener
-				GlobalKeyboardEventHandler.unregister(KeyListener)
+				KeyboardEvents -= KeyListener
 				actorHandler -= CaretBlinker
 				parentCanvas.cursorManager.foreach { _ -= this }
 			}
@@ -390,11 +390,13 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		def hide() = caretVisibilityPointer.value = false
 	}
 	
-	private object KeyListener extends KeyStateListener with ClipboardOwner
+	private object KeyListener extends KeyStateListener2 with ClipboardOwner
 	{
 		// ATTRIBUTES	--------------------------
 		
-		var keyStatus = KeyStatus.empty
+		var keyStatus = KeyboardState.default
+		
+		override val handleCondition: FlagLike = focusPointer && selectableFlag
 		
 		
 		// COMPUTED	------------------------------
@@ -405,15 +407,18 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def onKeyState(event: KeyStateEvent) = {
-			keyStatus = event.keyStatus
-			if (event.isDown) {
+		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
+		
+		override def onKeyState(event: KeyStateEvent2) = {
+			keyStatus = event.keyboardState
+			if (event.pressed) {
 				event.arrow match {
 					// On arrow keys, changes caret position (and possibly selected area)
-					case Some(arrowDirection) => moveCaret(arrowDirection, event.keyStatus.shift, event.keyStatus.control)
+					case Some(arrowDirection) =>
+						moveCaret(arrowDirection, event.keyboardState(Shift), event.keyboardState(Control))
 					case None =>
 						// Listens to shortcut keys (ctrl + C, V or X)
-						if (event.keyStatus.control) {
+						if (event.keyboardState(Control)) {
 							if (event.index == KeyEvent.VK_C)
 								selectedText.filterNot { _.isEmpty }.foreach { selected =>
 									Try { clipBoard.setContents(new StringSelection(selected), this) }
@@ -424,9 +429,6 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 				}
 			}
 		}
-		
-		// Only listens to key events while focused
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus && selectable
 		
 		// Called when clipboard contents are lost. Ignores this event
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
@@ -451,7 +453,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			draggingFlag.set()
-			updateCaret(event.position, KeyListener.keyStatus.shift)
+			updateCaret(event.position, KeyListener.keyStatus(Shift))
 			lastClickTime = Now
 			Consume("EditableTextLabel clicked")
 		}

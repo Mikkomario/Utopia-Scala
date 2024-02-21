@@ -6,15 +6,11 @@ import utopia.flow.operator.filter.Filter
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.genesis.handling.template.Handleable2
 import utopia.genesis.util.Screen
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.Mortal
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.TopLeft
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -75,7 +71,7 @@ object Popup
 		autoCloseLogic match {
 			case WhenFocusLost => newWindow.component.addWindowFocusListener(new HideOnFocusLostListener(newWindow))
 			case WhenClickedOutside => CommonMouseEvents += new HideOnOutsideClickListener(newWindow)
-			case WhenAnyKeyPressed => GlobalKeyboardEventHandler += new HideOnKeyPressListener(newWindow)
+			case WhenAnyKeyPressed => KeyboardEvents += new HideOnKeyPressListener(newWindow)
 			case WhenEscPressed => newWindow.setToCloseOnEsc()
 			case _ => ()
 		}
@@ -136,7 +132,7 @@ object Popup
 		}
 	}
 	
-	private trait HideActionListener extends Handleable with Mortal with Handleable2
+	private trait HideActionListener extends Handleable2
 	{
 		// ABSTRACT	--------------------------
 		
@@ -145,9 +141,7 @@ object Popup
 		
 		// IMPLEMENTED	----------------------
 		
-		override def handleCondition: FlagLike = popup.closedFlag
-		
-		override def isDead = popup.isClosed
+		override def handleCondition: FlagLike = popup.notClosedFlag
 	}
 	
 	private class HideOnOutsideClickListener(override val popup: Window[_])
@@ -169,10 +163,10 @@ object Popup
 		}
 	}
 	
-	private class HideOnKeyPressListener(override val popup: Window[_]) extends KeyStateListener with HideActionListener
+	private class HideOnKeyPressListener(override val popup: Window[_]) extends KeyStateListener2 with HideActionListener
 	{
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed
 		
-		override def onKeyState(event: KeyStateEvent) = popup.close()
+		override def onKeyState(event: KeyStateEvent2) = popup.close()
 	}
 }

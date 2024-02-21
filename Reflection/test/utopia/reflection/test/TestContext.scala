@@ -6,9 +6,9 @@ import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
 
@@ -35,7 +35,7 @@ object TestContext
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
-	GlobalKeyboardEventHandler.specifyExecutionContext(exc)
+	KeyboardEvents.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
 	

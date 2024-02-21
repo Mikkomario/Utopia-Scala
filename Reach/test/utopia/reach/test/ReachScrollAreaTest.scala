@@ -6,8 +6,8 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.ResettableFlag
-import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.handling.event.keyboard.Key.{FunctionKey, Space}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.Hsl
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -18,8 +18,6 @@ import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
 import utopia.reach.window.ReachWindow
-
-import java.awt.event.KeyEvent
 
 /**
   * A test app for scroll areas
@@ -80,10 +78,8 @@ object ReachScrollAreaTest extends App
 	window.setToCloseOnEsc()
 	
 	// Adds user-interaction
-	GlobalKeyboardEventHandler.registerKeyStateListener {
-		KeyStateListener.onKeyPressed(KeyEvent.VK_SPACE) { _ => isAltSizeFlag.update { !_ } } }
-	GlobalKeyboardEventHandler.registerKeyStateListener(
-		KeyStateListener.onKeyPressed(KeyEvent.VK_F5) { _ => window.result.repaint() })
+	KeyboardEvents += KeyStateListener2.pressed(Space) { _ => isAltSizeFlag.update { !_ } }
+	KeyboardEvents += KeyStateListener2.pressed(FunctionKey(5)) { _ => window.result.repaint() }
 	
 	Loop.regularly(3.seconds) {
 		println()

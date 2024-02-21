@@ -14,14 +14,14 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.{DownArrow, UpArrow}
+import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
 
-import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 
 object ContainerSelectionManager
@@ -204,18 +204,18 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 	/**
 	  * Enables key state handling for the stack (allows selection change with up & down arrows)
 	  */
-	def enableKeyHandling(actorHandler: ActorHandler2, nextKeyCode: Int = KeyEvent.VK_DOWN, prevKeyCode: Int = KeyEvent.VK_UP,
+	def enableKeyHandling(actorHandler: ActorHandler2, nextKey: Key = DownArrow, prevKey: Key = UpArrow,
 	                      initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
 	                      minScrollDelay: Duration = 0.05.seconds,
 	                      listenEnabledCondition: => Boolean = true) =
 	{
-		val listener = new SelectionKeyListener(nextKeyCode, prevKeyCode, listenEnabledCondition,
+		val listener = new SelectionKeyListener(nextKey, prevKey, listenEnabledCondition,
 			initialScrollDelay, scrollDelayModifier, minScrollDelay)(amount => moveSelection(amount))
 		container.addStackHierarchyChangeListener(attached => {
 			if (attached)
-				GlobalKeyboardEventHandler += listener
+				KeyboardEvents += listener
 			else
-				GlobalKeyboardEventHandler -= listener
+				KeyboardEvents -= listener
 		}, callIfAttached = true)
 		actorHandler += listener
 	}
@@ -246,7 +246,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
-			val nearest = container.itemNearestTo(event.mousePosition - container.position)
+			val nearest = container.itemNearestTo(event.position.relative - container.position)
 			nearest.foreach(selectDisplay)
 			
 			if (consumeEvents && nearest.isDefined)

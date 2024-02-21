@@ -1,6 +1,6 @@
 package utopia.reach.focus
 
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.ResettableFlag
 
 /**
   * A focus listener used for tracking focus status
@@ -11,7 +11,7 @@ class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener 
 {
 	// ATTRIBUTES	-------------------------
 	
-	private val pointer = new EventfulPointer(hasFocusInitially)
+	private val pointer = ResettableFlag(hasFocusInitially)
 	
 	
 	// COMPUTED	-----------------------------
@@ -19,7 +19,7 @@ class FocusStateTracker(hasFocusInitially: Boolean) extends FocusChangeListener 
 	/**
 	  * @return A pointer to the tracked focus state
 	  */
-	def focusPointer = pointer.readOnly
+	def focusPointer = pointer.view
 	
 	
 	// IMPLEMENTED	-------------------------

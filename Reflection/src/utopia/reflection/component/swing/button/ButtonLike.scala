@@ -5,21 +5,20 @@ import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 
-import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
+import java.awt.event.{FocusEvent, FocusListener}
 
 object ButtonLike
 {
-	private val defaultTriggerKeys = Set(KeyEvent.VK_ENTER, KeyEvent.VK_SPACE)
+	private val defaultTriggerKeys = Set[Key](Enter, Space)
 }
 
 /**
@@ -128,13 +127,13 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		lazy val hotKeyListener = new HotKeyListener(hotKeys, hotKeyChars)
 		addStackHierarchyChangeListener(attached => {
 			if (attached) {
-				GlobalKeyboardEventHandler += ButtonKeyListener
+				KeyboardEvents += ButtonKeyListener
 				if (hotKeys.nonEmpty || hotKeyChars.nonEmpty)
-					GlobalKeyboardEventHandler += hotKeyListener
+					KeyboardEvents += hotKeyListener
 			}
 			else {
-				GlobalKeyboardEventHandler -= ButtonKeyListener
-				GlobalKeyboardEventHandler -= hotKeyListener
+				KeyboardEvents -= ButtonKeyListener
+				KeyboardEvents -= hotKeyListener
 			}
 		}, callIfAttached = true)
 		
@@ -151,55 +150,48 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		override def focusLost(e: FocusEvent) = updateFocus(newFocusState = false)
 	}
 	
-	private object ButtonKeyListener extends KeyStateListener
+	private object ButtonKeyListener extends KeyStateListener2
 	{
 		// ATTRIBUTES   -------------
 		
 		// Only accepts enter & space presses
-		override val keyStateEventFilter = KeyStateEvent.keysFilter(defaultTriggerKeys)
+		override val keyStateEventFilter = KeyStateEvent2.filter(defaultTriggerKeys)
 		
 		
 		// IMPLEMENTED  -------------
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
-			if (event.isDown)
-				down = true
-			else if (down)
-			{
-				trigger()
-				down = false
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def onKeyState(event: KeyStateEvent2) = {
+			// Only allows handling while in focus
+			if (isInFocus && enabled) {
+				if (event.pressed)
+					down = true
+				else if (down) {
+					trigger()
+					down = false
+				}
 			}
 		}
-		
-		// Only allows handling while in focus
-		override def allowsHandlingFrom(handlerType: HandlerType) = isInFocus && enabled
 	}
 	
-	private class HotKeyListener(hotKeys: Set[Int], hotKeyCharacters: Iterable[Char]) extends KeyStateListener
+	private class HotKeyListener(hotKeys: Set[Int], hotKeyCharacters: Iterable[Char]) extends KeyStateListener2
 	{
 		override val keyStateEventFilter =
-		{
-			if (hotKeys.isEmpty)
-				KeyStateEvent.charsFilter(hotKeyCharacters)
-			else if (hotKeyCharacters.isEmpty)
-				KeyStateEvent.keysFilter(hotKeys)
-			else
-				KeyStateEvent.keysFilter(hotKeys) || KeyStateEvent.charsFilter(hotKeyCharacters)
-		}
+			KeyStateEventFilter { e => hotKeys.contains(e.index) || hotKeyCharacters.exists(e.concernsChar) }
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
-			if (event.isDown)
-				down = true
-			else if (down)
-			{
-				trigger()
-				down = false
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def onKeyState(event: KeyStateEvent2) = {
+			if (enabled) {
+				if (event.pressed)
+					down = true
+				else if (down) {
+					trigger()
+					down = false
+				}
 			}
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
 	private object ButtonMouseListener extends MouseButtonStateListener2 with MouseMoveListener2
@@ -220,7 +212,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			if (enabled) {
 				if (down) {
-					if (event.wasReleased) {
+					if (event.released) {
 						trigger()
 						down = false
 						Consume("Button released")
@@ -228,7 +220,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 					else
 						Preserve
 				}
-				else if (event.isOverArea(bounds)) {
+				else if (event.isOver(bounds)) {
 					down = true
 					Consume("Button pressed")
 				}
@@ -242,7 +234,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		// When mouse enters, brightens, when mouse leaves, returns
 		override def onMouseMove(event: MouseMoveEvent2) = {
 			if (enabled) {
-				if (event.isOverArea(bounds))
+				if (event.isOver(bounds))
 					state += Hover
 				else
 					state -= Hover

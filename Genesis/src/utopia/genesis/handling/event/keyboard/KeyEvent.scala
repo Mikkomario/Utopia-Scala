@@ -14,6 +14,14 @@ object KeyEvent
 	type KeyEventFilter = Filter[KeyEvent]
 	
 	
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Access to filters that may be applied to all key events
+	  */
+	def filter = KeyEventFilter
+	
+	
 	// NESTED   ------------------------
 	
 	/**
@@ -64,8 +72,7 @@ object KeyEvent
 		/**
 		  * @return An item that only accepts events that concern one of the specified keys
 		  */
-		def apply(keyIndex1: Key, keyIndex2: Key, moreIndices: Key*): A =
-			apply(Set(keyIndex1, keyIndex2) ++ moreIndices)
+		def apply(key1: Key, key2: Key, moreKeys: Key*): A = apply(Set(key1, key2) ++ moreKeys)
 		
 		/**
 		  * @param character A character (key)

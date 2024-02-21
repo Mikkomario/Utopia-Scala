@@ -4,9 +4,7 @@ import utopia.firmament.controller.data.ContainerContentDisplayer
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.KeyTypedEvent
-import utopia.genesis.handling.KeyTypedListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.handling.event.keyboard.{KeyTypedEvent2, KeyTypedListener2, KeyboardEvents}
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.MutableViewTextLabel
@@ -60,7 +58,7 @@ object MutableReachStackTest extends App
 	
 	// Updates content in background
 	var lastIndex = 3
-	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent =>
+	KeyboardEvents += KeyTypedListener2.unconditional { event: KeyTypedEvent2 =>
 		if (event.typedChar.isDigit) {
 			val newIndex = event.typedChar.asDigit
 			val newDigits = {
@@ -71,7 +69,7 @@ object MutableReachStackTest extends App
 			}
 			dataPointer.value = newDigits.map { i =>
 				val length = 1 + Random.nextInt(6)
-				val tensMod = (math.pow(10, length - 1)).toInt
+				val tensMod = math.pow(10, length - 1).toInt
 				i * tensMod + Random.nextInt(tensMod)
 			}
 			lastIndex = newIndex

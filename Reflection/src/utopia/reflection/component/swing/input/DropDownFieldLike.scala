@@ -9,14 +9,12 @@ import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2}
-import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
@@ -30,7 +28,6 @@ import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenFo
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
 
-import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 /**
@@ -184,9 +181,9 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		addStackHierarchyChangeListener(attached => {
 			if (attached)
-				GlobalKeyboardEventHandler += ShowPopupKeyListener
+				KeyboardEvents += ShowPopupKeyListener
 			else
-				GlobalKeyboardEventHandler -= ShowPopupKeyListener
+				KeyboardEvents -= ShowPopupKeyListener
 		}, callIfAttached = true)
 		addMouseButtonListener(ShowPopupKeyListener)
 	}
@@ -201,9 +198,8 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			// Relays key events to the search field
 			popup.addConstraint(PopUpWidthModifier)
 			popup.relayAwtKeyEventsTo(mainDisplay)
-			popup.addKeyStateListener(KeyStateListener(
-				KeyStateEvent.keysFilter(KeyEvent.VK_TAB, KeyEvent.VK_ENTER, KeyEvent.VK_ESCAPE) &&
-					KeyStateEvent.wasPressedFilter) { _ => if (popup.isFocusedWindow) popup.close() })
+			popup.addKeyStateListener(
+				KeyStateListener2.pressed(Tab, Enter, Esc) { _ => if (popup.isFocusedWindow) popup.close() })
 			popup.addMouseButtonListener(MouseButtonStateListener2.released { _ =>
 				if (popup.isFocusedWindow)
 					popup.close()
@@ -221,29 +217,23 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// NESTED	-------------------------------
 	
-	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener2
+	private object ShowPopupKeyListener extends KeyStateListener2 with Handleable with MouseButtonStateListener2
 	{
 		// ATTRIBUTES   ----------------------
 		
 		override val handleCondition: FlagLike = visiblePopupPointer.map { _.isEmpty }
 		
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.notKeysFilter(Set(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
-		
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && !KeyStateEvent2.filter(Set(Esc, Tab))
 		override val mouseButtonStateEventFilter =
 			MouseButtonStateEvent2.filter.leftPressed && MouseButtonStateEventFilter.over(mainDisplay.bounds)
 		
 		
 		// IMPLEMENTED  -----------------------
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-		{
-			case KeyStateHandlerType => handleCondition.value && mainDisplay.isInFocus
-			case MouseButtonStateHandlerType => handleCondition.value
-			case _ => super.allowsHandlingFrom(handlerType)
+		override def onKeyState(event: KeyStateEvent2) = {
+			if (mainDisplay.isInFocus)
+				displayPopup()
 		}
-		
-		override def onKeyState(event: KeyStateEvent) = displayPopup()
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			// Grabs focus if possible

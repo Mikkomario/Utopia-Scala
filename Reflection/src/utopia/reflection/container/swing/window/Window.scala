@@ -11,15 +11,14 @@ import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling._
 import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.keyboard.Key.Esc
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateHandler2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator2, MouseMoveListener2, MouseWheelListener2}
-import utopia.genesis.handling.mutable.KeyStateHandler
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
@@ -31,7 +30,7 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.event.{ResizeListener, StackHierarchyListener}
 
-import java.awt.event.{ComponentAdapter, ComponentEvent, KeyEvent, WindowAdapter, WindowEvent}
+import java.awt.event.{ComponentAdapter, ComponentEvent, WindowAdapter, WindowEvent}
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters.SeqHasAsJava
 import scala.util.Try
@@ -98,10 +97,14 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	private val uponCloseAction = VolatileOption[() => Unit]()
 	
 	private val _closedFlag = Flag()
+	/**
+	  * A flag that contains true while this window has not yet been closed
+	  */
+	lazy val notClosedFlag = !_closedFlag
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
-	private val keyStateHandler = KeyStateHandler()
+	private val keyStateHandler = KeyStateHandler2()
 	
 	
 	// ABSTRACT    -----------------
@@ -269,7 +272,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  * ADds a new listener to be informed of keyboard events while this window is open
 	  * @param listener A listener to inform
 	  */
-	def addKeyStateListener(listener: KeyStateListener) = keyStateHandler += listener
+	def addKeyStateListener(listener: KeyStateListener2) = keyStateHandler += listener
 	
 	/**
 	  * Displays this window, making it visible
@@ -328,11 +331,11 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			
 			// Starts key listening
-			GlobalKeyboardEventHandler += keyStateHandler
+			KeyboardEvents += keyStateHandler
 			
 			// Quits event listening once this window finally closes
 			uponCloseAction.setOne(() => {
-				GlobalKeyboardEventHandler -= keyStateHandler
+				KeyboardEvents -= keyStateHandler
 				CommonMouseEvents.removeGenerator(mouseEventGenerator)
 				actorHandler -= mouseEventGenerator
 				mouseEventGenerator.stop()
@@ -353,13 +356,11 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  * @param icon New window icon
 	  * @param minSize Minimum size allowed for the icon (in pixels). Default = 16x16.
 	  */
-	def setIcon(icon: Image, minSize: Size = Size(16, 16)) =
-	{
+	def setIcon(icon: Image, minSize: Size = Size(16, 16)) = {
 		// Minimum size must be positive
 		if (minSize.sign.isNotPositive)
 			throw new IllegalArgumentException(s"Icon minimum size must be positive. Now supplied $minSize")
-		else
-		{
+		else {
 			// Copies the maximum size icon first
 			val original = icon.downscaled
 			original.toAwt.foreach { maxImage =>
@@ -382,7 +383,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	/**
 	  * Makes it so that this window will close one escape is pressed
 	  */
-	def setToCloseOnEsc() = keyStateHandler += KeyStateListener.onKeyPressed(KeyEvent.VK_ESCAPE) { _ => close() }
+	def setToCloseOnEsc() = keyStateHandler += KeyStateListener2.pressed(Esc) { _: KeyStateEvent2 => close() }
 	
 	/**
 	  * Makes this window become invisible whenever it loses focus

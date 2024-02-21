@@ -3,13 +3,11 @@ package utopia.reach.window
 import utopia.firmament.component.Window
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.handling.event.keyboard.Key.Enter
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.reach.component.template.focus.FocusableWithState
 
-import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 object WindowDefaultButtonKeyTriggerer
@@ -20,22 +18,22 @@ object WindowDefaultButtonKeyTriggerer
 	  * @param buttons Buttons / actionable items that prevent this listener from triggering when they have focus
 	  * @param additionalCondition A condition which must be met in order for the action to be triggered
 	  *                            (default = always enabled)
-	  * @param triggerKeyIndex Keyboard index which causes this trigger (default = enter)
+	  * @param triggerKey Key which causes this trigger (default = enter)
 	  * @param action Action performed on trigger
 	  * @param exc Implicit execution context
 	  * @return A new window button listener
 	  */
 	def register(window: Window, buttons: Iterable[FocusableWithState], additionalCondition: View[Boolean] = AlwaysTrue,
-	             triggerKeyIndex: Int = KeyEvent.VK_ENTER)(action: => Unit)
+	             triggerKey: Key = Enter)
+	            (action: => Unit)
 	            (implicit exc: ExecutionContext) =
 	{
 		// Creates the listener
-		val listener = new WindowDefaultButtonKeyTriggerer(window, buttons, additionalCondition,
-			triggerKeyIndex)(action)
+		val listener = new WindowDefaultButtonKeyTriggerer(window, buttons, additionalCondition, triggerKey)(action)
 		// Registers the listener to listen to events
-		GlobalKeyboardEventHandler += listener
+		KeyboardEvents += listener
 		// When the window closes, automatically removes this component from the keyboard listening interface
-		window.closeFuture.foreach { _ => GlobalKeyboardEventHandler -= listener }
+		window.closeFuture.foreach { _ => KeyboardEvents -= listener }
 	}
 }
 
@@ -45,24 +43,22 @@ object WindowDefaultButtonKeyTriggerer
   * @since 4.3.2021, v0.1
   */
 class WindowDefaultButtonKeyTriggerer(window: Window, buttons: Iterable[FocusableWithState],
-                                      additionalCondition: View[Boolean] = AlwaysTrue,
-                                      triggerKeyIndex: Int = KeyEvent.VK_ENTER)
+                                      additionalCondition: View[Boolean] = AlwaysTrue, triggerKey: Key = Enter)
                                      (action: => Unit)
-	extends KeyStateListener
+	extends KeyStateListener2
 {
 	// ATTRIBUTES	----------------------------
 	
-	override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.keyFilter(triggerKeyIndex)
+	override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(triggerKey)
 	
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def onKeyState(event: KeyStateEvent) = {
+	override def handleCondition: FlagLike = window.fullyVisibleAndFocusedFlag
+	
+	override def onKeyState(event: KeyStateEvent2) = {
 		// Checks whether required conditions are met
 		if (buttons.forall { !_.hasFocus } && additionalCondition.value)
 			action
 	}
-	
-	override def allowsHandlingFrom(handlerType: HandlerType) =
-		window.isFocused && window.isFullyVisible
 }

@@ -16,16 +16,14 @@ import utopia.flow.view.mutable.Resettable
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.{Shift, Tab}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorShade.Dark
 import utopia.paradigm.enumeration.Alignment
@@ -42,7 +40,6 @@ import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.drawing.RealTimeReachPaintManager
 import utopia.reach.focus.ReachFocusManager
 
-import java.awt.event.KeyEvent
 import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
 import java.util
 import javax.swing.event.{AncestorEvent, AncestorListener}
@@ -367,7 +364,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		repaint()
 	}
 	
-	attachmentPointer.addListener { event =>
+	attachmentPointer.addContinuousListener { event =>
 		// When attached to the stack hierarchy,
 		// makes sure to update immediate content layout and repaint this component
 		if (event.newValue) {
@@ -379,10 +376,10 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 			super[ReachCanvasLike].repaint()
 			// Listens to tabulator key events for manual focus handling
 			if (!disableFocus)
-				GlobalKeyboardEventHandler += FocusKeyListener
+				KeyboardEvents += FocusKeyListener
 		}
 		else
-			GlobalKeyboardEventHandler -= FocusKeyListener
+			KeyboardEvents -= FocusKeyListener
 	}
 	
 	// Listens to mouse events for cursor-swapping
@@ -566,23 +563,25 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		override def paintChildren(g: Graphics) = ()
 	}
 	
-	private object FocusKeyListener extends KeyStateListener
+	private object FocusKeyListener extends KeyStateListener2
 	{
 		// ATTRIBUTES	------------------------
 		
 		// Only listens to tabulator presses
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter && KeyStateEvent.keyFilter(KeyEvent.VK_TAB)
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(Tab)
 		
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def onKeyState(event: KeyStateEvent) = {
-			// Moves the focus forwards or backwards
-			val direction = if (event.keyStatus.shift) Negative else Positive
-			focusManager.moveFocus(direction)
-		}
+		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
+		override def onKeyState(event: KeyStateEvent2) = {
+			if (focusManager.hasFocus) {
+				// Moves the focus forwards or backwards
+				val direction = if (event.keyboardState(Shift)) Negative else Positive
+				focusManager.moveFocus(direction)
+			}
+		}
 	}
 	
 	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener2

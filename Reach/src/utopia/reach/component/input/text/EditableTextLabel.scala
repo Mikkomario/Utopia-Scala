@@ -3,14 +3,15 @@ package utopia.reach.component.input.text
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
-import utopia.genesis.handling.{KeyStateListener, KeyTypedHandlerType, KeyTypedListener}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Enter, Tab}
+import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyEvent, KeyStateEvent2, KeyStateListener2, KeyTypedEvent2, KeyTypedListener2, KeyboardEvents}
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -20,7 +21,6 @@ import utopia.reach.focus.FocusListener
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
-import java.awt.event.KeyEvent
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
@@ -340,18 +340,22 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	setup()
 	addHierarchyListener { isAttached =>
 		if (isAttached)
-			GlobalKeyboardEventHandler += KeyListener
+			KeyboardEvents ++= Pair(_KeyTypedListener, KeyPressListener)
 		else
-			GlobalKeyboardEventHandler -= KeyListener
+			KeyboardEvents --= Pair(_KeyTypedListener, KeyPressListener)
 	}
 	
 	
 	// COMPUTED	-----------------------------------
 	
 	/**
+	  * @return Pointer that contains true while this lable is enabled
+	  */
+	def enabledPointer = settings.enabledPointer
+	/**
 	  * @return Whether this label is currently enabled
 	  */
-	def enabled = settings.enabledPointer.value
+	def enabled = enabledPointer.value
 	
 	def text = textPointer.value
 	def text_=(newText: String) = textPointer.value = newText
@@ -450,11 +454,35 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	
 	// NESTED	----------------------------------
 	
-	private object KeyListener extends KeyTypedListener with KeyStateListener with ClipboardOwner
+	private object _KeyTypedListener extends KeyTypedListener2
 	{
-		// ATTRIBUTES	--------------------------
+		// ATTRIBUTES   ----------------------
 		
-		private val ignoredOnType = Set(KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE, KeyEvent.VK_DELETE, KeyEvent.VK_TAB)
+		override val keyTypedEventFilter: Filter[KeyTypedEvent2] = {
+			// Ignores certain characters
+			val base = !KeyEvent.filter(Enter, BackSpace, Delete, Tab) &&
+				{ e: KeyTypedEvent2 => font.toAwt.canDisplay(e.typedChar) }
+			
+			// Only accepts characters accepted by the content filter
+			settings.inputFilter match {
+				case Some(filter) => e: KeyTypedEvent2 => filter(e.typedChar.toString)
+				case None => base
+			}
+		}
+		
+		
+		// IMPLEMENTED  ---------------------------
+		
+		override def handleCondition: FlagLike = enabledPointer
+		
+		override def onKeyTyped(event: KeyTypedEvent2): Unit = insertToCaret(event.typedChar.toString)
+	}
+	
+	private object KeyPressListener extends KeyStateListener2 with ClipboardOwner
+	{
+		// ATTRIBUTES   --------------------------
+		
+		override val keyStateEventFilter: KeyStateEventFilter = KeyStateEvent2.filter.pressed
 		
 		
 		// COMPUTED	------------------------------
@@ -465,71 +493,55 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def onKeyTyped(event: KeyTypedEvent) ={
-			// Skips cases handled by key state listening
-			if (!ignoredOnType.contains(event.index) && font.toAwt.canDisplay(event.typedChar)) {
-				// Inserts the typed character into the string (if accepted by the content filter)
-				if (settings.inputFilter.forall { _(event.typedChar.toString) })
-					insertToCaret(event.typedChar.toString)
-			}
-		}
+		override def handleCondition: FlagLike = selectableFlag
 		
-		override def onKeyState(event: KeyStateEvent) =
-		{
-			if (event.isDown) {
-				// Inserts a line-break on enter (if enabled)
-				if (textDrawContext.allowLineBreaks && event.index == KeyEvent.VK_ENTER)
-					insertToCaret("\n")
-				// Removes a character on backspace / delete
-				else if (event.index == KeyEvent.VK_BACK_SPACE) {
-					if (selectedRange.nonEmpty)
-						removeSelectedText()
-					else if (caretIndex > 0) {
-						removeAt(caretIndex - 1)
-						caretIndex -= 1
-					}
+		override def onKeyState(event: KeyStateEvent2) = {
+			// Inserts a line-break on enter (if enabled)
+			if (textDrawContext.allowLineBreaks && event.index == Enter.index)
+				insertToCaret("\n")
+			// Removes a character on backspace / delete
+			else if (event.index == BackSpace.index) {
+				if (selectedRange.nonEmpty)
+					removeSelectedText()
+				else if (caretIndex > 0) {
+					removeAt(caretIndex - 1)
+					caretIndex -= 1
 				}
-				else if (event.index == KeyEvent.VK_DELETE) {
-					if (selectedRange.nonEmpty)
-						removeSelectedText()
-					else
-						removeAt(caretIndex)
-				}
-				// Listens to shortcut keys (ctrl + C, V or X)
-				else if (event.keyStatus.control) {
-					if (event.index == KeyEvent.VK_V && enabled)
-						Try {
-							// Retrieves the clipboard contents and pastes them on the string
-							Option(clipBoard.getContents(null)).foreach { pasteContent =>
-								if (pasteContent.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-									val rawPasteText = pasteContent.getTransferData(DataFlavor.stringFlavor).toString
-									val actualPasteText = settings.inputFilter match {
-										case Some(filter) => filter.filter(rawPasteText)
-										case None => rawPasteText
-									}
-									if (actualPasteText.nonEmpty)
-										insertToCaret(actualPasteText)
+			}
+			else if (event.index == Delete.index) {
+				if (selectedRange.nonEmpty)
+					removeSelectedText()
+				else
+					removeAt(caretIndex)
+			}
+			// Listens to shortcut keys (ctrl + C, V or X)
+			else if (enabled && event.keyboardState(Control)) {
+				if (event.concernsChar('V'))
+					Try {
+						// Retrieves the clipboard contents and pastes them on the string
+						Option(clipBoard.getContents(null)).foreach { pasteContent =>
+							if (pasteContent.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+								val rawPasteText = pasteContent.getTransferData(DataFlavor.stringFlavor).toString
+								val actualPasteText = settings.inputFilter match {
+									case Some(filter) => filter.filter(rawPasteText)
+									case None => rawPasteText
 								}
+								if (actualPasteText.nonEmpty)
+									insertToCaret(actualPasteText)
 							}
 						}
-					else if (event.index == KeyEvent.VK_X && enabled)
-						selectedText.foreach { textToCopy =>
-							// Copies the cut content to the clip board. Will not remove the text if copy failed.
-							Try { clipBoard.setContents(new StringSelection(textToCopy), this) } match
-							{
-								case Success(_) => removeSelectedText()
-								case Failure(_) => ()
-							}
+					}
+				else if (event.concernsChar('X'))
+					selectedText.foreach { textToCopy =>
+						// Copies the cut content to the clip board. Will not remove the text if copy failed.
+						Try { clipBoard.setContents(new StringSelection(textToCopy), this) } match
+						{
+							case Success(_) => removeSelectedText()
+							case Failure(_) => ()
 						}
-				}
+					}
 			}
 		}
-		
-		// Only listens to key events while focused
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus && (handlerType match {
-			case KeyTypedHandlerType => enabled
-			case _ => selectable
-		})
 		
 		// Called when clipboard contents are lost. Ignores this event
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
