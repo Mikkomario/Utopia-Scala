@@ -5,23 +5,21 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -316,17 +314,9 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
                                 settings: ViewImageAndTextButtonSettings,
                                 displayFunction: DisplayFunction[A] = DisplayFunction.raw)
                                (action: A => Unit)
-	extends ReachComponentWrapper with ButtonLike
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = baseStatePointer
-		.mergeWithWhile(settings.enabledPointer, parentHierarchy.linkPointer) { (state, enabled) =>
-			state + (Disabled -> !enabled)
-		}
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	override val focusId = hashCode()
 	
 	/**
 	  * A pointer that refers to this button's main color
@@ -358,13 +348,11 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 	
 	// INITIAL CODE	------------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	colorPointer.addContinuousAnyChangeListener { repaint() }
 	
 	
 	// IMPLEMENTED	------------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action(contentPointer.value)
 	

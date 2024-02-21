@@ -5,22 +5,19 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
-import utopia.firmament.model.{GuiElementStatus, TextDrawContext}
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsWrapper}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 
 /**
@@ -159,28 +156,20 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
                  color: Color, settings: ButtonSettings = ButtonSettings.default, borderWidth: Double = 0.0,
                  customDrawers: Vector[CustomDrawer] = Vector.empty,
                  allowTextShrink: Boolean = false)(action: => Unit)
-	extends ButtonLike with ReachComponentWrapper
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = baseStatePointer
-		.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
-	
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	override val focusId = hashCode()
 	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
 		ButtonBackgroundViewDrawer(Fixed(color), statePointer, Fixed(borderWidth)) +: customDrawers, allowTextShrink)
 	
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	
 	
 	// IMPLEMENTED	-----------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

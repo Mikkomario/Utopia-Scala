@@ -1,8 +1,20 @@
 # Utopia Reach - List of Changes
 
-## v1.2.1 (in development)
+## v1.3 (in development)
+### Breaking changes
+- Refactored ViewTextButton constructors
+  - Removed the non-contextual factory altogether
+  - The contextual constructor is now pointer-based
+  - The contextual factory now uses **ButtonSettings** and extends **CustomDrawableFactory**
+- All **FocusableWithState** implementations are now required to implement the `focusPointer: FlagLike` property
+- **ButtonLike** implementations are now required to implement `.enabledPointer: FlagLike`
+### Deprecations
+- Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes
 - Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
+- **RadioButtons** now correctly support **HotKeys**
+### Other changes
+- **ReachComponent** is now a trait - however, it is intended to be used like an abstract class, still
 
 ## v1.2 - 22.01.2024
 This update focuses on image-drawing, especially in buttons. 

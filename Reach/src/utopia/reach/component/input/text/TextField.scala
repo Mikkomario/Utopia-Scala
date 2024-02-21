@@ -30,7 +30,7 @@ import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.component.template.focus.{FocusableWithState, FocusableWrapper}
+import utopia.reach.component.template.focus.{FocusableWithPointerWrapper, FocusableWithState, FocusableWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reach.focus.FocusListener
@@ -687,7 +687,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
                    textContentPointer: EventfulPointer[String] = new EventfulPointer(""),
                    inputValidation: Option[A => InputValidationResult] = None)
 				  (parseResult: String => A)
-	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithState with FocusableWrapper
+	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithPointerWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	

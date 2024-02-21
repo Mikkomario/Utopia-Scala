@@ -29,12 +29,10 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
@@ -51,7 +49,6 @@ import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.context.ReachContentWindowContext
 
-import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 /**
@@ -80,10 +77,10 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  */
 	def expandAndCollapseIcon: Pair[SingleColorIcon]
 	/**
-	  * Additional key-indices that open the pop-up when they are pressed while this field is in focus.
+	  * Additional keys that open the pop-up when they are pressed while this field is in focus.
 	  * By default, only the appropriate arrow key opens the pop-up.
 	  */
-	def activationKeys: Set[Int]
+	def activationKeys: Set[Key]
 	/**
 	  * @return A function used for modifying the pop-up context from that accepted by this factory
 	  */
@@ -114,7 +111,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  *             By default, only the appropriate arrow key opens the pop-up.
 	  * @return Copy of this factory with the specified activation keys
 	  */
-	def withActivationKeys(keys: Set[Int]): Repr
+	def withActivationKeys(keys: Set[Key]): Repr
 	/**
 	  * The expand (first) and the collapse icon (second) that should be displayed at the right side of the
 	  * created fields.
@@ -234,7 +231,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	
 	// OTHER	--------------------
 	
-	def mapActivationKeys(f: Set[Int] => Set[Int]) = withActivationKeys(f(activationKeys))
+	def mapActivationKeys(f: Set[Key] => Set[Key]) = withActivationKeys(f(activationKeys))
 	def mapExpandAndCollapseIcon(f: Pair[SingleColorIcon] => Pair[SingleColorIcon]) =
 		withExpandAndCollapseIcon(f(expandAndCollapseIcon))
 	def mapFieldSettings(f: FieldSettings => FieldSettings) = withFieldSettings(f(fieldSettings))
@@ -261,8 +258,8 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def withListCap(cap: StackLength) = mapListStackSettings { _.withCap(cap) }
 	def withListCustomDrawers(drawers: Vector[CustomDrawer]) = mapListStackSettings { _.withCustomDrawers(drawers) }
 	
-	def withAdditionalActivationKeys(keys: IterableOnce[Int]) = mapActivationKeys { _ ++ keys }
-	def activatedWithKey(keyIndex: Int) = mapActivationKeys { _ + keyIndex }
+	def withAdditionalActivationKeys(keys: IterableOnce[Key]) = mapActivationKeys { _ ++ keys }
+	def activatedWithKey(key: Key) = mapActivationKeys { _ + key }
 	
 	def withListMargin(margin: SizeCategory): Repr = withListMargin(Some(margin))
 }
@@ -283,7 +280,7 @@ object FieldWithSelectionPopupSettings
   *                                 Please note that a non-empty right-side icon will override these values.
   * @param listMargin Size of the margins to place between the selectable items in the pop-up.
   *                   None if no margin should be placed.
-  * @param activationKeys           Additional key-indices that open the pop-up when they are pressed while this field is
+  * @param activationKeys           Additional keys that open the pop-up when they are pressed while this field is
   *                                 in focus.
   *                                 By default, only the appropriate arrow key opens the pop-up.
   * @param noOptionsViewConstructor A function used for constructing a view to display when no
@@ -297,7 +294,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
                                            listSettings: SelectionListSettings = SelectionListSettings.default,
                                            expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
                                            listMargin: Option[SizeCategory] = Some(SizeCategory.Small),
-                                           activationKeys: Set[Int] = Set[Int](),
+                                           activationKeys: Set[Key] = Set[Key](),
                                            popupContextMod: ReachContentWindowContext => ReachContentWindowContext = Identity,
                                            noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
                                            extraOptionConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
@@ -306,7 +303,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withActivationKeys(keys: Set[Int]) = copy(activationKeys = keys)
+	override def withActivationKeys(keys: Set[Key]) = copy(activationKeys = keys)
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) = copy(expandAndCollapseIcon = icons)
 	override def withExtraOptionLocation(location: End) = copy(extraOptionLocation = location)
 	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
@@ -354,7 +351,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 	override def listMargin: Option[SizeCategory] = settings.listMargin
 	
 	override def withListMargin(margin: Option[SizeCategory]): Repr = mapSettings { _.withListMargin(margin) }
-	override def withActivationKeys(keys: Set[Int]) = mapSettings { _.withActivationKeys(keys) }
+	override def withActivationKeys(keys: Set[Key]) = mapSettings { _.withActivationKeys(keys) }
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
 		mapSettings { _.withExpandAndCollapseIcon(icons) }
 	override def withExtraOptionLocation(location: End) = mapSettings { _.withExtraOptionLocation(location) }
@@ -513,10 +510,14 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	val popUpVisiblePointer = lazyPopup.stateView.flatMap {
+	val popUpVisiblePointer: FlagLike = lazyPopup.stateView.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
+	/**
+	  * A pointer which contains true while a pop-up is hidden
+	  */
+	val popUpHiddenPointer = !popUpVisiblePointer
 	/**
 	  * A pointer that contains a timestamp of the latest pop-up visibility change event
 	  */
@@ -566,6 +567,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconPointer))
 		.apply(isEmptyPointer)(makeField)(makeRightHintLabel)
 	
+	/**
+	  * A pointer that contains true while the pop-up window is NOT displayed, but only while this field has focus
+	  */
+	val popUpHiddenWhileFocusedFlag = popUpHiddenPointer && field.focusPointer
+	
 	private lazy val popUpContextPointer = contextPointer.mergeWith(field.innerBackgroundPointer) { (context, bg) =>
 		settings.popupContextMod(context.withBackground(bg))
 	}
@@ -595,12 +601,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		if (isAttached) {
 			valuePointer.addListenerAndSimulateEvent(None)(updateLastValueListener)
 			contentPointer.addListenerAndSimulateEvent(Vector())(contentUpdateListener)
-			GlobalKeyboardEventHandler += FieldKeyListener
+			KeyboardEvents += FieldKeyListener
 			CommonMouseEvents += PopupHideMouseListener
 		}
 		else {
 			CommonMouseEvents -= PopupHideMouseListener
-			GlobalKeyboardEventHandler -= FieldKeyListener
+			KeyboardEvents -= FieldKeyListener
 			contentPointer.removeListener(contentUpdateListener)
 			valuePointer.removeListener(updateLastValueListener)
 			lazyPopup.popCurrent().foreach { _.close() }
@@ -756,52 +762,51 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		}
 	}
 	
-	private object FieldKeyListener extends KeyStateListener
+	private object FieldKeyListener extends KeyStateListener2
 	{
 		// ATTRIBUTES	-------------------------
+		
+		// Is interested in key events while the field has focus and pop-up is not open
+		override def handleCondition: FlagLike = popUpHiddenWhileFocusedFlag
 		
 		// Listens to down arrow presses
 		// Also supports additional key-strokes (based on the 'additionalActivationKeys' parameter)
 		override val keyStateEventFilter = {
-			val arrowFilter = KeyStateEvent.arrowKeyFilter(settings.listAxis(Positive))
+			val arrowFilter = KeyStateEvent2.filter.arrow(settings.listAxis(Positive))
 			val keyFilter = NotEmpty(settings.activationKeys) match {
-				case Some(keys) => arrowFilter || { e: KeyStateEvent => keys.exists(e.keyStatus.apply) }
+				case Some(keys) => arrowFilter || KeyStateEvent2.filter(keys)
 				case None => arrowFilter
 			}
-			KeyStateEvent.wasPressedFilter && keyFilter
+			KeyStateEvent2.filter.pressed && keyFilter
 		}
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent) = openPopup()
-		
-		// Is interested in key events while the field has focus and pop-up is not open
-		override def allowsHandlingFrom(handlerType: HandlerType) = !popUpVisiblePointer.value && field.hasFocus
+		override def onKeyState(event: KeyStateEvent2) = openPopup()
 	}
 	
-	private class PopupKeyListener(popup: Window) extends KeyStateListener
+	private class PopupKeyListener(popup: Window) extends KeyStateListener2
 	{
 		// ATTRIBUTES	-------------------------
 		
 		// Listens to enter and tabulator presses
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.keysFilter(KeyEvent.VK_TAB, KeyEvent.VK_ENTER, KeyEvent.VK_ESCAPE, KeyEvent.VK_SPACE)
+		override val keyStateEventFilter =
+			KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(Tab, Enter, Esc, Space)
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent) = {
+		// Only reacts to events while the pop-up is visible
+		override def handleCondition: FlagLike = popup.fullyVisibleFlag
+		
+		override def onKeyState(event: KeyStateEvent2) = {
 			// Stores the selected value, if applicable
-			// TODO:
 			// Hides the pop-up
 			popup.visible = false
 			// On tabulator press, yields focus afterwards
-			if (event.index == KeyEvent.VK_TAB)
-				Delay(0.1.seconds) { yieldFocus(if (event.keyStatus.shift) Negative else Positive) }
+			if (event.index == Tab.index)
+				Delay(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
 		}
-		
-		// Only reacts to events while the pop-up is visible
-		override def allowsHandlingFrom(handlerType: HandlerType) = popup.isFullyVisible
 	}
 }

@@ -3,22 +3,20 @@ package utopia.reach.component.button.image
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.StackInsetsConvertible
-import utopia.firmament.model.{GuiElementStatus, HotKey}
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageLabelSettings, ImageLabelSettingsLike, ViewImageLabel}
-import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -317,26 +315,19 @@ object ImageButton extends ImageButtonSetup()
 class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, settings: ImageButtonSettings,
                   allowUpscaling: Boolean = true)
                  (action: => Unit)
-	extends ReachComponentWrapper with ButtonLike
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = baseStatePointer
-		.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
 		.withSettings(settings.imageSettings)
 		.withAllowUpscaling(allowUpscaling)
 		.apply(statePointer.strongMap { state => images(state) })
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	
-	override val focusId = hashCode()
 	
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	
 	
 	// COMPUTED ---------------------------------
@@ -348,8 +339,6 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	
 	
 	// IMPLEMENTED	-----------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

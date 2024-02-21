@@ -16,7 +16,4 @@ case class KeyTypedEvent2(typedChar: Char, index: Int, keyboardState: KeyboardSt
 	  * @return The digit typed, if the typed character was a digit. None otherwise.
 	  */
 	def digit = if (typedChar.isDigit) Some(typedChar.asDigit) else None
-	
-	@deprecated("Replaced with keyBoardState")
-	def keyStatus = keyboardState
 }

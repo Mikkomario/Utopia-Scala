@@ -1,24 +1,38 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.EventHandler2
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
+import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
 
-object KeyTypedHandler2 extends FromCollectionFactory[KeyTypedListener2, KeyTypedHandler2]
+import scala.annotation.unused
+
+object KeyTypedHandler2
 {
-	// IMPLEMENTED  --------------------
-	
-	override def from(items: IterableOnce[KeyTypedListener2]): KeyTypedHandler2 = apply(items)
-	
-	
-	// OTHER    ------------------------
+	// ATTRIBUTES   ------------------------
 	
 	/**
-	  * @param listeners Listeners to place on this handler, initially
-	  * @return A new handler managing those listeners
+	  * A factory for constructing these handlers
 	  */
-	def apply(listeners: IterableOnce[KeyTypedListener2]) = new KeyTypedHandler2(listeners)
+	val factory = KeyTypedHandlerFactory()
+	
+	
+	// IMPLICIT ---------------------------
+	
+	implicit def objectToFactory(@unused o: KeyTypedHandler2.type): KeyTypedHandlerFactory = factory
+	
+	
+	// NESTED   ---------------------------
+	
+	case class KeyTypedHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+		extends HandlerFactory[KeyTypedListener2, KeyTypedHandler2, KeyTypedHandlerFactory]
+	{
+		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
+		
+		override def apply(initialItems: IterableOnce[KeyTypedListener2]) =
+			new KeyTypedHandler2(initialItems, condition)
+	}
 }
 
 /**
@@ -26,9 +40,10 @@ object KeyTypedHandler2 extends FromCollectionFactory[KeyTypedListener2, KeyType
   * @author Mikko Hilpinen
   * @since 05/02/2024, v4.0
   */
-class KeyTypedHandler2(initialListeners: IterableOnce[KeyTypedListener2] = Iterable.empty)
-	extends DeepHandler2[KeyTypedListener2](initialListeners) with EventHandler2[KeyTypedListener2, KeyTypedEvent2]
-		with KeyTypedListener2
+class KeyTypedHandler2(initialListeners: IterableOnce[KeyTypedListener2] = Iterable.empty,
+                       additionalCondition: Changing[Boolean] = AlwaysTrue)
+	extends DeepHandler2[KeyTypedListener2](initialListeners, additionalCondition)
+		with EventHandler2[KeyTypedListener2, KeyTypedEvent2] with KeyTypedListener2
 {
 	override def keyTypedEventFilter: Filter[KeyTypedEvent2] = AcceptAll
 	

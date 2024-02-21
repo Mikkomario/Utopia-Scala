@@ -5,7 +5,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.enumeration.GuiElementState.{Disabled, Focused}
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.Fixed
@@ -143,6 +143,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	
 	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
+	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialStyle, allowTextShrink)
 	/**

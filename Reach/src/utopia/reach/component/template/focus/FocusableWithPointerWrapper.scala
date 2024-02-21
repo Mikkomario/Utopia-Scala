@@ -5,11 +5,12 @@ package utopia.reach.component.template.focus
   * @author Mikko Hilpinen
   * @since 6.2.2021, v0.1
   */
-trait FocusableWithPointerWrapper extends FocusableWrapper with FocusableWithPointer
+// TODO: Rename
+trait FocusableWithPointerWrapper extends FocusableWrapper with FocusableWithState
 {
 	// ABSTRACT	-----------------------------
 	
-	override protected def focusable: FocusableWithPointer
+	override protected def focusable: FocusableWithState
 	
 	
 	// IMPLEMENTED	-------------------------

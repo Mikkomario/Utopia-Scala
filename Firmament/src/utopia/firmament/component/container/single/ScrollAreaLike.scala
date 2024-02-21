@@ -16,9 +16,9 @@ import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse._
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -524,25 +524,25 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			// Performs some calculations in this component's context
 			val relativeEvent = event.relativeTo(position)
 			
-			if (event.wasPressed) {
+			if (event.pressed) {
 				// If mouse was pressed inside inside scroll bar, starts dragging the bar
 				val barUnderEvent = axes.findMap { axis =>
-					barBounds.get(axis).filter { b => relativeEvent.isOverArea(b.bar) }.map { axis -> _.bar }
+					barBounds.get(axis).filter { b => relativeEvent.isOver(b.bar) }.map { axis -> _.bar }
 				}
 				
 				if (barUnderEvent.isDefined) {
 					isDraggingContent = false
 					barDragAxis = barUnderEvent.get._1
-					barDragPosition = relativeEvent.positionOverArea(barUnderEvent.get._2)
+					barDragPosition = relativeEvent.position.relative - barUnderEvent.get._2.position
 					isDraggingBar = true
 					scroller.stop()
 				}
 				// Consumed pressed events are only considered in scroll bar(s)
 				// if outside, starts drag scrolling
 				// TODO: This not consumed -requirement should likely be customizable
-				else if (event.isOverArea(bounds) && !event.isConsumed) {
+				else if (event.unconsumed && event.isOver(bounds)) {
 					isDraggingBar = false
-					contentDragPosition = event.mousePosition
+					contentDragPosition = event.position
 					isDraggingContent = true
 					scroller.stop()
 				}
@@ -552,7 +552,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		override def onMouseMove(event: MouseMoveEvent2) = {
 			// If dragging scroll bar, scrolls the content
 			if (isDraggingBar) {
-				val newBarOrigin = event.positionOverArea(bounds) - barDragPosition
+				val newBarOrigin = event.position.relative - bounds.position - barDragPosition
 				scrollTo(newBarOrigin(barDragAxis) / lengthAlong(barDragAxis), barDragAxis, animated = false)
 			}
 			// If dragging content, updates scrolling and remembers velocity
@@ -573,7 +573,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			// in 2D scroll views, X-scrolling is applied only if shift is being held
 			val scrollAxis = {
 				if (allows2DScrolling) {
-					if (GlobalKeyboardEventHandler.keyStatus(KeyEvent.VK_SHIFT)) X else Y
+					if (KeyboardEvents.state(KeyEvent.VK_SHIFT)) X else Y
 				}
 				else
 					axes.headOption getOrElse Y

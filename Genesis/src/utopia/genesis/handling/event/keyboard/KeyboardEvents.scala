@@ -19,7 +19,7 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 {
 	// ATTRIBUTES	------------------
 	
-	private lazy val keyStateHandler = KeyStateHandler()
+	private lazy val keyStateHandler = KeyStateHandler2()
 	private lazy val keyTypedHandler = KeyTypedHandler2()
 	
 	private lazy val handlers = Handlers(keyStateHandler, keyTypedHandler)

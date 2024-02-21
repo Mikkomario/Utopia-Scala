@@ -3,6 +3,7 @@
 ## v1.3 (in development)
 ### Breaking changes
 - Moved **DrawLevel** to **Genesis**
+- **HotKey** no longer contains property `.characters` and now uses **Key** instead of key index (Int)
 ### New methods
 - **StackInsets**
   - Added `.min(StackInsets)` and `.max(StackInsets)`

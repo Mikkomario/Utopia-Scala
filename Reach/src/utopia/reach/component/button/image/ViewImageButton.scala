@@ -3,24 +3,22 @@ package utopia.reach.component.button.image
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.StackInsets
-import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings, ViewImageLabelSettingsLike}
-import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -391,7 +389,7 @@ object ViewImageButton extends ViewImageButtonSetup()
 class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changing[ButtonImageSet],
                       settings: ViewImageButtonSettings, allowUpscalingPointer: Changing[Boolean] = AlwaysTrue)
                      (action: => Unit)
-	extends ReachComponentWrapper with ButtonLike
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -400,16 +398,10 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 		case None => imagesPointer
 	}
 	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	
-	override val statePointer = baseStatePointer
-		.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
 	override protected val wrapped = ViewImageLabel(parentHierarchy)
 		.withSettings(settings.imageSettings)
 		.copy(allowUpscalingPointer = allowUpscalingPointer)
 		.apply(statePointer.mergeWith(appliedImagesPointer) { (state, images) => images(state) })
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	override val focusId = hashCode()
 	
 	/**
 	  * A pointer to this button's current overall shade (based on the focused-state)
@@ -419,7 +411,7 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	
 	// INITIAL CODE	-----------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	
 	
 	// COMPUTED	---------------------------------
@@ -431,8 +423,6 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 	
 	
 	// IMPLEMENTED	-----------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

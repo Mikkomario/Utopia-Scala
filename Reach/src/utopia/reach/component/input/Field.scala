@@ -10,13 +10,14 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
+import utopia.genesis.graphics.Priority2.High
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
@@ -26,13 +27,11 @@ import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.component.template.focus.{Focusable, FocusableWithPointer, FocusableWrapper}
-import utopia.reach.component.template.{ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.focus.{Focusable, FocusableWithState, FocusableWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
-import utopia.genesis.graphics.Priority2.High
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 
 /**
@@ -520,6 +519,7 @@ object Field extends FieldSetup()
   * @since 14.11.2020, v0.1
   * @tparam C Type of wrapped field
   */
+// TODO: It would be more reasonable if isEmptyPointer was nonEmptyPointer - the problem is that the transition is hard
 class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHierarchy,
                                                     contextPointer: Changing[TextContext],
                                                     isEmptyPointer: Changing[Boolean],
@@ -527,13 +527,11 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
                                                    (makeField: FieldCreationContext => C)
                                                    (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 	                                                   Option[OpenComponent[ReachComponentLike, Any]])
-	extends ReachComponentWrapper with FocusableWrapper with FocusableWithPointer
+	extends ReachComponentWrapper with FocusableWrapper with FocusableWithState with PartOfComponentHierarchy
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	private implicit def c: ReachCanvas = parentHierarchy.top
-	
-	private val _focusPointer = new EventfulPointer(false)
+	private val _focusPointer = ResettableFlag()
 	
 	private lazy val uncoloredHintContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { context =>
 		context
@@ -726,7 +724,7 @@ class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHi
 				// Creates the field name label first
 				// Field name is displayed when
 				// a) it is available AND
-				// b) The edit label has focus OR c) The edit label is empty
+				// b) The edit label has focus OR c) The edit label is not empty
 				val nameShouldBeSeparatePointer = _focusPointer.mergeWith(isEmptyPointer) { _ || !_ }
 				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 				// TODO: Name label might have wrong text color because of background highlighting - Needs a different context if so

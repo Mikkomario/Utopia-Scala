@@ -4,20 +4,17 @@ import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
-import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.HandlerType
+import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -27,11 +24,11 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -306,14 +303,9 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
              override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
-	extends CustomDrawReachComponent with ButtonLike with InteractionWithPointer[Boolean]
+	extends AbstractButton(settings) with CustomDrawReachComponent with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	
-	override val statePointer = baseStatePointer.mergeWith(settings.enabledPointer) { (state, enabled) =>
-		state + (Disabled -> !enabled) }
 	
 	// The "bar" is exactly two knobs wide and 70% knob high
 	// The width and height are then extended on both sides by extra hover radius, which is not included in the
@@ -326,22 +318,20 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	}
 	
 	override val customDrawers = SwitchDrawer +: settings.customDrawers
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	override val focusId = hashCode()
 	
 	
 	// INITIAL CODE	--------------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	valuePointer.addContinuousListener { event => SwitchDrawer.updateTarget(event.newValue) }
 	addHierarchyListener { isAttached =>
 		if (isAttached) {
 			actorHandler += SwitchDrawer
-			GlobalKeyboardEventHandler += ArrowKeyListener
+			KeyboardEvents += ArrowKeyListener
 		}
 		else {
 			actorHandler -= SwitchDrawer
-			GlobalKeyboardEventHandler -= ArrowKeyListener
+			KeyboardEvents -= ArrowKeyListener
 		}
 	}
 	
@@ -352,8 +342,6 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	
 	// IMPLEMENTED	--------------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override def updateLayout() = ()
 	
@@ -472,13 +460,17 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		}
 	}
 	
-	private object ArrowKeyListener extends KeyStateListener
+	private object ArrowKeyListener extends KeyStateListener2
 	{
-		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
-			KeyStateEvent.keysFilter(KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT)
+		// ATTRIBUTES   ----------------------
 		
-		override def onKeyState(event: KeyStateEvent) = value = event.index == KeyEvent.VK_RIGHT
+		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(RightArrow, LeftArrow)
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = hasFocus
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def handleCondition: FlagLike = focusPointer
+		
+		override def onKeyState(event: KeyStateEvent2) = value = event.index == KeyEvent.VK_RIGHT
 	}
 }

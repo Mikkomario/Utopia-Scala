@@ -3,26 +3,24 @@ package utopia.reach.component.input.check
 import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackLength
-import utopia.firmament.model.{GuiElementStatus, HotKey, StandardSizeAdjustable}
+import utopia.firmament.model.{HotKey, StandardSizeAdjustable}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.Priority2.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ButtonLike, CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
-import utopia.genesis.graphics.Priority2.High
 import utopia.reach.focus.FocusListener
 
 import scala.language.implicitConversions
@@ -301,17 +299,9 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
                      settings: RadioButtonSettings = RadioButtonSettings.default)
                     (implicit colorScheme: ColorScheme)
-	extends CustomDrawReachComponent with ButtonLike
+	extends AbstractButton(settings) with CustomDrawReachComponent
 {
 	// ATTRIBUTES   ---------------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = {
-		if (settings.enabledPointer.isAlwaysTrue)
-			baseStatePointer.readOnly
-		else
-			baseStatePointer.mergeWith(settings.enabledPointer) { (base, enabled) => base + (Disabled -> !enabled) }
-	}
 	
 	/**
 	 * A pointer that contains whether this button is currently selected
@@ -323,9 +313,6 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 		val optimalLength = diameter + hoverExtraRadius * 2
 		StackLength(diameter, optimalLength, optimalLength).square
 	}
-	
-	override val focusId = hashCode()
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 	
 	private val colorPointer = backgroundColorPointer
 		.mergeWith(selectedPointer, settings.enabledPointer) { (background, isSelected, isEnabled) =>
@@ -339,16 +326,15 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 				if (isEnabled) base.withAlpha(0.72) else base.withAlpha(0.5)
 			}
 		}
-	private val hoverColorPointer = colorPointer.lazyMergeWith(baseStatePointer) { (color, state) =>
-		color.timesAlpha(state.hoverAlpha)
-	}
+	private val hoverColorPointer = colorPointer
+		.lazyMergeWith(statePointer) { (color, state) => color.timesAlpha(state.hoverAlpha) }
 	
 	override val customDrawers = RadioButtonDrawer +: settings.customDrawers
 	
 	
 	// INITIAL CODE ---------------------------------
 	
-	setup(baseStatePointer)
+	setup()
 	selectedPointer.addContinuousAnyChangeListener { repaint(High) }
 	
 	
@@ -358,8 +344,6 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	
 	
 	// IMPLEMENTED  ---------------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = select()
 	

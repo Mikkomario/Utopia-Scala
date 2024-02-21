@@ -5,10 +5,9 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.genesis.event.{KeyStateEvent, KeyTypedEvent}
-import utopia.genesis.handling.{KeyStateListener, KeyTypedListener}
+import utopia.genesis.handling.event.keyboard.Key.BackSpace
+import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyTypedListener2, KeyboardEvents}
 import utopia.genesis.image.Image
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
@@ -94,8 +93,8 @@ object ReachComponentTest extends App
 	
 	// Adds user interaction
 	val label = window.result
-	GlobalKeyboardEventHandler += KeyTypedListener { event: KeyTypedEvent => label.text += event.typedChar.toString }
-	window.focusKeyStateHandler += KeyStateListener(KeyStateEvent.keyFilter(KeyEvent.VK_BACK_SPACE)) { _ =>
+	KeyboardEvents += KeyTypedListener2.unconditional { event => label.text += event.typedChar.toString }
+	window.focusKeyStateHandler += KeyStateListener2(BackSpace) { _ =>
 		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
 	}
 }

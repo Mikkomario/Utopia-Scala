@@ -5,23 +5,21 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsLike, ImageLabelSettings}
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -291,13 +289,9 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
                          image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString,
                          settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
                         (action: => Unit)
-	extends ReachComponentWrapper with ButtonLike
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = baseStatePointer
-		.mergeWith(settings.enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
 	
 	// Applies the button image effects, if applicable
 	private val appliedImage = image match {
@@ -323,9 +317,6 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 		case Right(imageSet) => Right(imageSet ++ settings.imageEffects)
 	}
 	
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	override val focusId = hashCode()
-	
 	override protected val wrapped = {
 		// Adds space for the borders
 		val borderWidth = context.buttonBorderWidth
@@ -349,12 +340,10 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	
 	// INITIAL CODE	------------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	
 	
 	// IMPLEMENTED	------------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

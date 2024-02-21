@@ -1,123 +1,55 @@
 package utopia.reach.component.button.text
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
-import utopia.firmament.model.stack.StackInsets
-import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.text.Font
-import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.paradigm.enumeration.Alignment
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextFactory
-import utopia.reach.component.factory.contextual.TextContextualFactory
+import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.{FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.component.template.{ButtonLike, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
-import utopia.reach.focus.FocusListener
 
-// TODO: Refactor these constructors
 object ViewTextButton extends Cff[ViewTextButtonFactory]
+	with FromVariableContextComponentFactoryFactory[TextContext, ContextualViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
+	
+	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[TextContext]): ContextualViewTextButtonFactory =
+		ContextualViewTextButtonFactory(hierarchy, context)
 }
 
 class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualViewTextButtonFactory]
+	extends FromVariableContextFactory[TextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContext(context: TextContext) =
-		ContextualViewTextButtonFactory(this, context)
-	
-	
-	// OTHER	---------------------------------
-	
-	/**
-	  * Creates a new button
-	  * @param contentPointer Pointer that contains the displayed button content
-	  * @param font Font to use when drawing text
-	  * @param colorPointer Pointer that contains this button's background color
-	  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                       Default = always enabled.
-	  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-	  * @param borderWidth Width of this button's borders (default = 0 = no border)
-	  * @param alignment Text alignment used (default = Center)
-	  * @param textInsets Insets placed around the text (in addition to borders) (default = any, preferring 0)
-	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0.0)
-	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-	  *                (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
-	  * @param allowTextShrink Whether text size should be allowed to decrease to conserve space when necessary
-	  *                        (default = false)
-	  * @param action The action performed when this button is pressed (accepts currently displayed content)
-	  * @tparam A Type of displayed content
-	  * @return A new button
-	  */
-	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[Color],
-	             lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
-	             enabledPointer: FlagLike = AlwaysTrue,
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
-	             alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-	             betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-	             additionalDrawers: Seq[CustomDrawer] = Vector(),
-	             additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-	             allowTextShrink: Boolean = false)(action: A => Unit) =
-		new ViewTextButton[A](parentHierarchy, contentPointer, font, colorPointer, lineSplitThresholdPointer,
-			enabledPointer, displayFunction, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
-			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(action)
-	
-	/**
-	  * Creates a new button
-	  * @param text Text displayed on this button
-	  * @param font Font to use when drawing text
-	  * @param colorPointer Pointer that contains this button's background color
-	  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                       Default = always enabled.
-	  * @param borderWidth Width of this button's borders (default = 0 = no border)
-	  * @param alignment Text alignment used (default = Center)
-	  * @param textInsets Insets placed around the text (in addition to borders) (default = any, preferring 0)
-	  * @param betweenLinesMargin Margin placed between horizontal text lines, in case there are many (default = 0.0)
-	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-	  *                (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
-	  * @param allowLineBreaks Whether line breaks within the text should be respected and applied (default = true)
-	  * @param allowTextShrink Whether text size should be allowed to decrease to conserve space when necessary
-	  *                        (default = false)
-	  * @param action The action performed when this button is pressed
-	  * @return A new button
-	  */
-	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[Color],
-	                   enabledPointer: FlagLike = AlwaysTrue, borderWidth: Double = 0.0,
-	                   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-	                   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-	                   additionalDrawers: Seq[CustomDrawer] = Vector(),
-	                   additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-	                   allowTextShrink: Boolean = false)(action: => Unit) =
-		new ViewTextButton[LocalizedString](parentHierarchy, Fixed(text), font, colorPointer, Fixed(None), enabledPointer,
-			DisplayFunction.identity, borderWidth, alignment, textInsets, betweenLinesMargin, hotKeys,
-			additionalDrawers, additionalFocusListeners, allowLineBreaks, allowTextShrink)(_ => action)
+	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextButtonFactory =
+		ContextualViewTextButtonFactory(parentHierarchy, p)
 }
 
-case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, context: TextContext)
-	extends TextContextualFactory[ContextualViewTextButtonFactory]
+case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+                                           settings: ButtonSettings = ButtonSettings.default,
+                                           customDrawers: Vector[CustomDrawer] = Vector.empty)
+	extends VariableContextualFactory[TextContext, ContextualViewTextButtonFactory]
+		with ButtonSettingsWrapper[ContextualViewTextButtonFactory]
+		with CustomDrawableFactory[ContextualViewTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def self: ContextualViewTextButtonFactory = this
-	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextButtonFactory =
+		copy(contextPointer = p)
+	override def withSettings(settings: ButtonSettings): ContextualViewTextButtonFactory = copy(settings = settings)
+	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewTextButtonFactory =
+		copy(customDrawers = drawers)
 	
 	
 	// OTHER	----------------------------------
@@ -126,98 +58,71 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
 	  * Creates a new button that changes its color based on a pointer value
 	  * @param contentPointer Pointer that contains the displayed button content
 	  * @param colorPointer Pointer that contains this button's background color
-	  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                       Default = always enabled.
 	  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-	  * @param borderWidth Width of this button's borders (default = border equal to very small margins)
-	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-	  *                (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action The action performed when this button is pressed (accepts currently displayed content)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
+	@deprecated("Please use other color functions together with .apply(...) instead", "v1.3")
 	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[Color],
-	                         enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                         borderWidth: Double = context.margins.verySmall, hotKeys: Set[HotKey] = Set(),
-	                         additionalDrawers: Seq[CustomDrawer] = Vector(),
-	                         additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-		factory[A](contentPointer, context.font, colorPointer, Fixed(context.lineSplitThreshold), enabledPointer,
-			displayFunction, borderWidth, context.textAlignment, context.textInsets,
-			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers, additionalFocusListeners,
-			context.allowLineBreaks, context.allowTextShrink)(action)
+	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	                        (action: A => Unit) =
+		withContextPointer(contextPointer.mergeWith(colorPointer) { _.withBackground(_) })
+			.apply(contentPointer, displayFunction)(action)
 	
 	/**
 	  * Creates a new button that changes its color based on a pointer value
 	  * @param contentPointer Pointer that contains the displayed button content
 	  * @param rolePointer A pointer that contains this button's role
-	  * @param enabledPointer Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                       Default = always enabled.
 	  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-	  * @param preferredShade Preferred shade of color to use (default = standard)
-	  * @param borderWidth Width of this button's borders (default = border equal to very small margins)
-	  * @param hotKeys Keys that can be used for triggering this button even when it doesn't have focus
-	  *                (default = empty)
-	  * @param additionalDrawers Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action The action performed when this button is pressed (accepts currently displayed content)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
+	@deprecated("Please use other role-related functions together with .apply(...) instead", "v1.3")
 	def withChangingRole[A](contentPointer: Changing[A], rolePointer: Changing[ColorRole],
-	                        enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                        preferredShade: ColorLevel = Standard, borderWidth: Double = context.margins.verySmall,
-	                        hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-	                        additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-		withChangingColor[A](contentPointer, rolePointer.map { role => context.color.preferring(preferredShade)(role) },
-			enabledPointer, displayFunction, borderWidth, hotKeys, additionalDrawers,
-			additionalFocusListeners)(action)
+	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	                       (action: A => Unit) =
+		withContextPointer(contextPointer.mergeWith(rolePointer) { _.withBackground(_) })
+			.apply(contentPointer, displayFunction)(action)
 	
 	/**
 	  * Creates a new button
 	  * @param contentPointer           Pointer that contains the displayed button content
-	  * @param enabledPointer           Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                                 Default = always enabled.
 	  * @param displayFunction          A function for converting the displayed value to a localized string (default = toString)
-	  * @param hotKeys                  Keys that can be used for triggering this button even when it doesn't have focus
-	  *                                 (default = empty)
-	  * @param additionalDrawers        Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action                   The action performed when this button is pressed (accepts currently displayed content)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: Changing[A], enabledPointer: Changing[Boolean] = AlwaysTrue,
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, hotKeys: Set[HotKey] = Set(),
-	             additionalDrawers: Seq[CustomDrawer] = Vector(),
-	             additionalFocusListeners: Seq[FocusListener] = Vector())(action: A => Unit) =
-	{
-		factory[A](contentPointer, context.font, Fixed(context.background), Fixed(context.lineSplitThreshold),
-			enabledPointer, displayFunction, context.buttonBorderWidth, context.textAlignment, context.textInsets,
-			context.betweenLinesMargin.optimal, hotKeys, additionalDrawers,
-			additionalFocusListeners, context.allowLineBreaks, context.allowTextShrink)(action)
-	}
+	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	            (action: A => Unit) =
+		new ViewTextButton[A](parentHierarchy, contextPointer, contentPointer, settings, displayFunction,
+			customDrawers)(action)
+	
+	/**
+	  * @param textPointer Pointer that contains the text to display on this button
+	  * @param action Action run when this button is triggered
+	  * @return A new button
+	  */
+	def text(textPointer: Changing[LocalizedString])(action: => Unit) =
+		apply(textPointer, DisplayFunction.identity) { _ => action }
+	/**
+	  * @param text Text to display on this button
+	  * @param action Action to perform when this button is triggered
+	  * @return A new button
+	  */
+	def staticText(text: LocalizedString)(action: => Unit) =
+		this.text(Fixed(text))(action)
 	
 	/**
 	  * Creates a new button
 	  * @param text                     Text displayed on this string
-	  * @param enabledPointer           Pointer that contains whether this button should be enabled (true) or disabled (false).
-	  *                                 Default = always enabled.
-	  * @param hotKeys                  Keys that can be used for triggering this button even when it doesn't have focus
-	  *                                 (default = empty)
-	  * @param additionalDrawers        Additional custom drawers assigned to this button (default = empty)
-	  * @param additionalFocusListeners Focus listeners assigned to this button (default = empty)
 	  * @param action                   The action performed when this button is pressed
 	  * @return A new button
 	  */
-	def withStaticText(text: LocalizedString, enabledPointer: Changing[Boolean] = AlwaysTrue,
-	                   hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Vector(),
-	                   additionalFocusListeners: Seq[FocusListener] = Vector())(action: => Unit) =
-		apply[LocalizedString](Fixed(text), enabledPointer, DisplayFunction.identity, hotKeys,
-			additionalDrawers, additionalFocusListeners) { _ => action }
+	@deprecated("Please use .staticText(LocalizedString) instead", "v1.3")
+	def withStaticText(text: LocalizedString)(action: => Unit) =
+		staticText(text)(action)
 }
 
 /**
@@ -225,40 +130,30 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
   * @author Mikko Hilpinen
   * @since 26.10.2020, v0.1
   */
-class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
-                        colorPointer: Changing[Color], lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
-                        override val enabledPointer: FlagLike = AlwaysTrue,
-                        displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
-                        alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
-                        betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-                        additionalDrawers: Seq[CustomDrawer] = Vector(),
-                        additionalFocusListeners: Seq[FocusListener] = Vector(), allowLineBreaks: Boolean = true,
-                        allowTextShrink: Boolean = false)(action: A => Unit)
-	extends ButtonLike with ReachComponentWrapper
+class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+                        contentPointer: Changing[A], settings: ButtonSettings = ButtonSettings.default,
+                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                        additionalDrawers: Vector[CustomDrawer] = Vector.empty)
+                       (action: A => Unit)
+	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	private val _statePointer = baseStatePointer.mergeWith(enabledPointer) { (state, enabled) =>
-		state + (Disabled -> !enabled) }
-	private val actualTextInsets = if (borderWidth > 0) textInsets + borderWidth else textInsets
-	private val stylePointer = colorPointer
-		.mergeWith(lineSplitThresholdPointer, enabledPointer) { (color, splitThreshold, enabled) =>
-			TextDrawContext(font, if (enabled) color.shade.defaultTextColor else color.shade.defaultHintTextColor,
-				alignment, actualTextInsets, splitThreshold, betweenLinesMargin, allowLineBreaks)
-		}
+	private val colorPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
+	private val borderWidthPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth.toDouble }
+	private val appliedContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { c =>
+		if (c.buttonBorderWidth > 0) c.mapTextInsets { _ + c.buttonBorderWidth } else c
+	}
 	
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: additionalFocusListeners
-	override val focusId = hashCode()
-	override protected val wrapped = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
-		Fixed(allowTextShrink), displayFunction, ButtonBackgroundViewDrawer(colorPointer,
-			statePointer, Fixed(borderWidth)) +: additionalDrawers)
+	override protected val wrapped = ViewTextLabel.withContextPointer(parentHierarchy, appliedContextPointer)
+		.withCustomDrawers(ButtonBackgroundViewDrawer(colorPointer, statePointer, borderWidthPointer) +: additionalDrawers)
+		.apply[A](contentPointer, displayFunction)
 	
 	
 	// INITIAL CODE	---------------------------------
 	
-	setup(baseStatePointer, hotKeys)
-	colorPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => repaint() }
+	setup()
+	colorPointer.addContinuousListener { _ => repaint() }
 	
 	
 	// COMPUTED	-------------------------------------
@@ -270,8 +165,6 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	
 	
 	// IMPLEMENTED	---------------------------------
-	
-	override def statePointer = _statePointer.readOnly
 	
 	override protected def trigger() = action(contentPointer.value)
 	

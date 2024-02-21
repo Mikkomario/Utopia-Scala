@@ -1,24 +1,38 @@
 package utopia.genesis.handling.action
 
-import utopia.flow.collection.template.factory.FromCollectionFactory
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
 
+import scala.annotation.unused
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
-object ActorHandler2 extends FromCollectionFactory[Actor2, ActorHandler2]
+object ActorHandler2
 {
-	// IMPLEMENTED  ------------------------
-	
-	override def from(items: IterableOnce[Actor2]): ActorHandler2 = new ActorHandler2(items)
-	
-	
-	// OTHER    ----------------------------
+	// ATTRIBUTES   ------------------------
 	
 	/**
-	  * @param actors Actors for this handler to manage
-	  * @return A new actor handler
+	  * A factory for constructing these handlers
 	  */
-	def apply(actors: IterableOnce[Actor2]) = new ActorHandler2(actors)
+	val factory = ActorHandlerFactory()
+	
+	
+	// IMPLICIT ---------------------------
+	
+	implicit def objectToFactory(@unused o: ActorHandler2.type): ActorHandlerFactory = factory
+	
+	
+	// NESTED   ---------------------------
+	
+	case class ActorHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+		extends HandlerFactory[Actor2, ActorHandler2, ActorHandlerFactory]
+	{
+		override def usingCondition(newCondition: FlagLike): ActorHandlerFactory = copy(condition = newCondition)
+		
+		override def apply(initialItems: IterableOnce[Actor2]): ActorHandler2 =
+			new ActorHandler2(initialItems, condition)
+	}
 }
 
 /**
@@ -26,7 +40,9 @@ object ActorHandler2 extends FromCollectionFactory[Actor2, ActorHandler2]
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class ActorHandler2(initialItems: IterableOnce[Actor2]) extends DeepHandler2[Actor2](initialItems) with Actor2
+class ActorHandler2(initialItems: IterableOnce[Actor2] = Iterable.empty,
+                    additionalCondition: Changing[Boolean] = AlwaysTrue)
+	extends DeepHandler2[Actor2](initialItems, additionalCondition) with Actor2
 {
 	override def act(duration: FiniteDuration) = items.foreach { _.act(duration) }
 	

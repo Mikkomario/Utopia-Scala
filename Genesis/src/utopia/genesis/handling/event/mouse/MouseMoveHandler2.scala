@@ -1,24 +1,39 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.EventHandler2
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
+import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
 
-object MouseMoveHandler2 extends FromCollectionFactory[MouseMoveListener2, MouseMoveHandler2]
+import scala.annotation.unused
+import scala.language.implicitConversions
+
+object MouseMoveHandler2
 {
-	// IMPLEMENTED  ------------------------
-	
-	override def from(items: IterableOnce[MouseMoveListener2]): MouseMoveHandler2 = apply(items)
-	
-	
-	// OTHER    ----------------------------
+	// ATTRIBUTES   ------------------------
 	
 	/**
-	  * @param listeners Listeners to place on this handler, initially
-	  * @return A handler managing the specified listeners
+	  * A factory for constructing these handlers
 	  */
-	def apply(listeners: IterableOnce[MouseMoveListener2]) = new MouseMoveHandler2(listeners)
+	val factory = MouseMoveHandlerFactory()
+	
+	
+	// IMPLICIT ---------------------------
+	
+	implicit def objectToFactory(@unused o: MouseMoveHandler2.type): MouseMoveHandlerFactory = factory
+	
+	
+	// NESTED   ---------------------------
+	
+	case class MouseMoveHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+		extends HandlerFactory[MouseMoveListener2, MouseMoveHandler2, MouseMoveHandlerFactory]
+	{
+		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
+		
+		override def apply(initialItems: IterableOnce[MouseMoveListener2]) =
+			new MouseMoveHandler2(initialItems, condition)
+	}
 }
 
 /**
@@ -26,9 +41,10 @@ object MouseMoveHandler2 extends FromCollectionFactory[MouseMoveListener2, Mouse
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class MouseMoveHandler2(initialListeners: IterableOnce[MouseMoveListener2] = Vector.empty)
-	extends DeepHandler2[MouseMoveListener2](initialListeners) with EventHandler2[MouseMoveListener2, MouseMoveEvent2]
-		with MouseMoveListener2
+class MouseMoveHandler2(initialListeners: IterableOnce[MouseMoveListener2] = Iterable.empty,
+                        additionalCondition: Changing[Boolean] = AlwaysTrue)
+	extends DeepHandler2[MouseMoveListener2](initialListeners, additionalCondition)
+		with EventHandler2[MouseMoveListener2, MouseMoveEvent2] with MouseMoveListener2
 {
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
 	

@@ -28,7 +28,7 @@ import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.focus.Focusable
+import utopia.reach.component.template.focus.{Focusable, FocusableWithState}
 import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
@@ -51,7 +51,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
                                            textPointer: Changing[LocalizedString], selectableFlag: Changing[Boolean],
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                            enabledPointer: Changing[Boolean] = AlwaysTrue)
-	extends CustomDrawReachComponent with TextComponent with Focusable with CursorDefining
+	extends CustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -124,15 +124,6 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	def selectable: Boolean = selectableFlag.value
 	
 	/**
-	  * @return A pointer to this label's focus state
-	  */
-	def focusPointer = FocusHandler.focusPointer
-	/**
-	  * @return Whether this label is currently the focused component
-	  */
-	def hasFocus = FocusHandler.focus
-	
-	/**
 	  * @return Current index of the text caret
 	  */
 	def caretIndex = caretIndexPointer.value
@@ -161,7 +152,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def updateLayout() = ()
+	override def focusPointer = FocusHandler.focusPointer
 	
 	override def measuredText = measuredTextPointer.value
 	override def textDrawContext = stylePointer.value
@@ -171,6 +162,8 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	
 	override def cursorType = if (selectable) Text else Default
 	override def cursorBounds = boundsInsideTop
+	
+	override def updateLayout() = ()
 	
 	override def cursorToImage(cursor: Cursor, position: Point) = {
 		// If hovering over a selected area, bases cursor color on that

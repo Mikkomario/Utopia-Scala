@@ -12,6 +12,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
 import utopia.paradigm.color.ColorShade
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
@@ -26,7 +27,6 @@ import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
 import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
-import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
@@ -96,7 +96,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 			case None => LocalizedString.alwaysEmpty
 		}
 		val appliedSettings = settings.withPromptPointer(actualPromptPointer)
-			.withAdditionalActivationKeys(Set(KeyEvent.VK_SPACE, KeyEvent.VK_RIGHT, KeyEvent.VK_DOWN))
+			.withAdditionalActivationKeys(Set(Space, RightArrow, DownArrow))
 		val field = FieldWithSelectionPopup.withContext(parentHierarchy, contextPointer).withSettings(appliedSettings)
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				sameItemCheck)

@@ -21,15 +21,14 @@ import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, Flag, IndirectPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.FlagLike._
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.keyboard.Key.Esc
+import utopia.genesis.handling.event.keyboard.{KeyStateHandler2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
-import utopia.genesis.handling.mutable.KeyStateHandler
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
-import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
@@ -37,7 +36,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.awt.Frame
-import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent, WindowAdapter, WindowEvent}
+import java.awt.event.{ComponentEvent, ComponentListener, WindowAdapter, WindowEvent}
 import javax.swing.{JDialog, JFrame}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -404,10 +403,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// The key-state handler is initialized only when necessary
 	private val keyStateHandlerPointer = Lazy {
-		val handler = KeyStateHandler()
+		val handler = KeyStateHandler2()
 		// Only activates the handler once this window is open
 		if (isOpen)
-			GlobalKeyboardEventHandler += handler
+			KeyboardEvents += handler
 		handler
 	}
 	/**
@@ -415,8 +414,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	lazy val focusKeyStateHandler = {
 		val parent = keyStateHandlerPointer.value
-		val handler = KeyStateHandler()
-		handler.filter = { _ => isFocused }
+		val handler = KeyStateHandler2.conditional(focusedFlag).empty
 		parent += handler
 		handler
 	}
@@ -526,14 +524,14 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			
 			// Starts key listening (if used)
-			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler += _ }
+			KeyboardEvents ++= keyStateHandlerPointer.current
 			
 			// Quits event listening once this window closes
 			closeFuture.onComplete { _ =>
 				CommonMouseEvents.removeGenerator(mouseEventGenerator)
 				eventActorHandler -= mouseEventGenerator
 				mouseEventGenerator.stop()
-				keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
+				KeyboardEvents --= keyStateHandlerPointer.current
 			}
 		}
 	}.waitFor(maxInitializationWaitDuration).failure
@@ -882,14 +880,12 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	def setToCloseOnEsc(requireFocus: Boolean = true) = {
 		val handler = if (requireFocus) focusKeyStateHandler else keyStateHandler
-		handler += KeyStateListener.onKeyReleased(KeyEvent.VK_ESCAPE) { _ => close() }
+		handler += KeyStateListener2.released(Esc) { _ => close() }
 	}
 	/**
 	  * Closes this window once the user releases any keyboard key
 	  */
-	def setToCloseOnAnyKeyRelease() = {
-		keyStateHandler += KeyStateListener.onAnyKeyReleased { _ => close() }
-	}
+	def setToCloseOnAnyKeyRelease() = keyStateHandler += KeyStateListener2.released { _ => close() }
 	/**
 	  * Closes this window when it loses focus the next time
 	  */

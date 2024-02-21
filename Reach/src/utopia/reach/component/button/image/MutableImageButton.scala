@@ -2,7 +2,7 @@ package utopia.reach.component.button.image
 
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.ButtonImageSet
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.enumeration.GuiElementState.{Disabled, Focused}
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.immutable.eventful.Fixed
@@ -97,6 +97,8 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
 	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
+	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
+	
 	/**
 	  * A pointer to this button's currently displayed image
 	  */

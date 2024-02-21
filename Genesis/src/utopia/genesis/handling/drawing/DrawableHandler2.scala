@@ -5,7 +5,6 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{PostponingProcess, WaitTarget}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -15,10 +14,10 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority2.{High, Normal, VeryLow}
 import utopia.genesis.graphics._
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
+import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
 import utopia.genesis.image.MutableImage
 import utopia.genesis.util.Fps
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -48,15 +47,23 @@ object DrawableHandler2
 	  * @param log Logging implementation for catching errors in queued repaints
 	  */
 	case class DrawableHandlerFactory(clipPointer: Option[Changing[Bounds]] = None,
-	                                  visiblePointer: Changing[Boolean] = AlwaysTrue,
+	                                  visiblePointer: FlagLike = AlwaysTrue,
 	                                  fpsLimits: Map[Priority2, Fps] = Map(), preDrawPriority: Priority2 = High,
 	                                  drawOrder: DrawOrder = DrawOrder.default)
 	                                 (implicit exc: ExecutionContext, log: Logger)
-		extends FromCollectionFactory[Drawable2, DrawableHandler2]
+		extends HandlerFactory[Drawable2, DrawableHandler2, DrawableHandlerFactory]
 	{
+		// ATTRIBUTES   ------------------
+		
+		override val condition = visiblePointer
+		
+		
 		// IMPLEMENTED  ------------------
 		
-		override def from(items: IterableOnce[Drawable2]): DrawableHandler2 = apply(items)
+		override def usingCondition(newCondition: FlagLike): DrawableHandlerFactory = copy(visiblePointer = newCondition)
+		
+		override def apply(items: IterableOnce[Drawable2]) =
+			new DrawableHandler2(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
 		
 		
 		// OTHER    ----------------------
@@ -148,12 +155,7 @@ object DrawableHandler2
 		  */
 		def drawnTo(drawLevel: DrawOrder) = copy(drawOrder = drawLevel)
 		
-		/**
-		  * @param items Items to place on this handler, initially
-		  * @return A handler managing the specified items
-		  */
-		def apply(items: IterableOnce[Drawable2]) =
-			new DrawableHandler2(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
+		
 	}
 }
 

@@ -13,7 +13,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-abstract class ReachComponent extends ReachComponentLike with CachingStackable
+trait ReachComponent extends ReachComponentLike with CachingStackable
 {
 	// ATTRIBUTES	-----------------------
 	

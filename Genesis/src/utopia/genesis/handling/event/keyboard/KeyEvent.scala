@@ -152,6 +152,12 @@ trait KeyEvent
 	def keyboardState: KeyboardState
 	
 	
+	// COMPUTED -----------------------
+	
+	@deprecated("Please use .keyboardState instead", "v4.0")
+	def keyStatus = keyboardState
+	
+	
 	// OTHER    -----------------------
 	
 	/**

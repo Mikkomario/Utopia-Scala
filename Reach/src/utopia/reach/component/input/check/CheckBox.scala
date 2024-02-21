@@ -4,16 +4,15 @@ import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Background
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.model.enumeration.GuiElementState.Disabled
+import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.DrawLevel2.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
@@ -21,13 +20,13 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
+import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageLabel
-import utopia.reach.component.template.{ButtonLike, PartOfComponentHierarchy, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -364,13 +363,9 @@ class CheckBox(parentHierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
                override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false))
-	extends ReachComponentWrapper with ButtonLike with InteractionWithPointer[Boolean]
+	extends AbstractButton(settings) with ReachComponentWrapper with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------
-	
-	private val baseStatePointer = new EventfulPointer(GuiElementStatus.identity)
-	override val statePointer = baseStatePointer.mergeWith(settings.enabledPointer) { (base, enabled) =>
-		base + (Disabled -> !enabled) }
 	
 	/**
 	  * Pointer to the currently displayed image
@@ -385,18 +380,13 @@ class CheckBox(parentHierarchy: ComponentHierarchy,
 			.apply(imagePointer)
 	}
 	
-	override val focusId = hashCode()
-	override val focusListeners = new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
-	
 	
 	// INITIAL CODE	--------------------------
 	
-	setup(baseStatePointer, settings.hotKeys)
+	setup()
 	
 	
 	// IMPLEMENTED	--------------------------
-	
-	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = valuePointer.update { !_ }
 	
