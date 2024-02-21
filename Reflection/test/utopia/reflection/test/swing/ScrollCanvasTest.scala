@@ -41,7 +41,7 @@ object ScrollCanvasTest extends App
 	val actorHandler = ActorHandler()
 	val drawHandler = DrawableHandler()
 	val mouseButtonHandler = MouseButtonStateHandler2()
-	val mouseWheelHandler = MouseWheelHandler2()
+	val mouseWheelHandler = MouseWheelHandler()
 	val mouseMoveHandler = MouseMoveHandler2()
 	
 	// FIXME: Create a new set of handlers, which includes
@@ -104,7 +104,7 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	}
 }
 
-private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener
+private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener with KeyStateListener
 {
 	// ATTRIBUTES	---------------
 	
@@ -119,7 +119,7 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 	
 	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def onMouseWheelRotated(event: MouseWheelEvent2) = {
+	override def onMouseWheelRotated(event: MouseWheelEvent) = {
 		if (listening) {
 			canvas.scaling *= (1 + event.wheelTurn * 0.1)
 			Consume("Canvas zoom")

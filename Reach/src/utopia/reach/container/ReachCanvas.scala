@@ -250,7 +250,7 @@ object ReachCanvas
 					canvas.distributeMouseButtonEvent(event)
 				}
 				generator.moveHandler += MouseMoveListener2.unconditional(canvas.distributeMouseMoveEvent)
-				generator.wheelHandler += MouseWheelListener2.unconditional(canvas.distributeMouseWheelEvent)
+				generator.wheelHandler += MouseWheelListener.unconditional(canvas.distributeMouseWheelEvent)
 				actorHandler += generator
 			}
 		}
@@ -338,7 +338,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	
 	override lazy val mouseButtonHandler = MouseButtonStateHandler2()
 	override lazy val mouseMoveHandler = MouseMoveHandler2()
-	override lazy val mouseWheelHandler = MouseWheelHandler2()
+	override lazy val mouseWheelHandler = MouseWheelHandler()
 	
 	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
 	
@@ -483,7 +483,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		super.distributeMouseMoveEvent(event)
 		currentContent.foreach { _.distributeMouseMoveEvent(event.relativeTo(position)) }
 	}
-	override def distributeMouseWheelEvent(event: MouseWheelEvent2) = {
+	override def distributeMouseWheelEvent(event: MouseWheelEvent) = {
 		super.distributeMouseWheelEvent(event) match {
 			case consume: Consume =>
 				val newEvent = event.consumed(consume.consumeEvent)

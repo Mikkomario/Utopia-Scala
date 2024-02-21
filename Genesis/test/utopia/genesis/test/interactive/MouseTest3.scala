@@ -96,7 +96,7 @@ object MouseTest3 extends App
 	}
 	
 	private object TestItem
-		extends Drawable2 with MouseMoveListener2 with MouseWheelListener2 with MouseButtonStateListener2
+		extends Drawable2 with MouseMoveListener2 with MouseWheelListener with MouseButtonStateListener2
 	{
 		// ATTRIBUTES   ---------------
 		
@@ -136,7 +136,7 @@ object MouseTest3 extends App
 		override def drawBoundsPointer: Changing[Bounds] = boundsPointer.readOnly
 		override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 		
-		override def mouseWheelEventFilter: Filter[MouseWheelEvent2] = AcceptAll
+		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		override def handleCondition: FlagLike = AlwaysTrue
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = drawer.draw(shapeCache(bounds))
@@ -150,7 +150,7 @@ object MouseTest3 extends App
 				colorAnglePointer.update { _ + Rotation.circles(0.001).clockwise * event.transition.length }
 			positionPointer.value = event.position
 		}
-		override def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice =
+		override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice =
 			radiusPointer.update { _ * radiusAdjustment(-event.wheelTurn) }
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
 			val dir = event.button match {

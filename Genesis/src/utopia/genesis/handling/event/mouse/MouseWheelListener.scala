@@ -14,14 +14,14 @@ import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
 
-object MouseWheelListener2
+object MouseWheelListener
 {
     // TYPES    ----------------------
     
     /**
       * Event filter for mouse wheel events
       */
-    type MouseWheelEventFilter = Filter[MouseWheelEvent2]
+    type MouseWheelEventFilter = Filter[MouseWheelEvent]
     
     
     // ATTRIBUTES   ------------------
@@ -42,7 +42,7 @@ object MouseWheelListener2
     
     // IMPLICIT ----------------------
     
-    implicit def objectToFactory(@unused o: MouseWheelListener2.type): MouseWheelListenerFactory = unconditional
+    implicit def objectToFactory(@unused o: MouseWheelListener.type): MouseWheelListenerFactory = unconditional
     
     
     // OTHER    ----------------------
@@ -54,8 +54,8 @@ object MouseWheelListener2
       * @return A new mouse event listener
       */
     @deprecated("Please use .usingFilter(Filter)(...) instead", "v4.0")
-    def apply(filter: Filter[MouseWheelEvent2] = AcceptAll)
-             (f: MouseWheelEvent2 => Option[ConsumeEvent]): MouseWheelListener2 =
+    def apply(filter: Filter[MouseWheelEvent] = AcceptAll)
+             (f: MouseWheelEvent => Option[ConsumeEvent]): MouseWheelListener =
         unconditional.usingFilter(filter) { e => ConsumeChoice(f(e)) }
     
     /**
@@ -65,7 +65,7 @@ object MouseWheelListener2
       * @return A new mouse event listener
       */
     @deprecated("Please use .over(Area2D)(...) instead", "v4.0")
-    def onWheelInsideArea(getArea: => Area2D)(f: MouseWheelEvent2 => Option[ConsumeEvent]) =
+    def onWheelInsideArea(getArea: => Area2D)(f: MouseWheelEvent => Option[ConsumeEvent]) =
         apply { e => e.isOverArea(getArea) }(f)
     /**
       * Creates a new mouse wheel listener that calls specified function on wheel rotations inside a specific area
@@ -74,13 +74,13 @@ object MouseWheelListener2
       * @return A new mouse event listener
       */
     @deprecated("Please use .over(Area2D)(...) instead", "v4.0")
-    def onWheelInsideAreaNoConsume(getArea: => Area2D)(f: MouseWheelEvent2 => Unit) =
+    def onWheelInsideAreaNoConsume(getArea: => Area2D)(f: MouseWheelEvent => Unit) =
         onWheelInsideArea(getArea) { e => f(e); None }
     
     
     // NESTED   ----------------------
     
-    trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent2, A]
+    trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent, A]
     {
         // COMPUTED ------------------
         
@@ -113,7 +113,7 @@ object MouseWheelListener2
     {
         // IMPLEMENTED  --------------
         
-        override protected def withFilter(filter: Filter[MouseWheelEvent2]): MouseWheelEventFilter = filter
+        override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelEventFilter = filter
         
         
         // OTHER    ------------------
@@ -122,20 +122,20 @@ object MouseWheelListener2
           * @param f A filter function
           * @return A filter that uses the specified function
           */
-        def other(f: MouseWheelEvent2 => Boolean): MouseWheelEventFilter = Filter(f)
+        def other(f: MouseWheelEvent => Boolean): MouseWheelEventFilter = Filter(f)
     }
     
     case class MouseWheelListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseWheelEventFilter = AcceptAll)
-        extends ListenerFactory[MouseWheelEvent2, MouseWheelListenerFactory]
+        extends ListenerFactory[MouseWheelEvent, MouseWheelListenerFactory]
             with MouseWheelFilteringFactory[MouseWheelListenerFactory]
     {
         // IMPLEMENTED  --------------
         
-        override def usingFilter(filter: Filter[MouseWheelEvent2]): MouseWheelListenerFactory = copy(filter = filter)
+        override def usingFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory = copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): MouseWheelListenerFactory =
             copy(condition = condition)
         
-        override protected def withFilter(filter: Filter[MouseWheelEvent2]): MouseWheelListenerFactory =
+        override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory =
             copy(filter = this.filter && filter)
             
         
@@ -146,16 +146,16 @@ object MouseWheelListener2
           * @return A listener that uses the specified function.
           *         The resulting listener will apply this factory's handling condition and event filter.
           */
-        def apply(f: MouseWheelEvent2 => ConsumeChoice): MouseWheelListener2 =
+        def apply(f: MouseWheelEvent => ConsumeChoice): MouseWheelListener =
             new _MouseWheelListener(condition, filter, f)
     }
     
     private class _MouseWheelListener(override val handleCondition: FlagLike,
                                       override val mouseWheelEventFilter: MouseWheelEventFilter,
-                                      f: MouseWheelEvent2 => ConsumeChoice)
-        extends MouseWheelListener2
+                                      f: MouseWheelEvent => ConsumeChoice)
+        extends MouseWheelListener
     {
-        override def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice = f(event)
+        override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice = f(event)
     }
 }
 
@@ -164,13 +164,13 @@ object MouseWheelListener2
   * @author Mikko Hilpinen
   * @since 6.2.2024, v4.0
   */
-trait MouseWheelListener2 extends Handleable2
+trait MouseWheelListener extends Handleable2
 {
     /**
       * @return A filter applied to incoming events.
       *         Only events accepted by this filter should trigger [[onMouseWheelRotated]].
       */
-    def mouseWheelEventFilter: Filter[MouseWheelEvent2]
+    def mouseWheelEventFilter: Filter[MouseWheelEvent]
     
     /**
       * Delivers a mouse wheel event to this listener.
@@ -178,6 +178,6 @@ trait MouseWheelListener2 extends Handleable2
       * @param event A mouse wheel event
       * @return Whether this listener chose to consume the specified event
       */
-    def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice
+    def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice
 }
 

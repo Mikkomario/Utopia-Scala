@@ -23,7 +23,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	
 	private val buttonHandler = MouseButtonStateHandler2.empty
 	private val moveHandler = MouseMoveHandler2.empty
-	private val wheelHandler = MouseWheelHandler2.empty
+	private val wheelHandler = MouseWheelHandler.empty
 	private val dragHandler = MouseDragHandler.empty
 	
 	/**
@@ -106,7 +106,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  * @param listener A mouse wheel listener
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def registerWheelListener(listener: MouseWheelListener2) =
+	def registerWheelListener(listener: MouseWheelListener) =
 		wheelHandler += listener
 	/**
 	 * @param listener A new mouse drag listener to inform about mouse drag events
@@ -152,7 +152,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	// NESTED   -------------------------
 	
 	private object AbsolutizingListener
-		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener2 with MouseDragListener
+		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener with MouseDragListener
 	{
 		// IMPLEMENTED  -----------------
 		
@@ -160,7 +160,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 		
 		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
-		override def mouseWheelEventFilter: Filter[MouseWheelEvent2] = AcceptAll
+		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
 		// Removes the relative component from incoming events
@@ -170,7 +170,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 			buttonHandler.onMouseButtonStateEvent(absolutize(event))
 		}
 		override def onMouseMove(event: MouseMoveEvent2): Unit = moveHandler.onMouseMove(absolutize(event))
-		override def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice =
+		override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice =
 			wheelHandler.onMouseWheelRotated(absolutize(event))
 		override def onMouseDrag(event: MouseDragEvent): Unit = dragHandler.onMouseDrag(absolutize(event))
 		

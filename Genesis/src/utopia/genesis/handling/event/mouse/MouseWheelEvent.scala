@@ -1,10 +1,10 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.event.mouse.MouseWheelListener2.MouseWheelEventFilter
+import utopia.genesis.handling.event.mouse.MouseWheelListener.MouseWheelEventFilter
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
-object MouseWheelEvent2
+object MouseWheelEvent
 {
 	/**
 	  * @return Access point to filters targeting mouse wheel events
@@ -22,14 +22,14 @@ object MouseWheelEvent2
   * @param buttonStates Mouse button states during this event
   * @param consumeEvent An event concerning this event's consuming. None if not consumed yet (default)
  */
-case class MouseWheelEvent2(wheelTurn: Double, override val position: RelativePoint,
-                            override val buttonStates: MouseButtonStates,
-                            override val consumeEvent: Option[ConsumeEvent] = None)
-	extends MouseEvent2[MouseWheelEvent2] with Consumable[MouseWheelEvent2]
+case class MouseWheelEvent(wheelTurn: Double, override val position: RelativePoint,
+                           override val buttonStates: MouseButtonStates,
+                           override val consumeEvent: Option[ConsumeEvent] = None)
+	extends MouseEvent2[MouseWheelEvent] with Consumable[MouseWheelEvent]
 {
 	override def self = this
 	
-	override def withPosition(position: RelativePoint): MouseWheelEvent2 = copy(position = position)
+	override def withPosition(position: RelativePoint): MouseWheelEvent = copy(position = position)
 	
 	override def consumed(event: ConsumeEvent) =
 		if (isConsumed) this else copy(consumeEvent = Some(event))

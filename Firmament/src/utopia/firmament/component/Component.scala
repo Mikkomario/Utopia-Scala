@@ -34,7 +34,7 @@ trait Component extends HasMutableBounds
     /**
       * @return A handler used for distributing mouse wheel events within this component
       */
-    def mouseWheelHandler: MouseWheelHandler2
+    def mouseWheelHandler: MouseWheelHandler
     
     /**
       * @return Handlers used for distributing events within this component.
@@ -103,9 +103,9 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseWheelEvent(event: MouseWheelEvent2): ConsumeChoice = {
+    def distributeMouseWheelEvent(event: MouseWheelEvent): ConsumeChoice = {
         // Informs children first
-        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseWheelEvent2](
+        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseWheelEvent](
             event) { _.distributeMouseWheelEvent(_) }
         
         // Then informs own handler
@@ -127,7 +127,7 @@ trait Component extends HasMutableBounds
       * Adds a new mouse wheel listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseWheelListener(listener: MouseWheelListener2) = mouseWheelHandler += listener
+    def addMouseWheelListener(listener: MouseWheelListener) = mouseWheelHandler += listener
     /**
       * Assigns a listener to be informed of events related to this component
       * @param listener A listener to be informed

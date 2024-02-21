@@ -496,7 +496,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
 	                            val velocityMod: Double, val scroller: AnimatedScroller)
-		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener2
+		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -569,7 +569,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		}
 		
 		// When wheel is rotated inside component bounds, scrolls
-		override def onMouseWheelRotated(event: MouseWheelEvent2) = {
+		override def onMouseWheelRotated(event: MouseWheelEvent) = {
 			// in 2D scroll views, X-scrolling is applied only if shift is being held
 			val scrollAxis = {
 				if (allows2DScrolling) {
