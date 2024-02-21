@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.End
 import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
 import utopia.genesis.text.Font
@@ -54,7 +54,7 @@ object ScrollAreaTest extends App
 	val stack = Stack.rowWithItems(columns, 16.fixed, 4.fixed)
 	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkened
 
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 
 	// Creates the scroll area
 	val barDrawer = BoxScrollBarDrawer.roundedBarOnly(Color.black.withAlpha(0.55))

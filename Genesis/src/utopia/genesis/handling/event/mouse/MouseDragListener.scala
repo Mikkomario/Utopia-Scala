@@ -12,14 +12,14 @@ import utopia.paradigm.angular.{Angle, Rotation}
 
 import scala.annotation.unused
 
-object MouseDragListener2
+object MouseDragListener
 {
 	// TYPES    --------------------------
 	
 	/**
 	  * A filter applied over mouse drag events
 	  */
-	type MouseDragEventFilter = Filter[MouseDragEvent2]
+	type MouseDragEventFilter = Filter[MouseDragEvent]
 	
 	
 	// ATTRIBUTES   ----------------------
@@ -40,13 +40,13 @@ object MouseDragListener2
 	
 	// IMPLICIT --------------------------
 	
-	implicit def objectToFactory(@unused o: MouseDragListener2.type): MouseDragListenerFactory = unconditional
+	implicit def objectToFactory(@unused o: MouseDragListener.type): MouseDragListenerFactory = unconditional
 	
 	
 	// NESTED   --------------------------
 	
 	trait MouseDragFilteringFactory[+A]
-		extends MouseMoveFilteringFactory[MouseDragEvent2, A] with MouseButtonFilteringFactory[MouseDragEvent2, A]
+		extends MouseMoveFilteringFactory[MouseDragEvent, A] with MouseButtonFilteringFactory[MouseDragEvent, A]
 	{
 		// COMPUTED ----------------------
 		
@@ -120,7 +120,7 @@ object MouseDragListener2
 	{
 		// IMPLEMENTED  ---------------------
 		
-		override protected def withFilter(filter: Filter[MouseDragEvent2]): MouseDragEventFilter = filter
+		override protected def withFilter(filter: Filter[MouseDragEvent]): MouseDragEventFilter = filter
 		
 		
 		// OTHER    ------------------------
@@ -129,20 +129,20 @@ object MouseDragListener2
 		  * @param f A filter function
 		  * @return A filter that uses the specified function
 		  */
-		def apply(f: MouseDragEvent2 => Boolean): MouseDragEventFilter = Filter(f)
+		def apply(f: MouseDragEvent => Boolean): MouseDragEventFilter = Filter(f)
 	}
 	
 	case class MouseDragListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseDragEventFilter = AcceptAll)
-		extends ListenerFactory[MouseDragEvent2, MouseDragListenerFactory]
+		extends ListenerFactory[MouseDragEvent, MouseDragListenerFactory]
 			with MouseDragFilteringFactory[MouseDragListenerFactory]
 	{
 		// IMPLEMENTED  -----------------------
 		
-		override def usingFilter(filter: Filter[MouseDragEvent2]): MouseDragListenerFactory = copy(filter = filter)
+		override def usingFilter(filter: Filter[MouseDragEvent]): MouseDragListenerFactory = copy(filter = filter)
 		override def usingCondition(condition: Changing[Boolean]): MouseDragListenerFactory =
 			copy(condition = condition)
 		
-		override protected def withFilter(filter: Filter[MouseDragEvent2]): MouseDragListenerFactory =
+		override protected def withFilter(filter: Filter[MouseDragEvent]): MouseDragListenerFactory =
 			copy(filter = this.filter && filter)
 			
 		
@@ -154,15 +154,15 @@ object MouseDragListener2
 		  * @return A listener that calls the specified function on mouse drag events,
 		  *         but only when this factory's listening condition and event filter allow it
 		  */
-		def apply[U](f: MouseDragEvent2 => U): MouseDragListener2 = new _MouseDragListener[U](condition, filter, f)
+		def apply[U](f: MouseDragEvent => U): MouseDragListener = new _MouseDragListener[U](condition, filter, f)
 	}
 	
 	private class _MouseDragListener[U](override val handleCondition: FlagLike,
 	                                    override val mouseDragEventFilter: MouseDragEventFilter,
-	                                    f: MouseDragEvent2 => U)
-		extends MouseDragListener2
+	                                    f: MouseDragEvent => U)
+		extends MouseDragListener
 	{
-		override def onMouseDrag(event: MouseDragEvent2): Unit = f(event)
+		override def onMouseDrag(event: MouseDragEvent): Unit = f(event)
 	}
 }
 
@@ -171,18 +171,18 @@ object MouseDragListener2
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
-trait MouseDragListener2 extends Handleable2
+trait MouseDragListener extends Handleable2
 {
 	// ABSTRACT ----------------------------
 	
 	/**
 	  * @return A filter for the accepted mouse drag events
 	  */
-	def mouseDragEventFilter: Filter[MouseDragEvent2]
+	def mouseDragEventFilter: Filter[MouseDragEvent]
 	
 	/**
 	 * Allows the listener to react to mouse drag events
 	 * @param event A new mouse drag event
 	 */
-	def onMouseDrag(event: MouseDragEvent2): Unit
+	def onMouseDrag(event: MouseDragEvent): Unit
 }

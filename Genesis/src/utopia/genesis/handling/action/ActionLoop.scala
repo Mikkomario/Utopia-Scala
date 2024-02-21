@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 /**
   * A loop that continuously generates action events
   * @param actor The actor that will receive the generated events.
-  *              If multiple actors should be informed, use an [[ActorHandler2]]
+  *              If multiple actors should be informed, use an [[ActorHandler]]
   * @param apsRange The valid range of actions-per-second.
   *                 Will attempt to fire an action event at the maximum APS.
   *
@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context
   * @param logger Logger that records exceptions caught during the scheduled actions
   */
-class ActionLoop(actor: Actor2, val apsRange: HasInclusiveEnds[Fps] = Span(Fps(15), Fps(60)))
+class ActionLoop(actor: Actor, val apsRange: HasInclusiveEnds[Fps] = Span(Fps(15), Fps(60)))
                 (implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {

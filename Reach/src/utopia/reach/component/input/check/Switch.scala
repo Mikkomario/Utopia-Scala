@@ -12,7 +12,7 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.paradigm.animation.Animation
@@ -166,7 +166,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @return A new switch
 	  */
-	protected def _apply(actorHandler: ActorHandler2, color: Color, knobDiameter: Double,
+	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	                     valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
 	                     shade: => ColorShade = Light,
@@ -254,7 +254,7 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
 	  * @param animationDuration Duration it takes to complete the transition animation (default = global default)
 	  * @return A new switch
 	  */
-	def apply(actorHandler: ActorHandler2, color: Color, knobDiameter: Double,
+	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
 	          shade: => ColorShade = Light,
@@ -298,7 +298,7 @@ object Switch extends SwitchSetup()
   * @author Mikko Hilpinen
   * @since 19.11.2020, v0.1
   */
-class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler2, color: Color,
+class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
@@ -352,7 +352,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	// NESTED	------------------------------------
 	
-	private object SwitchDrawer extends CustomDrawer with Actor2
+	private object SwitchDrawer extends CustomDrawer with Actor
 	{
 		// ATTRIBUTES	-------------
 		

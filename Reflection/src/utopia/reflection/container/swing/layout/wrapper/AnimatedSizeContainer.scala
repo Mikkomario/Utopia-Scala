@@ -5,7 +5,7 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.util.Fps
 import utopia.paradigm.path.ProjectilePath
 import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
@@ -26,9 +26,9 @@ object AnimatedSizeContainer
 	  * @tparam C Type of container content
 	  * @return Newly created container
 	  */
-	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler2,
-								 transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-								 maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
+	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler,
+	                             transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	                             maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 		new AnimatedSizeContainer[C](actorHandler, component, transitionDuration, maxRefreshRate)
 	
 	/**
@@ -48,7 +48,7 @@ object AnimatedSizeContainer
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler2, initialContent: C,
+class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initialContent: C,
                                                transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
                                                maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with AwtContainerRelated
@@ -170,7 +170,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler2, init
 	
 	// NESTED	-------------------------
 	
-	private object SizeUpdater extends Actor2
+	private object SizeUpdater extends Actor
 	{
 		override def handleCondition: FlagLike = AlwaysTrue
 		

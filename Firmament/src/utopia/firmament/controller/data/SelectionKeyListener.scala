@@ -5,7 +5,7 @@ import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2}
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -99,7 +99,7 @@ class SelectionKeyListener(nextKey: Key = DownArrow, prevKey: Key = UpArrow,
                            initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
                            minScrollDelay: Duration = 0.05.seconds)
                           (moveSelection: Int => Unit)
-	extends KeyStateListener2 with Actor2
+	extends KeyStateListener2 with Actor
 {
 	// ATTRIBUTES	-----------------------------
 	

@@ -14,7 +14,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
-class DragTracker2(listener: MouseDragListener2) extends MouseButtonStateListener2 with MouseMoveListener2
+class DragTracker2(listener: MouseDragListener) extends MouseButtonStateListener2 with MouseMoveListener2
 {
 	// ATTRIBUTES   --------------------
 	
@@ -38,7 +38,7 @@ class DragTracker2(listener: MouseDragListener2) extends MouseButtonStateListene
 			else
 				pointer.pop().foreach { case (start, lastMove) =>
 					lastMove.foreach { move =>
-						val dragEvent = MouseDragEvent2(start.position, move, event.button, start.keyState,
+						val dragEvent = MouseDragEvent(start.position, move, event.button, start.keyState,
 							pressed = false)
 						listener.onMouseDrag(dragEvent)
 					}
@@ -50,7 +50,7 @@ class DragTracker2(listener: MouseDragListener2) extends MouseButtonStateListene
 	override def onMouseMove(event: MouseMoveEvent2): Unit = {
 		val events = dragPointers.flatMap { case (button, pointer) =>
 			pointer.updateAndGet { _.map { case (start, _) => start -> Some(event) } }
-				.map { case (start, _) => MouseDragEvent2(start.position, event, button, start.keyState) }
+				.map { case (start, _) => MouseDragEvent(start.position, event, button, start.keyState) }
 		}
 		events.foreach(listener.onMouseDrag)
 	}

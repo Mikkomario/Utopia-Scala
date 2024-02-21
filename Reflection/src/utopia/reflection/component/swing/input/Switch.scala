@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
 import utopia.paradigm.animation.Animation
@@ -59,7 +59,7 @@ object Switch
   * @author Mikko Hilpinen
   * @since 4.5.2019, v1+
   */
-class Switch(actorHandler: ActorHandler2, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
+class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
              initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
@@ -171,7 +171,7 @@ class Switch(actorHandler: ActorHandler2, val targetWidth: StackLength, val colo
 		override def onChangeEvent(event: ChangeEvent[Boolean]) = SwitchDrawer2.updateTarget(event.newValue)
 	}
 	
-	private object SwitchDrawer2 extends CustomDrawer with Actor2
+	private object SwitchDrawer2 extends CustomDrawer with Actor
 	{
 		// ATTRIBUTES	-------------
 		

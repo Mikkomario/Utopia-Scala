@@ -13,7 +13,7 @@ import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.RightArrow
 import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
@@ -60,7 +60,7 @@ object ScrollViewTest extends App
 		label
 	}
 	
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	
 	// Creates the main stack
 	val stack = new AnimatedStack[ItemLabel[Int]](actorHandler, Y, 8.fixed, 4.fixed) // Stack.column[ItemLabel[Int]](8.fixed, 4.fixed)

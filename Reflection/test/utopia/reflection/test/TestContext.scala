@@ -5,7 +5,7 @@ import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
@@ -23,7 +23,7 @@ object TestContext
 {
 	ParadigmDataType.setup()
 	
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	val colorScheme = ColorScheme.default ++
 		ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
 			ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get)

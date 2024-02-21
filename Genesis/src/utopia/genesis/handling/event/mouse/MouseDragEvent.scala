@@ -2,12 +2,12 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.collection.immutable.Pair
 import utopia.genesis.handling.event.keyboard.KeyboardState
-import utopia.genesis.handling.event.mouse.MouseDragListener2.MouseDragEventFilter
+import utopia.genesis.handling.event.mouse.MouseDragListener.MouseDragEventFilter
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import scala.concurrent.duration.FiniteDuration
 
-object MouseDragEvent2
+object MouseDragEvent
 {
 	/**
 	  * @return Access points to mouse drag -event filters
@@ -26,9 +26,9 @@ object MouseDragEvent2
  * @param pressed Whether the associated mouse button is still pressed.
   *                False if the button was released, which also signals the end of the drag.
  */
-case class MouseDragEvent2(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2, override val button: MouseButton,
-                           startKeyboardState: KeyboardState, override val pressed: Boolean = true)
-	extends MouseMoveEventLike[MouseDragEvent2] with MouseButtonStateEventLike[MouseDragEvent2]
+case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2, override val button: MouseButton,
+                          startKeyboardState: KeyboardState, override val pressed: Boolean = true)
+	extends MouseMoveEventLike[MouseDragEvent] with MouseButtonStateEventLike[MouseDragEvent]
 {
 	// ATTRIBUTES   ----------------------------
 	
@@ -59,7 +59,7 @@ case class MouseDragEvent2(dragOrigin: RelativePoint, lastMove: MouseMoveEvent2,
 	override def duration: FiniteDuration = lastMove.duration
 	override def buttonStates: MouseButtonStates = lastMove.buttonStates
 	
-	override def withPositions(positions: Pair[RelativePoint]): MouseDragEvent2 =
+	override def withPositions(positions: Pair[RelativePoint]): MouseDragEvent =
 		copy(lastMove = lastMove.withPositions(positions))
 	override def mapPosition(f: RelativePoint => RelativePoint) =
 		copy(dragOrigin = f(dragOrigin), lastMove = lastMove.mapPosition(f))

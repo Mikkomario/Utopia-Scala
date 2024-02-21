@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout.wrapper.scrolling
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.ScrollBarDrawerLike
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -40,7 +40,7 @@ object ScrollView
   * @since 30.4.2019, v1+
   */
 class ScrollView[C <: ReflectionStackable with AwtComponentRelated](override val content: C, override val axis: Axis2D,
-                                                                    actorHandler: ActorHandler2, scrollBarDrawer: ScrollBarDrawerLike,
+                                                                    actorHandler: ActorHandler, scrollBarDrawer: ScrollBarDrawerLike,
                                                                     override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
                                                                     scrollPerWheelClick: Double =  ComponentCreationDefaults.scrollAmountPerWheelClick,
                                                                     override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,

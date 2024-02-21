@@ -5,7 +5,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
@@ -32,11 +32,11 @@ object MouseOverHandler
 	// NESTED   ---------------------------
 	
 	case class MouseOverHandlerFactory(override val condition: FlagLike = AlwaysTrue)
-		extends HandlerFactory[MouseOverListener2, MouseOverHandler, MouseOverHandlerFactory]
+		extends HandlerFactory[MouseOverListener, MouseOverHandler, MouseOverHandlerFactory]
 	{
 		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
 		
-		override def apply(initialItems: IterableOnce[MouseOverListener2]) =
+		override def apply(initialItems: IterableOnce[MouseOverListener]) =
 			new MouseOverHandler(initialItems, condition)
 	}
 }
@@ -46,14 +46,14 @@ object MouseOverHandler
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener2] = Iterable.empty,
+class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Iterable.empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[MouseOverListener2](initialListeners, additionalCondition) with Actor2 with MouseMoveListener2
+	extends DeepHandler2[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener2
 {
 	// ATTRIBUTES   ----------------------
 	
 	// Items on which the mouse is currently hovering
-	private var entries = Map[MouseOverListener2, Instant]()
+	private var entries = Map[MouseOverListener, Instant]()
 	private var lastPosition = RelativePoint.origin
 	
 	
@@ -99,8 +99,8 @@ class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener2] = Iter
 		}
 	}
 	
-	override protected def asHandleable(item: Handleable2): Option[MouseOverListener2] = item match {
-		case l: MouseOverListener2 => Some(l)
+	override protected def asHandleable(item: Handleable2): Option[MouseOverListener] = item match {
+		case l: MouseOverListener => Some(l)
 		case _ => None
 	}
 }

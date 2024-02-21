@@ -12,7 +12,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
@@ -204,7 +204,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 	/**
 	  * Enables key state handling for the stack (allows selection change with up & down arrows)
 	  */
-	def enableKeyHandling(actorHandler: ActorHandler2, nextKey: Key = DownArrow, prevKey: Key = UpArrow,
+	def enableKeyHandling(actorHandler: ActorHandler, nextKey: Key = DownArrow, prevKey: Key = UpArrow,
 	                      initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
 	                      minScrollDelay: Duration = 0.05.seconds,
 	                      listenEnabledCondition: => Boolean = true) =

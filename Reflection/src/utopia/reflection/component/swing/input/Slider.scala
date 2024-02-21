@@ -17,7 +17,7 @@ import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
@@ -380,7 +380,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	  *                  (default = smooth animation finish)
 	  * @param animationDuration Duration of the complete knob transition (default = global default value)
 	  */
-	def enableAnimations(actorHandler: ActorHandler2, curvature: AnyAnimation[Double] = ProjectilePath(),
+	def enableAnimations(actorHandler: ActorHandler, curvature: AnyAnimation[Double] = ProjectilePath(),
 	                     animationDuration: Duration = ComponentCreationDefaults.transitionDuration) =
 	{
 		if (animator.isEmpty) {
@@ -462,7 +462,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	// NESTED   -----------------------------
 	
 	private class Animator(curve: AnyAnimation[Double], animationDuration: Duration)
-		extends Actor2 with ChangeListener[Double]
+		extends Actor with ChangeListener[Double]
 	{
 		// ATTRIBUTES   ---------------------
 		

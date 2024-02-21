@@ -7,7 +7,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
@@ -55,7 +55,7 @@ object ButtonTest extends App
 		val row = imageButton.rowWith(Vector(textButton, comboButton), margin = 16.any, layout = Fit)
 
 		// Creates progress bar
-		val actorHandler = ActorHandler2()
+		val actorHandler = ActorHandler()
 
 		val bar = new ProgressBar(actorHandler, 160.any x 12.downscaling, Color.gray(0.7), Color.magenta,
 			progressPointer)

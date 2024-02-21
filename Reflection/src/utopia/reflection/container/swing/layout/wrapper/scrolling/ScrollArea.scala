@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout.wrapper.scrolling
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.ScrollBarDrawerLike
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -36,7 +36,7 @@ object ScrollArea
   * @author Mikko Hilpinen
   * @since 18.5.2019, v1+
   */
-class ScrollArea[C <: ReflectionStackable with AwtComponentRelated](override val content: C, actorHandler: ActorHandler2,
+class ScrollArea[C <: ReflectionStackable with AwtComponentRelated](override val content: C, actorHandler: ActorHandler,
                                                                     scrollBarDrawer: ScrollBarDrawerLike,
                                                                     override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
                                                                     scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,

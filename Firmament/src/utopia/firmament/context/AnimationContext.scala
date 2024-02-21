@@ -1,6 +1,6 @@
 package utopia.firmament.context
 
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 
 import scala.concurrent.duration.FiniteDuration
@@ -16,7 +16,7 @@ object AnimationContext
 	  * @param useFadingInAnimations Whether animations should use fading effects, when available (default = true)
 	  * @return A new animation context instance
 	  */
-	def apply(actorHandler: ActorHandler2,
+	def apply(actorHandler: ActorHandler,
 	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 	          maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 	          useFadingInAnimations: Boolean = true): AnimationContext =
@@ -25,10 +25,10 @@ object AnimationContext
 	
 	// NESTED   -----------------------
 	
-	private case class _AnimationContext(actorHandler: ActorHandler2,
-	                                    animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
-	                                    maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
-	                                    useFadingInAnimations: Boolean = true)
+	private case class _AnimationContext(actorHandler: ActorHandler,
+	                                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	                                     maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
+	                                     useFadingInAnimations: Boolean = true)
 		extends AnimationContext
 }
 
@@ -57,5 +57,5 @@ trait AnimationContext
 	/**
 	  * @return Actor handler used for delivering action events, which are used in animations
 	  */
-	def actorHandler: ActorHandler2
+	def actorHandler: ActorHandler
 }

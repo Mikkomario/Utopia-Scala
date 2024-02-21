@@ -11,7 +11,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.util.Fps
 import utopia.paradigm.angular.DirectionalRotation
@@ -40,7 +40,7 @@ object AnimationLabel
 	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
-	def withRotatingImage(actorHandler: ActorHandler2, image: Image, rotation: TimedAnimation[DirectionalRotation],
+	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation],
 	                      alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 	{
 		val animator = TransformingImageAnimator(image, rotation.map { Matrix2D.rotation(_).to3D })
@@ -57,8 +57,8 @@ object AnimationLabel
 	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @return A new label
 	  */
-	def withSprite(actorHandler: ActorHandler2, strip: Strip, animationSpeed: Fps,
-				   alignment: Alignment = Center) =
+	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps,
+	               alignment: Alignment = Center) =
 	{
 		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed))
 		new AnimationLabel(actorHandler, animator, StackSize.any(strip.size), strip.drawPosition, alignment,
@@ -104,7 +104,7 @@ object AnimationLabel
   * @param alignment Alignment used when positioning the drawn content
   * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
   */
-class AnimationLabel[A](actorHandler: ActorHandler2, animator: Animator[A], override val stackSize: StackSize,
+class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
                         drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
 	extends Label with ReflectionStackable
 {
@@ -167,7 +167,7 @@ class AnimationLabel[A](actorHandler: ActorHandler2, animator: Animator[A], over
 		}
 	}
 	
-	private object Repainter extends Actor2
+	private object Repainter extends Actor
 	{
 		private val threshold = maxFps.interval
 		private var lastDraw = Now - threshold

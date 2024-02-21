@@ -18,7 +18,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -97,7 +97,7 @@ object ReachWindow
 	  * @param log Implicit logging implementation
 	  * @return A new reach window factory that uses the default context
 	  */
-	def apply(actorHandler: ActorHandler2, background: Color)(implicit exc: ExecutionContext, log: Logger) =
+	def apply(actorHandler: ActorHandler, background: Color)(implicit exc: ExecutionContext, log: Logger) =
 		withContext(ReachWindowContext(WindowContext(actorHandler), background))
 }
 

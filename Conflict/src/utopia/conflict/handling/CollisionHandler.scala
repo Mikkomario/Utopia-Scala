@@ -3,7 +3,7 @@ package utopia.conflict.handling
 import utopia.conflict.collision.{Collision, CollisionShape}
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.Handleable2
 
 import scala.concurrent.duration.FiniteDuration
@@ -44,7 +44,7 @@ object CollisionHandler
  */
 class CollisionHandler(targetHandler: CollisionTargetHandler,
                        initialListeners: IterableOnce[CollisionListener] = Iterable.empty)
-    extends CollisionPartyHandler[CollisionListener](initialListeners) with Actor2
+    extends CollisionPartyHandler[CollisionListener](initialListeners) with Actor
 {
     // ATTRIBUTES   --------------------
     

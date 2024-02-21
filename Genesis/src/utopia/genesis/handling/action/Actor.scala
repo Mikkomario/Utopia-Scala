@@ -1,6 +1,6 @@
-package utopia.genesis.handling
+package utopia.genesis.handling.action
 
-import utopia.inception.handling.Handleable
+import utopia.genesis.handling.template.Handleable2
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -10,8 +10,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 23.12.2016
  */
-@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
-trait Actor extends Handleable
+trait Actor extends Handleable2
 {
     // ABSTRACT ------------------
     
@@ -22,12 +21,4 @@ trait Actor extends Handleable
      * @param duration The duration since the last act
      */
     def act(duration: FiniteDuration): Unit
-    
-    
-    // COMPUTED ------------------
-    
-    /**
-      * @return Whether this actor should be considered active
-      */
-    def isActive = allowsHandlingFrom(ActorHandlerType)
 }

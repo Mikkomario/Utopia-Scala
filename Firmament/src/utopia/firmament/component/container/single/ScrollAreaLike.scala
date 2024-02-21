@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Foreground
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
@@ -329,7 +329,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * setupMouseHandling is called
 	  * @param actorHandler The actor handler that will deliver action events
 	  */
-	private def setupAnimatedScrolling(actorHandler: ActorHandler2) = {
+	private def setupAnimatedScrolling(actorHandler: ActorHandler) = {
 		if (scroller.isEmpty) {
 			val newScroller = new AnimatedScroller
 			scroller = Some(newScroller)
@@ -351,7 +351,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * @param dragDuration The maximum drag duration when concerning velocity tracking (default = 0.5 seconds)
 	  * @param velocityMod A modifier applied to velocity (default = 1.0)
 	  */
-	protected def setupMouseHandling(actorHandler: ActorHandler2, scrollPerWheelClick: Double,
+	protected def setupMouseHandling(actorHandler: ActorHandler, scrollPerWheelClick: Double,
 	                                 dragDuration: FiniteDuration = 300.millis, velocityMod: Double = 1.0) =
 	{
 		setupAnimatedScrolling(actorHandler)
@@ -454,7 +454,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	// NESTED CLASSES	-----------------------
 	
-	private class AnimatedScroller extends Actor2
+	private class AnimatedScroller extends Actor
 	{
 		// ATTRIBUTES	-----------------------
 		

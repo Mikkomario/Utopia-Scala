@@ -18,7 +18,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority2.VeryHigh
-import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
@@ -357,7 +357,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	}
 	
 	// Switches between visible and invisible caret
-	private object CaretBlinker extends Actor2
+	private object CaretBlinker extends Actor
 	{
 		// ATTRIBUTES	--------------------------
 		

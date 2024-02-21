@@ -5,7 +5,7 @@ import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
@@ -191,7 +191,7 @@ object ReflectionStackable
 		  * @param maxRefreshRate     Maximum size refresh rate (defaults to global default)
 		  * @return This component wrapped in a component that animates its size adjustments
 		  */
-		def withAnimatedSizeUsing(actorHandler: ActorHandler2,
+		def withAnimatedSizeUsing(actorHandler: ActorHandler,
 		                          transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
 		                          maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 			AnimatedSizeContainer(s, actorHandler, transitionDuration, maxRefreshRate)

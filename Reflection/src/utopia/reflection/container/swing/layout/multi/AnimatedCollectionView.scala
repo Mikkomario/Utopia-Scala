@@ -5,7 +5,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.stack.StackLength
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
@@ -43,7 +43,7 @@ object AnimatedCollectionView
  * @author Mikko Hilpinen
  * @since 24.4.2020, v1.2
  */
-class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler2, rowAxis: Axis2D, initialRowSplitThreshold: Double,
+class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowAxis: Axis2D, initialRowSplitThreshold: Double,
                                                 margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
                                                 forceEqualRowLength: Boolean = false,
                                                 animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,

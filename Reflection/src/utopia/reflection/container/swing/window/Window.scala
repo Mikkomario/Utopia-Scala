@@ -11,10 +11,10 @@ import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateHandler2, KeyStateListener2, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator2, MouseMoveListener2, MouseWheelListener2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator, MouseMoveListener2, MouseWheelListener2}
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -318,11 +318,11 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  * Starts mouse event generation for this window
 	  * @param actorHandler An ActorHandler that generates the necessary action events
 	  */
-	def startEventGenerators(actorHandler: ActorHandler2)(implicit exc: ExecutionContext) =
+	def startEventGenerators(actorHandler: ActorHandler)(implicit exc: ExecutionContext) =
 	{
 		if (generatorActivated.set()) {
 			// Starts mouse listening
-			val mouseEventGenerator = new MouseEventGenerator2(content.component)
+			val mouseEventGenerator = new MouseEventGenerator(content.component)
 			actorHandler += mouseEventGenerator
 			mouseEventGenerator.buttonHandler += MouseButtonStateListener2
 				.unconditional { e => content.distributeMouseButtonEvent(e) }

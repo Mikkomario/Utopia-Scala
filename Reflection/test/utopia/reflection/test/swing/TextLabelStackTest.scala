@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.graphics.{DrawSettings, StrokeSettings}
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.color.Color
@@ -52,7 +52,7 @@ object TextLabelStackTest extends App
 	labels(1).addCustomDrawer() { (d, b) => d.draw(b.shrunk(Size.square(4))) }
 
 	// Creates the frame and displays it
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	val actionLoop = new ActionLoop(actorHandler)
 
 	val framing = Framing.symmetric(stack, 24.downscaling.square)

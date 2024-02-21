@@ -4,7 +4,7 @@ import utopia.firmament.component.HasMutableBounds
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateListener2
 import utopia.genesis.handling.event.mouse.{MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2, MouseWheelListener2}
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -59,7 +59,7 @@ object MouseTest extends App
 	frame.addKeyStateListener(KeyStateListener2.unconditional { println(_) })
 	
 	// Starts the program
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	val actorLoop = new ActionLoop(actorHandler)
 	
 	frame.startEventGenerators(actorHandler)

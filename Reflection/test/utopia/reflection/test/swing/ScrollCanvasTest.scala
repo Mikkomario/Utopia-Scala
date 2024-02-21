@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.Drawable
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.Control
@@ -38,7 +38,7 @@ object ScrollCanvasTest extends App
 	ParadigmDataType.setup()
 	
 	// Creates the handlers
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	val drawHandler = DrawableHandler()
 	val mouseButtonHandler = MouseButtonStateHandler2()
 	val mouseWheelHandler = MouseWheelHandler2()

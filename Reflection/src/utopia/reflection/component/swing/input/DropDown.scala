@@ -2,29 +2,28 @@ package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Direction2D.Up
-import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reflection.component.swing.label.{ImageLabel, ItemLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.modifier.StackSizeModifier
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
-import utopia.genesis.handling.action.ActorHandler2
-import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reflection.text.Prompt
 
 import scala.concurrent.ExecutionContext
@@ -118,7 +117,7 @@ object DropDown
   * @since 14.3.2020, v1
   */
 class DropDown[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler2, override protected val noResultsView: AwtStackable, icon: Image,
+(actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
  defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
  textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,

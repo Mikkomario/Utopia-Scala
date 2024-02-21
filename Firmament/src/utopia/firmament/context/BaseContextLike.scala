@@ -6,7 +6,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{LengthPriority, StackLength}
 import utopia.flow.operator.ScopeUsable
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
@@ -27,7 +27,7 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	/**
 	  * @return Actor handler used for distributing action events
 	  */
-	def actorHandler: ActorHandler2
+	def actorHandler: ActorHandler
 	
 	/**
 	  * @return A localizer used in this context

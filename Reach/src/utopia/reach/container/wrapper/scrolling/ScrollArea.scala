@@ -8,7 +8,7 @@ import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -249,7 +249,7 @@ case class InitializedContextualScrollAreaFactory[N](parentHierarchy: ComponentH
   * @since 7.12.2020, v0.1
   */
 class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-                 actorHandler: ActorHandler2, barDrawer: ScrollBarDrawerLike,
+                 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike,
                  override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
                  override val scrollBarMargin: Size = Size.zero,
                  scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,

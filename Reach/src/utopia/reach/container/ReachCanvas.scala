@@ -17,7 +17,7 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Shift, Tab}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
@@ -146,7 +146,7 @@ object ReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def forSwing[C <: ReachComponentLike, R](actorHandler: ActorHandler2, backgroundPointer: Changing[Color],
+	def forSwing[C <: ReachComponentLike, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
 	                                         cursors: Option[CursorSet] = None,
 	                                         revalidateListener: ReachCanvas => Unit = _ => (),
 	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
@@ -198,7 +198,7 @@ object ReachCanvas
 	
 	// NESTED   ----------------------------
 	
-	private class SwingAttachmentTracker(actorHandler: ActorHandler2, canvas: ReachCanvas, attachedFlag: ResettableFlag,
+	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: ResettableFlag,
 	                                     absolutePositionView: Resettable, mouseDisabled: Boolean)
 	                                    (implicit exc: ExecutionContext)
 		extends AncestorListener
@@ -231,13 +231,13 @@ object ReachCanvas
 		override def ancestorMoved(event: AncestorEvent) = absolutePositionView.reset()
 	}
 	
-	private class SwingMouseEventConverter(actorHandler: ActorHandler2, canvas: ReachCanvas,
+	private class SwingMouseEventConverter(actorHandler: ActorHandler, canvas: ReachCanvas,
 	                                       parentPointer: Changing[Option[java.awt.Component]])
 	                                      (implicit exc: ExecutionContext)
 	{
 		// ATTRIBUTES   -----------------------
 		
-		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator2(_) } }
+		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator(_) } }
 		
 		
 		// INITIAL CODE --------------------

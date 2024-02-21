@@ -1,6 +1,6 @@
 package utopia.firmament.context
 import utopia.firmament.model.enumeration.WindowResizePolicy
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.insets.Insets
 
@@ -27,7 +27,7 @@ trait WindowContextWrapper[+Repr] extends WindowContextLike[Repr]
 	
 	// IMPLEMENTED  -----------------
 	
-	override def actorHandler: ActorHandler2 = windowContext.actorHandler
+	override def actorHandler: ActorHandler = windowContext.actorHandler
 	override def windowResizeLogic: WindowResizePolicy = windowContext.windowResizeLogic
 	override def screenBorderMargins: Insets = windowContext.screenBorderMargins
 	override def icon: Image = windowContext.icon

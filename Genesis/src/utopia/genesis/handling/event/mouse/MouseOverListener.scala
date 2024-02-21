@@ -15,7 +15,7 @@ import scala.annotation.unused
 import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
-object MouseOverListener2
+object MouseOverListener
 {
 	// TYPES    ------------------------
 	
@@ -43,7 +43,7 @@ object MouseOverListener2
 	
 	// IMPLICIT ------------------------
 	
-	implicit def objectToFactory(@unused o: MouseOverListener2.type): MouseOverListenerFactory = unconditional
+	implicit def objectToFactory(@unused o: MouseOverListener.type): MouseOverListenerFactory = unconditional
 	
 	
 	// NESTED   ------------------------
@@ -106,14 +106,14 @@ object MouseOverListener2
 		  *          but only if the listening condition and event filter of this factory allow it
 		  * @return A new mouse over listener
 		  */
-		def apply(contains: DoubleVector => Boolean)(f: MouseOverEvent => ConsumeChoice): MouseOverListener2 =
+		def apply(contains: DoubleVector => Boolean)(f: MouseOverEvent => ConsumeChoice): MouseOverListener =
 			new _MouseOverListener(condition, filter, contains, f)
 	}
 	
 	private class _MouseOverListener(override val handleCondition: FlagLike,
 	                                 override val mouseOverEventFilter: MouseOverEventFilter,
 	                                 containment: DoubleVector => Boolean, f: MouseOverEvent => ConsumeChoice)
-		extends MouseOverListener2
+		extends MouseOverListener
 	{
 		override def contains(point: DoubleVector): Boolean = containment(point)
 		
@@ -126,7 +126,7 @@ object MouseOverListener2
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-trait MouseOverListener2 extends Handleable2 with Area2D
+trait MouseOverListener extends Handleable2 with Area2D
 {
 	/**
 	  * @return A filter applied to incoming mouse over events.

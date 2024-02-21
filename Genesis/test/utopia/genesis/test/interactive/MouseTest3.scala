@@ -10,7 +10,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener, Repositioner}
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
@@ -61,9 +61,9 @@ object MouseTest3 extends App
 	window.display()
 	
 	// Creates the handlers & event systems
-	private val actorHandler = ActorHandler2.empty
+	private val actorHandler = ActorHandler.empty
 	private val actionLoop = new ActionLoop(actorHandler)
-	private val mouseGenerator = MouseEventGenerator2(actorHandler, canvas)
+	private val mouseGenerator = MouseEventGenerator(actorHandler, canvas)
 	
 	private val handlers = Handlers(Vector(actorHandler, canvas.handler) ++ mouseGenerator.handlers)
 	

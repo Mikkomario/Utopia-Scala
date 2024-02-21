@@ -6,7 +6,7 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
@@ -87,7 +87,7 @@ object AnimatedStack
   * @author Mikko Hilpinen
   * @since 18.4.2020, v1.2
   */
-class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler2, direction: Axis2D,
+class AnimatedStack[C <: AwtStackable](actorHandler: ActorHandler, direction: Axis2D,
                                        margin: StackLength = StackLength.any,
                                        cap: StackLength = StackLength.fixedZero, layout: StackLayout = Fit,
                                        animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,

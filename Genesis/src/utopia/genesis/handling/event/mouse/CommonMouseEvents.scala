@@ -18,13 +18,13 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 {
 	// ATTRIBUTES	--------------------------------
 	
-	private var generators = Set[MouseEventGenerator2]()
+	private var generators = Set[MouseEventGenerator]()
 	private var _buttonStates = MouseButtonStates.default
 	
 	private val buttonHandler = MouseButtonStateHandler2.empty
 	private val moveHandler = MouseMoveHandler2.empty
 	private val wheelHandler = MouseWheelHandler2.empty
-	private val dragHandler = MouseDragHandler2.empty
+	private val dragHandler = MouseDragHandler.empty
 	
 	/**
 	  * The handlers (button, move, wheel & drag) managed by this interface
@@ -64,7 +64,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  * Registers a new event generator to be used for generating global mouse events
 	  * @param generator A new mouse event generator
 	  */
-	def addGenerator(generator: MouseEventGenerator2) = {
+	def addGenerator(generator: MouseEventGenerator) = {
 		if (!generators.contains(generator) && generator.hasNotStopped) {
 			generators = generators + generator
 			generator.handlers += AbsolutizingListener
@@ -73,19 +73,19 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 		}
 	}
 	@deprecated("Please use .addGenerator(MouseEventGenerator2) instead", "v4.0")
-	def registerGenerator(generator: MouseEventGenerator2) = addGenerator(generator)
+	def registerGenerator(generator: MouseEventGenerator) = addGenerator(generator)
 	/**
 	  * Removes a mouse event generator from the tracked / listened generators
 	  * @param generator A generator to remove
 	  */
-	def removeGenerator(generator: MouseEventGenerator2) = {
+	def removeGenerator(generator: MouseEventGenerator) = {
 		if (generators.contains(generator)) {
 			generator.handlers -= AbsolutizingListener
 			generators -= generator
 		}
 	}
 	@deprecated("Please use .removeGenerator(MouseEventGenerator) instead", "v4.0")
-	def unregisterGenerator(generator: MouseEventGenerator2) = removeGenerator(generator)
+	def unregisterGenerator(generator: MouseEventGenerator) = removeGenerator(generator)
 	
 	/**
 	  * Registers a new mouse button listener to this handler
@@ -112,7 +112,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	 * @param listener A new mouse drag listener to inform about mouse drag events
 	 */
 	@deprecated("Deprecated for removal", "v4.0")
-	def registerDragListener(listener: MouseDragListener2) =
+	def registerDragListener(listener: MouseDragListener) =
 		dragHandler += listener
 	
 	/**
@@ -122,7 +122,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
 	def register(item: Any) = item match {
-		case generator: MouseEventGenerator2 => registerGenerator(generator)
+		case generator: MouseEventGenerator => registerGenerator(generator)
 		case listener: Handleable2 => handlers += listener
 		case _ => ()
 	}
@@ -132,7 +132,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
 	def unregister(item: Any) = item match {
-		case generator: MouseEventGenerator2 => unregisterGenerator(generator)
+		case generator: MouseEventGenerator => unregisterGenerator(generator)
 		case listener: Handleable2 => handlers -= listener
 		case _ => ()
 	}
@@ -152,7 +152,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	// NESTED   -------------------------
 	
 	private object AbsolutizingListener
-		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener2 with MouseDragListener2
+		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener2 with MouseDragListener
 	{
 		// IMPLEMENTED  -----------------
 		
@@ -161,7 +161,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent2] = AcceptAll
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent2] = AcceptAll
-		override def mouseDragEventFilter: Filter[MouseDragEvent2] = AcceptAll
+		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
 		// Removes the relative component from incoming events
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
@@ -172,7 +172,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 		override def onMouseMove(event: MouseMoveEvent2): Unit = moveHandler.onMouseMove(absolutize(event))
 		override def onMouseWheelRotated(event: MouseWheelEvent2): ConsumeChoice =
 			wheelHandler.onMouseWheelRotated(absolutize(event))
-		override def onMouseDrag(event: MouseDragEvent2): Unit = dragHandler.onMouseDrag(absolutize(event))
+		override def onMouseDrag(event: MouseDragEvent): Unit = dragHandler.onMouseDrag(absolutize(event))
 		
 		
 		// OTHER    --------------------

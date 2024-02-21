@@ -19,7 +19,7 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Priority2.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
@@ -212,7 +212,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  * @return A new list
 	  */
 	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler2, contextBackgroundPointer: View[Color], contentPointer: P,
+	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -262,7 +262,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(actorHandler: ActorHandler2, contextBackgroundPointer: View[Color], contentPointer: P,
+	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -382,7 +382,7 @@ object SelectionList extends SelectionListSetup()
   * @since 19.12.2020, v0.1
   */
 class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
-(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler2, contextBackgroundPointer: View[Color],
+(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
  marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],

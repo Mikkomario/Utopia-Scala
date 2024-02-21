@@ -9,7 +9,7 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
 import utopia.paradigm.animation.{Animation, AnimationLike}
@@ -120,7 +120,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	  * Starts this transition progress
 	  * @return A future of transition completion
 	  */
-	def start(actorHandler: ActorHandler2) =
+	def start(actorHandler: ActorHandler) =
 	{
 		if (_state == NotStarted) {
 			// Starts transition & revalidation loop
@@ -146,7 +146,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 		}
 	}
 	
-	private class Animator(handler: ActorHandler2) extends Actor2
+	private class Animator(handler: ActorHandler) extends Actor
 	{
 		override def handleCondition: FlagLike = AlwaysTrue
 		

@@ -5,7 +5,7 @@ import utopia.flow.view.mutable.caching.ResettableVolatileLazy
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.Drawable
-import utopia.genesis.handling.action.Actor2
+import utopia.genesis.handling.action.Actor
 import utopia.inception.handling.HandlerType
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -16,7 +16,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since 18.8.2019, v2.1+
   * @tparam A Type of animation result that is also drawn
   */
-abstract class Animator[A] extends Actor2 with Drawable
+abstract class Animator[A] extends Actor with Drawable
 {
 	// TODO: Add animation events
 	// ATTRIBUTES	-------------------

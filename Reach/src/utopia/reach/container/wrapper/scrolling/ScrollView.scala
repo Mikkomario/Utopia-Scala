@@ -5,7 +5,7 @@ import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.Hsl
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -161,7 +161,7 @@ case class InitializedContextualScrollViewFactory[N](parentHierarchy: ComponentH
   * @since 9.12.2020, v0.1
   */
 class ScrollView(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-                 actorHandler: ActorHandler2, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
+                 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
                  override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
                  override val scrollBarMargin: Size = Size.zero,
                  scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,

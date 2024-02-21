@@ -2,7 +2,7 @@ package utopia.firmament.context
 
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.flow.operator.ScopeUsable
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.insets.Insets
 
@@ -18,7 +18,7 @@ trait WindowContextLike[+Repr] extends ScopeUsable[Repr]
 	/**
 	  * @return Actor handler used for delivering action events for window event generation
 	  */
-	def actorHandler: ActorHandler2
+	def actorHandler: ActorHandler
 	/**
 	  * @return Resize logic to use for constructed windows
 	  */

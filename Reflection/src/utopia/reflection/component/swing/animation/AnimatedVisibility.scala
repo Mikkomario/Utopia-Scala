@@ -5,7 +5,7 @@ import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.label.EmptyLabel
@@ -43,7 +43,7 @@ object AnimatedVisibility
   * @author Mikko Hilpinen
   * @since 19.4.2020, v1.2
   */
-class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler2,
+class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler,
                                             transitionAxis: Option[Axis2D] = None,
                                             initialState: VisibilityState = Invisible,
                                             duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,

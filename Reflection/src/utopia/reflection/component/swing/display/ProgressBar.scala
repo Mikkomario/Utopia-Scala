@@ -11,7 +11,7 @@ import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -45,7 +45,7 @@ object ProgressBar
   * @author Mikko Hilpinen
   * @since 1.8.2019, v1+
   */
-class ProgressBar(actorHandler: ActorHandler2, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
+class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
                   progressPointer: Changing[Double],
                   animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends ReflectionStackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
@@ -130,7 +130,7 @@ class ProgressBar(actorHandler: ActorHandler2, _stackSize: StackSize, val backgr
 		}
 	}
 	
-	private object ProgressDrawer extends CustomDrawer with Actor2
+	private object ProgressDrawer extends CustomDrawer with Actor
 	{
 		// ATTRIBUTES	------------------
 		

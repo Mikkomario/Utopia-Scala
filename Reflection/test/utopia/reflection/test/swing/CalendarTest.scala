@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
@@ -52,7 +52,7 @@ object CalendarTest extends App
 	calendar.valuePointer.addContinuousListener { e => println(s"New selected date: ${ e.newValue }") }
 	
 	// Creates the frame and displays it
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 	val actionLoop = new ActionLoop(actorHandler)
 	
 	val framing = Framing.symmetric(calendar, 24.downscaling.square)

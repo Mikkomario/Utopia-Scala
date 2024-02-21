@@ -2,7 +2,7 @@ package utopia.firmament.context
 
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.insets.Insets
 
@@ -38,7 +38,7 @@ object WindowContext
 	  *                            Default = false = transparency is enabled when possible.
 	  * @return A new context
 	  */
-	def apply(actorHandler: ActorHandler2, resizeLogic: WindowResizePolicy = Program,
+	def apply(actorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
 	          screenBorderMargins: Insets = Insets.zero, icon: Image = ComponentCreationDefaults.windowIcon,
 	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
 	          ignoreScreenInsets: Boolean = false, disableTransparency: Boolean = false): WindowContext =
@@ -48,7 +48,7 @@ object WindowContext
 	
 	// NESTED   ------------------------
 	
-	private case class _WindowContext(actorHandler: ActorHandler2, windowResizeLogic: WindowResizePolicy,
+	private case class _WindowContext(actorHandler: ActorHandler, windowResizeLogic: WindowResizePolicy,
 	                                  screenBorderMargins: Insets, icon: Image, windowBordersEnabled: Boolean,
 	                                  fullScreenEnabled: Boolean, focusEnabled: Boolean, screenInsetsEnabled: Boolean,
 	                                  transparencyEnabled: Boolean)

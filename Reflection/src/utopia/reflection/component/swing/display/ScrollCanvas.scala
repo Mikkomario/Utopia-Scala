@@ -13,7 +13,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.DrawableHandler
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.util.Fps
 import utopia.genesis.view.RepaintLoop
@@ -73,7 +73,7 @@ object ScrollCanvas
   * @param scrollBarIsInsideContent Whether the scroll bar should be placed inside (true) or outside (false) of drawn
   *                                 content (default = false)
   */
-class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler2,
+class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
                    val contentMouseButtonHandler: MouseButtonStateHandler2, val contentMouseMoveHandler: MouseMoveHandler2,
                    val contentMouseWheelHandler: MouseWheelHandler2, maxOptimalSize: Option[Size],
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,

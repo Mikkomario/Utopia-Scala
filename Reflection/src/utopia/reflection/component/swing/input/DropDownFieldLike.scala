@@ -9,7 +9,7 @@ import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
@@ -43,7 +43,7 @@ import scala.concurrent.ExecutionContext
   * @param exc Implicit execution context (used in pop-up)
   */
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
-(actorHandler: ActorHandler2, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
+(actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
  displayStackLayout: StackLayout = Fit,
  protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
  override val valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),

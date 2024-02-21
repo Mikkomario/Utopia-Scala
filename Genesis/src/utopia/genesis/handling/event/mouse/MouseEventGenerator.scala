@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.action.{Actor2, ActorHandler2}
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.ref.WeakReference
 import scala.util.Try
 
-object MouseEventGenerator2
+object MouseEventGenerator
 {
     /**
       * Creates a new mouse event generator and attaches it to an ActorHandler
@@ -29,10 +29,10 @@ object MouseEventGenerator2
       * @param exc Implicit execution context (used for delivering mouse events)
       * @return A new mouse event generator, already attached to the specified ActorHandler
       */
-    def apply(handler: ActorHandler2, component: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
+    def apply(handler: ActorHandler, component: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
              (implicit exc: ExecutionContext) =
     {
-        val generator = new MouseEventGenerator2(component, activeCondition)
+        val generator = new MouseEventGenerator(component, activeCondition)
         handler += generator
         generator
     }
@@ -45,9 +45,9 @@ object MouseEventGenerator2
  * @author Mikko Hilpinen
  * @since 22.1.2017
  */
-class MouseEventGenerator2(c: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
-                          (implicit exc: ExecutionContext)
-    extends Actor2 with Breakable
+class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
+                         (implicit exc: ExecutionContext)
+    extends Actor with Breakable
 {
     // ATTRIBUTES    -----------------
     

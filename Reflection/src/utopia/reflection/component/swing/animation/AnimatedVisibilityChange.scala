@@ -5,7 +5,6 @@ import utopia.genesis.util.Fps
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.path.ProjectilePath
-import utopia.reflection.component.context.AnimationContextLike
 import utopia.reflection.component.swing.label.EmptyLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapperWrapper}
 import utopia.reflection.component.template.layout.stack.{AnimatedTransitionLike, ReflectionStackable}

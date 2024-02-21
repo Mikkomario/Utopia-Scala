@@ -6,7 +6,7 @@ import utopia.flow.operator.filter.Filter
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.genesis.handling.template.Handleable2
@@ -48,7 +48,7 @@ object Popup
 	  */
 	def apply[C <: AwtContainerRelated with ReflectionStackable](context: ReflectionComponentLike with AwtComponentRelated,
 	                                                             content: C,
-	                                                             actorHandler: ActorHandler2,
+	                                                             actorHandler: ActorHandler,
 	                                                             autoCloseLogic: PopupAutoCloseLogic = Never,
 	                                                             resizeAlignment: Alignment = TopLeft)
 	                                                            (getTopLeft: (Size, Size) => Point)

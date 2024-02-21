@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
-import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.color.Color
@@ -37,7 +37,7 @@ object SwitchTest extends App
 	labels.foreach { l => l.alignTo(Direction2D.Right) }
 
 	// Creates the switches
-	val actorHandler = ActorHandler2()
+	val actorHandler = ActorHandler()
 
 	val enabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red, initialState = true)
 	val disabledSwitch = new Switch(actorHandler, 32.upTo(64), Color.red)

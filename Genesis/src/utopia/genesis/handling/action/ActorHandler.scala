@@ -8,7 +8,7 @@ import scala.annotation.unused
 import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
 
-object ActorHandler2
+object ActorHandler
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -20,18 +20,18 @@ object ActorHandler2
 	
 	// IMPLICIT ---------------------------
 	
-	implicit def objectToFactory(@unused o: ActorHandler2.type): ActorHandlerFactory = factory
+	implicit def objectToFactory(@unused o: ActorHandler.type): ActorHandlerFactory = factory
 	
 	
 	// NESTED   ---------------------------
 	
 	case class ActorHandlerFactory(override val condition: FlagLike = AlwaysTrue)
-		extends HandlerFactory[Actor2, ActorHandler2, ActorHandlerFactory]
+		extends HandlerFactory[Actor, ActorHandler, ActorHandlerFactory]
 	{
 		override def usingCondition(newCondition: FlagLike): ActorHandlerFactory = copy(condition = newCondition)
 		
-		override def apply(initialItems: IterableOnce[Actor2]): ActorHandler2 =
-			new ActorHandler2(initialItems, condition)
+		override def apply(initialItems: IterableOnce[Actor]): ActorHandler =
+			new ActorHandler(initialItems, condition)
 	}
 }
 
@@ -40,14 +40,14 @@ object ActorHandler2
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class ActorHandler2(initialItems: IterableOnce[Actor2] = Iterable.empty,
-                    additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[Actor2](initialItems, additionalCondition) with Actor2
+class ActorHandler(initialItems: IterableOnce[Actor] = Iterable.empty,
+                   additionalCondition: Changing[Boolean] = AlwaysTrue)
+	extends DeepHandler2[Actor](initialItems, additionalCondition) with Actor
 {
 	override def act(duration: FiniteDuration) = items.foreach { _.act(duration) }
 	
-	override protected def asHandleable(item: Handleable2): Option[Actor2] = item match {
-		case a: Actor2 => Some(a)
+	override protected def asHandleable(item: Handleable2): Option[Actor] = item match {
+		case a: Actor => Some(a)
 		case _ => None
 	}
 }
