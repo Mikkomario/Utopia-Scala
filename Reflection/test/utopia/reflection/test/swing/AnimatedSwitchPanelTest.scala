@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.event.keyboard.KeyStateListener2
+import utopia.genesis.handling.event.keyboard.KeyStateListener
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.label.{EmptyLabel, TextLabel}
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
@@ -41,7 +41,7 @@ object AnimatedSwitchPanelTest extends App
 	setup.start()
 
 	val indexPointer = new EventfulPointer(0)
-	frame.addKeyStateListener(KeyStateListener2.pressed { event =>
+	frame.addKeyStateListener(KeyStateListener.pressed { event =>
 		if (event.index == KeyEvent.VK_RIGHT)
 			indexPointer.update { i => (i + 1) % labels.size }
 		else if (event.index == KeyEvent.VK_LEFT)

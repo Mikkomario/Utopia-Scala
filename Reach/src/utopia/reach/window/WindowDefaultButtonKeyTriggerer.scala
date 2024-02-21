@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.keyboard.Key.Enter
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.reach.component.template.focus.FocusableWithState
 
 import scala.concurrent.ExecutionContext
@@ -45,18 +45,18 @@ object WindowDefaultButtonKeyTriggerer
 class WindowDefaultButtonKeyTriggerer(window: Window, buttons: Iterable[FocusableWithState],
                                       additionalCondition: View[Boolean] = AlwaysTrue, triggerKey: Key = Enter)
                                      (action: => Unit)
-	extends KeyStateListener2
+	extends KeyStateListener
 {
 	// ATTRIBUTES	----------------------------
 	
-	override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(triggerKey)
+	override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(triggerKey)
 	
 	
 	// IMPLEMENTED	----------------------------
 	
 	override def handleCondition: FlagLike = window.fullyVisibleAndFocusedFlag
 	
-	override def onKeyState(event: KeyStateEvent2) = {
+	override def onKeyState(event: KeyStateEvent) = {
 		// Checks whether required conditions are met
 		if (buttons.forall { !_.hasFocus } && additionalCondition.value)
 			action

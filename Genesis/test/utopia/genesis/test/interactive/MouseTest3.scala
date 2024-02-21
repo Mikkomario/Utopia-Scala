@@ -13,8 +13,8 @@ import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener, Repositioner}
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.view.{AwtCanvas, MainFrame}
@@ -69,7 +69,7 @@ object MouseTest3 extends App
 	
 	// Adds the test component
 	handlers += TestItem
-	KeyboardEvents += KeyStateListener2.apply(Key.Esc).pressed { _ => window.dispose() }
+	KeyboardEvents += KeyStateListener.apply(Key.Esc).pressed { _ => window.dispose() }
 	
 	// Adds a view to the test component
 	private val repositioner = new Repositioner(TestItem, Left(Fixed(Point(200, 200)), Fixed(Size(20, 20))))
@@ -88,9 +88,9 @@ object MouseTest3 extends App
 	
 	// NESTED   -----------------------
 	
-	private object KeyListener extends KeyStateListener2
+	private object KeyListener extends KeyStateListener
 	{
-		override def onKeyState(event: KeyStateEvent2): Unit = println(event)
+		override def onKeyState(event: KeyStateEvent): Unit = println(event)
 		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 		override def handleCondition: FlagLike = AlwaysTrue
 	}

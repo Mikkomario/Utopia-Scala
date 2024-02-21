@@ -8,8 +8,8 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority2.High
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
@@ -144,7 +144,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	
 	private class ButtonKeyListener(statePointer: Pointer[GuiElementStatus], hotKeys: Set[HotKey],
 	                                requiresFocus: Boolean = true)
-		extends KeyStateListener2
+		extends KeyStateListener
 	{
 		// ATTRIBUTES	---------------------------
 		
@@ -172,7 +172,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		
 		// IMPLEMENTED	---------------------------
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			lazy val windowHasFocus = parentWindow.exists { window => window.isFocused || !window.isFocusableWindow }
 			if (hotKeys.exists { key =>
 				key.isTriggeredWith(event.keyboardState) && (key.triggersWithoutWindowFocus || windowHasFocus) })

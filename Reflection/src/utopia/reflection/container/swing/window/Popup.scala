@@ -7,7 +7,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.ActorHandler
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.genesis.handling.template.Handleable2
 import utopia.genesis.util.Screen
@@ -163,10 +163,10 @@ object Popup
 		}
 	}
 	
-	private class HideOnKeyPressListener(override val popup: Window[_]) extends KeyStateListener2 with HideActionListener
+	private class HideOnKeyPressListener(override val popup: Window[_]) extends KeyStateListener with HideActionListener
 	{
-		override val keyStateEventFilter = KeyStateEvent2.filter.pressed
+		override val keyStateEventFilter = KeyStateEvent.filter.pressed
 		
-		override def onKeyState(event: KeyStateEvent2) = popup.close()
+		override def onKeyState(event: KeyStateEvent) = popup.close()
 	}
 }

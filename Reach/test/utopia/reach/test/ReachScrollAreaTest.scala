@@ -7,7 +7,7 @@ import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.genesis.handling.event.keyboard.Key.{FunctionKey, Space}
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.Hsl
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -78,8 +78,8 @@ object ReachScrollAreaTest extends App
 	window.setToCloseOnEsc()
 	
 	// Adds user-interaction
-	KeyboardEvents += KeyStateListener2.pressed(Space) { _ => isAltSizeFlag.update { !_ } }
-	KeyboardEvents += KeyStateListener2.pressed(FunctionKey(5)) { _ => window.result.repaint() }
+	KeyboardEvents += KeyStateListener.pressed(Space) { _ => isAltSizeFlag.update { !_ } }
+	KeyboardEvents += KeyStateListener.pressed(FunctionKey(5)) { _ => window.result.repaint() }
 	
 	Loop.regularly(3.seconds) {
 		println()

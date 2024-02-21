@@ -7,6 +7,8 @@ import utopia.genesis.handling.event.keyboard.{Key, KeyboardState}
 
 object HotKey
 {
+	// TODO: Could add an implicit conversion from Key to HotKey
+	
 	/**
 	  * @param key Key that triggers this hotkey
 	  * @return A hotkey triggered by the specified key
@@ -70,6 +72,7 @@ object HotKey
   *                            in order for the hotkey action to be triggered.
   *                            Default = true.
   */
+// TODO: Consider renaming to Hotkey
 case class HotKey(keys: Set[Key] = Set(), condition: View[Boolean] = AlwaysTrue, requiresWindowFocus: Boolean = true)
 {
 	// COMPUTED -----------------------

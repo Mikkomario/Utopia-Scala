@@ -11,6 +11,7 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
   - Please use standard **MouseEventGenerator** instead (which doesn't support scaling out-of-the-box, however)
 - Replaced **GlobalMouseEventHandler** with **CommonMouseEvents**
 - Replaced **GlobalKeyEventHandler** with **KeyboardEvents**
+- Replaced **ActorLoop** with **ActionLoop**
 - **Animator**'s handling states can't be mutated anymore
 
 ## v3.5.1 (in development)

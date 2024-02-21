@@ -12,7 +12,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.inception.handling.immutable.Handleable
@@ -199,7 +199,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			popup.addConstraint(PopUpWidthModifier)
 			popup.relayAwtKeyEventsTo(mainDisplay)
 			popup.addKeyStateListener(
-				KeyStateListener2.pressed(Tab, Enter, Esc) { _ => if (popup.isFocusedWindow) popup.close() })
+				KeyStateListener.pressed(Tab, Enter, Esc) { _ => if (popup.isFocusedWindow) popup.close() })
 			popup.addMouseButtonListener(MouseButtonStateListener2.released { _ =>
 				if (popup.isFocusedWindow)
 					popup.close()
@@ -217,20 +217,20 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// NESTED	-------------------------------
 	
-	private object ShowPopupKeyListener extends KeyStateListener2 with Handleable with MouseButtonStateListener2
+	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener2
 	{
 		// ATTRIBUTES   ----------------------
 		
 		override val handleCondition: FlagLike = visiblePopupPointer.map { _.isEmpty }
 		
-		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && !KeyStateEvent2.filter(Set(Esc, Tab))
+		override val keyStateEventFilter = KeyStateEvent.filter.pressed && !KeyStateEvent.filter(Set(Esc, Tab))
 		override val mouseButtonStateEventFilter =
 			MouseButtonStateEvent2.filter.leftPressed && MouseButtonStateEventFilter.over(mainDisplay.bounds)
 		
 		
 		// IMPLEMENTED  -----------------------
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			if (mainDisplay.isInFocus)
 				displayPopup()
 		}

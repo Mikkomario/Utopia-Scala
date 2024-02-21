@@ -11,7 +11,7 @@ import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.Control
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.util.Fps
@@ -104,7 +104,7 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	}
 }
 
-private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener2
+private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener
 {
 	// ATTRIBUTES	---------------
 	
@@ -112,7 +112,7 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 	
 	// Only listens to mouse wheel events while cursor is inside canvas
 	override val mouseWheelEventFilter = MouseEvent2.filter.over(Bounds(Point.origin, canvas.worldSize))
-	override val keyStateEventFilter = KeyStateEvent2.filter(Control)
+	override val keyStateEventFilter = KeyStateEvent.filter(Control)
 	
 	
 	// IMPLEMENTED	---------------
@@ -128,5 +128,5 @@ private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListene
 			Preserve
 	}
 	
-	override def onKeyState(event: KeyStateEvent2) = listening = event.pressed
+	override def onKeyState(event: KeyStateEvent) = listening = event.pressed
 }

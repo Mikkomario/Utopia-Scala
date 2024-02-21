@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.StackLayout.Leading
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.handling.event.keyboard.Key.Control
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.paradigm.color.ColorRole.{Gray, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
@@ -76,7 +76,7 @@ object TextFieldTest extends App
 						(productField, amountField, priceField)
 					}
 				// amountField.textPointer.addContinuousListener { println(_) }
-				KeyboardEvents += KeyStateListener2.pressed(Control) { _ => println(amountField.value) }
+				KeyboardEvents += KeyStateListener.pressed(Control) { _ => println(amountField.value) }
 				
 				// Pairs the fields with matching labels
 				context.forTextComponents.withTextAlignment(Alignment.BottomLeft).withoutTextInsets.use { implicit labelC =>

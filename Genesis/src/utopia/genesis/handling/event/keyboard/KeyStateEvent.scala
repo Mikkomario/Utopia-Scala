@@ -2,11 +2,11 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.KeyEvent.KeyEventFilter
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
 
-object KeyStateEvent2
+object KeyStateEvent
 {
     // ATTRIBUTES   -------------------------
     
@@ -113,7 +113,7 @@ object KeyStateEvent2
   * @param location The specific location where the key was changed
   * @param keyboardState The state of the keyboard immediately after this event
  */
-case class KeyStateEvent2(index: Int, location: KeyLocation, keyboardState: KeyboardState, pressed: Boolean)
+case class KeyStateEvent(index: Int, location: KeyLocation, keyboardState: KeyboardState, pressed: Boolean)
     extends KeyEvent
 {
     // COMPUTED ---------------------

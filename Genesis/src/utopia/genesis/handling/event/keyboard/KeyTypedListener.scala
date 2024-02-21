@@ -10,14 +10,14 @@ import utopia.genesis.handling.template.Handleable2
 import scala.annotation.unused
 import scala.language.implicitConversions
 
-object KeyTypedListener2
+object KeyTypedListener
 {
     // TYPES    --------------------------
     
     /**
       * Filter class for key typed -events
       */
-    type KeyTypedEventFilter = Filter[KeyTypedEvent2]
+    type KeyTypedEventFilter = Filter[KeyTypedEvent]
     
     
     // ATTRIBUTES   ----------------------
@@ -30,21 +30,21 @@ object KeyTypedListener2
     
     // IMPLICIT --------------------------
     
-    implicit def objectToFactory(@unused o: KeyTypedListener2.type): KeyTypedListenerFactory = unconditional
+    implicit def objectToFactory(@unused o: KeyTypedListener.type): KeyTypedListenerFactory = unconditional
     
     
     // NESTED   --------------------------
     
     case class KeyTypedListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
-        extends ListenerFactory[KeyTypedEvent2, KeyTypedListenerFactory]
-            with KeyFilteringFactory[KeyTypedEvent2, KeyTypedListenerFactory]
+        extends ListenerFactory[KeyTypedEvent, KeyTypedListenerFactory]
+            with KeyFilteringFactory[KeyTypedEvent, KeyTypedListenerFactory]
     {
         // IMPLEMENTED  ------------------
         
-        override def usingFilter(filter: Filter[KeyTypedEvent2]): KeyTypedListenerFactory = copy(filter = filter)
+        override def usingFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory = copy(filter = filter)
         override def usingCondition(condition: Changing[Boolean]): KeyTypedListenerFactory = copy(condition = condition)
         
-        override protected def withFilter(filter: Filter[KeyTypedEvent2]): KeyTypedListenerFactory =
+        override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory =
             copy(filter = this.filter && filter)
         
         
@@ -55,14 +55,14 @@ object KeyTypedListener2
           * @tparam U Arbitrary function result type
           * @return A listener that calls the specified function, after applying this factory's conditions & filters
           */
-        def apply[U](f: KeyTypedEvent2 => U): KeyTypedListener2 = new _KeyTypedListener[U](condition, filter, f)
+        def apply[U](f: KeyTypedEvent => U): KeyTypedListener = new _KeyTypedListener[U](condition, filter, f)
     }
     
     private class _KeyTypedListener[U](override val handleCondition: FlagLike,
-                                       override val keyTypedEventFilter: KeyTypedEventFilter, f: KeyTypedEvent2 => U)
-        extends KeyTypedListener2
+                                       override val keyTypedEventFilter: KeyTypedEventFilter, f: KeyTypedEvent => U)
+        extends KeyTypedListener
     {
-        override def onKeyTyped(event: KeyTypedEvent2): Unit = f(event)
+        override def onKeyTyped(event: KeyTypedEvent): Unit = f(event)
     }
 }
 
@@ -71,16 +71,16 @@ object KeyTypedListener2
  * @author Mikko Hilpinen
  * @since 23.2.2017
  */
-trait KeyTypedListener2 extends Handleable2
+trait KeyTypedListener extends Handleable2
 {
     /**
       * @return A filter used for filtering incoming key typed -events
       */
-    def keyTypedEventFilter: Filter[KeyTypedEvent2]
+    def keyTypedEventFilter: Filter[KeyTypedEvent]
     
     /**
      * This method will be called in order to inform the instance of new key typed -events
       * @param event the newly occurred key typed -event
      */
-    def onKeyTyped(event: KeyTypedEvent2): Unit
+    def onKeyTyped(event: KeyTypedEvent): Unit
 }

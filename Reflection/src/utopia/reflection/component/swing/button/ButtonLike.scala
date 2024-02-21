@@ -7,8 +7,8 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.Focusable
@@ -150,19 +150,19 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		override def focusLost(e: FocusEvent) = updateFocus(newFocusState = false)
 	}
 	
-	private object ButtonKeyListener extends KeyStateListener2
+	private object ButtonKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES   -------------
 		
 		// Only accepts enter & space presses
-		override val keyStateEventFilter = KeyStateEvent2.filter(defaultTriggerKeys)
+		override val keyStateEventFilter = KeyStateEvent.filter(defaultTriggerKeys)
 		
 		
 		// IMPLEMENTED  -------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			// Only allows handling while in focus
 			if (isInFocus && enabled) {
 				if (event.pressed)
@@ -175,14 +175,14 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		}
 	}
 	
-	private class HotKeyListener(hotKeys: Set[Int], hotKeyCharacters: Iterable[Char]) extends KeyStateListener2
+	private class HotKeyListener(hotKeys: Set[Int], hotKeyCharacters: Iterable[Char]) extends KeyStateListener
 	{
 		override val keyStateEventFilter =
 			KeyStateEventFilter { e => hotKeys.contains(e.index) || hotKeyCharacters.exists(e.concernsChar) }
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			if (enabled) {
 				if (event.pressed)
 					down = true

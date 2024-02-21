@@ -2,7 +2,7 @@ package utopia.reach.component.template.focus
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.reach.focus.FocusTracking
 
 /**
@@ -32,7 +32,7 @@ trait FocusableWithState extends Focusable with FocusTracking
 	  * The listener will only be informed while this component has focus.
 	  * @param onEvent A function called on keyboard state events
 	  */
-	def addKeyListenerWhileFocused(onEvent: KeyStateEvent2 => Unit) =
+	def addKeyListenerWhileFocused(onEvent: KeyStateEvent => Unit) =
 		_addKeyListenerWhileFocused(AcceptAll)(onEvent)
 	
 	/**
@@ -41,10 +41,10 @@ trait FocusableWithState extends Focusable with FocusTracking
 	  * @param filter  A filter applied to keyboard state events before accepting them
 	  * @param onEvent A function called on keyboard state events
 	  */
-	def addFilteredKeyListenerWhileFocused(filter: Filter[KeyStateEvent2])(onEvent: KeyStateEvent2 => Unit) =
+	def addFilteredKeyListenerWhileFocused(filter: Filter[KeyStateEvent])(onEvent: KeyStateEvent => Unit) =
 		_addKeyListenerWhileFocused(filter)(onEvent)
 	
-	private def _addKeyListenerWhileFocused(filter: Filter[KeyStateEvent2])(onEvent: KeyStateEvent2 => Unit) = {
+	private def _addKeyListenerWhileFocused(filter: Filter[KeyStateEvent])(onEvent: KeyStateEvent => Unit) = {
 		lazy val listener = new FocusKeyListener(filter)(onEvent)
 		addHierarchyListener { isAttached =>
 			if (isAttached) KeyboardEvents += listener else KeyboardEvents -= listener
@@ -54,14 +54,14 @@ trait FocusableWithState extends Focusable with FocusTracking
 	
 	// NESTED   ----------------------------------
 	
-	private class FocusKeyListener(override val keyStateEventFilter: Filter[KeyStateEvent2])
-	                              (onEvent: KeyStateEvent2 => Unit)
-		extends KeyStateListener2
+	private class FocusKeyListener(override val keyStateEventFilter: Filter[KeyStateEvent])
+	                              (onEvent: KeyStateEvent => Unit)
+		extends KeyStateListener
 	{
 		// IMPLEMENTED  --------------------------
 		
 		override def handleCondition: FlagLike = focusPointer
 		
-		override def onKeyState(event: KeyStateEvent2) = onEvent(event)
+		override def onKeyState(event: KeyStateEvent) = onEvent(event)
 	}
 }

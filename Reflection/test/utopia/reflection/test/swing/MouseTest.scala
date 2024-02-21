@@ -5,7 +5,7 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2
+import utopia.genesis.handling.event.keyboard.KeyStateListener
 import utopia.genesis.handling.event.mouse.{MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2, MouseWheelListener2}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.label.Label
@@ -56,7 +56,7 @@ object MouseTest extends App
 		.leftPressed.over(items(2).bounds) { e => println(e.position.relative) })
 	items(2).addMouseWheelListener(MouseWheelListener2.over(items(2).bounds) { e => println(e.wheelTurn) })
 	
-	frame.addKeyStateListener(KeyStateListener2.unconditional { println(_) })
+	frame.addKeyStateListener(KeyStateListener.unconditional { println(_) })
 	
 	// Starts the program
 	val actorHandler = ActorHandler()

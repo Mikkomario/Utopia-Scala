@@ -4,7 +4,7 @@ import utopia.firmament.controller.data.ContainerContentDisplayer
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.event.keyboard.{KeyTypedEvent2, KeyTypedListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyTypedEvent, KeyTypedListener, KeyboardEvents}
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.MutableViewTextLabel
@@ -58,7 +58,7 @@ object MutableReachStackTest extends App
 	
 	// Updates content in background
 	var lastIndex = 3
-	KeyboardEvents += KeyTypedListener2.unconditional { event: KeyTypedEvent2 =>
+	KeyboardEvents += KeyTypedListener.unconditional { event: KeyTypedEvent =>
 		if (event.typedChar.isDigit) {
 			val newIndex = event.typedChar.asDigit
 			val newDigits = {

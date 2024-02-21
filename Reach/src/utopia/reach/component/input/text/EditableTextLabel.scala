@@ -10,8 +10,8 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Enter, Tab}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{KeyEvent, KeyStateEvent2, KeyStateListener2, KeyTypedEvent2, KeyTypedListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyEvent, KeyStateEvent, KeyStateListener, KeyTypedEvent, KeyTypedListener, KeyboardEvents}
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -454,18 +454,18 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	
 	// NESTED	----------------------------------
 	
-	private object _KeyTypedListener extends KeyTypedListener2
+	private object _KeyTypedListener extends KeyTypedListener
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val keyTypedEventFilter: Filter[KeyTypedEvent2] = {
+		override val keyTypedEventFilter: Filter[KeyTypedEvent] = {
 			// Ignores certain characters
 			val base = !KeyEvent.filter(Enter, BackSpace, Delete, Tab) &&
-				{ e: KeyTypedEvent2 => font.toAwt.canDisplay(e.typedChar) }
+				{ e: KeyTypedEvent => font.toAwt.canDisplay(e.typedChar) }
 			
 			// Only accepts characters accepted by the content filter
 			settings.inputFilter match {
-				case Some(filter) => e: KeyTypedEvent2 => filter(e.typedChar.toString)
+				case Some(filter) => e: KeyTypedEvent => filter(e.typedChar.toString)
 				case None => base
 			}
 		}
@@ -475,14 +475,14 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		override def handleCondition: FlagLike = enabledPointer
 		
-		override def onKeyTyped(event: KeyTypedEvent2): Unit = insertToCaret(event.typedChar.toString)
+		override def onKeyTyped(event: KeyTypedEvent): Unit = insertToCaret(event.typedChar.toString)
 	}
 	
-	private object KeyPressListener extends KeyStateListener2 with ClipboardOwner
+	private object KeyPressListener extends KeyStateListener with ClipboardOwner
 	{
 		// ATTRIBUTES   --------------------------
 		
-		override val keyStateEventFilter: KeyStateEventFilter = KeyStateEvent2.filter.pressed
+		override val keyStateEventFilter: KeyStateEventFilter = KeyStateEvent.filter.pressed
 		
 		
 		// COMPUTED	------------------------------
@@ -495,7 +495,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		override def handleCondition: FlagLike = selectableFlag
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			// Inserts a line-break on enter (if enabled)
 			if (textDrawContext.allowLineBreaks && event.index == Enter.index)
 				insertToCaret("\n")

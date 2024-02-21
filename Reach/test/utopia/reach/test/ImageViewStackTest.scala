@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
@@ -54,7 +54,7 @@ object ImageViewStackTest extends App
 	}
 	
 	// Adjusts the label visibilities with keys 1, 2 and 3
-	KeyboardEvents += KeyStateListener2.pressed { event =>
+	KeyboardEvents += KeyStateListener.pressed { event =>
 		event.index match {
 			case KeyEvent.VK_1 => pointer1.update { !_ }
 			case KeyEvent.VK_2 => pointer2.update { !_ }

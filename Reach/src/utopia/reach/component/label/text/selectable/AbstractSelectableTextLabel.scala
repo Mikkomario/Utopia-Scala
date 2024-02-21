@@ -21,8 +21,8 @@ import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents, KeyboardState}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents, KeyboardState}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -390,7 +390,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		def hide() = caretVisibilityPointer.value = false
 	}
 	
-	private object KeyListener extends KeyStateListener2 with ClipboardOwner
+	private object KeyListener extends KeyStateListener with ClipboardOwner
 	{
 		// ATTRIBUTES	--------------------------
 		
@@ -409,7 +409,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			keyStatus = event.keyboardState
 			if (event.pressed) {
 				event.arrow match {

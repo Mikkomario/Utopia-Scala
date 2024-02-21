@@ -23,7 +23,7 @@ import utopia.flow.view.template.eventful.FlagLike._
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
-import utopia.genesis.handling.event.keyboard.{KeyStateHandler2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateHandler, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
@@ -403,7 +403,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// The key-state handler is initialized only when necessary
 	private val keyStateHandlerPointer = Lazy {
-		val handler = KeyStateHandler2()
+		val handler = KeyStateHandler()
 		// Only activates the handler once this window is open
 		if (isOpen)
 			KeyboardEvents += handler
@@ -414,7 +414,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	lazy val focusKeyStateHandler = {
 		val parent = keyStateHandlerPointer.value
-		val handler = KeyStateHandler2.conditional(focusedFlag).empty
+		val handler = KeyStateHandler.conditional(focusedFlag).empty
 		parent += handler
 		handler
 	}
@@ -880,12 +880,12 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	def setToCloseOnEsc(requireFocus: Boolean = true) = {
 		val handler = if (requireFocus) focusKeyStateHandler else keyStateHandler
-		handler += KeyStateListener2.released(Esc) { _ => close() }
+		handler += KeyStateListener.released(Esc) { _ => close() }
 	}
 	/**
 	  * Closes this window once the user releases any keyboard key
 	  */
-	def setToCloseOnAnyKeyRelease() = keyStateHandler += KeyStateListener2.released { _ => close() }
+	def setToCloseOnAnyKeyRelease() = keyStateHandler += KeyStateListener.released { _ => close() }
 	/**
 	  * Closes this window when it loses focus the next time
 	  */

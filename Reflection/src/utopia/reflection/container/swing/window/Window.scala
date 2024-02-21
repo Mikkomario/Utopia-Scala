@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.eventful.Flag
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateHandler2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateHandler, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator, MouseMoveListener2, MouseWheelListener2}
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
@@ -104,7 +104,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	
-	private val keyStateHandler = KeyStateHandler2()
+	private val keyStateHandler = KeyStateHandler()
 	
 	
 	// ABSTRACT    -----------------
@@ -272,7 +272,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  * ADds a new listener to be informed of keyboard events while this window is open
 	  * @param listener A listener to inform
 	  */
-	def addKeyStateListener(listener: KeyStateListener2) = keyStateHandler += listener
+	def addKeyStateListener(listener: KeyStateListener) = keyStateHandler += listener
 	
 	/**
 	  * Displays this window, making it visible
@@ -383,7 +383,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	/**
 	  * Makes it so that this window will close one escape is pressed
 	  */
-	def setToCloseOnEsc() = keyStateHandler += KeyStateListener2.pressed(Esc) { _: KeyStateEvent2 => close() }
+	def setToCloseOnEsc() = keyStateHandler += KeyStateListener.pressed(Esc) { _: KeyStateEvent => close() }
 	
 	/**
 	  * Makes this window become invisible whenever it loses focus

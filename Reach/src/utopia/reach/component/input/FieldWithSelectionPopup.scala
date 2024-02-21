@@ -31,7 +31,7 @@ import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
@@ -762,7 +762,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		}
 	}
 	
-	private object FieldKeyListener extends KeyStateListener2
+	private object FieldKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES	-------------------------
 		
@@ -772,27 +772,27 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// Listens to down arrow presses
 		// Also supports additional key-strokes (based on the 'additionalActivationKeys' parameter)
 		override val keyStateEventFilter = {
-			val arrowFilter = KeyStateEvent2.filter.arrow(settings.listAxis(Positive))
+			val arrowFilter = KeyStateEvent.filter.arrow(settings.listAxis(Positive))
 			val keyFilter = NotEmpty(settings.activationKeys) match {
-				case Some(keys) => arrowFilter || KeyStateEvent2.filter(keys)
+				case Some(keys) => arrowFilter || KeyStateEvent.filter(keys)
 				case None => arrowFilter
 			}
-			KeyStateEvent2.filter.pressed && keyFilter
+			KeyStateEvent.filter.pressed && keyFilter
 		}
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent2) = openPopup()
+		override def onKeyState(event: KeyStateEvent) = openPopup()
 	}
 	
-	private class PopupKeyListener(popup: Window) extends KeyStateListener2
+	private class PopupKeyListener(popup: Window) extends KeyStateListener
 	{
 		// ATTRIBUTES	-------------------------
 		
 		// Listens to enter and tabulator presses
 		override val keyStateEventFilter =
-			KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(Tab, Enter, Esc, Space)
+			KeyStateEvent.filter.pressed && KeyStateEvent.filter(Tab, Enter, Esc, Space)
 		
 		
 		// IMPLEMENTED	-------------------------
@@ -800,7 +800,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// Only reacts to events while the pop-up is visible
 		override def handleCondition: FlagLike = popup.fullyVisibleFlag
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			// Stores the selected value, if applicable
 			// Hides the pop-up
 			popup.visible = false

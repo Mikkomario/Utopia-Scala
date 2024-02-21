@@ -2,7 +2,7 @@ package utopia.reach.test
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.genesis.handling.event.keyboard.{KeyTypedListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
@@ -38,7 +38,7 @@ object ReachInSwingTest extends App
 	
 	textPointer.addListener { e => println(e.newValue) }
 	
-	KeyboardEvents += KeyTypedListener2.unconditional { e =>
+	KeyboardEvents += KeyTypedListener.unconditional { e =>
 		val char = e.typedChar.toString
 		if (textPointer.value.startsWith(char))
 			textPointer.value = char

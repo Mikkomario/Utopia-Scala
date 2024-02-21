@@ -19,8 +19,8 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 {
 	// ATTRIBUTES	------------------
 	
-	private lazy val keyStateHandler = KeyStateHandler2()
-	private lazy val keyTypedHandler = KeyTypedHandler2()
+	private lazy val keyStateHandler = KeyStateHandler()
+	private lazy val keyTypedHandler = KeyTypedHandler()
 	
 	private lazy val handlers = Handlers(keyStateHandler, keyTypedHandler)
 	
@@ -42,7 +42,7 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 				stateChanged(event, index, pressed = true)
 			case KeyEvent.KEY_RELEASED => stateChanged(event, index, pressed = false)
 			case KeyEvent.KEY_TYPED =>
-				val newEvent = KeyTypedEvent2(event.getKeyChar, lastPressedKeyIndex, _state)
+				val newEvent = KeyTypedEvent(event.getKeyChar, lastPressedKeyIndex, _state)
 				// Distributes the event asynchronously, if possible
 				queue { keyTypedHandler.onKeyTyped(newEvent) }
 		}
@@ -86,14 +86,14 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 	  * @param listener A new keyboard state listener
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def registerKeyStateListener(listener: KeyStateListener2) =
+	def registerKeyStateListener(listener: KeyStateListener) =
 		keyStateHandler += listener
 	/**
 	  * Adds a new key typed listener
 	  * @param listener A new key typed listener
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def registerKeyTypedListener(listener: KeyTypedListener2) =
+	def registerKeyTypedListener(listener: KeyTypedListener) =
 		keyTypedHandler += listener
 	/**
 	  * Adds a new keyboard related listener. If the listener is not a KeyStateListener nor a KeyTypedListener,
@@ -125,7 +125,7 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 		// Only reacts to status changes
 		if (_state(index, location) != pressed) {
 			_state = _state.withKeyState(index, location, pressed)
-			val newEvent = KeyStateEvent2(index, location, _state, pressed)
+			val newEvent = KeyStateEvent(index, location, _state, pressed)
 			// Distributes the event asynchronously, if possible
 			queue { keyStateHandler.onKeyState(newEvent) }
 		}

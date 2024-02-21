@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
-import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent2, KeyStateListener2}
+import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 
@@ -99,7 +99,7 @@ class SelectionKeyListener(nextKey: Key = DownArrow, prevKey: Key = UpArrow,
                            initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
                            minScrollDelay: Duration = 0.05.seconds)
                           (moveSelection: Int => Unit)
-	extends KeyStateListener2 with Actor
+	extends KeyStateListener with Actor
 {
 	// ATTRIBUTES	-----------------------------
 	
@@ -108,14 +108,14 @@ class SelectionKeyListener(nextKey: Key = DownArrow, prevKey: Key = UpArrow,
 	private var nextDelay = initialScrollDelay
 	private var remainingDelay = nextDelay
 	
-	override val keyStateEventFilter = KeyStateEvent2.filter(nextKey, prevKey)
+	override val keyStateEventFilter = KeyStateEvent.filter(nextKey, prevKey)
 	
 	
 	// IMPLEMENTED	-----------------------------
 	
 	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def onKeyState(event: KeyStateEvent2) = {
+	override def onKeyState(event: KeyStateEvent) = {
 		val direction = if (event.index == nextKey.index) Positive else Negative
 		// Case: Key press
 		if (event.pressed) {

@@ -14,7 +14,7 @@ import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -460,17 +460,17 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		}
 	}
 	
-	private object ArrowKeyListener extends KeyStateListener2
+	private object ArrowKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(RightArrow, LeftArrow)
+		override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(RightArrow, LeftArrow)
 		
 		
 		// IMPLEMENTED  ----------------------
 		
 		override def handleCondition: FlagLike = focusPointer
 		
-		override def onKeyState(event: KeyStateEvent2) = value = event.index == KeyEvent.VK_RIGHT
+		override def onKeyState(event: KeyStateEvent) = value = event.index == KeyEvent.VK_RIGHT
 	}
 }

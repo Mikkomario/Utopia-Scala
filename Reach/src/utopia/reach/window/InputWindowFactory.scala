@@ -14,6 +14,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
 import utopia.reach.component.button.image.ImageButton
@@ -28,7 +29,6 @@ import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
 
-import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.ExecutionContext
 
@@ -149,8 +149,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Creates the default close button (if enabled)
 		val defaultCloseButton = defaultCloseButtonText.notEmpty.map { text =>
-			WindowButtonBlueprint.closeWithResult(text, closeIcon,
-				hotkey = Some(HotKey.keyWithIndex(KeyEvent.VK_ESCAPE))) { defaultResult }
+			WindowButtonBlueprint.closeWithResult(text, closeIcon, hotkey = Some(HotKey(Esc))) { defaultResult }
 		}
 		
 		// Creates the other buttons

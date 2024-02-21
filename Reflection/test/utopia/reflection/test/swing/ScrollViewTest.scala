@@ -15,7 +15,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.RightArrow
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
@@ -75,7 +75,7 @@ object ScrollViewTest extends App
 	contentManager.enableMouseHandling(false)
 	private val contentUpdateLoop = new ContentUpdateLoop(contentManager)
 	
-	KeyboardEvents += KeyStateListener2.pressed(RightArrow) { _ => contentManager.updateSingle(2) }
+	KeyboardEvents += KeyStateListener.pressed(RightArrow) { _ => contentManager.updateSingle(2) }
 	
 	// Creates the scroll view
 	val barDrawer = BoxScrollBarDrawer(Color.black.withAlpha(0.55), Color.red)

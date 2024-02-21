@@ -20,7 +20,7 @@ import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
@@ -600,18 +600,18 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			progressPointer.value = progressForX(event.position.absolute.x - absolutePosition.x)
 	}
 	
-	private object KeyPressListener extends KeyStateListener2
+	private object KeyPressListener extends KeyStateListener
 	{
 		// ATTRIBUTES   --------------------
 		
-		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(RightArrow, LeftArrow)
+		override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(RightArrow, LeftArrow)
 		
 		
 		// IMPLEMENTED  --------------------
 		
 		override def handleCondition: FlagLike = focusedAndEnabledPointer
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			val direction = if (event.index == KeyEvent.VK_RIGHT) Positive else Negative
 			if (stickyPoints.nonEmpty)
 				progressPointer.value = nextStickyPointInDirection(direction)

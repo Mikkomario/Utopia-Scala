@@ -18,8 +18,8 @@ import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.keyboard.KeyStateListener2.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -185,7 +185,7 @@ private object SelectionKeyListener
 }
 private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
                                    focusPointer: FlagLike, actions: Map[Int, () => Unit])
-	extends KeyStateListener2
+	extends KeyStateListener
 {
 	import SelectionKeyListener._
 	
@@ -205,7 +205,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 	override def handleCondition: FlagLike = focusPointer
 	override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 	
-	override def onKeyState(event: KeyStateEvent2) = {
+	override def onKeyState(event: KeyStateEvent) = {
 		if (event.pressed) {
 			// Checks for trigger keys
 			if (triggerKeys.contains(event.index))

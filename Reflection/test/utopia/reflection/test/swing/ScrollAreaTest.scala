@@ -9,7 +9,7 @@ import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.End
-import utopia.genesis.handling.event.keyboard.{KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
 import utopia.paradigm.angular.Rotation
@@ -69,7 +69,7 @@ object ScrollAreaTest extends App
 	frame.setToExitOnClose()
 
 	// Adds additional action on END key
-	KeyboardEvents += KeyStateListener2.pressed(End) { _ => scrollArea.scrollToBottom() }
+	KeyboardEvents += KeyStateListener.pressed(End) { _ => scrollArea.scrollToBottom() }
 
 	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()

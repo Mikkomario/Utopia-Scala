@@ -20,7 +20,7 @@ import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Shift, Tab}
-import utopia.genesis.handling.event.keyboard.{KeyStateEvent2, KeyStateListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
@@ -563,19 +563,19 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		override def paintChildren(g: Graphics) = ()
 	}
 	
-	private object FocusKeyListener extends KeyStateListener2
+	private object FocusKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES	------------------------
 		
 		// Only listens to tabulator presses
-		override val keyStateEventFilter = KeyStateEvent2.filter.pressed && KeyStateEvent2.filter(Tab)
+		override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(Tab)
 		
 		
 		// IMPLEMENTED	-----------------------
 		
 		override def handleCondition: FlagLike = AlwaysTrue
 		
-		override def onKeyState(event: KeyStateEvent2) = {
+		override def onKeyState(event: KeyStateEvent) = {
 			if (focusManager.hasFocus) {
 				// Moves the focus forwards or backwards
 				val direction = if (event.keyboardState(Shift)) Negative else Positive

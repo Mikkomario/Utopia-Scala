@@ -4,7 +4,7 @@ import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.event.keyboard.{KeyTypedListener2, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.color.ColorShade.Light
@@ -67,7 +67,7 @@ object SelectionListTest extends App
 	}
 	
 	// Changes content based on digit key-presses
-	KeyboardEvents += KeyTypedListener2.unconditional { event =>
+	KeyboardEvents += KeyTypedListener.unconditional { event =>
 		event.digit.foreach { i => contentPointer.value = (1 to i).toVector }
 	}
 	
