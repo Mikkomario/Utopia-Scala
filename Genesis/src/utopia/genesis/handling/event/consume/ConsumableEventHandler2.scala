@@ -36,7 +36,7 @@ trait ConsumableEventHandler2[Listener <: Handleable2, Event <: Consumable[Event
 	  * @return The event after distributing (possibly consumed) +
 	  *         a consume choice indicating whether the event was consumed or not
 	  */
-	def distribute(event: Event) = event.distributeAmong(items) { (listener, event) =>
+	def distribute(event: Event) = event.distribute(items) { (listener, event) =>
 		if (filterOf(listener)(event))
 			deliver(listener, event)
 		else

@@ -12,7 +12,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{ButtonSettings, ButtonSettingsLike}
@@ -353,6 +353,8 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextConte
 	
 	
 	// IMPLEMENTED	------------------------------
+	
+	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

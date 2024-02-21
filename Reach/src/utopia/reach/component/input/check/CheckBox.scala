@@ -13,7 +13,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
@@ -395,6 +395,8 @@ class CheckBox(parentHierarchy: ComponentHierarchy,
 	
 	
 	// IMPLEMENTED	--------------------------
+	
+	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = valuePointer.update { !_ }
 	

@@ -20,21 +20,21 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, Flag, IndirectPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.FlagLike._
-import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent, MouseMoveEvent, MouseWheelEvent}
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling._
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.mutable.{ActorHandler, KeyStateHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.event.mouse._
+import utopia.genesis.handling.mutable.KeyStateHandler
+import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler, MouseEventGenerator}
-import utopia.inception.util.Filter
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.insets.Insets
 
 import java.awt.Frame
 import java.awt.event.{ComponentEvent, ComponentListener, KeyEvent, WindowAdapter, WindowEvent}
@@ -256,7 +256,7 @@ object Window
   *               as well as possible window initialization warnings.
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
-             eventactorHandler: ActorHandler2, resizeLogic: WindowResizePolicy = Program,
+             eventActorHandler: ActorHandler2, resizeLogic: WindowResizePolicy = Program,
              screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
              initialIcon: Image = ComponentCreationDefaults.windowIcon,
              maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
@@ -268,9 +268,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 {
 	// ATTRIBUTES   ----------------
 	
-	override val mouseButtonHandler = MouseButtonStateHandler()
-	override val mouseMoveHandler = MouseMoveHandler()
-	override val mouseWheelHandler = MouseWheelHandler()
+	override val mouseButtonHandler = MouseButtonStateHandler2()
+	override val mouseMoveHandler = MouseMoveHandler2()
+	override val mouseWheelHandler = MouseWheelHandler2()
+	
+	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
 	
 	/**
 	  * @return The AWT window wrapped by this window
@@ -314,6 +316,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * (i.e. open, visible and not minimized)
 	  */
 	val fullyVisibleFlag = (_visibleFlag && (!_minimizedFlag)) && (!_closedFlag)
+	/**
+	  * A flag that contains true when (and only when) this window is fully visible (open, not minimized) and has focus
+	  */
+	lazy val fullyVisibleAndFocusedFlag = fullyVisibleFlag && _focusedFlag
 	
 	/**
 	  * A future that resolves once this window is displayed for the first time
@@ -447,7 +453,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Initializes position and size
 		_positionPointer.value = Point.of(component.getLocation)
 		_sizePointer.value = Size(component.getSize)
-			
+		
 		// Registers to update the state when the wrapped window updates
 		component.addComponentListener(WindowComponentStateListener)
 		
@@ -506,34 +512,28 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// Once this window is open, starts event handling
 		openedFuture.foreach { _ =>
 			// Starts mouse listening (which is active only while visible)
-			// FIXME: Swap mouse event generator logic and add the new generator to the actor handler (and remove upon close)
-			val mouseEventGenerator = new MouseEventGenerator(container)
-			// eventActorHandler += mouseEventGenerator
+			val mouseEventGenerator = new MouseEventGenerator2(container)
+			eventActorHandler += mouseEventGenerator
 			// Mouse movement events are only enabled while this window is in focus (unless not focusable)
-			val mouseMoveEventsEnabledFilter: Filter[Any] = {
-				if (isFocusable)
-					_ => isFullyVisible && isFocused
-				else
-					_ => isFullyVisible
-			}
-			val whileVisibleFilter: Filter[Any] = _ => isFullyVisible
-			mouseEventGenerator.buttonHandler += MouseButtonStateListener(whileVisibleFilter) { e =>
+			val movementsEnabledPointer = if (isFocusable) fullyVisibleAndFocusedFlag else fullyVisibleFlag
+			mouseEventGenerator.buttonHandler += MouseButtonStateListener2.conditional(fullyVisibleFlag) { e =>
 				content.distributeMouseButtonEvent(e)
-				None
 			}
-			mouseEventGenerator.moveHandler += MouseMoveListener(mouseMoveEventsEnabledFilter)(content.distributeMouseMoveEvent)
-			mouseEventGenerator.wheelHandler += MouseWheelListener(whileVisibleFilter)(content.distributeMouseWheelEvent)
-			GlobalMouseEventHandler.registerGenerator(mouseEventGenerator)
+			mouseEventGenerator.moveHandler += MouseMoveListener2
+				.conditional(movementsEnabledPointer)(content.distributeMouseMoveEvent)
+			mouseEventGenerator.wheelHandler += MouseWheelListener2
+				.conditional(fullyVisibleFlag)(content.distributeMouseWheelEvent)
+			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			
 			// Starts key listening (if used)
 			keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler += _ }
 			
 			// Quits event listening once this window closes
 			closeFuture.onComplete { _ =>
-				// eventActorHandler -= mouseEventGenerator
-				mouseEventGenerator.kill()
+				CommonMouseEvents.removeGenerator(mouseEventGenerator)
+				eventActorHandler -= mouseEventGenerator
+				mouseEventGenerator.stop()
 				keyStateHandlerPointer.current.foreach { GlobalKeyboardEventHandler -= _ }
-				GlobalMouseEventHandler.unregisterGenerator(mouseEventGenerator)
 			}
 		}
 	}.waitFor(maxInitializationWaitDuration).failure
@@ -784,11 +784,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def updateLayout() = content.size = size - insets.total
 	
 	// When distributing events, accounts for the difference in coordinate systems (based on insets)
-	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent2) =
 		super.distributeMouseButtonEvent(event.translated(-insets.toPoint))
-	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
+	override def distributeMouseMoveEvent(event: MouseMoveEvent2) =
 		super.distributeMouseMoveEvent(event.translated(-insets.toPoint))
-	override def distributeMouseWheelEvent(event: MouseWheelEvent) =
+	override def distributeMouseWheelEvent(event: MouseWheelEvent2) =
 		super.distributeMouseWheelEvent(event.translated(-insets.toPoint))
 	
 	
@@ -910,11 +910,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	def setToCloseWhenClickedOutside(activationDelay: Duration = Duration.Zero) = {
 		activationDelay.finite.foreach { delay =>
 			val threshold = Now + delay
-			val listener = MouseButtonStateListener(
-				MouseButtonStateEvent.leftButtonFilter && Filter { _: Any => Now > threshold } &&
-					MouseEvent.isOutsideAreaFilter(bounds)
-			) { _ => close(); None }
-			addMouseButtonListener(listener)
+			addMouseButtonListener(MouseButtonStateListener2
+				.leftPressed.filtering { _ => Now > threshold }.outside(bounds) { _ => close() })
 		}
 	}
 	/**

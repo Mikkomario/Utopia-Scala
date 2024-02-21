@@ -2,8 +2,8 @@ package utopia.reach.test
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.genesis.event.MouseButtonStateEvent
-import utopia.genesis.handling.{KeyTypedListener, MouseButtonStateListener}
+import utopia.genesis.handling.KeyTypedListener
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
@@ -87,14 +87,13 @@ object ReachInSwingTest extends App
 						.withCustomDrawer(new MousePositionDrawer(componentP, 3.0))
 						.apply(textPointer)
 					componentP.set(label)
-					label.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.leftPressedFilter) { event =>
-						if (label.bounds.contains(event.mousePosition))
+					label.addMouseButtonListener(MouseButtonStateListener2.leftPressed { event =>
+						if (label.bounds.contains(event.position))
 							clicksCounter.update { _ + 1 }
 						else
 							println("Click outside")
-						println(s"\tMouse: ${event.mousePosition}")
+						println(s"\tMouse: ${event.position.relative}")
 						println(s"\tlabel: ${label.bounds}")
-						None
 					})
 					label
 				}
@@ -102,9 +101,8 @@ object ReachInSwingTest extends App
 		canvas.position = Point(20, 100)
 		canvas.size = Size(200, 50)
 		canvas.updateLayout()
-		canvas.child.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.leftPressedFilter) { event =>
-			println(s"Align frame Mouse: ${event.mousePosition}")
-			None
+		canvas.child.addMouseButtonListener(MouseButtonStateListener2.leftPressed { event =>
+			println(s"Align frame Mouse: ${event.position.relative}")
 		})
 		
 		canvas.attachmentPointer.addListenerAndSimulateEvent(false) { e =>

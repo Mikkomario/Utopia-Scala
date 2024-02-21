@@ -8,14 +8,14 @@ import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
 import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -237,21 +237,22 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		}
 	}
 	
-	private class MouseHandler(val consumeEvents: Boolean) extends MouseButtonStateListener with Handleable
+	private class MouseHandler(val consumeEvents: Boolean) extends MouseButtonStateListener2
 	{
 		// Only considers left mouse button presses inside stack bounds
-		override def mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			MouseEvent.isOverAreaFilter(container.bounds)
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftPressed &&
+			MouseEvent2.filter.over(container.bounds)
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			val nearest = container.itemNearestTo(event.mousePosition - container.position)
 			nearest.foreach(selectDisplay)
 			
 			if (consumeEvents && nearest.isDefined)
-				Some(ConsumeEvent("Stack selection change"))
+				Consume("Stack selection change")
 			else
-				None
+				Preserve
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package utopia.reflection.component.template
 
 import utopia.firmament.component.ComponentWrapper
+import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size

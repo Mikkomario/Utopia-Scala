@@ -9,7 +9,7 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -66,7 +66,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply[A](contentPointer: Changing[A], font: Font, colorPointer: Changing[Color],
 	             lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
-	             enabledPointer: Changing[Boolean] = AlwaysTrue,
+	             enabledPointer: FlagLike = AlwaysTrue,
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
 	             alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 	             betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
@@ -99,7 +99,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new button
 	  */
 	def withStaticText(text: LocalizedString, font: Font, colorPointer: Changing[Color],
-	                   enabledPointer: Changing[Boolean] = AlwaysTrue, borderWidth: Double = 0.0,
+	                   enabledPointer: FlagLike = AlwaysTrue, borderWidth: Double = 0.0,
 	                   alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 	                   betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 	                   additionalDrawers: Seq[CustomDrawer] = Vector(),
@@ -227,7 +227,7 @@ case class ContextualViewTextButtonFactory(factory: ViewTextButtonFactory, conte
   */
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Changing[A], font: Font,
                         colorPointer: Changing[Color], lineSplitThresholdPointer: Changing[Option[Double]] = Fixed(None),
-                        enabledPointer: Changing[Boolean] = AlwaysTrue,
+                        override val enabledPointer: FlagLike = AlwaysTrue,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw, borderWidth: Double = 0.0,
                         alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
                         betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
@@ -271,7 +271,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contentPointer: Cha
 	
 	// IMPLEMENTED	---------------------------------
 	
-	override def statePointer = _statePointer
+	override def statePointer = _statePointer.readOnly
 	
 	override protected def trigger() = action(contentPointer.value)
 	

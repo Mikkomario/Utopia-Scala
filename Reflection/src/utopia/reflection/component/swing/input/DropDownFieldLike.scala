@@ -1,35 +1,36 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.component.input.SelectableWithPointers
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-
-import java.awt.event.KeyEvent
-import utopia.paradigm.color.Color
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
-import utopia.genesis.handling.mutable.ActorHandler
-import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType, MouseButtonStateListener}
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.action.ActorHandler2
+import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener2.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.{KeyStateHandlerType, KeyStateListener, MouseButtonStateHandlerType}
 import utopia.genesis.view.GlobalKeyboardEventHandler
-import utopia.paradigm.enumeration.Axis.Y
 import utopia.inception.handling.HandlerType
 import utopia.inception.handling.immutable.Handleable
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.component.input.SelectableWithPointers
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.Focusable
-import utopia.firmament.component.display.Refreshable
-import utopia.firmament.model.enumeration.StackLayout
-import StackLayout.Fit
-import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.multi.AnimatedStack
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenFocusLost
 import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.firmament.model.stack.modifier.StackSizeModifier
-import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
+import java.awt.event.KeyEvent
 import scala.concurrent.ExecutionContext
 
 /**
@@ -94,7 +95,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	protected val popupContentView = SwitchPanel[AwtStackable](searchStack)
 	
 	private var focusGainSkips = 0
-	private var visiblePopup: Option[Window[_]] = None
+	private val visiblePopupPointer = EventfulPointer.empty[Window[_]]()
 	
 	
 	// COMPUTED	-------------------------------
@@ -102,7 +103,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	/**
 	  * @return Whether this field is currently displaying a pop-up view
 	  */
-	def isDisplayingPopUp = visiblePopup.exists { _.visible }
+	def isDisplayingPopUp = visiblePopupPointer.value.exists { _.visible }
 	
 	/**
 	  * @return Current stack size of the search options -view
@@ -179,7 +180,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		displaysManager.enableMouseHandling()
 		displaysManager.enableKeyHandling(actorHandler,
-			listenEnabledCondition = mainDisplay.isInFocus || visiblePopup.exists { _.visible })
+			listenEnabledCondition = mainDisplay.isInFocus || visiblePopupPointer.value.exists { _.visible })
 		
 		addStackHierarchyChangeListener(attached => {
 			if (attached)
@@ -191,27 +192,26 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	private def displayPopup() = {
-		if (visiblePopup.isEmpty) {
+		if (visiblePopupPointer.value.isEmpty) {
 			// Creates and displays the popup
 			val popup = Popup(mainDisplay, popupContentView, actorHandler, WhenFocusLost) {
 				(fieldSize, _) => Point(0, fieldSize.height)
 			}
-			visiblePopup = Some(popup)
+			visiblePopupPointer.value = Some(popup)
 			// Relays key events to the search field
 			popup.addConstraint(PopUpWidthModifier)
 			popup.relayAwtKeyEventsTo(mainDisplay)
 			popup.addKeyStateListener(KeyStateListener(
 				KeyStateEvent.keysFilter(KeyEvent.VK_TAB, KeyEvent.VK_ENTER, KeyEvent.VK_ESCAPE) &&
 					KeyStateEvent.wasPressedFilter) { _ => if (popup.isFocusedWindow) popup.close() })
-			popup.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.wasReleasedFilter){ _ =>
+			popup.addMouseButtonListener(MouseButtonStateListener2.released { _ =>
 				if (popup.isFocusedWindow)
 					popup.close()
-				None
 			})
 			popup.display()
 			popup.closeFuture.foreach { _ =>
 				focusGainSkips += 1
-				visiblePopup = None
+				visiblePopupPointer.value = None
 				// Updates "real" selection only when pop-up closes
 				value = displaysManager.value
 			}
@@ -221,31 +221,36 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// NESTED	-------------------------------
 	
-	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener
+	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener2
 	{
-		private def isReceivingEvents = visiblePopup.isEmpty
+		// ATTRIBUTES   ----------------------
 		
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
-		{
-			case KeyStateHandlerType => isReceivingEvents && mainDisplay.isInFocus
-			case MouseButtonStateHandlerType => isReceivingEvents
-			case _ => super.allowsHandlingFrom(handlerType)
-		}
+		override val handleCondition: FlagLike = visiblePopupPointer.map { _.isEmpty }
 		
 		override val keyStateEventFilter = KeyStateEvent.wasPressedFilter &&
 			KeyStateEvent.notKeysFilter(Set(KeyEvent.VK_ESCAPE, KeyEvent.VK_TAB))
 		
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && MouseButtonStateEventFilter.over(mainDisplay.bounds)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match
+		{
+			case KeyStateHandlerType => handleCondition.value && mainDisplay.isInFocus
+			case MouseButtonStateHandlerType => handleCondition.value
+			case _ => super.allowsHandlingFrom(handlerType)
+		}
+		
 		override def onKeyState(event: KeyStateEvent) = displayPopup()
 		
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter && (e => e.isOverArea(mainDisplay.bounds))
-		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			// Grabs focus if possible
 			if (!mainDisplay.isInFocus)
 				mainDisplay.requestFocusInWindow()
 			displayPopup()
-			Some(ConsumeEvent("Search From Field Clicked"))
+			Consume("Search From Field Clicked")
 		}
 	}
 	

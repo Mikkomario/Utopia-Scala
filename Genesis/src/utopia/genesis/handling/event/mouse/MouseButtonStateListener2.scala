@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -182,19 +183,19 @@ object MouseButtonStateListener2
         /**
           * @return An item that only accepts events concerning left mouse button presses
           */
-        def leftPressed = withFilter { e => e.concernsLeft && e.pressed }
+        def leftPressed = buttonPressed(MouseButton.Left)
         /**
           * @return An item that only accepts events concerning left mouse button releases
           */
-        def leftReleased = withFilter { e => e.concernsLeft && e.released }
+        def leftReleased = buttonReleased(MouseButton.Left)
         /**
           * @return An item that only accepts events concerning right mouse button presses
           */
-        def rightPressed = withFilter { e => e.concernsRight && e.pressed }
+        def rightPressed = buttonPressed(MouseButton.Right)
         /**
           * @return An item that only accepts events concerning right mouse button releases
           */
-        def rightReleased = withFilter { e => e.concernsRight && e.released }
+        def rightReleased = buttonReleased(MouseButton.Right)
         
         /**
           * @param button Targeted mouse button
@@ -221,21 +222,44 @@ object MouseButtonStateListener2
           * @param button Targeted button
           * @return An item that only accepts press events, and those only from the specified button
           */
-        def buttonPressed(button: MouseButton) = withFilter { e => e.button == button && e.pressed }
+        def buttonPressed(button: MouseButton) = buttonState(button, pressed = true)
         /**
           * @param button Targeted button
           * @return An item that only accepts release events, and those only from the specified button
           */
-        def buttonReleased(button: MouseButton) = withFilter { e => e.button == button && e.released }
+        def buttonReleased(button: MouseButton) = buttonState(button, pressed = false)
+        /**
+          * @param button Targeted button
+          * @param pressed Required button state (true for pressed, false for released)
+          * @return A filter that only accepts the specified state of the specified button
+          */
+        def buttonState(button: MouseButton, pressed: Boolean) =
+            withFilter { e => e.button == button && e.pressed == pressed }
     }
     
     object MouseButtonStateEventFilter
         extends MouseButtonFilteringFactory[MouseButtonStateEventLike[_], MouseButtonStateEventFilter]
     {
+        // ATTRIBUTES   ---------------------
+        
+        // Caches some often used filters
+        private val buttonCache =
+            Cache[MouseButton, MouseButtonStateEventFilter] { b: MouseButton =>
+                Filter { e: MouseButtonStateEventLike[_] => e.button == b }
+            }
+        private val stateCache = Cache { state: Boolean => apply { _.pressed == state } }
+        private val buttonStateCache = Cache { p: (MouseButton, Boolean) => buttonCache(p._1) && stateCache(p._2) }
+        
+        
         // IMPLEMENTED  ---------------------
         
         override protected def withFilter(filter: MouseButtonStateEventFilter): MouseButtonStateEventFilter = filter
         
+        override def pressed = stateCache(true)
+        override def released = stateCache(false)
+        override def apply(button: MouseButton) = buttonCache(button)
+        override def buttonState(button: MouseButton, pressed: Boolean) =
+            buttonStateCache(button -> pressed)
         
         // OTHER    -------------------------
         

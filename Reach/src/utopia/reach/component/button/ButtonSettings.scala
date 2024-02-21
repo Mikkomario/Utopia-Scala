@@ -1,8 +1,9 @@
 package utopia.reach.component.button
 
 import utopia.firmament.model.HotKey
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.reach.focus.FocusListener
 
 import java.awt.event.KeyEvent
@@ -20,7 +21,8 @@ trait ButtonSettingsLike[+Repr]
 	/**
 	  * A pointer that determines whether this button is interactive or not
 	  */
-	def enabledPointer: Changing[Boolean]
+	// TODO: Rename to enabledFlag
+	def enabledPointer: FlagLike
 	/**
 	  * The keys used for triggering this button even when it doesn't have focus
 	  */
@@ -71,7 +73,7 @@ trait ButtonSettingsLike[+Repr]
 	
 	// OTHER	--------------------
 	
-	def mapEnabledPointer(f: Changing[Boolean] => Changing[Boolean]) = withEnabledPointer(f(enabledPointer))
+	def mapEnabledPointer(f: Mutate[FlagLike]) = withEnabledPointer(f(enabledPointer))
 	def mapFocusListeners(f: Vector[FocusListener] => Vector[FocusListener]) =
 		withFocusListeners(f(focusListeners))
 	def mapHotKeys(f: Set[HotKey] => Set[HotKey]) = withHotKeys(f(hotKeys))
@@ -114,7 +116,7 @@ object ButtonSettings
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ButtonSettings(enabledPointer: Changing[Boolean] = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+case class ButtonSettings(enabledPointer: FlagLike = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
                           focusListeners: Vector[FocusListener] = Vector.empty)
 	extends ButtonSettingsLike[ButtonSettings]
 {

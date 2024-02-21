@@ -10,17 +10,19 @@ import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
@@ -269,8 +271,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	private val label = new EmptyLabel()
 	
 	private val progressPointer = new EventfulPointer[Double](initialValue)
-	val valuePointer =
-	{
+	val valuePointer = {
 		if (stickyPoints.nonEmpty)
 			progressPointer.map { p => range(stickyPointClosestTo(p)) }
 		else
@@ -280,7 +281,11 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	private val defaultRepainter = ChangeListener.continuousOnAnyChange { repaint() }
 	private var animator: Option[Animator] = None
 	
-	private var _state = GuiElementStatus.identity
+	private val statePointer = EventfulPointer(GuiElementStatus.identity)
+	private val pressedPointer: FlagLike = statePointer.map { _ is Activated }
+	private val notPressedPointer = !pressedPointer
+	private val enabledPointer: FlagLike = statePointer.map { _ isNot Disabled }
+	private val focusPointer: FlagLike = statePointer.map { _ is Focused }
 	
 	
 	// INITIAL CODE -------------------------
@@ -298,11 +303,11 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	addMouseMoveListener(MouseOverListener)
 	addStackHierarchyChangeListener { isAttached =>
 		if (isAttached) {
-			GlobalMouseEventHandler += GlobalMouseDragListener
+			CommonMouseEvents += CommonMouseDragListener
 			GlobalKeyboardEventHandler += KeyPressListener
 		}
 		else {
-			GlobalMouseEventHandler -= GlobalMouseDragListener
+			CommonMouseEvents -= CommonMouseDragListener
 			GlobalKeyboardEventHandler -= KeyPressListener
 		}
 	}
@@ -310,18 +315,16 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	// COMPUTED -----------------------------
 	
-	def doubleValue = animator match
-	{
+	def doubleValue = animator match {
 		case Some(animator) => animator.calculatedProgress
 		case None => progressPointer.value
 	}
 	
-	def state = _state
+	def state = statePointer.value
 	private def state_=(newState: GuiElementStatus) = {
-		if (_state != newState) {
-			_state = newState
+		val oldState = statePointer.getAndSet(newState)
+		if (oldState!= newState)
 			repaint()
-		}
 	}
 	
 	def enabled = state isNot Disabled
@@ -538,55 +541,64 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		}
 	}
 	
-	private object MousePressListener extends MouseButtonStateListener
+	private object MousePressListener extends MouseButtonStateListener2
 	{
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			MouseEvent.isOverAreaFilter(bounds)
+		// ATTRIBUTES   -----------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override val handleCondition: FlagLike = notPressedPointer && enabledPointer
+		
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(bounds)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			progressPointer.value = progressForX(event.mousePosition.x - x)
 			pressed = true
 			if (!isInFocus)
 				requestFocusInWindow()
-			Some(ConsumeEvent("Slider grabbed"))
+			Consume("Slider grabbed")
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = notPressed && enabled
 	}
 	
-	private object MouseOverListener extends MouseMoveListener
+	private object MouseOverListener extends MouseMoveListener2
 	{
-		override def onMouseMove(event: MouseMoveEvent) = {
+		override def handleCondition: FlagLike = enabledPointer
+		
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseMove(event: MouseMoveEvent2) = {
 			val b = bounds
 			if (event.enteredArea(b))
 				state += Hover
 			else if (event.exitedArea(b))
 				state -= Hover
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
-	private object GlobalMouseDragListener extends MouseButtonStateListener with MouseMoveListener
+	private object CommonMouseDragListener extends MouseButtonStateListener2 with MouseMoveListener2
 	{
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.wasReleasedFilter &&
-			MouseButtonStateEvent.leftButtonFilter
+		// ATTRIBUTES   -------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
+		
+		
+		// IMPLEMENTED  -------------------
+		
+		override def handleCondition: FlagLike = pressedPointer
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			pressed = false
 			// Slides to the closest sticky point, if there is one
 			if (stickyPoints.nonEmpty)
-				progressPointer.value = stickyPointClosestTo(progressForX(
-					event.absoluteMousePosition.x - absolutePosition.x))
-			Some(ConsumeEvent("Slider grab released"))
+				progressPointer.value = stickyPointClosestTo(progressForX(event.position.absolute.x - absolutePosition.x))
+			Consume("Slider grab released")
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent) = progressPointer.value = progressForX(
-			event.absoluteMousePosition.x - absolutePosition.x)
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = pressed
+		override def onMouseMove(event: MouseMoveEvent2) =
+			progressPointer.value = progressForX(event.position.absolute.x - absolutePosition.x)
 	}
 	
 	private object KeyPressListener extends KeyStateListener

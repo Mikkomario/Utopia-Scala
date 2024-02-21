@@ -3,11 +3,15 @@ package utopia.reflection.test.swing
 import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.event._
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
+import utopia.genesis.handling.event.consume.Consumable
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.mutable._
 import utopia.genesis.util.Fps
 import utopia.genesis.view.GlobalKeyboardEventHandler
@@ -38,13 +42,13 @@ object ScrollCanvasTest extends App
 	// Creates the handlers
 	val actorHandler = ActorHandler2()
 	val drawHandler = DrawableHandler()
-	val mouseButtonHandler = MouseButtonStateHandler()
-	val mouseWheelHandler = MouseWheelHandler()
-	val mouseMoveHandler = MouseMoveHandler()
+	val mouseButtonHandler = MouseButtonStateHandler2()
+	val mouseWheelHandler = MouseWheelHandler2()
+	val mouseMoveHandler = MouseMoveHandler2()
 	
 	// FIXME: Create a new set of handlers, which includes
 	//  (actorHandler, drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)
-	val handlers = HandlerRelay(drawHandler, mouseButtonHandler, mouseWheelHandler, mouseMoveHandler)
+	val handlers = HandlerRelay(drawHandler)
 	
 	// Creates the drawable items
 	val worldSize = Size(320, 320)
@@ -78,7 +82,7 @@ object ScrollCanvasTest extends App
 	println(StackHierarchyManager.description)
 }
 
-private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener
+private class TestCircle(val position: Point) extends Drawable with Handleable with MouseButtonStateListener2
 {
 	// ATTRIBUTES	---------------------
 	
@@ -86,42 +90,43 @@ private class TestCircle(val position: Point) extends Drawable with Handleable w
 	
 	private var circle = Circle(position, 128)
 	
+	override val mouseButtonStateEventFilter = Consumable.unconsumedFilter &&
+		MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(circle)
+	
 	
 	// IMPLEMENTED	---------------------
 	
+	override def handleCondition: FlagLike = AlwaysTrue
+	
 	override def draw(drawer: Drawer) = drawer.draw(circle)
 	
-	override def mouseButtonStateEventFilter = Consumable.notConsumedFilter &&
-		MouseButtonStateEvent.leftPressedFilter && MouseEvent.isOverAreaFilter(circle)
-	
-	override def onMouseButtonState(event: MouseButtonStateEvent) =
-	{
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 		circle = Circle(position, circle.radius * 0.8)
-		Some(ConsumeEvent("Circle was clicked"))
+		Consume("Circle was clicked")
 	}
 }
 
-private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener with KeyStateListener with Handleable
+private class Zoomer(private val canvas: ScrollCanvas) extends MouseWheelListener2 with KeyStateListener with Handleable
 {
 	// ATTRIBUTES	---------------
 	
 	private var listening = false
 	
+	// Only listens to mouse wheel events while cursor is inside canvas
+	override val mouseWheelEventFilter = MouseEvent2.filter.over(Bounds(Point.origin, canvas.worldSize))
+	
 	
 	// IMPLEMENTED	---------------
 	
-	// Only listens to mouse wheel events while cursor is inside canvas
-	override def mouseWheelEventFilter = MouseEvent.isOverAreaFilter(Bounds(Point.origin, canvas.worldSize))
+	override def handleCondition: FlagLike = AlwaysTrue
 	
-	override def onMouseWheelRotated(event: MouseWheelEvent) =
-	{
-		if (listening)
-		{
+	override def onMouseWheelRotated(event: MouseWheelEvent2) = {
+		if (listening) {
 			canvas.scaling *= (1 + event.wheelTurn * 0.1)
-			Some(ConsumeEvent("Canvas zoom"))
+			Consume("Canvas zoom")
 		}
 		else
-			None
+			Preserve
 	}
 	
 	override def keyStateEventFilter = KeyStateEvent.keyFilter(KeyEvent.VK_CONTROL)

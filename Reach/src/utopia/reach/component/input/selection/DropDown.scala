@@ -2,21 +2,18 @@ package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ScrollingContext, TextContext}
-import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.Border
-import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
-import utopia.genesis.handling.MouseButtonStateListener
-import utopia.inception.handling.HandlerType
-import utopia.paradigm.color.{Color, ColorShade}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
+import utopia.paradigm.color.ColorShade
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.contextual.VariableContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -171,25 +168,25 @@ private object FieldFocusMouseListener
 	// Time before pop-up visibility may be swapped
 	private val visibilityChangeThreshold = 0.2.seconds
 }
-private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener
+private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener2
 {
 	// ATTRIBUTES	-------------------
 	
-	override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-		MouseEvent.isOverAreaFilter(field.bounds)
+	override val mouseButtonStateEventFilter =
+		MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(field.bounds)
 	
 	
 	// IMPLEMENTED	-------------------
 	
-	override def onMouseButtonState(event: MouseButtonStateEvent) = {
+	override def handleCondition: FlagLike = AlwaysTrue
+	
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 		// Requests focus or opens the field, except when the pop-up was just closed
 		if (field.field.hasFocus && field.popUpVisibilityLastChangedPointer.value < Now - visibilityChangeThreshold)
 			field.openPopup()
 		else
 			field.requestFocus()
-		None
+		Preserve
 	}
-	
-	override def allowsHandlingFrom(handlerType: HandlerType) = true
 }
 

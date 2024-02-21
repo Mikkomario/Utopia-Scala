@@ -8,6 +8,7 @@
   - Added `.min(StackInsets)` and `.max(StackInsets)`
 ### Other changes
 - **StackLength**`.min(StackLength)` and `.max(StackLength)` now prioritize shrinking or expanding based on their direction
+- `.setToCloseWhenClickedOutside()` in **Window** now only activates on mouse-presses, no longer on mouse-releases
 - GUI element highlighting is now less pronounced after the first stage.
   - E.g. When button is pressed with a mouse, the pressed stage more resembles the hover stage,
     while still being noticeably different

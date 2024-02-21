@@ -13,11 +13,12 @@ import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
@@ -88,19 +89,13 @@ object ScrollViewTest extends App
 	
 	val frame = Frame.windowed(scrollView, "Scroll View Test", User)
 	frame.setToExitOnClose()
-	frame.addMouseButtonListener(MouseButtonStateListener() { event => println(event); None })
+	frame.addMouseButtonListener(MouseButtonStateListener2.unconditional { event => println(event) })
 	
 	actionLoop.runAsync()
 	StackHierarchyManager.startRevalidationLoop()
 	contentUpdateLoop.runAsync()
 	frame.startEventGenerators(actorHandler)
 	frame.visible = true
-	
-	println("Global mouse handling:")
-	println(GlobalMouseEventHandler.debugString)
-	
-	println("Frame mouse handling:")
-	println(frame.mouseButtonHandler.debugString)
 }
 
 private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit exc: ExecutionContext)

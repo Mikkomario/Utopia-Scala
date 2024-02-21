@@ -15,11 +15,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
+import utopia.flow.operator.Identity
+import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.operator.Identity
-import utopia.flow.operator.enumeration.End
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
@@ -28,10 +28,11 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.color.ColorRole
@@ -595,10 +596,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 			valuePointer.addListenerAndSimulateEvent(None)(updateLastValueListener)
 			contentPointer.addListenerAndSimulateEvent(Vector())(contentUpdateListener)
 			GlobalKeyboardEventHandler += FieldKeyListener
-			GlobalMouseEventHandler += PopupHideMouseListener
+			CommonMouseEvents += PopupHideMouseListener
 		}
 		else {
-			GlobalMouseEventHandler -= PopupHideMouseListener
+			CommonMouseEvents -= PopupHideMouseListener
 			GlobalKeyboardEventHandler -= FieldKeyListener
 			contentPointer.removeListener(contentUpdateListener)
 			valuePointer.removeListener(updateLastValueListener)
@@ -725,11 +726,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	// NESTED	---------------------------------
 	
-	private object PopupHideMouseListener extends MouseButtonStateListener
+	private object PopupHideMouseListener extends MouseButtonStateListener2
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override lazy val mouseButtonStateEventFilter = MouseButtonStateEvent.leftButtonFilter
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
 		
 		// Only closes the pop-up on mouse release if it was visible on the previous mouse press
 		private val closeOnReleaseFlag = ResettableFlag()
@@ -737,22 +738,22 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
-			if (event.isDown) {
+			if (event.pressed) {
 				closeOnReleaseFlag.value = cachedPopup.exists { _.isFullyVisible }
-				None
+				Preserve
 			}
 			// Case: Mouse release => Hides the pop-up if it was visible when the mouse was pressed
 			else if (closeOnReleaseFlag.reset()) {
 				cachedPopup.foreach { _.visible = false }
-				Some(ConsumeEvent("Pop-up closing"))
+				Consume("Pop-up closing")
 			}
 			else
-				None
+				Preserve
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
 	}
 	
 	private object FieldKeyListener extends KeyStateListener

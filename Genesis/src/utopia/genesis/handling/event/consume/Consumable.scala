@@ -73,7 +73,7 @@ trait Consumable[+Repr]
 	  * @return Copy of this event after the deliveries, plus a consume choice to forward, if necessary.
 	  *         If one of the listeners consumed this event, returns the consumed copy. Otherwise returns this event.
 	  */
-	def distributeAmong[L](listeners: IterableOnce[L])(deliver: (L, Repr) => ConsumeChoice) = {
+	def distribute[L](listeners: IterableOnce[L])(deliver: (L, Repr) => ConsumeChoice) = {
 		val listenerIter = listeners.iterator
 		// Case: No listeners to inform => No-op
 		if (!listenerIter.hasNext)
@@ -135,7 +135,7 @@ trait Consumable[+Repr]
 	  * @tparam L The type of the listeners
 	  * @return Whether this event should now be considered consumed
 	  */
-	@deprecated("Please convert to using distributeAmong(...) instead", "v4.0")
+	@deprecated("Please convert to using distribute(...) instead", "v4.0")
 	def distributeAmong[L](listeners: Seq[L])(call: (L, Repr) => Option[ConsumeEvent]) = {
 		var nextIndex = 0
 		def hasNext = nextIndex < listeners.size

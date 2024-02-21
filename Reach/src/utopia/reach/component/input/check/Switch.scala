@@ -353,6 +353,8 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	
 	// IMPLEMENTED	--------------------------------
 	
+	override def enabledPointer: FlagLike = settings.enabledPointer
+	
 	override def updateLayout() = ()
 	
 	override protected def trigger() = value = !value

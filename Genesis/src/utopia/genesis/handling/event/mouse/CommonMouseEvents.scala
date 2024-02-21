@@ -21,8 +21,8 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	private var generators = Set[MouseEventGenerator2]()
 	private var _buttonStates = MouseButtonStates.default
 	
-	private val buttonHandler = MouseButtonStateHandler.empty
-	private val moveHandler = MouseMoveHandler.empty
+	private val buttonHandler = MouseButtonStateHandler2.empty
+	private val moveHandler = MouseMoveHandler2.empty
 	private val wheelHandler = MouseWheelHandler2.empty
 	private val dragHandler = MouseDragHandler2.empty
 	

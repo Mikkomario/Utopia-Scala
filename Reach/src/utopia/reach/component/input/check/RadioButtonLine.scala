@@ -6,8 +6,8 @@ import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.handling.MouseButtonStateListener
-import utopia.genesis.handling.event.consume.ConsumeEvent
+import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener2
 import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -81,10 +81,10 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 					.withIsHintPointer(settings.enabledPointer.lightMap { !_ })
 					.text(labelText)
 				// Clicking the label triggers the button
-				label.addMouseButtonListener(MouseButtonStateListener.onLeftPressedInside { label.bounds } { _ =>
+				label.addMouseButtonListener(MouseButtonStateListener2.leftPressed.over { label.bounds } { _ =>
 					radioButton.select()
 					radioButton.requestFocus()
-					Some(ConsumeEvent("Radio button selected via label"))
+					Consume("Radio button selected via label")
 				})
 				// Adds mouse functionality to the label
 				CursorDefining.defineCursorFor(label, View { if (enabledPointer.value) Interactive else Default },

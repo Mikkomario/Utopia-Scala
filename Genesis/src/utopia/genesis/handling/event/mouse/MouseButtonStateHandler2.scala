@@ -5,11 +5,11 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.genesis.handling.event.consume.{ConsumableEventHandler2, ConsumeChoice}
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
-object MouseButtonStateHandler extends FromCollectionFactory[MouseButtonStateListener2, MouseButtonStateHandler]
+object MouseButtonStateHandler2 extends FromCollectionFactory[MouseButtonStateListener2, MouseButtonStateHandler2]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def from(items: IterableOnce[MouseButtonStateListener2]): MouseButtonStateHandler = apply(items)
+	override def from(items: IterableOnce[MouseButtonStateListener2]): MouseButtonStateHandler2 = apply(items)
 	
 	
 	// OTHER    ----------------------------
@@ -18,7 +18,7 @@ object MouseButtonStateHandler extends FromCollectionFactory[MouseButtonStateLis
 	  * @param listeners Listeners to place on this handler, initially
 	  * @return A handler managing the specified listeners
 	  */
-	def apply(listeners: IterableOnce[MouseButtonStateListener2]) = new MouseButtonStateHandler(listeners)
+	def apply(listeners: IterableOnce[MouseButtonStateListener2]) = new MouseButtonStateHandler2(listeners)
 }
 
 /**
@@ -26,7 +26,7 @@ object MouseButtonStateHandler extends FromCollectionFactory[MouseButtonStateLis
   * @author Mikko Hilpinen
   * @since 05/02/2024, v4.0
   */
-class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateListener2] = Iterable.empty)
+class MouseButtonStateHandler2(initialListeners: IterableOnce[MouseButtonStateListener2] = Iterable.empty)
 	extends DeepHandler2[MouseButtonStateListener2](initialListeners)
 		with ConsumableEventHandler2[MouseButtonStateListener2, MouseButtonStateEvent2] with MouseButtonStateListener2
 {

@@ -2,11 +2,13 @@ package utopia.reflection.component.swing.button
 
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent}
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.genesis.handling.event.mouse.MouseButton
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reflection.component.swing.template.AwtComponentRelated
@@ -25,6 +27,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 25.4.2019, v1+
   */
+// TODO: Should be an abstract class (because contains concrete properties)
 trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focusable
 {
 	import ButtonLike._
@@ -116,8 +119,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	/**
 	  * Initializes this button's listeners. Should be called when constructing this button.
 	  */
-	protected def initializeListeners(hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set()) =
-	{
+	protected def initializeListeners(hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set()) = {
 		// Adds mouse handling
 		addMouseMoveListener(ButtonMouseListener)
 		addMouseButtonListener(ButtonMouseListener)
@@ -200,44 +202,51 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
-	private object ButtonMouseListener extends MouseButtonStateListener with MouseMoveListener
+	private object ButtonMouseListener extends MouseButtonStateListener2 with MouseMoveListener2
 	{
-		// IMPLEMENTED	--------------
+		// ATTRIBUTES   ---------------
 		
 		// Only listens to left mouse button presses & releases
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.buttonFilter(MouseButton.Left)
-		
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
 		// Listens to mouse enters & exits
-		override val mouseMoveEventFilter = MouseMoveEvent.enterAreaFilter(bounds) ||
-			MouseMoveEvent.exitedAreaFilter(bounds)
+		override val mouseMoveEventFilter = MouseMoveEvent2.filter.enteredOrExited(bounds)
+		
+		
+		// IMPLEMENTED	--------------
+		
+		override def handleCondition: FlagLike = AlwaysTrue
 		
 		// On left mouse within bounds, brightens color and remembers, on release, returns
-		override def onMouseButtonState(event: MouseButtonStateEvent) = {
-			if (down) {
-				if (event.wasReleased) {
-					trigger()
-					down = false
-					Some(ConsumeEvent("Button released"))
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			if (enabled) {
+				if (down) {
+					if (event.wasReleased) {
+						trigger()
+						down = false
+						Consume("Button released")
+					}
+					else
+						Preserve
+				}
+				else if (event.isOverArea(bounds)) {
+					down = true
+					Consume("Button pressed")
 				}
 				else
-					None
-			}
-			else if (event.isOverArea(bounds)) {
-				down = true
-				Some(ConsumeEvent("Button pressed"))
+					Preserve
 			}
 			else
-				None
+				Preserve
 		}
 		
 		// When mouse enters, brightens, when mouse leaves, returns
-		override def onMouseMove(event: MouseMoveEvent) = {
-			if (event.isOverArea(bounds))
-				state += Hover
-			else
-				state -= Hover
+		override def onMouseMove(event: MouseMoveEvent2) = {
+			if (enabled) {
+				if (event.isOverArea(bounds))
+					state += Hover
+				else
+					state -= Hover
+			}
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 }

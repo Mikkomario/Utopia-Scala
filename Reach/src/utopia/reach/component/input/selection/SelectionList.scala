@@ -11,20 +11,19 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Priority2.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.{MouseButtonStateHandlerType, MouseButtonStateListener, MouseMoveListener}
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
-import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
+import utopia.genesis.handling.event.consume.Consumable
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -440,7 +439,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	addHierarchyListener { isAttached =>
 		if (isAttached) {
 			GlobalKeyboardEventHandler += keyListener
-			GlobalMouseEventHandler += GlobalMouseReleaseListener
+			CommonMouseEvents += CommonMouseReleaseListener
 			actorHandler += keyListener
 			addCustomDrawer(SelectionDrawer)
 			marginPointer.addListenerAndSimulateEvent(stack.margin)(revalidateListener)
@@ -451,7 +450,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		}
 		else {
 			GlobalKeyboardEventHandler -= keyListener
-			GlobalMouseEventHandler -= GlobalMouseReleaseListener
+			CommonMouseEvents -= CommonMouseReleaseListener
 			actorHandler -= keyListener
 			removeCustomDrawer(SelectionDrawer)
 			marginPointer.removeListener(revalidateListener)
@@ -515,7 +514,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	// NESTED	------------------------------------
 	
-	private object LocalMouseListener extends MouseMoveListener with MouseButtonStateListener
+	private object LocalMouseListener extends MouseMoveListener2 with MouseButtonStateListener2
 	{
 		// ATTRIBUTES	----------------------------
 		
@@ -526,8 +525,8 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		private var pressedDisplay: Option[C] = None
 		
 		// Only listens to left mouse button presses which haven't been consumed yet
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			Consumable.notConsumedFilter
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter
 		
 		
 		// COMPUTED	--------------------------------
@@ -541,34 +540,41 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// IMPLEMENTED	----------------------------
 		
-		override def onMouseMove(event: MouseMoveEvent) = {
-			if (event.isOverArea(bounds))
-				relativeMousePositionPointer.value = Some(event.mousePosition - position)
+		override def handleCondition: FlagLike = AlwaysTrue
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseMove(event: MouseMoveEvent2) = {
+			if (event.isOver(bounds))
+				relativeMousePositionPointer.value = Some(event.position - position)
 			else
 				relativeMousePositionPointer.value = None
 		}
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) = {
-			if (!hasFocus)
-				requestFocus()
-			pressedDisplay = hoverComponentPointer.value
-			SelectionDrawer.hoverAreaPointer.value.foreach { repaintArea(_, High) }
-			pressedDisplay.map { d => ConsumeEvent(s"Pressed display $d") }
-		}
-		
-		// Only listens to mouse presses while the mouse is over this component
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
-			case MouseButtonStateHandlerType => relativeMousePosition.isDefined
-			case _ => true
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			// Only listens to mouse presses while the mouse is over this component
+			if (relativeMousePosition.isDefined) {
+				if (!hasFocus)
+					requestFocus()
+				pressedDisplay = hoverComponentPointer.value
+				SelectionDrawer.hoverAreaPointer.value.foreach { repaintArea(_, High) }
+				pressedDisplay match {
+					case Some(display) => Consume(s"Pressed display $display")
+					case None => Preserve
+				}
+			}
+			else
+				Preserve
 		}
 		
 		
 		// OTHER	---------------------------------
 		
 		def release() = {
-			val result = pressedDisplay.filter(currentDisplayUnderCursor.contains).map { d =>
-				manager.selectDisplay(d)
-				ConsumeEvent(s"Selected $d")
+			val result = pressedDisplay.filter(currentDisplayUnderCursor.contains) match {
+				case Some(display) =>
+					manager.selectDisplay(display)
+					Consume(s"Selected $display")
+				case None => Preserve
 			}
 			pressedDisplay = None
 			SelectionDrawer.hoverAreaPointer.value.foreach { repaintArea(_) }
@@ -576,11 +582,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		}
 	}
 	
-	private object GlobalMouseReleaseListener extends MouseButtonStateListener with Handleable
+	private object CommonMouseReleaseListener extends MouseButtonStateListener2
 	{
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftReleasedFilter
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) =
 			LocalMouseListener.release()
 	}
 	

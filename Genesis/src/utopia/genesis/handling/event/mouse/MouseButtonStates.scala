@@ -149,9 +149,14 @@ case class MouseButtonStates(buttonsPressed: Set[MouseButton])
 	
 	/**
 	  * @param button A button that is pressed
-	  * @return Copy of this set with the specified state
+	  * @return Copy of this set with the specified button marked as pressed
 	  */
 	def +(button: MouseButton) = withButtonDown(button)
+	/**
+	  * @param buttonState New button state to assign
+	  * @return Copy of this set with the specified state
+	  */
+	def +(buttonState: (MouseButton, Boolean)) = withButtonState(buttonState._1, buttonState._2)
 	/**
 	  * @param event A mouse button event
 	  * @return Copy of this state after the specified event has taken place

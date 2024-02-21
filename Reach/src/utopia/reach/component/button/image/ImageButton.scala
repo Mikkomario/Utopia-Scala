@@ -7,7 +7,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackInsetsConvertible
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -348,6 +348,8 @@ class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, s
 	
 	
 	// IMPLEMENTED	-----------------------------
+	
+	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = action
 	

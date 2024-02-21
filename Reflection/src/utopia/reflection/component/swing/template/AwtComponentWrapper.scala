@@ -2,18 +2,18 @@ package utopia.reflection.component.swing.template
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Component
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.caching.MutableLazy
-import utopia.genesis.event.{MouseButtonStateEvent, MouseButtonStatus}
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.mutable._
+import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent2, MouseButtonStateHandler2, MouseButtonStates, MouseMoveHandler2, MouseWheelHandler2}
+import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackable, ReflectionStackLeaf}
-import utopia.reflection.component.template.ReflectionComponentLike
-import utopia.reflection.event.{ResizeEvent, ResizeListener}
-import utopia.firmament.model.stack.StackSize
-import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.template.ReflectionComponentLike
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf, ReflectionStackable}
+import utopia.reflection.event.{ResizeEvent, ResizeListener}
 import utopia.reflection.util.ComponentToImage
 
 import java.awt.event.MouseEvent
@@ -42,9 +42,11 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     private val cachedSize = MutableLazy { Size(component.getWidth, component.getHeight) }
     
     // Handlers for distributing events
-    override val mouseButtonHandler = MouseButtonStateHandler()
-    override val mouseMoveHandler = MouseMoveHandler()
-    override val mouseWheelHandler = MouseWheelHandler()
+    override val mouseButtonHandler = MouseButtonStateHandler2()
+    override val mouseMoveHandler = MouseMoveHandler2()
+    override val mouseWheelHandler = MouseWheelHandler2()
+    
+    override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
     
     /**
      * The currently active resize listeners for this wrapper. Please note that the listeners
@@ -206,24 +208,29 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
     
     private class AwtMouseEventImporter extends java.awt.event.MouseListener
     {
-        private var currentButtonStatus = MouseButtonStatus.empty
+        // ATTRIBUTES   --------------------
+        
+        private var currentButtonStatus = MouseButtonStates.default
+        
+        
+        // IMPLEMENTED  --------------------
         
         override def mouseClicked(e: MouseEvent) = ()
-        
         override def mousePressed(e: MouseEvent) = updateMouseButtonStatus(e, newStatus = true)
-        
         override def mouseReleased(e: MouseEvent) = updateMouseButtonStatus(e, newStatus = false)
         
         override def mouseEntered(e: MouseEvent) = ()
-        
         override def mouseExited(e: MouseEvent) = ()
         
-        private def updateMouseButtonStatus(e: MouseEvent, newStatus: Boolean) =
-        {
-            currentButtonStatus += (e.getButton, newStatus)
+        
+        // OTHER    ------------------------
+        
+        private def updateMouseButtonStatus(e: MouseEvent, newStatus: Boolean) = {
+            currentButtonStatus += (MouseButton(e.getButton) -> newStatus)
             val eventPosition = positionOfEvent(e)
-            val event = MouseButtonStateEvent(e.getButton, isDown = newStatus, eventPosition,
-                absolutePosition + eventPosition, currentButtonStatus)
+            val event = MouseButtonStateEvent2(MouseButton(e.getButton),
+                RelativePoint.absoluteByRelative(eventPosition) { absolutePosition + _ }, currentButtonStatus,
+                None, pressed = newStatus)
             distributeMouseButtonEvent(event)
         }
         

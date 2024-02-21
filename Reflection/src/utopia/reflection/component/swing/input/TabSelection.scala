@@ -3,27 +3,27 @@ package utopia.reflection.component.swing.input
 import utopia.firmament.component.input.SelectableWithPointers
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.graphics.DrawLevel2.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
 import utopia.genesis.text.Font
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment.Center
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Background
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.{StackInsets, StackLength}
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 import scala.collection.immutable.HashMap
 
@@ -209,27 +209,28 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 		}
 	}
 	
-	private class LabelMouseListener(val label: TextLabel) extends MouseButtonStateListener with Handleable
+	private class LabelMouseListener(val label: TextLabel) extends MouseButtonStateListener2
 	{
 		// ATTRIBUTES	----------
 		
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			MouseEvent.isOverAreaFilter(label.bounds)
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(label.bounds)
 		
 		
 		// IMPLEMENTED	---------
 		
+		override def handleCondition: FlagLike = AlwaysTrue
+		
 		// When pressed, selects the label
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) =
 		{
 			val newValue = labels.find { _._2 == label }.map { _._1 }
-			if (newValue.isDefined)
-			{
+			if (newValue.isDefined) {
 				value = newValue
-				Some(ConsumeEvent(s"$newValue selected in TabSelection"))
+				Consume(s"$newValue selected in TabSelection")
 			}
 			else
-				None
+				Preserve
 		}
 	}
 	

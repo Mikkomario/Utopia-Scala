@@ -3,24 +3,26 @@ package utopia.reach.container.multi
 import utopia.firmament.context.ColorContext
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseEvent, MouseMoveEvent}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.event.consume.Consumable
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -118,18 +120,22 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		if (rowsWithResults.nonEmpty) {
 			val stack = stackCreation.parent
 			stackPointer.value = Some(stack)
-			stack.addMouseMoveListener(selector)
-			stack.addMouseButtonListener(selector)
+			stack += selector
 			// Also adds item selection on left mouse press
 			val locations = StackItemAreas(stack)
-			stack.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.leftPressedFilter &&
-				Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(stack.bounds)) { e =>
-				locations.itemNearestTo(e.mousePosition - stack.position).flatMap { c => rowsWithIndices.find { _._1 == c } }
-					.map { case (_, index) =>
-						selectedRowIndexPointer.value = index
-						ConsumeEvent("List item selected")
+			stack.addMouseButtonListener(MouseButtonStateListener2
+				.filtering(MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter &&
+					MouseEvent2.filter.over(stack.bounds))
+				{ e =>
+					locations.itemNearestTo(e.position - stack.position)
+						.flatMap { c => rowsWithIndices.find { _._1 == c } } match
+					{
+						case Some((_, index)) =>
+							selectedRowIndexPointer.value = index
+							Consume("List item selected")
+						case None => Preserve
 					}
-			})
+				})
 			// And keyboard listening for selected index changing
 			val maxRowIndex = rowsWithIndices.map { _._2 }.max
 			val focusTracker = new FocusStateTracker(false)
@@ -217,7 +223,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],
                        selectedComponentPointer: Changing[Option[ReachComponentLike]],
                        keyPressedPointer: View[Boolean])
-	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener with Handleable
+	extends CustomDrawer with MouseMoveListener2 with MouseButtonStateListener2
 {
 	// ATTRIBUTES	----------------------------------
 	
@@ -235,7 +241,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 			pos.flatMap { pos => items.flatMap { _.areaNearestTo(pos) } }
 		}
 	
-	override val mouseButtonStateEventFilter = Consumable.notConsumedFilter
+	override val mouseButtonStateEventFilter = Consumable.unconsumedFilter
 	
 	
 	// COMPUTED	-------------------------------------
@@ -250,11 +256,12 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 	// IMPLEMENTED	----------------------------------
 	
 	override def opaque = false
-	
 	override def drawLevel = Normal
 	
-	override def draw(drawer: Drawer, bounds: Bounds) =
-	{
+	override def handleCondition: FlagLike = AlwaysTrue
+	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+	
+	override def draw(drawer: Drawer, bounds: Bounds) = {
 		def draw(highlightLevel: Double, area: Bounds) =
 			drawer.draw(area)(DrawSettings.onlyFill(backgroundPointer.value.highlightedBy(highlightLevel)))
 		def drawMouseArea() = mouseOverArea.foreach { draw(if (mousePressed) 0.225 else 0.075, _) }
@@ -279,10 +286,10 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 		}
 	}
 	
-	override def onMouseMove(event: MouseMoveEvent) = {
+	override def onMouseMove(event: MouseMoveEvent2) = {
 		stack.foreach { stack =>
-			if (event.isOverArea(stack.bounds))
-				relativeMousePositionPointer.value = Some(event.mousePosition - stack.position)
+			if (event.isOver(stack.bounds))
+				relativeMousePositionPointer.value = Some(event.position - stack.position)
 			else if (relativeMousePosition.nonEmpty) {
 				relativeMousePositionPointer.value = None
 				mousePressed = false
@@ -290,12 +297,11 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 		}
 	}
 	
-	override def onMouseButtonState(event: MouseButtonStateEvent) = {
-		if (event.wasReleased)
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+		if (event.released)
 			mousePressed = false
 		// else if (stack.exists { s => event.isOverArea(s.bounds) })
 		else if (relativeMousePosition.isDefined)
 			mousePressed = true
-		None
 	}
 }

@@ -7,6 +7,7 @@ import utopia.firmament.drawing.view.SelectableTextViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Now
@@ -14,14 +15,15 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.event._
 import utopia.genesis.graphics.Priority2.VeryHigh
 import utopia.genesis.handling._
 import utopia.genesis.handling.action.Actor2
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2, MouseMoveEvent2, MouseMoveListener2}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -53,7 +55,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private var draggingMouse = false
+	private val draggingFlag = ResettableFlag()
 	
 	override val focusId = hashCode()
 	private val stylePointer = contextPointer.mergeWith(enabledPointer) { (context, enabled) =>
@@ -200,20 +202,19 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 			if (isAttached) {
 				enableFocusHandling()
 				GlobalKeyboardEventHandler.register(KeyListener)
-				GlobalMouseEventHandler.register(GlobalMouseReleaseListener)
+				CommonMouseEvents += CommonMouseReleaseListener
 				actorHandler += CaretBlinker
 				parentCanvas.cursorManager.foreach { _ += this }
 			}
 			else {
 				disableFocusHandling()
+				CommonMouseEvents -= CommonMouseReleaseListener
 				GlobalKeyboardEventHandler.unregister(KeyListener)
-				GlobalMouseEventHandler.unregister(GlobalMouseReleaseListener)
 				actorHandler -= CaretBlinker
 				parentCanvas.cursorManager.foreach { _ -= this }
 			}
 		}
-		addMouseButtonListener(MouseListener)
-		addMouseMoveListener(MouseListener)
+		this += MouseListener
 		
 		// Repaints (and possibly revalidates) this component when content or styling changes
 		measuredTextPointer.addListener { event =>
@@ -438,7 +439,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		override def lostOwnership(clipboard: Clipboard, contents: Transferable) = ()
 	}
 	
-	private object MouseListener extends MouseButtonStateListener with MouseMoveListener
+	private object MouseListener extends MouseButtonStateListener2 with MouseMoveListener2
 	{
 		// ATTRIBUTES	---------------------------------
 		
@@ -446,24 +447,25 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		private var lastClickTime = Now.toInstant
 		
 		// Is only interested in left mouse button presses inside this component's area
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter &&
-			MouseEvent.isOverAreaFilter(bounds)
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(bounds)
 		
 		
 		// IMPLEMENTED	---------------------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) = {
-			draggingMouse = true
-			updateCaret(event.mousePosition, KeyListener.keyStatus.shift)
+		override def handleCondition: FlagLike = AlwaysTrue
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			draggingFlag.set()
+			updateCaret(event.position, KeyListener.keyStatus.shift)
 			lastClickTime = Now
-			Some(ConsumeEvent("EditableTextLabel clicked"))
+			Consume("EditableTextLabel clicked")
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent) = updateCaret(event.mousePosition, selectArea = true)
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = handlerType match {
-			case MouseMoveHandlerType => draggingMouse
-			case _ => true
+		override def onMouseMove(event: MouseMoveEvent2) = {
+			if (draggingFlag.isSet)
+				updateCaret(event.position, selectArea = true)
 		}
 		
 		
@@ -506,15 +508,15 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		}
 	}
 	
-	private object GlobalMouseReleaseListener extends MouseButtonStateListener
+	private object CommonMouseReleaseListener extends MouseButtonStateListener2
 	{
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.wasReleasedFilter
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.released
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) = {
-			draggingMouse = false
-			None
+		override def handleCondition: FlagLike = draggingFlag
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			draggingFlag.reset()
+			Preserve
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = draggingMouse
 	}
 }

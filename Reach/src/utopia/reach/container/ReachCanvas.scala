@@ -7,22 +7,25 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.Resettable
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent, MouseWheelEvent}
+import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.mutable.{ActorHandler, MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse._
+import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
-import utopia.genesis.view.{GlobalKeyboardEventHandler, MouseEventGenerator}
+import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorShade.Dark
 import utopia.paradigm.enumeration.Alignment
@@ -237,28 +240,21 @@ object ReachCanvas
 	{
 		// ATTRIBUTES   -----------------------
 		
-		// FIXME: Switch to the new generator type
-		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator(_) } }
+		private val generatorPointer = parentPointer.strongMap { _.map { new MouseEventGenerator2(_) } }
 		
 		
 		// INITIAL CODE --------------------
 		
 		// Distributes the mouse events from the parent component into the canvas element
 		generatorPointer.addContinuousListener { event =>
-			event.oldValue.foreach { _.kill() }
+			event.oldValue.foreach { _.stop() }
 			event.newValue.foreach { generator =>
-				generator.buttonHandler += MouseButtonStateListener() { event =>
+				generator.buttonHandler += MouseButtonStateListener2.unconditional { event =>
 					canvas.distributeMouseButtonEvent(event)
-					None
 				}
-				generator.moveHandler += MouseMoveListener() { event =>
-					canvas.distributeMouseMoveEvent(event)
-				}
-				generator.wheelHandler += MouseWheelListener()({ event =>
-					canvas.distributeMouseWheelEvent(event)
-				})
-				// FIXME: Add the new generator to the actor handler here
-				// actorHandler += generator
+				generator.moveHandler += MouseMoveListener2.unconditional(canvas.distributeMouseMoveEvent)
+				generator.wheelHandler += MouseWheelListener2.unconditional(canvas.distributeMouseWheelEvent)
+				actorHandler += generator
 			}
 		}
 	}
@@ -343,9 +339,11 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		case Left(v) => Left(View { v.value + position })
 	}
 	
-	override lazy val mouseButtonHandler: MouseButtonStateHandler = MouseButtonStateHandler()
-	override lazy val mouseMoveHandler: MouseMoveHandler = MouseMoveHandler()
-	override lazy val mouseWheelHandler: MouseWheelHandler = MouseWheelHandler()
+	override lazy val mouseButtonHandler = MouseButtonStateHandler2()
+	override lazy val mouseMoveHandler = MouseMoveHandler2()
+	override lazy val mouseWheelHandler = MouseWheelHandler2()
+	
+	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
 	
 	
 	// INITIAL CODE	---------------------------
@@ -471,26 +469,34 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	// Distributes the events via the canvas content element, but transforms the coordinates relative to this canvas
-	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) = {
+	override def distributeMouseButtonEvent(event: MouseButtonStateEvent2) = {
 		super.distributeMouseButtonEvent(event) match {
-			case Some(consumed) =>
-				val newEvent = event.consumed(consumed)
+			case consume: Consume =>
+				val newEvent = event.consumed(consume.consumeEvent)
 				currentContent.foreach { _.distributeMouseButtonEvent(newEvent.relativeTo(position)) }
-				Some(consumed)
-			case None => currentContent.flatMap { _.distributeMouseButtonEvent(event.relativeTo(position)) }
+				consume
+			case _ =>
+				currentContent match {
+					case Some(c) => c.distributeMouseButtonEvent(event.relativeTo(position))
+					case None => Preserve
+				}
 		}
 	}
-	override def distributeMouseMoveEvent(event: MouseMoveEvent) = {
+	override def distributeMouseMoveEvent(event: MouseMoveEvent2) = {
 		super.distributeMouseMoveEvent(event)
 		currentContent.foreach { _.distributeMouseMoveEvent(event.relativeTo(position)) }
 	}
-	override def distributeMouseWheelEvent(event: MouseWheelEvent) = {
+	override def distributeMouseWheelEvent(event: MouseWheelEvent2) = {
 		super.distributeMouseWheelEvent(event) match {
-			case Some(consumed) =>
-				val newEvent = event.consumed(consumed)
+			case consume: Consume =>
+				val newEvent = event.consumed(consume.consumeEvent)
 				currentContent.foreach { _.distributeMouseWheelEvent(newEvent.relativeTo(position)) }
-				Some(consumed)
-			case None => currentContent.flatMap { _.distributeMouseWheelEvent(event.relativeTo(position)) }
+				consume
+			case _ =>
+				currentContent match {
+					case Some(c) => c.distributeMouseWheelEvent(event.relativeTo(position))
+					case None => Preserve
+				}
 		}
 	}
 	
@@ -579,7 +585,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		override def allowsHandlingFrom(handlerType: HandlerType) = focusManager.hasFocus
 	}
 	
-	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener with Handleable
+	private class CursorSwapper(cursorManager: ReachCursorManager) extends MouseMoveListener2
 	{
 		// ATTRIBUTES	-----------------------------
 		
@@ -614,8 +620,11 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		
 		// IMPLEMENTED	-----------------------------
 		
-		override def onMouseMove(event: MouseMoveEvent) = {
-			val newPosition = event.mousePosition - position
+		override def handleCondition: FlagLike = AlwaysTrue
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseMove(event: MouseMoveEvent2) = {
+			val newPosition = event.position - position
 			mousePositionPointer.update { lastPosition =>
 				if (newPosition.distanceFrom(lastPosition) >= minCursorDistance)
 					newPosition

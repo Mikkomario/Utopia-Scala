@@ -105,8 +105,8 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	  * Starts delivering of transformed mouse events to the wrapped wrapped item and/or possibly other items.
 	  * @param parentHandlers The handlers that will deliver mouse events to be converted.
 	  *                       The supported (& expected) handler types are:
-	  *                             - [[MouseButtonStateHandler]]
-	  *                             - [[MouseMoveHandler]]
+	  *                             - [[MouseButtonStateHandler2]]
+	  *                             - [[MouseMoveHandler2]]
 	  *                             - [[MouseWheelHandler2]]
 	  *                             - [[MouseDragHandler2]]
 	  * @param disableMouseToWrapped Whether direct mouse-event delivery to the wrapped item should be disabled,
@@ -138,8 +138,8 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	{
 		// ATTRIBUTES   ----------------------
 		
-		private val buttonHandler = MouseButtonStateHandler.empty
-		private val moveHandler = MouseMoveHandler.empty
+		private val buttonHandler = MouseButtonStateHandler2.empty
+		private val moveHandler = MouseMoveHandler2.empty
 		private val wheelHandler = MouseWheelHandler2.empty
 		private val dragHandler = MouseDragHandler2.empty
 		

@@ -1,12 +1,11 @@
 package utopia.firmament.component
 
-import utopia.genesis.event._
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.mutable._
-import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.consume.{Consumable, ConsumeChoice}
+import utopia.genesis.handling.event.mouse._
+import utopia.genesis.handling.template.{Handleable2, Handlers}
 import utopia.genesis.text.Font
-import utopia.inception.handling.Handleable
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
@@ -27,15 +26,21 @@ trait Component extends HasMutableBounds
     /**
       * @return A handler used for distributing mouse button events within this component
       */
-    def mouseButtonHandler: MouseButtonStateHandler
+    def mouseButtonHandler: MouseButtonStateHandler2
     /**
-      * @return A handler used for distributing mouse move events within this componen
+      * @return A handler used for distributing mouse move events within this component
       */
-    def mouseMoveHandler: MouseMoveHandler
+    def mouseMoveHandler: MouseMoveHandler2
     /**
       * @return A handler used for distributing mouse wheel events within this component
       */
-    def mouseWheelHandler: MouseWheelHandler
+    def mouseWheelHandler: MouseWheelHandler2
+    
+    /**
+      * @return Handlers used for distributing events within this component.
+      *         Typically used for distributing mouse-related events only.
+      */
+    def handlers: Handlers
     
     /**
       * @return The components under this component
@@ -72,12 +77,12 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseButtonEvent(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
+    def distributeMouseButtonEvent(event: MouseButtonStateEvent2): ConsumeChoice = {
         // Informs children first
-        val consumeEvent = distributeConsumableMouseEvent[MouseButtonStateEvent](event, _.distributeMouseButtonEvent(_))
+        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseButtonStateEvent2](event) { _.distributeMouseButtonEvent(_) }
         
         // Then informs own handler
-        mouseButtonHandler.onMouseButtonState(consumeEvent.map(event.consumed).getOrElse(event))
+        childrenChoice || mouseButtonHandler.onMouseButtonStateEvent(eventAfterChildren)
     }
     /**
       * Distributes a mouse move event to this wrapper and children
@@ -85,11 +90,11 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseMoveEvent(event: MouseMoveEvent): Unit = {
+    def distributeMouseMoveEvent(event: MouseMoveEvent2): Unit = {
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
-        distributeEvent[MouseMoveEvent](event, e => Vector(e.mousePosition, e.previousMousePosition),
+        distributeEvent[MouseMoveEvent2](event, e => Vector(e.mousePosition, e.previousMousePosition),
             _.relativeTo(_), _.distributeMouseMoveEvent(_))
     }
     /**
@@ -98,38 +103,77 @@ trait Component extends HasMutableBounds
       *              (origin should be at the parent component's position). Events outside parent context shouldn't be
       *              distributed.
       */
-    def distributeMouseWheelEvent(event: MouseWheelEvent): Option[ConsumeEvent] = {
+    def distributeMouseWheelEvent(event: MouseWheelEvent2): ConsumeChoice = {
         // Informs children first
-        val consumeEvent = distributeConsumableMouseEvent[MouseWheelEvent](event, _.distributeMouseWheelEvent(_))
+        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseWheelEvent2](
+            event) { _.distributeMouseWheelEvent(_) }
         
         // Then informs own handler
-        mouseWheelHandler.onMouseWheelRotated(consumeEvent.map(event.consumed).getOrElse(event))
+        childrenChoice || mouseWheelHandler.onMouseWheelRotated(eventAfterChildren)
     }
     
     /**
       * Adds a new mouse button listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseButtonListener(listener: MouseButtonStateListener) = mouseButtonHandler += listener
+    def addMouseButtonListener(listener: MouseButtonStateListener2) =
+        mouseButtonHandler += listener
     /**
       * Adds a new mouse move listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseMoveListener(listener: MouseMoveListener) = mouseMoveHandler += listener
+    def addMouseMoveListener(listener: MouseMoveListener2) = mouseMoveHandler += listener
     /**
       * Adds a new mouse wheel listener to this wrapper
       * @param listener A new listener
       */
-    def addMouseWheelListener(listener: MouseWheelListener) = mouseWheelHandler += listener
+    def addMouseWheelListener(listener: MouseWheelListener2) = mouseWheelHandler += listener
+    /**
+      * Assigns a listener to be informed of events related to this component
+      * @param listener A listener to be informed
+      * @return This component
+      */
+    def +=(listener: Handleable2) = {
+        handlers += listener
+        this
+    }
+    /**
+      * Assigns 0-n listeners to be informed of events related to this component
+      * @param listeners Listeners to be informed
+      * @return This component
+      */
+    def ++=(listeners: IterableOnce[Handleable2]) = {
+        handlers ++= listeners
+        this
+    }
     
     /**
       * Removes a listener from this wrapper
       * @param listener A listener to be removed
       */
-    def removeMouseListener(listener: Handleable) = forMeAndChildren { c =>
+    def removeMouseListener(listener: Handleable2) = forMeAndChildren { c =>
         c.mouseButtonHandler -= listener
         c.mouseMoveHandler -= listener
         c.mouseWheelHandler -= listener
+    }
+    /**
+      * Removes a listener from this component, so that it won't be informed of events anymore
+      * @param listener A listener
+      * @return This component
+      */
+    def -=(listener: Handleable2) = {
+        forMeAndChildren { _.handlers -= listener }
+        this
+    }
+    /**
+      * Removes 0-n listeners so that they won't be informed of events within this component anymore
+      * @param listeners Listeners to remove
+      * @return This component
+      */
+    def --=(listeners: Iterable[Handleable2]) = {
+        if (listeners.nonEmpty)
+            forMeAndChildren { _.handlers --= listeners }
+        this
     }
     
     private def forMeAndChildren[U](operation: Component => U): Unit = {
@@ -150,14 +194,15 @@ trait Component extends HasMutableBounds
         }
     }
     
-    private def distributeConsumableMouseEvent[E <: MouseEvent[E] with Consumable[E]](event: E, childAccept: (Component, E) => Option[ConsumeEvent]) =
+    private def distributeConsumableMouseEvent[E <: MouseEvent2[E] with Consumable[E]](event: E)
+                                                                                      (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
     {
         val myBounds = bounds
         if (myBounds.contains(event.mousePosition)) {
             val translatedEvent = event.relativeTo(myBounds.position)
-            translatedEvent.distributeAmong(children)(childAccept)
+            translatedEvent.distribute(children)(childAccept)
         }
         else
-            None
+            event -> Preserve
     }
 }

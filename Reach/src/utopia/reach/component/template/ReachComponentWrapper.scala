@@ -1,8 +1,7 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.StackableWrapper
-import utopia.genesis.graphics.Drawer
-import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.{DrawLevel2, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
@@ -30,9 +29,6 @@ trait ReachComponentWrapper extends ReachComponentLike with StackableWrapper
 	
 	override def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds]) =
 		wrapped.paintContent(drawer, drawLevel, clipZone)
-	
-	override def bounds = wrapped.bounds
-	override def bounds_=(b: Bounds) = wrapped.bounds = b
 	
 	override def children = wrapped.children
 	

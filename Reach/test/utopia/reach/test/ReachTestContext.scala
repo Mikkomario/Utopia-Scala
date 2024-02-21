@@ -5,17 +5,17 @@ import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.WindowResizePolicy.UserAndProgram
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.genesis.handling.ActorLoop
-import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.handling.action.{ActionLoop, ActorHandler2}
 import utopia.genesis.text.Font
 import utopia.genesis.text.FontStyle.Plain
-import utopia.genesis.util.Screen
+import utopia.genesis.util.{Fps, Screen}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.paradigm.color.{ColorScheme, ColorSet}
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.measurement.DistanceExtensions._
+import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.transform.Adjustment
 import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext}
 
@@ -42,7 +42,7 @@ object ReachTestContext
 	implicit val ppi: Ppi = Screen.ppi
 	val cm = 1.cm.toPixels.round.toInt
 	
-	val actorHandler = ActorHandler()
+	val actorHandler = ActorHandler2()
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
 	
@@ -59,7 +59,7 @@ object ReachTestContext
 		.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 		.withContentContext(baseContext)
 	
-	private val actionLoop = new ActorLoop(actorHandler, 5 to 60)
+	private val actionLoop = new ActionLoop(actorHandler, NumericSpan(5, 60).mapTo(Fps.apply))
 	
 	
 	// INIITAL CODE -----------------------

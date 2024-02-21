@@ -4,17 +4,17 @@ import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, 
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent, MouseMoveEvent}
-import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener, MouseMoveListener}
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.event.KeyStateEvent
+import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.handling.KeyStateListener
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseMoveEvent2, MouseMoveListener2}
 import utopia.genesis.view.GlobalKeyboardEventHandler
 import utopia.inception.handling.HandlerType
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
-import utopia.genesis.graphics.Priority2.High
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.genesis.handling.event.mouse.MouseButton
 
 import java.awt.event.KeyEvent
 
@@ -39,6 +39,10 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	  * @return The current state of this button
 	  */
 	def statePointer: Changing[GuiElementStatus]
+	/**
+	  * @return A pointer that contains true while this button may be interacted with
+	  */
+	def enabledPointer: FlagLike
 	
 	/**
 	  * Triggers the actions associated with this button
@@ -193,16 +197,15 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		override def allowsHandlingFrom(handlerType: HandlerType) = enabled && (!requiresFocus || hasFocus)
 	}
 	
-	private class ButtonMouseListener(statePointer: Pointer[GuiElementStatus]) extends MouseButtonStateListener
-		with MouseMoveListener
+	private class ButtonMouseListener(statePointer: Pointer[GuiElementStatus])
+		extends MouseButtonStateListener2 with MouseMoveListener2
 	{
 		// ATTRIBUTES	----------------------------
 		
 		// Only listens to left mouse button presses & releases
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.buttonFilter(MouseButton.Left)
-		
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.left
 		// Listens to mouse enters & exits
-		override val mouseMoveEventFilter = MouseMoveEvent.enteredOrExitedAreaFilter(bounds)
+		override val mouseMoveEventFilter = MouseMoveEvent2.filter.enteredOrExited(bounds)
 		
 		
 		// COMPUTED	-------------------------------
@@ -213,35 +216,35 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		
 		// IMPLEMENTED	----------------------------
 		
+		override def handleCondition: FlagLike = enabledPointer
+		
 		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
-		override def onMouseButtonState(event: MouseButtonStateEvent) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			if (down) {
 				if (event.wasReleased) {
 					trigger()
 					down = false
-					Some(ConsumeEvent("Button released"))
+					Consume("Button released")
 				}
 				else
-					None
+					Preserve
 			}
 			else if (event.wasPressed && event.isOverArea(bounds)) {
 				down = true
 				if (!hasFocus)
 					requestFocus()
-				Some(ConsumeEvent("Button pressed"))
+				Consume("Button pressed")
 			}
 			else
-				None
+				Preserve
 		}
 		
 		// When mouse enters, brightens, when mouse leaves, returns
-		override def onMouseMove(event: MouseMoveEvent) = {
+		override def onMouseMove(event: MouseMoveEvent2) = {
 			if (event.isOverArea(bounds))
 				statePointer.update { _ + Hover }
 			else
 				statePointer.update { _ - Hover }
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 }

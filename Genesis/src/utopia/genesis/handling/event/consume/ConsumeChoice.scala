@@ -17,6 +17,12 @@ sealed trait ConsumeChoice
 	  *         None if the choice was not to consume the related item.
 	  */
 	def eventIfConsumed: Option[ConsumeEvent]
+	
+	/**
+	  * @param other Another consume choice
+	  * @return A choice that chooses to consume if either of these choices is to consume
+	  */
+	def ||(other: ConsumeChoice): ConsumeChoice
 }
 
 object ConsumeChoice
@@ -46,6 +52,8 @@ object ConsumeChoice
 	case object Preserve extends ConsumeChoice
 	{
 		override def eventIfConsumed: Option[ConsumeEvent] = None
+		
+		override def ||(other: ConsumeChoice): ConsumeChoice = other
 	}
 	
 	object Consume
@@ -65,6 +73,8 @@ object ConsumeChoice
 		// IMPLEMENTED  --------------------
 		
 		override def eventIfConsumed: Option[ConsumeEvent] = Some(consumeEvent)
+		
+		override def ||(other: ConsumeChoice): ConsumeChoice = this
 		
 		
 		// OTHER    ------------------------

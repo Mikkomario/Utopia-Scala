@@ -1,6 +1,8 @@
 package utopia.firmament.component
 
+import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
@@ -27,11 +29,16 @@ trait ComponentWrapper extends Component
 	override def mouseMoveHandler = wrapped.mouseMoveHandler
 	override def mouseWheelHandler = wrapped.mouseWheelHandler
 	
+	override def handlers: Handlers = wrapped.handlers
+	
 	override def position = wrapped.position
 	override def position_=(p: Point) = wrapped.position = p
 	
 	override def size = wrapped.size
 	override def size_=(s: Size) = wrapped.size = s
+	
+	override def bounds: Bounds = wrapped.bounds
+	override def bounds_=(b: Bounds): Unit = wrapped.bounds = b
 	
 	override def children = wrapped.children
 }

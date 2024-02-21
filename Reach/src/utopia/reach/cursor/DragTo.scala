@@ -8,10 +8,15 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileOption
-import utopia.genesis.event.{MouseButtonStateEvent, MouseMoveEvent}
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.{MouseButtonStateListener, MouseMoveHandlerType, MouseMoveListener}
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.event.MouseMoveEvent
+import utopia.genesis.handling.event.consume.Consumable
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent2, MouseButtonStateListener2}
+import utopia.genesis.handling.{MouseMoveHandlerType, MouseMoveListener}
 import utopia.genesis.util.Screen
 import utopia.genesis.view.GlobalMouseEventHandler
 import utopia.inception.handling.HandlerType
@@ -260,7 +265,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 	
 	// NESTED   ---------------------------
 	
-	private object MouseListener extends MouseButtonStateListener
+	private object MouseListener extends MouseButtonStateListener2
 	{
 		// ATTRIBUTES   -------------------------
 		
@@ -269,28 +274,38 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		// 3 = Component stack size (at drag start)
 		// 4 = Maximum bounds at drag start
 		// 5 = Drag directions, which are empty when repositioning
-		private var drag: Option[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])] = None
+		private val dragPointer = EventfulPointer.empty[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])]()
+		private val draggingFlag: FlagLike = dragPointer.map { _.isDefined }
 		
 		override val mouseButtonStateEventFilter =
-			MouseButtonStateEvent.leftPressedFilter && Consumable.notConsumedFilter
+			MouseButtonStateEvent2.filter.leftPressed && Consumable.unconsumedFilter
+			
+		
+		// COMPUTED -----------------------------
+		
+		private def drag = dragPointer.value
+		private def drag_=(newDrag: Option[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])]) =
+			dragPointer.value = newDrag
 		
 		
 		// IMPLEMENTED  -------------------------
 		
+		override def handleCondition: FlagLike = AlwaysTrue
+		
 		// Case: Mouse pressed
-		override def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			val componentBounds = component.bounds
 			// Case: Mouse pressed within the component => Checks whether pressed at the drag-area
 			// TODO: Could add external borders here
-			if (componentBounds.contains(event.mousePosition)) {
+			if (componentBounds.contains(event.position)) {
 				val innerArea = componentBounds - resizeActiveInsets
 				// Case: Clicked inside => Applies repositioning, if appropriate
-				if (innerArea.contains(event.mousePosition)) {
-					startDrag(event.absoluteMousePosition)
+				if (innerArea.contains(event.position)) {
+					startDrag(event.position.absolute)
 				}
 				// Case: Pressed near the borders => Determines the drag directions
-				if (!innerArea.contains(event.mousePosition)) {
-					val relativePosition = event.mousePosition - componentBounds.position
+				if (!innerArea.contains(event.position)) {
+					val relativePosition = event.position - componentBounds.position
 					val directions = resizeAxes.flatMap { axis =>
 						val p = relativePosition(axis)
 						val borders = resizeActiveInsets(axis)
@@ -303,24 +318,22 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 					}
 					// Case: Drag start
 					if (directions.nonEmpty)
-						startDrag(event.absoluteMousePosition, directions.toMap)
+						startDrag(event.position.absolute, directions.toMap)
 					// Case: These directions were not supported => Applies repositioning, if appropriate
 					else if (repositionLogic.nonEmpty && resizeAxes.nonEmpty)
-						startDrag(event.absoluteMousePosition)
+						startDrag(event.position.absolute)
 					// Case: Repositioning not appropriate => Ignores the event
 					else
-						None
+						Preserve
 				}
 				// Case: Mouse pressed inside the component
 				else
-					None
+					Preserve
 			}
 			// Case: Mouse pressed outside the component
 			else
-				None
+				Preserve
 		}
-		
-		override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
 		
 		
 		// OTHER    ------------------------
@@ -329,9 +342,9 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		private def startDrag(absoluteMousePosition: Point, directions: Map[Axis2D, End] = Map()) = {
 			drag = Some((absoluteMousePosition, getBounds(), component.stackSize,
 				Bounds(Point.origin, getArea()), directions))
-			GlobalMouseEventHandler += ReleaseListener
+			CommonMouseEvents += ReleaseListener
 			GlobalMouseEventHandler += DragListener
-			Some(ConsumeEvent("drag-start"))
+			Consume("drag-start")
 		}
 		
 		
@@ -440,20 +453,23 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			}
 		}
 		
-		private object ReleaseListener extends MouseButtonStateListener
+		private object ReleaseListener extends MouseButtonStateListener2
 		{
-			override def mouseButtonStateEventFilter =
-				MouseButtonStateEvent.leftReleasedFilter
+			// ATTRIBUTES   ------------------
+			
+			override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftReleased
+			
+			
+			// IMPLEMENTED  ------------------
+			
+			override def handleCondition: FlagLike = draggingFlag
 			
 			// Stops the drag
-			override def onMouseButtonState(event: MouseButtonStateEvent): Option[ConsumeEvent] = {
+			override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 				drag = None
-				GlobalMouseEventHandler -= this
+				CommonMouseEvents -= this
 				GlobalMouseEventHandler -= MouseListener.DragListener
-				None
 			}
-			
-			override def allowsHandlingFrom(handlerType: HandlerType): Boolean = drag.isDefined
 		}
 	}
 }

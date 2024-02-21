@@ -155,7 +155,8 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 			label.textInsets = label.textInsets.onlyVertical / 2
 			val content = removeIcon.map { icon =>
 				Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
-					s += ImageButton.contextual(icon.inButton.contextual, isLowPriority = true) { -=(label.content) }
+					s += ImageButton
+						.contextual(icon.inButton.contextual, isLowPriority = true) { TagView.this -= label.content }
 					s += label
 				}
 			}.getOrElse(label)
@@ -168,8 +169,7 @@ class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon:
 		
 		override protected def wrapped = view
 		
-		override def content_=(newContent: (String, Color)) =
-		{
+		override def content_=(newContent: (String, Color)) = {
 			label.content = newContent._1
 			view.color = newContent._2
 		}

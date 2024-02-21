@@ -12,8 +12,9 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling._
 import utopia.genesis.handling.action.ActorHandler2
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseEventGenerator2}
+import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener2, MouseEventGenerator2, MouseMoveListener2, MouseWheelListener2}
 import utopia.genesis.handling.mutable.KeyStateHandler
+import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
@@ -252,6 +253,8 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	override def mouseButtonHandler = content.mouseButtonHandler
 	override def mouseMoveHandler = content.mouseMoveHandler
 	override def mouseWheelHandler = content.mouseWheelHandler
+	override def handlers: Handlers = content.handlers
+	
 	// override def keyStateHandler = content.keyStateHandler
 	// override def keyTypedHandler = content.keyTypedHandler
 	
@@ -314,13 +317,10 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 			// Starts mouse listening
 			val mouseEventGenerator = new MouseEventGenerator2(content.component)
 			actorHandler += mouseEventGenerator
-			// TODO: Replace with new listener classes
-			/*
-			mouseEventGenerator.buttonHandler += MouseButtonStateListener() { e =>
-				content.distributeMouseButtonEvent(e); None }
-			mouseEventGenerator.moveHandler += MouseMoveListener() { content.distributeMouseMoveEvent(_) }
-			mouseEventGenerator.wheelHandler += MouseWheelListener() { content.distributeMouseWheelEvent(_) }
-			 */
+			mouseEventGenerator.buttonHandler += MouseButtonStateListener2
+				.unconditional { e => content.distributeMouseButtonEvent(e) }
+			mouseEventGenerator.moveHandler += MouseMoveListener2.unconditional { content.distributeMouseMoveEvent(_) }
+			mouseEventGenerator.wheelHandler += MouseWheelListener2.unconditional { content.distributeMouseWheelEvent(_) }
 			CommonMouseEvents.addGenerator(mouseEventGenerator)
 			
 			// Starts key listening
@@ -328,9 +328,10 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 			
 			// Quits event listening once this window finally closes
 			uponCloseAction.setOne(() => {
-				actorHandler -= mouseEventGenerator
 				GlobalKeyboardEventHandler -= keyStateHandler
 				CommonMouseEvents.removeGenerator(mouseEventGenerator)
+				actorHandler -= mouseEventGenerator
+				mouseEventGenerator.stop()
 			})
 		}
 	}

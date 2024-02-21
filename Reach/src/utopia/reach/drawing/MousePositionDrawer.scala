@@ -1,12 +1,12 @@
 package utopia.reach.drawing
 
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.event.MouseMoveEvent
+import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel2.Foreground
 import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
-import utopia.genesis.handling.MouseMoveListener
-import utopia.inception.handling.HandlerType
+import utopia.genesis.handling.event.mouse.{MouseMoveEvent2, MouseMoveListener2}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -25,7 +25,7 @@ import utopia.reach.component.template.ReachComponentLike
   */
 class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]], radius: Double = 1.0,
                           insideColor: Color = Color.red, outsideColor: Color = Color.blue.withAlpha(0.5))
-	extends CustomDrawer with MouseMoveListener
+	extends CustomDrawer with MouseMoveListener2
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -50,9 +50,10 @@ class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]]
 	override def opaque: Boolean = false
 	override def drawLevel: DrawLevel2 = Foreground
 	
-	override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
+	override def handleCondition: FlagLike = AlwaysTrue
+	override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
 	
-	override def onMouseMove(event: MouseMoveEvent): Unit = componentPointer.value.foreach { c =>
+	override def onMouseMove(event: MouseMoveEvent2): Unit = componentPointer.value.foreach { c =>
 		val oldP = lastMousePosition
 		lastMousePosition = event.relativeTo(c.position).mousePosition
 		c.repaintArea(Bounds.between(oldP, lastMousePosition).enlarged(radius * 2.0))

@@ -5,8 +5,10 @@ import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.ScrollBarBounds
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.event._
@@ -14,7 +16,9 @@ import utopia.genesis.graphics.DrawLevel2.Foreground
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling._
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
-import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
+import utopia.genesis.handling.event.consume.Consumable
+import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.mouse._
 import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
 import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.enumeration.Axis._
@@ -496,7 +500,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
 	                            val velocityMod: Double, val scroller: AnimatedScroller)
-		extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener with Handleable
+		extends MouseButtonStateListener2 with MouseMoveListener2 with MouseWheelListener2
 	{
 		// ATTRIBUTES	-----------------------
 		
@@ -510,15 +514,17 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		private var velocities = Vector[(Instant, Velocity2D, FiniteDuration)]()
 		
 		// Listens to left mouse presses & releases
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter
+		override val mouseButtonStateEventFilter = MouseButtonStateEvent2.filter.leftPressed
 		// Only listens to wheel events inside component bounds
-		override val mouseWheelEventFilter = Consumable.notConsumedFilter && MouseEvent.isOverAreaFilter(bounds)
+		override val mouseWheelEventFilter = Consumable.unconsumedFilter && MouseEvent2.filter.over(bounds)
 		
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
+		override def handleCondition: FlagLike = AlwaysTrue
+		override def mouseMoveEventFilter: Filter[MouseMoveEvent2] = AcceptAll
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
 			// Performs some calculations in this component's context
 			val relativeEvent = event.relativeTo(position)
 			
@@ -545,11 +551,9 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 					scroller.stop()
 				}
 			}
-			None
 		}
 		
-		override def onMouseMove(event: MouseMoveEvent) =
-		{
+		override def onMouseMove(event: MouseMoveEvent2) = {
 			// If dragging scroll bar, scrolls the content
 			if (isDraggingBar) {
 				val newBarOrigin = event.positionOverArea(bounds) - barDragPosition
@@ -569,7 +573,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		}
 		
 		// When wheel is rotated inside component bounds, scrolls
-		override def onMouseWheelRotated(event: MouseWheelEvent) = {
+		override def onMouseWheelRotated(event: MouseWheelEvent2) = {
 			// in 2D scroll views, X-scrolling is applied only if shift is being held
 			val scrollAxis = {
 				if (allows2DScrolling) {
@@ -580,7 +584,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			}
 			
 			scroll(scrollAxis(-event.wheelTurn * scrollPerWheelClick), animated = false)
-			Some(ConsumeEvent(s"Scroll area scrolling along axis $scrollAxis"))
+			Consume(s"Scroll area scrolling along axis $scrollAxis")
 		}
 		
 		

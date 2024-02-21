@@ -5,11 +5,11 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.genesis.handling.event.EventHandler2
 import utopia.genesis.handling.template.{DeepHandler2, Handleable2}
 
-object MouseMoveHandler extends FromCollectionFactory[MouseMoveListener2, MouseMoveHandler]
+object MouseMoveHandler2 extends FromCollectionFactory[MouseMoveListener2, MouseMoveHandler2]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def from(items: IterableOnce[MouseMoveListener2]): MouseMoveHandler = apply(items)
+	override def from(items: IterableOnce[MouseMoveListener2]): MouseMoveHandler2 = apply(items)
 	
 	
 	// OTHER    ----------------------------
@@ -18,7 +18,7 @@ object MouseMoveHandler extends FromCollectionFactory[MouseMoveListener2, MouseM
 	  * @param listeners Listeners to place on this handler, initially
 	  * @return A handler managing the specified listeners
 	  */
-	def apply(listeners: IterableOnce[MouseMoveListener2]) = new MouseMoveHandler(listeners)
+	def apply(listeners: IterableOnce[MouseMoveListener2]) = new MouseMoveHandler2(listeners)
 }
 
 /**
@@ -26,7 +26,7 @@ object MouseMoveHandler extends FromCollectionFactory[MouseMoveListener2, MouseM
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class MouseMoveHandler(initialListeners: IterableOnce[MouseMoveListener2] = Vector.empty)
+class MouseMoveHandler2(initialListeners: IterableOnce[MouseMoveListener2] = Vector.empty)
 	extends DeepHandler2[MouseMoveListener2](initialListeners) with EventHandler2[MouseMoveListener2, MouseMoveEvent2]
 		with MouseMoveListener2
 {

@@ -8,7 +8,7 @@ import utopia.firmament.model.enumeration.GuiElementState.Disabled
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{GuiElementStatus, HotKey, StandardSizeAdjustable}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.flow.view.template.eventful.FlagLike.wrap
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
@@ -358,6 +358,8 @@ class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedV
 	
 	
 	// IMPLEMENTED  ---------------------------------
+	
+	override def enabledPointer: FlagLike = settings.enabledPointer
 	
 	override protected def trigger() = select()
 	

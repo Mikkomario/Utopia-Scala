@@ -7,16 +7,15 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.event.{MouseButtonStateEvent, MouseEvent}
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.genesis.handling.MouseButtonStateListener
 import utopia.genesis.handling.action.{Actor2, ActorHandler2}
-import utopia.genesis.handling.event.consume.ConsumeEvent
-import utopia.inception.handling.HandlerType
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent2, MouseButtonStateListener2, MouseEvent2}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.AnimationLike.AnyAnimation
 import utopia.paradigm.color.Color
@@ -147,20 +146,24 @@ class Switch(actorHandler: ActorHandler2, val targetWidth: StackLength, val colo
 	
 	// NESTED CLASSES	-------------
 	
-	private object ClickHandler extends MouseButtonStateListener
+	private object ClickHandler extends MouseButtonStateListener2
 	{
 		// Only listens to left mouse button presses inside switch area
-		override val mouseButtonStateEventFilter = MouseButtonStateEvent.leftPressedFilter && MouseEvent.isOverAreaFilter(bounds)
+		override val mouseButtonStateEventFilter =
+			MouseButtonStateEvent2.filter.leftPressed && MouseEvent2.filter.over(bounds)
 		
-		// When this switch is pressed, hanges its state
-		override def onMouseButtonState(event: MouseButtonStateEvent) =
-		{
-			value = !value
-			Some(ConsumeEvent("Switch activation"))
+		override def handleCondition: FlagLike = AlwaysTrue
+		
+		// When this switch is pressed, changes its state
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent2) = {
+			// Only enabled items are interactive
+			if (enabled) {
+				value = !value
+				Consume("Switch activation")
+			}
+			else
+				Preserve
 		}
-		
-		// Only enabled items are interactive
-		override def allowsHandlingFrom(handlerType: HandlerType) = enabled
 	}
 	
 	private object StatusChangeListener extends ChangeListener[Boolean]
