@@ -134,7 +134,7 @@ object MouseTest3 extends App
 		override def opaque: Boolean = false
 		
 		override def drawBoundsPointer: Changing[Bounds] = boundsPointer.readOnly
-		override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
+		override def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 		
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 		override def handleCondition: FlagLike = AlwaysTrue

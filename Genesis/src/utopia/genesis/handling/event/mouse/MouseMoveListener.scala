@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
@@ -226,8 +226,7 @@ object MouseMoveListener
         
         override def usingFilter(filter: Filter[MouseMoveEvent]): MouseMoveEventListenerFactory =
             copy(filter = filter)
-        override def usingCondition(condition: Changing[Boolean]): MouseMoveEventListenerFactory =
-            copy(condition = condition)
+        override def usingCondition(condition: FlagLike): MouseMoveEventListenerFactory = copy(condition = condition)
             
         
         // OTHER    -----------------------

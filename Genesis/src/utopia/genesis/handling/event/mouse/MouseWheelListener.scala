@@ -3,10 +3,10 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.FlagLike
+import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
-import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.VerticalDirection
@@ -132,8 +132,7 @@ object MouseWheelListener
         // IMPLEMENTED  --------------
         
         override def usingFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: Changing[Boolean]): MouseWheelListenerFactory =
-            copy(condition = condition)
+        override def usingCondition(condition: FlagLike): MouseWheelListenerFactory = copy(condition = condition)
         
         override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory =
             copy(filter = this.filter && filter)

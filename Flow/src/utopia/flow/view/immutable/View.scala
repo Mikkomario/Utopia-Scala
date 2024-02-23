@@ -19,7 +19,7 @@ object View
 	  * @tparam A Type of that value
 	  * @return A view wrapping that value
 	  */
-	def fixed[A](value: A): View[A] = new FixedView[A](value)
+	def fixed[A](value: A): View[A] = FixedView[A](value)
 	
 	
 	// IMPLICIT -----------------------------
@@ -37,12 +37,11 @@ object View
 	
 	private class ViewWrapper[+A](_value: => A) extends View[A] {
 		override def value = _value
-		override def mapValue[B](f: A => B) = Lazy { f(_value) }
 	}
 	
-	private class FixedView[+A](override val value: A) extends View[A] {
+	private case class FixedView[+A](override val value: A) extends View[A] {
 		override def valueIterator = Iterator.single(value)
-		override def mapValue[B](f: A => B) = Lazy { f(value) }
+		override def mapValue[B](f: A => B) = FixedView(f(value))
 	}
 }
 

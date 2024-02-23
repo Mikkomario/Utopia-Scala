@@ -31,7 +31,7 @@ trait ListenerFactory[Event, +Repr]
       * @param condition A condition for receiving event information (overrides existing condition)
       * @return Copy of this factory that uses (only) the specified condition for managing listening-states
       */
-    def usingCondition(condition: Changing[Boolean]): Repr
+    def usingCondition(condition: FlagLike): Repr
     
     
     // OTHER    -------------------------

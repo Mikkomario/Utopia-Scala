@@ -185,6 +185,15 @@ class StackSize private(override val dimensions: Dimensions[StackLength])
     def maxHeight = height.max
     
     /**
+      * @return Whether this size may expand from its optimal value
+      */
+    def mayExpand = dimensions.exists { _.mayExpand }
+    /**
+      * @return Whether this size may get smaller from its optimal value
+      */
+    def mayShrink = dimensions.exists { _.mayShrink }
+    
+    /**
       * @return A copy of this size with no width limits
       */
     def withAnyWidth = mapWidth { _.noLimits }

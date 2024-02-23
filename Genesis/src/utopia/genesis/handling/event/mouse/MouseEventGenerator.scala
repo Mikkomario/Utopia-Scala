@@ -158,7 +158,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
                     position = newPosition
                     
                     // Informs the handler only if one has been generated
-                    lazyMoveHandler.current.foreach { handler =>
+                    lazyMoveHandler.current.filter { _.mayBeHandled }.foreach { handler =>
                         val event = MouseMoveEvent(Pair(previousMousePosition, position), duration, buttonStates)
                         eventQueue.push { handler.onMouseMove(event) }
                     }
@@ -223,7 +223,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
             val button = MouseButton(event.getButton)
             buttonStates = buttonStates.withButtonState(button, pressed)
             if (handleCondition.value)
-                lazyButtonHandler.current.foreach { handler =>
+                lazyButtonHandler.current.filter { _.mayBeHandled }.foreach { handler =>
                     val newEvent = MouseButtonStateEvent(button, position, buttonStates, None, pressed = pressed)
                     // Distributes the event asynchronously
                     eventQueue.push { handler.onMouseButtonStateEvent(newEvent) }
@@ -235,7 +235,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
     {
         override def mouseWheelMoved(e: java.awt.event.MouseWheelEvent) = {
             if (handleCondition.value)
-                lazyWheelHandler.current.foreach { handler =>
+                lazyWheelHandler.current.filter { _.mayBeHandled }.foreach { handler =>
                     val event = MouseWheelEvent(e.getWheelRotation, position, buttonStates)
                     // Distributes the event asynchronously
                     eventQueue.push { handler.onMouseWheelRotated(event) }

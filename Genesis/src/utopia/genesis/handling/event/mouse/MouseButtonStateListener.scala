@@ -3,9 +3,9 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
+import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
 import utopia.genesis.handling.template.Handleable2
 import utopia.paradigm.shape.shape2d.area.Area2D
@@ -287,8 +287,7 @@ object MouseButtonStateListener
         
         override def usingFilter(filter: Filter[MouseButtonStateEvent]): MouseButtonStateListenerFactory =
             copy(filter = filter)
-        override def usingCondition(condition: Changing[Boolean]): MouseButtonStateListenerFactory =
-            copy(condition = condition)
+        override def usingCondition(condition: FlagLike): MouseButtonStateListenerFactory = copy(condition = condition)
         
         override protected def withFilter(filter: Filter[MouseButtonStateEvent]): MouseButtonStateListenerFactory =
             copy(filter = this.filter && filter)

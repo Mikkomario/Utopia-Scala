@@ -2,12 +2,13 @@
 
 ## v1.3 (in development)
 ### Breaking changes
-- Refactored ViewTextButton constructors
+- Refactored **ViewTextButton** constructors
   - Removed the non-contextual factory altogether
   - The contextual constructor is now pointer-based
   - The contextual factory now uses **ButtonSettings** and extends **CustomDrawableFactory**
 - All **FocusableWithState** implementations are now required to implement the `focusPointer: FlagLike` property
 - **ButtonLike** implementations are now required to implement `.enabledPointer: FlagLike`
+- Moved **FramedFactory** to the **Firmament** module
 ### Deprecations
 - Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes

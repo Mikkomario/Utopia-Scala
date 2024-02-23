@@ -12,8 +12,8 @@ import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.DrawableHandler
 import utopia.genesis.handling.action.ActorHandler
+import utopia.genesis.handling.drawing.DrawableHandler2
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.util.Fps
 import utopia.genesis.view.RepaintLoop
@@ -30,6 +30,7 @@ import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 
 import scala.concurrent.ExecutionContext
 
+@deprecated("Deprecated for removal. If possible, please convert to using DrawableCanvas in Reach instead", "v2.1.2")
 object ScrollCanvas
 {
 	/**
@@ -43,7 +44,7 @@ object ScrollCanvas
 	  * @param context Component creation context (implicit)
 	  * @return A new scroll canvas
 	  */
-	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler,
+	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler2, contentMouseButtonHandler: MouseButtonStateHandler,
 	               contentMouseMoveHandler: MouseMoveHandler, contentMouseWheelHandler: MouseWheelHandler,
 	               maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContext) =
 	{
@@ -73,7 +74,8 @@ object ScrollCanvas
   * @param scrollBarIsInsideContent Whether the scroll bar should be placed inside (true) or outside (false) of drawn
   *                                 content (default = false)
   */
-class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
+@deprecated("Deprecated for removal. If possible, please convert to using DrawableCanvas in Reach instead", "v2.1.2")
+class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler2, actorHandler: ActorHandler,
                    val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
                    val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,
@@ -187,7 +189,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 		// Draws the game world items with scaling
 		override def draw(drawer: Drawer, bounds: Bounds) = {
 			val scaledDrawer = if (_scaling == 1.0) drawer else drawer.scaled(_scaling)
-			drawHandler.draw(scaledDrawer)
+			drawHandler.draw(scaledDrawer, drawHandler.drawBounds + bounds.position)
 		}
 	}
 	

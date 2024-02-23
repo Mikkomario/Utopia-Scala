@@ -1,9 +1,8 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
-import KeyLocation.Standard
+import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable2, Handlers}
-import utopia.inception.handling.Handleable
 
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -42,9 +41,11 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 				stateChanged(event, index, pressed = true)
 			case KeyEvent.KEY_RELEASED => stateChanged(event, index, pressed = false)
 			case KeyEvent.KEY_TYPED =>
-				val newEvent = KeyTypedEvent(event.getKeyChar, lastPressedKeyIndex, _state)
-				// Distributes the event asynchronously, if possible
-				queue { keyTypedHandler.onKeyTyped(newEvent) }
+				if (keyTypedHandler.mayBeHandled) {
+					val newEvent = KeyTypedEvent(event.getKeyChar, lastPressedKeyIndex, _state)
+					// Distributes the event asynchronously, if possible
+					queue { keyTypedHandler.onKeyTyped(newEvent) }
+				}
 		}
 		false
 	}
@@ -125,9 +126,11 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 		// Only reacts to status changes
 		if (_state(index, location) != pressed) {
 			_state = _state.withKeyState(index, location, pressed)
-			val newEvent = KeyStateEvent(index, location, _state, pressed)
-			// Distributes the event asynchronously, if possible
-			queue { keyStateHandler.onKeyState(newEvent) }
+			if (keyStateHandler.mayBeHandled) {
+				val newEvent = KeyStateEvent(index, location, _state, pressed)
+				// Distributes the event asynchronously, if possible
+				queue { keyStateHandler.onKeyState(newEvent) }
+			}
 		}
 	}
 	

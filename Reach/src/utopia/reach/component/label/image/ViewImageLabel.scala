@@ -4,6 +4,7 @@ import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ImageViewDrawer
+import utopia.firmament.factory.FramedFactory
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
@@ -18,7 +19,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 

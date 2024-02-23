@@ -1,13 +1,8 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.{DrawOrder, Drawer}
-import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
-import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.mouse._
-import utopia.genesis.handling.template.Handlers
+import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.enumeration.FillAreaLogic.{Fit, ScalePreservingShape}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -19,9 +14,10 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
   * @author Mikko Hilpinen
   * @since 11/02/2024, v4.0
   */
-class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], Changing[Size]), Changing[Bounds]],
+class Repositioner(override protected val wrapped: Drawable2,
+                   targetPointer: Either[(Changing[Point], Changing[Size]), Changing[Bounds]],
                    resizeLogic: ScalePreservingShape = Fit)
-	extends Drawable2
+	extends TransformingDrawableWrapper
 {
 	// ATTRIBUTES   --------------------
 	
@@ -34,9 +30,9 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	
 	private val scalingPointer = targetSizePointer.mergeWith(originalSizePointer) { _.x / _.x }
 	
-	private lazy val mouseHandler = new RepositionedMouseHandler()
+	override protected val mouseHandler = new TransformedMouseHandler()
 	
-	private var _repaintListeners = Vector.empty[RepaintListener]
+	private var _repaintListeners = Seq.empty[RepaintListener]
 	
 	
 	// INITIAL CODE --------------------
@@ -47,18 +43,12 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	
 	// IMPLEMENTED  --------------------
 	
-	override def handleCondition: FlagLike = wrapped.handleCondition
-	
-	override def drawOrder: DrawOrder = wrapped.drawOrder
 	override def opaque: Boolean = wrapped.opaque
-	override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 	
-	override def addRepaintListener(listener: RepaintListener): Unit = {
-		if (!_repaintListeners.contains(listener))
-			_repaintListeners :+= listener
-	}
-	override def removeRepaintListener(listener: RepaintListener): Unit =
-		_repaintListeners = _repaintListeners.filterNot { _ == listener }
+	override def repaintListeners = _repaintListeners
+	override protected def repaintListeners_=(listeners: Seq[RepaintListener]): Unit = _repaintListeners = listeners
+	
+	override protected def viewSubRegion(region: Bounds): Bounds = region * scalingPointer.value
 	
 	override def draw(drawer: Drawer, bounds: Bounds): Unit = {
 		// Modifies the drawer so that (0,0) lies at the targeted draw position, with correct scaling applied
@@ -68,16 +58,13 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 		wrapped.draw(modifiedDrawer, Bounds(Point.origin, wrapped.drawBounds.size))
 	}
 	
-	
-	// OTHER    -----------------------
-	
 	/**
 	  * Converts a point in the space relative to this item, to a space relative to the wrapped item.
 	  * @param p A point to convert
 	  * @tparam V Type of the specified point
 	  * @return A matching point in the view space (i.e. the wrapped item's coordinate system)
 	  */
-	def toView[V <: DoubleVectorLike[V]](p: V) = {
+	override def toView[V <: DoubleVectorLike[V]](p: V) = {
 		// Converts to a point relative to the displayed item draw-bounds
 		val relativeToDrawArea = p - targetPositionPointer.value - relativeBoundsPointer.value.position
 		// Applies scaling to match relative position to the item draw-bounds
@@ -92,90 +79,12 @@ class Repositioner(wrapped: Drawable2, targetPointer: Either[(Changing[Point], C
 	  * @tparam V Type of the specified point
 	  * @return A matching point in this item's space
 	  */
-	def view[V <: DoubleVectorLike[V]](viewPoint: V) = {
+	override def view[V <: DoubleVectorLike[V]](viewPoint: V) = {
 		// Converts to a point relative to the wrapped item's draw bounds
 		val relativeToItemDrawBounds = viewPoint - wrapped.drawBounds.position
 		// Applies scaling to match the position in the visual space
 		val scaled = relativeToItemDrawBounds * scalingPointer.value
 		// Corrects for the display position
 		scaled + targetPositionPointer.value
-	}
-	
-	/**
-	  * Starts delivering of transformed mouse events to the wrapped wrapped item and/or possibly other items.
-	  * @param parentHandlers The handlers that will deliver mouse events to be converted.
-	  *                       The supported (& expected) handler types are:
-	  *                             - [[MouseButtonStateHandler]]
-	  *                             - [[MouseMoveHandler]]
-	  *                             - [[MouseWheelHandler]]
-	  *                             - [[MouseDragHandler]]
-	  * @param disableMouseToWrapped Whether direct mouse-event delivery to the wrapped item should be disabled,
-	  *                              even in situations where it would otherwise be possible.
-	  *                              Set this to true if you don't want the wrapped item to receive these mouse events
-	  *                              (directly).
-	  *                              Default = false = the wrapped item will start to receive mouse events,
-	  *                              if its capable of handling them.
-	  * @return Handlers that deliver transformed mouse events
-	  */
-	def setupMouseEvents(parentHandlers: Handlers, disableMouseToWrapped: Boolean = false) = {
-		// If the wrapped item supports mouse events, starts delivering them to that item as well (unless disabled)
-		if (!disableMouseToWrapped && (wrapped.isInstanceOf[MouseMoveListener] ||
-			wrapped.isInstanceOf[MouseButtonStateListener] || wrapped.isInstanceOf[MouseWheelListener] ||
-			wrapped.isInstanceOf[MouseDragListener]))
-			mouseHandler.handlers += wrapped
-		
-		// Starts receiving events from above
-		parentHandlers += mouseHandler
-		// Returns the converted mouse handlers
-		mouseHandler.handlers
-	}
-	
-	
-	// NESTED   -----------------------
-	
-	private class RepositionedMouseHandler
-		extends MouseMoveListener with MouseWheelListener with MouseDragListener with MouseButtonStateListener
-	{
-		// ATTRIBUTES   ----------------------
-		
-		private val buttonHandler = MouseButtonStateHandler.empty
-		private val moveHandler = MouseMoveHandler.empty
-		private val wheelHandler = MouseWheelHandler.empty
-		private val dragHandler = MouseDragHandler.empty
-		
-		val handlers = Handlers(buttonHandler, moveHandler, wheelHandler, dragHandler)
-		
-		override lazy val handleCondition: FlagLike =
-			buttonHandler.handleCondition || moveHandler.handleCondition ||
-				wheelHandler.handleCondition || dragHandler.handleCondition
-		
-		
-		// IMPLEMENTED  ----------------------
-		
-		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
-		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
-		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
-		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
-		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
-			if (buttonHandler.mayBeHandled)
-				buttonHandler.onMouseButtonStateEvent(event.mapPosition { _.map(toView) })
-			else
-				Preserve
-		}
-		override def onMouseMove(event: MouseMoveEvent): Unit = {
-			if (moveHandler.mayBeHandled)
-				moveHandler.onMouseMove(event.mapPosition { _.map(toView) })
-		}
-		override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice = {
-			if (wheelHandler.mayBeHandled)
-				wheelHandler.onMouseWheelRotated(event.mapPosition { _.map(toView) })
-			else
-				Preserve
-		}
-		override def onMouseDrag(event: MouseDragEvent): Unit = {
-			if (dragHandler.mayBeHandled)
-				dragHandler.onMouseDrag(event.mapPosition { _.map(toView) })
-		}
 	}
 }

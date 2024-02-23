@@ -2,6 +2,7 @@ package utopia.paradigm.animation
 
 import utopia.paradigm.animation.TimedAnimation.{CurvedAnimation, MapAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.paradigm.animation.transform.{AnimatedTransform, TimedAnimationWithTranform}
+import utopia.paradigm.motion.motion1d.LinearVelocity
 
 import scala.concurrent.duration.Duration
 
@@ -21,6 +22,11 @@ trait TimedAnimation[+A] extends AnimationLike[A, TimedAnimation]
 	
 	
 	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Velocity at which this animation progresses (where distance of 1.0 represents full animation length)
+	  */
+	def velocity = LinearVelocity(1.0, duration)
 	
 	def withReverseAppended: TimedAnimation[A] = appendedWith(reversed)
 	
@@ -53,8 +59,7 @@ trait TimedAnimation[+A] extends AnimationLike[A, TimedAnimation]
 	  * @return Animation's progress at specified time. If time is larger than the duration of this transform,
 	  *         this animation is repeated.
 	  */
-	def repeating(passedTime: Duration) =
-	{
+	def repeating(passedTime: Duration) = {
 		val d = duration.toNanos
 		apply((passedTime.toNanos % d) / d.toDouble)
 	}

@@ -1,22 +1,21 @@
 package utopia.genesis.animation.animator
 
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.caching.ResettableVolatileLazy
+import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.Drawable
 import utopia.genesis.handling.action.Actor
-import utopia.inception.handling.HandlerType
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
-  * Used for drawing animations with or without transformations. Mutable.
+  * Used for generating time-based animations. Mutable.
   * @author Mikko Hilpinen
   * @since 18.8.2019, v2.1+
-  * @tparam A Type of animation result that is also drawn
+  * @tparam A Type of animation result
   */
-abstract class Animator[A] extends Actor with Drawable
+@deprecated("Deprecated for removal. Replaced with a new version.", "v4.0")
+abstract class Animator[A] extends Actor
 {
 	// TODO: Add animation events
 	// ATTRIBUTES	-------------------
@@ -30,7 +29,8 @@ abstract class Animator[A] extends Actor with Drawable
 	  */
 	var allowsRepeat = true
 	private var _progress: Duration = Duration.Zero
-	private lazy val cached = ResettableVolatileLazy { apply(_progress / animationDuration) }
+	
+	private val _pointer = CopyOnDemand(View { apply(_progress / animationDuration) })
 	
 	
 	// ABSTRACT	-----------------------
@@ -45,13 +45,6 @@ abstract class Animator[A] extends Actor with Drawable
 	  */
 	protected def apply(progress: Double): A
 	
-	/**
-	  * Draws an item
-	  * @param drawer Drawer used
-	  * @param item Item that should be drawn
-	  */
-	protected def draw(drawer: Drawer, item: A): Unit
-	
 	
 	// COMPUTED	------------------------
 	
@@ -59,27 +52,28 @@ abstract class Animator[A] extends Actor with Drawable
 	  * @return Current progress of this animation
 	  */
 	def progress = _progress / animationDuration
-	
 	/**
 	  * Changes this animation's progress
 	  * @param newProgress The new progress of this animation
 	  */
 	def progress_=(newProgress: Double) = {
 		_progress = newProgress * animationDuration
-		cached.reset()
+		_pointer.update()
 	}
 	
 	/**
+	  * @return A pointer that contains the currently displayed item
+	  */
+	def pointer = _pointer.readOnly
+	/**
 	  * @return Currently displayed item
 	  */
-	def current = cached.value
+	def current = _pointer.value
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def handleCondition: FlagLike = AlwaysTrue
-	
-	override def allowsHandlingFrom(handlerType: HandlerType): Boolean = true
 	
 	override def act(duration: FiniteDuration) = {
 		// Advances animation progress
@@ -90,7 +84,7 @@ abstract class Animator[A] extends Actor with Drawable
 				_progress += duration * mod
 				// Resets progress if past animation duration
 				while (_progress > ad) { _progress -= ad }
-				cached.reset()
+				_pointer.update()
 			}
 			else if (_progress < ad) {
 				val proposedProgress = _progress + duration * mod
@@ -98,12 +92,10 @@ abstract class Animator[A] extends Actor with Drawable
 					_progress = ad
 				else
 					_progress = proposedProgress
-				cached.reset()
+				_pointer.update()
 			}
 		}
 	}
-	
-	override def draw(drawer: Drawer): Unit = draw(drawer, cached.value)
 	
 	
 	// OTHER	----------------------
@@ -113,7 +105,7 @@ abstract class Animator[A] extends Actor with Drawable
 	  */
 	def reset() = {
 		_progress = Duration.Zero
-		cached.reset()
+		_pointer.update()
 	}
 	
 	/**
@@ -125,7 +117,6 @@ abstract class Animator[A] extends Actor with Drawable
 	  * Makes it so that this animator will always stop at the end of each animation
 	  */
 	def disableRepeat() = allowsRepeat = false
-	
 	/**
 	  * Makes it so that this animator will keep repeating the current animation
 	  */

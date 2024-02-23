@@ -1,4 +1,4 @@
-package utopia.reach.component.factory
+package utopia.firmament.factory
 
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.collection.immutable.Pair

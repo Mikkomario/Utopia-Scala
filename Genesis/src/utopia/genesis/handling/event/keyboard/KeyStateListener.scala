@@ -127,7 +127,7 @@ object KeyStateListener
         // IMPLEMENTED  ---------------------
         
         override def usingFilter(filter: Filter[KeyStateEvent]): KeyStateListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: Changing[Boolean]): KeyStateListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: FlagLike): KeyStateListenerFactory = copy(condition = condition)
 	    
 	    override protected def withFilter(filter: Filter[KeyStateEvent]): KeyStateListenerFactory = filtering(filter)
 	    

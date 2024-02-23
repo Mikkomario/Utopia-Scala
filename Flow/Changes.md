@@ -20,6 +20,8 @@
 ### New methods
 - **Changing**
   - Added `.onceFixedAt(...)`
+- **Fixed** (object)
+  - Added `.never` which is an alias for `Fixed(None)`
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **ResettableFlag**
@@ -33,6 +35,9 @@
       they're specifically requested using `.apply(...)`
   - `.apply(...)` in the resulting model also supports alternative property names
   - The resulting model still utilizes the original model's property factory
+- `View.fixed(...).mapValue(...)` now produces a fixed view instead of a **Lazy**
+- `View(...).mapValue(...)` now produces a call-by-name (mapping) view instead of a **Lazy**
+  - I.e. mapping results are no longer cached in these cases
 - The generic type parameter in **PropertyFactory** is no longer restricted
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions

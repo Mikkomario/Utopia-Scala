@@ -34,7 +34,7 @@ trait Drawable2 extends Handleable2
     /**
       * @return List of currently attached repaint listeners
       */
-    protected def repaintListeners: Iterable[RepaintListener]
+    def repaintListeners: Iterable[RepaintListener]
     
     /**
      * Draws the drawable instance using a specific drawer.

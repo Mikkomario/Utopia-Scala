@@ -10,6 +10,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.genesis.handling.event.keyboard.Key.Enter
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.button.image.ImageAndTextButton
@@ -21,7 +22,6 @@ import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
 import utopia.reach.context.ReachContentWindowContext
 
-import java.awt.event.KeyEvent
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
@@ -250,7 +250,7 @@ trait InteractionWindowFactory[A]
 		implicit val context: TextContext = buttonContext(blueprint.role, blueprint.icon.nonEmpty)
 		val enterHotkey = {
 			if (blueprint.isDefault)
-				Some(HotKey.conditionalKeyWithIndex(KeyEvent.VK_ENTER)(defaultActionEnabled))
+				Some(HotKey.conditional(Enter)(defaultActionEnabled))
 			else
 				None
 		}

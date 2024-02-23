@@ -1,32 +1,22 @@
 package utopia.reflection.component.swing.label
 
-import utopia.firmament.context.{BaseContext, ComponentCreationDefaults}
-import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.component.stack.ConstrainableWrapper
+import utopia.firmament.context.BaseContext
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.animation.animator.{Animator, SpriteDrawer, TransformingImageAnimator}
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.Drawer
-import utopia.genesis.handling.action.{Actor, ActorHandler}
+import utopia.firmament.model.stack.modifier.OverwriteSizeModifier
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.genesis.handling.action.ActorHandler
+import utopia.genesis.handling.event.animation.{Animator2, AnimatorInstruction}
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.util.Fps
 import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.transform.AffineTransformation
-import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.reflection.event.StackHierarchyListener
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 
-import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import java.awt.Component
 import scala.math.Ordering.Double.TotalOrdering
 
 object AnimationLabel
@@ -36,17 +26,21 @@ object AnimationLabel
 	  * @param actorHandler Actor handler that will deliver action events
 	  * @param image Image to be drawn
 	  * @param rotation Rotation animation
-	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
-	  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
 	  * @return A new label
 	  */
-	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation],
-	                      alignment: Alignment = Center, maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
+	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation]) =
 	{
-		val animator = TransformingImageAnimator(image, rotation.map { Matrix2D.rotation(_).to3D })
-		val maxRadius = image.size.toBounds().corners.map { p => (p - image.origin).length }.max
-		val stackSize = (maxRadius * 2).any.square
-		new AnimationLabel(actorHandler, animator, stackSize, Point(maxRadius, maxRadius), alignment, maxFps)
+		val instruction = AnimatorInstruction(rotation.map { r => (image, Some(Matrix2D.rotation(r))) }, loops = true)
+		val animator = new Animator2(Fixed(instruction))
+		
+		val label = new AnimationLabel(actorHandler, animator)
+		
+		// Uses a fixed stack size
+		val maxRadius = image.bounds.corners.iterator.map { _.length }.max
+		val stackSize = (maxRadius * 2).ceil.any.square
+		label.addConstraint(OverwriteSizeModifier(stackSize))
+		
+		label
 	}
 	
 	/**
@@ -54,42 +48,38 @@ object AnimationLabel
 	  * @param actorHandler Actor handler that will deliver action events
 	  * @param strip Image strip
 	  * @param animationSpeed Animation speed in frames per second
-	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @return A new label
 	  */
-	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps,
-	               alignment: Alignment = Center) =
-	{
-		val animator = SpriteDrawer(strip.toTimedAnimation(animationSpeed))
-		new AnimationLabel(actorHandler, animator, StackSize.any(strip.size), strip.drawPosition, alignment,
-			animationSpeed)
+	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps) = {
+		val instruction = AnimatorInstruction(strip.toTimedAnimation(animationSpeed).map { _ -> None }, loops = true)
+		val animator = new Animator2(Fixed(instruction))
+		val label = new AnimationLabel(actorHandler, animator)
+		
+		label.addConstraint(OverwriteSizeModifier(StackSize.any(strip.size)))
+		label
 	}
 	
 	/**
 	  * Creates a new label that rotates a static image
 	  * @param image Image to be drawn
 	  * @param rotation Rotation animation
-	  * @param alignment Alignment to use when positioning the image in the label (default = Center)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[DirectionalRotation],
-	                                alignment: Alignment = Center,
-									maxFps: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
+	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[DirectionalRotation])
 								   (implicit context: BaseContext) =
-		withRotatingImage(context.actorHandler, image, rotation, alignment, maxFps)
+		withRotatingImage(context.actorHandler, image, rotation)
 	
 	/**
 	  * Creates a new label that draws a looping sprite / strip
 	  * @param strip Image strip
 	  * @param animationSpeed Animation speed in frames per second
-	  * @param alignment Alignment to use when positioning image in this label (default = Center)
 	  * @param context Implicit component creation context
 	  * @return A new label
 	  */
-	def contextualWithSprite(strip: Strip, animationSpeed: Fps, alignment: Alignment = Center)
+	def contextualWithSprite(strip: Strip, animationSpeed: Fps)
 							(implicit context: BaseContext) =
-		withSprite(context.actorHandler, strip, animationSpeed, alignment)
+		withSprite(context.actorHandler, strip, animationSpeed)
 }
 
 /**
@@ -98,87 +88,36 @@ object AnimationLabel
   * @since 15.6.2020, v1.2
   * @param actorHandler An actor handler that will deliver action events to progress the animation
   * @param animator Animator used for the actual drawing
-  * @param stackSize Size of this label (expected to be the size of the drawn area)
-  * @param drawOrigin The point in this label (in optimal size) where the drawer (0, 0) should be located when calling
-  *                   animator.draw(...) (default = top left corner of this label)
-  * @param alignment Alignment used when positioning the drawn content
-  * @param maxFps Maximum repaint speed for this element (default = 120 frames per second)
+  * @param allowUpscaling Whether the image should be allowed to scale above its size (default = false)
+  * @param isLowPriority Whether this label's stack size should be low priority
   */
-class AnimationLabel[A](actorHandler: ActorHandler, animator: Animator[A], override val stackSize: StackSize,
-                        drawOrigin: Point = Point.origin, alignment: Alignment = Center, maxFps: Fps = Fps(120))
-	extends Label with ReflectionStackable
+class AnimationLabel(actorHandler: ActorHandler, animator: Animator2[(Image, Option[Matrix2D])],
+                     allowUpscaling: Boolean = false, isLowPriority: Boolean = false)
+	extends ReflectionStackableWrapper with ConstrainableWrapper with AwtComponentRelated
 {
 	// ATTRIBUTES	-------------------------
 	
-	private var _isAttached = false
-	
-	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	private val label = new ImageLabel2(animator.value._1, allowUpscaling, isLowPriority)
 	
 	
-	// INITIAL CODE	-------------------------
+	// INITIAL CODE -------------------------
 	
-	addCustomDrawer(ContentDrawer)
+	label.transformationPointer.value = animator.value._2
+	animator.addListener { event =>
+		label.image = event.newValue._1
+		label.transformationPointer.value = event.newValue._2
+	}
+	
+	addStackHierarchyChangeListener { attached =>
+		if (attached)
+			actorHandler += animator
+		else
+			actorHandler -= animator
+	}
 	
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def updateLayout() = ()
-	
-	override def resetCachedSize() = ()
-	
-	override def stackId = hashCode()
-	
-	override def isAttachedToMainHierarchy = _isAttached
-	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
-		if (_isAttached != newAttachmentStatus) {
-			_isAttached = newAttachmentStatus
-			// Animator is only attached to the actor handler when this component is displayable
-			if (newAttachmentStatus) {
-				actorHandler += animator
-				actorHandler += Repainter
-			}
-			else {
-				actorHandler -= animator
-				actorHandler -= Repainter
-			}
-			fireStackHierarchyChangeEvent(newAttachmentStatus)
-		}
-	}
-	
-	
-	// NESTED	----------------------------
-	
-	private object ContentDrawer extends CustomDrawer
-	{
-		override def drawLevel = Normal
-		
-		override def opaque = false
-		
-		override def draw(drawer: Drawer, bounds: Bounds) =
-		{
-			// Determines the draw location and scaling
-			val originalSize = stackSize.optimal
-			val displaySize = originalSize.fittingWithin(bounds.size)
-			val drawPosition = alignment.position(displaySize, bounds).position
-			val scaling = (displaySize / originalSize).toVector
-			// Performs the actual drawing
-			animator.draw(drawer * AffineTransformation(drawPosition.toVector + drawOrigin * scaling, scaling = scaling))
-		}
-	}
-	
-	private object Repainter extends Actor
-	{
-		private val threshold = maxFps.interval
-		private var lastDraw = Now - threshold
-		
-		override def handleCondition: FlagLike = AlwaysTrue
-		
-		override def act(duration: FiniteDuration) = {
-			val time = Instant.now()
-			if (time >= lastDraw + threshold)
-				repaint()
-			lastDraw = time
-		}
-	}
+	override protected def wrapped = label
+	override def component: Component = label.component
 }

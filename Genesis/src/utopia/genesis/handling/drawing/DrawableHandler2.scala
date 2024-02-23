@@ -234,7 +234,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	
 	override def opaque = false
 	
-	override protected def repaintListeners: Iterable[RepaintListener] = _repaintListeners
+	override def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 	
 	override def repaint(region: Option[Bounds], priority: Priority2) = clip(region).foreach { region =>
 		region match {

@@ -42,7 +42,7 @@ object KeyTypedListener
         // IMPLEMENTED  ------------------
         
         override def usingFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: Changing[Boolean]): KeyTypedListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: FlagLike): KeyTypedListenerFactory = copy(condition = condition)
         
         override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory =
             copy(filter = this.filter && filter)

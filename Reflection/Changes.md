@@ -1,6 +1,9 @@
 # Utopia Reflection - List of Changes
 
-## v2.1.2 (in development)
+## v2.2 (in development)
+### Breaking changes
+- Rewrote **AnimationLabel**, so that it's now (transformed) image -based and uses the new **Animator** class in **Genesis**
+  - The default constructor is noticeably different and may break some use-cases
 ### Other changes
 - Pop-up windows now close (if specified to do so) only on mouse-presses, not on mouse-releases
 - Removed some classes that were deprecated at v2.0 (or earlier)

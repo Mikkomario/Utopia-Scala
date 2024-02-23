@@ -7,6 +7,13 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 
+object Fixed
+{
+	/**
+	  * A pointer/view that never contains any value
+	  */
+	val never = apply(None)
+}
 case class Fixed[+A](override val value: A) extends Changing[A]
 {
 	// IMPLEMENTED	-------------

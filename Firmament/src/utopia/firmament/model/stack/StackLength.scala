@@ -171,6 +171,14 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	 * @return Whether this length has a maximum limit
 	 */
 	def hasMax = max.isDefined
+	/**
+	  * @return Whether this length may expand (at least a little) from its optimal value
+	  */
+	def mayExpand = max.forall { _ > optimal }
+	/**
+	  * @return Whether this label may shrink from its optimal value
+	  */
+	def mayShrink = min < optimal
 	
 	/**
 	  * @return A version of this stack length that has low priority

@@ -1,9 +1,9 @@
 package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.BaseContext
+import utopia.firmament.factory.FramedFactory
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
-import utopia.reach.component.factory.FramedFactory
 
 /**
   * Common trait for component creation factories that place insets around the created components and utilize

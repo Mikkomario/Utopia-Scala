@@ -4,6 +4,7 @@ import utopia.firmament.component.text.TextComponent
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, TextDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.factory.FramedFactory
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
@@ -12,7 +13,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
-import utopia.reach.component.factory.{BackgroundAssignable, FramedFactory, FromContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 

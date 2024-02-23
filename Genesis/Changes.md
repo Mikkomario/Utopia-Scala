@@ -4,15 +4,26 @@
 Handler update
 Remember MutableImage changes (once added) and the new drawSubImage -feature
 ### Breaking changes
+- Rewrote all handler & handling -classes, including all event classes
+- Heavily modified the package structure relating to events and handling
 - Removed the **DefaultSetup** class
   - For the time being, the setup must be done manually
   - It is recommended to use **Reach**'s **DrawableCanvas** instead of the standard **Genesis** setup
+- Removed **SpriteDrawer** and **TransformedImageDrawer**
 - Removed **CanvasMouseEventGenerator**
   - Please use standard **MouseEventGenerator** instead (which doesn't support scaling out-of-the-box, however)
 - Replaced **GlobalMouseEventHandler** with **CommonMouseEvents**
 - Replaced **GlobalKeyEventHandler** with **KeyboardEvents**
 - Replaced **ActorLoop** with **ActionLoop**
+- Replaced **Camera** with **Repositioner**
+- Replaced **Animator** with a new implementation
 - **Animator**'s handling states can't be mutated anymore
+### Deprecations
+- Deprecated **Animator** and **AnimatorWithTransform** for removal
+- Deprecated **KeyStatus** in favor of **KeyboardState**
+- Deprecated **MouseButtonStatus** in favor of **MouseButtonStates**
+### New features
+- Added a new pointer-based **Animator** implementation, as well as support for animation events
 
 ## v3.5.1 (in development)
 ### New methods
