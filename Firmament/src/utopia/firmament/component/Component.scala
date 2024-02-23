@@ -6,7 +6,6 @@ import utopia.genesis.handling.event.consume.{Consumable, ConsumeChoice}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.{Handleable, Handlers}
 import utopia.genesis.text.Font
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
 /**
 * This trait describes basic component features without any implementation
@@ -79,7 +78,8 @@ trait Component extends HasMutableBounds
       */
     def distributeMouseButtonEvent(event: MouseButtonStateEvent): ConsumeChoice = {
         // Informs children first
-        val (eventAfterChildren, childrenChoice) = distributeConsumableMouseEvent[MouseButtonStateEvent](event) { _.distributeMouseButtonEvent(_) }
+        val (eventAfterChildren, childrenChoice) =
+            distributeConsumableMouseEvent[MouseButtonStateEvent](event) { _.distributeMouseButtonEvent(_) }
         
         // Then informs own handler
         childrenChoice || mouseButtonHandler.onMouseButtonStateEvent(eventAfterChildren)
@@ -94,8 +94,16 @@ trait Component extends HasMutableBounds
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
-        distributeEvent[MouseMoveEvent](event, e => e.positions.map { _.relative },
-            _.relativeTo(_), _.distributeMouseMoveEvent(_))
+        // If has children, informs them. Event position is modified and only events within this component's area
+        // are relayed forward
+        if (children.nonEmpty) {
+            val myBounds = bounds
+            if (event.positions.exists { p => myBounds.contains(p.relative) }) {
+                val translated = event.relativeTo(myBounds.position)
+                // Only visible children are informed of events
+                children.foreach { _.distributeMouseMoveEvent(translated) }
+            }
+        }
     }
     /**
       * Distributes a mouse wheel event to this wrapper and children
@@ -181,27 +189,22 @@ trait Component extends HasMutableBounds
         children.foreach(operation)
     }
     
-    private def distributeEvent[E](event: E, positionsFromEvent: E => Iterable[Point],
-                                   translateEvent: (E, Point) => E, childAccept: (Component, E) => Unit) =
-    {
-        // If has children, informs them. Event position is modified and only events within this component's area
-        // are relayed forward
-        val myBounds = bounds
-        if (positionsFromEvent(event).exists { myBounds.contains(_) }) {
-            val translated = translateEvent(event, myBounds.position)
-            // Only visible children are informed of events
-            children.foreach { c => childAccept(c, translated) }
-        }
-    }
-    
     private def distributeConsumableMouseEvent[E <: MouseEvent[E] with Consumable[E]](event: E)
                                                                                      (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
     {
-        val myBounds = bounds
-        if (myBounds.contains(event.position)) {
-            val translatedEvent = event.relativeTo(myBounds.position)
-            translatedEvent.distribute(children)(childAccept)
+        if (children.nonEmpty) {
+            val myBounds = bounds
+            if (myBounds.contains(event.position)) {
+                // Translates the event to the children's coordinate system
+                val translatedEvent = event.relativeTo(myBounds.position)
+                val (eventAfter, choice) = translatedEvent.distribute(children)(childAccept)
+                // Translates the event back to this component's coordinates before returning it
+                eventAfter.withPosition(event.position) -> choice
+            }
+            else
+                event -> Preserve
         }
+        // Case: No children to deliver this event to => No need to adjust this event
         else
             event -> Preserve
     }

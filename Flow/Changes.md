@@ -22,6 +22,8 @@
   - Added `.onceFixedAt(...)`
 - **Fixed** (object)
   - Added `.never` which is an alias for `Fixed(None)`
+- **FlagLike**
+  - Added `.lightSwitch(...)` and `.switch(...)`, which are mapping functions specialized for boolean values
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **ResettableFlag**

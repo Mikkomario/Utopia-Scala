@@ -113,7 +113,10 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	override val focusListeners: Seq[FocusListener] = FocusHandler +: settings.focusListeners
 	override val customDrawers: Vector[CustomDrawer] = mainDrawer +: settings.customDrawers
 	
-	private lazy val interActiveFlag = FocusHandler.focusPointer && selectableFlag
+	/**
+	  * A pointer that contains true while this label allows text selection (being in focus)
+	  */
+	protected lazy val interactiveFlag = FocusHandler.focusPointer && selectableFlag
 	
 	
 	// COMPUTED	-----------------------------------
@@ -366,7 +369,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def handleCondition: FlagLike = interActiveFlag
+		override def handleCondition: FlagLike = interactiveFlag
 		
 		override def act(duration: FiniteDuration) = {
 			passedDuration += duration

@@ -1,7 +1,8 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 
 import scala.language.implicitConversions
 
@@ -116,6 +117,34 @@ trait FlagLike extends Any with Changing[Boolean]
 							(a, b, _) => a.containsFinal(true) || b.containsFinal(true) }
 				}
 		}
+	}
+	
+	/**
+	  * @param falseState Function that returns the viewed value when this flag is not set
+	  * @param trueState Function that returns the viewed value when this flag is set
+	  * @tparam A Type of the viewed values
+	  * @return A view that presents one of the specified values based on the state of this flag
+	  */
+	def lightSwitch[A](falseState: => A, trueState: => A) = lightMap { if (_) trueState else falseState }
+	/**
+	  * @param falseState Value when this flag is not set (lazily called)
+	  * @param trueState Value when this flag is set (lazily called)
+	  * @tparam A Type of the specified values
+	  * @return A view that presents one of the specified values, based on the state of this flag
+	  */
+	def switch[A](falseState: => A, trueState: => A) = fixedValue match {
+		case Some(fixed) => if (fixed) Fixed(trueState) else Fixed(falseState)
+		case None =>
+			if (value) {
+				val f = Lazy(falseState)
+				val t = trueState
+				lightSwitch(f.value, t)
+			}
+			else {
+				val f = falseState
+				val t = Lazy(trueState)
+				lightSwitch(f, t.value)
+			}
 	}
 	
 	/**

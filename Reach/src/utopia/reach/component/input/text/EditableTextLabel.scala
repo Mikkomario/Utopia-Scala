@@ -334,6 +334,11 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	
 	private var focusLeaveConditions = Vector[String => (String, Boolean)]()
 	
+	/**
+	  * A flag that contains true while this label is receiving text input (having focus)
+	  */
+	val editingFlag = if (settings.allowsSelectionWhileDisabled) focusPointer && enabledPointer else interactiveFlag
+	
 	
 	// INITIAL CODE	-------------------------------
 	
@@ -473,7 +478,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		// IMPLEMENTED  ---------------------------
 		
-		override def handleCondition: FlagLike = enabledPointer
+		override def handleCondition: FlagLike = editingFlag
 		
 		override def onKeyTyped(event: KeyTypedEvent): Unit = insertToCaret(event.typedChar.toString)
 	}
@@ -493,7 +498,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def handleCondition: FlagLike = selectableFlag
+		override def handleCondition: FlagLike = editingFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			// Inserts a line-break on enter (if enabled)

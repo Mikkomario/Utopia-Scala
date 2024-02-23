@@ -6,6 +6,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{Flag, ResettableFlag}
+import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.transform.Adjustment
@@ -38,8 +39,14 @@ object ColoredImageButtonTest extends App
 		stackF.centeredRow.build(ViewImageButton) { buttonF =>
 			val closeButton = buttonF.coloredIcon(
 				Fixed(SingleColorIcon(Image.readFrom(iconsDir/"close.png").get)),
-				colorP) { pressedFlag.set() }
-			val onButton = buttonF.icon(onFlag.map { if (_) onIcon else offIcon }) { onFlag.switch() }
+				colorP) {
+				println("Pressed")
+				pressedFlag.set()
+			}
+			val onButton = buttonF.icon(onFlag.lightSwitch(offIcon, onIcon)) {
+				println("On button pressed")
+				onFlag.switch()
+			}
 			
 			Vector(closeButton, onButton)
 		}

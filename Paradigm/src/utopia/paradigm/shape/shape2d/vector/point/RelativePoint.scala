@@ -167,6 +167,8 @@ trait RelativePoint
 	
 	override protected def equalsProperties = Vector(relative, absolute)
 	
+	override def toString = s"{ \"absolute\": $absolute, \"relative\": $relative }"
+	
 	override def +(other: HasDoubleDimensions): RelativePoint = map { _ + other }
 	override def -(other: HasDoubleDimensions): RelativePoint = map { _ - other }
 	override def *(mod: Double): RelativePoint = map { _ * mod }

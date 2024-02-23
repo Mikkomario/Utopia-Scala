@@ -520,7 +520,7 @@ object Field extends FieldSetup()
   * @tparam C Type of wrapped field
   */
 // TODO: It would be more reasonable if isEmptyPointer was nonEmptyPointer - the problem is that the transition is hard
-class Field[C <: ReachComponentLike with Focusable](parentHierarchy: ComponentHierarchy,
+class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy: ComponentHierarchy,
                                                     contextPointer: Changing[TextContext],
                                                     isEmptyPointer: Changing[Boolean],
                                                     settings: FieldSettings = FieldSettings.default)
