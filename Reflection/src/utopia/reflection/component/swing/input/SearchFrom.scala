@@ -11,7 +11,7 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment

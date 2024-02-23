@@ -12,7 +12,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.DrawLevel2.Background
+import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary

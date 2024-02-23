@@ -6,8 +6,8 @@ import utopia.firmament.factory.FramedFactory
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.view.immutable.View
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.{DrawLevel2, Drawer, FromDrawLevelFactory}
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.{DrawLevel, Drawer, FromDrawLevelFactory}
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.Matrix2D
@@ -45,14 +45,14 @@ object ImageDrawer2
 	
 	@deprecated("Please use the factory approach instead", "v1.3")
 	def apply(image: Image, insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
-	          drawLevel: DrawLevel2 = Normal, useUpscaling: Boolean = true) =
+	          drawLevel: DrawLevel = Normal, useUpscaling: Boolean = true) =
 		ImageDrawerFactory(None, insets, alignment, drawLevel, useUpscaling)(image)
 	
 	
 	// NESTED   -------------------------------
 	
 	case class ImageDrawerFactory(transformation: Option[Matrix2D] = None, insets: StackInsets = StackInsets.any,
-	                              alignment: Alignment = Alignment.Center, drawLevel: DrawLevel2 = DrawLevel2.default,
+	                              alignment: Alignment = Alignment.Center, drawLevel: DrawLevel = DrawLevel.default,
 	                              upscales: Boolean = false)
 		extends FromAlignmentFactory[ImageDrawerFactory] with FramedFactory[ImageDrawerFactory]
 			with FromDrawLevelFactory[ImageDrawerFactory] with LinearTransformable[ImageDrawerFactory]
@@ -79,7 +79,7 @@ object ImageDrawer2
 		
 		override def withInsets(insets: StackInsetsConvertible): ImageDrawerFactory = copy(insets = insets.toInsets)
 		override def apply(alignment: Alignment): ImageDrawerFactory = copy(alignment = alignment)
-		override def apply(drawLevel: DrawLevel2): ImageDrawerFactory = copy(drawLevel = drawLevel)
+		override def apply(drawLevel: DrawLevel): ImageDrawerFactory = copy(drawLevel = drawLevel)
 		override def transformedWith(transformation: Matrix2D): ImageDrawerFactory = {
 			val newTransform = this.transformation match {
 				case Some(t) => t * transformation
@@ -100,7 +100,7 @@ object ImageDrawer2
 	}
 	
 	private case class _ImageDrawer(image: Image, transformation: Option[Matrix2D], insets: StackInsets,
-	                                alignment: Alignment, drawLevel: DrawLevel2, useUpscaling: Boolean)
+	                                alignment: Alignment, drawLevel: DrawLevel, useUpscaling: Boolean)
 		extends ImageDrawer2
 }
 

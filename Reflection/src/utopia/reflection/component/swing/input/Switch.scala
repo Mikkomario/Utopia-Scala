@@ -11,7 +11,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}

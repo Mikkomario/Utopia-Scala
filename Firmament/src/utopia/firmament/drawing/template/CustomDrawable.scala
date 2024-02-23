@@ -1,6 +1,6 @@
 package utopia.firmament.drawing.template
 
-import utopia.genesis.graphics.{DrawLevel2, Drawer}
+import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
@@ -33,7 +33,7 @@ trait CustomDrawable
 	  * @param level Target draw level
 	  * @param drawer A drawer that will do the actual drawing
 	  */
-	def customDraw(level: DrawLevel2, drawer: Drawer) = {
+	def customDraw(level: DrawLevel, drawer: Drawer) = {
 		val b = drawBounds
 		customDrawers.filter { _.drawLevel == level }.foreach { _.draw(drawer, b) }
 	}

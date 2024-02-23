@@ -9,8 +9,8 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.Priority2.VeryHigh
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.Priority.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow}

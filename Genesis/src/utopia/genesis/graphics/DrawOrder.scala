@@ -1,7 +1,7 @@
 package utopia.genesis.graphics
 
 import utopia.flow.operator.ordering.SelfComparable
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 
 import scala.language.implicitConversions
 
@@ -17,7 +17,7 @@ object DrawOrder
 	
 	// IMPLICIT -----------------------
 	
-	implicit def apply(level: DrawLevel2): DrawOrder = new DrawOrder(level)
+	implicit def apply(level: DrawLevel): DrawOrder = new DrawOrder(level)
 }
 
 /**
@@ -29,7 +29,7 @@ object DrawOrder
   * @param orderIndex More precise draw-order index within 'level'.
   *                   Larger indexes are drawn after (i.e. above) lower indexes.
   */
-case class DrawOrder(level: DrawLevel2 = Normal, orderIndex: Int = 0) extends SelfComparable[DrawOrder]
+case class DrawOrder(level: DrawLevel = Normal, orderIndex: Int = 0) extends SelfComparable[DrawOrder]
 {
 	override def self = this
 	

@@ -9,7 +9,7 @@ import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.paradigm.animation.Animation

@@ -3,8 +3,8 @@ package utopia.firmament.drawing.view
 import utopia.firmament.model.Border
 import utopia.flow.view.immutable.View
 import utopia.firmament.drawing.template
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Normal
 
 /**
   * Used for drawing a mutable border over a component
@@ -14,7 +14,7 @@ import utopia.genesis.graphics.DrawLevel2.Normal
   * @param borderPointer Pointer from which the border is being drawn
   * @param drawLevel Depth where this drawer is used (default = Normal)
   */
-case class BorderViewDrawer(borderPointer: View[Border], drawLevel: DrawLevel2 = Normal)
+case class BorderViewDrawer(borderPointer: View[Border], drawLevel: DrawLevel = Normal)
 	extends template.BorderDrawerLike
 {
 	// IMPLEMENTED	--------------------------

@@ -2,8 +2,8 @@ package utopia.firmament.drawing.mutable
 
 import utopia.firmament.drawing.template.BorderDrawerLike
 import utopia.firmament.model.Border
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Normal
 
 /**
   * Used for drawing a mutable border over a component
@@ -13,7 +13,7 @@ import utopia.genesis.graphics.DrawLevel2.Normal
   * @param initialBorder Initially drawn border (default = no border)
   * @param drawLevel Drawing depth used (default = Normal)
   */
-class MutableBorderDrawer(initialBorder: Border = Border.zero, override val drawLevel: DrawLevel2 = Normal)
+class MutableBorderDrawer(initialBorder: Border = Border.zero, override val drawLevel: DrawLevel = Normal)
 	extends BorderDrawerLike
 {
 	// ATTRIBUTES	----------------------------

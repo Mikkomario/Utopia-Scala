@@ -10,7 +10,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.drawing.DrawableHandler

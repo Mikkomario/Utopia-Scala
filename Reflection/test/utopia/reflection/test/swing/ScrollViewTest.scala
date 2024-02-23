@@ -12,7 +12,7 @@ import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.graphics.{DrawLevel2, DrawSettings, StrokeSettings}
+import utopia.genesis.graphics.{DrawLevel, DrawSettings, StrokeSettings}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.RightArrow
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
@@ -67,7 +67,7 @@ object ScrollViewTest extends App
 	stack.background = Color.yellow.minusHue(Rotation.clockwise.degrees(33)).darkenedBy(1.2)
 	
 	// Adds content management
-	val selectionDrawer = CustomDrawer(DrawLevel2.Foreground) { (d, b) => d.draw(b) }
+	val selectionDrawer = CustomDrawer(DrawLevel.Foreground) { (d, b) => d.draw(b) }
 	
 	val contentManager = new ContainerSelectionManager[Int, ItemLabel[Int]](stack, selectionDrawer)(makeLabel)
 	contentManager.valuePointer.addContinuousListener { i => println(s"Selected ${ i.newValue }") }

@@ -8,7 +8,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.Priority2.Normal
+import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.drawing.{Drawable, DrawableHandler, RepaintListener, Repositioner}

@@ -1,17 +1,15 @@
-package utopia.reach.drawing
+package utopia.genesis.graphics
 
-import utopia.genesis.graphics.Priority2.Normal
-import utopia.genesis.graphics.{Drawer, Priority2}
+import utopia.genesis.graphics.Priority.Normal
 import utopia.paradigm.color.ColorShade
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 /**
-  * A common trait for classes which manage and optimize component painting
+  * A common trait for classes which manage and optimize (component) painting
   * @author Mikko Hilpinen
-  * @since 25.11.2020, v0.1
+  * @since 25.11.2020 in Reach v0.1 - Moved to Genesis 6.2.2024 at v4.0
   */
-@deprecated("Deprecated for removal. Moved to Genesis.", "v4.0")
 trait PaintManager
 {
 	// ABSTRACT	------------------------------
@@ -22,6 +20,7 @@ trait PaintManager
 	  */
 	def paintWith(drawer: Drawer): Unit
 	
+	/*
 	/**
 	  * Paints (a portion of) the managed region. Doesn't require and a buffer or state update, unless that's necessary
 	  * to perform the actual drawing.
@@ -31,6 +30,7 @@ trait PaintManager
 	  *                 implementation dependent.
 	  */
 	def paint(region: Option[Bounds] = None, priority: Priority2 = Normal): Unit
+	*/
 	
 	/**
 	  * Requests a repaint of (a portion of) the managed region
@@ -40,7 +40,7 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaint(region: Option[Bounds] = None, priority: Priority2 = Normal): Unit
+	def repaint(region: Option[Bounds] = None, priority: Priority = Normal): Unit
 	
 	/**
 	  * Shifts a sub-region in the managed area to a new location
@@ -49,12 +49,13 @@ trait PaintManager
 	  */
 	def shift(originalArea: Bounds, transition: Vector2D): Unit
 	
+	/*
 	/**
 	  * @param area A sub-region of the painted / managed region
 	  * @return The average shade (dark or light) of the targeted area
 	  */
 	def averageShadeOf(area: Bounds): ColorShade
-	
+	*/
 	
 	// OTHER	-------------------------------
 	
@@ -65,7 +66,7 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaintRegion(region: Bounds, priority: Priority2 = Normal) = repaint(Some(region), priority)
+	def repaintRegion(region: Bounds, priority: Priority = Normal) = repaint(Some(region), priority)
 	
 	/**
 	  * Requests a repaint of the managed region
@@ -73,5 +74,5 @@ trait PaintManager
 	  *                 faster / prioritized repainting, although the actual effect of this parameter is
 	  *                 implementation dependent.
 	  */
-	def repaintAll(priority: Priority2 = Normal) = repaint(None, priority)
+	def repaintAll(priority: Priority = Normal) = repaint(None, priority)
 }

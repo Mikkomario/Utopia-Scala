@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.button
 
 import utopia.firmament.model.GuiElementStatus
 import utopia.genesis.graphics.Drawer
-import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.DrawLevel
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
@@ -22,7 +22,7 @@ trait ButtonStateDrawer
 	/**
 	  * @return The draw-level this drawer uses
 	  */
-	def drawLevel: DrawLevel2
+	def drawLevel: DrawLevel
 	
 	/**
 	  * Draws based on provided state

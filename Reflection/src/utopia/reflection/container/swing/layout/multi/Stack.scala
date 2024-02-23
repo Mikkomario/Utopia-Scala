@@ -7,7 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
+import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D
@@ -244,7 +244,7 @@ class Stack[C <: Stack.AwtStackable](override val direction: Axis2D, override va
     {
         override def opaque = true
     
-        override def drawLevel = DrawLevel2.Background
+        override def drawLevel = DrawLevel.Background
     
         override def draw(drawer: Drawer, bounds: Bounds) = {
             if (count > 1) {

@@ -4,8 +4,8 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.DrawLevel2.Foreground
-import utopia.genesis.graphics.{DrawLevel2, DrawSettings, Drawer}
+import utopia.genesis.graphics.DrawLevel.Foreground
+import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.mouse.{MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.Circle
@@ -48,7 +48,7 @@ class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]]
 	// IMPLEMENTED  ----------------------
 	
 	override def opaque: Boolean = false
-	override def drawLevel: DrawLevel2 = Foreground
+	override def drawLevel: DrawLevel = Foreground
 	
 	override def handleCondition: FlagLike = AlwaysTrue
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll

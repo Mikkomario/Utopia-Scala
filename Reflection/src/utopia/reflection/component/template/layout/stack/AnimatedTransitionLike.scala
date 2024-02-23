@@ -7,7 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.image.Image

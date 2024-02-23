@@ -4,7 +4,7 @@ import utopia.firmament.context.BaseContextLike
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.paradigm.color.Color
 import utopia.firmament.drawing.immutable.RoundedBackgroundDrawer
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.template.layout.ReflectionFramingLike

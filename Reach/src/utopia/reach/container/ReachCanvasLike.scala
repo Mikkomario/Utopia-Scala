@@ -1,7 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.{PaintManager2, Priority2}
+import utopia.genesis.graphics.{PaintManager, Priority}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -28,7 +28,7 @@ trait ReachCanvasLike
 	/**
 	  * @return A painter that will draw canvas content. None while not set up.
 	  */
-	protected def currentPainter: Option[PaintManager2]
+	protected def currentPainter: Option[PaintManager]
 	
 	/**
 	  * Object that manages focus between the components in this canvas element
@@ -114,7 +114,7 @@ trait ReachCanvasLike
 	  * @param area Area to paint again
 	  * @param priority Priority to use for this repaint. The high level priority areas are painted first.
 	  */
-	def repaint(area: Bounds, priority: Priority2 = Priority2.Normal) =
+	def repaint(area: Bounds, priority: Priority = Priority.Normal) =
 		currentPainter.foreach { _.repaintRegion(area, priority) }
 	
 	/**

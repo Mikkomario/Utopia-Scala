@@ -11,7 +11,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.DrawLevel2.Foreground
+import utopia.genesis.graphics.DrawLevel.Foreground
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable

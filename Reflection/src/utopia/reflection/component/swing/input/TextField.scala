@@ -13,7 +13,7 @@ import utopia.paradigm.color.{Color, ColorSet}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
 import utopia.reflection.component.template.Focusable

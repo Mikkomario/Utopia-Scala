@@ -6,8 +6,8 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.{DrawLevel2, MeasuredText}
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.{DrawLevel, MeasuredText}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -26,7 +26,7 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
                                     highlightedBackgroundPointer: View[Option[Color]] = View.fixed(None),
                                     caretColorPointer: View[Color] = View.fixed(Color.textBlack),
                                     caretWidthPointer: View[Double] = View.fixed(1.0),
-                                    override val drawLevel: DrawLevel2 = Normal)
+                                    override val drawLevel: DrawLevel = Normal)
 	extends SelectableTextDrawerLike
 {
 	// ATTRIBUTES	------------------------------

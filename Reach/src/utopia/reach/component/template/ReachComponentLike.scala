@@ -1,14 +1,14 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.Stackable
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.{Background, Foreground, Normal}
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{Drawer, Priority2}
+import utopia.genesis.graphics.{Drawer, Priority}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
@@ -62,7 +62,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  *                  foreground is drawn above child components)
 	  * @param clipZone  Limited drawing area. The drawing should be clipped / limited to that area, if specified.
 	  */
-	def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds] = None): Unit
+	def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds] = None): Unit
 	
 	
 	// COMPUTED	------------------------
@@ -185,19 +185,19 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	/**
 	  * Paints this component again
 	  */
-	def repaint(priority: Priority2) = parentHierarchy.repaint(bounds, priority)
+	def repaint(priority: Priority) = parentHierarchy.repaint(bounds, priority)
 	/**
 	  * Paints this component's parent again
 	  * @param priority Priority to use for the repaint operation. Higher priority components are drawn first.
 	  *                 (Default = Normal).
 	  */
-	def repaintParent(priority: Priority2 = Priority2.Normal) = parentHierarchy.repaintBottom(priority)
+	def repaintParent(priority: Priority = Priority.Normal) = parentHierarchy.repaintBottom(priority)
 	/**
 	  * Repaints a sub-section of this component's area
 	  * @param relativeArea An area to repaint (where (0,0) is located at the top left corner of this component)
 	  * @param priority Priority to use for the repaint (default = normal)
 	  */
-	def repaintArea(relativeArea: Bounds, priority: Priority2 = Priority2.Normal) =
+	def repaintArea(relativeArea: Bounds, priority: Priority = Priority.Normal) =
 		parentHierarchy.repaint(relativeArea + position, priority)
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Once that has been done,
@@ -206,7 +206,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  *                 (Default = Normal).
 	  */
 	@deprecated(".revalidate() now repaints the lowest level automatically", "v1.0")
-	def revalidateAndRepaint(priority: Priority2 = Priority2.Normal) = revalidateAndThen { repaint(priority) }
+	def revalidateAndRepaint(priority: Priority = Priority.Normal) = revalidateAndThen { repaint(priority) }
 	
 	/**
 	  * Paints movement of this component, translating it by specified amount

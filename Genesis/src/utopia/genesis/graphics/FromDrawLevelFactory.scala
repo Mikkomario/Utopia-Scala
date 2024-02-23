@@ -1,6 +1,6 @@
 package utopia.genesis.graphics
 
-import utopia.genesis.graphics.DrawLevel2.{Background, Foreground}
+import utopia.genesis.graphics.DrawLevel.{Background, Foreground}
 
 /**
   * Common trait for factory classes that produce items based on draw-levels
@@ -15,7 +15,7 @@ trait FromDrawLevelFactory[+A]
 	  * @param drawLevel Targeted draw level
 	  * @return An item with/at that draw level
 	  */
-	def apply(drawLevel: DrawLevel2): A
+	def apply(drawLevel: DrawLevel): A
 	
 	
 	// COMPUTED -------------------------

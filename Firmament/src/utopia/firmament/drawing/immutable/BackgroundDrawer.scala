@@ -1,8 +1,8 @@
 package utopia.firmament.drawing.immutable
 
 import utopia.firmament.drawing.template.BackgroundDrawerLike
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Background
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Background
 import utopia.paradigm.color.Color
 
 /**
@@ -10,5 +10,5 @@ import utopia.paradigm.color.Color
   * @author Mikko Hilpine
   * @since 28.2.2020, Reflection v1
   */
-case class BackgroundDrawer(override val color: Color, override val drawLevel: DrawLevel2 = Background)
+case class BackgroundDrawer(override val color: Color, override val drawLevel: DrawLevel = Background)
 	extends BackgroundDrawerLike

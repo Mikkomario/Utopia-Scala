@@ -5,7 +5,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.graphics.Priority.High
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter

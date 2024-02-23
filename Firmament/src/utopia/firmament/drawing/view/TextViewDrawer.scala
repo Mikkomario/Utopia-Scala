@@ -2,8 +2,8 @@ package utopia.firmament.drawing.view
 
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.view.immutable.View
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.MeasuredText
 
 /**
@@ -12,7 +12,7 @@ import utopia.genesis.graphics.MeasuredText
   * @since 17.10.2020, Reflection v2
   */
 case class TextViewDrawer(textPointer: View[MeasuredText], stylePointer: View[TextDrawContext],
-                          override val drawLevel: DrawLevel2 = Normal)
+                          override val drawLevel: DrawLevel = Normal)
 	extends utopia.firmament.drawing.template.TextDrawerLike
 {
 	// IMPLEMENTED	----------------------------

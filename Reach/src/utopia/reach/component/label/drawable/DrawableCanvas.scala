@@ -1,12 +1,12 @@
 package utopia.reach.component.label.drawable
 
-import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.DrawLevel
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{Drawer, Priority2}
+import utopia.genesis.graphics.{Drawer, Priority}
 import utopia.genesis.handling.drawing.{DrawableHandler, Repositioner}
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.FillAreaLogic.ScalePreservingShape
@@ -27,7 +27,7 @@ import scala.concurrent.ExecutionContext
   * @since 09/02/2024, v1.3
   */
 class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaPointer: Changing[Bounds],
-                     scalingLogic: ScalePreservingShape, fpsLimits: Map[Priority2, Fps] = Map(),
+                     scalingLogic: ScalePreservingShape, fpsLimits: Map[Priority, Fps] = Map(),
                      minSize: Size = Size.zero)
                     (implicit exc: ExecutionContext, log: Logger)
 	extends ReachComponent
@@ -56,9 +56,9 @@ class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaP
 	// Matches the visual size with the actual size of this component
 	override def updateLayout() = visualSizePointer.update()
 	
-	override def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds]) = {
+	override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = {
 		// Draws the content on the normal draw level
-		if (drawLevel == DrawLevel2.Normal) {
+		if (drawLevel == DrawLevel.Normal) {
 			// Always clips to this component's bounds, at least
 			val clip = clipZone match {
 				case Some(clip) => bounds.overlapWith(clip)

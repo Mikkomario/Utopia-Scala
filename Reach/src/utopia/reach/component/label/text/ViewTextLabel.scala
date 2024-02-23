@@ -19,7 +19,7 @@ import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignabl
 import utopia.reach.component.factory.{BackgroundAssignable, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.genesis.graphics.Priority2
+import utopia.genesis.graphics.Priority
 
 case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                                           customDrawers: Vector[CustomDrawer] = Vector(),
@@ -271,7 +271,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	// Style changes (color & alignment) also trigger a revalidation / repaint
 	stylePointer.addListenerWhile(parentHierarchy.linkPointer) { event =>
 		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
-			repaint(Priority2.Low)
+			repaint(Priority.Low)
 	}
 	allowTextShrinkPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
 	

@@ -1,8 +1,8 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.Priority2.Normal
-import utopia.genesis.graphics.{DrawOrder, Drawer, Priority2}
+import utopia.genesis.graphics.Priority.Normal
+import utopia.genesis.graphics.{DrawOrder, Drawer, Priority}
 import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
@@ -75,6 +75,6 @@ trait Drawable extends Handleable
       *                  None if this item's whole draw bounds should be drawn (default).
       * @param priority Drawing priority (default = Normal)
       */
-    def repaint(subRegion: Option[Bounds] = None, priority: Priority2 = Normal) =
+    def repaint(subRegion: Option[Bounds] = None, priority: Priority = Normal) =
         repaintListeners.foreach { _.repaint(this, subRegion, priority) }
 }

@@ -6,7 +6,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds

@@ -2,8 +2,8 @@ package utopia.firmament.drawing.immutable
 
 import utopia.genesis.image.Image
 import utopia.firmament.drawing.template
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.paradigm.enumeration.Alignment
 import utopia.firmament.model.stack.StackInsets
 
@@ -13,6 +13,6 @@ import utopia.firmament.model.stack.StackInsets
   * @since 25.3.2020, Reflection v1
   */
 case class ImageDrawer(override val image: Image, override val insets: StackInsets = StackInsets.any,
-				  override val alignment: Alignment = Alignment.Center, override val drawLevel: DrawLevel2 = Normal,
-				  override val useUpscaling: Boolean = true)
+                       override val alignment: Alignment = Alignment.Center, override val drawLevel: DrawLevel = Normal,
+                       override val useUpscaling: Boolean = true)
 	extends template.ImageDrawerLike

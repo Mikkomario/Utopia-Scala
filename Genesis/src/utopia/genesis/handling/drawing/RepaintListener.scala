@@ -1,7 +1,7 @@
 package utopia.genesis.handling.drawing
 
-import utopia.genesis.graphics.Priority2
-import utopia.genesis.graphics.Priority2.Normal
+import utopia.genesis.graphics.Priority
+import utopia.genesis.graphics.Priority.Normal
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
@@ -18,5 +18,5 @@ trait RepaintListener
 	  *                  None if the item's whole draw bounds should be drawn again.
 	  * @param priority Priority with which the item should be drawn
 	  */
-	def repaint(item: Drawable, subRegion: Option[Bounds] = None, priority: Priority2 = Normal): Unit
+	def repaint(item: Drawable, subRegion: Option[Bounds] = None, priority: Priority = Normal): Unit
 }

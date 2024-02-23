@@ -3,8 +3,8 @@ package utopia.firmament.drawing.mutable
 import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.{DrawLevel2, MeasuredText}
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.{DrawLevel, MeasuredText}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -15,7 +15,7 @@ import utopia.paradigm.enumeration.Alignment
   * @since 7.4.2023, Reflection v2.0
   */
 class MutableTextDrawer(initialText: MeasuredText, initialContext: TextDrawContext,
-                        initialDrawLevel: DrawLevel2 = Normal)
+                        initialDrawLevel: DrawLevel = Normal)
 	extends TextDrawerLike
 {
 	// ATTRIBUTES   ----------------------
@@ -31,8 +31,8 @@ class MutableTextDrawer(initialText: MeasuredText, initialContext: TextDrawConte
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def drawLevel: DrawLevel2 = _drawLevel
-	def drawLevel_=(newLevel: DrawLevel2) = _drawLevel = newLevel
+	override def drawLevel: DrawLevel = _drawLevel
+	def drawLevel_=(newLevel: DrawLevel) = _drawLevel = newLevel
 	
 	override def text: MeasuredText = _text
 	def text_=(newText: MeasuredText) = _text = newText

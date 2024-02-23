@@ -30,6 +30,8 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Deprecated **MouseButtonStatus** in favor of **MouseButtonStates**
 ### New features
 - Added a new pointer-based **Animator** implementation, as well as support for animation events
+- Added **DrawLevel** from the **Firmament** module
+- Added **PaintManager** and **Priority** from the **Reach** module
 ### Other
 - This module is no longer dependent from the **Inception** module
 - Multiple new features and changes lack in-depth testing - Exercise discretion

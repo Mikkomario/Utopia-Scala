@@ -11,7 +11,7 @@ import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.graphics.DrawLevel2.Normal
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font

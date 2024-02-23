@@ -9,6 +9,7 @@
 - All **FocusableWithState** implementations are now required to implement the `focusPointer: FlagLike` property
 - **ButtonLike** implementations are now required to implement `.enabledPointer: FlagLike`
 - Moved **FramedFactory** to the **Firmament** module
+- Moved **PaintManager** and **Priority** to the **Genesis** module
 ### Deprecations
 - Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes

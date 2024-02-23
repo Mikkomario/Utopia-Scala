@@ -17,7 +17,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.Priority2.VeryHigh
+import utopia.genesis.graphics.Priority.VeryHigh
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}

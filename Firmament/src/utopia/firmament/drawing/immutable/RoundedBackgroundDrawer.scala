@@ -2,8 +2,8 @@ package utopia.firmament.drawing.immutable
 
 import utopia.paradigm.color.Color
 import utopia.firmament.drawing.template
-import utopia.genesis.graphics.DrawLevel2
-import utopia.genesis.graphics.DrawLevel2.Background
+import utopia.genesis.graphics.DrawLevel
+import utopia.genesis.graphics.DrawLevel.Background
 
 object RoundedBackgroundDrawer
 {
@@ -14,7 +14,7 @@ object RoundedBackgroundDrawer
 	  * @param drawLevel Depth to use when drawing this background (default = Background = bottom)
 	  * @return A new background drawer
 	  */
-	def withFactor(color: Color, roundingFactor: Double, drawLevel: DrawLevel2 = Background) =
+	def withFactor(color: Color, roundingFactor: Double, drawLevel: DrawLevel = Background) =
 		apply(color, Right(roundingFactor), drawLevel)
 	
 	/**
@@ -23,7 +23,7 @@ object RoundedBackgroundDrawer
 	  * @param drawLevel Depth to use when drawing this background (default = Background = bottom)
 	  * @return A new background drawer that uses a static radius
 	  */
-	def withRadius(color: Color, radius: Double, drawLevel: DrawLevel2 = Background) =
+	def withRadius(color: Color, radius: Double, drawLevel: DrawLevel = Background) =
 		apply(color, Left(radius), drawLevel)
 }
 
@@ -34,5 +34,5 @@ object RoundedBackgroundDrawer
   */
 case class RoundedBackgroundDrawer private(override val color: Color,
                                            override protected val rounding: Either[Double, Double],
-										   override val drawLevel: DrawLevel2 = Background)
+										   override val drawLevel: DrawLevel = Background)
 	extends template.RoundedBackgroundDrawerLike

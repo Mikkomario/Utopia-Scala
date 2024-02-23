@@ -16,8 +16,8 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.Consumable

@@ -17,7 +17,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.MeasuredText
-import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.graphics.Priority.High
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}

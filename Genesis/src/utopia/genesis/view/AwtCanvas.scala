@@ -1,7 +1,7 @@
 package utopia.genesis.view
 
 import utopia.flow.parse.AutoClose._
-import utopia.genesis.graphics.{Drawer, Priority2}
+import utopia.genesis.graphics.{Drawer, Priority}
 import utopia.genesis.handling.drawing.{Drawable, DrawableHandler, RepaintListener}
 import utopia.genesis.view.ScalingPolicy.{Crop, Project}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -129,7 +129,7 @@ class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler,
     
     private object HandlerRepaintListener extends RepaintListener
     {
-        override def repaint(item: Drawable, subRegion: Option[Bounds], priority: Priority2) = {
+        override def repaint(item: Drawable, subRegion: Option[Bounds], priority: Priority) = {
             subRegion match {
                 case Some(region) => AwtCanvas.this.repaint(region.toAwt)
                 case None => AwtCanvas.this.repaint()

@@ -11,7 +11,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.OpenComponent
-import utopia.genesis.graphics.DrawLevel2
+import utopia.genesis.graphics.DrawLevel
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -115,7 +115,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override def toString = s"Segment($index)"
 		
-		override def paintContent(drawer: Drawer, drawLevel: DrawLevel2, clipZone: Option[Bounds]) = ()
+		override def paintContent(drawer: Drawer, drawLevel: DrawLevel, clipZone: Option[Bounds]) = ()
 		
 		override def calculatedStackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
 		

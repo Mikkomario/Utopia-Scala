@@ -7,8 +7,8 @@ import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{HotKey, StandardSizeAdjustable}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.Priority2.High
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum

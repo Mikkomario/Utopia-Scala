@@ -5,8 +5,8 @@ import utopia.firmament.factory.FramedFactory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
-import utopia.genesis.graphics.DrawLevel2.Normal
-import utopia.genesis.graphics.{DrawLevel2, FromDrawLevelFactory}
+import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.{DrawLevel, FromDrawLevelFactory}
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
@@ -35,7 +35,7 @@ object ViewImageDrawer
 	
 	case class ViewImageDrawerFactory(transformationView: View[Option[Matrix2D]] = View.fixed(None),
 	                                  insetsView: View[StackInsets] = View.fixed(StackInsets.any),
-	                                  alignmentView: View[Alignment] = View.fixed(Center), drawLevel: DrawLevel2 = Normal,
+	                                  alignmentView: View[Alignment] = View.fixed(Center), drawLevel: DrawLevel = Normal,
 	                                  upscales: Boolean = false)
 		extends LinearTransformable[ViewImageDrawerFactory] with FramedFactory[ViewImageDrawerFactory]
 			with FromAlignmentFactory[ViewImageDrawerFactory] with FromDrawLevelFactory[ViewImageDrawerFactory]
@@ -46,7 +46,7 @@ object ViewImageDrawer
 		override def identity: ViewImageDrawerFactory = this
 		
 		override def apply(alignment: Alignment): ViewImageDrawerFactory = withAlignmentView(View.fixed(alignment))
-		override def apply(drawLevel: DrawLevel2): ViewImageDrawerFactory = copy(drawLevel = drawLevel)
+		override def apply(drawLevel: DrawLevel): ViewImageDrawerFactory = copy(drawLevel = drawLevel)
 		override def withInsets(insets: StackInsetsConvertible): ViewImageDrawerFactory =
 			copy(insetsView = View.fixed(insets.toInsets))
 		override def transformedWith(transformation: Matrix2D): ViewImageDrawerFactory = mapTransformation {
@@ -89,7 +89,7 @@ object ViewImageDrawer
   */
 class ViewImageDrawer(imageView: View[Image], transformationView: View[Option[Matrix2D]] = View.fixed(None),
                       insetsView: View[StackInsets] = View.fixed(StackInsets.any),
-                      alignmentView: View[Alignment] = View.fixed(Center), override val drawLevel: DrawLevel2 = Normal,
+                      alignmentView: View[Alignment] = View.fixed(Center), override val drawLevel: DrawLevel = Normal,
                       override val useUpscaling: Boolean = false)
 	extends ImageDrawer2
 {
