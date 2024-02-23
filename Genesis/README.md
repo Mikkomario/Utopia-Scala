@@ -3,7 +3,6 @@
 ## Parent Modules
 - Utopia Flow
 - Utopia Paradigm
-- Utopia Inception
 
 ## Main Features
 

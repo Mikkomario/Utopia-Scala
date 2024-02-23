@@ -16,7 +16,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-class Animator2[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeFlag: FlagLike = AlwaysTrue)
+class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeFlag: FlagLike = AlwaysTrue)
 	extends Actor with ChangingWrapper[A]
 {
 	// ATTRIBUTES   ---------------------------

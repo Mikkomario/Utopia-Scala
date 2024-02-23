@@ -5,8 +5,14 @@ Handler update
 Remember MutableImage changes (once added) and the new drawSubImage -feature
 ### Breaking changes
 - Rewrote all handler & handling -classes, including all event classes
+  - **HandlerRelay** is now named **Handlers**
+  - Removed separate immutable and mutable class versions
+    - All **Handlers** are now mutable
+  - Replaced **Handleable**`.allowsHandlingFrom(HandlerType)` with `.handleCondition: FlagLike` 
+  - Removed the **Mortal** and **Killable** traits
+    - Instead of using these traits, modify the `.handleCondition` property accordingly
 - Heavily modified the package structure relating to events and handling
-- Removed the **DefaultSetup** class
+- Removed the **Setup** trait and **DefaultSetup** class
   - For the time being, the setup must be done manually
   - It is recommended to use **Reach**'s **DrawableCanvas** instead of the standard **Genesis** setup
 - Removed **SpriteDrawer** and **TransformedImageDrawer**
@@ -24,6 +30,9 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Deprecated **MouseButtonStatus** in favor of **MouseButtonStates**
 ### New features
 - Added a new pointer-based **Animator** implementation, as well as support for animation events
+### Other
+- This module is no longer dependent from the **Inception** module
+- Multiple new features and changes lack in-depth testing - Exercise discretion
 
 ## v3.5.1 (in development)
 ### New methods

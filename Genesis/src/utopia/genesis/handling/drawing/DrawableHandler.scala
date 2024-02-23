@@ -17,7 +17,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority2.{High, Normal, VeryLow}
 import utopia.genesis.graphics._
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 import utopia.genesis.image.MutableImage
 import utopia.genesis.util.Fps
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -28,11 +28,11 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import scala.annotation.unused
 import scala.concurrent.ExecutionContext
 
-object DrawableHandler2
+object DrawableHandler
 {
 	// IMPLICIT --------------------------
 	
-	implicit def objectToFactory(@unused o: DrawableHandler2.type)
+	implicit def objectToFactory(@unused o: DrawableHandler.type)
 	                            (implicit exc: ExecutionContext, log: Logger): DrawableHandlerFactory =
 		DrawableHandlerFactory()
 		
@@ -51,7 +51,7 @@ object DrawableHandler2
 	                                  fpsLimits: Map[Priority2, Fps] = Map(), preDrawPriority: Priority2 = High,
 	                                  drawOrder: DrawOrder = DrawOrder.default)
 	                                 (implicit exc: ExecutionContext, log: Logger)
-		extends HandlerFactory[Drawable2, DrawableHandler2, DrawableHandlerFactory]
+		extends HandlerFactory[Drawable, DrawableHandler, DrawableHandlerFactory]
 	{
 		// ATTRIBUTES   ------------------
 		
@@ -62,8 +62,8 @@ object DrawableHandler2
 		
 		override def usingCondition(newCondition: FlagLike): DrawableHandlerFactory = copy(visiblePointer = newCondition)
 		
-		override def apply(items: IterableOnce[Drawable2]) =
-			new DrawableHandler2(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
+		override def apply(items: IterableOnce[Drawable]) =
+			new DrawableHandler(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
 		
 		
 		// OTHER    ----------------------
@@ -164,11 +164,11 @@ object DrawableHandler2
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
-                       override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority2, Fps] = Map(),
-                       preDrawPriority: Priority2 = High, initialItems: IterableOnce[Drawable2] = Vector.empty)
-                      (implicit exc: ExecutionContext, log: Logger)
-	extends DeepHandler2[Drawable2](initialItems, visiblePointer) with Drawable2 with PaintManager2
+class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
+                      override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority2, Fps] = Map(),
+                      preDrawPriority: Priority2 = High, initialItems: IterableOnce[Drawable] = Vector.empty)
+                     (implicit exc: ExecutionContext, log: Logger)
+	extends DeepHandler[Drawable](initialItems, visiblePointer) with Drawable with PaintManager2
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -200,7 +200,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	private val repaintProcess = repaintWaitPointer.map { p =>
 		PostponingProcess(p, shutdownReaction = Some(Cancel)) { _ =>
 			queuedRepaintPointer.foreach { _.pop().foreach { case (_, region, priority) =>
-				super[Drawable2].repaint(region, priority)
+				super[Drawable].repaint(region, priority)
 			} }
 		}
 	}
@@ -261,8 +261,8 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 	override def removeRepaintListener(listener: RepaintListener): Unit =
 		_repaintListeners = _repaintListeners.filterNot { _ == listener }
 	
-	override protected def asHandleable(item: Handleable2) = item match {
-		case d: Drawable2 => Some(d)
+	override protected def asHandleable(item: Handleable) = item match {
+		case d: Drawable => Some(d)
 		case _ => None
 	}
 	
@@ -306,7 +306,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 			// Case: No repaint queued => Delivers requested repaint to parent
 			case None => subRegion -> priority
 		}
-		super[Drawable2].repaint(appliedRegion, appliedPriority)
+		super[Drawable].repaint(appliedRegion, appliedPriority)
 	}
 	
 	private def _paint(drawer: Drawer, translation: Vector2D = Vector2D.zero) = {
@@ -611,7 +611,7 @@ class DrawableHandler2(clipPointer: Option[Changing[Bounds]] = None, visiblePoin
 		
 		private object LayerRepaintListener extends RepaintListener
 		{
-			override def repaint(item: Drawable2, subRegion: Option[Bounds], priority: Priority2) = {
+			override def repaint(item: Drawable, subRegion: Option[Bounds], priority: Priority2) = {
 				val drawBounds = item.drawBounds
 				val repaintBounds = subRegion match {
 					case Some(region) => region + drawBounds.position

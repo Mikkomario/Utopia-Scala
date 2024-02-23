@@ -1,5 +1,9 @@
 # Utopia Inception
 
+## Notice
+This module has reached its end-of-life, will not receive further development and will be removed in a future release.  
+All features from this module are now present in a rewritten form in the **Genesis** module.
+
 ## Parent Modules
 - Utopia Flow
 

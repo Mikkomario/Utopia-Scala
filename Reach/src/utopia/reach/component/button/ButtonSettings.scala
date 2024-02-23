@@ -4,9 +4,9 @@ import utopia.firmament.model.HotKey
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.genesis.handling.event.keyboard.Key
+import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Space}
 import utopia.reach.focus.FocusListener
-
-import java.awt.event.KeyEvent
 
 /**
   * Common trait for button factories and settings
@@ -60,15 +60,15 @@ trait ButtonSettingsLike[+Repr]
 	/**
 	 * @return Copy of this factory that builds buttons that are triggered by pressing the enter key
 	 */
-	def triggeredWithEnter = triggeredWithKeyIndex(KeyEvent.VK_ENTER)
+	def triggeredWithEnter = triggeredWith(Enter)
 	/**
 	 * @return Copy of this factory that builds buttons that are triggered by pressing the space-bar
 	 */
-	def triggeredWithSpace = triggeredWithKeyIndex(KeyEvent.VK_SPACE)
+	def triggeredWithSpace = triggeredWith(Space)
 	/**
 	 * @return Copy of this factory that builds buttons that are triggered by pressing the escape key
 	 */
-	def triggeredWithEscape = triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
+	def triggeredWithEscape = triggeredWith(Esc)
 	
 	
 	// OTHER	--------------------
@@ -92,7 +92,13 @@ trait ButtonSettingsLike[+Repr]
 	  * @param keyIndex An KeyIndex (see [[java.awt.event.KeyEvent]]) of the targeted key
 	  * @return Copy of this factory that uses the specified key as a hotkey
 	  */
-	def triggeredWithKeyIndex(keyIndex: Int) = withHotKey(HotKey.keyWithIndex(keyIndex))
+	@deprecated("Please use .triggeredWith(Key) instead", "v1.3")
+	def triggeredWithKeyIndex(keyIndex: Int) = triggeredWith(Key(keyIndex))
+	/**
+	  * @param key A keyboard key that should trigger this button (even when this button doesn't have focus)
+	  * @return Copy of this factory that uses the specified key as a hotkey
+	  */
+	def triggeredWith(key: Key) = withHotKey(HotKey(key))
 	
 	/**
 	  * @param listener A focus listener

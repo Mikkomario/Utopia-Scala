@@ -14,7 +14,7 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
   * @author Mikko Hilpinen
   * @since 11/02/2024, v4.0
   */
-class Repositioner(override protected val wrapped: Drawable2,
+class Repositioner(override protected val wrapped: Drawable,
                    targetPointer: Either[(Changing[Point], Changing[Size]), Changing[Bounds]],
                    resizeLogic: ScalePreservingShape = Fit)
 	extends TransformingDrawableWrapper

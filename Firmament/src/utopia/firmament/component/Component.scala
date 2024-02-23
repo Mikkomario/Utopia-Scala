@@ -4,7 +4,7 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeChoice}
 import utopia.genesis.handling.event.mouse._
-import utopia.genesis.handling.template.{Handleable2, Handlers}
+import utopia.genesis.handling.template.{Handleable, Handlers}
 import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.vector.point.Point
 
@@ -94,7 +94,7 @@ trait Component extends HasMutableBounds
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
-        distributeEvent[MouseMoveEvent](event, e => Vector(e.mousePosition, e.previousMousePosition),
+        distributeEvent[MouseMoveEvent](event, e => e.positions.map { _.relative },
             _.relativeTo(_), _.distributeMouseMoveEvent(_))
     }
     /**
@@ -133,7 +133,7 @@ trait Component extends HasMutableBounds
       * @param listener A listener to be informed
       * @return This component
       */
-    def +=(listener: Handleable2) = {
+    def +=(listener: Handleable) = {
         handlers += listener
         this
     }
@@ -142,7 +142,7 @@ trait Component extends HasMutableBounds
       * @param listeners Listeners to be informed
       * @return This component
       */
-    def ++=(listeners: IterableOnce[Handleable2]) = {
+    def ++=(listeners: IterableOnce[Handleable]) = {
         handlers ++= listeners
         this
     }
@@ -151,7 +151,7 @@ trait Component extends HasMutableBounds
       * Removes a listener from this wrapper
       * @param listener A listener to be removed
       */
-    def removeMouseListener(listener: Handleable2) = forMeAndChildren { c =>
+    def removeMouseListener(listener: Handleable) = forMeAndChildren { c =>
         c.mouseButtonHandler -= listener
         c.mouseMoveHandler -= listener
         c.mouseWheelHandler -= listener
@@ -161,7 +161,7 @@ trait Component extends HasMutableBounds
       * @param listener A listener
       * @return This component
       */
-    def -=(listener: Handleable2) = {
+    def -=(listener: Handleable) = {
         forMeAndChildren { _.handlers -= listener }
         this
     }
@@ -170,7 +170,7 @@ trait Component extends HasMutableBounds
       * @param listeners Listeners to remove
       * @return This component
       */
-    def --=(listeners: Iterable[Handleable2]) = {
+    def --=(listeners: Iterable[Handleable]) = {
         if (listeners.nonEmpty)
             forMeAndChildren { _.handlers --= listeners }
         this
@@ -198,7 +198,7 @@ trait Component extends HasMutableBounds
                                                                                      (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
     {
         val myBounds = bounds
-        if (myBounds.contains(event.mousePosition)) {
+        if (myBounds.contains(event.position)) {
             val translatedEvent = event.relativeTo(myBounds.position)
             translatedEvent.distribute(children)(childAccept)
         }

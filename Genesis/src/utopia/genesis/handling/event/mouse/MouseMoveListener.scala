@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.OriginType.Relative
@@ -253,7 +253,7 @@ object MouseMoveListener
  * @author Mikko Hilpinen
  * @since 21.1.2017
  */
-trait MouseMoveListener extends Handleable2
+trait MouseMoveListener extends Handleable
 {
     /**
      * This filter is applied over mouse move events the listener would receive.

@@ -1,6 +1,6 @@
 package utopia.genesis.handling.action
 
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -10,7 +10,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 23.12.2016
  */
-trait Actor extends Handleable2
+trait Actor extends Handleable
 {
     // ABSTRACT ------------------
     

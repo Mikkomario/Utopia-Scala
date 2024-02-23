@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
 import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
-import utopia.genesis.handling.template.{Handleable2, Handlers}
+import utopia.genesis.handling.template.{Handleable, Handlers}
 
 import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 12.9.2020, v2.4
   */
-object KeyboardEvents extends mutable.Growable[Handleable2]
+object KeyboardEvents extends mutable.Growable[Handleable]
 {
 	// ATTRIBUTES	------------------
 	
@@ -66,7 +66,7 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 	
 	// IMPLEMENTED  -----------------
 	
-	override def addOne(elem: Handleable2) = {
+	override def addOne(elem: Handleable) = {
 		handlers += elem
 		this
 	}
@@ -102,24 +102,24 @@ object KeyboardEvents extends mutable.Growable[Handleable2]
 	  * @param listener A new listener
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def register(listener: Handleable2) = handlers += listener
+	def register(listener: Handleable) = handlers += listener
 	/**
 	  * Removes a listener from receiving any more events
 	  * @param listener A listener that doesn't need to receive events any more
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
-	def unregister(listener: Handleable2) = handlers -= listener
+	def unregister(listener: Handleable) = handlers -= listener
 	
 	/**
 	  * Removes a listener from receiving any more events
 	  * @param listener A listener that doesn't need to receive events any more
 	  */
-	def -=(listener: Handleable2) = handlers -= listener
+	def -=(listener: Handleable) = handlers -= listener
 	/**
 	  * Removes 0-n listeners from receiving any more events
 	  * @param listeners Listeners to remove / detach
 	  */
-	def --=(listeners: IterableOnce[Handleable2]) = handlers --= listeners
+	def --=(listeners: IterableOnce[Handleable]) = handlers --= listeners
 	
 	private def stateChanged(event: KeyEvent, index: Int, pressed: Boolean) = {
 		val location = KeyLocation.of(event.getKeyLocation).getOrElse(Standard)

@@ -7,7 +7,7 @@ import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import KeyEvent.KeyFilteringFactory
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -179,7 +179,7 @@ object KeyStateListener
   * @author Mikko Hilpinen
   * @since 22.2.2017
   */
-trait KeyStateListener extends Handleable2
+trait KeyStateListener extends Handleable
 {
     /**
       * This method will be called when the keyboard state changes, provided this items handling state allows it.

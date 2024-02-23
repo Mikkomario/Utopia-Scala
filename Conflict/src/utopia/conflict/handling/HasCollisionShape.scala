@@ -2,7 +2,7 @@ package utopia.conflict.handling
 
 import utopia.conflict.collision.CollisionShape
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 /**
   * Common trait for items that have a specific collision shape

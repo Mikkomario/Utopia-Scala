@@ -2,7 +2,7 @@ package utopia.genesis.view
 
 import utopia.flow.parse.AutoClose._
 import utopia.genesis.graphics.{Drawer, Priority2}
-import utopia.genesis.handling.drawing.{Drawable2, DrawableHandler2, RepaintListener}
+import utopia.genesis.handling.drawing.{Drawable, DrawableHandler, RepaintListener}
 import utopia.genesis.view.ScalingPolicy.{Crop, Project}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -26,7 +26,7 @@ import javax.swing.JPanel
   * @param scalingPolicy How this panel handles scaling
   * @param clearPrevious Whether the results of previous draws should be cleared before the next redraw (default = true)
  */
-class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler2,
+class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler,
                 val scalingPolicy: ScalingPolicy = Project, clearPrevious: Boolean = true)
     extends JPanel(null)
 {
@@ -129,7 +129,7 @@ class AwtCanvas(originalViewSize: Size, val handler: DrawableHandler2,
     
     private object HandlerRepaintListener extends RepaintListener
     {
-        override def repaint(item: Drawable2, subRegion: Option[Bounds], priority: Priority2) = {
+        override def repaint(item: Drawable, subRegion: Option[Bounds], priority: Priority2) = {
             subRegion match {
                 case Some(region) => AwtCanvas.this.repaint(region.toAwt)
                 case None => AwtCanvas.this.repaint()

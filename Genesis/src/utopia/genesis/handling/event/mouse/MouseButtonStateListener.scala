@@ -7,7 +7,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
@@ -317,7 +317,7 @@ object MouseButtonStateListener
  * @author Mikko Hilpinen
  * @since 18.2.2017
  */
-trait MouseButtonStateListener extends Handleable2
+trait MouseButtonStateListener extends Handleable
 {
     // ABSTRACT ---------------------------
     

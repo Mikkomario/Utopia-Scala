@@ -1,13 +1,13 @@
 package utopia.conflict.handling
 
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 /**
   * Common trait for items that can be collided with, having a specific collision shape
   * @author Mikko Hilpinen
   * @since 2.8.2017
   */
-trait CanCollideWith extends Handleable2 with HasCollisionShape
+trait CanCollideWith extends Handleable with HasCollisionShape
 {
     // ABSTRACT     --------------------------
 	

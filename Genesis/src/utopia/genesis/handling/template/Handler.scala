@@ -12,7 +12,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 30/01/2024, v4.0
   */
-trait Handler2[A <: Handleable2] extends mutable.Growable[A]
+trait Handler[A <: Handleable] extends mutable.Growable[A]
 {
 	// ABSTRACT ------------------------
 	
@@ -43,7 +43,7 @@ trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 	  * @param item An item that may or may not be processed by this handler
 	  * @return Some if the item could be converted to the accepted type. None otherwise.
 	  */
-	protected def asHandleable(item: Handleable2): Option[A]
+	protected def asHandleable(item: Handleable): Option[A]
 	
 	
 	// IMPLEMENTED  --------------------
@@ -66,12 +66,12 @@ trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 	  * Removes an item from this handler
 	  * @param item The item to remove
 	  */
-	def -=(item: Handleable2): Unit = removeWhere { _ == item }
+	def -=(item: Handleable): Unit = removeWhere { _ == item }
 	/**
 	  * Removes a number of items from this handler
 	  * @param items Items to remove
 	  */
-	def --=(items: IterableOnce[Handleable2]) = {
+	def --=(items: IterableOnce[Handleable]) = {
 		val _items = Set.from(items)
 		if (_items.nonEmpty)
 			removeWhere(_items.contains)
@@ -93,7 +93,7 @@ trait Handler2[A <: Handleable2] extends mutable.Growable[A]
 	  * @param item An item that may be handled by this handler
 	  * @return Whether that item was attached to this handler
 	  */
-	def ?+=(item: Handleable2): Boolean = asHandleable(item) match {
+	def ?+=(item: Handleable): Boolean = asHandleable(item) match {
 		case Some(item) =>
 			addOne(item)
 			true

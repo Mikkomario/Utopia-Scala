@@ -10,7 +10,6 @@ This module still contains more features, such as animation support, however.
 ## Parent Modules
 - Utopia Flow
 - Utopia Paradigm
-- Utopia Inception
 - Utopia Genesis
 - Utopia Firmament
 

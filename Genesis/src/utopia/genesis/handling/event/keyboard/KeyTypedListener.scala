@@ -5,7 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyEvent.KeyFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -71,7 +71,7 @@ object KeyTypedListener
  * @author Mikko Hilpinen
  * @since 23.2.2017
  */
-trait KeyTypedListener extends Handleable2
+trait KeyTypedListener extends Handleable
 {
     /**
       * @return A filter used for filtering incoming key typed -events

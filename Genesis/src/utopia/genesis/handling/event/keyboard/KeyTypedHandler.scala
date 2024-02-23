@@ -3,8 +3,8 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.EventHandler2
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.event.EventHandler
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 
@@ -42,8 +42,8 @@ object KeyTypedHandler
   */
 class KeyTypedHandler(initialListeners: IterableOnce[KeyTypedListener] = Iterable.empty,
                       additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[KeyTypedListener](initialListeners, additionalCondition)
-		with EventHandler2[KeyTypedListener, KeyTypedEvent] with KeyTypedListener
+	extends DeepHandler[KeyTypedListener](initialListeners, additionalCondition)
+		with EventHandler[KeyTypedListener, KeyTypedEvent] with KeyTypedListener
 {
 	override def keyTypedEventFilter: Filter[KeyTypedEvent] = AcceptAll
 	
@@ -53,7 +53,7 @@ class KeyTypedHandler(initialListeners: IterableOnce[KeyTypedListener] = Iterabl
 	
 	override def onKeyTyped(event: KeyTypedEvent): Unit = distribute(event)
 	
-	override protected def asHandleable(item: Handleable2): Option[KeyTypedListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[KeyTypedListener] = item match {
 		case l: KeyTypedListener => Some(l)
 		case _ => None
 	}

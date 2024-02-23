@@ -15,6 +15,7 @@
 - Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
 - **RadioButtons** now correctly support **HotKeys**
 ### Other changes
+- This module is no longer dependent from the **Inception** module
 - **ReachComponent** is now a trait - however, it is intended to be used like an abstract class, still
 
 ## v1.2 - 22.01.2024

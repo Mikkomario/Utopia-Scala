@@ -365,7 +365,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			override def onMouseMove(event: MouseMoveEvent): Unit = {
 				// Applies the drag
 				drag.foreach { case (absoluteOrigin, originalBounds, stackSize, maxBounds, directions) =>
-					val totalDrag = event.absoluteMousePosition - absoluteOrigin
+					val totalDrag = event.position.absolute - absoluteOrigin
 					// Calculates the would-be bounds (without limits applied yet)
 					val newBounds = {
 						// Case: Repositioning

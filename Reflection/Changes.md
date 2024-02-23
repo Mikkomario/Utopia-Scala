@@ -5,6 +5,7 @@
 - Rewrote **AnimationLabel**, so that it's now (transformed) image -based and uses the new **Animator** class in **Genesis**
   - The default constructor is noticeably different and may break some use-cases
 ### Other changes
+- This module is no longer dependent from the **Inception** module
 - Pop-up windows now close (if specified to do so) only on mouse-presses, not on mouse-releases
 - Removed some classes that were deprecated at v2.0 (or earlier)
 

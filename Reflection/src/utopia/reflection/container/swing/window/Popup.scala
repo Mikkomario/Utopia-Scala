@@ -9,7 +9,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.TopLeft
@@ -132,7 +132,7 @@ object Popup
 		}
 	}
 	
-	private trait HideActionListener extends Handleable2
+	private trait HideActionListener extends Handleable
 	{
 		// ABSTRACT	--------------------------
 		

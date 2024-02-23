@@ -2,7 +2,7 @@ package utopia.genesis.handling.action
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 import scala.concurrent.duration.FiniteDuration
@@ -42,11 +42,11 @@ object ActorHandler
   */
 class ActorHandler(initialItems: IterableOnce[Actor] = Iterable.empty,
                    additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[Actor](initialItems, additionalCondition) with Actor
+	extends DeepHandler[Actor](initialItems, additionalCondition) with Actor
 {
 	override def act(duration: FiniteDuration) = items.foreach { _.act(duration) }
 	
-	override protected def asHandleable(item: Handleable2): Option[Actor] = item match {
+	override protected def asHandleable(item: Handleable): Option[Actor] = item match {
 		case a: Actor => Some(a)
 		case _ => None
 	}

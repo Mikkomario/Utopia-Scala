@@ -6,14 +6,14 @@ import utopia.genesis.handling.template.Handlers.AnyHandler
 
 import scala.collection.mutable
 
-object Handlers extends FromCollectionFactory[Handler2[_ <: Handleable2], Handlers]
+object Handlers extends FromCollectionFactory[Handler[_ <: Handleable], Handlers]
 {
 	// TYPES    -----------------------
 	
 	/**
 	  * A handler type without specification on what type of content it manages
 	  */
-	type AnyHandler = Handler2[_ <: Handleable2]
+	type AnyHandler = Handler[_ <: Handleable]
 	
 	
 	// IMPLEMENTED  -------------------
@@ -52,7 +52,7 @@ object Handlers extends FromCollectionFactory[Handler2[_ <: Handleable2], Handle
   * @author Mikko Hilpinen
   * @since 30/01/2024, v4.0
   */
-trait Handlers extends mutable.Growable[Handleable2] with Iterable[AnyHandler]
+trait Handlers extends mutable.Growable[Handleable] with Iterable[AnyHandler]
 {
 	// ABSTRACT ----------------------
 	
@@ -67,7 +67,7 @@ trait Handlers extends mutable.Growable[Handleable2] with Iterable[AnyHandler]
 	override def iterator: Iterator[AnyHandler] = handlers.iterator
 	override def knownSize = handlers.knownSize
 	
-	override def addOne(elem: Handleable2) = {
+	override def addOne(elem: Handleable) = {
 		handlers.foreach { _ ?+= elem }
 		this
 	}
@@ -81,12 +81,12 @@ trait Handlers extends mutable.Growable[Handleable2] with Iterable[AnyHandler]
 	  * Removes an item from all associated handlers
 	  * @param item An item to remove
 	  */
-	def -=(item: Handleable2): Unit = handlers.foreach { _ -= item }
+	def -=(item: Handleable): Unit = handlers.foreach { _ -= item }
 	/**
 	  * Removes the specified items from all associated handlers
 	  * @param items Items to remove
 	  */
-	def --=(items: IterableOnce[Handleable2]) = {
+	def --=(items: IterableOnce[Handleable]) = {
 		val _items = Set.from(items)
 		if (_items.nonEmpty)
 			handlers.foreach { _.removeWhere(_items.contains) }

@@ -7,7 +7,7 @@ import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.{Key, KeyLocation}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonFilteringFactory
 import utopia.genesis.handling.event.mouse.MouseMoveListener.MouseMoveFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
 
 import scala.annotation.unused
@@ -170,7 +170,7 @@ object MouseDragListener
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */
-trait MouseDragListener extends Handleable2
+trait MouseDragListener extends Handleable
 {
 	// ABSTRACT ----------------------------
 	

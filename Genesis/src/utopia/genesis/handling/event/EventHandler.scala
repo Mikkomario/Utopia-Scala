@@ -1,14 +1,14 @@
 package utopia.genesis.handling.event
 
 import utopia.flow.operator.filter.Filter
-import utopia.genesis.handling.template.{Handleable2, Handler2}
+import utopia.genesis.handling.template.{Handleable, Handler}
 
 /**
   * Event handlers distribute events for the handleable instances
   * @author Mikko Hilpinen
   * @since 10.5.2019, v1+
   */
-trait EventHandler2[Listener <: Handleable2, -Event] extends Handler2[Listener]
+trait EventHandler[Listener <: Handleable, -Event] extends Handler[Listener]
 {
 	// ABSTRACT -----------------------
 	

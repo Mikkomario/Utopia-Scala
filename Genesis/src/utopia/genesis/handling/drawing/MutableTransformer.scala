@@ -12,7 +12,7 @@ import utopia.paradigm.transform.AffineTransformation
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-class MutableTransformer(item: Drawable2, initialTransform: AffineTransformation = AffineTransformation.identity)
+class MutableTransformer(item: Drawable, initialTransform: AffineTransformation = AffineTransformation.identity)
 	extends DrawableWrapper with MutableTransformable with CoordinateTransform
 {
 	// ATTRIBUTES   ----------------------
@@ -28,7 +28,7 @@ class MutableTransformer(item: Drawable2, initialTransform: AffineTransformation
 	
 	// IMPLEMENTED  ----------------------
 	
-	override protected def wrapped: Drawable2 = transformer
+	override protected def wrapped: Drawable = transformer
 	
 	override def transformation: AffineTransformation = transformPointer.value
 	override def transformation_=(newTransformation: AffineTransformation): Unit =

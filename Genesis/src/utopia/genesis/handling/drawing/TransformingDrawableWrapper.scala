@@ -12,14 +12,14 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
   * @author Mikko Hilpinen
   * @since 11/02/2024, v4.0
   */
-trait TransformingDrawableWrapper extends Drawable2 with CoordinateTransform
+trait TransformingDrawableWrapper extends Drawable with CoordinateTransform
 {
 	// ABSTRACT ------------------------
 	
 	/**
 	  * @return The wrapped item
 	  */
-	protected def wrapped: Drawable2
+	protected def wrapped: Drawable
 	
 	/**
 	  * @return Handler used for delivering transformed mouse events

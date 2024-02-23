@@ -6,7 +6,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.animation.AnimationEvent.{Completed, Paused, Started}
 import utopia.genesis.handling.event.animation.AnimationListener.AnimationEventFilter
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -156,7 +156,7 @@ object AnimationListener
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-trait AnimationListener extends Handleable2
+trait AnimationListener extends Handleable
 {
 	/**
 	  * @return Filter applied to incoming animation events.

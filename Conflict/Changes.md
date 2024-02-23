@@ -11,6 +11,7 @@ Refactoring based on Genesis changes
 - **CollisionHandler** class was completely rewritten
   - The new implementation is mutable. Immutable version was removed.
 ### Other
+- This module is no longer dependent from the **Inception** module
 - This release has not been properly tested. Exercise discretion.
 
 ## v1.4.5 - 22.01.2024

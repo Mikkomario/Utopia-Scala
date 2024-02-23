@@ -7,7 +7,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.template.vector.DoubleVector
 
@@ -126,7 +126,7 @@ object MouseOverListener
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-trait MouseOverListener extends Handleable2 with Area2D
+trait MouseOverListener extends Handleable with Area2D
 {
 	/**
 	  * @return A filter applied to incoming mouse over events.

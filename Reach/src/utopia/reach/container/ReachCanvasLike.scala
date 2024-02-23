@@ -1,14 +1,13 @@
 package utopia.reach.container
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.genesis.graphics.Priority2
+import utopia.genesis.graphics.{PaintManager2, Priority2}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager
-import utopia.reach.drawing.{PaintManager, Priority}
 
 import scala.collection.immutable.VectorBuilder
 
@@ -29,7 +28,7 @@ trait ReachCanvasLike
 	/**
 	  * @return A painter that will draw canvas content. None while not set up.
 	  */
-	protected def currentPainter: Option[PaintManager]
+	protected def currentPainter: Option[PaintManager2]
 	
 	/**
 	  * Object that manages focus between the components in this canvas element

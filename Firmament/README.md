@@ -4,7 +4,6 @@ Utopia module for building GUI layouts. Basis for both **Reach** and **Reflectio
 ## Parent Modules
 - Flow
 - Paradigm
-- Inception
 - Genesis
 
 ## Main Features

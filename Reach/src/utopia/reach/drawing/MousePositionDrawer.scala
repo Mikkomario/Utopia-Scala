@@ -55,7 +55,7 @@ class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]]
 	
 	override def onMouseMove(event: MouseMoveEvent): Unit = componentPointer.value.foreach { c =>
 		val oldP = lastMousePosition
-		lastMousePosition = event.relativeTo(c.position).mousePosition
+		lastMousePosition = event.position.relative - c.position
 		c.repaintArea(Bounds.between(oldP, lastMousePosition).enlarged(radius * 2.0))
 	}
 	

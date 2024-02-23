@@ -4,7 +4,7 @@ import utopia.conflict.collision.CollisionShape
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
-import utopia.genesis.handling.template.{AbstractHandler2, Handleable2}
+import utopia.genesis.handling.template.{AbstractHandler, Handleable}
 
 import scala.collection.mutable
 
@@ -15,8 +15,8 @@ import scala.collection.mutable
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-abstract class CollisionPartyHandler[A <: Handleable2 with HasCollisionShape](initialItems: IterableOnce[A])
-    extends AbstractHandler2[A](initialItems)
+abstract class CollisionPartyHandler[A <: Handleable with HasCollisionShape](initialItems: IterableOnce[A])
+    extends AbstractHandler[A](initialItems)
 {
     // ATTRIBUTES   ----------------------
     

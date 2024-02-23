@@ -4,7 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.template.{Handleable2, Handlers}
+import utopia.genesis.handling.template.{Handleable, Handlers}
 
 import scala.collection.mutable
 
@@ -14,7 +14,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 12.9.2020, v2.4
   */
-object CommonMouseEvents extends mutable.Growable[Handleable2]
+object CommonMouseEvents extends mutable.Growable[Handleable]
 {
 	// ATTRIBUTES	--------------------------------
 	
@@ -50,7 +50,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override def addOne(elem: Handleable2) = {
+	override def addOne(elem: Handleable) = {
 		handlers += elem
 		this
 	}
@@ -123,7 +123,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	@deprecated("Deprecated for removal", "v4.0")
 	def register(item: Any) = item match {
 		case generator: MouseEventGenerator => registerGenerator(generator)
-		case listener: Handleable2 => handlers += listener
+		case listener: Handleable => handlers += listener
 		case _ => ()
 	}
 	/**
@@ -133,7 +133,7 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	@deprecated("Deprecated for removal", "v4.0")
 	def unregister(item: Any) = item match {
 		case generator: MouseEventGenerator => unregisterGenerator(generator)
-		case listener: Handleable2 => handlers -= listener
+		case listener: Handleable => handlers -= listener
 		case _ => ()
 	}
 	
@@ -141,12 +141,12 @@ object CommonMouseEvents extends mutable.Growable[Handleable2]
 	  * Removes a mouse event listener
 	  * @param listener A listener that will no longer receive mouse-related events
 	  */
-	def -=(listener: Handleable2) = handlers -= listener
+	def -=(listener: Handleable) = handlers -= listener
 	/**
 	  * Removes 0-n mouse event listeners
 	  * @param listeners Listeners to remove from receiving mouse-related events
 	  */
-	def --=(listeners: IterableOnce[Handleable2]) = handlers --= listeners
+	def --=(listeners: IterableOnce[Handleable]) = handlers --= listeners
 	
 	
 	// NESTED   -------------------------

@@ -5,7 +5,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.genesis.handling.event.keyboard.Key.BackSpace
+import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Esc, FunctionKey}
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyTypedListener, KeyboardEvents}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
@@ -20,8 +20,6 @@ import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
 import utopia.reach.window.ReachWindow
-
-import java.awt.event.KeyEvent
 
 /**
   * A simple test for the reach component implementation
@@ -59,12 +57,12 @@ object ReachComponentTest extends App
 							// 2.1: Clear Button
 							val clearButton = factories.mapContext { _ / Secondary }(TextButton)
 								.withFocusListener(focusReporter("Clear Button"))
-								.triggeredWithKeyIndex(KeyEvent.VK_F1)
+								.triggeredWith(FunctionKey(1))
 								.apply("Clear (F1)") { editableLabel.text = "" }
 							// 2.2: Close Button
 							val closeButtonFactory = factories.mapContext { _ / Primary }(ImageAndTextButton)
 								.withFocusListener(focusReporter("Close Button"))
-								.triggeredWithKeyIndex(KeyEvent.VK_ESCAPE)
+								.triggeredWith(Esc)
 							val closeButton = closeButtonFactory.sizeChanging
 								.apply(SingleColorIcon(
 									Image.readFrom("Reach/test-images/close.png").getOrElse(Image.empty).cropped),

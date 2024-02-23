@@ -3,8 +3,8 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.consume.{ConsumableEventHandler2, ConsumeChoice}
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.event.consume.{ConsumableEventHandler, ConsumeChoice}
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -43,8 +43,8 @@ object MouseWheelHandler
   */
 class MouseWheelHandler(initialListeners: IterableOnce[MouseWheelListener] = Iterable.empty,
                         additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[MouseWheelListener](initialListeners, additionalCondition)
-		with ConsumableEventHandler2[MouseWheelListener, MouseWheelEvent] with MouseWheelListener
+	extends DeepHandler[MouseWheelListener](initialListeners, additionalCondition)
+		with ConsumableEventHandler[MouseWheelListener, MouseWheelEvent] with MouseWheelListener
 {
 	override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
 	
@@ -55,7 +55,7 @@ class MouseWheelHandler(initialListeners: IterableOnce[MouseWheelListener] = Ite
 	
 	override def onMouseWheelRotated(event: MouseWheelEvent): ConsumeChoice = distribute(event)._2
 	
-	override protected def asHandleable(item: Handleable2): Option[MouseWheelListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[MouseWheelListener] = item match {
 		case l: MouseWheelListener => Some(l)
 		case _ => None
 	}

@@ -1,8 +1,7 @@
 package utopia.conflict.handling
 
-import utopia.conflict.collision.{Collision, CollisionShape}
-import utopia.genesis.handling.template.Handleable2
-import utopia.inception.handling.Handleable
+import utopia.conflict.collision.Collision
+import utopia.genesis.handling.template.Handleable
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -12,7 +11,7 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-trait CollisionListener extends Handleable2 with HasCollisionShape
+trait CollisionListener extends Handleable with HasCollisionShape
 {
     // ABSTRACT   ----------------
     

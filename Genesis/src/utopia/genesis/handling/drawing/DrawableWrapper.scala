@@ -9,14 +9,14 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-trait DrawableWrapper extends Drawable2
+trait DrawableWrapper extends Drawable
 {
 	// ABSTRACT    -----------------------
 	
 	/**
 	  * @return The wrapped drawable instance
 	  */
-	protected def wrapped: Drawable2
+	protected def wrapped: Drawable
 	
 	
 	// IMPLEMENTED  -----------------------

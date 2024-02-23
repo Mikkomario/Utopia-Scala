@@ -2,14 +2,14 @@ package utopia.genesis.handling.event.consume
 
 import utopia.flow.operator.filter.Filter
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
-import utopia.genesis.handling.template.{Handleable2, Handler2}
+import utopia.genesis.handling.template.{Handleable, Handler}
 
 /**
   * A common trait for event-distributing handlers that deal with consumable events
   * @author Mikko Hilpinen
   * @since 05/02/2024, v4.0
   */
-trait ConsumableEventHandler2[Listener <: Handleable2, Event <: Consumable[Event]] extends Handler2[Listener]
+trait ConsumableEventHandler[Listener <: Handleable, Event <: Consumable[Event]] extends Handler[Listener]
 {
 	// ABSTRACT ------------------------
 	

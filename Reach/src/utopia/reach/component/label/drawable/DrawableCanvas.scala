@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{Drawer, Priority2}
-import utopia.genesis.handling.drawing.{DrawableHandler2, Repositioner}
+import utopia.genesis.handling.drawing.{DrawableHandler, Repositioner}
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.FillAreaLogic.ScalePreservingShape
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -36,7 +36,7 @@ class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaP
 	
 	private val visualSizePointer = CopyOnDemand(sizePointer)
 	
-	private val drawHandler = DrawableHandler2.withClipPointer(viewAreaPointer)
+	private val drawHandler = DrawableHandler.withClipPointer(viewAreaPointer)
 		.withVisibilityPointer(parentHierarchy.linkPointer).withFpsLimits(fpsLimits).empty
 	private val wrapper = new Repositioner(drawHandler, Left(Fixed(Point.origin), visualSizePointer), scalingLogic)
 	

@@ -15,7 +15,6 @@ import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener}
-import utopia.inception.handling.immutable.Handleable
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -217,7 +216,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	
 	// NESTED	-------------------------------
 	
-	private object ShowPopupKeyListener extends KeyStateListener with Handleable with MouseButtonStateListener
+	private object ShowPopupKeyListener extends KeyStateListener with MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		

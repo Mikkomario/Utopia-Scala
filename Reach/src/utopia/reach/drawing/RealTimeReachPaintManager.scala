@@ -5,7 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.genesis.graphics.{Drawer, Priority2}
+import utopia.genesis.graphics.{Drawer, PaintManager2, Priority2}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Axis2D
@@ -17,6 +17,7 @@ import utopia.reach.component.template.ReachComponentLike
 
 import java.awt.{Graphics2D, Toolkit}
 import javax.swing.RepaintManager
+import scala.annotation.unused
 import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 
@@ -49,7 +50,7 @@ object RealTimeReachPaintManager
 //  (used for moving window contents while still keeping component position as (0,0))
 class RealTimeReachPaintManager(component: ReachComponentLike, background: => Option[Color] = None, maxQueueSize: Int = 30,
                                 disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
-	extends PaintManager
+	extends PaintManager2
 {
 	// ATTRIBUTES	---------------------------------
 	
@@ -83,21 +84,6 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		// Checks whether component size changed. Invalidates buffer if so.
 		checkForSizeChanges()
 		flatten().drawWith(drawer, component.position)
-	}
-	
-	override def paint(region: Option[Bounds], priority: Priority2): Unit = {
-		// May have to repaint if component size had changed since the last paint
-		checkForSizeChanges()
-		// Makes sure the image buffer is up to date
-		val newImage = flatten(region)
-		// Paints the image buffer, at least partially
-		paint { drawer =>
-			val modifiedDrawer = region match {
-				case Some(region) => drawer.clippedToBounds(region)
-				case None => drawer
-			}
-			newImage.drawWith(modifiedDrawer, component.position)
-		}
 	}
 	
 	override def repaint(region: Option[Bounds], priority: Priority2) = region.map { _.ceil } match {
@@ -183,12 +169,27 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 		}
 	}
 	
-	// Updates the buffer and processes data from the image
-	override def averageShadeOf(area: Bounds) =
-		ColorShade.forLuminosity(flatten().averageRelativeLuminanceOf(area))
-	
 	
 	// OTHER	-------------------------------------
+	
+	// TODO: Possibly remove - This function was previously part of the PaintManager interface
+	def paint(region: Option[Bounds], @unused priority: Priority2): Unit = {
+		// May have to repaint if component size had changed since the last paint
+		checkForSizeChanges()
+		// Makes sure the image buffer is up to date
+		val newImage = flatten(region)
+		// Paints the image buffer, at least partially
+		paint { drawer =>
+			val modifiedDrawer = region match {
+				case Some(region) => drawer.clippedToBounds(region)
+				case None => drawer
+			}
+			newImage.drawWith(modifiedDrawer, component.position)
+		}
+	}
+	
+	// Updates the buffer and processes data from the image
+	def averageShadeOf(area: Bounds) = ColorShade.forLuminosity(flatten().averageRelativeLuminanceOf(area))
 	
 	/**
 	  * @return Resets the buffer, so that the next draw operation will completely redraw the component contents

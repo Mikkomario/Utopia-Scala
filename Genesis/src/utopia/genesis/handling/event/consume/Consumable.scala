@@ -8,12 +8,16 @@ object Consumable
 {
 	// ATTRIBUTES   -----------------
 	
-	@deprecated("Please use .unconsumedFilter instead", "v4.0")
-	val notConsumedFilter: utopia.inception.util.Filter[Consumable[_]] = !_.isConsumed
 	/**
 	  * A filter that only accepts unconsumed items
 	  */
 	val unconsumedFilter: Filter[Consumable[_]] = _.unconsumed
+	
+	
+	// COMPUTED ---------------------
+	
+	@deprecated("Please use .unconsumedFilter instead", "v4.0")
+	def notConsumedFilter = unconsumedFilter
 }
 
 /**

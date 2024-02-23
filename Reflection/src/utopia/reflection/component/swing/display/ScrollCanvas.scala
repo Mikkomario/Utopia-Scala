@@ -13,7 +13,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel2.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler
-import utopia.genesis.handling.drawing.DrawableHandler2
+import utopia.genesis.handling.drawing.DrawableHandler
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.util.Fps
 import utopia.genesis.view.RepaintLoop
@@ -44,7 +44,7 @@ object ScrollCanvas
 	  * @param context Component creation context (implicit)
 	  * @return A new scroll canvas
 	  */
-	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler2, contentMouseButtonHandler: MouseButtonStateHandler,
+	def contextual(originalWorldSize: Size, drawHandler: DrawableHandler, contentMouseButtonHandler: MouseButtonStateHandler,
 	               contentMouseMoveHandler: MouseMoveHandler, contentMouseWheelHandler: MouseWheelHandler,
 	               maxOptimalSize: Option[Size] = None)(implicit context: ScrollingContext) =
 	{
@@ -75,7 +75,7 @@ object ScrollCanvas
   *                                 content (default = false)
   */
 @deprecated("Deprecated for removal. If possible, please convert to using DrawableCanvas in Reach instead", "v2.1.2")
-class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler2, actorHandler: ActorHandler,
+class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, actorHandler: ActorHandler,
                    val contentMouseButtonHandler: MouseButtonStateHandler, val contentMouseMoveHandler: MouseMoveHandler,
                    val contentMouseWheelHandler: MouseWheelHandler, maxOptimalSize: Option[Size],
                    scrollBarDrawer: ScrollBarDrawerLike, scrollBarWidth: Int = ComponentCreationDefaults.scrollBarWidth,

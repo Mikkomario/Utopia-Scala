@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.modifier.OverwriteSizeModifier
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.handling.action.ActorHandler
-import utopia.genesis.handling.event.animation.{Animator2, AnimatorInstruction}
+import utopia.genesis.handling.event.animation.{Animator, AnimatorInstruction}
 import utopia.genesis.image.{Image, Strip}
 import utopia.genesis.util.Fps
 import utopia.paradigm.angular.DirectionalRotation
@@ -31,7 +31,7 @@ object AnimationLabel
 	def withRotatingImage(actorHandler: ActorHandler, image: Image, rotation: TimedAnimation[DirectionalRotation]) =
 	{
 		val instruction = AnimatorInstruction(rotation.map { r => (image, Some(Matrix2D.rotation(r))) }, loops = true)
-		val animator = new Animator2(Fixed(instruction))
+		val animator = new Animator(Fixed(instruction))
 		
 		val label = new AnimationLabel(actorHandler, animator)
 		
@@ -52,7 +52,7 @@ object AnimationLabel
 	  */
 	def withSprite(actorHandler: ActorHandler, strip: Strip, animationSpeed: Fps) = {
 		val instruction = AnimatorInstruction(strip.toTimedAnimation(animationSpeed).map { _ -> None }, loops = true)
-		val animator = new Animator2(Fixed(instruction))
+		val animator = new Animator(Fixed(instruction))
 		val label = new AnimationLabel(actorHandler, animator)
 		
 		label.addConstraint(OverwriteSizeModifier(StackSize.any(strip.size)))
@@ -91,7 +91,7 @@ object AnimationLabel
   * @param allowUpscaling Whether the image should be allowed to scale above its size (default = false)
   * @param isLowPriority Whether this label's stack size should be low priority
   */
-class AnimationLabel(actorHandler: ActorHandler, animator: Animator2[(Image, Option[Matrix2D])],
+class AnimationLabel(actorHandler: ActorHandler, animator: Animator[(Image, Option[Matrix2D])],
                      allowUpscaling: Boolean = false, isLowPriority: Boolean = false)
 	extends ReflectionStackableWrapper with ConstrainableWrapper with AwtComponentRelated
 {

@@ -4,7 +4,7 @@ import utopia.conflict.collision.{Collision, CollisionShape}
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.Actor
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -63,7 +63,7 @@ class CollisionHandler(targetHandler: CollisionTargetHandler,
         activeCollisions.foreach { case (listener, collisions) => listener.onCollision(collisions, duration) }
     }
     
-    override protected def asHandleable(item: Handleable2): Option[CollisionListener] = item match {
+    override protected def asHandleable(item: Handleable): Option[CollisionListener] = item match {
         case l: CollisionListener => Some(l)
         case _ => None
     }

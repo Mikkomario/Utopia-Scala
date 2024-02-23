@@ -7,7 +7,7 @@ import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.VerticalDirection
 import utopia.paradigm.shape.shape2d.area.Area2D
@@ -163,7 +163,7 @@ object MouseWheelListener
   * @author Mikko Hilpinen
   * @since 6.2.2024, v4.0
   */
-trait MouseWheelListener extends Handleable2
+trait MouseWheelListener extends Handleable
 {
     /**
       * @return A filter applied to incoming events.

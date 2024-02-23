@@ -3,8 +3,8 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.EventHandler2
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.event.EventHandler
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -43,8 +43,8 @@ object KeyStateHandler
   */
 class KeyStateHandler(initialListeners: IterableOnce[KeyStateListener] = Iterable.empty,
                       additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[KeyStateListener](initialListeners, additionalCondition)
-		with EventHandler2[KeyStateListener, KeyStateEvent] with KeyStateListener
+	extends DeepHandler[KeyStateListener](initialListeners, additionalCondition)
+		with EventHandler[KeyStateListener, KeyStateEvent] with KeyStateListener
 {
 	override def keyStateEventFilter: Filter[KeyStateEvent] = AcceptAll
 	
@@ -55,7 +55,7 @@ class KeyStateHandler(initialListeners: IterableOnce[KeyStateListener] = Iterabl
 	override protected def deliver(listener: KeyStateListener, event: KeyStateEvent): Unit =
 		listener.onKeyState(event)
 	
-	override protected def asHandleable(item: Handleable2): Option[KeyStateListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[KeyStateListener] = item match {
 		case l: KeyStateListener => Some(l)
 		case _ => None
 	}

@@ -3,7 +3,7 @@ package utopia.genesis.handling.drawing
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Priority2.Normal
 import utopia.genesis.graphics.{DrawOrder, Drawer, Priority2}
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 /**
@@ -11,7 +11,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
  * @author Mikko Hilpinen
  * @since 28.12.2016
  */
-trait Drawable2 extends Handleable2
+trait Drawable extends Handleable
 {
     // ABSTRACT ------------------------
     

@@ -2,7 +2,7 @@ package utopia.conflict.handling
 
 import utopia.conflict.collision.CollisionShape
 import utopia.flow.collection.template.factory.FromCollectionFactory
-import utopia.genesis.handling.template.Handleable2
+import utopia.genesis.handling.template.Handleable
 
 object CollisionTargetHandler extends FromCollectionFactory[CanCollideWith, CollisionTargetHandler]
 {
@@ -38,7 +38,7 @@ class CollisionTargetHandler(initialItems: IterableOnce[CanCollideWith])
     // Provides public access to the updated collision targets
     override def popUpdatedTargets() = super.popUpdatedTargets()
     
-    override protected def asHandleable(item: Handleable2): Option[CanCollideWith] = item match {
+    override protected def asHandleable(item: Handleable): Option[CanCollideWith] = item match {
         case c: CanCollideWith => Some(c)
         case _ => None
     }

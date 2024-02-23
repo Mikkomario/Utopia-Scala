@@ -3,8 +3,8 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.EventHandler2
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.event.EventHandler
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -43,8 +43,8 @@ object MouseDragHandler
   */
 class MouseDragHandler(initialListeners: IterableOnce[MouseDragListener] = Iterable.empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[MouseDragListener](initialListeners, additionalCondition)
-		with EventHandler2[MouseDragListener, MouseDragEvent] with MouseDragListener
+	extends DeepHandler[MouseDragListener](initialListeners, additionalCondition)
+		with EventHandler[MouseDragListener, MouseDragEvent] with MouseDragListener
 {
 	override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 	
@@ -55,7 +55,7 @@ class MouseDragHandler(initialListeners: IterableOnce[MouseDragListener] = Itera
 	
 	override def onMouseDrag(event: MouseDragEvent): Unit = distribute(event)
 	
-	override protected def asHandleable(item: Handleable2): Option[MouseDragListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[MouseDragListener] = item match {
 		case l: MouseDragListener => Some(l)
 		case _ => None
 	}

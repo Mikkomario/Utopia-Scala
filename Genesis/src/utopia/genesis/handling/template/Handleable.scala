@@ -7,13 +7,13 @@ import utopia.flow.view.template.eventful.FlagLike
   * @author Mikko Hilpinen
   * @since 30/01/2024, v4.0
   */
-trait Handleable2
+trait Handleable
 {
 	// ABSTRACT ---------------------
 	
 	/**
 	  * @return A condition that must be met in order for this item to be handled.
-	  *         The [[Handler2]] implementations *should* respect this condition.
+	  *         The [[Handler]] implementations *should* respect this condition.
 	  */
 	def handleCondition: FlagLike
 	

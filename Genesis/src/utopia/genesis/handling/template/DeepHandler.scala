@@ -9,9 +9,9 @@ import FlagLike._
   * @author Mikko Hilpinen
   * @since 01/02/2024, v4.0
   */
-abstract class DeepHandler2[A <: Handleable2](initialItems: IterableOnce[A] = Vector.empty,
-                                              additionalHandleCondition: Changing[Boolean] = AlwaysTrue)
-	extends AbstractHandler2[A](initialItems) with Handleable2
+abstract class DeepHandler[A <: Handleable](initialItems: IterableOnce[A] = Vector.empty,
+                                            additionalHandleCondition: Changing[Boolean] = AlwaysTrue)
+	extends AbstractHandler[A](initialItems) with Handleable
 {
 	// ATTRIBUTES   --------------------
 	

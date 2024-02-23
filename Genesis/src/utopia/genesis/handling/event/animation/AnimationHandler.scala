@@ -3,9 +3,9 @@ package utopia.genesis.handling.event.animation
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.event.EventHandler2
+import utopia.genesis.handling.event.EventHandler
 import utopia.genesis.handling.event.animation.AnimationListener.AnimationEventFilter
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
 import scala.language.implicitConversions
@@ -46,8 +46,8 @@ object AnimationHandler
   */
 class AnimationHandler(initialListeners: IterableOnce[AnimationListener] = Iterable.empty,
                        additionalCondition: FlagLike = AlwaysTrue)
-	extends DeepHandler2[AnimationListener](initialListeners, additionalCondition)
-		with EventHandler2[AnimationListener, AnimationEvent] with AnimationListener
+	extends DeepHandler[AnimationListener](initialListeners, additionalCondition)
+		with EventHandler[AnimationListener, AnimationEvent] with AnimationListener
 {
 	override def animationEventFilter: AnimationEventFilter = AcceptAll
 	
@@ -57,7 +57,7 @@ class AnimationHandler(initialListeners: IterableOnce[AnimationListener] = Itera
 	override protected def deliver(listener: AnimationListener, event: AnimationEvent): Unit =
 		listener.onAnimationEvent(event)
 	
-	override protected def asHandleable(item: Handleable2): Option[AnimationListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[AnimationListener] = item match {
 		case l: AnimationListener => Some(l)
 		case _ => None
 	}

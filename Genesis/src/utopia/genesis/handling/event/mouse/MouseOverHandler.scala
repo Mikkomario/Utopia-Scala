@@ -6,7 +6,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.action.Actor
-import utopia.genesis.handling.template.{DeepHandler2, Handleable2, HandlerFactory}
+import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import java.time.Instant
@@ -48,7 +48,7 @@ object MouseOverHandler
   */
 class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Iterable.empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
-	extends DeepHandler2[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener
+	extends DeepHandler[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -99,7 +99,7 @@ class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Itera
 		}
 	}
 	
-	override protected def asHandleable(item: Handleable2): Option[MouseOverListener] = item match {
+	override protected def asHandleable(item: Handleable): Option[MouseOverListener] = item match {
 		case l: MouseOverListener => Some(l)
 		case _ => None
 	}
