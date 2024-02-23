@@ -27,7 +27,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private implicit val focusOrdering: Ordering[Point] =
 		new CombinedOrdering[Point](Vector(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))
 	
-	private val targetsPointer = new EventfulPointer(Set[Focusable]())
+	private val targetsPointer = EventfulPointer(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
 		sortComponents(targets.map { c => c.parentHierarchy.toVector -> c }.toVector) }
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }

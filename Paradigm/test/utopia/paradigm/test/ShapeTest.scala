@@ -177,5 +177,13 @@ object ShapeTest extends App
         Polygon(Point(-0.5), Point(-32, 32), Point(32, 32), Point(0.5))
     ), nonConvexPolygon.convexParts)
     
+    // Tests bounds-transformations
+    val bt1 = Bounds(Point(-5, -5), Size(10, 10))
+    val transformed1 = bt1.rotated(Rotation.degrees(45).clockwise)
+    println()
+    println(transformed1)
+    println(transformed1.corners.map { _.round }.mkString(", "))
+    println(transformed1.bounds)
+    
     println("Success!")
 }

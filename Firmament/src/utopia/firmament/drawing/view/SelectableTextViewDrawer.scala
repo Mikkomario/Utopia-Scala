@@ -31,7 +31,7 @@ case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePo
 {
 	// ATTRIBUTES	------------------------------
 	
-	override protected val lastDrawStatusPointer = new EventfulPointer(Point.origin -> Vector2D.identity)
+	override protected val lastDrawStatusPointer = EventfulPointer(Point.origin -> Vector2D.identity)
 	
 	/**
 	  * Pointer to the currently drawn targets

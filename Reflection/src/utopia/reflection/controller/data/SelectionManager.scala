@@ -20,7 +20,7 @@ trait SelectionManager[A, C <: Refreshable[A]] extends ContentManager[A, C] with
 	
 	// TODO: Value pointer should be settable from outside
 	private var _selectedDisplay: Option[C] = None
-	override val valuePointer = new EventfulPointer[Option[A]](None)
+	override val valuePointer = EventfulPointer[Option[A]](None)
 	
 	
 	// INITIAL CODE	-------------------

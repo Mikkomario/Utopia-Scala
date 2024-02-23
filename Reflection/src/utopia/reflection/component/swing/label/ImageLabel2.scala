@@ -40,7 +40,7 @@ class ImageLabel2(initialImage: Image, override val allowUpscaling: Boolean = fa
 {
 	// ATTRIBUTES	-----------------
 	
-	override val contentPointer = new EventfulPointer(initialImage)
+	override val contentPointer = EventfulPointer(initialImage)
 	/**
 	  * Pointer that contains the currently displayed transformation applied to the drawn image
 	  */

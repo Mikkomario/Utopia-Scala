@@ -16,7 +16,7 @@ object ReachRadioButtonsTest extends App
 	import ReachTestContext._
 	
 	// Controls
-	private val valuePointer = new EventfulPointer(1)
+	private val valuePointer = EventfulPointer(1)
 	
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>

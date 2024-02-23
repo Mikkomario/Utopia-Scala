@@ -91,11 +91,11 @@ class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initial
 	/**
 	  * A mutable pointer that contains this label's style
 	  */
-	val stylePointer = new EventfulPointer(initialStyle)
+	val stylePointer = EventfulPointer(initialStyle)
 	/**
 	  * A mutable pointer that contains this label's text
 	  */
-	val textPointer = new EventfulPointer(initialText)
+	val textPointer = EventfulPointer(initialText)
 	/**
 	  * A pointer to this label's measured text
 	  */

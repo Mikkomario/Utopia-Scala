@@ -17,7 +17,7 @@ object ReachWindowTest extends App
 {
 	import ReachTestContext._
 	
-	val textPointer = new EventfulPointer("Text")
+	val textPointer = EventfulPointer("Text")
 	
 	val window = ReachWindow.withResizeLogic(User)
 		.withWindowBackground(colors.primary.default).muchLarger

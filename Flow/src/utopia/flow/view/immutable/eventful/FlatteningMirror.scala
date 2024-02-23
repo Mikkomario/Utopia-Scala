@@ -54,7 +54,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	// Pointer that contains the currently tracked mid-pointer
 	private val pointerPointer = source.incrementalMap(initialMap)(incrementMap)
 	// Pointer that contains the currently simulated value
-	private val pointer = new EventfulPointer[R](pointerPointer.value.value)
+	private val pointer = EventfulPointer[R](pointerPointer.value.value)
 	
 	// Stop listeners are stored here while the source pointer is changing
 	// Once (if) the source stops changing, transfers these over to the resulting pointer

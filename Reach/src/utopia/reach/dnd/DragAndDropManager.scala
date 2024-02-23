@@ -40,7 +40,7 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 	private var mousePosition = Point.origin
 	private var hoverTargets = Set[DragAndDropTarget]()
 	
-	private val targetsPointer = new EventfulPointer(Vector[DragAndDropTarget]())
+	private val targetsPointer = EventfulPointer(Vector[DragAndDropTarget]())
 	
 	
 	// INITIAL CODE -------------------------

@@ -22,7 +22,7 @@ object AsyncViewTest extends App
 	val waitLock = new AnyRef
 	
 	// Controlled pointer
-	val original = new EventfulPointer[Int](0)
+	val original = EventfulPointer[Int](0)
 	// Pointer that updates with a delay
 	val delayed = original.delayedBy(delay)
 	// Pointer that slowly adds 1 to the original pointer value and performs a single calculation at a time

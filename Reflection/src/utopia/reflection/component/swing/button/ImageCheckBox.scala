@@ -26,7 +26,7 @@ class ImageCheckBox(offImages: ButtonImageSet, onImages: ButtonImageSet, hotKeys
 	// ATTRIBUTES	---------------------
 	
 	private val label = new ImageLabel(if (initialState) onImages.default else offImages.default)
-	override val valuePointer = new EventfulPointer(initialState)
+	override val valuePointer = EventfulPointer(initialState)
 	
 	
 	// INITIAL CODE	---------------------

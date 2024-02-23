@@ -1,6 +1,6 @@
 package utopia.firmament.drawing.view
 
-import utopia.firmament.drawing.immutable.ImageDrawer2
+import utopia.firmament.drawing.immutable.ImageDrawer
 import utopia.firmament.factory.FramedFactory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.util.Mutate
@@ -91,7 +91,7 @@ class ViewImageDrawer(imageView: View[Image], transformationView: View[Option[Ma
                       insetsView: View[StackInsets] = View.fixed(StackInsets.any),
                       alignmentView: View[Alignment] = View.fixed(Center), override val drawLevel: DrawLevel = Normal,
                       override val useUpscaling: Boolean = false)
-	extends ImageDrawer2
+	extends ImageDrawer
 {
 	override def image: Image = imageView.value
 	override def transformation: Option[Matrix2D] = transformationView.value

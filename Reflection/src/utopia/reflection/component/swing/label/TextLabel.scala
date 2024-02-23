@@ -81,11 +81,11 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * A mutable pointer that contains this label's text
 	  */
-	val textPointer = new EventfulPointer(initialText)
+	val textPointer = EventfulPointer(initialText)
 	/**
 	  * A mutable pointer that contains this label's styling
 	  */
-	val stylePointer = new EventfulPointer(TextDrawContext(initialFont, initialTextColor, initialAlignment,
+	val stylePointer = EventfulPointer(TextDrawContext(initialFont, initialTextColor, initialAlignment,
 		initialInsets))
 	
 	private val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) =>

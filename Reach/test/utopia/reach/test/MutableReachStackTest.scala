@@ -38,7 +38,7 @@ object MutableReachStackTest extends App
 	}
 	
 	// Adds stack content management
-	val dataPointer = new EventfulPointer[Vector[Int]](Vector(1, 2, 3))
+	val dataPointer = EventfulPointer[Vector[Int]](Vector(1, 2, 3))
 	ContainerContentDisplayer.forStatelessItems(window.content, dataPointer) { i =>
 		implicit val c: ReachCanvas = window.canvas
 		Open

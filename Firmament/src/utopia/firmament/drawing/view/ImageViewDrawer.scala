@@ -8,6 +8,7 @@ import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 
+@deprecated("Deprecated for removal. Replaced with ViewImageDrawer", "v1.3")
 object ImageViewDrawer
 {
 	/**
@@ -31,6 +32,7 @@ object ImageViewDrawer
   * @author Mikko Hilpinen
   * @since 21.10.2020, Reflection v2
   */
+@deprecated("Deprecated for removal. Replaced with ViewImageDrawer", "v1.3")
 case class ImageViewDrawer(imagePointer: View[Image], insetsPointer: View[StackInsets] = View.fixed(StackInsets.any),
                            alignmentPointer: View[Alignment] = View.fixed(Alignment.Center),
                            override val drawLevel: DrawLevel = Normal,

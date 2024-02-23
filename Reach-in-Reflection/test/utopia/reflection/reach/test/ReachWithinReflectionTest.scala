@@ -26,7 +26,7 @@ object ReachWithinReflectionTest extends App
 	import utopia.reach.test.TestCursors._
 	import utopia.reflection.test.TestContext._
 	
-	val textPointer = new EventfulPointer[String]("")
+	val textPointer = EventfulPointer[String]("")
 	val background = colorScheme.gray.light
 	val canvas = ReflectionReachCanvas(Color.black.withAlpha(0.0), cursors) { hierarchy =>
 		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents)

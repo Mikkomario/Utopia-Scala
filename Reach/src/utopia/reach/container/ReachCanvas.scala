@@ -315,7 +315,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	/**
 	  * A pointer that contains the up-to-date bounds of this canvas
 	  */
-	val boundsPointer = new EventfulPointer(Bounds.zero)
+	val boundsPointer = EventfulPointer(Bounds.zero)
 	// Uses an immutable version of the position and size pointer locally, exposes mutable versions publicly
 	private val _positionPointer = boundsPointer.map { _.position }
 	/**
@@ -592,7 +592,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		private val swapExc = new SingleThreadExecutionContext("Cursor swapper")
 		
 		private val minCursorDistance = 10
-		private val mousePositionPointer = new EventfulPointer(Point.origin)
+		private val mousePositionPointer = EventfulPointer(Point.origin)
 		
 		private lazy val defaultBackgroundShadePointer = backgroundPointer
 			.lazyMap { c => if (c.alpha > 0.0) c.shade else Dark }

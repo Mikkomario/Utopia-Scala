@@ -36,9 +36,9 @@ object ImageViewStackTest extends App
 	val icon2 = Image.readFrom("Reach/test-images/cursor-hand.png").get.withCenterOrigin * 2
 	val icon3 = Image.readFrom("Reach/test-images/cursor-text.png").get
 	
-	val pointer1 = new EventfulPointer(true)
-	val pointer2 = new EventfulPointer(false)
-	val pointer3 = new EventfulPointer(false)
+	val pointer1 = EventfulPointer(true)
+	val pointer2 = EventfulPointer(false)
+	val pointer3 = EventfulPointer(false)
 	
 	// Window[Stack[Label1, Label2]]
 	val window = ReachWindow.contentContextual.using(ViewStack) { (_, stackF) =>

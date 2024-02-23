@@ -29,7 +29,7 @@ object TagView
 	  * @return A new tag view
 	  */
 	def withPointer(rowSplitThreshold: Double,
-	                contentPointer: EventfulPointer[Vector[(String, Color)]] = new EventfulPointer(Vector()),
+	                contentPointer: EventfulPointer[Vector[(String, Color)]] = EventfulPointer(Vector()),
 	                removeIcon: Option[SingleColorIcon] = None)
 	         (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
 		new TagView(context, rowSplitThreshold, removeIcon, contentPointer)
@@ -47,7 +47,7 @@ object TagView
 	def apply(rowSplitThreshold: Double, initialTags: Vector[(String, Color)] = Vector(),
 	          removeIcon: Option[SingleColorIcon] = None)
 	         (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
-		withPointer(rowSplitThreshold, new EventfulPointer(initialTags), removeIcon)
+		withPointer(rowSplitThreshold, EventfulPointer(initialTags), removeIcon)
 	
 	/**
 	  * Creates a new tag view
@@ -60,7 +60,7 @@ object TagView
 	  * @return A new tag view
 	  */
 	def withPointerWithRemovalEnabled(rowSplitThreshold: Double, removeIcon: SingleColorIcon,
-	                                  contentPointer: EventfulPointer[Vector[(String, Color)]] = new EventfulPointer(Vector()))
+	                                  contentPointer: EventfulPointer[Vector[(String, Color)]] = EventfulPointer(Vector()))
 	                                 (implicit context: TextContext, animationContext: AnimationContext,
 	                                  exc: ExecutionContext) =
 		withPointer(rowSplitThreshold, contentPointer, Some(removeIcon))
@@ -78,7 +78,7 @@ object TagView
 	def withRemovalEnabled(rowSplitThreshold: Double, removeIcon: SingleColorIcon,
 	                       initialTags: Vector[(String, Color)] = Vector())
 	                      (implicit context: TextContext, animationContext: AnimationContext, exc: ExecutionContext) =
-		withPointerWithRemovalEnabled(rowSplitThreshold, removeIcon, new EventfulPointer(initialTags))
+		withPointerWithRemovalEnabled(rowSplitThreshold, removeIcon, EventfulPointer(initialTags))
 }
 
 /**
@@ -93,7 +93,7 @@ object TagView
   * @param exc Implicit execution context
   */
 class TagView(parentContext: TextContext, rowSplitThreshold: Double, removeIcon: Option[SingleColorIcon] = None,
-              override val contentPointer: EventfulPointer[Vector[(String, Color)]] = new EventfulPointer(Vector()))
+              override val contentPointer: EventfulPointer[Vector[(String, Color)]] = EventfulPointer(Vector()))
              (implicit animationContext: AnimationContext, exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with RefreshableWithPointer[Vector[(String, Color)]]
 {

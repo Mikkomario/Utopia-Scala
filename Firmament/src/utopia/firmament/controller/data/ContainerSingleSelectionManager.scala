@@ -33,7 +33,7 @@ object ContainerSingleSelectionManager
 	  */
 	def forStatelessItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display],
 	                                             contentPointer: P[A],
-	                                             valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	                                             valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	                                             equalsCheck: EqualsFunction[A] = EqualsFunction.default)
 												(makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer,
@@ -55,7 +55,7 @@ object ContainerSingleSelectionManager
 	  * @return New content displayer
 	  */
 	def forImmutableStates[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A],
-	                                              valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None))
+	                                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None))
 												 (sameItemCheck: EqualsFunction[A])
 												 (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
@@ -77,7 +77,7 @@ object ContainerSingleSelectionManager
 	  * @return New content displayer
 	  */
 	def forMutableItems[A, W, Display <: D[A]](container: MutableMultiContainer[W, Display], contentPointer: P[A],
-	                                           valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None))
+	                                           valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None))
 											  (sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])
 											  (makeDisplay: A => W) =
 		new ContainerSingleSelectionManager[A, W, Display, P[A]](container, contentPointer, valuePointer, sameItemCheck,
@@ -99,7 +99,7 @@ class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Comp
 {
 	// ATTRIBUTES	----------------------------
 	
-	private val _selectedDisplayPointer = new EventfulPointer[Iterable[Display]](None)
+	private val _selectedDisplayPointer = EventfulPointer[Iterable[Display]](None)
 	
 	
 	// INITIAL CODE ----------------------------

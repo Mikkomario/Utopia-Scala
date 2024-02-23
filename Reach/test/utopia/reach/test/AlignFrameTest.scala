@@ -24,7 +24,7 @@ object AlignFrameTest extends App
 {
 	import ReachTestContext._
 	
-	val contentPointer = new EventfulPointer(1)
+	val contentPointer = EventfulPointer(1)
 	val imgPointer = Fixed(SingleColorIcon(
 		Image.readOrEmpty(Paths.get("Reach/test-images/check-box-selected.png"))
 	))

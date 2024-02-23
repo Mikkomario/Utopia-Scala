@@ -83,7 +83,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new field
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
 	(makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => C)

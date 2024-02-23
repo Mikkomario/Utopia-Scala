@@ -99,7 +99,7 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	
 	// Seals (stops changing) if maps to a final value
 	override def destiny: Destiny =
-		origin.destiny.sealedIf(mayStopMapping && bridge.value.isTemporal).possibleToSealIf(mayStopMapping)
+		origin.destiny.sealedIf { mayStopMapping && bridge.value.isTemporal }.possibleToSealIf(mayStopMapping)
 	
 	override def value: ChangeResult[R] = {
 		val raw = bridge.value

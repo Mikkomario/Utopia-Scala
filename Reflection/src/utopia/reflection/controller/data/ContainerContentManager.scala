@@ -46,7 +46,7 @@ object ContainerContentManager
 	def forStatelessItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector(),
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
-		forStatelessItemsPointer[A, Display](container, new EventfulPointer(initialItems), equalsCheck)(makeDisplay)
+		forStatelessItemsPointer[A, Display](container, EventfulPointer(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object
@@ -85,7 +85,7 @@ object ContainerContentManager
 	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forImmutableStatesPointer[A, Display](container, new EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
+		forImmutableStatesPointer[A, Display](container, EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for mutable / mutating items. Please note that the items may not always update
@@ -124,7 +124,7 @@ object ContainerContentManager
 	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: MultiStack[Display], initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forMutableItemsPointer[A, Display](container, new EventfulPointer(initialItems))(sameItemCheck)(equalsCheck)(makeDisplay)
+		forMutableItemsPointer[A, Display](container, EventfulPointer(initialItems))(sameItemCheck)(equalsCheck)(makeDisplay)
 }
 
 /**
@@ -145,7 +145,7 @@ object ContainerContentManager
   */
 @deprecated("Please use ContainerContentDisplayer instead", "v2.0")
 class ContainerContentManager[A, Container <: MutableMultiContainer[Display, Display] with ReflectionStackable, Display <: ReflectionStackable with Refreshable[A]]
-(container: Container, contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+(container: Container, contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)
 (makeItem: A => Display)
 	extends ContainerContentDisplayer[A, Container, Display, EventfulPointer[Vector[A]]](

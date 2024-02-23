@@ -34,7 +34,7 @@ object ItemLabel
 	def apply[A](font: Font, initialContent: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
 	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
-		new ItemLabel[A](new EventfulPointer[A](initialContent), displayFunction, font, textColor, insets, alignment,
+		new ItemLabel[A](EventfulPointer[A](initialContent), displayFunction, font, textColor, insets, alignment,
 			hasMinWidth)
 	
 	/**
@@ -47,7 +47,7 @@ object ItemLabel
 	  */
 	def contextual[A](content: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 					 (implicit context: TextContext) = contextualWithPointer(
-		new EventfulPointer(content), displayFunction)
+		EventfulPointer(content), displayFunction)
 	
 	/**
 	  * Creates a new label using specified content pointer and contextual information

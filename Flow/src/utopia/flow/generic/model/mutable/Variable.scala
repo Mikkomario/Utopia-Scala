@@ -5,9 +5,8 @@ import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
-import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.AbstractChanging
 
 object Variable
 {
@@ -65,7 +64,22 @@ object Variable
     // NESTED   -----------------------
     
     private class _Variable(override val name: String, initialValue: Value = Value.empty)
-        extends EventfulPointer[Value](initialValue) with Variable
+        extends AbstractChanging[Value] with Variable
+    {
+        private var _value = initialValue
+        override lazy val readOnly = super.readOnly
+        
+        override def value: Value = _value
+        override def value_=(newValue: Value): Unit = {
+            val oldValue = _value
+            _value = newValue
+            fireEventIfNecessary(oldValue).foreach { _() }
+        }
+        
+        override def destiny: Destiny = ForeverFlux
+        
+        override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
+    }
     
     private class FixedTypeVariable(override val name: String, override val dataType: DataType,
                                     initialValue: Value = Value.empty, requireCastingSuccess: Boolean = false)
@@ -106,7 +120,7 @@ object Variable
  * @author Mikko Hilpinen
  * @since 27.11.2016
  */
-trait Variable extends Property with Pointer[Value] with Changing[Value]
+trait Variable extends Property with EventfulPointer[Value]
 {
     // COMP. PROPERTIES    -----------
     

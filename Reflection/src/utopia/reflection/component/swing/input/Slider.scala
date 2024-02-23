@@ -268,7 +268,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private val label = new EmptyLabel()
 	
-	private val progressPointer = new EventfulPointer[Double](initialValue)
+	private val progressPointer = EventfulPointer[Double](initialValue)
 	val valuePointer = {
 		if (stickyPoints.nonEmpty)
 			progressPointer.map { p => range(stickyPointClosestTo(p)) }

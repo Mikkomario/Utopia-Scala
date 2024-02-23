@@ -29,7 +29,7 @@ object ReachSwitchTest extends App
 	import ReachTestContext._
 	
 	// Controls
-	val enabledPointer = new EventfulPointer(true)
+	val enabledPointer = EventfulPointer(true)
 	
 	// Creates the components
 	// Window

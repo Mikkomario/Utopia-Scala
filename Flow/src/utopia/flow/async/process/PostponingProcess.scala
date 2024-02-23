@@ -70,7 +70,7 @@ object PostponingProcess
 				isRestartable = isRestartable) { _ => action }
 		// Case: Default => Uses a postponing process
 		else
-			new RangePostponingRevalidationProcess(new EventfulPointer[WaitTarget](UntilNotified),
+			new RangePostponingRevalidationProcess(EventfulPointer[WaitTarget](UntilNotified),
 				delayRange.start, delayRange.end, Some(shutDownReaction), isRestartable)(action)
 	}
 	

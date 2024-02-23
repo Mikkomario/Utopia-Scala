@@ -1,6 +1,5 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 object LockablePointer
@@ -27,7 +26,7 @@ object LockablePointer
   * @author Mikko Hilpinen
   * @since 26.7.2023, v2.2
   */
-class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Lockable[A] with Pointer[A]
+class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Lockable[A] with EventfulPointer[A]
 {
 	// ATTRIBUTES   -------------------------
 	

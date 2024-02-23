@@ -7,6 +7,7 @@
 ### Bugfixes
 - Fixed **DirectionalRotationLike** `+(C)` implementation, which would previously combine opposite rotations in cases 
   where the first rotation was negative
+- Fixed (removed) **Parallelogramic**`.bounds` implementation
 - Fixed some issues with **Polygonic**`.convexParts`
 ### New features
 - Added **HasMutableSize** trait

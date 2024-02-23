@@ -1,17 +1,21 @@
 package utopia.reach.component.label.image
 
-import utopia.firmament.component.stack.CachingStackable
+import utopia.firmament.component.image.ImageComponent
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, ImageDrawer}
-import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.factory.FramedFactory
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackSize}
+import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.paradigm.transform.LinearSizeAdjustable
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.transform.{LinearSizeAdjustable, LinearTransformable}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -25,6 +29,7 @@ import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponen
   */
 trait ImageLabelSettingsLike[+Repr]
 	extends CustomDrawableFactory[Repr] with FramedFactory[Repr] with FromAlignmentFactory[Repr]
+		with LinearTransformable[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -36,6 +41,11 @@ trait ImageLabelSettingsLike[+Repr]
 	  * Scaling applied to the drawn images
 	  */
 	def imageScaling: Double
+	/**
+	  * @return Transformation applied to the drawn images.
+	  *         None if no transformation should be applied.
+	  */
+	def transformation: Option[Matrix2D]
 	/**
 	  * Color overlay applied over drawn images
 	  */
@@ -65,6 +75,11 @@ trait ImageLabelSettingsLike[+Repr]
 	  */
 	def withImageScaling(scaling: Double): Repr
 	/**
+	  * @param transformation Transformation to apply
+	  * @return Copy of this factory with the specified transformation in place
+	  */
+	def withTransformation(transformation: Option[Matrix2D]): Repr
+	/**
 	  * Whether low priority size constraints should be used
 	  * @param lowPriority Whether low priority image size should be used
 	  * @return Copy of this factory with the specified setting in use
@@ -85,10 +100,21 @@ trait ImageLabelSettingsLike[+Repr]
 	def lowPriority = withUseLowPrioritySize(lowPriority = true)
 	
 	
+	// IMPLEMENTED  ----------------
+	
+	override def transformedWith(transformation: Matrix2D): Repr = mapTransformation {
+		case Some(t) => Some(t * transformation)
+		case None => Some(transformation)
+	}
+	
+	
 	// OTHER	--------------------
 	
 	def mapAlignment(f: Alignment => Alignment) = withAlignment(f(alignment))
 	def mapImageScaling(f: Double => Double) = withImageScaling(f(imageScaling))
+	
+	def withTransformation(transformation: Matrix2D): Repr = withTransformation(Some(transformation))
+	def mapTransformation(f: Mutate[Option[Matrix2D]]) = withTransformation(f(transformation))
 	
 	/**
 	  * @param color Color overlay to add on created image labels
@@ -118,12 +144,14 @@ object ImageLabelSettings
 	  */
 	def from(settings: ImageLabelSettingsLike[_]) = settings match {
 		case s: ImageLabelSettings => s
-		case s => apply(s.insets, s.alignment, s.imageScaling, s.colorOverlay, s.customDrawers, s.usesLowPrioritySize)
+		case s => apply(s.insets, s.alignment, s.imageScaling, s.transformation, s.colorOverlay, s.customDrawers,
+			s.usesLowPrioritySize)
 	}
 }
 case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
-                              imageScaling: Double = 1.0, colorOverlay: Option[Color] = None,
-                              customDrawers: Vector[CustomDrawer] = Vector.empty, usesLowPrioritySize: Boolean = false)
+                               imageScaling: Double = 1.0, transformation: Option[Matrix2D] = None,
+                               colorOverlay: Option[Color] = None, customDrawers: Vector[CustomDrawer] = Vector.empty,
+                               usesLowPrioritySize: Boolean = false)
 	extends ImageLabelSettingsLike[ImageLabelSettings]
 {
 	// COMPUTED ----------------------------
@@ -132,11 +160,16 @@ case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: 
 	  * @return A set of view-image-label-settings that match these settings
 	  */
 	def toViewSettings = ViewImageLabelSettings(customDrawers, Fixed(insets), Fixed(alignment),
-		colorOverlay.map(Fixed.apply), Fixed(imageScaling), usesLowPrioritySize = usesLowPrioritySize)
+		colorOverlay.map(Fixed.apply), Fixed(imageScaling), Fixed(transformation),
+		usesLowPrioritySize = usesLowPrioritySize)
 	
 	
 	// IMPLEMENTED  ------------------------
 	
+	override def identity: ImageLabelSettings = this
+	
+	override def withTransformation(transformation: Option[Matrix2D]): ImageLabelSettings =
+		copy(transformation = transformation)
 	override def withInsets(insets: StackInsetsConvertible): ImageLabelSettings = copy(insets = insets.toInsets)
 	override def withImageScaling(scaling: Double): ImageLabelSettings = copy(imageScaling = scaling)
 	override def withColor(color: Option[Color]): ImageLabelSettings = copy(colorOverlay = color)
@@ -162,6 +195,7 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 	override def colorOverlay: Option[Color] = settings.colorOverlay
 	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
+	override def transformation: Option[Matrix2D] = settings.transformation
 	
 	override def withInsets(insets: StackInsetsConvertible): Repr = mapSettings { _.withInsets(insets) }
 	override def withImageScaling(scaling: Double): Repr = mapSettings { _.withImageScaling(scaling) }
@@ -169,6 +203,8 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 	override def withUseLowPrioritySize(lowPriority: Boolean): Repr = mapSettings { _.withUseLowPrioritySize(lowPriority) }
 	override def apply(alignment: Alignment): Repr = mapSettings { _(alignment) }
 	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withTransformation(transformation: Option[Matrix2D]): Repr =
+		mapSettings { _.withTransformation(transformation) }
 	
 	
 	// OTHER    --------------------------
@@ -189,6 +225,11 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	def toViewFactory: VF
 	
 	
+	// IMPLEMENTED  -----------------------
+	
+	override def identity: Repr = self
+	
+	
 	// OTHER    ---------------------------
 	
 	/**
@@ -201,15 +242,16 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 			case Some(c) => image.withColorOverlay(c)
 			case None => image
 		}
-		new _ImageLabel(parentHierarchy, img * imageScaling, insets, alignment, customDrawers, allowsUpscaling,
-			usesLowPrioritySize)
+		new _ImageLabel(parentHierarchy, img * imageScaling, transformation, insets, alignment, customDrawers,
+			allowsUpscaling, usesLowPrioritySize)
 	}
 	
 	
 	// NESTED   --------------------------------------
 	
 	// A static image label implementation
-	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, override val image: Image,
+	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, image: Image,
+	                          transformation: Option[Matrix2D] = None,
 	                          override val insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 	                          additionalCustomDrawers: Vector[CustomDrawer] = Vector(), override val allowUpscaling: Boolean = true,
 	                          override val useLowPrioritySize: Boolean = false)
@@ -217,19 +259,28 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	{
 		// ATTRIBUTES	------------------------------
 		
-		override val customDrawers = ImageDrawer(image * imageScaling, insets, alignment,
-			useUpscaling = allowUpscaling) +: additionalCustomDrawers
+		override val customDrawers = ImageDrawer
+			.copy(insets = insets, alignment = alignment, transformation = transformation, upscales = allowUpscaling)
+			.apply(image * imageScaling) +:
+			additionalCustomDrawers
+		
+		override val visualImageSize: Size = transformation match {
+			case Some(t) => (image.bounds * t).size
+			case None => image.size
+		}
 		
 		
 		// IMPLEMENTED	------------------------------
 		
 		override def updateLayout() = ()
+		
+		override def imageScaling: Vector2D = image.scaling
 	}
 }
 
 case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
-                             settings: ImageLabelSettings = ImageLabelSettings.default,
-                             allowsUpscaling: Boolean = false)
+                              settings: ImageLabelSettings = ImageLabelSettings.default,
+                              allowsUpscaling: Boolean = false)
 	extends ImageLabelFactoryLike[ImageLabelFactory, ViewImageLabelFactory] with BackgroundAssignable[ImageLabelFactory]
 		with FromContextFactory[ColorContext, ContextualImageLabelFactory]
 {
@@ -260,7 +311,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 }
 
 case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
-                                       settings: ImageLabelSettings = ImageLabelSettings.default)
+                                        settings: ImageLabelSettings = ImageLabelSettings.default)
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
 		with ContextualBackgroundAssignableFactory[ColorContext, ContextualImageLabelFactory]
@@ -305,6 +356,8 @@ case class ImageLabelSetup(settings: ImageLabelSettings)
 {
 	// IMPLEMENTED  ---------------------
 	
+	override def identity: ImageLabelSetup = this
+	
 	override def withSettings(settings: ImageLabelSettings): ImageLabelSetup = copy(settings = settings)
 	
 	override def apply(hierarchy: ComponentHierarchy) = ImageLabelFactory(hierarchy, settings)
@@ -313,6 +366,7 @@ case class ImageLabelSetup(settings: ImageLabelSettings)
 object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory] with ImageLabelSettingsWrapper[ImageLabelSetup]
 {
 	override protected def settings: ImageLabelSettings = ImageLabelSettings.default
+	override def identity: ImageLabelSetup = ImageLabelSetup(settings)
 	
 	override def withSettings(settings: ImageLabelSettings): ImageLabelSetup = ImageLabelSetup(settings)
 	
@@ -324,39 +378,4 @@ object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory] with ImageL
   * @author Mikko Hilpinen
   * @since 27.10.2020, v0.1
   */
-trait ImageLabel extends ReachComponentLike with CustomDrawable with CachingStackable
-{
-	// ABSTRACT	----------------------------
-	
-	/**
-	  * @return The image drawn on this label
-	  */
-	def image: Image
-	/**
-	  * @return Insets placed around the image
-	  */
-	def insets: StackInsets
-	
-	/**
-	  * @return Whether image should be allowed to scale beyond it's original size
-	  *         (while still respecting source resolution)
-	  */
-	def allowUpscaling: Boolean
-	/**
-	  * @return Whether this label should use lower priority size constraints
-	  */
-	def useLowPrioritySize: Boolean
-	
-	
-	// IMPLEMENTED	------------------------
-	
-	override def calculatedStackSize = {
-		val raw = {
-			if (allowUpscaling)
-				StackSize.downscaling(image.size.ceil, image.sourceResolution)
-			else
-				StackSize.downscaling(image.size.ceil)
-		}
-		(if (useLowPrioritySize) raw.shrinking else raw) + insets
-	}
-}
+trait ImageLabel extends ReachComponentLike with ImageComponent

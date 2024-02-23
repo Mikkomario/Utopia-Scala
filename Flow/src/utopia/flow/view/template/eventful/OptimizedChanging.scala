@@ -17,7 +17,7 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 	// ATTRIBUTES   -------------------------
 	
 	// Stores the listeners in a pointer, because this mirror functions differently while there are listeners assigned
-	private val listenersPointer = new EventfulPointer[Pair[Vector[ChangeListener[A]]]](Pair.twice(Vector.empty))
+	private val listenersPointer = EventfulPointer[Pair[Vector[ChangeListener[A]]]](Pair.twice(Vector.empty))
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */

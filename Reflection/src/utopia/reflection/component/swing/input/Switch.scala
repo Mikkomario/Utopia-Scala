@@ -73,7 +73,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	private var _attached = false
 	
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
-	override val valuePointer = new EventfulPointer(initialState)
+	override val valuePointer = EventfulPointer(initialState)
 	
 	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
 	

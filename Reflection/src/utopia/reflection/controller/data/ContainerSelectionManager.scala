@@ -62,7 +62,7 @@ object ContainerSelectionManager
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
-			new EventfulPointer(initialItems), equalsCheck)(makeDisplay)
+			EventfulPointer(initialItems), equalsCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for immutable items that represent a state of some other object
@@ -103,7 +103,7 @@ object ContainerSelectionManager
 	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, new EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
+		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
 	
 	/**
 	  * Creates a content manager for mutable / mutating items. Please note that the items may not always update
@@ -144,7 +144,7 @@ object ContainerSelectionManager
 	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
 	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
-		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, new EventfulPointer(initialItems))(
+		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, EventfulPointer(initialItems))(
 			sameItemCheck)(equalsCheck)(makeDisplay)
 }
 
@@ -155,7 +155,7 @@ object ContainerSelectionManager
   */
 class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
- contentPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
+ contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
 	extends ContainerContentDisplayer[A, C, C, EventfulPointer[Vector[A]]](container, contentPointer,
 		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, EventfulPointer[Vector[A]]]

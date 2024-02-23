@@ -44,8 +44,8 @@ import scala.concurrent.ExecutionContext
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 (actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
  displayStackLayout: StackLayout = Fit,
- protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = new EventfulPointer[Vector[A]](Vector()),
- override val valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+ protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+ override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
  contentIsStateless: Boolean = false)
 (implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with SelectableWithPointers[Option[A], Vector[A]] with Focusable

@@ -96,12 +96,6 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	
 	override def collisionAxes = Vector(topEdge, rightEdge).map { _.normal2D }
 	
-	override def bounds = {
-		val p1 = topLeftCorner
-		val p2 = p1 + topEdge + rightEdge
-		Bounds.between(p1, p2)
-	}
-	
 	override def center = topLeftCorner + (topEdge / 2) + (rightEdge / 2)
 	override def maxEdgeLength = topEdge.length max rightEdge.length
 	override def minEdgeLength = topEdge.length min rightEdge.length

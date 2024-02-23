@@ -6,7 +6,6 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{Flag, ResettableFlag}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.transform.Adjustment

@@ -42,7 +42,7 @@ class ImageLabel(initialImage: Image, alwaysFillArea: Boolean = true, allowUpsca
 {
 	// ATTRIBUTES	-----------------
 	
-	override val contentPointer = new EventfulPointer(initialImage)
+	override val contentPointer = EventfulPointer(initialImage)
 	
 	private var scaledImage = initialImage
 	private var relativeImagePosition = Point.origin

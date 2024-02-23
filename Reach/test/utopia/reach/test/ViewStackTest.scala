@@ -27,7 +27,7 @@ object ViewStackTest extends App
 	import ReachTestContext._
 	
 	// Data
-	val numberPointer = new EventfulPointer[Int](1)
+	val numberPointer = EventfulPointer[Int](1)
 	
 	// Creates the components
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>

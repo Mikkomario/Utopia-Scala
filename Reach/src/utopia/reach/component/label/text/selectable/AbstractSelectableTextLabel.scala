@@ -69,12 +69,12 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	/**
 	  * Pointer that contains the current caret index within text
 	  */
-	protected val caretIndexPointer = new EventfulPointer(measuredText.maxCaretIndex)
-	private val caretVisibilityPointer = new EventfulPointer(false)
+	protected val caretIndexPointer = EventfulPointer(measuredText.maxCaretIndex)
+	private val caretVisibilityPointer = EventfulPointer(false)
 	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
 	// Selected range is in caret indices
-	private val selectedRangePointer = new EventfulPointer[Option[(Int, Int)]](None)
+	private val selectedRangePointer = EventfulPointer[Option[(Int, Int)]](None)
 	
 	private val (selectionBgPointer, selectedTextColorPointer, caretColorPointer) = {
 		// Case: Draws text selection background => Other colors are also affected
@@ -329,7 +329,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	{
 		// ATTRIBUTES	--------------------------
 		
-		private val _focusPointer = new EventfulPointer(false)
+		private val _focusPointer = EventfulPointer(false)
 		/**
 		  * A pointer that contains true while this component is in focus
 		  */

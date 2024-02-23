@@ -28,7 +28,7 @@ class TagFraming[C <: AwtStackable](initialComponent: C, initialColor: Color)
 	/**
 	  * Pointer that contains the current tag background color
 	  */
-	val colorPointer = new EventfulPointer(initialColor)
+	val colorPointer = EventfulPointer(initialColor)
 	
 	private var _content = initialComponent
 	

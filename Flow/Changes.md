@@ -3,6 +3,8 @@
 ## v2.4 (in development)
 ### Breaking changes
 - **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
+- **EventfulPointer** is now a trait instead of a class
+  - The new trait is intended to be used for all interfaces that provide both **Pointer** and **Changing** interfaces
 - **EqualsBy**`.equalsProperties` now returns **Seq** instead of **Iterable**
 - The write functions in **FileExtensions**, which accept a function, now return the return value of that 
   function, and no longer the path itself.
@@ -19,6 +21,7 @@
 - Added **FromCollectionFactory** trait
 ### New methods
 - **Changing**
+  - Added `.viewWhile(FlagLike)`
   - Added `.onceFixedAt(...)`
 - **Fixed** (object)
   - Added `.never` which is an alias for `Fixed(None)`
@@ -40,9 +43,13 @@
 - `View.fixed(...).mapValue(...)` now produces a fixed view instead of a **Lazy**
 - `View(...).mapValue(...)` now produces a call-by-name (mapping) view instead of a **Lazy**
   - I.e. mapping results are no longer cached in these cases
+- The `mirrorCondition` in **OptimizedMirror** is now stricter
+  - Previously the value would still reflect the updated value when called directly
+  - Also, now `.destiny` correctly changes when mirror condition seals to false
 - The generic type parameter in **PropertyFactory** is no longer restricted
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
+- Minor optimization to certain -while functions in **Changing**
 - Minor optimization to **VolatileList** -constructing
 
 ## v2.3 - 22.01.2024

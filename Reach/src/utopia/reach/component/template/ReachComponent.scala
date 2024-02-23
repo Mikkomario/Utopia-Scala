@@ -17,7 +17,7 @@ trait ReachComponent extends ReachComponentLike with CachingStackable
 {
 	// ATTRIBUTES	-----------------------
 	
-	override val boundsPointer = new EventfulPointer(Bounds.zero)
+	override val boundsPointer = EventfulPointer(Bounds.zero)
 	override lazy val positionPointer = boundsPointer.lightMap { _.position }
 	override lazy val sizePointer = boundsPointer.lightMap { _.size }
 	

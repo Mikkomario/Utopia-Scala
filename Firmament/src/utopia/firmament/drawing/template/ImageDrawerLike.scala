@@ -12,7 +12,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
   * @author Mikko Hilpinen
   * @since 25.3.2020, Reflection v1
   */
-// TODO: Add support for transformations (mostly rotation is needed). The challenge, then, is the bounds-handling
+@deprecated("Deprecated for removal. Replaced with ImageDrawer", "v1.3")
 trait ImageDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	----------------------------

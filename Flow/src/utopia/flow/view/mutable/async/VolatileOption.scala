@@ -20,7 +20,8 @@ object VolatileOption
 * @author Mikko Hilpinen
 * @since 29.3.2019
 **/
-class VolatileOption[A](initialValue: Option[A]) extends Volatile[Option[A]](initialValue) with Iterable[A]
+class VolatileOption[A](initialValue: Option[A])
+    extends Volatile[Option[A]](initialValue) with Iterable[A]
 {
 	// IMPLEMENTED    ---------------
     

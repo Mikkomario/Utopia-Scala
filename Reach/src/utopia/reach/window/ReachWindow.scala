@@ -373,7 +373,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		def apply(window: => Window, canvas: => Stackable, revalidationDelay: Pair[FiniteDuration])
 		         (implicit exc: ExecutionContext, log: Logger) =
 		{
-			val waitPointer = new EventfulPointer[WaitTarget](UntilNotified)
+			val waitPointer = EventfulPointer[WaitTarget](UntilNotified)
 			val orderedDelay = revalidationDelay.sorted
 			val process = new PostponingRevalidationProcess(waitPointer, window, canvas, orderedDelay.first, orderedDelay.second)
 			// Starts the process immediately

@@ -12,7 +12,7 @@ import utopia.flow.test.TestContext._
   */
 object DelayedViewTest extends App
 {
-	val p = new EventfulPointer(0)
+	val p = EventfulPointer(0)
 	val d = p.delayedBy(0.5.seconds)
 	
 	assert(p.value == 0)

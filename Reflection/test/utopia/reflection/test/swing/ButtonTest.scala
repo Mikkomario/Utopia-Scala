@@ -38,7 +38,7 @@ object ButtonTest extends App
 		val image = Image.readFrom(Paths.get("Reflection/test-images/mushrooms.png")).get.withSize(Size(64, 64)).downscaled
 		val images = ButtonImageSet(image).highlighting
 
-		val progressPointer = new EventfulPointer(0.0)
+		val progressPointer = EventfulPointer(0.0)
 
 		def action() = progressPointer.value += 0.1
 

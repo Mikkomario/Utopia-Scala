@@ -30,7 +30,7 @@ object ColoredViewImageAndTextLabelTest extends App
 		SingleColorIcon(Image.readFrom(images/"check-box-selected.png").get) -> "Selected",
 		SingleColorIcon.empty -> "Nothing"
 	)
-	val indexPointer = new EventfulPointer(0)
+	val indexPointer = EventfulPointer(0)
 	val itemPointer = indexPointer.map { options(_)._2 }
 	val imagePointer = indexPointer.map { options(_)._1 }
 	

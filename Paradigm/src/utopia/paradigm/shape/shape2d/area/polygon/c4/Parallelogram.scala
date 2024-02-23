@@ -11,5 +11,8 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
   */
 case class Parallelogram(topLeftCorner: Point, topEdge: Vector2D, rightEdge: Vector2D) extends Parallelogramic
 {
+	override lazy val corners = super.corners
+	override lazy val bounds = super.bounds
+	
 	override def toString = s"Origin: $topLeft, Top Edge: $topEdge, Right Edge: $rightEdge"
 }

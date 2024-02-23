@@ -17,7 +17,7 @@ object ReachFramingTest extends App
 {
 	import ReachTestContext._
 	
-	private val pointer = new EventfulPointer("Some\nText")
+	private val pointer = EventfulPointer("Some\nText")
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		framingF.expandingToRight.build(ViewTextLabel) { _.withBackground(Secondary)(pointer) }
 	}

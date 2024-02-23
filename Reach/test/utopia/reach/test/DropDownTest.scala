@@ -40,8 +40,8 @@ object DropDownTest extends App
 		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
 			framingF.build(Stack) { stackF =>
 				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(baseDdf) { ddF =>
-					val selectedCategoryPointer = new EventfulPointer[Option[String]](None)
-					val selectedItemPointer = new EventfulPointer[Option[String]](None)
+					val selectedCategoryPointer = EventfulPointer[Option[String]](None)
+					val selectedItemPointer = EventfulPointer[Option[String]](None)
 					
 					Vector(
 						ddF.withFieldName("Category")

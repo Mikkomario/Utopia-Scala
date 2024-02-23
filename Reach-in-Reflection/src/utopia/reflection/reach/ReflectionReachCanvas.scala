@@ -60,7 +60,7 @@ object ReflectionReachCanvas
 		}
 		val contentPointer = SettableOnce[ReachComponentLike]()
 		val canvas = new ReflectionReachCanvas(contentPointer, absolutePositionView,
-			new EventfulPointer[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
+			EventfulPointer[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
 			disableFocus)({
 			case c: ReflectionStackable => c.revalidate()
 			case _ => canvasPointer.value.foreach { _.revalidate() }

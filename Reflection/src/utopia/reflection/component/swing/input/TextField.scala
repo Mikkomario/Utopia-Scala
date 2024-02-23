@@ -260,7 +260,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 {
 	// ATTRIBUTES	----------------------
 	
-	private val _textPointer = new EventfulPointer(initialText)
+	private val _textPointer = EventfulPointer(initialText)
 	override val valuePointer = _textPointer.map { text =>
 		// Text is trimmed before mapping. Empty strings are treated as None
 		val base = text.trim.notEmpty

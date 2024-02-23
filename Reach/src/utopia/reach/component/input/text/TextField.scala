@@ -288,7 +288,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new text field
 	  */
 	def apply[A](defaultWidth: StackLength,
-	             textPointer: EventfulPointer[String] = new EventfulPointer[String](""),
+	             textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	             inputValidation: Option[A => InputValidationResult] = None)
 	            (parseResult: String => A) =
 		new TextField[A](parentHierarchy, contextPointer, defaultWidth, settings, textPointer,
@@ -310,7 +310,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new text field
 	  */
 	def validating[A](defaultWidth: StackLength,
-	                  textPointer: EventfulPointer[String] = new EventfulPointer[String](""))
+	                  textPointer: EventfulPointer[String] = EventfulPointer[String](""))
 	                 (parse: String => A)(validate: A => InputValidationResult) =
 		apply[A](defaultWidth, textPointer, Some(validate))(parse)
 	
@@ -326,7 +326,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  *                   None if no validation should be applied (default).
 	  * @return A new text field
 	  */
-	def string(defaultWidth: StackLength, textPointer: EventfulPointer[String] = new EventfulPointer[String](""),
+	def string(defaultWidth: StackLength, textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	           validate: Option[String => InputValidationResult] = None) =
 		apply[String](defaultWidth, textPointer, validate)(Identity)
 	/**
@@ -341,7 +341,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new text field
 	  */
 	def validatedString(defaultWidth: StackLength,
-	                    textPointer: EventfulPointer[String] = new EventfulPointer[String](""))
+	                    textPointer: EventfulPointer[String] = EventfulPointer[String](""))
 	                   (validate: String => InputValidationResult) =
 		string(defaultWidth, textPointer, Some(validate))
 	
@@ -356,7 +356,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new text field
 	  */
 	@deprecated("Renamed to .string(...)", "v1.1")
-	def forString(defaultWidth: StackLength, textPointer: EventfulPointer[String] = new EventfulPointer[String](""),
+	def forString(defaultWidth: StackLength, textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	              inputValidation: Option[String => InputValidationResult] = None) =
 		string(defaultWidth, textPointer, inputValidation)
 	
@@ -574,7 +574,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 		val initialText = initialValue.map { _.toString }.getOrElse("")
 		
 		// Displays an error if the value is outside of accepted range
-		val textPointer = new EventfulPointer(initialText)
+		val textPointer = EventfulPointer(initialText)
 		
 		// Applies generic input and output processing, if not defined already
 		val appliedSettings = settings.withHintPointer(effectiveHintPointer).withMaxLength(maxLength)
@@ -684,14 +684,14 @@ object TextField extends TextFieldSetup()
   */
 class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                    defaultWidth: StackLength, settings: TextFieldSettings = TextFieldSettings.default,
-                   textContentPointer: EventfulPointer[String] = new EventfulPointer(""),
+                   textContentPointer: EventfulPointer[String] = EventfulPointer(""),
                    inputValidation: Option[A => InputValidationResult] = None)
 				  (parseResult: String => A)
 	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithPointerWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	
-	private val _statePointer = new EventfulPointer[FieldState](BeforeEdit)
+	private val _statePointer = EventfulPointer[FieldState](BeforeEdit)
 	private val goToEditInputListener: ChangeListener[Any] = ChangeListener.onAnyChange {
 		if (hasFocus)
 			_statePointer.value = Editing

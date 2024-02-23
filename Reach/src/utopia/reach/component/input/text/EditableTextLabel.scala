@@ -278,7 +278,7 @@ case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @param textPointer A pointer to this label's text (default = new empty pointer)
 	  * @return a new label
 	  */
-	def apply(textPointer: EventfulPointer[String] = new EventfulPointer("")) =
+	def apply(textPointer: EventfulPointer[String] = EventfulPointer("")) =
 		new EditableTextLabel(parentHierarchy, contextPointer, settings, textPointer)
 }
 
@@ -324,7 +324,7 @@ object EditableTextLabel extends EditableTextLabelSetup()
 // TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
-                        val textPointer: EventfulPointer[String] = new EventfulPointer(""))
+                        val textPointer: EventfulPointer[String] = EventfulPointer(""))
 	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped },
 		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledPointer, settings.labelSettings,

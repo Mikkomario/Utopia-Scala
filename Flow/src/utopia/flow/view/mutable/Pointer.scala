@@ -42,7 +42,7 @@ object Pointer
 	  * @return A new pointer with events
 	  */
 	@deprecated("Renamed to .eventful(A)", "v2.2")
-	def withEvents[A](value: A) = new EventfulPointer(value)
+	def withEvents[A](value: A) = EventfulPointer(value)
 	
 	/**
 	  * Creates a new (eventful) pointer that may be locked

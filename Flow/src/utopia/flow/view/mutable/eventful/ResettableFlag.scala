@@ -70,7 +70,7 @@ object ResettableFlag
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait ResettableFlag extends Flag with Resettable with Pointer[Boolean]
+trait ResettableFlag extends Flag with Resettable with EventfulPointer[Boolean]
 {
 	// COMPUTED --------------------------
 	

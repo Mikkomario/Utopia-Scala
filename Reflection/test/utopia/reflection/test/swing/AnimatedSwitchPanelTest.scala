@@ -40,7 +40,7 @@ object AnimatedSwitchPanelTest extends App
 	val setup = new SingleFrameSetup(actorHandler, frame)
 	setup.start()
 
-	val indexPointer = new EventfulPointer(0)
+	val indexPointer = EventfulPointer(0)
 	frame.addKeyStateListener(KeyStateListener.pressed { event =>
 		if (event.index == KeyEvent.VK_RIGHT)
 			indexPointer.update { i => (i + 1) % labels.size }

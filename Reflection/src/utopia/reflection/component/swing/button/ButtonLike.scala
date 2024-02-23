@@ -44,7 +44,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 	
 	private var actions = Vector[() => Unit]()
 	
-	private val _statePointer = new EventfulPointer[GuiElementStatus](GuiElementStatus.identity)
+	private val _statePointer = EventfulPointer[GuiElementStatus](GuiElementStatus.identity)
 	
 	
 	// COMPUTED	----------------------

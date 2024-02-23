@@ -92,7 +92,7 @@ class TypeOrSearch
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val selectedItemsPointer = new EventfulPointer(Vector[String]())
+	private val selectedItemsPointer = EventfulPointer(Vector[String]())
 	
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = parentContext.localizer

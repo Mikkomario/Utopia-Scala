@@ -78,8 +78,8 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	private var isShowingSelectOption = true
 	private var isUpdatingSelection = false // Consider using a thread-safe solution
 	
-	override val valuePointer = new EventfulPointer[Option[A]](None)
-	override val contentPointer = new EventfulPointer[Vector[A]](Vector())
+	override val valuePointer = EventfulPointer[Option[A]](None)
+	override val contentPointer = EventfulPointer[Vector[A]](Vector())
 	
 	
 	// INITIAL CODE	-------------------

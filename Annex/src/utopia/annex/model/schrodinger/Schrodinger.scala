@@ -28,7 +28,7 @@ trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 	
 	// ATTRIBUTES   -----------------------
 	
-	protected val _serverResultPointer: EventfulPointer[Option[R]] = new EventfulPointer(None)
+	protected val _serverResultPointer: EventfulPointer[Option[R]] = EventfulPointer(None)
 	
 	/**
 	  * A pointer to the currently mimicked instance

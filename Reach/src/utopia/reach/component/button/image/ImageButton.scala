@@ -10,6 +10,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
@@ -48,6 +49,8 @@ trait ImageButtonSettingsLike[+Repr]
 	
 	// IMPLEMENTED	--------------------
 	
+	override def identity: Repr = self
+	
 	override def alignment = imageSettings.alignment
 	override def colorOverlay = imageSettings.colorOverlay
 	override def customDrawers = imageSettings.customDrawers
@@ -57,6 +60,7 @@ trait ImageButtonSettingsLike[+Repr]
 	override def imageScaling = imageSettings.imageScaling
 	override def insets = imageSettings.insets
 	override def usesLowPrioritySize = imageSettings.usesLowPrioritySize
+	override def transformation: Option[Matrix2D] = imageSettings.transformation
 	
 	override def apply(alignment: Alignment): Repr = mapImageSettings { _.withAlignment(alignment) }
 	override def withAlignment(alignment: Alignment) = withImageSettings(imageSettings.withAlignment(alignment))
@@ -72,6 +76,8 @@ trait ImageButtonSettingsLike[+Repr]
 	override def withInsets(insets: StackInsetsConvertible) = withImageSettings(imageSettings.withInsets(insets))
 	override def withUseLowPrioritySize(lowPriority: Boolean) =
 		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
+	override def withTransformation(transformation: Option[Matrix2D]): Repr =
+		mapImageSettings { _.withTransformation(transformation) }
 	
 	
 	// OTHER	--------------------

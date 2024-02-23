@@ -10,11 +10,14 @@
 - **ButtonLike** implementations are now required to implement `.enabledPointer: FlagLike`
 - Moved **FramedFactory** to the **Firmament** module
 - Moved **PaintManager** and **Priority** to the **Genesis** module
+- **ImageLabelSettingsLike** and related settings-like traits now require a transformation to be specified 
 ### Deprecations
 - Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes
 - Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
 - **RadioButtons** now correctly support **HotKeys**
+### New features
+- Image labels now support transformations
 ### Other changes
 - This module is no longer dependent from the **Inception** module
 - **ReachComponent** is now a trait - however, it is intended to be used like an abstract class, still

@@ -16,7 +16,7 @@ object ConsoleTest extends App
 	implicit val jsonParser: JsonParser = JsonReader
 	
 	val terminatedPointer = Pointer(false)
-	val forgottenCommandsPointer = new EventfulPointer(Set[String]())
+	val forgottenCommandsPointer = EventfulPointer(Set[String]())
 	
 	val closeCommand = Command.withoutArguments("quit", "q", "Closes this console") {
 		terminatedPointer.value = true }

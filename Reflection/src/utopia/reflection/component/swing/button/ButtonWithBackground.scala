@@ -15,7 +15,7 @@ abstract class ButtonWithBackground(color: Color, borderWidth: Double) extends B
 {
 	// ATTRIBUTES   -------------------
 	
-	private val borderPointer = new EventfulPointer(makeBorder(color))
+	private val borderPointer = EventfulPointer(makeBorder(color))
 	
 	
 	// IMPLEMENTED  ------------------

@@ -74,9 +74,9 @@ object InputWindowTest extends App
 		override protected def log: Logger = ReachTestContext.log
 		
 		override protected def inputTemplate = {
-			val nameErrorPointer = new EventfulPointer(LocalizedString.empty)
+			val nameErrorPointer = EventfulPointer(LocalizedString.empty)
 			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF =>
-				val textPointer = new EventfulPointer[String]("")
+				val textPointer = EventfulPointer[String]("")
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
 				}

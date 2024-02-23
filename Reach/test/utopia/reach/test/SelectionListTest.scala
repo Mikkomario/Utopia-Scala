@@ -27,8 +27,8 @@ object SelectionListTest extends App
 	import ReachTestContext._
 	
 	// Data
-	val contentPointer = new EventfulPointer(Vector(1, 2, 34, 45, 567, 6, 7890))
-	val valuePointer = new EventfulPointer[Option[Int]](Some(2))
+	val contentPointer = EventfulPointer(Vector(1, 2, 34, 45, 567, 6, 7890))
+	val valuePointer = EventfulPointer[Option[Int]](Some(2))
 	
 	val mainBg = colors.gray.default
 	

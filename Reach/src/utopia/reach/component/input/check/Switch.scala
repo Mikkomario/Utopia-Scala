@@ -168,7 +168,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	  */
 	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	                     valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
+	                     valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
 	                     shade: => ColorShade = Light,
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 	{
@@ -211,7 +211,7 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
 	  * @param valuePointer   A mutable pointer to this switches pointer (default = new pointer)
 	  * @return A new switch
 	  */
-	def apply(valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false))
+	def apply(valuePointer: EventfulPointer[Boolean] = EventfulPointer(false))
 	         (implicit animationContext: AnimationContext) =
 	{
 		val knobR = context.margins.medium
@@ -256,7 +256,7 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
+	          valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
 	          shade: => ColorShade = Light,
 	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 		_apply(actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset, valuePointer, shade,
@@ -300,7 +300,7 @@ object Switch extends SwitchSetup()
   */
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-             override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false),
+             override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends AbstractButton(settings) with CustomDrawReachComponent with InteractionWithPointer[Boolean]

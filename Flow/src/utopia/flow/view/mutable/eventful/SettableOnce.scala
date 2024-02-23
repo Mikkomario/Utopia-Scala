@@ -3,7 +3,6 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
-import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 object SettableOnce
@@ -32,7 +31,7 @@ object SettableOnce
   * @author Mikko Hilpinen
   * @since 16.11.2022, v2.0
   */
-class SettableOnce[A]() extends AbstractMayStopChanging[Option[A]] with Pointer[Option[A]]
+class SettableOnce[A] extends AbstractMayStopChanging[Option[A]] with EventfulPointer[Option[A]]
 {
 	// ATTRIBUTES   -------------------------
 	

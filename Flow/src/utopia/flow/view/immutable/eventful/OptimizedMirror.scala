@@ -1,7 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.model.Destiny
-import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
+import utopia.flow.event.model.ChangeResponse.Detach
+import utopia.flow.event.model.{ChangeResponse, Destiny}
+import utopia.flow.operator.Identity
+import utopia.flow.view.template.eventful.{Changing, FlagLike, OptimizedChanging}
 
 object OptimizedMirror
 {
@@ -26,10 +28,21 @@ object OptimizedMirror
 	  * @tparam R Type of mapping results
 	  * @return A new pointer that returns mapped origin values
 	  */
-	def apply[O, R](origin: Changing[O], mirrorCondition: Changing[Boolean] = AlwaysTrue,
+	def apply[O, R](origin: Changing[O], mirrorCondition: FlagLike = AlwaysTrue,
 	                disableCaching: Boolean = false)
 	               (f: O => R) =
 		new OptimizedMirror[O, R](origin, f, mirrorCondition, cachingDisabled = disableCaching)
+	
+	/**
+	  * Creates a conditional view into another pointer
+	  * @param origin The viewed pointer
+	  * @param viewCondition A condition that must be met in order for the viewing to be active.
+	  *                      If set to false, the last available value will be viewed instead.
+	  * @tparam O Type of the viewed values
+	  * @return A new view that reflects the specified pointer's value, but only while the view condition is met
+	  */
+	def viewWhile[O](origin: Changing[O], viewCondition: FlagLike) =
+		apply(origin, viewCondition, disableCaching = true)(Identity)
 }
 
 /**
@@ -41,16 +54,30 @@ object OptimizedMirror
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
-class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Changing[Boolean] = AlwaysTrue,
+class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: FlagLike = AlwaysTrue,
                             cachingDisabled: Boolean = false)
 	extends OptimizedChanging[R]
 {
 	// ATTRIBUTES   -------------------------
 	
 	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f)(fireEvent)
+	// A placeholder value returned while mirroring is not allowed
+	private var placeholder: Option[R] = None
 	
 	
 	// INITIAL CODE -------------------------
+	
+	// Whenever stops listening to the origin pointer,
+	// stores the last known value, so that it may be used as a placeholder
+	condition.addListenerAndSimulateEvent(true) { event =>
+		if (event.newValue)
+			placeholder = None
+		else
+			placeholder = Some(f(origin.value))
+			
+		// If the origin doesn't change anymore, it is not needful to track the listening condition
+		ChangeResponse.continueIf(origin.mayChange)
+	}
 	
 	onceSourceStops(origin) {
 		declareChangingStopped()
@@ -64,8 +91,8 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Changing[
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def value: R = bridge.value
-	override def destiny: Destiny = origin.destiny
+	override def value: R = placeholder.getOrElse(bridge.value)
+	override def destiny: Destiny = origin.destiny.sealedIf { condition.isAlwaysFalse }
 	
 	override def readOnly = this
 }

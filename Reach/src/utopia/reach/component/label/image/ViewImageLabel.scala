@@ -3,19 +3,24 @@ package utopia.reach.component.label.image
 import utopia.firmament.context.ColorContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.drawing.view.ImageViewDrawer
+import utopia.firmament.drawing.view.ViewImageDrawer
 import utopia.firmament.factory.FramedFactory
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.WeakCache
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
@@ -49,6 +54,11 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	  * Pointer that determines image scaling, in addition to the original image scaling
 	  */
 	protected def imageScalingPointer: Changing[Double]
+	/**
+	  * @return Pointer that determines image transformation to apply.
+	  *         Contains None if no transformation should be applied.
+	  */
+	def transformationPointer: Changing[Option[Matrix2D]]
 	
 	/**
 	  * Pointer that determines the image drawing location within this component
@@ -70,6 +80,11 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	  * @return Copy of this factory with the specified insets pointer
 	  */
 	def withInsetsPointer(p: Changing[StackInsets]): Repr
+	/**
+	  * @param p New Transformation pointer to assign
+	  * @return Cop of this factory with the specified transformation pointer
+	  */
+	def withTransformationPointer(p: Changing[Option[Matrix2D]]): Repr
 	
 	
 	// COMPUTED ------------------------
@@ -82,19 +97,25 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	
 	// IMPLEMENTED	--------------------
 	
+	override def identity: Repr = self
+	
 	override def alignment: Alignment = alignmentPointer.value
 	override def colorOverlay = colorOverlayPointer.map { _.value }
 	override def imageScaling: Double = imageScalingPointer.value
 	override def insets: StackInsets = insetsPointer.value
+	override def transformation: Option[Matrix2D] = transformationPointer.value
 	
 	override def apply(alignment: Alignment): Repr = withAlignmentPointer(Fixed(alignment))
 	
 	override def mapInsets(f: StackInsets => StackInsetsConvertible) =
 		withInsetsPointer(insetsPointer.map { f(_).toInsets })
+	override def mapTransformation(f: Mutate[Option[Matrix2D]]) = mapTransformationPointer { _.map(f) }
 	
 	override def withColor(color: Option[Color]): Repr = withColorOverlayPointer(color.map(Fixed.apply))
 	override def withImageScaling(scaling: Double): Repr = withImageScalingPointer(Fixed(scaling))
 	override def withInsets(insets: StackInsetsConvertible): Repr = withInsetsPointer(Fixed(insets.toInsets))
+	override def withTransformation(transformation: Option[Matrix2D]): Repr =
+		withTransformationPointer(Fixed(transformation))
 	
 	
 	// OTHER	--------------------
@@ -106,6 +127,8 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	def mapImageScalingPointer(f: Changing[Double] => Changing[Double]) =
 		withImageScalingPointer(f(imageScalingPointer))
 	def mapInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) = withInsetsPointer(f(insetsPointer))
+	def mapTransformationPointer(f: Mutate[Changing[Option[Matrix2D]]]) =
+		withTransformationPointer(f(transformationPointer))
 	
 	def withColorOverlayPointer(pointer: Changing[Color]): Repr = withColorOverlayPointer(Some(pointer))
 	def withColor(color: Changing[Color]): Repr = withColorOverlayPointer(Some(color))
@@ -127,7 +150,7 @@ object ViewImageLabelSettings
 	def apply(staticSettings: ImageLabelSettings): ViewImageLabelSettings =
 		apply(staticSettings.customDrawers, Fixed(staticSettings.insets), Fixed(staticSettings.alignment),
 			staticSettings.colorOverlay.map { Fixed(_) }, Fixed(staticSettings.imageScaling),
-			staticSettings.usesLowPrioritySize)
+			Fixed(staticSettings.transformation), staticSettings.usesLowPrioritySize)
 }
 /**
   * Combined settings used when constructing view image labels
@@ -145,6 +168,7 @@ case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.e
                                   alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
                                   colorOverlayPointer: Option[Changing[Color]] = None,
                                   imageScalingPointer: Changing[Double] = Fixed(1.0),
+                                  transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
                                   usesLowPrioritySize: Boolean = false)
 	extends ViewImageLabelSettingsLike[ViewImageLabelSettings]
 {
@@ -152,6 +176,8 @@ case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.e
 	
 	override def self: ViewImageLabelSettings = this
 	
+	override def withTransformationPointer(p: Changing[Option[Matrix2D]]): ViewImageLabelSettings =
+		copy(transformationPointer = p)
 	override def withAlignmentPointer(p: Changing[Alignment]): ViewImageLabelSettings = copy(alignmentPointer = p)
 	override def withColorOverlayPointer(p: Option[Changing[Color]]): ViewImageLabelSettings =
 		copy(colorOverlayPointer = p)
@@ -195,7 +221,10 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 	override def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
 	override def insetsPointer: Changing[StackInsets] = settings.insetsPointer
 	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
+	override def transformationPointer: Changing[Option[Matrix2D]] = settings.transformationPointer
 	
+	override def withTransformationPointer(p: Changing[Option[Matrix2D]]): Repr =
+		mapSettings { _.withTransformationPointer(p) }
 	override def withAlignmentPointer(p: Changing[Alignment]): Repr =
 		mapSettings { _.withAlignmentPointer(p) }
 	override def withColorOverlayPointer(p: Option[Changing[Color]]): Repr =
@@ -277,8 +306,8 @@ trait ViewImageLabelFactoryLike[+Repr]
 		}
 		// Applies image scaling, also
 		val scaledImagePointer = coloredPointer.mergeWith(imageScalingPointer) { _ * _ }
-		new ViewImageLabel(parentHierarchy, scaledImagePointer, insetsPointer, alignmentPointer, allowUpscalingPointer,
-			customDrawers, usesLowPrioritySize)
+		new ViewImageLabel(parentHierarchy, scaledImagePointer, insetsPointer, alignmentPointer, transformationPointer,
+			allowUpscalingPointer, customDrawers, usesLowPrioritySize)
 	}
 }
 
@@ -439,6 +468,7 @@ object ViewImageLabel extends ViewImageLabelSetup()
   */
 class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[Image],
                      insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
+                     transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
                      allowUpscalingPointer: Changing[Boolean] = AlwaysTrue,
                      additionalCustomDrawers: Vector[CustomDrawer] = Vector(),
                      override val useLowPrioritySize: Boolean = false)
@@ -446,22 +476,43 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 {
 	// ATTRIBUTES	---------------------------------
 	
+	private val localImagePointer = imagePointer.viewWhile(parentHierarchy.linkPointer)
+	private val localTransformationPointer = transformationPointer.viewWhile(parentHierarchy.linkPointer)
+	private val visualImageSizePointer = localTransformationPointer.fixedValue match {
+		case Some(transformation) =>
+			transformation match {
+				case Some(t) => localImagePointer.map { i => (i.bounds * t).size }
+				case None => localImagePointer.lightMap { _.size }
+			}
+		case None =>
+			val boundsPointer = localImagePointer.lightMap { _.bounds }
+			boundsPointer.mergeWith(localTransformationPointer) { (b, t) =>
+				t match {
+					case Some(t) => (b * t).size
+					case None => b.size
+				}
+			}
+	}
+	
 	val customDrawers = additionalCustomDrawers :+
-		ImageViewDrawer(imagePointer, insetsPointer, alignmentPointer, useUpscaling = allowUpscaling)
+		ViewImageDrawer.copy(transformationView = transformationPointer, insetsView = insetsPointer,
+			alignmentView = alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
+	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE	---------------------------------
 	
 	// Reacts to changes in the pointers
-	imagePointer.addListenerWhile(parentHierarchy.linkPointer) { change =>
+	localImagePointer.addListener { change =>
 		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
 			repaint()
 		else
 			revalidate()
 	}
-	insetsPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
+	localTransformationPointer.addListener(revalidateListener)
+	insetsPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
 	alignmentPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => repaint() }
-	allowUpscalingPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
+	allowUpscalingPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
 	
 	
 	// COMPUTED	-------------------------------------
@@ -474,7 +525,9 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	
 	// IMPLEMENTED	---------------------------------
 	
-	override def image = imagePointer.value
+	override def visualImageSize: Size = visualImageSizePointer.value
+	override def imageScaling: Vector2D = localImagePointer.value.scaling
+	
 	override def insets = insetsPointer.value
 	override def allowUpscaling: Boolean = allowUpscalingPointer.value
 	

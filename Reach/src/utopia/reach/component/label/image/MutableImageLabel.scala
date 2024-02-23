@@ -1,13 +1,17 @@
 package utopia.reach.component.label.image
 
+import utopia.firmament.drawing.view.ViewImageDrawer
+import utopia.firmament.model.stack.StackInsets
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
+import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
-import utopia.firmament.drawing.view.ImageViewDrawer
-import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.StackInsets
 
 // TODO: Use ImageLabelSettings here
 class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
@@ -47,21 +51,36 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	/**
 	  * Pointer to this label's displayed image
 	  */
-	val imagePointer = new EventfulPointer(initialImage)
+	val imagePointer = EventfulPointer(initialImage)
 	/**
 	  * Pointer to the insets placed around the image in this label
 	  */
-	val insetsPointer = new EventfulPointer(initialInsets)
+	val insetsPointer = EventfulPointer(initialInsets)
 	/**
 	  * Pointer to the alignment used when positioning the image in this label
 	  */
-	val alignmentPointer = new EventfulPointer(initialAlignment)
+	val alignmentPointer = EventfulPointer(initialAlignment)
+	/**
+	  * Pointer to the transformation applied when drawing the image
+	  */
+	val transformationPointer = EventfulPointer.empty[Matrix2D]()
+	
+	private val visualImageSizePointer = imagePointer.mergeWith(transformationPointer) { (img, t) =>
+		t match {
+			case Some(t) => (img.bounds * t).size
+			case None => img.size
+		}
+	}
+	
+	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE	--------------------------
 	
 	// Adds image drawing
-	addCustomDrawer(ImageViewDrawer(imagePointer, insetsPointer, alignmentPointer, useUpscaling = allowUpscaling))
+	addCustomDrawer(ViewImageDrawer
+		.copy(insetsView = insetsPointer, alignmentView = alignmentPointer, upscales = allowUpscaling)
+		.apply(imagePointer))
 	
 	// Updates and repaints this label when values change
 	imagePointer.addContinuousListener { change =>
@@ -70,11 +89,15 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 		else
 			revalidate()
 	}
-	insetsPointer.addContinuousListener { _ => revalidate() }
+	transformationPointer.addListener(revalidateListener)
+	insetsPointer.addListener(revalidateListener)
 	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	
 	// COMPUTED	------------------------------
+	
+	def image = imagePointer.value
+	def image_=(newImage: Image) = imagePointer.value = newImage
 	
 	/**
 	  * @return Alignment used when positioning the image in this label
@@ -85,8 +108,8 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def image = imagePointer.value
-	def image_=(newImage: Image) = imagePointer.value = newImage
+	override def visualImageSize: Size = visualImageSizePointer.value
+	override def imageScaling: Vector2D = image.scaling
 	
 	override def insets = insetsPointer.value
 	def insets_=(newInsets: StackInsets) = insetsPointer.value = newInsets

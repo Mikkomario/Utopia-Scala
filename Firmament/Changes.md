@@ -4,6 +4,12 @@
 ### Breaking changes
 - Moved **DrawLevel** to **Genesis**
 - **HotKey** no longer contains property `.characters` and now uses **Key** instead of key index (Int)
+- **ImageDrawer** is now a trait and not a class
+### Deprecations
+- Deprecated **ImageDrawerLike** in favor of the new **ImageDrawer** trait / implementation
+- Deprecated **ImageViewDrawer** in favor of the new **ViewImageDrawer**
+### New features
+- Image drawers now support transformations (most importantly rotation)
 ### New methods
 - **StackInsets**
   - Added `.min(StackInsets)` and `.max(StackInsets)`

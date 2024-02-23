@@ -283,7 +283,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private lazy val screenInsets = Screen.actualInsetsAt(component.getGraphicsConfiguration)
 	
 	// Allows mutable access to the display icon
-	val iconPointer = new EventfulPointer(initialIcon)
+	val iconPointer = EventfulPointer(initialIcon)
 	
 	// Stores window state in private flags
 	// These are updated based on awt window events, but also accept preliminary updates from other sources
@@ -295,10 +295,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private val _focusedFlag = ResettableFlag(component.isFocused)
 	
 	// Stores position and size in pointers, which are only updated on window events
-	private val _positionPointer = new EventfulPointer(Point.origin)
+	private val _positionPointer = EventfulPointer(Point.origin)
 	// Pre-initializes the window size based on container size.
 	// Won't take into account the window insets. Actual size is initialized after pack() in the AWT event thread
-	private val _sizePointer = new EventfulPointer(Size(container.getSize))
+	private val _sizePointer = EventfulPointer(Size(container.getSize))
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated

@@ -213,7 +213,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  */
 	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
-	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
@@ -263,7 +263,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
-	 valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](actorHandler, contextBackgroundPointer, contentPointer, valuePointer, sameItemCheck,
@@ -332,7 +332,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new list
 	  */
 	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
-	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = new EventfulPointer[Option[A]](None),
+	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](contextPointer.value.actorHandler,
@@ -518,7 +518,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		// ATTRIBUTES	----------------------------
 		
-		private val relativeMousePositionPointer = new EventfulPointer[Option[Point]](None)
+		private val relativeMousePositionPointer = EventfulPointer[Option[Point]](None)
 		// FIXME: stack.itemNearestTo doesn't return the correct item anymore
 		val hoverComponentPointer = relativeMousePositionPointer.map { _.flatMap(locationTracker.itemNearestTo) }
 		

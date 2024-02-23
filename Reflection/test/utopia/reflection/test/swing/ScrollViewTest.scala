@@ -52,7 +52,7 @@ object ScrollViewTest extends App
 	val displayFunction = DisplayFunction.interpolating("Label number %i")
 	def makeLabel(number: Int) =
 	{
-		val label = new ItemLabel(new EventfulPointer(number), displayFunction, basicFont,
+		val label = new ItemLabel(EventfulPointer(number), displayFunction, basicFont,
 			initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		label.background = Color.yellow
 		label.alignment = Center

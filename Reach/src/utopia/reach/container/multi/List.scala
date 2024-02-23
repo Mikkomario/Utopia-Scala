@@ -88,7 +88,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val mainStackCap = edgeMargins.along(mainStackDirection)
 		
 		// Creates the rows and row components first
-		val selectedRowIndexPointer = new EventfulPointer[Int](0)
+		val selectedRowIndexPointer = EventfulPointer[Int](0)
 		val rowIndexGenerator = Iterator.iterate(0) { _ + 1 }
 		val rowContextIterator = rowIndexGenerator.map { index =>
 			ListRowContext(new SeedHierarchyBlock(canvas), Lazy { selectedRowIndexPointer.map { _ == index } }, index)
@@ -241,7 +241,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 	
 	private var mousePressed = false
 	
-	private val relativeMousePositionPointer = new EventfulPointer[Option[Point]](None)
+	private val relativeMousePositionPointer = EventfulPointer[Option[Point]](None)
 	private lazy val mouseOverAreaPointer = relativeMousePositionPointer
 		.lazyMergeWith(locationTrackerPointer) { (pos, items) =>
 			pos.flatMap { pos => items.flatMap { _.areaNearestTo(pos) } }

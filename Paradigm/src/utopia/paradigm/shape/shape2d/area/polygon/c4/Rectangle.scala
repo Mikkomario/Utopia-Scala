@@ -46,6 +46,8 @@ case class Rectangle(topLeftCorner: Point, topEdge: Vector2D, rightEdgeLength: D
 	// ATTRIBUTES	-----------------
 	
 	override lazy val rightEdge = super.rightEdge
+	override lazy val corners = super.corners
+	override lazy val bounds = super.bounds
 	
 	
 	// COMPUTED	---------------------

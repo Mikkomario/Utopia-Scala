@@ -13,7 +13,7 @@ import scala.util.Try
 object ChangingTest extends App
 {
 	// Tests mapping
-	val origin = new EventfulPointer(1)
+	val origin = EventfulPointer(1)
 	val mapped = origin.map { _ % 2 }
 	
 	var originChanges = 0

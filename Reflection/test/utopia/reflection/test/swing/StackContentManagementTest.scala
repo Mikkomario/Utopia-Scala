@@ -30,7 +30,7 @@ object StackContentManagementTest extends App
 	val stack = Stack.column[ItemLabel[Int]]()
 	
 	val background = colorScheme(Gray)
-	val contentPointer = new EventfulPointer(Vector(1, 4, 6))
+	val contentPointer = EventfulPointer(Vector(1, 4, 6))
 	val manager = baseContext.against(background).forTextComponents.use { implicit txc =>
 		ContainerContentDisplayer.forStatelessItems(stack, contentPointer) { i: Int =>
 			println(s"Creating a new label ($i)")

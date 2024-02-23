@@ -645,6 +645,32 @@ trait Changing[+A] extends Any with View[A]
 	def findMapNextFuture[B](f: A => Option[B]) = _findMapFuture[B](f, disableImmediateTrigger = true)
 	
 	/**
+	  * Creates a conditional view into this pointer
+	  * @param condition A condition that must be met
+	  *                  in order for the resulting pointer to reflect the value of this pointer.
+	  *                  When this condition is not met, the resulting pointer will contain
+	  *                  the last value of this pointer before the viewing stopped.
+	  *
+	  *                  Call-by-name. Not called if this item won't change anymore.
+	  *
+	  * @return A pointer that conditionally contains either the value of this pointer or a previous value,
+	  *         if active viewing is not allowed.
+	  */
+	def viewWhile(condition: => FlagLike) = {
+		if (mayChange) {
+			val c = condition
+			c.fixedValue match {
+				// Case: Condition is always true or always false => No advanced listening is needed
+				case Some(shouldView) => if (shouldView) this else Fixed(value)
+				case None => OptimizedMirror.viewWhile(this, c)
+			}
+		}
+		// Case: This pointer won't change anymore => Conditional listening makes no difference
+		else
+			this
+	}
+	
+	/**
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A mirrored version of this item, using specified mapping function
@@ -671,11 +697,13 @@ trait Changing[+A] extends Any with View[A]
 	  * and the cost of listening to that condition is smaller than the cost of performing the mapping
 	  * while that condition does not hold.
 	  *
+	  * @param condition Condition for mapping / viewing to take place.
+	  *                  Call-by-name. Not called if this item won't change anymore.
 	  * @param f A mapping function
 	  * @tparam B Mapping result type
 	  * @return A (strongly) mirrored version of this item, using specified mapping function
 	  */
-	def mapWhile[B](condition: Changing[Boolean])(f: A => B): Changing[B] = diverge {
+	def mapWhile[B](condition: => FlagLike)(f: A => B): Changing[B] = diverge {
 		val conditionFlag: FlagLike = condition
 		// Case: Mirroring is never actually allowed => Uses a fixed value instead
 		if (conditionFlag.isAlwaysFalse)
@@ -827,7 +855,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from both of these items
 	  */
-	def mergeWithWhile[B, R](other: Changing[B], condition: Changing[Boolean])(f: (A, B) => R): Changing[R] = {
+	def mergeWithWhile[B, R](other: Changing[B], condition: FlagLike)(f: (A, B) => R): Changing[R] = {
 		if (condition.isAlwaysFalse)
 			Fixed(f(value, other.value))
 		else
@@ -846,7 +874,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from all three of these items
 	  */
-	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Changing[Boolean])
+	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: FlagLike)
 	                           (merge: (A, B, C) => R): Changing[R] =
 	{
 		if (condition.isAlwaysFalse)
@@ -979,7 +1007,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
 	  *         this pointer's changes
 	  */
-	def delayedBy(threshold: => Duration, viewCondition: Changing[Boolean] = AlwaysTrue)
+	def delayedBy(threshold: => Duration, viewCondition: FlagLike = AlwaysTrue)
 	             (implicit exc: ExecutionContext): Changing[A] =
 	{
 		// Case: The view is not allowed to update => Returns a fixed value

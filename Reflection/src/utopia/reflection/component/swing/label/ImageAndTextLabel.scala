@@ -53,7 +53,7 @@ object ImageAndTextLabel
 	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
 					 (implicit context: TextContext) =
-		contextualWithPointer(new EventfulPointer(item), displayFunction, imageInsets)(itemToImage)
+		contextualWithPointer(EventfulPointer(item), displayFunction, imageInsets)(itemToImage)
 }
 
 /**

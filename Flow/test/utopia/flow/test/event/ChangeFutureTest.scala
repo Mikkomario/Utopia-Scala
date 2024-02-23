@@ -18,7 +18,7 @@ object ChangeFutureTest extends App
 	
 	val delay = 0.5.seconds
 	
-	val original = new EventfulPointer(1)
+	val original = EventfulPointer(1)
 	val delayMapped = original.flatMap { i => ChangeFuture(i, Delay(delay) { i + 1 }) }
 	
 	original.addListener { e => println(s"$Now original: $e") }

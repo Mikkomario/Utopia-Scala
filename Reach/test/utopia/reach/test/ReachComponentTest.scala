@@ -51,7 +51,7 @@ object ReachComponentTest extends App
 					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
 						val editableLabel = factories(EditableTextLabel)
-							.withFocusListener(focusReporter("Label"))(new EventfulPointer("Type Here"))
+							.withFocusListener(focusReporter("Label"))(EventfulPointer("Type Here"))
 						// 2: Button Row
 						val buttonStack = factories(Stack).related.row.build(Mixed) { factories =>
 							// 2.1: Clear Button

@@ -174,7 +174,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 		if (options.isEmpty)
 			throw new IllegalArgumentException("There must be at least one available option")
 		else
-			apply(options, new EventfulPointer[A](options.head._1))
+			apply(options, EventfulPointer[A](options.head._1))
 	}
 	
 	/**

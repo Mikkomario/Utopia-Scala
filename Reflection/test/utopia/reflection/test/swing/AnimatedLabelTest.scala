@@ -28,7 +28,7 @@ object AnimatedLabelTest extends App
 	implicit val context: BaseContext = baseContext
 
 	val image = Image.readFrom("Reflection/test-images/mushrooms.png").get.withCenterOrigin
-	val rotation = Animation(Rotation.clockwise.circles).verySmoothSPathCurved.over(1.seconds)
+	val rotation = Animation(Rotation.clockwise.circles).verySmoothSPathCurved.over(2.seconds)
 	val label = AnimationLabel.contextualWithRotatingImage(image, rotation)
 
 	val content = label.framed(margins.medium.any, colorScheme.gray.light)

@@ -39,7 +39,7 @@ object ScrollAreaTest extends App
 	val basicFont = Font("Arial", 12, Plain, 2)
 	val labels = (1 to 10).toVector.map { row =>
 		(1 to 50).toVector.map { i =>
-			new ItemLabel(new EventfulPointer(row * i),
+			new ItemLabel(EventfulPointer(row * i),
 				DisplayFunction.interpolating("Label number %i"), basicFont, initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		}
 	}

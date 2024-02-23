@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.async
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
 object Volatile
@@ -20,7 +20,7 @@ object Volatile
 * @author Mikko Hilpinen
 * @since 27.3.2019
 **/
-class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] with Pointer[A]
+class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] with EventfulPointer[A]
 {
     // ATTRIBUTES   ----------------
     

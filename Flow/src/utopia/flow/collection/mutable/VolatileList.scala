@@ -37,8 +37,8 @@ object VolatileList
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileList[T] private(list: Vector[T]) extends Volatile(list)
-	with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
+class VolatileList[T] private(list: Vector[T])
+	extends Volatile(list) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
 {
     // IMPLEMENTED    ---------------
 	

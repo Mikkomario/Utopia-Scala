@@ -141,7 +141,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
+	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
 	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
 	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
 	
@@ -149,7 +149,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	/**
 	  * A mutable pointer to this button's base color
 	  */
-	val colorPointer = new EventfulPointer(initialColor)
+	val colorPointer = EventfulPointer(initialColor)
 	
 	var focusListeners: Seq[FocusListener] = Vector(new ButtonDefaultFocusListener(_statePointer))
 	override val focusId = hashCode()

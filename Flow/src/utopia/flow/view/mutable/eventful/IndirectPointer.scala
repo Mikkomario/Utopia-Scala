@@ -44,4 +44,4 @@ object IndirectPointer
   * @author Mikko Hilpinen
   * @since 12.4.2023, v2.1
   */
-trait IndirectPointer[A] extends Pointer[A] with ChangingWrapper[A]
+trait IndirectPointer[A] extends EventfulPointer[A] with ChangingWrapper[A]

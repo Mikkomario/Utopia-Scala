@@ -78,7 +78,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 				 textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 				 insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
 				 betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		forPointer[A](new EventfulPointer[A](initialValue), font, displayFunction, textColor, alignment, insets,
+		forPointer[A](EventfulPointer[A](initialValue), font, displayFunction, textColor, alignment, insets,
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
@@ -131,7 +131,7 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	  * @return A new label
 	  */
 	def apply[A](initialValue: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		forPointer(new EventfulPointer[A](initialValue), displayFunction)
+		forPointer(EventfulPointer[A](initialValue), displayFunction)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
@@ -201,7 +201,7 @@ class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
 	/**
 	  * A mutable pointer that contains the currently used text styling
 	  */
-	val stylePointer = new EventfulPointer(initialDrawContext)
+	val stylePointer = EventfulPointer(initialDrawContext)
 	/**
 	  * Pointer that contains the text currently displayed on this label
 	  */

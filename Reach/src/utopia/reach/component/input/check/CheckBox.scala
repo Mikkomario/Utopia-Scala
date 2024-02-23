@@ -181,7 +181,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def iconsOrImages(images: Either[Pair[SingleColorIcon], Pair[Image]],
-	                  valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
+	                  valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
 	{
 		// Requires high contrast because of low alpha values
 		implicit val c: ColorContext = context.withEnhancedColorContrast
@@ -208,7 +208,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def icons(icons: Pair[SingleColorIcon],
-	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer[Boolean](false)) =
+	          valuePointer: EventfulPointer[Boolean] = EventfulPointer[Boolean](false)) =
 		iconsOrImages(Left(icons), valuePointer)
 	/**
 	  * Creates a new check box
@@ -216,7 +216,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param valuePointer Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def images(images: Pair[Image], valuePointer: EventfulPointer[Boolean] = new EventfulPointer[Boolean](false)) =
+	def images(images: Pair[Image], valuePointer: EventfulPointer[Boolean] = EventfulPointer[Boolean](false)) =
 		iconsOrImages(Right(images), valuePointer)
 }
 
@@ -249,7 +249,7 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new check box
 	  */
 	def apply(images: Pair[Image], hoverColors: Pair[Color], hoverRadius: Double = 0.0,
-	          valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
+	          valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
 		new CheckBox(parentHierarchy, images, hoverColors, hoverRadius, settings, valuePointer)
 }
 
@@ -277,7 +277,7 @@ case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,
 	  * @param valuePointer   Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def apply(valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false)) =
+	def apply(valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
 		factory.iconsOrImages(images, valuePointer)
 }
 
@@ -362,7 +362,7 @@ object CheckBox extends CheckBoxSetup()
 class CheckBox(parentHierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
-               override val valuePointer: EventfulPointer[Boolean] = new EventfulPointer(false))
+               override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false))
 	extends AbstractButton(settings) with ReachComponentWrapper with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------

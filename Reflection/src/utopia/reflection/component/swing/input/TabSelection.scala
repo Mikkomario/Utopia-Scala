@@ -81,8 +81,8 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 	
 	private var labels: Map[A, TextLabel] = HashMap()
 	
-	override val valuePointer = new EventfulPointer[Option[A]](None)
-	override val contentPointer = new EventfulPointer[Seq[A]](Vector())
+	override val valuePointer = EventfulPointer[Option[A]](None)
+	override val contentPointer = EventfulPointer[Seq[A]](Vector())
 	
 	
 	// INITIAL CODE	-------------------

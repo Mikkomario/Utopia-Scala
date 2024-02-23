@@ -9,6 +9,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
@@ -85,17 +86,21 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	/**
 	  * A mutable pointer to this button's current image set
 	  */
-	val imagesPointer = new EventfulPointer(initialImages)
+	val imagesPointer = EventfulPointer(initialImages)
+	/**
+	  * A mutable pointer into this button's image-transformation
+	  */
+	val transformationPointer = EventfulPointer.empty[Matrix2D]()
 	/**
 	  * A mutable pointer to this button's current insets
 	  */
-	val insetsPointer = new EventfulPointer(initialInsets)
+	val insetsPointer = EventfulPointer(initialInsets)
 	/**
 	  * A mutable pointer to this button's current alignment
 	  */
-	val alignmentPointer = new EventfulPointer[Alignment](initialAlignment)
+	val alignmentPointer = EventfulPointer[Alignment](initialAlignment)
 	
-	private val _statePointer = new EventfulPointer(GuiElementStatus.identity)
+	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
 	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
 	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
 	
@@ -111,7 +116,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Vector()
 	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer,
-		Fixed(allowUpscaling), additionalDrawers, useLowPrioritySize)
+		transformationPointer, Fixed(allowUpscaling), additionalDrawers, useLowPrioritySize)
 	
 	override val focusId = hashCode()
 	
@@ -140,6 +145,9 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	  */
 	def alignment = alignmentPointer.value
 	def alignment_=(newAlignment: Alignment) = alignmentPointer.value = newAlignment
+	
+	def transformation = transformationPointer.value
+	def transformation_=(newTransformation: Option[Matrix2D]) = transformationPointer.value = newTransformation
 	
 	/**
 	  * Current overall shade of this button (based on the focused-image)
