@@ -292,10 +292,12 @@ class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaP
 	
 	// Relays the repaint requests to the component hierarchy
 	wrapper.addRepaintListener { (_, region, prio) =>
-		region match {
-			case Some(region) => repaintArea(region, prio)
-			case None => repaint(prio)
-		}
+		// Repaint requests are relative to the drawBounds while parent requests are relative to this component's bounds
+		val actualRegion = Bounds(Point.origin, size).overlapWith(region match {
+			case Some(r) => r + wrapper.drawBounds.position
+			case None => wrapper.drawBounds
+		})
+		actualRegion.foreach { b => repaintArea(b.ceil, prio) }
 	}
 	
 	// Distributes relativized mouse events to the Repositioner, which relays them to other components

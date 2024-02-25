@@ -443,10 +443,10 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 						// Case: Drawing a sub-region => Only paints part of the buffer image
 						case Some(region) =>
 							bounds.overlapWith(region).foreach { overlap =>
-								if (overlap == bounds)
+								if (overlap ~== bounds)
 									buffer.drawWith(drawer, targetPosition)
 								else {
-									val relativeArea = overlap - bounds.position
+									val relativeArea = (overlap - bounds.position).ceil // NB: Rounding might be unnecessary
 									buffer.drawSubImageWith(drawer, relativeArea, targetPosition)
 								}
 							}
@@ -499,7 +499,7 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 			drawBounds.foreach { bounds =>
 				// Determines the targeted area within the buffer image
 				val translation = bounds.position
-				val relativeRegion = region - translation
+				val relativeRegion = (region - translation).ceil // NB: Rounding here might be unnecessary
 				// Determines which items to re-draw
 				val targetItems = orderedItemsPointer.value.map { a => a -> a.drawBounds }
 					.filter { _._2.overlapsWith(region) }

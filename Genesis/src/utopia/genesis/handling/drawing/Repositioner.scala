@@ -29,7 +29,7 @@ class Repositioner(override protected val wrapped: Drawable,
 	private val relativeBoundsPointer = originalSizePointer.mergeWith(targetSizePointer)(resizeLogic.apply)
 	override val drawBoundsPointer = relativeBoundsPointer.mergeWith(targetPositionPointer) { _ + _ }
 	
-	private val scalingPointer = targetSizePointer.mergeWith(originalSizePointer) { _.x / _.x }
+	private val scalingPointer = relativeBoundsPointer.mergeWith(originalSizePointer) { _.width / _.width }
 	
 	override protected val mouseHandler = new TransformedMouseHandler()
 	

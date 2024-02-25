@@ -298,10 +298,13 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 				val innerArea = componentBounds - resizeActiveInsets
 				// Case: Clicked inside => Applies repositioning, if appropriate
 				if (innerArea.contains(event.position)) {
-					startDrag(event.position.absolute)
+					if (repositionLogic.nonEmpty)
+						startDrag(event.position.absolute)
+					else
+						Preserve
 				}
 				// Case: Pressed near the borders => Determines the drag directions
-				if (!innerArea.contains(event.position)) {
+				else {
 					val relativePosition = event.position - componentBounds.position
 					val directions = resizeAxes.flatMap { axis =>
 						val p = relativePosition(axis)
@@ -323,9 +326,6 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 					else
 						Preserve
 				}
-				// Case: Mouse pressed inside the component
-				else
-					Preserve
 			}
 			// Case: Mouse pressed outside the component
 			else

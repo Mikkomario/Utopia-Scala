@@ -9,7 +9,8 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
 import utopia.flow.operator.combine.{Combinable, LinearScalable, Subtractable}
-import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Direction2D}
@@ -44,6 +45,11 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
       * Collision axes used when testing for containment / overlap with Bounds
       */
     lazy val collisionAxes = Vector(X.unit.toVector2D, Y.unit.toVector2D)
+    
+    /**
+      * An approximate equality function for two sets of bounds
+      */
+    val approxEquals = EqualsFunction[Bounds] { (a, b) => a.forAllDimensionsWith(b) { _ ~== _ } }
     
     
     // IMPLICIT ---------------------------
@@ -128,7 +134,7 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
 class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     extends Dimensional[NumericSpan[Double], Bounds] with Rectangular with ValueConvertible with ModelConvertible
         with LinearScalable[Bounds] with Combinable[HasDoubleDimensions, Bounds]
-        with Subtractable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy
+        with Subtractable[HasDoubleDimensions, Bounds] with Bounded[Bounds] with EqualsBy with ApproxSelfEquals[Bounds]
 {
     // ATTRIBUTES   ----------------------
     
@@ -179,6 +185,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     override def self = this
     override def bounds = this
     
+    override implicit def equalsFunction: EqualsFunction[Bounds] = Bounds.approxEquals
     override protected def equalsProperties = Vector(dimensions)
     
     override def topLeftCorner = Point(dimensions.map { _.start })

@@ -16,10 +16,12 @@ import utopia.paradigm.color.{Color, Hsl}
 import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.Adjustment
 import utopia.reach.component.label.drawable.DrawableCanvas
+import utopia.reach.cursor.DragTo
 import utopia.reach.window.ReachWindow
 
 /**
@@ -37,7 +39,7 @@ object DrawableMouseTest extends App
 		canvasF.withMinSize(Size.square(320))(Fixed(Bounds(0, 0, 640, 480)))
 	}
 	private val canvas = window.content
-	// DragTo.resize.applyTo(window.content, Insets.symmetric(16))
+	DragTo.resize.applyTo(window.content, Insets.symmetric(16))
 	
 	window.setToCloseOnEsc()
 	window.setToExitOnClose()
