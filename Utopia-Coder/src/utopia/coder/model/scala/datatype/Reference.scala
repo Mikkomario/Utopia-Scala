@@ -91,6 +91,7 @@ object Reference
 		lazy val collectionExtensions = extensions(collection, "CollectionExtensions")
 		lazy val timeExtensions = extensions(time, "TimeExtensions")
 		
+		lazy val mutate = apply(utils, "Mutate")
 		lazy val notEmpty = apply(utils, "NotEmpty")
 		
 		lazy val pair = apply(immutableCollection, "Pair")
