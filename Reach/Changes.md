@@ -8,6 +8,7 @@
   - The contextual factory now uses **ButtonSettings** and extends **CustomDrawableFactory**
 - All **FocusableWithState** implementations are now required to implement the `focusPointer: FlagLike` property
 - **ButtonLike** implementations are now required to implement `.enabledPointer: FlagLike`
+- **ComponentHierarchy**`.linkPointer` is now type **FlagLike** instead of **Changing**
 - Moved **FramedFactory** to the **Firmament** module
 - Moved **PaintManager** and **Priority** to the **Genesis** module
 - **ImageLabelSettingsLike** and related settings-like traits now require a transformation to be specified 

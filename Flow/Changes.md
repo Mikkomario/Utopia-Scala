@@ -19,6 +19,7 @@
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
+- Added **PairOrVectorBuilder** class
 ### New methods
 - **Changing**
   - Added `.viewWhile(FlagLike)`
@@ -51,6 +52,8 @@
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**
 - Minor optimization to **VolatileList** -constructing
+- Optimized certain Pair functions
+  - E.g. `++` now returns a **Pair** if no elements are added
 
 ## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 

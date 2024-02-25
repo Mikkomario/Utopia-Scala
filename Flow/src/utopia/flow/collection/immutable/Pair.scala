@@ -1,18 +1,28 @@
 package utopia.flow.collection.immutable
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
-import scala.collection.mutable
+import scala.collection.{SeqFactory, mutable}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
 {
+	// COMPUTED ----------------------------------
+	
+	/**
+	  * @return A factory used for constructing Pairs or other indexed sequences, depending on the input size
+	  */
+	def factory = PairFactory
+	
+	
 	// IMPLICIT ----------------------------------
 	
 	implicit def tupleToPair[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
@@ -167,6 +177,155 @@ object Pair
 			Pair(firstUniquePool.toSet, secondUniqueBuilder.toSet) -> matchesBuilder.result()
 		}
 	}
+	
+	
+	// NESTED   ---------------------------
+	
+	/**
+	  * A builder class that builds a Pair if the input is exactly two items.
+	  * Otherwise builds a Vector.
+	  * @tparam A Type of items placed in the resulting collection.
+	  */
+	class PairOrVectorBuilder[A] extends mutable.Builder[A, Either[Vector[A], Pair[A]]]
+	{
+		// ATTRIBUTES   -------------------
+		
+		// Only tracked up to 3. After 3, the index doesn't matter anymore.
+		private var nextIndex = 0
+		private var first: Option[A] = None
+		private var second: Option[A] = None
+		
+		private val lazyBuilder = ResettableLazy {
+			val builder = new VectorBuilder[A]()
+			// Adds the then-queued first and second item
+			builder ++= first
+			builder ++= second
+			builder
+		}
+		
+		
+		// COMPUTED -----------------------
+		
+		private def overflown = nextIndex > 2
+		
+		
+		// IMPLEMENTED  -------------------
+		
+		// Tracks size until 3
+		override def knownSize = if (overflown) -1 else nextIndex
+		
+		override def addOne(elem: A) = {
+			nextIndex match {
+				case 0 => first = Some(elem)
+				case 1 => second = Some(elem)
+				case _ => lazyBuilder.value.addOne(elem)
+			}
+			if (nextIndex < 3)
+				nextIndex += 1
+			this
+		}
+		override def addAll(xs: IterableOnce[A]) = {
+			// Case: Already building a vector => Delegates building
+			if (overflown)
+				lazyBuilder.value.addAll(xs)
+			else {
+				xs match {
+					// Case: Iterable => Utilizes nonEmpty & knownSize
+					case i: Iterable[A] =>
+						if (i.nonEmpty) {
+							val count = i.knownSize
+							// Case: Number of added items is known => Switches directly to vector-building if needed
+							if (count > 0) {
+								val resultingIndex = nextIndex + count
+								// Case: Will overflow => Builds directly to the vector
+								if (resultingIndex > 2) {
+									nextIndex = 3
+									lazyBuilder.value.addAll(i)
+								}
+								// Case: Shouldn't overflow => Assigns the items normally
+								else
+									addFrom(i.iterator)
+							}
+							// Case: Number of items is unknown => Has to add one at a time
+							else
+								addFrom(i.iterator)
+						}
+					case i: Iterator[A] =>
+						if (i.hasNext)
+							addFrom(i)
+					case i =>
+						val iter = i.iterator
+						if (iter.hasNext)
+							addFrom(iter)
+				}
+			}
+			this
+		}
+		
+		override def clear() = {
+			first = None
+			second = None
+			lazyBuilder.reset()
+		}
+		
+		override def result() = nextIndex match {
+			case 0 => Left(Vector.empty)
+			case 1 => Left(Vector(first.get))
+			case 2 => Right(Pair(first.get, second.get))
+			case _ => Left(lazyBuilder.value.result())
+		}
+		
+		
+		// OTHER    -----------------------
+		
+		// Assumes a non-empty iterator
+		private def addFrom(iterator: Iterator[A]) = {
+			nextIndex match {
+				case 0 =>
+					first = Some(iterator.next())
+					if (iterator.hasNext) {
+						second = Some(iterator.next())
+						nextIndex = 2
+					}
+					else
+						nextIndex = 1
+				case 1 =>
+					second = Some(iterator.next())
+					nextIndex = 2
+				case _ =>
+					lazyBuilder.value.addAll(iterator)
+					nextIndex = 3
+			}
+			
+			if (iterator.hasNext) {
+				lazyBuilder.value.addAll(iterator)
+				nextIndex = 3
+			}
+		}
+	}
+	
+	object PairFactory extends SeqFactory[IndexedSeq]
+	{
+		override def empty[A]: Vector[A] = Vector.empty
+		
+		override def from[A](source: IterableOnce[A]): IndexedSeq[A] = source match {
+			// Case: Already an indexed sequence => Won't transform
+			case i: IndexedSeq[A] => i
+			// Case: Other collection type
+			case _ =>
+				// Case: Known to contain two elements => Converts to a pair
+				if (source.knownSize == 2) {
+					val iter = source.iterator
+					Pair(iter.next(), iter.next())
+				}
+				// Case: Other number of elements, or number of elements not known => Converts to an indexed seq
+				else
+					IndexedSeq.from(source)
+		}
+		
+		override def newBuilder[A]: mutable.Builder[A, IndexedSeq[A]] =
+			new PairOrVectorBuilder[A].mapResult { _.either }
+	}
 }
 
 /**
@@ -180,6 +339,7 @@ case class Pair[+A](first: A, second: A)
 	// IMPLEMENTED  ----------------------
 	
 	override def self = this
+	override def iterableFactory = Pair.factory
 	
 	override def unary_- = Pair(second, first)
 	override protected def _empty: IndexedSeq[A] = Vector.empty
@@ -187,8 +347,10 @@ case class Pair[+A](first: A, second: A)
 	override protected def only(side: End): IndexedSeq[A] = Vector(apply(side))
 	override protected def newPair[B](first: => B, second: => B): Pair[B] = Pair(first, second)
 	
-	override protected def _fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = Vector.from(coll)
-	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = new VectorBuilder[A]()
+	override protected def _fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
+		Pair.factory.from(coll)
+	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] =
+		Pair.factory.newBuilder
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -198,7 +360,7 @@ case class Pair[+A](first: A, second: A)
 	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = super[PairOps].sorted[B]
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = _fromSpecific(coll)
-	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Vector[A]] = _newSpecificBuilder
+	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] = _newSpecificBuilder
 	
 	
 	// OTHER    --------------------------

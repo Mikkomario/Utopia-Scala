@@ -1,6 +1,6 @@
 package utopia.reach.component.hierarchy
 
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.reach.component.template.ReachComponentLike
 
 /**
@@ -9,7 +9,7 @@ import utopia.reach.component.template.ReachComponentLike
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: Changing[Boolean])
+class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: FlagLike)
 	extends ComponentHierarchy
 {
 	// ATTRIBUTES	---------------------------
@@ -17,7 +17,7 @@ class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer
 	override lazy val parent = Right(parentComponent.parentHierarchy -> parentComponent)
 	override lazy val top = super.top
 	
-	override lazy val linkPointer = parentComponent.parentHierarchy.linkPointer.mergeWith(switchPointer) { _ && _ }
+	override lazy val linkPointer = parentComponent.parentHierarchy.linkPointer && switchPointer
 	
 	
 	// IMPLEMENTED	---------------------------

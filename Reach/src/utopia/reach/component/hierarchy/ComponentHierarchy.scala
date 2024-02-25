@@ -2,7 +2,7 @@ package utopia.reach.component.hierarchy
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{FontMetricsWrapper, Priority}
 import utopia.genesis.text.Font
@@ -30,10 +30,11 @@ trait ComponentHierarchy
 	def parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]
 	
 	/**
-	  * @return A pointer that shows whether this hierarchy is currently active / linked to the top window. Should
-	  *         take into account possible parent state.
+	  * @return A pointer that shows whether this hierarchy is currently active / linked to the top window.
+	  *         Should take into account possible parent state.
 	  */
-	def linkPointer: Changing[Boolean]
+	// TODO: Rename to linkedFlag
+	def linkPointer: FlagLike
 	// TODO: Consider adding the following two methods
 	/*
 	  * @return A pointer that contains the direct parent component's position relative to the root canvas component

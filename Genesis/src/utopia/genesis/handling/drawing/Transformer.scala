@@ -1,7 +1,9 @@
 package utopia.genesis.handling.drawing
 
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.Priority.Low
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -28,19 +30,17 @@ class Transformer(override protected val wrapped: Drawable, transformPointer: Ch
 	override val drawBoundsPointer: Changing[Bounds] = transformedDrawBoundsPointer.map { _.bounds }
 	
 	private var _repaintListeners = Seq[RepaintListener]()
+	private val repaintOnChangeListener = ChangeListener.onAnyChange { repaint(priority = Low) }
 	
 	override protected val mouseHandler = new TransformedMouseHandler()
 	
 	
 	// INITIAL CODE -----------------------
 	
-	// Relays the repaint requests forward, but with transformed sub-regions
-	wrapped.addRepaintListener { (_, region, prio) =>
-		val transformedRegion = region.flatMap { r =>
-			inverseTransformPointer.value.map { t => (r * t).bounds - drawBounds.position }
-		}
-		repaint(transformedRegion, prio)
-	}
+	// Whenever the wrapped draw bounds change, repaints
+	wrapped.drawBoundsPointer.addListener(repaintOnChangeListener)
+	// Also repaints when the transformation is altered
+	transformPointer.addListener(repaintOnChangeListener)
 	
 	
 	// IMPLEMENTED  -----------------------

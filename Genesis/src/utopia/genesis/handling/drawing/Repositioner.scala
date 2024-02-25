@@ -3,6 +3,7 @@ package utopia.genesis.handling.drawing
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.Priority.Low
 import utopia.paradigm.enumeration.FillAreaLogic.{Fit, ScalePreservingShape}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -36,9 +37,9 @@ class Repositioner(override protected val wrapped: Drawable,
 	
 	
 	// INITIAL CODE --------------------
-
-	// Whenever the wrapped item requests a repaint, modifies the repaint call to match the new position
-	wrapped.addRepaintListener { (_, region, priority) => repaint(region.map { _ * scalingPointer.value }, priority) }
+	
+	// Whenever the wrapped item's draw bounds update, repaints, even if the repositioned bounds won't change
+	wrapped.drawBoundsPointer.addAnyChangeListener { repaint(priority = Low) }
 	
 	
 	// IMPLEMENTED  --------------------

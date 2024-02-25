@@ -1,8 +1,10 @@
 package utopia.genesis.handling.event.consume
 
+import utopia.flow.operator.Identity
 import utopia.flow.operator.filter.Filter
+import utopia.flow.util.Mutate
 import utopia.flow.view.mutable.eventful.SettableOnce
-import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 
 object Consumable
 {
@@ -69,6 +71,20 @@ trait Consumable[+Repr]
 	def consumed(by: => String): Repr = consumed(new ConsumeEvent(by))
 	
 	/**
+	  * @param consumeChoice A choice to either consume or preserve this event as it is
+	  * @return Copy of this event that has been consumed, if the choice was to make it so
+	  */
+	def after(consumeChoice: ConsumeChoice): Repr = {
+		if (isConsumed)
+			self
+		else
+			consumeChoice match {
+				case Consume(consumeEvent) => consumed(consumeEvent)
+				case Preserve => self
+			}
+	}
+	
+	/**
 	  * Distributes this event among the specified listeners.
 	  * If one of the listeners chooses to consume this event, the remaining listeners will receive a consumed copy.
 	  * @param listeners Listeners to inform
@@ -77,27 +93,41 @@ trait Consumable[+Repr]
 	  * @return Copy of this event after the deliveries, plus a consume choice to forward, if necessary.
 	  *         If one of the listeners consumed this event, returns the consumed copy. Otherwise returns this event.
 	  */
-	def distribute[L](listeners: IterableOnce[L])(deliver: (L, Repr) => ConsumeChoice) = {
+	def distribute[L](listeners: IterableOnce[L])(deliver: (L, Repr) => ConsumeChoice) =
+		transformAndDistribute(listeners.iterator.map[(L, Mutate[Repr])] { _ -> Identity })(deliver)
+	/**
+	  * Distributes this event among the specified listeners.
+	  * Applies a custom modify function to each distribution.
+	  * If one of the listeners chooses to consume this event, the remaining listeners will receive a consumed copy.
+	  * @param listeners Listeners to inform.
+	  *                  Each listener is coupled with a transformation function that
+	  *                  customizes the delivered event for them.
+	  * @param deliver A function which delivers this event to a listener
+	  * @tparam L Type of listeners used
+	  * @return Copy of this event after the deliveries, plus a consume choice to forward, if necessary.
+	  *         If one of the listeners consumed this event, returns the consumed copy. Otherwise returns this event.
+	  */
+	def transformAndDistribute[L, E >: Repr](listeners: IterableOnce[(L, Repr => E)])(deliver: (L, E) => ConsumeChoice) = {
 		val listenerIter = listeners.iterator
 		// Case: No listeners to inform => No-op
 		if (!listenerIter.hasNext)
 			self -> Preserve
 		// Case: Already consumed => Won't bother tracking further consume events
 		else if (isConsumed) {
-			listenerIter.foreach { deliver(_, self) }
+			listenerIter.foreach { case (l, t) => deliver(l, t(self)) }
 			self -> Preserve
 		}
 		// Case: Not yet consumed => Prepares for a possible consume event
 		else {
 			// Swaps this event to a consumed copy once a consume event has been received
 			val consumeEventPointer = SettableOnce[ConsumeEvent]()
-			val eventPointer = consumeEventPointer.map {
+			val eventPointer = consumeEventPointer.strongMap {
 				case Some(consumeEvent) => consumed(consumeEvent)
 				case None => self
 			}
 			// Informs the listeners in order
-			listenerIter.foreach { l =>
-				val response = deliver(l, eventPointer.value)
+			listenerIter.foreach { case (l, t) =>
+				val response = deliver(l, t(eventPointer.value))
 				if (consumeEventPointer.value.isEmpty)
 					consumeEventPointer.value = response.eventIfConsumed
 			}

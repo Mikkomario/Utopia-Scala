@@ -154,8 +154,6 @@ object DrawableHandler
 		  *         (if used as a Drawable)
 		  */
 		def drawnTo(drawLevel: DrawOrder) = copy(drawOrder = drawLevel)
-		
-		
 	}
 }
 
@@ -236,6 +234,7 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 	
 	override def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 	
+	// Repainting is clipped and possibly delayed
 	override def repaint(region: Option[Bounds], priority: Priority) = clip(region).foreach { region =>
 		region match {
 			case Some(region) => layers.foreach { _.queueBufferUpdate(region, priority) }
