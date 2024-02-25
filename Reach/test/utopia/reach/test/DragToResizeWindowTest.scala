@@ -28,7 +28,8 @@ object DragToResizeWindowTest extends App
 	window.setToExitOnClose()
 	
 	println(window.content.stackSize)
-	DragTo.resize.repositioningWindow.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
+	// FIXME: Repositioning is always on, regardless of input
+	DragTo.resize/*.repositioningWindow*/.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
 	// DragToResize.expandingAtSides.fillingAtTop.applyTo(window.content, dragInsets)
 	
 	start()

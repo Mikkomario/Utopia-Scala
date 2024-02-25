@@ -1,0 +1,1063 @@
+{
+  "project": "Reach",
+  "version": "v1.3",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.reach",
+  "packages": {
+    "flow": "utopia.flow",
+    "coll": "flow/collection",
+    "strings": "flow/parse.string",
+    "operator": "flow/operator",
+    "pointers": "flow/view",
+    "immutablePointers": "pointers/immutable.eventful",
+    "paradigm": "utopia.paradigm",
+    "pEnum": "paradigm/enumeration",
+    "color": "paradigm/color",
+    "shapes": "paradigm/shape2d",
+    "genesis": "utopia.genesis",
+    "graphics": "genesis/graphics",
+    "firmament": "utopia.firmament",
+    "firmamentModels": "firmament/model",
+    "fEnum": "firmamentModels/enumeration",
+    "stackModels": "firmamentModels/stack",
+    "fContext": "firmament/context",
+    "localization": "firmament/localization",
+    "image": "firmament/image",
+    "focus": "utopia.reach.focus"
+  },
+  "references": {
+    "duration": "scala.concurrent.Duration",
+    "pair": "coll/immutable.Pair",
+    "regex": "strings/Regex",
+    "p": "pointers/template.eventful.Changing",
+    "fixed": "immutablePointers.Fixed",
+    "true!": "immutablePointers.AlwaysTrue",
+    "false!": "immutablePointers.AlwaysFalse",
+    "color": "color.Color",
+    "cRole": "color.ColorRole",
+    "align": "pEnum/Alignment",
+    "axis": "pEnum/Axis2D",
+    "size": "shapes/vector.size.Size",
+    "sizeC": "pEnum/SizeCategory",
+    "prio": "graphics/Priority",
+    "fps": "genesis/util/Fps",
+    "icon": "image/SingleColorIcon",
+    "hotkey": "firmamentModels/HotKey",
+    "localized": "localization/LocalizedString",
+    "defaults": "fContext/ComponentCreationDefaults",
+    "insets": "stackModels/StackInsets",
+    "len": "stackModels/StackLength"
+  },
+  "components": {
+    "component": {
+      "label": {
+        "image": [
+          {
+            "name": "ImageLabel",
+            "context": "color",
+            "parents": ["customDrawable", "framed"],
+            "props": [
+              {
+                "name": "alignment",
+                "type": "align",
+                "default": {
+                  "ref": "align",
+                  "code": "Alignment.Center"
+                },
+                "doc": "Alignment used when drawing the image within this label",
+                "map": true
+              },
+              {
+                "name": "imageScaling",
+                "param": "scaling",
+                "type": "Double",
+                "default": "1.0",
+                "doc": "Scaling applied to the drawn images",
+                "map": true
+              },
+              {
+                "name": "colorOverlay",
+                "param": "color",
+                "setter": "withColor",
+                "type": "Option[color]",
+                "default": "None",
+                "doc": "Color overlay applied over drawn images"
+              },
+              {
+                "name": "usesLowPrioritySize",
+                "param": "lowPriority",
+                "setter": "withUseLowPrioritySize",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether low priority size constraints should be used"
+              }
+            ],
+            "non_contextual_props": [
+              {
+                "name": "allowsUpscaling",
+                "param": "allow",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether the drawn image should be allowed to scale above its source resolution"
+              }
+            ]
+          },
+          {
+            "name": "ViewImageLabel",
+            "context": "color",
+            "variable_context": true,
+            "parents": ["customDrawable"],
+            "props": [
+              {
+                "name": "insetsPointer",
+                "param": "p",
+                "type": "p[insets]",
+                "default": {
+                  "ref": ["fixed"],
+                  "code": "Fixed(StackInsets.any)"
+                },
+                "doc": "Pointer that determines the insets placed around the image",
+                "map": true
+              },
+              {
+                "name": "alignmentPointer",
+                "param": "p",
+                "type": "p[align]",
+                "default": {
+                  "ref": ["fixed"],
+                  "code": "Fixed(Alignment.Center)"
+                },
+                "doc": "Pointer that determines the image drawing location within this component",
+                "map": true
+              },
+              {
+                "name": "colorOverlayPointer",
+                "param": "p",
+                "type": "Option[p[color]]",
+                "default": "None",
+                "doc": "Pointer that, when defined, places a color overlay over the drawn image",
+                "map": true
+              },
+              {
+                "name": "imageScalingPointer",
+                "param": "p",
+                "type": "p[Double]",
+                "default": {
+                  "ref": "fixed",
+                  "code": "Fixed(1.0)"
+                },
+                "doc": "Pointer that determines image scaling, in addition to the original image scaling",
+                "map": true
+              },
+              {
+                "name": "usesLowPrioritySize",
+                "param": "lowPriority",
+                "setter": "withUseLowPrioritySize",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether this label should use low priority size constraints"
+              }
+            ],
+            "non_contextual_props": [
+              {
+                "name": "allowsUpscaling",
+                "param": "allow",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether drawn images should be allowed to scale beyond their source resolution"
+              }
+            ]
+          },
+          {
+            "name": "ImageAndTextLabel",
+            "context": "text",
+            "only_contextual": true,
+            "parents": ["customDrawable"],
+            "props": [
+              {
+                "ref": "ImageLabel",
+                "prefix": "image",
+                "doc": "Settings that affect the wrapped image label"
+              },
+              {
+                "name": "separatingMargin",
+                "param": "margin",
+                "type": "Option[sizeC]",
+                "default": {
+                  "code": "Some(SizeCategory.Small)",
+                  "references": ["sizeC"]
+                },
+                "doc": "The total margin placed between the image and the text. None if no margin is placed."
+              },
+              {
+                "name": "forceEqualBreadth",
+                "param": "force",
+                "type": "Boolean",
+                "default": false,
+                "doc": "Whether the text and image should be forced to have equal width or height, depending on the layout"
+              },
+              {
+                "name": "isHint",
+                "param": "hint",
+                "type": "Boolean",
+                "default": false,
+                "doc": "Whether this factory constructs hint labels. Affects text opacity."
+              }
+            ]
+          },
+          {
+            "name": "ViewImageAndTextLabel",
+            "context": "text",
+            "only_contextual": true,
+            "variable_context": true,
+            "parents": ["customDrawable"],
+            "props": [
+              {
+                "ref": "ViewImageLabel",
+                "prefix": "image"
+              },
+              {
+                "name": "separatingMargin",
+                "param": "margin",
+                "type": "Option[sizeC]",
+                "default": {
+                  "code": "SizeCategory.Small",
+                  "references": ["sizeC"]
+                },
+                "doc": "The total margin placed between the image and the text. None if no margin is placed."
+              },
+              {
+                "name": "forceEqualBreadth",
+                "param": "force",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether the image and the text should be forced to have equal height or width (depending on the alignment used)"
+              }
+            ]
+          }
+        ],
+        "text": [
+          {
+            "name": "TextLabel",
+            "context": "text",
+            "parents": ["customDrawable"],
+            "props": [
+              {
+                "name": "lineSplitThreshold",
+                "param": "threshold",
+                "type": "Option[Double]",
+                "default": "None",
+                "doc": "Maximum line length in pixels. A newline character is placed before the word that would exceed this limit. \nNone if there should not be any automatic line-splitting."
+              }
+            ],
+            "contextual_props": [
+              {
+                "name": "isHint",
+                "param": "hint",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether this factory is used for creating hint labels. These labels have more transparent text."
+              }
+            ]
+          },
+          {
+            "name": "ViewTextLabel",
+            "context": "text",
+            "variable_context": true,
+            "parents": ["customDrawable"],
+            "contextual_props": [
+              {
+                "name": "isHintPointer",
+                "param": "p",
+                "type": "p[Boolean]",
+                "default": {
+                  "ref": "false!",
+                  "code": "AlwaysFalse"
+                },
+                "map": true,
+                "doc": "Pointer that determines whether text will be drawn as a hint (i.e. partially transparent)"
+              }
+            ],
+            "non_contextual_props": [
+              {
+                "name": "allowsTextToShrink",
+                "param": "allow",
+                "setter": "withAllowTextShrinking",
+                "type": "Boolean",
+                "default": "false",
+                "doc": "Whether text should be allowed to shrink in order to conserve space"
+              }
+            ]
+          }
+        ],
+        "text.selectable": [
+          {
+            "name": "SelectableTextLabel",
+            "context": "text",
+            "only_contextual": true,
+            "variable_context": true,
+            "parents": ["customDrawable", "focus"],
+            "props": [
+              {
+                "name": "highlightColorPointer",
+                "param": "p",
+                "type": "p[cRole]",
+                "default": {
+                  "code": "Fixed(ColorRole.Secondary)",
+                  "references": ["fixed", "cRole"]
+                },
+                "map": true,
+                "doc": "A pointer that determines the color used when highlighting selected text"
+              },
+              {
+                "name": "customCaretColorPointer",
+                "param": "p",
+                "type": "Option[p[cRole]]",
+                "default": "None",
+                "doc": "A pointer that, if defined, determines the color of the caret when drawn"
+              },
+              {
+                "name": "caretBlinkFrequency",
+                "param": "frequency",
+                "type": "scala.concurrent.Duration",
+                "default": {
+                  "code": "ComponentCreationDefaults.caretBlinkFrequency",
+                  "references": ["defaults"]
+                },
+                "map": true,
+                "doc": "Interval between caret visibility changes"
+              },
+              {
+                "name": "drawsSelectionBackground",
+                "param": "drawBackground",
+                "setter": "withDrawSelectionBackground",
+                "type": "Boolean",
+                "default": "true",
+                "doc": "Whether selected area background should be highlighted.\nIf false, only highlights selected text."
+              }
+            ]
+          }
+        ],
+        "drawable": [
+          {
+            "name": "DrawableCanvas",
+            "name_plural": "DrawableCanvases",
+            "context": "base",
+            "props": [
+              {
+                "name": "scalingLogic",
+                "param": "logic",
+                "type": "pEnum/FillAreaLogic.ScalePreservingShape",
+                "default": {
+                  "code": "FillAreaLogic.Fit",
+                  "references": ["pEnum/FillAreaLogic"]
+                },
+                "doc": "Logic used for scaling the draw output when the component size doesn't match view area size."
+              },
+              {
+                "name": "fpsLimits",
+                "param": "limits",
+                "type": "Map[prio, fps]",
+                "default": "Map()",
+                "mapping": true,
+                "doc": "Repaint frequency-limits assigned for specific draw-priorities"
+              },
+              {
+                "name": "minSize",
+                "param": "size",
+                "type": "size",
+                "default": "Size.zero",
+                "mapping": true,
+                "doc": "Minimum size assigned to the created component"
+              }
+            ]
+          }
+        ]
+      },
+      "button": [
+        {
+          "name": "Button",
+          "only_contextual": true,
+          "props": [
+            {
+              "name": "enabledPointer",
+              "param": "p",
+              "type": "p[Boolean]",
+              "default": {
+                "code": "AlwaysTrue",
+                "ref": "true!"
+              },
+              "map": true,
+              "doc": "A pointer that determines whether this button is interactive or not"
+            },
+            {
+              "name": "hotKeys",
+              "name_plural": "hotKeys",
+              "param": "keys",
+              "type": "Set[hotkey]",
+              "default": "Set()",
+              "map": true,
+              "doc": "The keys used for triggering this button even when it doesn't have focus"
+            },
+            {
+              "name": "focusListeners",
+              "name_plural": "focusListeners",
+              "param": "listeners",
+              "type": "Vector[focus/FocusListener]",
+              "default": "Vector.empty",
+              "map": true,
+              "doc": "Focus listeners that should receive focus events from this button"
+            }
+          ]
+        }
+      ],
+      "button.text": [
+        {
+          "name": "TextButton",
+          "context": "text",
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_properties": false
+            }
+          ]
+        }
+      ],
+      "button.image": [
+        {
+          "name": "ImageButton",
+          "context": "color",
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_properties": false
+            },
+            {
+              "ref": "ImageLabel",
+              "prefix": "image",
+              "prefix_properties": false
+            },
+            {
+              "name": "imageEffects",
+              "param": "effects",
+              "type": "Vector[image/ButtonImageEffect]",
+              "default": "ComponentCreationDefaults.asButtonImageEffects",
+              "mapping": true,
+              "doc": "Effects applied to generated image sets"
+            }
+          ]
+        },
+        {
+          "name": "ViewImageButton",
+          "context": "color",
+          "variable_context": true,
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_properties": false
+            },
+            {
+              "ref": "ViewImageLabel",
+              "prefix": "image",
+              "prefix_properties": false
+            },
+            {
+              "name": "imageEffects",
+              "param": "effects",
+              "type": "Vector[image/ButtonImageEffect]",
+              "default": "ComponentCreationDefaults.asButtonImageEffects",
+              "mapping": true,
+              "doc": "Effects applied to generated image sets"
+            }
+          ]
+        },
+        {
+          "name": "ImageAndTextButton",
+          "context": "text",
+          "only_contextual": true,
+          "parents": ["framed"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Wrapped general button settings"
+            },
+            {
+              "ref": "ImageAndTextLabel",
+              "prefix": "label",
+              "prefix_props": false,
+              "doc": "Wrapped settings for label construction"
+            },
+            {
+              "name": "imageEffects",
+              "param": "effects",
+              "type": "Vector[image/ButtonImageEffect]",
+              "default": "ComponentCreationDefaults.inButtonImageEffects",
+              "mapping": true,
+              "doc": "Effects applied to generated image sets"
+            }
+          ]
+        }
+      ],
+      "input": [
+        {
+          "name": "Field",
+          "context": "text",
+          "only_contextual": true,
+          "variable_context": true,
+          "props": [
+            {
+              "name": "fieldNamePointer",
+              "param": "p",
+              "type": "p[localized]",
+              "default": {
+                "code": "LocalizedString.alwaysEmpty",
+                "ref": "localized"
+              },
+              "map": true,
+              "doc": "Pointer that determines the name of this field displayed on this field"
+            },
+            {
+              "name": "promptPointer",
+              "param": "p",
+              "type": "p[localized]",
+              "default": {
+                "code": "LocalizedString.alwaysEmpty",
+                "ref": "localized"
+              },
+              "map": true,
+              "doc": "Pointer that determines what text is displayed while there is no input"
+            },
+            {
+              "name": "hintPointer",
+              "param": "p",
+              "type": "p[localized]",
+              "default": {
+                "code": "LocalizedString.alwaysEmpty",
+                "ref": "localized"
+              },
+              "map": true,
+              "doc": "Pointer that determines the hint to show underneath this field"
+            },
+            {
+              "name": "errorMessagePointer",
+              "param": "p",
+              "type": "p[localized]",
+              "default": {
+                "code": "LocalizedString.alwaysEmpty",
+                "ref": "localized"
+              },
+              "map": true,
+              "doc": "Pointer that determines an error message to display underneath this field"
+            },
+            {
+              "name": "highlightPointer",
+              "param": "p",
+              "type": "p[Option[cRole]]",
+              "default": {
+                "code": "Fixed(None)",
+                "ref": "fixed"
+              },
+              "map": true,
+              "doc": "Pointer that determines external highlight state/style to apply"
+            },
+            {
+              "name": "focusColorRole",
+              "param": "color",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color (role) used to highlight the focused-state"
+            },
+            {
+              "name": "hintScaleFactor",
+              "param": "scaling",
+              "type": "Double",
+              "default": "0.7",
+              "doc": "Scaling factor applied to displayed hint, error and field name text, relative to the input text size"
+            },
+            {
+              "name": "iconPointers",
+              "param": "pointers",
+              "type": "pair[p[icon]]",
+              "default": {
+                "code": "Pair.twice(SingleColorIcon.alwaysEmpty)",
+                "refs": ["icon", "pair"]
+              },
+              "map": true,
+              "doc": "Pointers that determines the icons to display on the left (first) and right (second) side of this field"
+            },
+            {
+              "ref": "ViewImageLabel",
+              "prefix": "image",
+              "doc": "Settings that defined how icons are displayed (if they are displayed)"
+            },
+            {
+              "name": "fillBackground",
+              "param": "fill",
+              "type": "Boolean",
+              "default": {
+                "code": "ComponentCreationDefaults.useFillStyleFields",
+                "ref": "defaults"
+              },
+              "doc": "Whether field background should be filled with color.\nIf false, outlined style will be used instead."
+            }
+          ]
+        },
+        {
+          "name": "FieldWithSelectionPopup",
+          "context": "reachWindow",
+          "variable_context": true,
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "Field",
+              "prefix": "field",
+              "prefix_props": false,
+              "doc": "Wrapped more generic field settings"
+            },
+            {
+              "ref": "SelectionList",
+              "prefix": "list",
+              "doc": "Settings that apply to the opened selection list"
+            },
+            {
+              "name": "expandAndCollapseIcon",
+              "param": "icons",
+              "type": "pair[icon]",
+              "default": {
+                "code": "Pair.twice(SingleColorIcon.empty)",
+                "refs": ["pair", "icon"]
+              },
+              "map": true,
+              "doc": "The expand (first) and the collapse icon (second) that should be displayed at the right side of the created fields.\nPlease note that a non-empty right-side icon will override these values."
+            },
+            {
+              "name": "listMargin",
+              "param": "margin",
+              "type": "Option[sizeC]",
+              "default": {
+                "code": "Some(SizeCategory.Small)",
+                "ref": "sizeC"
+              },
+              "doc": "Size of the margins to place between the selectable items in the pop-up. \nNone if no margin should be placed."
+            },
+            {
+              "name": "activationKeys",
+              "param": "keys",
+              "type": "Set[Int]",
+              "default": "Set[Int]()",
+              "map": true,
+              "doc": "Additional key-indices that open the pop-up when they are pressed while this field is in focus.\nBy default, only the appropriate arrow key opens the pop-up."
+            },
+            {
+              "name": "popupContextMod",
+              "param": "f",
+              "type": "ReachContentWindowContext => ReachContentWindowContext",
+              "default": {
+                "code": "Identity",
+                "ref": "operator/Identity"
+              },
+              "doc": "A function used for modifying the window context for the created pop-up"
+            },
+            {
+              "name": "noOptionsViewConstructor",
+              "param": "f",
+              "type": "Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]",
+              "default": "None",
+              "doc": "A function used for constructing a view to display when no options are selectable"
+            },
+            {
+              "name": "extraOptionConstructor",
+              "param": "f",
+              "type": "Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]",
+              "default": "None",
+              "doc": "A function used for constructing an additional selectable view to display"
+            },
+            {
+              "name": "extraOptionLocation",
+              "param": "location",
+              "type": "operator/End",
+              "default": {
+                "code": "End.Last",
+                "ref": "operator/End"
+              },
+              "doc": "The location where the extra option should be placed, if one has been specified"
+            }
+          ]
+        }
+      ],
+      "input.check": [
+        {
+          "name": "CheckBox",
+          "context": "color",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that affect the button aspects of these check boxes"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color (role) of the hover effects in check boxes while selected"
+            }
+          ]
+        },
+        {
+          "name": "RadioButton",
+          "context": "color",
+          "variable_context": true,
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that affect the functionality of the created radio buttons"
+            },
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color role used when highlighting the selected state in created radio buttons"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "scaling",
+              "type": "Double",
+              "default": "1.0",
+              "map": true,
+              "doc": "Scaling modifier applied to the size of the created radio buttons"
+            }
+          ]
+        },
+        {
+          "name": "Switch",
+          "context": "color",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Button",
+              "prefix": "button",
+              "prefix_props": false,
+              "doc": "Settings that apply to switch functionality"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "colorRole",
+              "setter": "withColor",
+              "param": "color",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Switch color when activated"
+            }
+          ]
+        }
+      ],
+      "input.text": [
+        {
+          "name": "EditableTextLabel",
+          "context": "text",
+          "only_contextual": true,
+          "variable_context": true,
+          "props": [
+            {
+              "ref": "SelectableTextLabel",
+              "prefix": "label",
+              "prefix_props": false,
+              "doc": "Wrapped general selectable text label settings"
+            },
+            {
+              "name": "enabledPointer",
+              "param": "p",
+              "type": "p[Boolean]",
+              "default": {
+                "code": "AlwaysTrue",
+                "ref": "true!"
+              },
+              "map": true,
+              "doc": "Pointer that determines whether this label is interactive or not"
+            },
+            {
+              "name": "inputFilter",
+              "param": "filter",
+              "type": "Option[regex]",
+              "default": "None",
+              "doc": "Filter that determines what input strings are recognized.\nThis filter is used to test individual characters."
+            },
+            {
+              "name": "maxLength",
+              "param": "max",
+              "type": "Option[Int]",
+              "default": "None",
+              "doc": "Longest allowed input length. None if no maximum is defined."
+            },
+            {
+              "name": "allowsSelectionWhileDisabled",
+              "param": "allow",
+              "type": "Boolean",
+              "default": "true",
+              "doc": "Whether text selection should be allowed while the editing features are disabled"
+            }
+          ]
+        },
+        {
+          "name": "TextField",
+          "context": "text",
+          "only_contextual": true,
+          "variable_context": true,
+          "props": [
+            {
+              "ref": "Field",
+              "prefix": "field",
+              "prefix_props": false,
+              "doc": "Wrapped settings that specify more general field functionality"
+            },
+            {
+              "ref": "EditableTextLabel",
+              "prefix": "editing",
+              "prefix_props": false,
+              "doc": "Wrapped settings that define how the text-editing should function"
+            },
+            {
+              "name": "resultFilter",
+              "param": "filter",
+              "type": "Option[regex]",
+              "default": "None",
+              "doc": "A filter applied to the text contents of this field whenever results are acquired or focus lost"
+            },
+            {
+              "name": "showsCharacterCount",
+              "param": "show",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the number of typed characters should be displayed at the bottom right part of the field"
+            }
+          ]
+        },
+        {
+          "name": "DurationField",
+          "context": "text",
+          "only_contextual": true,
+          "variable_context": true,
+          "props": [
+            {
+              "ref": "Field",
+              "prefix": "field",
+              "prefix_props": false,
+              "doc": "Settings that apply to the individual fields that form this component. Applied selectively."
+            },
+            {
+              "ref": "SelectableTextLabel",
+              "prefix": "label",
+              "prefix_props": false,
+              "doc": "Settings that apply to each of the input text fields that form this component."
+            },
+            {
+              "name": "enabledPointer",
+              "param": "p",
+              "type": "p[Boolean]",
+              "default": {
+                "code": "AlwaysTrue",
+                "ref": "true!"
+              },
+              "map": true,
+              "doc": "A pointer that determines whether this field is interactive or not"
+            },
+            {
+              "name": "initialValue",
+              "param": "v",
+              "type": "duration",
+              "default": {
+                "code": "Duration.Zero",
+                "ref": "duration"
+              },
+              "map": true,
+              "doc": "The initially selected value in created fields"
+            },
+            {
+              "name": "maxValue",
+              "param": "max",
+              "type": "duration",
+              "default": {
+                "code": "99.hours + 59.minutes + 59.seconds",
+                "ref": "utopia.flow.time.TimeExtensions._"
+              },
+              "map": true,
+              "doc": "The largest allowed input value (inclusive)"
+            },
+            {
+              "name": "separator",
+              "type": "localized",
+              "default": {
+                "code": "\":\"",
+                "ref": "localization/LocalString._"
+              },
+              "map": true,
+              "doc": "A separator placed between the individual input fields (i.e. the hours, minutes and seconds -fields)"
+            },
+            {
+              "name": "capturesSeconds",
+              "param": "capture",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether an input field should be provided for seconds"
+            },
+            {
+              "name": "showsLabels",
+              "param": "show",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the hours, minutes and seconds -field headers should be displayed."
+            }
+          ]
+        }
+      ],
+      "input.selection": [
+        {
+          "name": "RadioButtonGroup",
+          "context": "text",
+          "variable_context": true,
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "Stack",
+              "prefix": "stack",
+              "prefix_props": false
+            },
+            {
+              "name": "selectedColorRole",
+              "param": "role",
+              "type": "cRole",
+              "default": {
+                "code": "ColorRole.Secondary",
+                "ref": "cRole"
+              },
+              "doc": "Color role used for highlighting the selected radio button"
+            }
+          ]
+        },
+        {
+          "name": "SelectionList",
+          "context": "color",
+          "variable_context": true,
+          "props": [
+            {
+              "ref": "Stack",
+              "prefix": "stack",
+              "prefix_props": false,
+              "doc": "Settings that affect the stack layout of this list"
+            },
+            {
+              "name": "highlightModifier",
+              "param": "modifier",
+              "type": "Double",
+              "default": "1.0",
+              "map": true,
+              "doc": "A modifier that is applied to the color highlighting used in this component.\n1.0 signifies the default color highlighting."
+            }
+          ],
+          "non_contextual_props": [
+            {
+              "name": "marginPointer",
+              "param": "p",
+              "type": "p[len]",
+              "default": {
+                "code": "Fixed(StackLength.any)",
+                "refs": ["len", "fixed"]
+              },
+              "map": true,
+              "doc": "A pointer that determines the size of margins placed between selectable items"
+            }
+          ]
+        }
+      ]
+    },
+    "container": {
+      "multi": [
+        {
+          "name": "Stack",
+          "container": "Combining",
+          "context": "base",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "name": "axis",
+              "type": "axis",
+              "default": {
+                "code": "Axis.Y",
+                "ref": "pEnum/Axis"
+              },
+              "doc": "The axis along which the items in the stacks are placed.\nY yields columns and X yields rows."
+            },
+            {
+              "name": "layout",
+              "type": "fEnum/StackLayout",
+              "default": {
+                "code": "StackLayout.Fit",
+                "ref": "fEnum/StackLayout"
+              },
+              "doc": "Layout that determines how the components are sized perpendicular to stack axis.\nE.g. for columns, this property defines horizontal component placement and width."
+            },
+            {
+              "name": "cap",
+              "type": "len",
+              "default": {
+                "code": "StackLength.fixedZero",
+                "ref": "len"
+              },
+              "map": true,
+              "doc": "Specifies the margin placed at each end of the created stacks"
+            }
+          ],
+          "non_contextual_props": [
+            {
+              "name": "margin",
+              "type": "len",
+              "default": {
+                "code": "StackLength.any",
+                "ref": "len"
+              },
+              "map": true,
+              "doc": "Amount of empty space between adjacent items in the created stacks"
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "areRelated",
+              "param": "related",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the items in the created stacks should be considered closely related to each other,\nresulting in a smaller margin placed between them."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
