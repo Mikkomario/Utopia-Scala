@@ -121,7 +121,7 @@ object ComponentFactoryWriter
 				// Case: Mapping is enabled => Writes both the setter and the mapper
 				if (prop.mappingEnabled) {
 					val mapper = MethodDeclaration(("map" +: prop.name).function, isLowMergePriority = true)(
-						Parameter("f", prop.dataType.fromParameters(prop.dataType)))(
+						Parameter("f", flow.mutate(prop.dataType)))(
 						s"$setterName(f(${prop.name.function}))")
 					Pair(setter, mapper)
 				}
@@ -475,7 +475,7 @@ object ComponentFactoryWriter
 			val mapper = {
 				if (usePrefixes && prop.mappingEnabled)
 					Some(MethodDeclaration(("map" +: propName).function)(
-						Parameter("f", prop.dataType.fromParameters(prop.dataType)))(
+						Parameter("f", flow.mutate(prop.dataType)))(
 						s"${directSet.name}(f(${directGet.name}))"))
 				else
 					None
