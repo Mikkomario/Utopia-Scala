@@ -31,6 +31,7 @@
   **LinearTransformable** and **AffineTransformable**.
 - Slightly refactored **RelativePoint** mapping logic
 - **Bounds**`.relativize(...)` now accepts any kind of **DoubleVector** instead of just a **Point**
+- **Bounds** now extends **ApproxSelfEquals**
 - Added `.toString` to **RelativePoint**
 
 ## v1.5 - 22.01.2024

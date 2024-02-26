@@ -16,6 +16,7 @@
 - Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes
 - Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
+- Previously **DragTo** would always reposition the component, regardless of settings used
 - **RadioButtons** now correctly support **HotKeys**
 ### New features
 - Image labels now support transformations
