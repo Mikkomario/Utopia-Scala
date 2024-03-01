@@ -217,6 +217,7 @@ Each property object should contain following properties:
     - Indexes by default
   - `"value" / "val"` - Results in a generic **Value** type, which are stored in the database as json strings
   - `"model" / "values"` - Results in a **Model** type, which are stored in the database as json strings
+  - `"angle"` - Results in **Angle** type from **Paradigm**
   - `"Option[X]"` - Results in **Option** / nullable type where the underlying type is determined by what `X` is
   - `"Vector[X]"` - Results in **Vector** type where the underlying type is determined by what `X` is
     - Vectors are store in the database as json strings

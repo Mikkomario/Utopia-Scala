@@ -115,7 +115,8 @@ object VaultReferences
 		lazy val dataType = Reference(generic, "ParadigmDataType")
 		lazy val distance = Reference(measurement, "Distance")
 		lazy val distanceUnit = Reference(measurement, "DistanceUnit")
-		lazy val vector2D = Reference(VaultPackages.Paradigm.vector2D, "Vector2D")
+		lazy val vector2D = Reference(VaultPackages.paradigm.vector2D, "Vector2D")
+		lazy val angle = Reference(angular, "Angle")
 	}
 	
 	object Terra
