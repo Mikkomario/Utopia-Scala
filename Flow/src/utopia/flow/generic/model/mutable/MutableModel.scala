@@ -112,6 +112,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     override protected def propertyOrder = propOrder
     
     override protected def newProperty(attName: String): V = newProperty(attName, Value.empty)
+    override protected def generatesNonEmptyFor(propName: String): Boolean = propFactory.generatesNonEmpty(propName)
     
     
     // OTHER    ---------------

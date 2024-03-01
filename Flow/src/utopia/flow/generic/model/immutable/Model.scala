@@ -164,6 +164,7 @@ class Model private(override val propertyMap: Map[String, Constant],
     override def toValue = new Value(Some(this), ModelType)
     
     override def newProperty(attName: String) = propFactory(attName)
+    override protected def generatesNonEmptyFor(propName: String): Boolean = propFactory.generatesNonEmpty(propName)
     
     
     // OPERATORS    --------------

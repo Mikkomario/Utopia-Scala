@@ -39,7 +39,6 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         The map keys are lower case property names.
 	  */
 	def propertyMap: Map[String, P]
-	
 	/**
 	  * @return Property names (lower case) in order.
 	  *         Contains the names of all of this model's properties.
@@ -52,6 +51,11 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * @return A new property
 	  */
 	protected def newProperty(attName: String): P
+	/**
+	  * @param propName A property name
+	  * @return Whether [[newProperty]](propName) would generate a non-empty value for that property name.
+	  */
+	protected def generatesNonEmptyFor(propName: String): Boolean
 	
 	
 	// COMP. PROPERTIES    --------
@@ -201,7 +205,7 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         If all searches resulted in empty values, a new property is generated and its value returned.
 	  */
 	def apply(attName: String, secondaryAttName: String, moreAttNames: String*): Value =
-		apply(Vector(attName, secondaryAttName) ++ moreAttNames)
+		apply(Pair(attName, secondaryAttName) ++ moreAttNames)
 	
 	/**
 	 * @param propName Name of the targeted property
@@ -253,10 +257,14 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * Whether this model contains an existing property with the specified name
 	  * @param propName the name of the targeted property (case-insensitive)
 	  */
-	def contains(propName: String) = propertyMap.contains(propName.toLowerCase)
+	def contains(propName: String) =
+		propertyMap.contains(propName.toLowerCase) || generatesNonEmptyFor(propName)
 	/**
 	  * @param propName Name of the targeted property (case-insensitive)
 	  * @return Whether this model contains a non-empty property with the specified name
 	  */
-	def containsNonEmpty(propName: String) = existing(propName).exists { _.nonEmpty }
+	def containsNonEmpty(propName: String) = existing(propName) match {
+		case Some(p) => p.nonEmpty
+		case None => generatesNonEmptyFor(propName)
+	}
 }

@@ -3,6 +3,9 @@
 ## v2.4 (in development)
 ### Breaking changes
 - **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
+- **ModelLike** implementations are now required to provide `.generatesNonEmptyFor(String)`
+- **PropertyFactory** implementations are now required to provide `.generatesNonEmpty(String)`
+  - Consequently, modified some of the existing **PropertyFactory** constructors to request this information 
 - The write functions in **FileExtensions**, which accept a function, now return the return value of that 
   function, and no longer the path itself.
 ### Deprecations
@@ -22,6 +25,8 @@
       they're specifically requested using `.apply(...)`
   - `.apply(...)` in the resulting model also supports alternative property names
   - The resulting model still utilizes the original model's property factory
+- **ModelLike**`.contains(String)` and `.containsNonEmpty(String)` now support lazily initialized properties 
+  (e.g. those returned via the new model validation implementation)
 - The generic type parameter in **PropertyFactory** is no longer restricted 
 
 ## v2.3 - 22.01.2024
