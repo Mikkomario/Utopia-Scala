@@ -341,7 +341,7 @@ trait SingleColumnPropertyTypeWrapper extends PropertyTypeWrapper with SingleCol
   * E.g. Classes that can be represented using simple double numbers may extend this trait and delegate SQL conversions
   * to DoubleNumber.
   */
-trait DelegatingPropertyType extends PropertyType
+trait FacadePropertyType extends PropertyType
 {
 	// ABSTRACT ---------------------------
 	
@@ -427,12 +427,12 @@ trait DelegatingPropertyType extends PropertyType
 		// ATTRIBUTES   --------------------
 		
 		private lazy val optionDelegate = delegate.optional
-		override lazy val scalaType: ScalaType = ScalaType.option(DelegatingPropertyType.this.scalaType)
+		override lazy val scalaType: ScalaType = ScalaType.option(FacadePropertyType.this.scalaType)
 		
 		
 		// IMPLEMENTED  --------------------
 		
-		override def valueDataType: Reference = DelegatingPropertyType.this.valueDataType
+		override def valueDataType: Reference = FacadePropertyType.this.valueDataType
 		
 		override def sqlConversions: Vector[SqlTypeConversion] =
 			optionDelegate.sqlConversions
@@ -444,24 +444,24 @@ trait DelegatingPropertyType extends PropertyType
 		override def emptyValue: CodePiece = CodePiece.none
 		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
 		
-		override def defaultPropertyName: Name = DelegatingPropertyType.this.defaultPropertyName
-		override def defaultPartNames: Seq[Name] = DelegatingPropertyType.this.defaultPartNames
+		override def defaultPropertyName: Name = FacadePropertyType.this.defaultPropertyName
+		override def defaultPartNames: Seq[Name] = FacadePropertyType.this.defaultPartNames
 		
 		override def optional: PropertyType = this
-		override def concrete: PropertyType = DelegatingPropertyType.this
+		override def concrete: PropertyType = FacadePropertyType.this
 		
 		override def yieldsTryFromValue: Boolean = false
 		override def yieldsTryFromJsonValue: Boolean = false
 		override def supportsDefaultJsonValues: Boolean = false
 		
 		override def toValueCode(instanceCode: String): CodePiece =
-			_toValueCode(instanceCode)(DelegatingPropertyType.this.toValueCode)
+			_toValueCode(instanceCode)(FacadePropertyType.this.toValueCode)
 		override def toJsonValueCode(instanceCode: String): CodePiece =
-			_toValueCode(instanceCode)(DelegatingPropertyType.this.toJsonValueCode)
+			_toValueCode(instanceCode)(FacadePropertyType.this.toJsonValueCode)
 		
 		override def fromValueCode(valueCodes: Vector[String]): CodePiece =
-			_fromValueCode(DelegatingPropertyType.this.fromValueCode(valueCodes),
-				isTry = DelegatingPropertyType.this.yieldsTryFromValue)
+			_fromValueCode(FacadePropertyType.this.fromValueCode(valueCodes),
+				isTry = FacadePropertyType.this.yieldsTryFromValue)
 		override def fromValuesCode(valuesCode: String): CodePiece =
 			delegate.fromValuesCode(valuesCode).flatMapText { delegates =>
 				fromDelegateCode("v").mapText { fromDelegate =>
@@ -472,11 +472,11 @@ trait DelegatingPropertyType extends PropertyType
 				}
 			}
 		override def fromJsonValueCode(valueCode: String): CodePiece =
-			_fromValueCode(DelegatingPropertyType.this.fromJsonValueCode(valueCode),
-				isTry = DelegatingPropertyType.this.yieldsTryFromJsonValue)
+			_fromValueCode(FacadePropertyType.this.fromJsonValueCode(valueCode),
+				isTry = FacadePropertyType.this.yieldsTryFromJsonValue)
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String =
-			DelegatingPropertyType.this.writeDefaultDescription(className, propName)
+			FacadePropertyType.this.writeDefaultDescription(className, propName)
 		
 		
 		// OTHER    ------------------------

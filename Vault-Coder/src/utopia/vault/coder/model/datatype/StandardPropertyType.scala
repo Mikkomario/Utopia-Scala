@@ -55,6 +55,7 @@ object StandardPropertyType
 			case "model" | "values" => Some(GenericModel(appliedLength))
 			case "days" => Some(DayCount)
 			case "daterange" | "dates" => Some(DateRange)
+			case "angle" => Some(AngleType)
 			case "vector2d" | "doublevector" => Some(DoubleVector2D)
 			case "latlong" | "latitudelongitude" | "geolocation" | "gps" => Some(LatitudeLongitudePair)
 			case _ =>
@@ -248,7 +249,6 @@ object StandardPropertyType
 			
 			override def defaultPropertyName = "number"
 		}
-		
 		/**
 		  * Double property type
 		  */
@@ -1242,6 +1242,35 @@ object StandardPropertyType
 			CodePiece(s"${dateRange.target}.exclusive($pairCode)", Set(dateRange))
 	}
 	
+	case object AngleType extends FacadePropertyType
+	{
+		// ATTRIBUTES   ------------------------
+		
+		override lazy val sqlConversions = super.sqlConversions.map { _.modifyTarget(columnNameSuffix = "degrees") }
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override protected def delegate: PropertyType = DoubleNumber
+		
+		override def scalaType: ScalaType = paradigm.angle
+		
+		override def emptyValue: CodePiece = CodePiece.empty
+		override def nonEmptyDefaultValue: CodePiece = CodePiece.empty
+		override def defaultPropertyName: Name = "direction"
+		override def defaultPartNames: Seq[Name] = Seq.empty
+		
+		override def supportsDefaultJsonValues: Boolean = true
+		override protected def yieldsTryFromDelegate: Boolean = false
+		
+		override protected def toDelegateCode(instanceCode: String): CodePiece = s"$instanceCode.degrees"
+		
+		override protected def fromDelegateCode(delegateCode: String): CodePiece =
+			CodePiece(s"Angle.degrees($delegateCode)", Set(paradigm.angle))
+		
+		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String = ""
+	}
+	
 	case object DoubleVector2D extends PairLikeType(DoubleNumber, paradigm.vector2D, Pair("x", "y"), "twice")
 	{
 		override def scalaType: ScalaType = paradigm.vector2D
@@ -1276,7 +1305,7 @@ object StandardPropertyType
 				meters
 		}
 	}
-	case class LengthDistance(unitName: String, abbreviation: String) extends DelegatingPropertyType
+	case class LengthDistance(unitName: String, abbreviation: String) extends FacadePropertyType
 	{
 		// ATTRIBUTES   --------------------------
 		
@@ -1305,7 +1334,7 @@ object StandardPropertyType
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String = ""
 	}
 	
-	case object LatitudeLongitudePair extends DelegatingPropertyType
+	case object LatitudeLongitudePair extends FacadePropertyType
 	{
 		override protected val delegate: PropertyType = Paired(DoubleNumber)
 		

@@ -25,25 +25,25 @@ object PropertyFactory
 	/**
 	  * A basic property factory that yields constants
 	  */
-	val forConstants = apply(Constant)
+	val forConstants = apply(Constant) { _ => false }
 	/**
 	  * A basic property factory that yields variables
 	  */
-	val forVariables = apply { Variable(_, _) }
+	val forVariables = apply { Variable(_, _) } { _ => false }
 	
 	
-	// IMPLICIT ------------------------
+	// OTHER    ------------------------
 	
 	/**
 	  * Creates a new property factory by wrapping a function
 	  * @param f A function that accepts property name and proposed value (which may be empty), and yields a property
+	  * @param generatesNonEmpty A function that determines whether a non-empty default value is/would be
+	  *                          generated for the specified property
 	  * @tparam A Type of properties created
 	  * @return A new property factory that utilizes the specified functions
 	  */
-	implicit def apply[A](f: (String, Value) => A): PropertyFactory[A] = new _PropertyFactory[A](f)
-	
-	
-	// OTHER    ------------------------
+	def apply[A](f: (String, Value) => A)(generatesNonEmpty: String => Boolean): PropertyFactory[A] =
+		new _PropertyFactory[A](f, generatesNonEmpty)
 	
 	/**
 	  * Creates a new property factory that uses a default value instead of an empty value
@@ -61,14 +61,19 @@ object PropertyFactory
 	  */
 	def withDefault[A](defaultValue: Value, requireCastingSuccess: Boolean = false)(f: (String, Value) => A) =
 	{
-		apply { (name, value) =>
-			val actualValue = value.notEmpty match {
-				case Some(value) =>
-					value.castTo(defaultValue.dataType).getOrElse { if (requireCastingSuccess) defaultValue else value }
-				case None => defaultValue
-			}
-			f(name, actualValue)
+		// Case: Empty default => Same as no default
+		if (defaultValue.isEmpty)
+			apply(f) { _ => false }
+		// Case: Data type conversion used
+		else if (requireCastingSuccess) {
+			val dataType = defaultValue.dataType
+			apply { (name, value) =>
+				f(name, value.notEmpty.flatMap { _.castTo(dataType) }.getOrElse(defaultValue))
+			} { _ => true }
 		}
+		// Case: No data type conversion used
+		else
+			apply { (name, value) => f(name, value.nonEmptyOrElse(defaultValue)) } { _ => true }
 	}
 	
 	/**
@@ -112,12 +117,15 @@ object PropertyFactory
 	  * @tparam A Type of generated properties
 	  * @return A new property factory
 	  */
-	def castingTo[A](targetType: DataType, requireCastingSuccess: Boolean = false)(f: (String, Value) => A) =
-		apply { (name, value) =>
-			val actualValue = value.castTo(targetType)
-				.getOrElse { if (requireCastingSuccess) Value.emptyWithType(targetType) else value }
-			f(name, actualValue)
-		}
+	def castingTo[A](targetType: DataType, requireCastingSuccess: Boolean = false)(f: (String, Value) => A) = {
+		if (requireCastingSuccess)
+			apply { (name, value) =>
+				f(name, value.withType(targetType))
+			} { _ => false }
+		else
+			apply { (name, value) => f(name, value.castTo(targetType).getOrElse(value)) } { _ => false }
+	}
+	
 	/**
 	  * Creates a new constant property factory that, before assigning a value, casts it to a specific data type.
 	  * In situations where the casting fails, an empty value is assigned instead.
@@ -138,14 +146,17 @@ object PropertyFactory
 	
 	// NESTED   ------------------------
 	
-	private class _PropertyFactory[A](f: (String, Value) => A) extends PropertyFactory[A]
+	private class _PropertyFactory[A](f: (String, Value) => A, nonEmptyCheck: String => Boolean)
+		extends PropertyFactory[A]
 	{
 		override def apply(propertyName: String, value: Value) = f(propertyName, value)
+		override def generatesNonEmpty(propertyName: String): Boolean = nonEmptyCheck(propertyName)
 	}
 	
 	private class MappingFactory[-O, +R](wrapped: PropertyFactory[O], f: O => R) extends PropertyFactory[R]
 	{
 		override def apply(propertyName: String, value: Value) = f(wrapped(propertyName, value))
+		override def generatesNonEmpty(propertyName: String): Boolean = wrapped.generatesNonEmpty(propertyName)
 	}
 }
 
@@ -163,6 +174,12 @@ trait PropertyFactory[+A]
 	  * @return Generated property
 	  */
 	def apply(propertyName: String, value: Value = Value.empty): A
+	
+	/**
+	  * @param propertyName A property name
+	  * @return Whether this factory would produce a non-empty default value for the specified property
+	  */
+	def generatesNonEmpty(propertyName: String): Boolean
 	
 	
 	// OTHER    -----------------------

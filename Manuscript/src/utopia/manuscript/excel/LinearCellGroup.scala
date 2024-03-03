@@ -5,7 +5,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.PropertyFactory.ConstantFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.shape.template.Dimensions
 
 import scala.collection.immutable.VectorBuilder
 
@@ -31,19 +33,39 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	  * @return Value associated with that cell.
 	  *         Empty value if the specified index was out of range.
 	  */
-	def apply(cellIndex: Int) = cells
+	def apply(cellIndex: Int) = findCellAt(cellIndex) match {
+		case Some(cell) => cell.value
+		case None => Value.empty
+	}
+	/**
+	  * Checks whether the specified cell contains a non-empty value
+	  * @param cellIndex Targeted cell index
+	  * @return Whether the targeted cell contains a non-empty value
+	  */
+	def containsIndex(cellIndex: Int) = findCellAt(cellIndex).exists { _.value.nonEmpty }
+	
+	/**
+	  * @param index Targeted cell index
+	  * @return Cell at that index in this sequence
+	  */
+	def cellAt(index: Int) = findCellAt(index)
+		.getOrElse { new Cell(Dimensions.int(index, this.index, direction), Lazy.initialized(Value.empty)) }
+	/**
+	  * @param index Index of the targeted cell
+	  * @return A cell at that index. None if no cell was specified for that index.
+	  */
+	def findCellAt(index: Int) = cells
 		.findMap { c =>
 			// Matches against the cell's index, which doesn't necessarily match its index within the sequence
 			// (because empty cells are not included in that sequence)
 			val i = c.index(direction)
-			if (i == cellIndex)
-				Some(c.value)
-			else if (i > cellIndex)
-				Some(Value.empty)
+			if (i == index)
+				Some(Some(c))
+			else if (i > index)
+				Some(None)
 			else
 				None
-		}
-		.getOrElse(Value.empty)
+		}.flatten
 	
 	/**
 	  * Converts this group of cells into a model
@@ -134,5 +156,7 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 			}
 			Constant(propertyName, value)
 		}
+		
+		override def generatesNonEmpty(propertyName: String): Boolean = headers.lift(propertyName).exists(containsIndex)
 	}
 }

@@ -74,6 +74,7 @@ object VaultPackages
 		lazy val generic = base/"generic"
 		lazy val measurement = base/"measurement"
 		lazy val vector2D = base/"shape.shape2d.vector"
+		lazy val angular = base/"angular"
 	}
 	object Terra
 	{

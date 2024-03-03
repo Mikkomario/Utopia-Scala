@@ -375,6 +375,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                 case None => actualize(propertyName, value)
             }
         }
+        
+        override def generatesNonEmpty(propertyName: String): Boolean = find(propertyName).exists { _.hasDefault }
     }
     
     class ValidatedPropertyFactory(source: AnyModel) extends ConstantFactory
@@ -393,6 +395,15 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                 Constant(propertyName, actualValue)
             // Case: Non-declared property => Uses the specified value (if not empty) or consults the source model
             case None => Constant(propertyName, value.nonEmptyOrElse { source(propertyName) })
+        }
+        
+        override def generatesNonEmpty(propertyName: String): Boolean = find(propertyName) match {
+            // Case: Declared property => Checks for declared default value, or for a compatible source model value
+            case Some(declaration) =>
+                declaration.hasDefault ||
+                    source.nonEmpty(propertyName).exists { _.castTo(declaration.dataType).exists { !valueIsEmpty(_) } }
+            // Case: Undeclared property => Checks whether the source model contains the specified property
+            case None => source.containsNonEmpty(propertyName)
         }
     }
 }

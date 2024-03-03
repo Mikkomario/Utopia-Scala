@@ -102,7 +102,7 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit e
 {
 	// ATTRIBUTES	---------------------
 	
-	private val maxLength = 10
+	private val maxLength = 12
 	private var nextWait: Duration = 3.seconds
 	private var increasing = true
 	
@@ -113,23 +113,18 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit e
 	
 	override def iteration() =
 	{
-		val turnAround =
-		{
-			if (increasing)
-			{
-				if (target.content.size < maxLength)
-				{
+		val turnAround = {
+			if (increasing) {
+				if (target.content.size < maxLength) {
 					target.content :+= target.content.size
 					false
 				}
 				else
 					true
 			}
-			else
-			{
-				if (target.content.nonEmpty)
-				{
-					target.content = target.content.dropRight(1)
+			else {
+				if (target.content.nonEmpty) {
+					target.content = target.content.drop(1)
 					false
 				}
 				else
@@ -137,8 +132,7 @@ private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit e
 			}
 		}
 		
-		if (turnAround)
-		{
+		if (turnAround) {
 			increasing = !increasing
 			nextWait = 3.seconds
 		}

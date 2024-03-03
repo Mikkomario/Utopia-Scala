@@ -1,5 +1,9 @@
 # Utopia Vault Coder
 
+## v1.10.2 (in development)
+### New features
+Added support for **Angle** data type
+
 ## v1.10.1 - 22.01.2024
 This update contains some new data types, some bugfixes and some quality-of-life improvements.
 ### Bugfixes
