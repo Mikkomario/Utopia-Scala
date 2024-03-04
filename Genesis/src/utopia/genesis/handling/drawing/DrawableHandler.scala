@@ -27,6 +27,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import scala.annotation.unused
 import scala.concurrent.ExecutionContext
+import scala.language.implicitConversions
 
 object DrawableHandler
 {

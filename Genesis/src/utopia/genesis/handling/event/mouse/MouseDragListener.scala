@@ -11,6 +11,7 @@ import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.angular.{Angle, Rotation}
 
 import scala.annotation.unused
+import scala.language.implicitConversions
 
 object MouseDragListener
 {

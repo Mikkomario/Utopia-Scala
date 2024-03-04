@@ -7,6 +7,7 @@ import utopia.genesis.handling.event.EventHandler
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
+import scala.language.implicitConversions
 
 object KeyTypedHandler
 {

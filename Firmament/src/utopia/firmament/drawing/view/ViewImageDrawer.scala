@@ -14,6 +14,7 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.transform.LinearTransformable
 
 import scala.annotation.unused
+import scala.language.implicitConversions
 
 object ViewImageDrawer
 {

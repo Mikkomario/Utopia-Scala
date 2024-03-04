@@ -13,6 +13,7 @@ import utopia.paradigm.enumeration.VerticalDirection
 import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
+import scala.language.implicitConversions
 
 object MouseWheelListener
 {
