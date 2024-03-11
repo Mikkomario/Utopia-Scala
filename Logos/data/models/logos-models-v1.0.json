@@ -1,0 +1,175 @@
+{
+  "project": "Logos",
+  "version": "v1.0",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.logos",
+  "classes": {
+    "word": [
+      {
+        "name": "Word",
+        "doc": "Represents an individual word used in a text document. Case-sensitive.",
+        "combo": {
+          "name": "StatedWord",
+          "child": "WordPlacement",
+          "child_alias": "useCase",
+          "is_always_linked": true,
+          "doc": "Represents a word used in a specific statement"
+        },
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(16-64)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "Text representation of this word"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Delimiter",
+        "doc": "Represents a character sequence used to separate two statements or parts of a statement",
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(2-16)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "The characters that form this delimiter"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Statement",
+        "doc": "Represents an individual statement made within some text. Consecutive statements form whole texts.",
+        "props": [
+          {
+            "ref": "delimiter",
+            "type": "Option[Int]",
+            "doc": "Id of the delimiter that terminates this sentence. None if this sentence is not terminated with any character."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this statement was first made"
+          }
+        ]
+      },
+      {
+        "name": "WordPlacement",
+        "doc": "Records when a word is used in a statement",
+        "props": [
+          {
+            "ref": "statement",
+            "doc": "Id of the statement where the referenced word appears"
+          },
+          {
+            "ref": "word",
+            "doc": "Id of the word that appears in the described statement"
+          },
+          {
+            "name": "orderIndex",
+            "name_plural": "orderIndices",
+            "type": "Int(Tiny)",
+            "length_rule": "Expand",
+            "doc": "Index at which the specified word appears within the referenced statement (0-based)",
+            "index": true
+          }
+        ]
+      }
+    ],
+    "url": [
+      {
+        "name": "Domain",
+        "doc": "Represents the address of an internet service",
+        "props": [
+          {
+            "name": "url",
+            "type": "NonEmptyString(12-255)",
+            "allow_crop": true,
+            "doc": "Full http(s) address of this domain in string format. Includes protocol, domain name and possible port number."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "RequestPath",
+        "doc": "Represents a specific http(s) request url, not including any query parameters",
+        "combo": {
+          "name": "DetailedRequestPath",
+          "child": "Domain",
+          "is_always_linked": true,
+          "doc": "Includes textual domain information in a request path"
+        },
+        "props": [
+          {
+            "ref": "domain",
+            "doc": "Id of the domain part of this url"
+          },
+          {
+            "name": "path",
+            "type": "String(12-1024)",
+            "allow_crop": true,
+            "doc": "Part of this url that comes after the domain part. Doesn't include any query parameters, nor the initial forward slash."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Link",
+        "doc": "Represents a link for a specific http(s) request",
+        "has_combos": true,
+        "props": [
+          {
+            "ref": "request_path",
+            "doc": "Id of the targeted internet address, including the specific sub-path"
+          },
+          {
+            "name": "queryParameters",
+            "type": "Model(255-2048)",
+            "doc": "Specified request parameters in model format"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "LinkPlacement",
+        "doc": "Places a link within a statement",
+        "props": [
+          {
+            "ref": "statement",
+            "doc": "Id of the statement where the specified link is referenced"
+          },
+          {
+            "ref": "link",
+            "doc": "Referenced link"
+          },
+          {
+            "name": "orderIndex",
+            "name_plural": "orderIndices",
+            "type": "Int(Tiny)",
+            "length_rule": "Expand",
+            "doc": "Index where the link appears in the statement (0-based)"
+          }
+        ]
+      }
+    ]
+  }
+}

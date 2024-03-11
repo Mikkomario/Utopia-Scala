@@ -14,6 +14,7 @@ import scala.concurrent.duration.Duration
   * @author Mikko Hilpinen
   * @since 26.6.2021, v1.0
   */
+// TODO: Utilize the VaultContext interface here
 object CitadelContext
 {
 	// ATTRIBUTES	---------------------------------
