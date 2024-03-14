@@ -2,6 +2,8 @@
 
 ## v1.18.1 (in development)
 Supports **Flow v2.4**
+### New features
+- Added **VaultContext** and **VaultContextWrapper** traits in order to facilitate Vault-based library creation
 
 ## v1.18 - 22.01.2024
 This update focuses on improving grouped (i.e. multi-joined) result parsing.
