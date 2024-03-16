@@ -15,6 +15,8 @@ import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Updat
 
 object Storable
 {
+    // OTHER    ---------------------------
+    
     /**
       * Wraps a model into a storable instance
       * @param table The table the model uses
@@ -22,6 +24,17 @@ object Storable
       * @return A new storable instance based on the model
       */
     def apply(table: Table, model: template.ModelLike[Property]): Storable = new StorableWrapper(table, model)
+    
+    
+    // NESTED   ------------------------
+    
+    private class StorableWrapper(override val table: Table, val model: template.ModelLike[Property])
+        extends StorableWithFactory[Storable]
+    {
+        override lazy val factory = FromRowModelFactory(table)
+        
+        override def valueProperties = model.properties.map { c => c.name -> c.value }
+    }
 }
 
 /**
@@ -294,11 +307,4 @@ trait Storable extends ModelConvertible
         // Merges the specified conditions using AND
         conditions.head.combineWith(conditions.drop(1), combineOperator)
     }
-}
-
-private class StorableWrapper(override val table: Table, val model: template.ModelLike[Property]) extends StorableWithFactory[Storable]
-{
-    override lazy val factory = FromRowModelFactory(table)
-    
-    override def valueProperties = model.properties.map { c => c.name -> c.value }
 }

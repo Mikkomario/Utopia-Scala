@@ -8,14 +8,9 @@ import utopia.flow.view.template.Extender
   * @author Mikko Hilpinen
   * @since 19.9.2020, v1.6.1
   */
-trait Stored[+Data, +Id] extends Extender[Data]
+trait Stored[+Data, +Id] extends Extender[Data] with HasId[Id]
 {
 	// ABSTRACT ---------------------------
-	
-	/**
-	  * @return The table row id associated with this stored instance
-	  */
-	def id: Id
 	
 	/**
 	  * @return The data wrapped by this stored instance

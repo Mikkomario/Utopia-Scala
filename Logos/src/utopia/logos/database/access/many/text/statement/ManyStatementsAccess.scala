@@ -2,7 +2,7 @@ package utopia.logos.database.access.many.text.statement
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.factory.text.StatementFactory
-import utopia.logos.database.model.text.{StatementLinkModel, WordPlacementModel}
+import utopia.logos.database.model.text.{StatementLinkedModel, WordPlacementModel}
 import utopia.logos.database.model.url.LinkPlacementModel
 import utopia.logos.model.stored.text.Statement
 import utopia.vault.database.Connection
@@ -108,7 +108,7 @@ trait ManyStatementsAccess
 		} { findNotLinkedTo(linkLinkModel.table) }
 	}
 	
-	private def findWithReferenceAtIndex(model: StatementLinkModel, refColumn: Column, refId: Int, index: Int)
+	private def findWithReferenceAtIndex(model: StatementLinkedModel, refColumn: Column, refId: Int, index: Int)
 	                                    (implicit connection: Connection) =
 		find((refColumn <=> refId) && (model.orderIndexColumn <=> index), joins = Vector(model.table))
 }

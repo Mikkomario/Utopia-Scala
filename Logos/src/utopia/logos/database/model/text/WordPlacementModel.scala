@@ -14,7 +14,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @since 12.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
   */
 object WordPlacementModel
-	extends DataInserter[WordPlacementModel, WordPlacement, WordPlacementData] with StatementLinkModel
+	extends DataInserter[WordPlacementModel, WordPlacement, WordPlacementData] with StatementLinkedModel
 {
 	// ATTRIBUTES	--------------------
 	

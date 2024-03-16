@@ -3,7 +3,7 @@ package utopia.logos.database.model.url
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.factory.url.LinkPlacementFactory
-import utopia.logos.database.model.text.StatementLinkModel
+import utopia.logos.database.model.text.StatementLinkedModel
 import utopia.logos.model.partial.url.LinkPlacementData
 import utopia.logos.model.stored.url.LinkPlacement
 import utopia.vault.model.immutable.StorableWithFactory
@@ -15,7 +15,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
   */
 object LinkPlacementModel
-	extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData] with StatementLinkModel
+	extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData] with StatementLinkedModel
 {
 	// ATTRIBUTES	--------------------
 	

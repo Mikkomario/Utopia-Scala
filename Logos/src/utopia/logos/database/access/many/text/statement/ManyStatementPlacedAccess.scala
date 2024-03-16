@@ -2,7 +2,7 @@ package utopia.logos.database.access.many.text.statement
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.view.FilterableView
-import utopia.logos.database.model.text.StatementLinkModel
+import utopia.logos.database.model.text.StatementLinkedModel
 
 /**
  * Common trait for access points that target items that may be placed within statements
@@ -16,7 +16,7 @@ trait ManyStatementPlacedAccess[+Sub] extends FilterableView[Sub]
 	/**
 	 * @return Model used for interacting with statement-linked items
 	 */
-	protected def model: StatementLinkModel
+	protected def model: StatementLinkedModel
 	
 	
 	// OTHER    --------------------------
