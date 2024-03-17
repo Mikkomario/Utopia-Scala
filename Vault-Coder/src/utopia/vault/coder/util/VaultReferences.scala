@@ -33,6 +33,7 @@ object VaultReferences
 		
 		lazy val stored = Reference(models / "template", "Stored")
 		lazy val storedModelConvertible = Reference(models / "template", "StoredModelConvertible")
+		lazy val fromIdFactory = Reference(models/"template", "FromIdFactory")
 		
 		lazy val indexed = Reference(noSql / "template", "Indexed")
 		lazy val deprecatable = Reference(noSql / "template", "Deprecatable")
@@ -48,7 +49,7 @@ object VaultReferences
 		lazy val multiCombiningFactory = Reference(factories / "multi", "MultiCombiningFactory")
 		
 		lazy val storableWithFactory = Reference(models / "immutable", "StorableWithFactory")
-		lazy val dataInserter = Reference(noSql / "storable", "DataInserter")
+		lazy val storableFactory = Reference(noSql/"storable", "StorableFactory")
 		
 		lazy val view = Reference(viewAccess, "View")
 		lazy val subView = Reference(viewAccess, "SubView")

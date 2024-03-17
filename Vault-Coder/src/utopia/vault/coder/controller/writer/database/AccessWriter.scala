@@ -755,7 +755,7 @@ object AccessWriter
 		classToWrite.properties.flatMap { prop =>
 			// Only single-column properties are pulled
 			prop.onlyDbVariant.map { dbProp =>
-				val pullColumn = s"pullColumn($modelPropName.${ DbModelWriter.columnNameFrom(dbProp) })"
+				val pullColumn = s"pullColumn($modelPropName.${ dbProp.name.prop }.column)"
 				val pullCode = {
 					if (pullMany)
 						prop.dataType.fromValuesCode(pullColumn)
@@ -781,8 +781,9 @@ object AccessWriter
 		// TODO: Because of a technical limitation where accepted parameter type is not available, only single-column
 		//  properties are written
 		classToWrite.properties.map { _.concrete }.flatMap { prop =>
-			prop.onlyDbVariant.map { dbProp => setter(prop, dbProp, classToWrite.name, modelPropName)(
-				methodNameFromPropName) }
+			prop.onlyDbVariant.map { dbProp =>
+				setter(prop, dbProp, classToWrite.name, modelPropName)(methodNameFromPropName)
+			}
 			// prop.dbProperties.map { dbProp => setter(prop, dbProp, classToWrite.name)(methodNameFromPropName) }
 		}.toSet
 	}
@@ -806,7 +807,7 @@ object AccessWriter
 				returnDescription = s"Whether any ${className.doc} was affected")(
 				Parameter(paramName, paramType, description = s"A new ${ dbProp.name.doc } to assign")
 					.withImplicits(connectionParam))(
-				s"putColumn($modelPropName.${ DbModelWriter.columnNameFrom(dbProp) }, $valueConversionCode)")
+				s"putColumn($modelPropName.${ dbProp.name.prop }.column, $valueConversionCode)")
 	}
 	
 	private def deprecationAndFilterReferenceFor(classToWrite: Class) = {

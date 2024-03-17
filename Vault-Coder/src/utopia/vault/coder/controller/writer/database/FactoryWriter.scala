@@ -26,7 +26,7 @@ object FactoryWriter
 	/**
 	  * A suffix added to class names in order to make them factory class names
 	  */
-	val classNameSuffix = data.Name("Factory", "Factories", CamelCase.capitalized)
+	val classNameSuffix = data.Name("DbFactory", "DbFactories", CamelCase.capitalized)
 	
 	/**
 	  * Writes a factory used for processing database object data

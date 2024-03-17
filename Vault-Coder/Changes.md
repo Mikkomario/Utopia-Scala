@@ -1,8 +1,13 @@
 # Utopia Vault Coder
 
-## v1.10.2 (in development)
+## v1.11 (in development)
+### Breaking changes
+- Factory objects are now named "...DbFactory" instead of "...Factory"
+- Database model factories no longer contain separate -attName and -column properties, 
+  but individual properties that implicitly (or explicitly) convert to both
 ### New features
-Added support for **Angle** data type
+- Added support for **Angle** data type
+- Added writing of factory traits, which facilitate with-method creation
 
 ## v1.10.1 - 22.01.2024
 This update contains some new data types, some bugfixes and some quality-of-life improvements.

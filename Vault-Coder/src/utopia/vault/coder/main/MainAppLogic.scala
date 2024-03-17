@@ -273,9 +273,9 @@ object MainAppLogic extends CoderAppLogic
 	          descriptionLinkObjects: Option[(Reference, Reference, Reference)])
 	         (implicit setup: VaultProjectSetup, naming: NamingRules): Try[(Class, ClassReferences)] =
 	{
-		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef) =>
-			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { factoryRef =>
-				DbModelWriter(classToWrite, modelRef, dataRef, factoryRef)
+		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef, factoryRef) =>
+			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { dbFactoryRef =>
+				DbModelWriter(classToWrite, modelRef, dataRef, factoryRef, dbFactoryRef)
 					.flatMap { dbModelRef =>
 						// Adds description-specific references if applicable
 						(descriptionLinkObjects match {
@@ -296,10 +296,10 @@ object MainAppLogic extends CoderAppLogic
 							case None => Success(None)
 						}).flatMap { descriptionReferences =>
 							// Finally writes the access points
-							AccessWriter(classToWrite, modelRef, factoryRef, dbModelRef,
+							AccessWriter(classToWrite, modelRef, dbFactoryRef, dbModelRef,
 								descriptionReferences)
 								.map { case (genericUniqueAccessRef, genericManyAccessRef) =>
-									classToWrite -> ClassReferences(modelRef, dataRef, factoryRef, dbModelRef,
+									classToWrite -> ClassReferences(modelRef, dataRef, dbFactoryRef, dbModelRef,
 										genericUniqueAccessRef, genericManyAccessRef) }
 						}
 					}
