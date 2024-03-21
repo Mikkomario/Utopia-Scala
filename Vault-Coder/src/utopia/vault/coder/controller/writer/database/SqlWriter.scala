@@ -1,16 +1,16 @@
 package utopia.vault.coder.controller.writer.database
 
 import utopia.coder.model.data.{Name, NamingRules}
-import utopia.flow.time.Today
+import utopia.coder.model.enumeration.NameContext.{DatabaseName, TableName}
+import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
+import utopia.flow.time.Today
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, DbProperty, VaultProjectSetup}
 import utopia.vault.coder.model.datatype.PropertyType
-import utopia.coder.model.enumeration.NamingConvention.{CamelCase, Text}
 import utopia.vault.coder.model.datatype.StandardPropertyType.{ClassReference, EnumValue}
-import utopia.coder.model.enumeration.NameContext.DatabaseName
 
 import java.io.PrintWriter
 import java.nio.file.Path
@@ -25,6 +25,8 @@ import scala.util.Success
   */
 object SqlWriter
 {
+	// OTHER    ------------------------
+	
 	/**
 	  * Writes the SQL document for the specified classes
 	  * @param dbName Name of the database to use (optional)
@@ -277,26 +279,43 @@ object SqlWriter
 		writer.println()
 	}
 	
-	private def initialsFrom(tableNames: Iterable[String], charsToTake: Int = 1): Map[String, String] = {
-		// Generates initials
-		val namePairs = tableNames.map { tableName => tableName -> initialsFrom(tableName, charsToTake) }
-		val nameMap = namePairs.toMap
-		// Checks for duplicates
-		val reverseMap = namePairs.map { case (tableName, initial) => initial -> tableName }.toVector.asMultiMap
-		val duplicates = reverseMap.filter { case (_, tableNames) => tableNames.size > 1 }
-			.valuesIterator.toVector.flatten
-		// Uses recursion to resolve the duplicates, if necessary
-		if (duplicates.isEmpty)
-			nameMap
-		else
-			nameMap ++ initialsFrom(duplicates, charsToTake + 1)
+	private def initialsFrom(tableNames: Iterable[String])(implicit naming: NamingRules) = {
+		val convention = naming(TableName)
+		// Splits each table name into parts
+		val allOptions = tableNames.map { name => name -> convention.split(name) }
+		// Groups by the default initials (1 char from each part)
+		allOptions.groupBy { _._2.map { _.head }.mkString }.flatMap { case (defaultInitials, options) =>
+			// Case: Not unique => Makes unique
+			if (options.hasSize > 1)
+				makeUnique(options, 1)
+			// Case: Unique => Preserves
+			else
+				options.map { _._1 -> defaultInitials }
+		}
 	}
 	
-	private def initialsFrom(tableName: String, charsToTake: Int): String = {
-		if (charsToTake >= tableName.length)
-			tableName
-		else
-			tableName.split("_").map { _.take(charsToTake) }.mkString
+	// Assumes that 1 char from each entry has been tested already
+	// Also assumes that the specified set contains items of identical lengths
+	private def makeUnique(options: Iterable[(String, Seq[String])], testedChars: Int): Iterable[(String, String)] =
+	{
+		// Checks whether it is possible to find some index that (with this character count) makes the results distinct
+		options.head._2.indices
+			.find { i =>
+				val partOptions = options.map { _._2(i) }
+				val uniqueStarts = partOptions.map { _.take(testedChars + 1) }.toSet
+				uniqueStarts.size == partOptions.size
+			} match
+		{
+			// Case: Index found => Expands that index
+			case Some(targetIndex) =>
+				options.map { case (tableName, parts) =>
+					tableName -> parts.zipWithIndex
+						.map { case (part, i) => part.take(if (i == targetIndex) testedChars + 1 else 1) }
+						.mkString
+				}
+			// Case: No index found => Increases the amount of characters taken
+			case None => makeUnique(options, testedChars + 1)
+		}
 	}
 	
 	private def writeDocumentation(doc: String)(implicit writer: PrintWriter) = {
