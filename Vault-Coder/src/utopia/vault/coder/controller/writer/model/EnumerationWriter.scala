@@ -9,8 +9,10 @@ import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
 import utopia.coder.model.scala.declaration.{File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration, TraitDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
+import Reference._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Enum, VaultProjectSetup}
+import utopia.vault.coder.model.datatype.StandardPropertyType.Text
 
 import scala.io.Codec
 
@@ -21,8 +23,13 @@ import scala.io.Codec
   */
 object EnumerationWriter
 {
+	// ATTRIBUTES   ------------------------
+	
 	lazy val findPrefix = data.Name("find", CamelCase.lower)
 	lazy val forPrefix = data.Name("for", CamelCase.lower)
+	
+	
+	// OTHER    ----------------------------
 	
 	/**
 	  * @param e Enumeration
@@ -44,8 +51,7 @@ object EnumerationWriter
 	  * @param codec Codec to use (implicit)
 	  * @return Enum reference on success. Failure if writing failed.
 	  */
-	def apply(e: Enum)(implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) =
-	{
+	def apply(e: Enum)(implicit setup: VaultProjectSetup, codec: Codec, naming: NamingRules) = {
 		val enumName = e.name.enumName
 		val idPropName = e.idPropName.prop
 		val _findForIdName = findForIdName(e)
@@ -57,6 +63,7 @@ object EnumerationWriter
 			ComputedProperty("default", description = s"The default ${ e.name.doc } (i.e. ${ v.name.doc })")(
 				v.name.enumValue)
 		}
+		//noinspection LegacyStringFormatting
 		// forId implementation differs when the enumeration has a default value
 		val (forIdEndCode, forIdDescriptionPostfix) = e.defaultValue match {
 			case Some(default) => CodePiece(".getOrElse(default)") -> s", or the default ${e.name} (${default.name})"
@@ -67,13 +74,27 @@ object EnumerationWriter
 					". Failure if no matching value was found."
 		}
 		// NB: Current implementation doesn't really work for multi-column id types
-		val fromValueCode = e.idType.fromValueCode(Vector("value")).mapText { id =>
-			if (e.idType.yieldsTryFromValue) {
-				if (e.hasDefault) s"$id.map(${_forIdName})" else s"$id.flatMap(${_forIdName})"
+		val findForValueCode = e.idType.fromValueCode(Vector("idVal")).flatMapText { id =>
+			val yieldsTry = e.idType.yieldsTryFromValue
+			val parseIdVal = {
+				if (yieldsTry)
+					s"$id.toOption.flatMap(${_findForIdName})"
+				else
+					s"${_findForIdName}($id)"
 			}
-			else
-				s"${_forIdName}($id)"
+			// Matches against literal enumeration values as a backup, but not if the keys are of type String
+			if (e.idType.isInstanceOf[Text])
+				CodePiece(parseIdVal)
+			else {
+				val idValueType = e.idType.valueDataType
+				CodePiece(s"{ value.castTo(${
+					idValueType.target}, StringType) match { case Left(idVal) => $parseIdVal; case Right(stringVal) => val str = stringVal.getString; values.find { _.toString ~== str } } }",
+					Set(flow.equalsExtensions, idValueType, stringType))
+			}
 		}
+		val fromValueCode = forIdEndCode.mapText { end => s"findForValue(value)$end" }
+		val valueParam = Parameter("value", value,
+			description = s"A value representing an ${ e.name.doc } ${ e.idPropName.doc }")
 		val enumValueToValueCode = e.idType.toValueCode(idPropName)
 		
 		File(e.packagePath,
@@ -110,12 +131,12 @@ object EnumerationWriter
 						returnDescription = s"${ e.name.doc } matching that ${ e.idPropName.doc }$forIdDescriptionPostfix")(
 						Parameter(idPropName, e.idType.toScala, description = s"${ e.idPropName.doc } matching a ${ e.name.doc }"))(
 						s"${_findForIdName}($idPropName)${forIdEndCode.text}"),
+					MethodDeclaration("findForValue", findForValueCode.references,
+						returnDescription = s"${ e.name.doc } matching the specified value. None if the value didn't match any ${
+							e.name.doc }", isLowMergePriority = true)(valueParam)(findForValueCode.text),
 					MethodDeclaration("fromValue", fromValueCode.references,
 						returnDescription = s"${ e.name.doc } matching the specified value, when the value is interpreted as an ${
-							e.name.doc } ${ e.idPropName.doc }$forIdDescriptionPostfix")(
-						Parameter("value", value,
-							description = s"A value representing an ${ e.name.doc } ${ e.idPropName.doc }"))(
-						fromValueCode.text)
+							e.name.doc } ${ e.idPropName.doc }$forIdDescriptionPostfix")(valueParam)(fromValueCode.text)
 				),
 				// Contains an object for each value
 				nested = e.values.map { value =>

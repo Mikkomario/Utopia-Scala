@@ -6,7 +6,7 @@ import utopia.coder.model.enumeration.NamingConvention.CamelCase
 import utopia.coder.model.scala.Visibility.Protected
 import utopia.coder.model.scala.datatype.Reference._
 import utopia.coder.model.scala.datatype.{Extension, Reference, ScalaType}
-import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue}
+import utopia.coder.model.scala.declaration.PropertyDeclarationType.{ComputedProperty, ImmutableValue, LazyValue}
 import utopia.coder.model.scala.declaration.{ClassDeclaration, File, MethodDeclaration, ObjectDeclaration, PropertyDeclaration}
 import utopia.coder.model.scala.{DeclarationDate, Parameter}
 import utopia.flow.util.StringExtensions._
@@ -52,6 +52,7 @@ object DbModelWriter
 	{
 		val parentPackage = setup.dbModelPackage / classToWrite.packageName
 		val className = (classToWrite.name + classNameSuffix).className
+		val classType = ScalaType.basic(className)
 		val deprecation = DeprecationStyle.of(classToWrite)
 		
 		val optionalIdType = classToWrite.idType.optional
@@ -69,8 +70,8 @@ object DbModelWriter
 				factoryExtensionsFor(className, modelRef, dataRef, factoryRef, deprecation),
 				// Contains an access property for each property, as well as factory and table -properties
 				properties = classToWrite.dbProperties.map { prop =>
-					ComputedProperty(prop.name.prop,
-						description = "Property that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
+					LazyValue(prop.name.prop,
+						description = s"Property that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
 						s"property(${ prop.modelName.quoted })")
 				}.toVector ++ Vector(
 					ComputedProperty("factory", Set(dbFactoryRef),
@@ -105,7 +106,8 @@ object DbModelWriter
 						Parameter(prop.name.prop, inputType.scalaType, defaultValue)
 					}.toVector,
 				// Extends StorableWithFactory[A] with the factory traits
-				extensions = Vector(storableWithFactory(modelRef), factoryRef(modelRef), fromIdFactory(modelRef)),
+				extensions = Vector(storableWithFactory(modelRef), factoryRef(classType),
+					fromIdFactory(ScalaType.int, classType)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
 					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
@@ -113,7 +115,9 @@ object DbModelWriter
 				),
 				// adds withX(...) -methods for convenience
 				methods = classToWrite.properties.flatMap { withPropertyMethods(_, "copy",
-					"A new copy of this model with the specified ") }.toSet,
+					"A new copy of this model with the specified ") }.toSet +
+					MethodDeclaration("withId", isOverridden = true)(
+						Parameter("id", classToWrite.idType.toScala))("copy(id = Some(id))"),
 				description = s"Used for interacting with ${ classToWrite.name.plural } in the database",
 				author = classToWrite.author, since = DeclarationDate.versionedToday, isCaseClass = true)
 		).write()
@@ -150,7 +154,6 @@ object DbModelWriter
 				.map { prop => prop.toValueCode.withPrefix(s"$className.${ prop.name.prop }.name -> ") }
 				.reduceLeft { _.append(_, ", ") }
 			ComputedProperty("valueProperties", propsPart.references + flow.valueConversions, isOverridden = true)(
-				s"import $className._",
 				s"Vector($quotedId -> id, $propsPart)"
 			)
 		}

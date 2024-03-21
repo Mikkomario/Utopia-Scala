@@ -1,10 +1,10 @@
 package utopia.logos.database.access.single.url.link
 
+import utopia.logos.database.factory.url.LinkDbFactory
+import utopia.logos.model.stored.url.Link
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.LinkFactory
-import utopia.logos.model.stored.url.Link
 
 object UniqueLinkAccess
 {
@@ -30,14 +30,14 @@ object UniqueLinkAccess
 /**
   * A common trait for access points that return individual and distinct links.
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 trait UniqueLinkAccess 
 	extends UniqueLinkAccessLike[Link] with SingleRowModelAccess[Link] with FilterableView[UniqueLinkAccess]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def factory = LinkFactory
+	override def factory = LinkDbFactory
 	
 	override protected def self = this
 	

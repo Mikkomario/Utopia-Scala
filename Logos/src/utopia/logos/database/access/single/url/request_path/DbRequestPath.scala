@@ -1,17 +1,17 @@
 package utopia.logos.database.access.single.url.request_path
 
+import utopia.logos.database.factory.url.RequestPathDbFactory
+import utopia.logos.database.storable.url.RequestPathModel
+import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.RequestPathFactory
-import utopia.logos.database.model.url.RequestPathModel
-import utopia.logos.model.stored.url.RequestPath
 
 /**
   * Used for accessing individual request paths
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 object DbRequestPath extends SingleRowModelAccess[RequestPath] with UnconditionalView with Indexed
 {
@@ -25,7 +25,7 @@ object DbRequestPath extends SingleRowModelAccess[RequestPath] with Unconditiona
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = RequestPathFactory
+	override def factory = RequestPathDbFactory
 	
 	
 	// OTHER	--------------------

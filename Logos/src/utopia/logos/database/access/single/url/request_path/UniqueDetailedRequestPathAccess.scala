@@ -1,13 +1,13 @@
 package utopia.logos.database.access.single.url.request_path
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.factory.url.DetailedRequestPathDbFactory
+import utopia.logos.database.storable.url.DomainModel
+import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.DetailedRequestPathFactory
-import utopia.logos.database.model.url.DomainModel
-import utopia.logos.model.combined.url.DetailedRequestPath
 
 import java.time.Instant
 
@@ -37,7 +37,7 @@ object UniqueDetailedRequestPathAccess
 /**
   * A common trait for access points that return distinct detailed request paths
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 trait UniqueDetailedRequestPathAccess 
 	extends UniqueRequestPathAccessLike[DetailedRequestPath] with SingleRowModelAccess[DetailedRequestPath] 
@@ -49,12 +49,12 @@ trait UniqueDetailedRequestPathAccess
 	  * Full http(s) address of this domain in string format. Includes protocol, 
 	  * domain name and possible port number.. None if no domain (or value) was found.
 	  */
-	def domainUrl(implicit connection: Connection) = pullColumn(domainModel.urlColumn).getString
+	def domainUrl(implicit connection: Connection) = pullColumn(domainModel.url.column).getString
 	
 	/**
 	  * Time when this domain was added to the database. None if no domain (or value) was found.
 	  */
-	def domainCreated(implicit connection: Connection) = pullColumn(domainModel.createdColumn).instant
+	def domainCreated(implicit connection: Connection) = pullColumn(domainModel.created.column).instant
 	
 	/**
 	  * A database model (factory) used for interacting with the linked domain
@@ -64,7 +64,7 @@ trait UniqueDetailedRequestPathAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = DetailedRequestPathFactory
+	override def factory = DetailedRequestPathDbFactory
 	
 	override protected def self = this
 	
@@ -80,14 +80,14 @@ trait UniqueDetailedRequestPathAccess
 	  * @return Whether any domain was affected
 	  */
 	def domainCreated_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(domainModel.createdColumn, newCreated)
+		putColumn(domainModel.created.column, newCreated)
 	
 	/**
 	  * Updates the urls of the targeted domains
 	  * @param newUrl A new url to assign
 	  * @return Whether any domain was affected
 	  */
-	def domainUrl_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.urlColumn, 
+	def domainUrl_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column, 
 		newUrl)
 }
 

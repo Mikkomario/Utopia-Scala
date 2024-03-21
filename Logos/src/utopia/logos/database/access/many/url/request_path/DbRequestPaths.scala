@@ -3,10 +3,10 @@ package utopia.logos.database.access.many.url.request_path
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.database.Connection
-import utopia.vault.nosql.view.UnconditionalView
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.RequestPath
+import utopia.vault.database.Connection
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
   * The root access point when targeting multiple request paths at a time
@@ -24,13 +24,13 @@ object DbRequestPaths extends ManyRequestPathsAccess with UnconditionalView
 	def apply(ids: Set[Int]) = new DbRequestPathsSubset(ids)
 	
 	/**
-	 * Stores the specified request paths to the database.
-	 * Avoids inserting duplicates
-	 * @param paths Paths to store
-	 * @param connection Implicit DB connection
-	 * @return First inserted paths, then paths that already existed in the database.
-	 *         Both are grouped by their domain ids.
-	 */
+	  * Stores the specified request paths to the database.
+	  * Avoids inserting duplicates
+	  * @param paths Paths to store
+	  * @param connection Implicit DB connection
+	  * @return First inserted paths, then paths that already existed in the database.
+	  * Both are grouped by their domain ids.
+	  */
 	def store(paths: Map[Int, Set[String]])(implicit connection: Connection) = {
 		if (paths.nonEmpty) {
 			// Finds existing paths under the specified domains

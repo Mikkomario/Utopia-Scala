@@ -1,17 +1,17 @@
 package utopia.logos.database.access.single.url.domain
 
+import utopia.logos.database.factory.url.DomainDbFactory
+import utopia.logos.database.storable.url.DomainModel
+import utopia.logos.model.stored.url.Domain
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.DomainFactory
-import utopia.logos.database.model.url.DomainModel
-import utopia.logos.model.stored.url.Domain
 
 /**
   * Used for accessing individual domains
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 object DbDomain extends SingleRowModelAccess[Domain] with UnconditionalView with Indexed
 {
@@ -25,7 +25,7 @@ object DbDomain extends SingleRowModelAccess[Domain] with UnconditionalView with
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = DomainFactory
+	override def factory = DomainDbFactory
 	
 	
 	// OTHER	--------------------

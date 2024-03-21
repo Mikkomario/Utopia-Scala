@@ -6,27 +6,28 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.vault.database.Connection
-import utopia.vault.nosql.view.UnconditionalView
 import utopia.logos.database.access.many.url.domain.DbDomains
 import utopia.logos.database.access.many.url.request_path.DbRequestPaths
-import utopia.logos.database.model.url.RequestPathModel
+import utopia.logos.database.storable.url.RequestPathModel
 import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.partial.url.{LinkData, RequestPathData}
 import utopia.logos.model.stored.url.{Domain, Link}
+import utopia.vault.database.Connection
+import utopia.vault.nosql.view.UnconditionalView
 
 /**
   * The root access point when targeting multiple links at a time
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 object DbLinks extends ManyLinksAccess with UnconditionalView
 {
-	// ATTRIBUTES   ----------------
+	// ATTRIBUTES	--------------------
 	
 	private val maximumModelLength = 2048
 	
 	private lazy val parameterSeparatorRegex = Regex.escape('&').ignoringQuotations
+	
 	private lazy val parameterAssignmentRegex = Regex.escape('=').ignoringQuotations
 	
 	
@@ -39,13 +40,13 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 	def apply(ids: Set[Int]) = new DbLinksSubset(ids)
 	
 	/**
-	 * Stores all of the specified links to the database.
-	 * Avoids inserting duplicate information.
-	 * @param links Links to store
-	 * @param connection Implicit DB connection
-	 * @return All inserted links (first) and links that already existed in the database (second).
-	 *         Each link contains domain and path information, also.
-	 */
+	  * Stores all of the specified links to the database.
+	  * Avoids inserting duplicate information.
+	  * @param links Links to store
+	  * @param connection Implicit DB connection
+	  * @return All inserted links (first) and links that already existed in the database (second).
+	  * Each link contains domain and path information, also.
+	  */
 	def store(links: Set[String])(implicit connection: Connection) = {
 		if (links.nonEmpty) {
 			// Extracts the domain and parameter parts from each link
@@ -90,7 +91,8 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 				.groupMapReduce { _._1 } { _._2 } { case ((links1, wasInserted1), (links2, wasInserted2)) =>
 					links1.mergeWith(links2) { _ ++ _ } -> (wasInserted1 || wasInserted2)
 				}
-			val (pathsToInsert, pathsToStore) = linksPerDomainId.divideWith { case (domainId, (links, wasInserted)) =>
+			val (pathsToInsert, pathsToStore) = linksPerDomainId.divideWith { case (domainId, (links, 
+				wasInserted)) =>
 				val data = domainId -> links
 				if (wasInserted) Left(data) else Right(data)
 			}
@@ -109,12 +111,14 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 				.view.mapValues { _.map { case (path, wasInserted) =>
 					path.path.toLowerCase -> (path.id -> wasInserted) }.toMap
 				}.toMap
-			val pathPerId = (firstInsertedPaths.iterator ++ storedPathMaps.iterator.flatMap { _.valuesIterator.flatten })
+			val pathPerId = (firstInsertedPaths.iterator ++ 
+				storedPathMaps.iterator.flatMap { _.valuesIterator.flatten })
 				.map { p => p.id -> p }.toMap
 			
 			// Next stores individual links
 			// Won't check for duplicates under inserted paths
-			val (linksToFreelyInsert, linksToStore) = linksPerDomainId.splitFlatMap { case (domainId, (linksPerPath, _)) =>
+			val (linksToFreelyInsert, linksToStore) = linksPerDomainId.splitFlatMap { case (domainId, 
+				(linksPerPath, _)) =>
 				val pathIdMap = pathsMap(domainId)
 				// Keys are path ids; Values are link parameter sets + whether that path was inserted
 				val linksPerPathId = linksPerPath.iterator
@@ -122,7 +126,8 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 						val (pathId, wasInserted) = pathIdMap(path.toLowerCase)
 						pathId -> (paramSets, wasInserted)
 					}
-					.toVector.groupMapReduce { _._1 } { _._2 } { case ((params1, wasInserted1), (params2, wasInserted2)) =>
+					.toVector.groupMapReduce { _._1 } { _._2 } { case ((params1, wasInserted1), (params2, 
+						wasInserted2)) =>
 						(params1 ++ params2) -> (wasInserted1 || wasInserted2)
 					}
 				linksPerPathId.flatDivideWith { case (pathId, (paramSets, pathWasInserted)) =>
@@ -163,11 +168,21 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			Pair.twice(Vector.empty)
 	}
 	
+	private def ensureModelMaxLength(model: Model) = {
+		var m = model
+		while (m.toJson.length > maximumModelLength) {
+			val maxProp = m.properties.maxBy { _.value.toJson.length }
+			m = m + maxProp.withValue("...")
+		}
+		m
+	}
+	
 	// Converts a parameters-string into a model
 	// E.g. "foo=3&bar=test" would become {"foo": "3", "bar": "test"}
 	private def paramsStringToModel(paramsString: String) = {
 		// Splits to individual assignments
-		val model = Model.withConstants(parameterSeparatorRegex.split(paramsString).filter { _.nonEmpty }.flatMap { assignment =>
+		val model = Model.withConstants(parameterSeparatorRegex.split(paramsString)
+			.filter { _.nonEmpty }.flatMap { assignment =>
 			// Splits into parameter name and value
 			parameterAssignmentRegex.firstRangeFrom(assignment) match {
 				case Some(assignRange) =>
@@ -180,15 +195,6 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 		})
 		// Limits maximum output length
 		ensureModelMaxLength(model)
-	}
-	
-	private def ensureModelMaxLength(model: Model) = {
-		var m = model
-		while (m.toJson.length > maximumModelLength) {
-			val maxProp = m.properties.maxBy { _.value.toJson.length }
-			m = m + maxProp.withValue("...")
-		}
-		m
 	}
 	
 	

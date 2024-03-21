@@ -1,12 +1,12 @@
 package utopia.logos.database.access.many.url.link
 
+import utopia.logos.database.access.many.url.request_path.DbRequestPaths
+import utopia.logos.database.factory.url.LinkDbFactory
+import utopia.logos.model.combined.url.DetailedLink
+import utopia.logos.model.stored.url.Link
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.Condition
-import utopia.logos.database.access.many.url.request_path.DbRequestPaths
-import utopia.logos.database.factory.url.LinkFactory
-import utopia.logos.model.combined.url.DetailedLink
-import utopia.logos.model.stored.url.Link
 
 object ManyLinksAccess
 {
@@ -23,26 +23,24 @@ object ManyLinksAccess
 /**
   * A common trait for access points which target multiple links at a time
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with ManyRowModelAccess[Link]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * Pulls the accessible links as a map
-	 * @param connection Implicit DB donnection
-	 * @return Accessible links as a map where keys are request path ids and values are assigned parameter models.
-	 *         One model is provided for each link.
-	 */
-	def toMap(implicit connection: Connection) =
-		pullColumnMultiMap(model.requestPathIdColumn, model.queryParametersColumn)
+	  * Pulls the accessible links as a map
+	  * @param connection Implicit DB donnection
+	  */
+	def toMap(implicit connection: Connection) = 
+		pullColumnMultiMap(model.requestPathId.column, model.queryParameters.column)
 			.map { case (pathIdVal, paramVals) => pathIdVal.getInt -> paramVals.map { _.getModel } }
 	
 	/**
-	 * @param connection Implicit DB connection
-	 * @return All accessible links, including request path and domain information
-	 */
+	  * All accessible links, including request path and domain information
+	  * @param connection Implicit DB connection
+	  */
 	def pullDetailed(implicit connection: Connection) = {
 		val links = pull
 		if (links.nonEmpty) {
@@ -59,7 +57,7 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = LinkFactory
+	override def factory = LinkDbFactory
 	
 	override protected def self = this
 	

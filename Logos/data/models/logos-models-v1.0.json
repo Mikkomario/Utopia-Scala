@@ -3,6 +3,19 @@
   "version": "v1.0",
   "author": "Mikko Hilpinen",
   "package": "utopia.logos",
+  "enums": [
+    {
+      "name": "DisplayStyle",
+      "doc": "Represents a style chosen for displaying words, such as underlining or bold text. An open enumeration, meaning that sub-modules may introduce their own values.",
+      "default": "Default",
+      "values": [
+        {
+          "name": "Default",
+          "doc": "The default style with no modifications on how the text should be displayed."
+        }
+      ]
+    }
+  ],
   "classes": {
     "word": [
       {
@@ -50,6 +63,7 @@
       },
       {
         "name": "Statement",
+        "has_combos": true,
         "doc": "Represents an individual statement made within some text. Consecutive statements form whole texts.",
         "props": [
           {
@@ -82,6 +96,11 @@
             "length_rule": "Expand",
             "doc": "Index at which the specified word appears within the referenced statement (0-based)",
             "index": true
+          },
+          {
+            "name": "style",
+            "type": "Enum[DisplayStyle]",
+            "doc": "Style in which this word is used in this context"
           }
         ]
       }
@@ -140,6 +159,7 @@
           },
           {
             "name": "queryParameters",
+            "name_plural": "queryParameters",
             "type": "Model(255-2048)",
             "doc": "Specified request parameters in model format"
           },

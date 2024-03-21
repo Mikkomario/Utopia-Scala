@@ -1,12 +1,12 @@
 package utopia.logos.database.access.many.url.request_path
 
+import utopia.logos.database.access.many.url.domain.DbDomains
+import utopia.logos.database.factory.url.RequestPathDbFactory
+import utopia.logos.model.combined.url.DetailedRequestPath
+import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.Condition
-import utopia.logos.database.access.many.url.domain.DbDomains
-import utopia.logos.database.factory.url.RequestPathFactory
-import utopia.logos.model.combined.url.DetailedRequestPath
-import utopia.logos.model.stored.url.RequestPath
 
 object ManyRequestPathsAccess
 {
@@ -29,17 +29,17 @@ trait ManyRequestPathsAccess
 	extends ManyRequestPathsAccessLike[RequestPath, ManyRequestPathsAccess] 
 		with ManyRowModelAccess[RequestPath]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * @return Copy of this access point that includes domain information
-	 */
+	  * Copy of this access point that includes domain information
+	  */
 	def detailed = DbDetailedRequestPaths.filter(accessCondition)
 	
 	/**
-	 * @param connection Implicit DB connection
-	 * @return All accessible request paths, including domain information
-	 */
+	  * All accessible request paths, including domain information
+	  * @param connection Implicit DB connection
+	  */
 	def pullDetailed(implicit connection: Connection) = {
 		val paths = pull
 		if (paths.nonEmpty) {
@@ -55,7 +55,7 @@ trait ManyRequestPathsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = RequestPathFactory
+	override def factory = RequestPathDbFactory
 	
 	override protected def self = this
 	

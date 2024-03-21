@@ -1,14 +1,14 @@
 package utopia.logos.model.combined.url
 
-import utopia.flow.view.template.Extender
 import utopia.flow.util.StringExtensions._
+import utopia.flow.view.template.Extender
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.{Domain, RequestPath}
 
 /**
   * Includes textual domain information in a request path
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 case class DetailedRequestPath(requestPath: RequestPath, domain: Domain) extends Extender[RequestPathData]
 {
@@ -22,8 +22,8 @@ case class DetailedRequestPath(requestPath: RequestPath, domain: Domain) extends
 	
 	// IMPLEMENTED	--------------------
 	
-	override def wrapped = requestPath.data
-	
 	override def toString = s"$domain${requestPath.path.mapIfNotEmpty { p => s"/$p" }}"
+	
+	override def wrapped = requestPath.data
 }
 

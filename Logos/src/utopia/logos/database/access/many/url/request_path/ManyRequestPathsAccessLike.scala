@@ -1,11 +1,11 @@
 package utopia.logos.database.access.many.url.request_path
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.storable.url.RequestPathModel
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
-import utopia.logos.database.model.url.RequestPathModel
 
 import java.time.Instant
 
@@ -21,18 +21,18 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	/**
 	  * domain ids of the accessible request paths
 	  */
-	def domainIds(implicit connection: Connection) = pullColumn(model.domainIdColumn).map { v => v.getInt }
+	def domainIds(implicit connection: Connection) = pullColumn(model.domainId.column).map { v => v.getInt }
 	
 	/**
 	  * paths of the accessible request paths
 	  */
-	def paths(implicit connection: Connection) = pullColumn(model.pathColumn).flatMap { _.string }
+	def paths(implicit connection: Connection) = pullColumn(model.path.column).flatMap { _.string }
 	
 	/**
 	  * creation times of the accessible request paths
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = 
+		pullColumn(model.created.column).map { v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -45,18 +45,12 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	// OTHER	--------------------
 	
 	/**
-	 * @param domainIds Ids of the targeted domains
-	 * @return Access to request paths under those domains
-	 */
-	def withinDomains(domainIds: Iterable[Int]) = filter(model.domainIdColumn.in(domainIds))
-	
-	/**
 	  * Updates the creation times of the targeted request paths
 	  * @param newCreated A new created to assign
 	  * @return Whether any request path was affected
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+		putColumn(model.created.column, newCreated)
 	
 	/**
 	  * Updates the domain ids of the targeted request paths
@@ -64,13 +58,19 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	  * @return Whether any request path was affected
 	  */
 	def domainIds_=(newDomainId: Int)(implicit connection: Connection) = 
-		putColumn(model.domainIdColumn, newDomainId)
+		putColumn(model.domainId.column, newDomainId)
 	
 	/**
 	  * Updates the paths of the targeted request paths
 	  * @param newPath A new path to assign
 	  * @return Whether any request path was affected
 	  */
-	def paths_=(newPath: String)(implicit connection: Connection) = putColumn(model.pathColumn, newPath)
+	def paths_=(newPath: String)(implicit connection: Connection) = putColumn(model.path.column, newPath)
+	
+	/**
+	  * @param domainIds Ids of the targeted domains
+	  * @return Access to request paths under those domains
+	  */
+	def withinDomains(domainIds: Iterable[Int]) = filter(model.domainId.column.in(domainIds))
 }
 

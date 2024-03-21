@@ -1,12 +1,12 @@
 package utopia.logos.database.access.many.url.request_path
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.factory.url.DetailedRequestPathDbFactory
+import utopia.logos.database.storable.url.DomainModel
+import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.DetailedRequestPathFactory
-import utopia.logos.database.model.url.DomainModel
-import utopia.logos.model.combined.url.DetailedRequestPath
 
 import java.time.Instant
 
@@ -36,13 +36,13 @@ trait ManyDetailedRequestPathsAccess
 	/**
 	  * urls of the accessible domains
 	  */
-	def domainUrls(implicit connection: Connection) = pullColumn(domainModel.urlColumn).flatMap { _.string }
+	def domainUrls(implicit connection: Connection) = pullColumn(domainModel.url.column).flatMap { _.string }
 	
 	/**
 	  * creation times of the accessible domains
 	  */
 	def domainCreationTimes(implicit connection: Connection) = 
-		pullColumn(domainModel.createdColumn).map { v => v.getInstant }
+		pullColumn(domainModel.created.column).map { v => v.getInstant }
 	
 	/**
 	  * Model (factory) used for interacting the domains associated with this detailed request path
@@ -52,7 +52,7 @@ trait ManyDetailedRequestPathsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = DetailedRequestPathFactory
+	override def factory = DetailedRequestPathDbFactory
 	
 	override protected def self = this
 	
@@ -68,14 +68,14 @@ trait ManyDetailedRequestPathsAccess
 	  * @return Whether any domain was affected
 	  */
 	def domainCreationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(domainModel.createdColumn, newCreated)
+		putColumn(domainModel.created.column, newCreated)
 	
 	/**
 	  * Updates the urls of the targeted domains
 	  * @param newUrl A new url to assign
 	  * @return Whether any domain was affected
 	  */
-	def domainUrls_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.urlColumn, 
+	def domainUrls_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column, 
 		newUrl)
 }
 

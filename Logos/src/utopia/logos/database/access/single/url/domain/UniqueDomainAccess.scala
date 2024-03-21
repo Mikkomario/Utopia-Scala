@@ -2,15 +2,15 @@ package utopia.logos.database.access.single.url.domain
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.logos.database.factory.url.DomainDbFactory
+import utopia.logos.database.storable.url.DomainModel
+import utopia.logos.model.stored.url.Domain
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.DomainFactory
-import utopia.logos.database.model.url.DomainModel
-import utopia.logos.model.stored.url.Domain
 
 import java.time.Instant
 
@@ -38,7 +38,7 @@ object UniqueDomainAccess
 /**
   * A common trait for access points that return individual and distinct domains.
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 trait UniqueDomainAccess 
 	extends SingleRowModelAccess[Domain] with FilterableView[UniqueDomainAccess] 
@@ -50,12 +50,12 @@ trait UniqueDomainAccess
 	  * Full http(s) address of this domain in string format. Includes protocol, 
 	  * domain name and possible port number.. None if no domain (or value) was found.
 	  */
-	def url(implicit connection: Connection) = pullColumn(model.urlColumn).getString
+	def url(implicit connection: Connection) = pullColumn(model.url.column).getString
 	
 	/**
 	  * Time when this domain was added to the database. None if no domain (or value) was found.
 	  */
-	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
+	def created(implicit connection: Connection) = pullColumn(model.created.column).instant
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
@@ -67,7 +67,7 @@ trait UniqueDomainAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = DomainFactory
+	override def factory = DomainDbFactory
 	
 	override protected def self = this
 	
@@ -83,13 +83,13 @@ trait UniqueDomainAccess
 	  * @return Whether any domain was affected
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+		putColumn(model.created.column, newCreated)
 	
 	/**
 	  * Updates the urls of the targeted domains
 	  * @param newUrl A new url to assign
 	  * @return Whether any domain was affected
 	  */
-	def url_=(newUrl: String)(implicit connection: Connection) = putColumn(model.urlColumn, newUrl)
+	def url_=(newUrl: String)(implicit connection: Connection) = putColumn(model.url.column, newUrl)
 }
 

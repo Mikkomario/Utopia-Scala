@@ -177,7 +177,7 @@ object ModelWriter
 			val withMethods = withMethodsFor(classToWrite) { (prop, propName) =>
 				s"copy(data = data.${ withMethodNameFor(prop) }($propName))"
 			}
-			val factoryParents = Vector[Extension](factoryRef(classType), vault.fromIdFactory(classType))
+			val factoryParents = Vector[Extension](factoryRef(classType), vault.fromIdFactory(ScalaType.int, classType))
 			
 			val description = s"Represents a ${ classToWrite.name.doc } that has already been stored in the database"
 			// ModelConvertible extension & implementation differs based on id type

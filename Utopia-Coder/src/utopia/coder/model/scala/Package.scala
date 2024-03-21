@@ -74,6 +74,7 @@ object Package
 		lazy val eventfulViewTemplate = viewTemplate/"eventful"
 		lazy val eventfulImmutableView = view/"immutable.eventful"
 		lazy val utils = base / "util"
+		lazy val operator = base/"operator"
 	}
 }
 

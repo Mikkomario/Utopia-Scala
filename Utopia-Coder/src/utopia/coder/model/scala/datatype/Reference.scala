@@ -90,6 +90,8 @@ object Reference
 		lazy val valueUnwraps = extensions(typeCasting, "ValueUnwraps")
 		lazy val collectionExtensions = extensions(collection, "CollectionExtensions")
 		lazy val timeExtensions = extensions(time, "TimeExtensions")
+		lazy val stringExtensions = extensions(utils, "StringExtensions")
+		lazy val equalsExtensions = extensions(operator/"equality", "EqualsExtensions")
 		
 		lazy val mutate = apply(utils, "Mutate")
 		lazy val notEmpty = apply(utils, "NotEmpty")

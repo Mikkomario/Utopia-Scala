@@ -55,5 +55,5 @@ case class VaultProjectSetup(dbModuleName: Name, modelPackage: Package, database
 	/**
 	  * @return Package that contains database interaction models
 	  */
-	def dbModelPackage = databasePackage/"model"
+	def dbModelPackage = databasePackage/"storable"
 }

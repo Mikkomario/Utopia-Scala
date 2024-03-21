@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{InstantType, IntType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import utopia.logos.model.factory.url.RequestPathFactory
 
 import java.time.Instant
 
@@ -32,12 +33,17 @@ object RequestPathData extends FromModelFactoryWithSchema[RequestPathData]
   * nor the initial forward slash.
   * @param created Time when this request path was added to the database
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
-case class RequestPathData(domainId: Int, path: String = "", created: Instant = Now) extends ModelConvertible
+case class RequestPathData(domainId: Int, path: String = "", created: Instant = Now) 
+	extends RequestPathFactory[RequestPathData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("domainId" -> domainId, "path" -> path, "created" -> created))
+	
+	override def withCreated(created: Instant) = copy(created = created)
+	override def withDomainId(domainId: Int) = copy(domainId = domainId)
+	override def withPath(path: String) = copy(path = path)
 }
 

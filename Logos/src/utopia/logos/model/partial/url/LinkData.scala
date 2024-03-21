@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{InstantType, IntType, ModelType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import utopia.logos.model.factory.url.LinkFactory
 
 import java.time.Instant
 
@@ -32,15 +33,19 @@ object LinkData extends FromModelFactoryWithSchema[LinkData]
   * @param queryParameters Specified request parameters in model format
   * @param created Time when this link was added to the database
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 case class LinkData(requestPathId: Int, queryParameters: Model = Model.empty, created: Instant = Now) 
-	extends ModelConvertible
+	extends LinkFactory[LinkData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
 		Model(Vector("requestPathId" -> requestPathId, "queryParameters" -> queryParameters, 
 			"created" -> created))
+	
+	override def withCreated(created: Instant) = copy(created = created)
+	override def withQueryParameters(queryParameters: Model) = copy(queryParameters = queryParameters)
+	override def withRequestPathId(requestPathId: Int) = copy(requestPathId = requestPathId)
 }
 

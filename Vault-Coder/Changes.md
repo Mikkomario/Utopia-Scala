@@ -5,6 +5,7 @@
 - Factory objects are now named "...DbFactory" instead of "...Factory"
 - Database model factories no longer contain separate -attName and -column properties, 
   but individual properties that implicitly (or explicitly) convert to both
+- Database models are now written into `database.storable` package instead of `database.model` package
 ### New features
 - Added support for **Angle** data type
 - Added writing of factory traits, which facilitate with-method creation

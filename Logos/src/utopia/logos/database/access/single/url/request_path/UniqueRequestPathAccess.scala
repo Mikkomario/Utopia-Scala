@@ -1,10 +1,10 @@
 package utopia.logos.database.access.single.url.request_path
 
+import utopia.logos.database.factory.url.RequestPathDbFactory
+import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import utopia.logos.database.factory.url.RequestPathFactory
-import utopia.logos.model.stored.url.RequestPath
 
 object UniqueRequestPathAccess
 {
@@ -30,7 +30,7 @@ object UniqueRequestPathAccess
 /**
   * A common trait for access points that return individual and distinct request paths.
   * @author Mikko Hilpinen
-  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 20.03.2024, v1.0
   */
 trait UniqueRequestPathAccess 
 	extends UniqueRequestPathAccessLike[RequestPath] with SingleRowModelAccess[RequestPath] 
@@ -38,7 +38,7 @@ trait UniqueRequestPathAccess
 {
 	// IMPLEMENTED	--------------------
 	
-	override def factory = RequestPathFactory
+	override def factory = RequestPathDbFactory
 	
 	override protected def self = this
 	
