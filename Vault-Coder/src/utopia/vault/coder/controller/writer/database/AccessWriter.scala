@@ -6,7 +6,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, VaultProjectSetup, Property}
+import utopia.vault.coder.model.data.{Class, CombinationData, DbProperty, Property, VaultProjectSetup}
 import utopia.vault.coder.model.datatype.PropertyType
 import utopia.coder.model.enumeration.NamingConvention.{CamelCase, UnderScore}
 import utopia.coder.model.scala.Visibility.{Private, Protected}
@@ -15,6 +15,7 @@ import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProp
 import utopia.coder.model.scala.declaration._
 import utopia.coder.model.scala.{DeclarationDate, Package, Parameter, Parameters}
 import Reference._
+import utopia.coder.model.enumeration.NameContext.{ClassPropName, FunctionName}
 import utopia.vault.coder.util.VaultReferences._
 import utopia.vault.coder.util.VaultReferences.Vault._
 
@@ -539,7 +540,8 @@ object AccessWriter
 		val idsPullCode = classToWrite.idType.fromValuesCode("pullColumn(index)")
 		val highestTraitProperties = modelProperty +: propertyGettersFor(classToWrite, pullMany = true) { _.props } :+
 			ComputedProperty("ids", idsPullCode.references, implicitParams = Vector(connectionParam))(idsPullCode.text)
-		val highestTraitMethods = propertySettersFor(classToWrite, modelProperty.name) { _.props } ++ deprecationMethod
+		val highestTraitMethods = propertySettersFor(classToWrite, modelProperty.name) { _.props } ++
+			filterMethodsFor(classToWrite, modelProperty.name) ++ deprecationMethod
 		
 		// Deprecatable items inherit special parent traits
 		val (deprecatableViewParentRef, filterViewParentRef) = deprecationAndFilterReferenceFor(classToWrite)
@@ -820,5 +822,55 @@ object AccessWriter
 				None
 		}
 		deprecatableViewParentRef -> deprecatableViewParentRef.getOrElse(filterableView)
+	}
+	
+	private def filterMethodsFor(classToWrite: Class, modelPropName: String)(implicit naming: NamingRules) =
+	{
+		classToWrite.properties.flatMap { prop =>
+			// Only writes the with and in methods for properties with a single column
+			prop.dbProperties.only.iterator.flatMap { dbProp =>
+				// If these methods are not explicitly defined, only writes them for custom index properties
+				lazy val isCustomIndex = dbProp.overrides.indexing.isCertainlyTrue ||
+					classToWrite.comboIndexColumnNames.exists { _.contains(dbProp.columnName) }
+				val withMethodName = prop.withAccessName.nonEmptyOrElse {
+					if (isCustomIndex) ("with" +: prop.name).function else ""
+				}
+				val inMethodName = prop.inAccessName.nonEmptyOrElse {
+					if (isCustomIndex)
+						(Name("in", "in", CamelCase.lower) + prop.name).pluralIn(naming(FunctionName))
+					else
+						""
+				}
+				
+				// Writes the actual methods, if needed
+				lazy val singleParamName = prop.name.prop
+				lazy val concreteType = prop.dataType.concrete
+				lazy val singleValueCode = concreteType.toValueCode(singleParamName)
+				val withMethod = withMethodName.notEmpty.map { name =>
+					MethodDeclaration(name, singleValueCode.references,
+						returnDescription = s"Copy of this access point that only includes ${
+							classToWrite.name.pluralDoc } with the specified ${ prop.name }", isLowMergePriority = true)(
+						Parameter(singleParamName, concreteType.toScala, description = s"${ prop.name } to target"))(
+						s"filter($modelPropName.${ dbProp.name.prop }.column <=> ${singleValueCode.text})")
+				}
+				val inMethod = inMethodName.notEmpty.map { name =>
+					val paramsName = prop.name.pluralIn(naming(ClassPropName))
+					val code = singleValueCode.mapText { valueCode =>
+						if (valueCode == singleParamName)
+							paramsName
+						else
+							s"$paramsName.map { $singleParamName => $valueCode }"
+					}
+					MethodDeclaration(name, code.references,
+						returnDescription = s"Copy of this access point that only includes ${
+							classToWrite.name.pluralDoc } where ${ prop.name } is within the specified value set",
+						isLowMergePriority = true)(
+						Parameter(paramsName, ScalaType.generic("IterableOnce", concreteType.toScala),
+							description = s"Targeted ${ prop.name.pluralDoc }"))(code.text)
+				}
+				
+				Pair(withMethod, inMethod).flatten
+			}
+		}
 	}
 }

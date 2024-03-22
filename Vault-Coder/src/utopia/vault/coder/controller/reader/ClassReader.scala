@@ -403,7 +403,8 @@ object ClassReader
 				partModels.map { dbPropertyOverridesFrom(_, readName = true) }
 		}
 		
-		Property(name, actualDataType, default, dbPropertyOverrides, doc)
+		Property(name, actualDataType, default, dbPropertyOverrides, propModel("with").getString,
+			propModel("in").getString, doc)
 	}
 	
 	private def dbPropertyOverridesFrom(model: Model, default: CodePiece = CodePiece.empty, readName: Boolean = false)

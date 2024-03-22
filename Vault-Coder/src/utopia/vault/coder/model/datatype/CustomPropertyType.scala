@@ -238,6 +238,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		val appliedOptionFromValue = if (isFromJson) optionFromJsonValue.nonEmptyOrElse(optionFromValue) else optionFromValue
 		fromValueCode(appliedOptionFromValue, valueCodes)
 	}
+	override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 	
 	override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 		autoDescription
@@ -300,6 +301,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		// TODO: No multi-column support exists here either
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode(Vector("v")).mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
+		override def fromConcreteCode(concreteCode: String): CodePiece = s"Some($concreteCode)"
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			CustomPropertyType.this.writeDefaultDescription(className, propName)

@@ -17,9 +17,9 @@ object Property
 	  * @return A new property
 	  */
 	def singleColumn(name: Name, dataType: SingleColumnPropertyType, customDefaultValue: CodePiece = CodePiece.empty,
-	                 dbPropertyOverrides: DbPropertyOverrides = DbPropertyOverrides.empty,
-	                 description: String = ""): Property =
-		apply(name, dataType, customDefaultValue, Vector(dbPropertyOverrides), description)
+	                 dbPropertyOverrides: DbPropertyOverrides = DbPropertyOverrides.empty, withAccessName: String = "",
+	                 inAccessName: String = "", description: String = ""): Property =
+		apply(name, dataType, customDefaultValue, Vector(dbPropertyOverrides), withAccessName, inAccessName, description)
 }
 
 /**
@@ -32,10 +32,13 @@ object Property
   *                           Empty if no override should be made. Default = empty.
   * @param dbPropertyOverrides User-defined overrides applied to the database-properties matching this class-property.
   *                            Default = empty = no overrides.
+  * @param withAccessName (Custom) name of the access (filter) method that targets an individual value
+  * @param inAccessName (Custom) name of the access (filter) method that targets multiple values using an "in" query
   * @param description Description of this property (may be empty). Default = empty = no description.
   */
 case class Property(name: Name, dataType: PropertyType, customDefaultValue: CodePiece = CodePiece.empty,
-                    dbPropertyOverrides: Vector[DbPropertyOverrides] = Vector(), description: String = "")
+                    dbPropertyOverrides: Vector[DbPropertyOverrides] = Vector(), withAccessName: String = "",
+                    inAccessName: String = "", description: String = "")
 	extends Named
 {
 	// ATTRIBUTES   ------------------------
@@ -137,15 +140,4 @@ case class Property(name: Name, dataType: PropertyType, customDefaultValue: Code
 	  * @return Code that converts this property (properly named) into a value.
 	  */
 	def toJsonValueCode(implicit naming: NamingRules): CodePiece = dataType.toJsonValueCode(name.prop)
-	
-	/*
-	/**
-	  * @return An optional copy of this property
-	  */
-	def optional = if (dataType.isOptional) this else copy(dataType = dataType.optional)
-	/**
-	  * @return A concrete (non-optional) copy of this property
-	  */
-	def concrete = if (dataType.isConcrete) this else copy(dataType = dataType.concrete)
-	*/
 }
