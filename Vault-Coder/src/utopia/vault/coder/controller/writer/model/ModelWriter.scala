@@ -67,7 +67,8 @@ object ModelWriter
 				methods = classToWrite.properties.map { prop =>
 					MethodDeclaration.newAbstract((withPrefix + prop.name).function, genericType.toScalaType,
 						returnDescription = s"Copy of this item with the specified ${prop.name}")(
-						Parameter(prop.name.prop, prop.dataType.toScala, description = s"New ${prop.name} to assign"))
+						Parameter(prop.name.prop, prop.dataType.concrete.toScala,
+							description = s"New ${prop.name} to assign"))
 				}.toSet,
 				description = s"Common trait for ${
 					classToWrite.name}-related factories which allow construction with individual properties",
@@ -133,9 +134,8 @@ object ModelWriter
 					ComputedProperty("toModel", propWriteCode.references, isOverridden = true)(propWriteCode.text),
 				// Implements the withX(...) methods
 				methods = withMethodsFor(classToWrite) { (prop, propName) =>
-					// NB: This implementation is obviously faulty for optional properties that don't use Option
-					val newValue = if (prop.dataType.isConcrete) propName else s"Some($propName)"
-					s"copy($propName = $newValue)"
+					prop.dataType.fromConcreteCode(propName)
+						.mapText { wrappedValue => s"copy($propName = $wrappedValue)" }
 				},
 				description = classToWrite.description,
 				author = classToWrite.author,
@@ -257,12 +257,13 @@ object ModelWriter
 	}
 	
 	// code accepts a property and parameter name and returns the implementing code
-	private def withMethodsFor(classToWrite: Class)(code: (Property, String) => String)(implicit naming: NamingRules) =
+	private def withMethodsFor(classToWrite: Class)(writeCode: (Property, String) => CodePiece)(implicit naming: NamingRules) =
 	{
 		classToWrite.properties.map { prop =>
 			val propName = prop.name.prop
-			MethodDeclaration(withMethodNameFor(prop), isOverridden = true, isLowMergePriority = true)(
-				Parameter(propName, prop.dataType.concrete.toScala))(code(prop, propName))
+			val code = writeCode(prop, propName)
+			MethodDeclaration(withMethodNameFor(prop), code.references, isOverridden = true, isLowMergePriority = true)(
+				Parameter(propName, prop.dataType.concrete.toScala))(code.text)
 		}.toSet
 	}
 	

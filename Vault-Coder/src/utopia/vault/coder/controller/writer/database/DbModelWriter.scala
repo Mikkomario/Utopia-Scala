@@ -131,8 +131,8 @@ object DbModelWriter
 		// All factories extend the StorableFactory trait, the factory trait and FromIdFactory trait
 		val baseExtensions = Vector[Extension](
 			vault.storableFactory(classType, modelRef, dataRef),
-			factoryRef(modelRef),
-			fromIdFactory(modelRef)
+			factoryRef(classType),
+			fromIdFactory(ScalaType.int, classType)
 		)
 		// They may also extend a deprecation-related trait
 		deprecation match {

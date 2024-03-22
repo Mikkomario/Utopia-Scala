@@ -95,6 +95,15 @@ trait PropertyType extends ScalaTypeConvertible with ValueConvertibleType
 	  * @return Code that parses an instance of this type (or an instance of Try) from the specified value.
 	  */
 	def fromJsonValueCode(valueCode: String): CodePiece
+	/**
+	  * Writes code that accepts a concrete instance of this data type (acquired using .concrete)
+	  * and returns a type of this data type.
+	  * E.g. If this data type is option-wrapped, this would return Some(concreteValueCode).
+	  * If this type is concrete, may simply return the specified code without modifications.
+	  * @param concreteCode Code that refers to the concrete value
+	  * @return Code that converts the specified concrete instance into this type
+	  */
+	def fromConcreteCode(concreteCode: String): CodePiece
 	
 	/**
 	  * Writes a default documentation / description for a property
@@ -234,6 +243,7 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 		else
 			instanceCode.mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
 	}
+	override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 	
 	
 	// NESTED   -----------------------
@@ -266,6 +276,7 @@ trait ConcreteSingleColumnPropertyType extends SingleColumnPropertyType
 			optionFromValueCode(valueCode, isFromJson)
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.flatMap { v => $fromValue }" }
+		override def fromConcreteCode(concreteCode: String): CodePiece = s"Some($concreteCode)"
 		
 		override def toValueCode(instanceCode: String) = optionToValueCode(instanceCode)
 		override def toJsonValueCode(instanceCode: String): CodePiece = optionToValueCode(instanceCode, isToJson = true)
@@ -315,6 +326,7 @@ trait PropertyTypeWrapper extends PropertyType
 	override def fromValueCode(valueCodes: Vector[String]) = wrapped.fromValueCode(valueCodes)
 	override def fromValuesCode(valuesCode: String) = wrapped.fromValuesCode(valuesCode)
 	override def fromJsonValueCode(valueCode: String): CodePiece = wrapped.fromJsonValueCode(valueCode)
+	override def fromConcreteCode(concreteCode: String): CodePiece = wrapped.fromConcreteCode(concreteCode)
 }
 
 /**
@@ -399,6 +411,7 @@ trait FacadePropertyType extends PropertyType
 		}
 	override def fromJsonValueCode(valueCode: String): CodePiece =
 		safeFromDelegateCode(delegate.fromJsonValueCode(valueCode), isTry = delegate.yieldsTryFromJsonValue)
+	override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 	
 	
 	// OTHER    ---------------------------
@@ -422,7 +435,7 @@ trait FacadePropertyType extends PropertyType
 	
 	// NESTED   ----------------------------
 	
-	object OptionWrapper extends PropertyType
+	private object OptionWrapper extends PropertyType
 	{
 		// ATTRIBUTES   --------------------
 		
@@ -474,6 +487,7 @@ trait FacadePropertyType extends PropertyType
 		override def fromJsonValueCode(valueCode: String): CodePiece =
 			_fromValueCode(FacadePropertyType.this.fromJsonValueCode(valueCode),
 				isTry = FacadePropertyType.this.yieldsTryFromJsonValue)
+		override def fromConcreteCode(concreteCode: String): CodePiece = s"Some($concreteCode)"
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String =
 			FacadePropertyType.this.writeDefaultDescription(className, propName)

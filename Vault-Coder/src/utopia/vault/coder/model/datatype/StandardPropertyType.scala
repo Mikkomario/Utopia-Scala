@@ -406,38 +406,36 @@ object StandardPropertyType
 	  */
 	case object CreationTime extends ConcreteSingleColumnPropertyType
 	{
+		// ATTRIBUTES   ------------------------
+		
 		override lazy val sqlType = SqlPropertyType("TIMESTAMP", "CURRENT_TIMESTAMP", indexByDefault = true)
 		override lazy val defaultPropertyName = Name("created", "creationTimes", CamelCase.lower)
 		
-		override def valueDataType = instantType
 		
-		override def supportsDefaultJsonValues = false
+		// IMPLEMENTED  ------------------------
 		
 		override def scalaType = Reference.instant
-		
-		override def yieldsTryFromValue = false
-		
-		override def yieldsTryFromJsonValue: Boolean = false
+		override def valueDataType = instantType
 		
 		override def emptyValue = CodePiece.empty
-		
 		override def nonEmptyDefaultValue = now.targetCode
+		
+		override def supportsDefaultJsonValues = false
+		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = CodePiece(s"$valueCode.getInstant")
 		
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 		
 		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = s"$valueCode.instant"
-		
 		override def optionToValueCode(optionCode: String, isToJson: Boolean) =
 			CodePiece(optionCode, Set(valueConversions))
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Time when this ${ className.doc } was added to the database"
 	}
-	
 	/**
 	  * Property that always sets to the instance creation time
 	  */
@@ -473,7 +471,6 @@ object StandardPropertyType
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Time when this ${ className.doc } became deprecated. None while this ${ className.doc } is still valid."
 	}
-	
 	/**
 	  * Contains a time threshold for instance deprecation
 	  */
@@ -496,15 +493,14 @@ object StandardPropertyType
 	  */
 	case object DayCount extends ConcreteSingleColumnPropertyType
 	{
+		// ATTRIBUTES   -----------------------
+		
 		override val sqlType = SqlPropertyType("INT", "0", "days")
 		override lazy val nonEmptyDefaultValue = CodePiece("Days.zero", Set(days))
 		override lazy val valueDataType = dataType / "DaysType"
 		
-		override def supportsDefaultJsonValues = true
 		
-		override def yieldsTryFromValue = false
-		
-		override def yieldsTryFromJsonValue: Boolean = false
+		// IMPLEMENTED  ----------------------
 		
 		override def scalaType = days
 		
@@ -512,11 +508,13 @@ object StandardPropertyType
 		
 		override def defaultPropertyName = "duration"
 		
+		override def supportsDefaultJsonValues = true
+		override def yieldsTryFromValue = false
+		override def yieldsTryFromJsonValue: Boolean = false
+		
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode.length", Set(valueConversions))
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = CodePiece(instanceCode, Set(valueConversions))
-		
 		override def optionToValueCode(optionCode: String, isToJson: Boolean) = {
 			if (isToJson)
 				CodePiece(optionCode, Set(valueConversions))
@@ -531,7 +529,6 @@ object StandardPropertyType
 			else
 				CodePiece(s"Days($valueCode.getInt)", Set(days))
 		}
-		
 		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = {
 			if (isFromJson)
 				CodePiece(s"$valueCode.days")
@@ -546,10 +543,11 @@ object StandardPropertyType
 	{
 		private val emptyValue = "\"\""
 	}
-	
 	// This text is never wrapped in an option. An empty string is considered an empty value.
 	case class Text(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
+		// ATTRIBUTES   ---------------------
+		
 		override val sqlType = {
 			val typeName = {
 				if (length > 16777215)
@@ -562,31 +560,29 @@ object StandardPropertyType
 			SqlPropertyType(typeName, isNullable = true)
 		}
 		
-		override def scalaType = ScalaType.string
 		
+		// IMPLEMENTED  --------------------
+		
+		override def scalaType = ScalaType.string
 		override def valueDataType = stringType
 		
-		override def supportsDefaultJsonValues = true
-		
 		override def emptyValue = Text.emptyValue
-		
 		override def nonEmptyDefaultValue = CodePiece.empty
-		
-		override def defaultPropertyName = "text"
 		
 		override def concrete = this
 		
-		override def yieldsTryFromValue = false
+		override def defaultPropertyName = "text"
 		
+		override def supportsDefaultJsonValues = true
+		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def toValueCode(instanceCode: String) = CodePiece(instanceCode, Set(valueConversions))
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = toValueCode(instanceCode)
 		
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) = s"$valueCode.getString"
-		
 		override def fromValuesCode(valuesCode: String) = s"$valuesCode.flatMap { _.string }"
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -604,36 +600,29 @@ object StandardPropertyType
 		// IMPLEMENTED  ------------------------
 		
 		override def scalaType = allowingEmpty.scalaType
-		
 		override def valueDataType = stringType
-		
 		override def sqlConversion: SqlTypeConversion = SqlConversion
 		
 		// Empty value is not allowed
 		override def emptyValue = CodePiece.empty
-		
 		override def nonEmptyDefaultValue = CodePiece.empty
 		
-		override def supportsDefaultJsonValues = true
+		override def concrete = this
+		override def optional = allowingEmpty
 		
 		override def defaultPropertyName = if (length < 100) "name" else "text"
 		
-		override def optional = allowingEmpty
-		
-		override def concrete = this
-		
+		override def supportsDefaultJsonValues = true
 		override def yieldsTryFromValue = allowingEmpty.yieldsTryFromValue
-		
 		override def yieldsTryFromJsonValue: Boolean = allowingEmpty.yieldsTryFromJsonValue
 		
 		// Delegates value conversion
 		override def fromValueCode(valueCode: String, isFromJson: Boolean) =
 			allowingEmpty.fromValueCode(valueCode, isFromJson)
-		
 		override def fromValuesCode(valuesCode: String) = allowingEmpty.fromValuesCode(valuesCode)
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def toValueCode(instanceCode: String) = allowingEmpty.toValueCode(instanceCode)
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = allowingEmpty.toJsonValueCode(instanceCode)
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
@@ -663,8 +652,13 @@ object StandardPropertyType
 	
 	case class GenericValue(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
+		// ATTRIBUTES   ----------------------
+		
 		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)", isNullable = true)
 		override lazy val valueDataType = dataType / "AnyType"
+		
+		
+		// IMPLEMENTED  ---------------------
 		
 		override def scalaType = value
 		
@@ -695,6 +689,7 @@ object StandardPropertyType
 		// Expects a vector of json string values
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"Generic ${ propName.doc } of this ${ className.doc }"
@@ -703,8 +698,13 @@ object StandardPropertyType
 	// WET WET (from GenericValue)
 	case class GenericModel(length: Int = 255) extends DirectlySqlConvertiblePropertyType
 	{
+		// ATTRIBUTES   -----------------------
+		
 		override lazy val sqlType = SqlPropertyType(s"VARCHAR($length)", isNullable = true)
 		override lazy val valueDataType = dataType / "ModelType"
+		
+		
+		// IMPLEMENTED  ----------------------
 		
 		override def scalaType = model
 		
@@ -738,6 +738,7 @@ object StandardPropertyType
 		// Expects a vector of json string values
 		override def fromValuesCode(valuesCode: String) =
 			fromValueCode("v").mapText { fromValue => s"$valuesCode.map { v => $fromValue }" }
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -913,6 +914,7 @@ object StandardPropertyType
 				s"$valuesCode.map { v => $convertToId }.flatMap($findForId)"
 			}.referringTo(enumeration.reference)
 		}
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 			s"${ enumeration.name.doc.capitalize } of this ${ className.doc }"
@@ -969,6 +971,7 @@ object StandardPropertyType
 				idType.fromValuesCode(valuesCode)
 					.mapText { ids => s"$ids.flatMap($findForId)" }
 					.referringTo(enumeration.reference)
+			override def fromConcreteCode(concreteCode: String): CodePiece = s"Some($concreteCode)"
 			
 			override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) =
 				EnumValue.this.writeDefaultDescription(className, propName)
@@ -1030,15 +1033,12 @@ object StandardPropertyType
 		override def defaultPropertyName = "values"
 		
 		override def emptyValue = CodePiece("Vector.empty")
-		
 		override def nonEmptyDefaultValue = CodePiece.empty
 		
 		override def concrete = this
 		
 		override def yieldsTryFromValue = innerType.yieldsTryFromJsonValue
-		
 		override def yieldsTryFromJsonValue = innerType.yieldsTryFromJsonValue
-		
 		override def supportsDefaultJsonValues = true
 		
 		// Converts to json when storing to DB
@@ -1048,7 +1048,6 @@ object StandardPropertyType
 				s"NotEmpty($instanceCode) match { case Some(v) => ((v.map[Value] { v => $itemToValue }: Value).toJson): Value; case None => Value.empty }"
 			}.referringTo(Vector(valueConversions, notEmpty, value))
 		}
-		
 		override def toJsonValueCode(instanceCode: String) =
 			innerType.toJsonValueCode("v").mapText { itemToValue =>
 				s"$instanceCode.map[Value] { v => $itemToValue }"
@@ -1083,7 +1082,6 @@ object StandardPropertyType
 				}
 			}
 		}
-		
 		override def fromValuesCode(valuesCode: String) =
 			innerType.fromJsonValueCode("v").mapText { itemFromValue =>
 				// Case: Individual item parsing may fail => Ignores failures because has to succeed
@@ -1093,6 +1091,7 @@ object StandardPropertyType
 				else
 					s"$valuesCode.map { v => $itemFromValue }"
 			}
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules) = ""
 	}
@@ -1180,6 +1179,7 @@ object StandardPropertyType
 			else
 				s"$valuesCode.map { v => $fromValue }"
 		}
+		override def fromConcreteCode(concreteCode: String): CodePiece = concreteCode
 		
 		override def writeDefaultDescription(className: Name, propName: Name)(implicit naming: NamingRules): String = ""
 		
