@@ -837,7 +837,7 @@ object AccessWriter
 				}
 				val inMethodName = prop.inAccessName.nonEmptyOrElse {
 					if (isCustomIndex)
-						(Name("in", "in", CamelCase.lower) + prop.name).pluralIn(naming(FunctionName))
+						(Name("with", "with", CamelCase.lower) + prop.name).pluralIn(naming(FunctionName))
 					else
 						""
 				}
@@ -856,16 +856,19 @@ object AccessWriter
 				val inMethod = inMethodName.notEmpty.map { name =>
 					val paramsName = prop.name.pluralIn(naming(ClassPropName))
 					val code = singleValueCode.mapText { valueCode =>
-						if (valueCode == singleParamName)
-							paramsName
-						else
-							s"$paramsName.map { $singleParamName => $valueCode }"
+						val valuesCode = {
+							if (valueCode == singleParamName)
+								paramsName
+							else
+								s"$paramsName.map { $singleParamName => $valueCode }"
+						}
+						s"filter($modelPropName.${ dbProp.name.prop }.column.in($valuesCode))"
 					}
 					MethodDeclaration(name, code.references,
 						returnDescription = s"Copy of this access point that only includes ${
 							classToWrite.name.pluralDoc } where ${ prop.name } is within the specified value set",
 						isLowMergePriority = true)(
-						Parameter(paramsName, ScalaType.generic("IterableOnce", concreteType.toScala),
+						Parameter(paramsName, ScalaType.generic("Iterable", concreteType.toScala),
 							description = s"Targeted ${ prop.name.pluralDoc }"))(code.text)
 				}
 				

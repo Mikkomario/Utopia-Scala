@@ -75,34 +75,38 @@ object Name extends FromValueFactory[Name]
 		apply(singular, NamingConvention.of(singular, expectedStyle))
 	
 	private def pluralize(singular: String) = {
-		// Case: Empty string => remains empty
-		if (singular.isEmpty)
-			""
-		else
-			singular.last.toLower match {
-				// Case: Ends with an 's' => prepends with 'many' or replaces double 's' with 'sses'
-				case 's' =>
-					if (singular.length == 1 || (singular: StringOps)(singular.length - 2) == 's')
-						s"${ singular }ses"
-					else
-						s"${ singular }es"
-				case 'y' =>
-					// Case: Ends with a consonant + y => replaces 'y' with 'ies', vocal + y appends 's'
-					if (singular.last.isLower) {
-						if (singular.length > 1 && vocals.contains(singular.charAt(singular.length - 2)))
-							s"${singular}s"
+		// Handles special cases first
+		singular match {
+			// Case: Empty string => remains empty
+			case "" => ""
+			case "index" => "indices"
+			case "links" => "links"
+			case _ =>
+				singular.last.toLower match {
+					// Case: Ends with an 's' => prepends with 'many' or replaces double 's' with 'sses'
+					case 's' =>
+						if (singular.length == 1 || (singular: StringOps)(singular.length - 2) == 's')
+							s"${ singular }ses"
 						else
-							s"${ singular.dropRight(1) }ies"
-					}
-					// Case: Ends with a Y (separate) => adds an 's'
-					else if (singular.length == 1 || (singular: StringOps)(singular.length - 2).isLower)
-						s"${ singular }s"
-					// Case: Ends with a Y (with other upper-case characters before that) => replaces 'Y' with 'IES'
-					else
-						s"${ singular.dropRight(1) }IES"
-				// Default => appends 's'
-				case _ => s"${ singular }s"
-			}
+							s"${ singular }es"
+					case 'y' =>
+						// Case: Ends with a consonant + y => replaces 'y' with 'ies', vocal + y appends 's'
+						if (singular.last.isLower) {
+							if (singular.length > 1 && vocals.contains(singular.charAt(singular.length - 2)))
+								s"${singular}s"
+							else
+								s"${ singular.dropRight(1) }ies"
+						}
+						// Case: Ends with a Y (separate) => adds an 's'
+						else if (singular.length == 1 || (singular: StringOps)(singular.length - 2).isLower)
+							s"${ singular }s"
+						// Case: Ends with a Y (with other upper-case characters before that) => replaces 'Y' with 'IES'
+						else
+							s"${ singular.dropRight(1) }IES"
+					// Default => appends 's'
+					case _ => s"${ singular }s"
+				}
+		}
 	}
 }
 

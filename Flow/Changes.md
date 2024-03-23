@@ -22,6 +22,7 @@
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
+- Added **ZipBuilder** class
 - Added **PairOrVectorBuilder** class
 ### New methods
 - **Changing**

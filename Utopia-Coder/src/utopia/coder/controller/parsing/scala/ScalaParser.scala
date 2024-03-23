@@ -459,11 +459,10 @@ object ScalaParser
 	private def scalaDocFromLines(lines: Vector[String]) =
 	{
 		// Skips empty lines from the beginning and the end
-		val targetLines = lines.filterNot(emptyScalaDocLineRegex.apply)
+		val targetLines = lines.dropWhile(emptyScalaDocLineRegex.apply).dropRightWhile(emptyScalaDocLineRegex.apply)
 		if (targetLines.isEmpty)
 			ScalaDoc.empty
-		else
-		{
+		else {
 			val builder = new MultiMapBuilder[Option[ScalaDocKeyword], String]
 			var lastKeyword: Option[ScalaDocKeyword] = None
 			targetLines.foreach { line =>
@@ -472,8 +471,10 @@ object ScalaParser
 					lastKeyword = keyword
 				builder += lastKeyword -> content.dropWhile { c => c == '\n' || c == '\r' }
 			}
-			ScalaDoc(builder.result().map { case (keyword, lines) => ScalaDocPart(lines, keyword) }
-				.toVector.sortBy { _.keyword })
+			ScalaDoc(builder.result()
+				.map { case (keyword, lines) => ScalaDocPart(lines, keyword) }
+				.toVector.sortBy { _.keyword }
+			)
 		}
 	}
 	
