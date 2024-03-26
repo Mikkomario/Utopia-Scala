@@ -1,5 +1,6 @@
 package utopia.coder.controller.app
 
+import utopia.coder.controller.parsing.file.InputFiles
 import utopia.coder.model.data.{Filter, ProjectPaths}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
@@ -125,37 +126,10 @@ trait CoderAppLogic extends AppLogic
 				}
 		}
 		val inputPath: Lazy[Path] = Lazy {
-			if (modelsPath.fileType == "json")
-				modelsPath
-			else {
-				modelsPath.children match {
-					case Success(children) =>
-						val jsonChildren = children.filter { _.fileType == "json" }
-						if (jsonChildren.nonEmpty)
-							jsonChildren.flatMap { p => Version.findFrom(p.fileName.untilLast(".")).map { _ -> p } }
-								.maxByOption { _._1 }.map { _._2 }
-								.getOrElse { modelsPath }
-						else {
-							val subDirectories = children.filter { _.isDirectory }
-							subDirectories.flatMap { p => Version.findFrom(p.fileName).map { _ -> p } }
-								.maxByOption { _._1 }.map { _._2 }
-								.getOrElse {
-									println("Please specify the models.json file to read (or a directory containing multiple of such files)")
-									println(s"Instruction: Specify the path relative to $modelsPath")
-									if (subDirectories.isEmpty)
-										println(s"Warning: No suitable files were found from $modelsPath")
-									else {
-										println("Available subdirectories:")
-										subDirectories.foreach { p => println(s"\t- ${p.fileName}") }
-									}
-									modelsPath/StdIn.readLine()
-								}
-						}
-					case Failure(_) =>
-						println("Please specify the models.json file to read (or a directory containing multiple of such files)")
-						println(s"Instruction: Specify the path relative to $modelsPath")
-						modelsPath/StdIn.readLine()
-				}
+			InputFiles.versionedFileOrDirectoryFrom(modelsPath, "json").getOrElse {
+				println("Please specify the models.json file to read (or a directory containing multiple of such files)")
+				println(s"Instruction: Specify the path relative to $modelsPath")
+				modelsPath/StdIn.readLine()
 			}
 		}
 		// Determines the output path

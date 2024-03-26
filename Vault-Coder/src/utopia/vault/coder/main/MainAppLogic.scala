@@ -5,6 +5,7 @@ import utopia.coder.model.data.{Filter, NamingRules}
 import utopia.coder.model.enumeration.NameContext.FileName
 import utopia.coder.model.scala.datatype.Reference
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Today
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments}
@@ -80,8 +81,9 @@ object MainAppLogic extends CoderAppLogic
 		}
 		else if (inputPath.value.isDirectory)
 			inputPath.value.children.flatMap { filePaths =>
-				val jsonFilePaths = filePaths.filter { _.fileType.toLowerCase == "json" }
-				println(s"Found ${ jsonFilePaths.size } json file(s) from the input directory (${ inputPath.value.fileName })")
+				val jsonFilePaths = filePaths.filter { _.fileType ~== "json" }
+				println(s"Found ${ jsonFilePaths.size } json file(s) from the input directory (${
+					inputPath.value.fileName })")
 				jsonFilePaths.tryMap { reader.ClassReader(_) }
 			} match {
 				// Groups read results that target the same project

@@ -81,8 +81,14 @@ The input .json file should contain a single object with following properties:
     Each property should have a string array value where each item represents a possible enumeration value.
 - **"referenced_enumerations" / "referenced_enums": [String]** - Paths to enumerations from other projects
   - Enumeration paths should include the full reference: E.g. `"utopia.vault.coder.model.datatype.PropertyType"`
-- **"classes" / "class": Object** - Contains a property for each introduced sub-package, the value of each 
-  sub-package property should be a class object or an array of **class objects** (see [structure](#class-object-structure) below).
+- **"classes": Object** - Contains a property for each introduced sub-package
+  - The value of each sub-package property should be a class object or an array of **class objects** 
+    (see [structure](#class-object-structure) below)
+    - Alternatively, you may pass a string as a package property value. In these cases, the string is expected to 
+      list either a .json file that contains the class object array, 
+      or a directory that contains a versioned set of such files.
+      - E.g. If the read file is `/dir/models-v1.0.json`, a property `"package1": "package-models"` would find 
+        the latest version json file from under `/dir/package-models` and expect a json object array as file contents.
 
 ### Enumeration Object Structure
 Enumeration objects should contain the following properties:

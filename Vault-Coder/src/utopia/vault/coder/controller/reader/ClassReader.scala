@@ -1,15 +1,17 @@
 package utopia.vault.coder.controller.reader
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.coder.controller.parsing.file.InputFiles
 import utopia.coder.model.data
 import utopia.coder.model.data.{Name, NamingRules}
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.{UncertainBoolean, Version}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, CombinationData, DbPropertyOverrides, Enum, EnumerationValue, Instance, ProjectData, Property}
 import utopia.vault.coder.model.datatype.StandardPropertyType.BasicPropertyType.IntNumber
@@ -25,7 +27,7 @@ import utopia.coder.model.scala.Package
 import utopia.coder.model.scala.code.CodePiece
 
 import java.nio.file.Path
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * Used for reading class data from a .json file
@@ -89,13 +91,40 @@ object ClassReader
 				}
 			val allEnumerations = enumerations ++ referencedEnumerations
 			
-			val classData = root("classes", "class").getModel.properties.flatMap { packageAtt =>
-				packageAtt.value.model match {
-					case Some(classModel) =>
-						Some(classFrom(classModel, packageAtt.name, allEnumerations, customTypesMap, author))
-					case None =>
-						packageAtt.value.getVector.flatMap { _.model }
+			// Expects the classes property to contain an object where keys are package names and values are
+			// either references to other files or arrays containing class objects
+			val classData = root("classes").getModel.properties.flatMap { packageAtt =>
+				packageAtt.value.castTo(VectorType, StringType) match {
+					// Case: Class object array input => Parses the objects
+					case Left(vectorVal) =>
+						vectorVal.getVector.flatMap { _.model }
 							.map { classFrom(_, packageAtt.name, allEnumerations, customTypesMap, author) }
+					// Case: Reference input => Identifies and parses the referenced file
+					case Right(stringVal) =>
+						// If the specified path is relative, assumes that it is referred from this file's parent
+						val subPath: Path = stringVal.getString
+						val targetPath = if (subPath.isAbsolute) subPath else path.parent/subPath
+						InputFiles.versionedFileFrom(targetPath, "json") match {
+							// Case: File found => Parses it
+							case Some(referencedPath) =>
+								JsonBunny(referencedPath) match {
+									// Case: Parsing succeeded => Processes parsed content
+									case Success(parsed) =>
+										parsed.getVector.flatMap { _.model }
+											.map { classFrom(_, packageAtt.name, allEnumerations, customTypesMap, author) }
+									// Case: Parsing failed => Prints a warning
+									case Failure(error) =>
+										error.printStackTrace()
+										println(s"Failed to parse the json file referred as package ${
+											packageAtt.name}, pointing to file ${referencedPath.absolute}")
+										Vector.empty
+								}
+							// Case: File not found => Prints a warning
+							case None =>
+								println(s"Warning: $subPath for package ${
+									packageAtt.name} is not a valid reference from ${path.parent.absolute}")
+								Vector.empty
+						}
 				}
 			}
 			val classes = classData.map { _._1 }
