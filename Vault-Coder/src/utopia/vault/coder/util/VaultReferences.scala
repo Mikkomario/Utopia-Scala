@@ -30,6 +30,7 @@ object VaultReferences
 		lazy val connection = Reference(database, "Connection")
 		lazy val table = Reference(models / "immutable", "Table")
 		lazy val condition = Reference(sql, "Condition")
+		lazy val dbProp = Reference(immutableModels, "DbPropertyDeclaration")
 		
 		lazy val hasId = Reference(templateModels, "HasId")
 		lazy val stored = Reference(templateModels, "Stored")
@@ -49,7 +50,8 @@ object VaultReferences
 		lazy val possiblyCombiningFactory = Reference(singleLinkedFactories, "PossiblyCombiningFactory")
 		lazy val multiCombiningFactory = Reference(factories / "multi", "MultiCombiningFactory")
 		
-		lazy val storableWithFactory = Reference(models / "immutable", "StorableWithFactory")
+		lazy val storable = Reference(immutableModels, "Storable")
+		lazy val storableWithFactory = Reference(immutableModels, "StorableWithFactory")
 		lazy val storableFactory = Reference(noSql/"storable", "StorableFactory")
 		
 		lazy val view = Reference(viewAccess, "View")

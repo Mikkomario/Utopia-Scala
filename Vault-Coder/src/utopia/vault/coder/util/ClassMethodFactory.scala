@@ -102,6 +102,9 @@ object ClassMethodFactory
 		val innerIndentCount = tryProperties.size + 1
 		
 		// Writes the instance creation now that the "try-properties" properties have been declared
+		// Imports the db properties, if needed
+		if (!isFromJson)
+			builder += "import model._"
 		val assignments = classToWrite.properties.map { prop =>
 			// Case: Try-based property / value => already defined
 			if (prop.dataType.yieldsTryFromValue)
@@ -135,8 +138,9 @@ object ClassMethodFactory
 		// Uses different property names based on whether parsing from json or from a database model
 		if (isFromJson)
 			prop.dataType.fromJsonValueCode(s"$modelName(${prop.jsonPropName.quoted})")
+		// NB: Not very clean code. Assumes access to a database model factory named "model"
+		// Also assumes that properties from this model have already been imported
 		else
-			prop.dataType.fromValueCode(
-				prop.dbProperties.map { _.modelName }.map { name => s"$modelName(${name.quoted})" })
+			prop.dataType.fromValueCode(prop.dbProperties.map { prop => s"$modelName(${prop.name.prop}.name)" })
 	}
 }

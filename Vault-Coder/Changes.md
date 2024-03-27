@@ -5,6 +5,8 @@
 - Factory objects are now named "...DbFactory" instead of "...Factory"
 - Database model factories no longer contain separate -attName and -column properties, 
   but individual properties that implicitly (or explicitly) convert to both
+- Database model factories no longer contain a `factory` property
+- Database models now extend **Storable** instead of **StorableWithFactory**
 - Database models are now written into `database.storable` package instead of `database.model` package
 - The input file no longer supports a class property
 - A package property no longer supports an object as a value

@@ -14,6 +14,7 @@ import utopia.vault.coder.model.data.{Class, DbProperty, Property, VaultProjectS
 import utopia.vault.coder.util.VaultReferences.Vault._
 import utopia.vault.coder.util.VaultReferences._
 
+import scala.collection.immutable.VectorBuilder
 import scala.io.Codec
 
 /**
@@ -41,13 +42,13 @@ object DbModelWriter
 	  * @param modelRef     Reference to the stored model class
 	  * @param dataRef      Reference to the data class
 	  * @param factoryRef   Reference to the factory trait for copy-constructing
-	  * @param dbFactoryRef   Reference to the factory class
+	  * @param tablesRef    Reference to the table access object
 	  * @param codec        Implicit codec used when writing the file
 	  * @param setup        Target project -specific setup (implicit)
 	  * @return Reference to the generated class. Failure if writing failed.
 	  */
 	def apply(classToWrite: Class, modelRef: Reference, dataRef: Reference, factoryRef: Reference,
-	          dbFactoryRef: Reference)
+	          tablesRef: Reference)
 	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.dbModelPackage / classToWrite.packageName
@@ -56,6 +57,25 @@ object DbModelWriter
 		val deprecation = DeprecationStyle.of(classToWrite)
 		
 		val optionalIdType = classToWrite.idType.optional
+		
+		// Contains the following properties:
+		//      1) An id property
+		//      2) Properties for each class property
+		//      3) A table property
+		//      4) Deprecation property (optional)
+		val propertiesBuilder = new VectorBuilder[PropertyDeclaration]()
+		propertiesBuilder += LazyValue("id", Set(vault.dbProp),
+			description = s"Property that acts as the primary ${ classToWrite.name } row index")(
+			s"DbPropertyDeclaration(${classToWrite.idDatabasePropName.quoted}, index)")
+		propertiesBuilder ++= classToWrite.dbProperties
+			.map { prop =>
+				LazyValue(prop.name.prop,
+					description = s"Property that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
+					s"property(${ prop.modelName.quoted })")
+			}
+		propertiesBuilder += ComputedProperty("table", isOverridden = true)(
+			s"${ tablesRef.target }.${ classToWrite.name.prop }")
+		propertiesBuilder ++= deprecation.iterator.flatMap { _.properties }
 		
 		// Converts each property to the "intermediate" state
 		val applyParametersCode = ("None" +: classToWrite.properties.flatMap { prop =>
@@ -68,16 +88,8 @@ object DbModelWriter
 		File(parentPackage,
 			ObjectDeclaration(className,
 				factoryExtensionsFor(className, modelRef, dataRef, factoryRef, deprecation),
-				// Contains an access property for each property, as well as factory and table -properties
-				properties = classToWrite.dbProperties.map { prop =>
-					LazyValue(prop.name.prop,
-						description = s"Property that contains ${ classToWrite.name.doc } ${ prop.name.doc }")(
-						s"property(${ prop.modelName.quoted })")
-				}.toVector ++ Vector(
-					ComputedProperty("factory", Set(dbFactoryRef),
-						description = "The factory object used by this model type")(dbFactoryRef.target),
-					ComputedProperty("table", isOverridden = true)("factory.table")
-				) ++ deprecation.iterator.flatMap { _.properties },
+				// Contains an access property for each property, as well as a table -property
+				properties = propertiesBuilder.result(),
 				// Implements .apply(...) and .complete(id, data)
 				methods = Set(
 					MethodDeclaration("apply", isOverridden = true)(Parameter("data", dataRef))(
@@ -102,15 +114,13 @@ object DbModelWriter
 					classToWrite.dbProperties.map { prop =>
 						val inputType = prop.conversion.intermediate
 						val defaultValue = inputType.emptyValue
-						// TODO: Parameter descriptions are missing
 						Parameter(prop.name.prop, inputType.scalaType, defaultValue)
 					}.toVector,
-				// Extends StorableWithFactory[A] with the factory traits
-				extensions = Vector(storableWithFactory(modelRef), factoryRef(classType),
-					fromIdFactory(ScalaType.int, classType)),
+				// Extends Storable with the factory traits
+				extensions = Vector(storable, factoryRef(classType), fromIdFactory(ScalaType.int, classType)),
 				// Implements the required properties: factory & valueProperties
 				properties = Vector(
-					ComputedProperty("factory", isOverridden = true)(s"$className.factory"),
+					ComputedProperty("table", isOverridden = true)(s"$className.table"),
 					valuePropertiesPropertyFor(classToWrite, className)
 				),
 				// adds withX(...) -methods for convenience

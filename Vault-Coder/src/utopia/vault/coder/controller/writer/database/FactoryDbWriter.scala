@@ -3,12 +3,11 @@ package utopia.vault.coder.controller.writer.database
 import utopia.coder.model.data
 import utopia.coder.model.data.NamingRules
 import utopia.coder.model.enumeration.NamingConvention.CamelCase
+import utopia.coder.model.scala.DeclarationDate
 import utopia.coder.model.scala.code.CodePiece
 import utopia.coder.model.scala.datatype.{Extension, Reference}
 import utopia.coder.model.scala.declaration.PropertyDeclarationType.ComputedProperty
 import utopia.coder.model.scala.declaration.{File, ObjectDeclaration, PropertyDeclaration}
-import utopia.coder.model.scala.{DeclarationDate, datatype}
-import utopia.flow.util.StringExtensions._
 import utopia.vault.coder.model.data.{Class, VaultProjectSetup}
 import utopia.vault.coder.util.ClassMethodFactory
 import utopia.vault.coder.util.VaultReferences.Vault._
@@ -21,31 +20,36 @@ import scala.io.Codec
   * @author Mikko Hilpinen
   * @since 1.9.2021, v0.1
   */
-object FactoryWriter
+object FactoryDbWriter
 {
+	// ATTRIBUTES   --------------------
+	
 	/**
 	  * A suffix added to class names in order to make them factory class names
 	  */
 	val classNameSuffix = data.Name("DbFactory", "DbFactories", CamelCase.capitalized)
 	
+	
+	// OTHER    -------------------------
+	
 	/**
 	  * Writes a factory used for processing database object data
 	  * @param classToWrite Class data based on which the factory is created
-	  * @param tablesRef    Reference to the tables object
 	  * @param modelRef     Reference to the read model class
 	  * @param dataRef      Reference to the partial model data class
+	  * @param dbModelRef   Reference to the database model class
 	  * @param codec        Implicit codec to use when writing the document
 	  * @param setup        Implicit project-specific setup
 	  * @return Reference to the new written factory object. Failure if writing failed.
 	  */
-	def apply(classToWrite: Class, tablesRef: Reference, modelRef: Reference, dataRef: Reference)
+	def apply(classToWrite: Class, modelRef: Reference, dataRef: Reference, dbModelRef: Reference)
 	         (implicit codec: Codec, setup: VaultProjectSetup, naming: NamingRules) =
 	{
 		val parentPackage = setup.factoryPackage / classToWrite.packageName
 		val objectName = (classToWrite.name + classNameSuffix).className
 		File(parentPackage,
 			ObjectDeclaration(objectName, extensionsFor(classToWrite, modelRef),
-				properties = propertiesFor(classToWrite, tablesRef),
+				properties = propertiesFor(classToWrite, dbModelRef),
 				methods = methodsFor(classToWrite, modelRef, dataRef),
 				description = s"Used for reading ${ classToWrite.name.doc } data from the DB",
 				author = classToWrite.author, since = DeclarationDate.versionedToday
@@ -53,8 +57,7 @@ object FactoryWriter
 		).write()
 	}
 	
-	private def extensionsFor(classToWrite: Class, modelRef: Reference): Vector[Extension] =
-	{
+	private def extensionsFor(classToWrite: Class, modelRef: Reference): Vector[Extension] = {
 		val builder = new VectorBuilder[Extension]()
 		
 		// If no enumerations are included, the inheritance is more specific (=> uses automatic validation)
@@ -74,28 +77,31 @@ object FactoryWriter
 		builder.result()
 	}
 	
-	private def propertiesFor(classToWrite: Class, tablesRef: Reference)
-	                         (implicit setup: VaultProjectSetup, naming: NamingRules) =
+	private def propertiesFor(classToWrite: Class, dbModelRef: Reference)
+	                         (implicit naming: NamingRules) =
 	{
 		val builder = new VectorBuilder[PropertyDeclaration]()
 		
+		// All objects define a model property, which is used in other functions
+		builder += ComputedProperty("model", Set(dbModelRef),
+			description = "Model that specifies the how data is read")(
+			dbModelRef.target)
+		
 		// All objects define the table property (implemented)
-		builder += ComputedProperty("table", Set(tablesRef), isOverridden = true)(
-			s"${ tablesRef.target }.${ classToWrite.name.prop }")
+		builder += ComputedProperty("table", isOverridden = true)("model.table")
 		// Timestamp-based factories also specify a creation time property name
 		if (classToWrite.recordsIndexedCreationTime)
 			classToWrite.timestampProperty.foreach { createdProp =>
-				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(createdProp.modelName.quoted)
+				builder += ComputedProperty("creationTimePropertyName", isOverridden = true)(
+					s"model.${createdProp.name.prop}.name")
 			}
 		// Non-timestamp-based factories need to specify default ordering
 		else
 			builder += ComputedProperty("defaultOrdering", isOverridden = true, isLowMergePriority = true)("None")
 		// Deprecatable factories specify the deprecation condition (read from the database model)
 		if (classToWrite.isDeprecatable) {
-			val dbModelName = (classToWrite.name + DbModelWriter.classNameSuffix).className
-			val dbModelRef = datatype.Reference(setup.dbModelPackage / classToWrite.packageName, dbModelName)
 			builder += ComputedProperty("nonDeprecatedCondition", Set(dbModelRef), isOverridden = true)(
-				s"$dbModelName.nonDeprecatedCondition")
+				"model.nonDeprecatedCondition")
 		}
 		
 		builder.result()
@@ -106,7 +112,7 @@ object FactoryWriter
 	{
 		def _modelFromAssignments(assignments: CodePiece) =
 			modelRef.targetCode +
-				classToWrite.idType.fromValueCode(s"valid(${ classToWrite.idDatabasePropName.quoted })")
+				classToWrite.idType.fromValueCode("valid(id.name)")
 					.append(dataRef.targetCode + assignments.withinParenthesis, ", ")
 					.withinParenthesis
 		

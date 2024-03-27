@@ -73,7 +73,7 @@ object CombinedFactoryWriter
 		}
 		
 		File(setup.factoryPackage/data.packageName,
-			ObjectDeclaration((data.name + FactoryWriter.classNameSuffix).className,
+			ObjectDeclaration((data.name + FactoryDbWriter.classNameSuffix).className,
 				Vector(data.combinationType.extensionWith(references)) ++
 					creation.map { _._1 } ++ deprecation.map { _._1 },
 				properties = Vector(

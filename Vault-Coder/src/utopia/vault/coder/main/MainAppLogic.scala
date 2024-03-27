@@ -276,9 +276,9 @@ object MainAppLogic extends CoderAppLogic
 	         (implicit setup: VaultProjectSetup, naming: NamingRules): Try[(Class, ClassReferences)] =
 	{
 		ModelWriter(classToWrite).flatMap { case (modelRef, dataRef, factoryRef) =>
-			FactoryWriter(classToWrite, tablesRef, modelRef, dataRef).flatMap { dbFactoryRef =>
-				DbModelWriter(classToWrite, modelRef, dataRef, factoryRef, dbFactoryRef)
-					.flatMap { dbModelRef =>
+			DbModelWriter(classToWrite, modelRef, dataRef, factoryRef, tablesRef)
+				.flatMap { dbModelRef =>
+					FactoryDbWriter(classToWrite, modelRef, dataRef, dbModelRef).flatMap { dbFactoryRef =>
 						// Adds description-specific references if applicable
 						(descriptionLinkObjects match {
 							// Case: At least one class uses descriptions
@@ -305,7 +305,7 @@ object MainAppLogic extends CoderAppLogic
 										dbModelRef, genericUniqueAccessRef, genericManyAccessRef) }
 						}
 					}
-			}
+				}
 		}
 	}
 	
