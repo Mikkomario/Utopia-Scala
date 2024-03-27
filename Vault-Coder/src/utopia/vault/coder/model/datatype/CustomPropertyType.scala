@@ -70,7 +70,9 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
 							model("description", "doc", "desc"),
 							fromValueYieldsTry,
 							model("from_json_value_can_fail", "json_yields_try", "json_try")
-								.booleanOr(fromValueYieldsTry)
+								.booleanOr(fromValueYieldsTry),
+							model("function_generation_enabled", "functions_enabled", "functions", "filter")
+								.booleanOr(true)
 						))
 					}
 					else
@@ -176,6 +178,10 @@ object CustomPropertyType extends FromModelFactory[CustomPropertyType]
   *                        Each occurrence of $s is replaced with a singular class name and each occurrence of $p is
   *                        replaced with a plural class name.
   * @param yieldsTryFromValue Whether fromValue code yields a Try instead of an instance of this type (default = false)
+  * @param isFilterGenerationSupported Whether automatic withX filter function-writing should be enabled
+  *                                    for indexed properties (default = true).
+  *                                    Set to false if this type is based on fractional values where individual
+  *                                    value search is not a realistic use case.
   */
 case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlPropertyType, Vector[CustomPartConversion]],
                               valueDataType: Reference,
@@ -187,7 +193,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
                               nonEmptyDefaultValue: CodePiece = CodePiece.empty, defaultPropName: Option[Name] = None,
                               defaultPartNames: Seq[Name] = Vector(),
                               autoDescription: String = "", yieldsTryFromValue: Boolean = false,
-                              yieldsTryFromJsonValue: Boolean = false)
+                              yieldsTryFromJsonValue: Boolean = false, isFilterGenerationSupported: Boolean = true)
 	extends PropertyType
 {
 	// ATTRIBUTES   ----------------------------
@@ -278,6 +284,7 @@ case class CustomPropertyType(scalaType: ScalaType, conversion: Either[SqlProper
 		}
 		
 		override def valueDataType = CustomPropertyType.this.valueDataType
+		override def isFilterGenerationSupported: Boolean = CustomPropertyType.this.isFilterGenerationSupported
 		override def supportsDefaultJsonValues = false
 		
 		override def emptyValue = CodePiece.none

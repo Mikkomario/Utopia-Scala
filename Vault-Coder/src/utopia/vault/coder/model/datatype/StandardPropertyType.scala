@@ -237,16 +237,15 @@ object StandardPropertyType
 			override val sqlType = SqlPropertyType("BIGINT")
 			override lazy val valueDataTypeName = "LongType"
 			
+			override def isFilterGenerationSupported: Boolean = true
 			override def supportsDefaultJsonValues = true
 			
 			override def scalaType = ScalaType.long
 			
+			override def emptyValue = CodePiece.empty
 			override def nonEmptyDefaultValue = CodePiece.empty
 			
-			override def emptyValue = CodePiece.empty
-			
 			override def fromValuePropName = "long"
-			
 			override def defaultPropertyName = "number"
 		}
 		/**
@@ -262,6 +261,7 @@ object StandardPropertyType
 			override def nonEmptyDefaultValue = CodePiece.empty
 			override def emptyValue = CodePiece.empty
 			
+			override def isFilterGenerationSupported: Boolean = false
 			override def supportsDefaultJsonValues = true
 			
 			override def fromValuePropName = "double"
@@ -276,16 +276,15 @@ object StandardPropertyType
 			override val sqlType = SqlPropertyType("BOOLEAN", "FALSE")
 			override lazy val valueDataTypeName = "BooleanType"
 			
+			override def isFilterGenerationSupported: Boolean = true
 			override def supportsDefaultJsonValues = true
 			
 			override def scalaType = ScalaType.boolean
 			
 			override def nonEmptyDefaultValue = "false"
-			
 			override def emptyValue = CodePiece.empty
 			
 			override def fromValuePropName = "boolean"
-			
 			override def defaultPropertyName = "flag"
 		}
 		
@@ -297,16 +296,15 @@ object StandardPropertyType
 			override val sqlType = SqlPropertyType("DATETIME")
 			override lazy val valueDataTypeName = "InstantType"
 			
+			override def isFilterGenerationSupported: Boolean = false
 			override def supportsDefaultJsonValues = false
 			
 			override def scalaType = Reference.instant
 			
 			override def nonEmptyDefaultValue = now.targetCode
-			
 			override def emptyValue = CodePiece.empty
 			
 			override def fromValuePropName = "instant"
-			
 			override def defaultPropertyName = "timestamp"
 		}
 		
@@ -318,16 +316,15 @@ object StandardPropertyType
 			override val sqlType = SqlPropertyType("DATE")
 			override lazy val valueDataTypeName = "LocalDateType"
 			
+			override def isFilterGenerationSupported: Boolean = true
 			override def supportsDefaultJsonValues = false
 			
 			override def scalaType = Reference.localDate
 			
 			override def nonEmptyDefaultValue = today.targetCode
-			
 			override def emptyValue = CodePiece.empty
 			
 			override def fromValuePropName = "localDate"
-			
 			override def defaultPropertyName = "date"
 		}
 		
@@ -340,15 +337,14 @@ object StandardPropertyType
 			override lazy val valueDataTypeName = "LocalTimeType"
 			
 			override def supportsDefaultJsonValues = false
+			override def isFilterGenerationSupported: Boolean = false
 			
 			override def scalaType = Reference.localTime
 			
 			override def nonEmptyDefaultValue = now.targetCode
-			
 			override def emptyValue = CodePiece.empty
 			
 			override def fromValuePropName = "localTime"
-			
 			override def defaultPropertyName = "time"
 		}
 		
@@ -387,16 +383,15 @@ object StandardPropertyType
 			})
 			override lazy val valueDataTypeName = "IntType"
 			
+			override def isFilterGenerationSupported: Boolean = true
 			override def supportsDefaultJsonValues = true
 			
 			override def scalaType = ScalaType.int
 			
 			override def nonEmptyDefaultValue = CodePiece.empty
-			
 			override def emptyValue = CodePiece.empty
 			
 			override def fromValuePropName = "int"
-			
 			override def defaultPropertyName = Name("index", "indices", CamelCase.lower)
 		}
 	}
@@ -420,6 +415,7 @@ object StandardPropertyType
 		override def emptyValue = CodePiece.empty
 		override def nonEmptyDefaultValue = now.targetCode
 		
+		override def isFilterGenerationSupported: Boolean = false
 		override def supportsDefaultJsonValues = false
 		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
@@ -508,6 +504,7 @@ object StandardPropertyType
 		
 		override def defaultPropertyName = "duration"
 		
+		override def isFilterGenerationSupported: Boolean = true
 		override def supportsDefaultJsonValues = true
 		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
@@ -573,6 +570,7 @@ object StandardPropertyType
 		
 		override def defaultPropertyName = "text"
 		
+		override def isFilterGenerationSupported: Boolean = true
 		override def supportsDefaultJsonValues = true
 		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
@@ -612,6 +610,7 @@ object StandardPropertyType
 		
 		override def defaultPropertyName = if (length < 100) "name" else "text"
 		
+		override def isFilterGenerationSupported: Boolean = true
 		override def supportsDefaultJsonValues = true
 		override def yieldsTryFromValue = allowingEmpty.yieldsTryFromValue
 		override def yieldsTryFromJsonValue: Boolean = allowingEmpty.yieldsTryFromJsonValue
@@ -662,6 +661,7 @@ object StandardPropertyType
 		
 		override def scalaType = value
 		
+		override def isFilterGenerationSupported: Boolean = true
 		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
 		
@@ -708,6 +708,7 @@ object StandardPropertyType
 		
 		override def scalaType = model
 		
+		override def isFilterGenerationSupported: Boolean = false
 		override def yieldsTryFromValue = false
 		override def yieldsTryFromJsonValue: Boolean = false
 		
@@ -787,25 +788,22 @@ object StandardPropertyType
 		
 		// IMPLEMENTED  ------------------------
 		
-		override def defaultPropertyName = "duration"
-		
-		override def supportsDefaultJsonValues = true
-		
 		override def scalaType = Reference.finiteDuration
 		
+		override def emptyValue = CodePiece.empty
 		override def nonEmptyDefaultValue = CodePiece("Duration.Zero", Set(Reference.duration))
 		
-		override def emptyValue = CodePiece.empty
+		override def defaultPropertyName = "duration"
+		
+		override def isFilterGenerationSupported: Boolean = false
+		override def supportsDefaultJsonValues = true
 		
 		override def yieldsTryFromValue = false
-		
 		override def yieldsTryFromJsonValue: Boolean = false
 		
 		override def toValueCode(instanceCode: String) =
 			CodePiece(s"$instanceCode$unitConversionCode", toValueReferences)
-		
 		override def toJsonValueCode(instanceCode: String): CodePiece = CodePiece(instanceCode, Set(valueConversions))
-		
 		override def optionToValueCode(optionCode: String, isToJson: Boolean) = {
 			if (isToJson)
 				CodePiece(optionCode, Set(valueConversions))
@@ -819,7 +817,6 @@ object StandardPropertyType
 			else
 				CodePiece(s"FiniteDuration($valueCode.getLong, TimeUnit.${ unit.name })", fromValueReferences)
 		}
-		
 		override def optionFromValueCode(valueCode: String, isFromJson: Boolean) = {
 			if (isFromJson)
 				s"$valueCode.duration"
@@ -881,6 +878,7 @@ object StandardPropertyType
 		override def scalaType = enumeration.reference
 		override def valueDataType = enumeration.idType.valueDataType
 		
+		override def isFilterGenerationSupported: Boolean = true
 		override def supportsDefaultJsonValues = true
 		
 		override def optional: PropertyType = Optional
@@ -928,6 +926,7 @@ object StandardPropertyType
 			override def scalaType = ScalaType.option(EnumValue.this.scalaType)
 			override def valueDataType = EnumValue.this.valueDataType
 			
+			override def isFilterGenerationSupported: Boolean = true
 			override def supportsDefaultJsonValues = false
 			
 			override def nonEmptyDefaultValue = CodePiece.empty
@@ -1037,6 +1036,7 @@ object StandardPropertyType
 		
 		override def concrete = this
 		
+		override def isFilterGenerationSupported: Boolean = innerType.isFilterGenerationSupported
 		override def yieldsTryFromValue = innerType.yieldsTryFromJsonValue
 		override def yieldsTryFromJsonValue = innerType.yieldsTryFromJsonValue
 		override def supportsDefaultJsonValues = true
@@ -1134,6 +1134,7 @@ object StandardPropertyType
 		override def optional: PropertyType = this
 		override def concrete: PropertyType = this
 		
+		override def isFilterGenerationSupported: Boolean = innerType.isFilterGenerationSupported
 		override def supportsDefaultJsonValues: Boolean = true
 		
 		override def emptyValue: CodePiece = CodePiece.empty
