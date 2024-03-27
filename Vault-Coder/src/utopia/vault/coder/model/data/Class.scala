@@ -77,6 +77,7 @@ object Class
   * @param packageName Name of the package in which to wrap this class (may be empty)
   * @param customAccessSubPackageName Name to apply for this class's package when writing access points.
   *                                   Empty if to be auto-generated.
+  *                                   "-" if sub-packaging is to be omitted altogether.
   * @param comboIndexColumnNames Combo-indices for this class. Each item (vector) represents a single combo-index.
   *                              The items (strings) in combo-indices represent column names.
   * @param descriptionLinkName Name of the property that refers to this class from a description link (optional)

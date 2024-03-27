@@ -132,6 +132,7 @@ Class objects should contain following properties:
 - **"access_package" / "sub_access" / "access": String (optional)** - Custom sub-package name to use 
   when writing access classes
   - If left empty, the name will be auto-generated based on the class name and the package name
+  - If you want to omit sub-packaging for this class, specify `"-"` as the value
 - **"doc": String (optional)** - A description of this class, which is written to class documentation
 - **"author": String (optional)** - Author of this class. If omitted, the project author will be used.
 - **"combinations" / "combos": [Object]** - An array of **combination objects** for this class 

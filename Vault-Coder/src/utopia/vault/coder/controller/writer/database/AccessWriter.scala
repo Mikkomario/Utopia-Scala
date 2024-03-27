@@ -76,7 +76,12 @@ object AccessWriter
 		val pckName = c.packageName
 		val base = accessPackage/pckName
 		c.customAccessSubPackageName.notEmpty match {
-			case Some(custom) => base/custom
+			case Some(custom) =>
+				// Case: "-" defined as a custom package name => Indicates that no sub-packaging should be used
+				if (custom == "-")
+					base
+				else
+					base/custom
 			case None =>
 				val end = {
 					val full = c.name.singularIn(UnderScore).split('_').toVector
