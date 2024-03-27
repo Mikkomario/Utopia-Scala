@@ -29,7 +29,10 @@ object ModelWriter
 	private val dataClassAppendix = data.Name("Data", "Data", CamelCase.capitalized)
 	private val factoryTraitAppendix = data.Name("Factory", "Factories", CamelCase.capitalized)
 	
-	private val withPrefix = Name("with", "with", CamelCase.lower)
+	/**
+	  * Prefix to apply to "withX" functions
+	  */
+	val withPrefix = Name("with", "with", CamelCase.lower)
 	
 	
 	// OTHER    -----------------------------

@@ -27,6 +27,7 @@ object VaultPackages
 		
 		lazy val database = base / "database"
 		lazy val models = base / "model"
+		lazy val templateModels = models/"template"
 		lazy val sql = base / "sql"
 		lazy val noSql = base / "nosql"
 		lazy val deprecation = noSql / "storable.deprecation"

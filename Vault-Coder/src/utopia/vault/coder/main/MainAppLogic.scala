@@ -301,8 +301,8 @@ object MainAppLogic extends CoderAppLogic
 							AccessWriter(classToWrite, modelRef, dbFactoryRef, dbModelRef,
 								descriptionReferences)
 								.map { case (genericUniqueAccessRef, genericManyAccessRef) =>
-									classToWrite -> ClassReferences(modelRef, dataRef, dbFactoryRef, dbModelRef,
-										genericUniqueAccessRef, genericManyAccessRef) }
+									classToWrite -> ClassReferences(modelRef, dataRef, factoryRef, dbFactoryRef,
+										dbModelRef, genericUniqueAccessRef, genericManyAccessRef) }
 						}
 					}
 			}
@@ -314,21 +314,24 @@ object MainAppLogic extends CoderAppLogic
 	{
 		val parentRefs = classRefsMap(combination.parentClass)
 		val childRefs = classRefsMap(combination.childClass)
-		CombinedModelWriter(combination, parentRefs.model, parentRefs.data, childRefs.model).flatMap { combinedRefs =>
-			CombinedFactoryWriter(combination, combinedRefs, parentRefs.factory, childRefs.factory)
-				.flatMap { comboFactoryRef =>
-					parentRefs.genericUniqueAccessTrait
-						.toTry { new IllegalStateException("No generic unique access trait exists for a combined class") }
-						.flatMap { genericUniqueAccessTraitRef =>
-							parentRefs.genericManyAccessTrait
-								.toTry { new IllegalStateException("No generic access trait exists for a combined class") }
-								.flatMap { genericManyAccessTraitRef =>
-									AccessWriter.writeComboAccessPoints(combination, genericUniqueAccessTraitRef,
-										genericManyAccessTraitRef, combinedRefs.combined, comboFactoryRef,
-										parentRefs.dbModel, childRefs.dbModel)
-								}
-						}
-				}
-		}
+		CombinedModelWriter(combination, parentRefs.model, parentRefs.data, childRefs.model, parentRefs.factory)
+			.flatMap { combinedRefs =>
+				CombinedFactoryWriter(combination, combinedRefs, parentRefs.dbFactory, childRefs.dbFactory)
+					.flatMap { comboFactoryRef =>
+						parentRefs.genericUniqueAccessTrait
+							.toTry { new IllegalStateException(
+								"No generic unique access trait exists for a combined class") }
+							.flatMap { genericUniqueAccessTraitRef =>
+								parentRefs.genericManyAccessTrait
+									.toTry { new IllegalStateException(
+										"No generic access trait exists for a combined class") }
+									.flatMap { genericManyAccessTraitRef =>
+										AccessWriter.writeComboAccessPoints(combination, genericUniqueAccessTraitRef,
+											genericManyAccessTraitRef, combinedRefs.combined, comboFactoryRef,
+											parentRefs.dbModel, childRefs.dbModel)
+									}
+							}
+					}
+			}
 	}
 }

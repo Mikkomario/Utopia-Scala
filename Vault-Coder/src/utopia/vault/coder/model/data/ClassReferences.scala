@@ -7,5 +7,6 @@ import utopia.coder.model.scala.datatype.Reference
   * @author Mikko Hilpinen
   * @since 14.10.2021, v1.2
   */
-case class ClassReferences(model: Reference, data: Reference, factory: Reference, dbModel: Reference,
+case class ClassReferences(model: Reference, data: Reference, factory: Reference, dbFactory: Reference,
+                           dbModel: Reference,
                            genericUniqueAccessTrait: Option[Reference], genericManyAccessTrait: Option[Reference])

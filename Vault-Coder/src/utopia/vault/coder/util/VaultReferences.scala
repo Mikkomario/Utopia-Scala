@@ -31,9 +31,10 @@ object VaultReferences
 		lazy val table = Reference(models / "immutable", "Table")
 		lazy val condition = Reference(sql, "Condition")
 		
-		lazy val stored = Reference(models / "template", "Stored")
-		lazy val storedModelConvertible = Reference(models / "template", "StoredModelConvertible")
-		lazy val fromIdFactory = Reference(models/"template", "FromIdFactory")
+		lazy val hasId = Reference(templateModels, "HasId")
+		lazy val stored = Reference(templateModels, "Stored")
+		lazy val storedModelConvertible = Reference(templateModels, "StoredModelConvertible")
+		lazy val fromIdFactory = Reference(templateModels, "FromIdFactory")
 		
 		lazy val indexed = Reference(noSql / "template", "Indexed")
 		lazy val deprecatable = Reference(noSql / "template", "Deprecatable")
