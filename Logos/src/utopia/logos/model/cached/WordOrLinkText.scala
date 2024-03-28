@@ -1,5 +1,7 @@
 package utopia.logos.model.cached
 
+import utopia.flow.util.Mutate
+
 object WordOrLinkText
 {
 	/**
@@ -41,4 +43,13 @@ case class WordOrLinkText(text: String, isLink: Boolean)
 	// IMPLEMENTED  --------------------
 	
 	override def toString = text
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param f A text-mutating function
+	 * @return A mutated copy of this text with the [[isLink]] state preserved
+	 */
+	def mapText(f: Mutate[String]) = copy(text = f(text))
 }

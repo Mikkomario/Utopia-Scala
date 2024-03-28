@@ -80,6 +80,20 @@ class ZipBuilder[-A, -B, +R](merge: (A, B) => R) extends mutable.Builder[(A, B),
 	}
 	
 	
+	// OTHER    ---------------------------
+	
+	/**
+	 * Removes and returns all zipped items so far.
+	 * Unlike in [[clear]](), however, the unzipped queued items will be preserved.
+	 * @return Collected zipped elements
+	 */
+	def popResult() = {
+		val res = result()
+		resultBuilder.clear()
+		res
+	}
+	
+	
 	// NESTED   ---------------------------
 	
 	/**

@@ -2,6 +2,7 @@ package utopia.logos.model.cached
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 import utopia.logos.model.stored.word.Delimiter
 import utopia.logos.model.stored.url.Link
@@ -97,4 +98,14 @@ case class StatementText(words: Vector[WordOrLinkText], delimiter: String = "")
 	 *              2) The links within this statement
 	 */
 	def wordsAndLinks = words.divideBy { _.isLink }.map { _.map { _.text } }
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	 * Mutates the text present in the individual words of this statement
+	 * @param f A word text mutating function
+	 * @return A mutated copy of this statement text
+	 */
+	def mapWordText(f: Mutate[String]) = copy(words = words.map { _.mapText(f) }.filterNot { _.text.isEmpty })
 }
