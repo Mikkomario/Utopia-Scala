@@ -114,7 +114,7 @@ object KeyStateEvent
   * @param keyboardState The state of the keyboard immediately after this event
  */
 case class KeyStateEvent(index: Int, location: KeyLocation, keyboardState: KeyboardState, pressed: Boolean)
-    extends KeyEvent
+    extends SpecificKeyEvent
 {
     // COMPUTED ---------------------
     
@@ -127,52 +127,8 @@ case class KeyStateEvent(index: Int, location: KeyLocation, keyboardState: Keybo
     @deprecated("Renamed to .released", "v4.0")
     def isReleased = !isDown
     
-    /**
-      * @return Direction of the horizontal arrow key (left, right) that was changed.
-      *         None if the change didn't affect a horizontal arrow key.
-      */
-    def horizontalArrow: Option[HorizontalDirection] = index match {
-        case RightArrow.index => Some(Direction2D.Right)
-        case LeftArrow.index => Some(Direction2D.Left)
-        case _ => None
-    }
-    /**
-      * @return Direction of the vertical arrow key (up, down) that was changed.
-      *         None if the change didn't affect a vertical arrow key.
-      */
-    def verticalArrow: Option[VerticalDirection] = index match {
-        case UpArrow.index => Some(Direction2D.Up)
-        case DownArrow.index => Some(Direction2D.Down)
-        case _ => None
-    }
-    /**
-      * @return The direction of the arrow key that was changed.
-      *         None if the change didn't affect an arrow key.
-      */
-    def arrow = ArrowKey(index).map { _.direction }
-    
     
     // IMPLEMENTED  -----------------
     
     override def toString = s"$index ${ if (pressed) "was pressed" else "was released" } at location: $location"
-    
-    
-    // OTHER    ---------------------
-    
-    /**
-      * @param key Targeted key
-      * @param location Targeted specific key location
-      * @return Whether this event concerns that key at that location
-      */
-    def concernsKey(key: Key, location: KeyLocation): Boolean = concernsKey(key) && this.location == location
-    
-    /**
-      * @param axis Target axis
-      * @return Direction of the arrow key that lies in the specified axis and was changed. None if the change
-      *         didn't affect an arrow key on the specified axis.
-      */
-    def arrowAlong(axis: Axis2D) = axis match {
-        case X => horizontalArrow
-        case Y => verticalArrow
-    }
 }

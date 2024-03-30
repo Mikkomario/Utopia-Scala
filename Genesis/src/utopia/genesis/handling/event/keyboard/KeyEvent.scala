@@ -1,8 +1,9 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{Filter, RejectAll}
-import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, CharKey, Control, Shift}
-import utopia.paradigm.enumeration.Direction2D
+import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, CharKey, Control, DownArrow, LeftArrow, RightArrow, Shift, UpArrow}
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
 
 object KeyEvent
 {
@@ -161,6 +162,30 @@ trait KeyEvent
 	
 	// COMPUTED -----------------------
 	
+	/**
+	 * @return Direction of the horizontal arrow key (left, right) that was changed.
+	 *         None if the change didn't affect a horizontal arrow key.
+	 */
+	def horizontalArrow: Option[HorizontalDirection] = index match {
+		case RightArrow.index => Some(Direction2D.Right)
+		case LeftArrow.index => Some(Direction2D.Left)
+		case _ => None
+	}
+	/**
+	 * @return Direction of the vertical arrow key (up, down) that was changed.
+	 *         None if the change didn't affect a vertical arrow key.
+	 */
+	def verticalArrow: Option[VerticalDirection] = index match {
+		case UpArrow.index => Some(Direction2D.Up)
+		case DownArrow.index => Some(Direction2D.Down)
+		case _ => None
+	}
+	/**
+	 * @return The direction of the arrow key that was changed.
+	 *         None if the change didn't affect an arrow key.
+	 */
+	def arrow = ArrowKey(index).map { _.direction }
+	
 	@deprecated("Please use .keyboardState instead", "v4.0")
 	def keyStatus = keyboardState
 	
@@ -177,6 +202,16 @@ trait KeyEvent
 	  * @return Whether this event concerns the specified character key
 	  */
 	def concernsChar(char: Char): Boolean = concernsKey(CharKey(char))
+	
+	/**
+	 * @param axis Target axis
+	 * @return Direction of the arrow key that lies in the specified axis and was changed. None if the change
+	 *         didn't affect an arrow key on the specified axis.
+	 */
+	def arrowAlong(axis: Axis2D) = axis match {
+		case X => horizontalArrow
+		case Y => verticalArrow
+	}
 	
 	/**
 	  * Checks whether the event concerns a specific character key

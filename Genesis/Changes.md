@@ -29,6 +29,7 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Deprecated **KeyStatus** in favor of **KeyboardState**
 - Deprecated **MouseButtonStatus** in favor of **MouseButtonStates**
 ### New features
+- Added key-down events that are continuously fired while a keyboard key is held down
 - Added a new pointer-based **Animator** implementation, as well as support for animation events
 - Added **DrawLevel** from the **Firmament** module
 - Added **PaintManager** and **Priority** from the **Reach** module

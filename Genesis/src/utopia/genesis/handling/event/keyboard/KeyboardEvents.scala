@@ -1,6 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable, Handlers}
 
@@ -20,11 +21,13 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	
 	private lazy val keyStateHandler = KeyStateHandler()
 	private lazy val keyTypedHandler = KeyTypedHandler()
+	private lazy val keyDownHandler = KeyDownHandler()
 	
-	private lazy val handlers = Handlers(keyStateHandler, keyTypedHandler)
+	private lazy val handlers = Handlers(Vector(keyStateHandler, keyTypedHandler, keyDownHandler))
 	
 	private var _state = KeyboardState.default
 	private var lastPressedKeyIndex = 0
+	private var keyDownStarted = false
 	
 	// Event queue is used after the execution context has been specified
 	private var eventQueue: Option[ActionQueue] = None
@@ -81,6 +84,19 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	  * @param context An execution context used when distributing keyboard events
 	  */
 	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context))
+	
+	/**
+	 * Sets up the key-down event generation, unless it has been set up already
+	 * @param actorHandler An actor handler that will deliver action events required for event-generation
+	 */
+	def setupKeyDownEvents(actorHandler: => ActorHandler): Unit = {
+		if (!keyDownStarted) {
+			keyDownStarted = true
+			val generator = new KeyDownEventGenerator(keyDownHandler)
+			actorHandler += generator
+			keyStateHandler += generator
+		}
+	}
 	
 	/**
 	  * Adds a new keyboard state listener

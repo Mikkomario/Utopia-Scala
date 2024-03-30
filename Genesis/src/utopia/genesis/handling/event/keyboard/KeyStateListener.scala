@@ -3,10 +3,10 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import KeyEvent.KeyFilteringFactory
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.SpecificKeyEvent.SpecificKeyFilteringFactory
 import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
@@ -55,7 +55,7 @@ object KeyStateListener
       * Common trait for factory-like classes that support key-state-event -based filtering
       * @tparam A Type of generated items
       */
-    trait KeyStateFilteringFactory[+A] extends KeyFilteringFactory[KeyStateEvent, A]
+    trait KeyStateFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyStateEvent, A]
     {
         // COMPUTED   ---------------------
         
@@ -67,21 +67,6 @@ object KeyStateListener
           * An item that only accepts key-released events
           */
         def released = withFilter { _.released }
-        
-        
-        // OTHER    -----------------------
-        
-        /**
-          * @param location Targeted location
-          * @return Filter that only accepts key events at that location
-          */
-        def location(location: KeyLocation) = withFilter { _.location == location }
-        /**
-          * @param key Targeted key
-          * @param location Targeted specific key location
-          * @return Filter that only accepts key events of that key at that specific location
-          */
-        def specificKey(key: Key, location: KeyLocation) = withFilter { _.concernsKey(key, location) }
     }
     
     object KeyStateEventFilter extends KeyStateFilteringFactory[KeyStateEventFilter]
