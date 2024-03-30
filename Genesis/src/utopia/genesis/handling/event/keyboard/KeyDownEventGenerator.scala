@@ -46,6 +46,9 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler()) exte
 	private val keyboardStatePointer = Volatile(KeyboardState.default)
 	private val downKeysPointer = Volatile(Set[(Int, KeyLocation, Instant)]())
 	
+	private val hasKeysDownFlag: FlagLike = downKeysPointer.map { _.nonEmpty }
+	override val handleCondition: FlagLike = hasKeysDownFlag && handler.handleCondition
+	
 	
 	// INITIAL CODE --------------------------
 	
@@ -58,7 +61,6 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler()) exte
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def handleCondition: FlagLike = handler.handleCondition
 	override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 	
 	override def onKeyState(event: KeyStateEvent): Unit = {

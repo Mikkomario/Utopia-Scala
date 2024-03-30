@@ -70,7 +70,18 @@ object KeyDownListener
 	
 	object KeyDownEventFilter extends KeyDownFilteringFactory[KeyDownEventFilter]
 	{
+		// IMPLEMENTED  ---------------------
+		
 		override protected def withFilter(filter: Filter[KeyDownEvent]): KeyDownEventFilter = filter
+		
+		
+		// OTHER    -------------------------
+		
+		/**
+		 * @param f A filter function applicable for key-down events
+		 * @return A filter that uses the specified function
+		 */
+		def apply(f: KeyDownEvent => Boolean) = Filter(f)
 	}
 	
 	case class KeyDownListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll)

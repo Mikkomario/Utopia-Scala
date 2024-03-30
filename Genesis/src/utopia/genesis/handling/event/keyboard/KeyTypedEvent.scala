@@ -1,5 +1,15 @@
 package utopia.genesis.handling.event.keyboard
 
+import utopia.genesis.handling.event.keyboard.KeyTypedListener.KeyTypedEventFilter
+
+object KeyTypedEvent
+{
+	/**
+	 * @return Factory for constructing key typed event filters
+	 */
+	def filter = KeyTypedEventFilter
+}
+
 /**
  * These events are fired whenever the user types something on the keyboard.
   * Unlike KeyState events, these events focus less on the keyboard state changes and more on the characters typed

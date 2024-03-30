@@ -1,6 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.time.TimeExtensions._
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable, Handlers}
@@ -9,6 +10,7 @@ import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Common interface for keyboard events throughout the application
@@ -20,7 +22,13 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	// ATTRIBUTES	------------------
 	
 	private lazy val keyStateHandler = KeyStateHandler()
-	private lazy val keyTypedHandler = KeyTypedHandler()
+	// This handler version will only receive events from AWT, not generated events
+	private lazy val directKeyTypedHandler = KeyTypedHandler()
+	private lazy val keyTypedHandler = {
+		val handler = KeyTypedHandler()
+		directKeyTypedHandler += handler
+		handler
+	}
 	private lazy val keyDownHandler = KeyDownHandler()
 	
 	private lazy val handlers = Handlers(Vector(keyStateHandler, keyTypedHandler, keyDownHandler))
@@ -44,10 +52,10 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 				stateChanged(event, index, pressed = true)
 			case KeyEvent.KEY_RELEASED => stateChanged(event, index, pressed = false)
 			case KeyEvent.KEY_TYPED =>
-				if (keyTypedHandler.mayBeHandled) {
+				if (directKeyTypedHandler.mayBeHandled) {
 					val newEvent = KeyTypedEvent(event.getKeyChar, lastPressedKeyIndex, _state)
 					// Distributes the event asynchronously, if possible
-					queue { keyTypedHandler.onKeyTyped(newEvent) }
+					queue { directKeyTypedHandler.onKeyTyped(newEvent) }
 				}
 		}
 		false
@@ -86,15 +94,33 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context))
 	
 	/**
-	 * Sets up the key-down event generation, unless it has been set up already
+	 * Sets up the key-down event generation, unless it has been set up already.
+	 * Also sets up auto-generated continuous key-typed events while holding down a key (optional feature)
 	 * @param actorHandler An actor handler that will deliver action events required for event-generation
+	 * @param beforeMultiTypeDelay Duration how long a key must be held down before
+	 *                             continuous key typed -events will be generated.
+	 *                             Set to infinite to disable continuous key typed -events.
+	 *                             Default = 0.8 seconds.
+	 * @param multiTypeInterval Time interval between generated key typed -events. Default = 0.2 seconds
 	 */
-	def setupKeyDownEvents(actorHandler: => ActorHandler): Unit = {
+	def setupKeyDownEvents(actorHandler: ActorHandler, beforeMultiTypeDelay: Duration = 0.8.seconds,
+	                       multiTypeInterval: FiniteDuration = 0.2.seconds): Unit =
+	{
 		if (!keyDownStarted) {
 			keyDownStarted = true
+			
+			// Sets up the key down -events
 			val generator = new KeyDownEventGenerator(keyDownHandler)
 			actorHandler += generator
 			keyStateHandler += generator
+			
+			// Also starts key typed -event generation
+			beforeMultiTypeDelay.finite.foreach { delay =>
+				multiTypeInterval.finite.foreach { interval =>
+					HoldKeyToTypeGenerator.start(keyDownHandler, keyStateHandler, directKeyTypedHandler,
+						keyTypedHandler, delay, interval)
+				}
+			}
 		}
 	}
 	
@@ -111,7 +137,7 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	  */
 	@deprecated("Deprecated for removal", "v4.0")
 	def registerKeyTypedListener(listener: KeyTypedListener) =
-		keyTypedHandler += listener
+		directKeyTypedHandler += listener
 	/**
 	  * Adds a new keyboard related listener. If the listener is not a KeyStateListener nor a KeyTypedListener,
 	  * no action is taken

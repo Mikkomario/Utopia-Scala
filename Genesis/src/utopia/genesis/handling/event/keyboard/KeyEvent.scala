@@ -137,7 +137,18 @@ object KeyEvent
 	
 	object KeyEventFilter extends KeyFilteringFactory[KeyEvent, KeyEventFilter]
 	{
+		// IMPLEMENTED  ----------------
+		
 		override protected def withFilter(filter: KeyEventFilter): KeyEventFilter = filter
+		
+		
+		// OTHER    --------------------
+		
+		/**
+		 * @param f A key-event filter function
+		 * @return A filter that uses the specified function
+		 */
+		def apply(f: KeyEvent => Boolean) = Filter(f)
 	}
 }
 

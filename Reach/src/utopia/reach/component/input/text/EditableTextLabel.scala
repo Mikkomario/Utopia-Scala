@@ -9,9 +9,9 @@ import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Enter, Tab}
+import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Tab}
 import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{KeyEvent, KeyStateEvent, KeyStateListener, KeyTypedEvent, KeyTypedListener, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard._
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
@@ -20,7 +20,7 @@ import utopia.reach.component.label.text.selectable.{AbstractSelectableTextLabel
 import utopia.reach.focus.FocusListener
 
 import java.awt.Toolkit
-import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
+import java.awt.datatransfer._
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
@@ -465,14 +465,17 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		override val keyTypedEventFilter: Filter[KeyTypedEvent] = {
 			// Ignores certain characters
-			val base = !KeyEvent.filter(Enter, BackSpace, Delete, Tab) &&
-				{ e: KeyTypedEvent => font.toAwt.canDisplay(e.typedChar) }
+			val canDisplayFilter = KeyTypedEvent.filter { e => font.toAwt.canDisplay(e.typedChar) }
+			val notTabFilter = !KeyEvent.filter(Tab)
+			val deleteFilter = KeyEvent.filter(BackSpace, Delete)
 			
 			// Only accepts characters accepted by the content filter
-			settings.inputFilter match {
-				case Some(filter) => e: KeyTypedEvent => filter(e.typedChar.toString)
-				case None => base
+			val exclusiveFilter = settings.inputFilter match {
+				case Some(filter) =>
+					(canDisplayFilter && notTabFilter) && KeyTypedEvent.filter { e => filter(e.typedChar.toString) }
+				case None => canDisplayFilter && notTabFilter
 			}
+			deleteFilter || exclusiveFilter
 		}
 		
 		
@@ -480,7 +483,25 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		override def handleCondition: FlagLike = editingFlag
 		
-		override def onKeyTyped(event: KeyTypedEvent): Unit = insertToCaret(event.typedChar.toString)
+		override def onKeyTyped(event: KeyTypedEvent): Unit = {
+			// Removes a character on backspace / delete
+			if (event.index == BackSpace.index) {
+				if (selectedRange.nonEmpty)
+					removeSelectedText()
+				else if (caretIndex > 0) {
+					removeAt(caretIndex - 1)
+					caretIndex -= 1
+				}
+			}
+			else if (event.index == Delete.index) {
+				if (selectedRange.nonEmpty)
+					removeSelectedText()
+				else
+					removeAt(caretIndex)
+			}
+			else
+				insertToCaret(event.typedChar.toString)
+		}
 	}
 	
 	private object KeyPressListener extends KeyStateListener with ClipboardOwner
@@ -501,26 +522,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		override def handleCondition: FlagLike = editingFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
-			// Inserts a line-break on enter (if enabled)
-			if (textDrawContext.allowLineBreaks && event.index == Enter.index)
-				insertToCaret("\n")
-			// Removes a character on backspace / delete
-			else if (event.index == BackSpace.index) {
-				if (selectedRange.nonEmpty)
-					removeSelectedText()
-				else if (caretIndex > 0) {
-					removeAt(caretIndex - 1)
-					caretIndex -= 1
-				}
-			}
-			else if (event.index == Delete.index) {
-				if (selectedRange.nonEmpty)
-					removeSelectedText()
-				else
-					removeAt(caretIndex)
-			}
-			// Listens to shortcut keys (ctrl + C, V or X)
-			else if (enabled && event.keyboardState(Control)) {
+			if (event.keyboardState(Control)) {
 				if (event.concernsChar('V'))
 					Try {
 						// Retrieves the clipboard contents and pastes them on the string
