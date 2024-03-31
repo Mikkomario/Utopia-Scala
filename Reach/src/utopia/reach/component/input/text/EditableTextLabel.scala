@@ -10,7 +10,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Tab}
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard._
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory

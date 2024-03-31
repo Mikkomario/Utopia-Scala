@@ -5,8 +5,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.SpecificKeyEvent.SpecificKeyFilteringFactory
+import utopia.genesis.handling.event.keyboard.KeyStateEvent.{KeyStateEventFilter, KeyStateFilteringFactory}
 import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
@@ -14,28 +13,12 @@ import scala.language.implicitConversions
 
 object KeyStateListener
 {
-    // TYPES    -------------------------
-    
-    /**
-      * Type for filters applied to key state -events
-      */
-    type KeyStateEventFilter = Filter[KeyStateEvent]
-    
-    
     // ATTRIBUTES   ------------------
     
     /**
       * A factory used for constructing unconditional key-state-event listeners
       */
     val unconditional = KeyStateListenerFactory()
-    
-    
-    // COMPUTED ----------------------
-    
-    /**
-      * @return Access point for key-state-event -related filters
-      */
-    def filter = KeyStateEventFilter
     
     
     // IMPLICIT ----------------------
@@ -50,59 +33,6 @@ object KeyStateListener
     
     
     // NESTED   -----------------------------
-    
-    /**
-      * Common trait for factory-like classes that support key-state-event -based filtering
-      * @tparam A Type of generated items
-      */
-    trait KeyStateFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyStateEvent, A]
-    {
-        // COMPUTED   ---------------------
-        
-        /**
-          * An item that only accepts key-pressed events
-          */
-        def pressed = withFilter { _.pressed }
-        /**
-          * An item that only accepts key-released events
-          */
-        def released = withFilter { _.released }
-    }
-    
-    object KeyStateEventFilter extends KeyStateFilteringFactory[KeyStateEventFilter]
-    {
-        // ATTRIBUTES   ---------------------
-        
-        /**
-          * A filter that only accepts key-pressed events
-          */
-        override lazy val pressed = super.pressed
-        /**
-          * A filter that only accepts key-released events
-          */
-        override lazy val released = super.released
-        
-        
-        // IMPLEMENTED  ---------------------
-        
-        override protected def withFilter(filter: Filter[KeyStateEvent]): KeyStateEventFilter = filter
-        
-        
-        // OTHER    -------------------------
-        
-        /**
-          * @param f A filter function
-          * @return A key-state event-filter that applies the specified function
-          */
-        def apply(f: KeyStateEvent => Boolean): KeyStateEventFilter = Filter[KeyStateEvent](f)
-        
-        /**
-          * @param char A character (key)
-          * @return A filter that only accepts events of that key's pressed-events,
-          *         and only while a control key is being held down
-          */
-        def controlChar(char: Char) = whileControlDown && pressed && this.char(char)
-    }
     
     case class KeyStateListenerFactory(condition: FlagLike = AlwaysTrue,
                                        filter: KeyStateEventFilter = AcceptAll)

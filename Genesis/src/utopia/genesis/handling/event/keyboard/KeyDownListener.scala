@@ -1,28 +1,17 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.keyboard.KeyDownListener.KeyDownEventFilter
-import utopia.genesis.handling.event.keyboard.SpecificKeyEvent.SpecificKeyFilteringFactory
+import utopia.genesis.handling.event.keyboard.KeyDownEvent.{KeyDownEventFilter, KeyDownFilteringFactory}
 import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
-import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 object KeyDownListener
 {
-	// TYPES    -----------------------
-	
-	/**
-	 * A filter that applies to key down -events
-	 */
-	type KeyDownEventFilter = Filter[KeyDownEvent]
-	
-	
 	// ATTRIBUTES   -------------------
 	
 	/**
@@ -43,46 +32,6 @@ object KeyDownListener
 	
 	
 	// NESTED   -----------------------
-	
-	trait KeyDownFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyDownEvent, A]
-	{
-		/**
-		 * @param durationThreshold A time threshold after which key-down events should be ignored.
-		 * @return An item that only accepts events where the key has been held down for a duration shorter
-		 *         than the specified time threshold.
-		 *         Key-releases restart the tracked duration.
-		 */
-		def until(durationThreshold: Duration) = durationThreshold.finite match {
-			case Some(d) => withFilter { _.totalDuration < d }
-			case None => withFilter(AcceptAll)
-		}
-		/**
-		 * @param durationThreshold A time threshold before which key-down events should be ignored.
-		 * @return An item that only accepts events where the key has been held down for a duration longer
-		 *         than the specified time threshold.
-		 *         Key-releases restart the tracked duration.
-		 */
-		def after(durationThreshold: Duration) = durationThreshold.finite match {
-			case Some(d) => withFilter { _.totalDuration > d }
-			case None => withFilter(RejectAll)
-		}
-	}
-	
-	object KeyDownEventFilter extends KeyDownFilteringFactory[KeyDownEventFilter]
-	{
-		// IMPLEMENTED  ---------------------
-		
-		override protected def withFilter(filter: Filter[KeyDownEvent]): KeyDownEventFilter = filter
-		
-		
-		// OTHER    -------------------------
-		
-		/**
-		 * @param f A filter function applicable for key-down events
-		 * @return A filter that uses the specified function
-		 */
-		def apply(f: KeyDownEvent => Boolean) = Filter(f)
-	}
 	
 	case class KeyDownListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll)
 		extends ListenerFactory[KeyDownEvent, KeyDownListenerFactory]

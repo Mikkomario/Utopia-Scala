@@ -151,8 +151,7 @@ object Popup
 		
 		private val actionThreshold = Now + 0.1.seconds
 		
-		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
-			MouseButtonStateListener.filter.pressed
+		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = MouseButtonStateEvent.filter.pressed
 		
 		
 		// IMPLEMENTED	----------------------

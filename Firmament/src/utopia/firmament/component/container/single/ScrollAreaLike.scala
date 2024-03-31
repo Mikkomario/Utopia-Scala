@@ -17,7 +17,7 @@ import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.MouseButtonStateEvent.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse._
 import utopia.paradigm.enumeration.Axis._
 import utopia.paradigm.enumeration.Axis2D

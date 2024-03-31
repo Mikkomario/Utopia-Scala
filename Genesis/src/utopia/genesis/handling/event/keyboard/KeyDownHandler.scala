@@ -4,7 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.event.EventHandler
-import utopia.genesis.handling.event.keyboard.KeyDownListener.KeyDownEventFilter
+import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused

@@ -13,7 +13,7 @@ import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.drawing.{Drawable, DrawableHandler, RepaintListener, Repositioner}
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers

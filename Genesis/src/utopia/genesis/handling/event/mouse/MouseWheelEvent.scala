@@ -1,15 +1,77 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.operator.filter.Filter
+import utopia.flow.operator.sign.Sign
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
-import utopia.genesis.handling.event.mouse.MouseWheelListener.MouseWheelEventFilter
+import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
+import utopia.paradigm.enumeration.VerticalDirection
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 object MouseWheelEvent
 {
+	// TYPES    ----------------------
+	
+	/**
+	  * Event filter for mouse wheel events
+	  */
+	type MouseWheelEventFilter = Filter[MouseWheelEvent]
+	
+	
+	// COMPUTED ---------------------
+	
 	/**
 	  * @return Access point to filters targeting mouse wheel events
 	  */
 	def filter = MouseWheelEventFilter
+	
+	
+	// NESTED   ---------------------
+	
+	trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent, A]
+	{
+		// COMPUTED ------------------
+		
+		/**
+		  * @return An item that only accepts events where the wheel rotated up / away from the user
+		  */
+		def rotatedAway = rotated(Up)
+		/**
+		  * @return An item that only accepts events where the wheel rotated down / towards the user
+		  */
+		def rotatedTowards = rotated(Down)
+		
+		/**
+		  * @return An item that only accepts unconsumed events
+		  */
+		def unconsumed = withFilter { _.unconsumed }
+		
+		
+		// OTHER    ------------------
+		
+		/**
+		  * @param rotationDirection Accepted direction of rotation
+		  * @return An item that only accepts mouse wheel events towards the specified direction
+		  */
+		def rotated(rotationDirection: VerticalDirection) =
+			withFilter { e => Sign.of(e.wheelTurn) == rotationDirection.sign }
+	}
+	
+	object MouseWheelEventFilter extends MouseWheelFilteringFactory[MouseWheelEventFilter]
+	{
+		// IMPLEMENTED  --------------
+		
+		override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelEventFilter = filter
+		
+		
+		// OTHER    ------------------
+		
+		/**
+		  * @param f A filter function
+		  * @return A filter that uses the specified function
+		  */
+		def other(f: MouseWheelEvent => Boolean): MouseWheelEventFilter = Filter(f)
+	}
 }
 
 /**

@@ -13,7 +13,7 @@ import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.MouseButtonStateListener.MouseButtonStateEventFilter
+import utopia.genesis.handling.event.mouse.MouseButtonStateEvent.MouseButtonStateEventFilter
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.Y

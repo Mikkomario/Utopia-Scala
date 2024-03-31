@@ -1,13 +1,62 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.genesis.handling.event.keyboard.KeyTypedListener.KeyTypedEventFilter
+import utopia.flow.operator.filter.{Filter, RejectAll}
+import utopia.genesis.handling.event.keyboard.KeyEvent.KeyFilteringFactory
 
 object KeyTypedEvent
 {
+	// TYPES    --------------------------
+	
+	/**
+	  * Filter class for key typed -events
+	  */
+	type KeyTypedEventFilter = Filter[KeyTypedEvent]
+	
+	
+	// COMPUTED --------------------------
+	
 	/**
 	 * @return Factory for constructing key typed event filters
 	 */
 	def filter = KeyTypedEventFilter
+	
+	
+	// NESTED   --------------------------
+	
+	trait KeyTypedFilteringFactory[+A] extends KeyFilteringFactory[KeyTypedEvent, A]
+	{
+		/**
+		  * @param char Targeted character
+		  * @return An item that only accepts events concerning that typed character
+		  */
+		def apply(char: Char): A = withFilter { _.typedChar == char }
+		/**
+		  * @param chars Targeted characters
+		  * @return An item that only accepts events concerning those typed characters
+		  */
+		def chars(chars: Set[Char]): A = {
+			if (chars.isEmpty)
+				withFilter(RejectAll)
+			else
+				withFilter { e => chars.contains(e.typedChar) }
+		}
+	}
+	
+	object KeyTypedEventFilter extends KeyTypedFilteringFactory[KeyTypedEventFilter]
+	{
+		// IMPLEMENTED  -------------------
+		
+		override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedEventFilter = filter
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		  * @param f A filtering-function for key typed -events
+		  * @return A filter that uses the specified function
+		  */
+		def apply(f: KeyTypedEvent => Boolean) = Filter(f)
+	}
 }
 
 /**

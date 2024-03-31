@@ -1,15 +1,12 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
-import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseWheelEvent.{MouseWheelEventFilter, MouseWheelFilteringFactory}
 import utopia.genesis.handling.template.Handleable
-import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.enumeration.VerticalDirection
 import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
@@ -17,28 +14,12 @@ import scala.language.implicitConversions
 
 object MouseWheelListener
 {
-    // TYPES    ----------------------
-    
-    /**
-      * Event filter for mouse wheel events
-      */
-    type MouseWheelEventFilter = Filter[MouseWheelEvent]
-    
-    
     // ATTRIBUTES   ------------------
     
     /**
       * A mouse event listener factory that doesn't apply any conditions or event filters
       */
     val unconditional = MouseWheelListenerFactory()
-    
-    
-    // COMPUTED ----------------------
-    
-    /**
-      * @return Access point to constructing mouse wheel event filters
-      */
-    def filter = MouseWheelEventFilter
     
     
     // IMPLICIT ----------------------
@@ -80,51 +61,6 @@ object MouseWheelListener
     
     
     // NESTED   ----------------------
-    
-    trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent, A]
-    {
-        // COMPUTED ------------------
-        
-        /**
-          * @return An item that only accepts events where the wheel rotated up / away from the user
-          */
-        def rotatedAway = rotated(Up)
-        /**
-          * @return An item that only accepts events where the wheel rotated down / towards the user
-          */
-        def rotatedTowards = rotated(Down)
-        
-        /**
-          * @return An item that only accepts unconsumed events
-          */
-        def unconsumed = withFilter { _.unconsumed }
-        
-        
-        // OTHER    ------------------
-        
-        /**
-          * @param rotationDirection Accepted direction of rotation
-          * @return An item that only accepts mouse wheel events towards the specified direction
-          */
-        def rotated(rotationDirection: VerticalDirection) =
-            withFilter { e => Sign.of(e.wheelTurn) == rotationDirection.sign }
-    }
-    
-    object MouseWheelEventFilter extends MouseWheelFilteringFactory[MouseWheelEventFilter]
-    {
-        // IMPLEMENTED  --------------
-        
-        override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelEventFilter = filter
-        
-        
-        // OTHER    ------------------
-        
-        /**
-          * @param f A filter function
-          * @return A filter that uses the specified function
-          */
-        def other(f: MouseWheelEvent => Boolean): MouseWheelEventFilter = Filter(f)
-    }
     
     case class MouseWheelListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseWheelEventFilter = AcceptAll)
         extends ListenerFactory[MouseWheelEvent, MouseWheelListenerFactory]

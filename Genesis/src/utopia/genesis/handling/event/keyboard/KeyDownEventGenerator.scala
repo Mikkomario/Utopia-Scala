@@ -7,7 +7,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.{Actor, ActorHandler}
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 
 import java.time.Instant
 import scala.concurrent.duration.FiniteDuration

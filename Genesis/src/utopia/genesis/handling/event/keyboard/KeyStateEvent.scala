@@ -1,13 +1,21 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, DownArrow, LeftArrow, RightArrow, UpArrow}
+import utopia.flow.operator.filter.Filter
+import utopia.genesis.handling.event.keyboard.Key.ArrowKey
 import utopia.genesis.handling.event.keyboard.KeyEvent.KeyEventFilter
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
+import utopia.genesis.handling.event.keyboard.SpecificKeyEvent.SpecificKeyFilteringFactory
+import utopia.paradigm.enumeration.Direction2D
 
 object KeyStateEvent
 {
+    // TYPES    -------------------------
+    
+    /**
+      * Type for filters applied to key state -events
+      */
+    type KeyStateEventFilter = Filter[KeyStateEvent]
+    
+    
     // ATTRIBUTES   -------------------------
     
     /**
@@ -103,6 +111,62 @@ object KeyStateEvent
       */
     @deprecated("Please use ArrowKey(Direction2D).index instead", "v4.0")
     def arrowKeyIndex(direction: Direction2D) = ArrowKey(direction).index
+    
+    
+    // NESTED   -----------------------------
+    
+    /**
+      * Common trait for factory-like classes that support key-state-event -based filtering
+      * @tparam A Type of generated items
+      */
+    trait KeyStateFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyStateEvent, A]
+    {
+        // COMPUTED   ---------------------
+        
+        /**
+          * An item that only accepts key-pressed events
+          */
+        def pressed = withFilter { _.pressed }
+        /**
+          * An item that only accepts key-released events
+          */
+        def released = withFilter { _.released }
+    }
+    
+    object KeyStateEventFilter extends KeyStateFilteringFactory[KeyStateEventFilter]
+    {
+        // ATTRIBUTES   ---------------------
+        
+        /**
+          * A filter that only accepts key-pressed events
+          */
+        override lazy val pressed = super.pressed
+        /**
+          * A filter that only accepts key-released events
+          */
+        override lazy val released = super.released
+        
+        
+        // IMPLEMENTED  ---------------------
+        
+        override protected def withFilter(filter: Filter[KeyStateEvent]): KeyStateEventFilter = filter
+        
+        
+        // OTHER    -------------------------
+        
+        /**
+          * @param f A filter function
+          * @return A key-state event-filter that applies the specified function
+          */
+        def apply(f: KeyStateEvent => Boolean): KeyStateEventFilter = Filter[KeyStateEvent](f)
+        
+        /**
+          * @param char A character (key)
+          * @return A filter that only accepts events of that key's pressed-events,
+          *         and only while a control key is being held down
+          */
+        def controlChar(char: Char) = whileControlDown && pressed && this.char(char)
+    }
 }
 
 /**

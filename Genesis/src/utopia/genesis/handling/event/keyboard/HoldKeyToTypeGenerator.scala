@@ -3,8 +3,8 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.handling.event.keyboard.KeyDownListener.KeyDownEventFilter
-import utopia.genesis.handling.event.keyboard.KeyStateListener.KeyStateEventFilter
+import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
+import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration

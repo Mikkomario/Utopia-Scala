@@ -1,10 +1,10 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
-import utopia.genesis.handling.event.keyboard.KeyEvent.KeyFilteringFactory
+import utopia.genesis.handling.event.keyboard.KeyTypedEvent.{KeyTypedEventFilter, KeyTypedFilteringFactory}
 import utopia.genesis.handling.template.Handleable
 
 import scala.annotation.unused
@@ -12,14 +12,6 @@ import scala.language.implicitConversions
 
 object KeyTypedListener
 {
-    // TYPES    --------------------------
-    
-    /**
-      * Filter class for key typed -events
-      */
-    type KeyTypedEventFilter = Filter[KeyTypedEvent]
-    
-    
     // ATTRIBUTES   ----------------------
     
     /**
@@ -28,55 +20,12 @@ object KeyTypedListener
     val unconditional = KeyTypedListenerFactory()
     
     
-    // COMPUTED --------------------------
-    
-    /**
-     * @return A factory for constructing key typed event filters
-     */
-    def filter = KeyTypedEventFilter
-    
-    
     // IMPLICIT --------------------------
     
     implicit def objectToFactory(@unused o: KeyTypedListener.type): KeyTypedListenerFactory = unconditional
     
     
     // NESTED   --------------------------
-    
-    trait KeyTypedFilteringFactory[+A] extends KeyFilteringFactory[KeyTypedEvent, A]
-    {
-        /**
-         * @param char Targeted character
-         * @return An item that only accepts events concerning that typed character
-         */
-        def apply(char: Char): A = withFilter { _.typedChar == char }
-        /**
-         * @param chars Targeted characters
-         * @return An item that only accepts events concerning those typed characters
-         */
-        def chars(chars: Set[Char]): A = {
-            if (chars.isEmpty)
-                withFilter(RejectAll)
-            else
-                withFilter { e => chars.contains(e.typedChar) }
-        }
-    }
-    
-    object KeyTypedEventFilter extends KeyTypedFilteringFactory[KeyTypedEventFilter]
-    {
-        // IMPLEMENTED  -------------------
-        
-        override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedEventFilter = filter
-        
-        
-        // OTHER    ----------------------
-        
-        /**
-         * @param f A filtering-function for key typed -events
-         * @return A filter that uses the specified function
-         */
-        def apply(f: KeyTypedEvent => Boolean) = Filter(f)
-    }
     
     case class KeyTypedListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
         extends ListenerFactory[KeyTypedEvent, KeyTypedListenerFactory]

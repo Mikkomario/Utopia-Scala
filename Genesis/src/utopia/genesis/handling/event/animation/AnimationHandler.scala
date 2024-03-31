@@ -4,7 +4,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.EventHandler
-import utopia.genesis.handling.event.animation.AnimationListener.AnimationEventFilter
+import utopia.genesis.handling.event.animation.AnimationEvent.AnimationEventFilter
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused

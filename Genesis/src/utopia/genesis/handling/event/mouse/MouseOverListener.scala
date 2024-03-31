@@ -1,30 +1,20 @@
 package utopia.genesis.handling.event.mouse
 
-import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
+import utopia.genesis.handling.event.mouse.MouseOverEvent.{MouseOverEventFilter, MouseOverFilteringFactory}
 import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.template.vector.DoubleVector
 
 import scala.annotation.unused
-import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 object MouseOverListener
 {
-	// TYPES    ------------------------
-	
-	/**
-	  * Type of filters applied to mouse over events
-	  */
-	type MouseOverEventFilter = Filter[MouseOverEvent]
-	
-	
 	// ATTRIBUTES   --------------------
 	
 	/**
@@ -33,58 +23,12 @@ object MouseOverListener
 	val unconditional = MouseOverListenerFactory()
 	
 	
-	// COMPUTED ------------------------
-	
-	/**
-	  * @return An access point to mouse over event filters
-	  */
-	def filter = MouseOverEventFilter
-	
-	
 	// IMPLICIT ------------------------
 	
 	implicit def objectToFactory(@unused o: MouseOverListener.type): MouseOverListenerFactory = unconditional
 	
 	
 	// NESTED   ------------------------
-	
-	trait MouseOverFilteringFactory[+A] extends MouseFilteringFactory[MouseOverEvent, A]
-	{
-		/**
-		  * @return An item that only accepts unconsumed events
-		  */
-		def unconsumed = withFilter { _.unconsumed }
-		
-		/**
-		  * @param minimumDuration Minimum hover duration
-		  * @return An item that only accepts events once the hover extends over the specified duration
-		  */
-		def longerThan(minimumDuration: Duration) = {
-			if (minimumDuration <= Duration.Zero)
-				withFilter(AcceptAll)
-			else
-				minimumDuration.finite match {
-					case Some(duration) => withFilter { _.totalDuration >= duration }
-					case None => withFilter(RejectAll)
-				}
-		}
-	}
-	
-	object MouseOverEventFilter extends MouseOverFilteringFactory[MouseOverEventFilter]
-	{
-		// IMPLEMENTED  -----------------------
-		
-		override protected def withFilter(filter: Filter[MouseOverEvent]): MouseOverEventFilter = filter
-		
-		
-		// OTHER    ---------------------------
-		
-		/**
-		  * @param f A filtering function
-		  * @return A filter that uses the specified function
-		  */
-		def apply(f: MouseOverEvent => Boolean) = Filter(f)
-	}
 	
 	case class MouseOverListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseOverEventFilter = AcceptAll)
 		extends ListenerFactory[MouseOverEvent, MouseOverListenerFactory]
