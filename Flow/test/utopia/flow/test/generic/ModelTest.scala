@@ -108,5 +108,11 @@ object ModelTest extends App
 	
 	// assert(Model.from("a" -> "1") != Model.from("a" -> 1))
 	
+	// Tests model equality
+	val m1 = Model.from("airportId" -> 1,
+		"originator" -> "{\"name\": \"test\", \"code\": null, \"companyId\": null}".getModel)
+	assert(m1 ~== Model.from("airportId" -> "1",
+		"originator" -> "{\"name\": \"TEST\", \"code\": null}"))
+	
 	println("Success")
 }

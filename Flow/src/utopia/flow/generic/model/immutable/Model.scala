@@ -28,12 +28,7 @@ object Model
     implicit val similarProperties: EqualsFunction[Model] = (a, b) => {
         // Only compares defined (i.e. non-empty) properties
         val props = Pair(a, b).map { _.propertyMap.filter { _._2.nonEmpty } }
-        if (props.isSymmetricBy { _.keySet })
-            props.first.keys.forall { n =>
-                props.map { _(n).value }.isSymmetricWith(Value.convertToEqual)
-            }
-        else
-            false
+        props.mapAndMerge { _.keySet } { _ ++ _ }.forall { propName => a(propName) ~== b(propName) }
     }
     
     

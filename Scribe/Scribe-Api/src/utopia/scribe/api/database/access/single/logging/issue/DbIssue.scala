@@ -88,8 +88,8 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	def store(context: String, error: Option[RecordableError] = None, message: String = "",
 	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty,
 	          occurrenceDetails: Model = Model.empty, occurrences: Int = 1,
-	          timeRange: Span[Instant] = Span.singleValue(Now))(implicit connection: Connection,
-		version: Version): DetailedIssue =
+	          timeRange: Span[Instant] = Span.singleValue(Now))
+	         (implicit connection: Connection, version: Version): DetailedIssue =
 	{
 		// Inserts or finds the matching issue
 		val issueResult = store(IssueData(context, severity, timeRange.start))

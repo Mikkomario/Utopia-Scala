@@ -10,6 +10,7 @@ import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsExtensions._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.mutable
@@ -30,14 +31,36 @@ object Value
       * I.e. The "surface" data type of the values may still differ.
       */
     implicit val convertToEqual: EqualsFunction[Value] = (a, b) => {
-        if (a.dataType == b.dataType)
-            a.content == b.content
-        else if (a.isEmpty)
+        if (a.isEmpty)
             b.isEmpty
         else if (b.isEmpty)
             false
-        else
-            b.objectValue(a.dataType) == a.content
+        else {
+            // Uses a more flexible check for certain data types
+            // TODO: Create a way to inject support for other data types here as well
+            a.dataType match {
+                // Case: Comparing models => Compares the values using ~== instead of ==
+                case ModelType => b.model.exists { _ ~== a.getModel }
+                // Case: Comparing strings => Ignores case
+                case StringType => b.string.exists { _ ~== a.getString }
+                // Case: Comparing double numbers => Ignores some decimals
+                case DoubleType => b.double.exists { _ ~== a.getDouble }
+                // Case: Vector => Compares inner values using ~== instead of ==
+                case VectorType =>
+                    b.vector.exists { bVec =>
+                        val vectors = Pair(a.getVector, bVec)
+                        vectors.isSymmetricBy { _.size } && vectors.merge { (a, b) =>
+                            a.iterator.zip(b.iterator).forall { case (a, b) => convertToEqual(a, b) }
+                        }
+                    }
+                // Case: Pair => Compares inner values using ~== instead of ==
+                case PairType => b.pair.exists { bPair => a.getPair.forallWith(bPair)(convertToEqual.apply) }
+                // Case: Same data types => Compares values directly
+                case b.dataType => a.content == b.content
+                // Case: Different data types => Converts to the correct type first
+                case _ => b.objectValue(a.dataType) == a.content
+            }
+        }
     }
     
     
