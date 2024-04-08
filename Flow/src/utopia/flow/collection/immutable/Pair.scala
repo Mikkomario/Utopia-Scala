@@ -362,6 +362,19 @@ case class Pair[+A](first: A, second: A)
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = _fromSpecific(coll)
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] = _newSpecificBuilder
 	
+	override def filter(pred: A => Boolean) = {
+		if (pred(first)) {
+			if (pred(second))
+				this
+			else
+				Vector(first)
+		}
+		else if (pred(second))
+			Vector(second)
+		else
+			Vector.empty
+	}
+	
 	
 	// OTHER    --------------------------
 	
