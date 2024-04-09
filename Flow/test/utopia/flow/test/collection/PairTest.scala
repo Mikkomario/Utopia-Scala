@@ -10,10 +10,12 @@ import utopia.flow.collection.immutable.Pair.PairOrVectorBuilder
   */
 object PairTest extends App
 {
+	// Tests ++
 	val p1 = Pair(1, 2)
 	
 	assert((p1 ++ Vector.empty).isInstanceOf[Pair[Int]], p1 ++ Vector.empty)
 	
+	// Tests building
 	val b1 = new PairOrVectorBuilder[Int]()
 	assert(b1.result() == Left(Vector.empty))
 	b1 += 1
@@ -24,6 +26,10 @@ object PairTest extends App
 	assert(b1.result() == Left(Vector(1, 2, 3)))
 	b1 += 4
 	assert(b1.result() == Left(Vector(1, 2, 3, 4)))
+	
+	// Tests filter
+	assert(p1.filter { _ > 0 } == p1)
+	assert(p1.filter { _ < 0 } == Vector.empty)
 	
 	println("Success!")
 }
