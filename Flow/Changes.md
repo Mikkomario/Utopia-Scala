@@ -48,6 +48,8 @@
 - **ModelLike**`.contains(String)` and `.containsNonEmpty(String)` now support lazily initialized properties 
   (e.g. those returned via the new model validation implementation)
 - `~==` implementation in **Value** is now more flexible and takes into account approximate equality in inner values as well 
+- Conversion from **String** to date, instant and date-time values is now much more flexible
+- Conversion from **String** to **Float** and **Long** (via **Value**) is now slightly more flexible
 - The generic type parameter in **PropertyFactory** is no longer restricted 
 - `View.fixed(...).mapValue(...)` now produces a fixed view instead of a **Lazy**
 - `View(...).mapValue(...)` now produces a call-by-name (mapping) view instead of a **Lazy**

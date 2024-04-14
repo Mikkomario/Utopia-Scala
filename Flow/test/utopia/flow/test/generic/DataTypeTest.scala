@@ -7,13 +7,14 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, LocalDateTimeType, StringType}
 import utopia.flow.time.Today
+import utopia.flow.time.TimeExtensions._
 
+import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 
 /**
- *
  * @author Mikko Hilpinen
- * @since 5.4.2021, v
+ * @since 5.4.2021
  */
 object DataTypeTest extends App
 {
@@ -126,6 +127,32 @@ object DataTypeTest extends App
 	assert("(1, 2, 3)".getVector.map { _.getInt } == Vector(1, 2, 3))
 	assert("1, 2, 3".getVector.map { _.getInt } == Vector(1, 2, 3))
 	assert("1;2;3".getVector.map { _.getInt } == Vector(1, 2, 3))
+	
+	// Tests string to numeric conversions
+	assert("1".getInt == 1)
+	assert("01".getInt == 1)
+	assert("1.0".getInt == 1)
+	assert("1,0".getInt == 1)
+	assert("1.3".getInt == 1)
+	assert("1".getLong == 1L)
+	assert("01".getLong == 1L)
+	assert("1.0".getLong == 1L)
+	assert("1,0".getLong == 1L)
+	assert("1.3".getLong == 1L)
+	assert("1".getInt == 1)
+	assert("01".getDouble == 1.0)
+	assert("1.0".getDouble == 1.0)
+	assert("1,1".getDouble == 1.1)
+	assert("1.3".getDouble == 1.3)
+	
+	// Tests string to date unit conversion
+	assert("2021-01-01T01:01:01Z".getInstant == Instant.parse("2021-01-01T01:01:01Z"))
+	assert(LocalDateTime.parse("01.01.2021 01:01:01", DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm:ss")) == LocalDateTime.of(2021, 1, 1, 1, 1, 1))
+	assert("01.01.2021 01:01:01".getInstant == LocalDateTime.of(2021, 1, 1, 1, 1, 1).toInstantInDefaultZone, "01.01.2021 01:01:01".getInstant)
+	assert("01.01.2021".getInstant == LocalDate.of(2021, 1, 1).atStartOfDay().toInstantInDefaultZone)
+	assert("2021-01-01".getLocalDateTime == LocalDateTime.of(2021, 1, 1, 0, 0))
+	// NB: This test doesn't resolve on every time zone
+	assert("2021-01-01T12:04:02Z".getLocalDate == LocalDate.of(2021, 1, 1), "2021-01-01T12:04:02Z".getLocalDate)
 	
 	println("Success")
 }

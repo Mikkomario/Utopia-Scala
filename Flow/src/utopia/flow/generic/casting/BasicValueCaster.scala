@@ -2,12 +2,14 @@ package utopia.flow.generic.casting
 
 import utopia.flow.collection.immutable.Pair
 import ValueConversions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
 import utopia.flow.parse.json.JsonReader
+import utopia.flow.parse.string.Regex
 import utopia.flow.time.{Days, Today}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
@@ -27,7 +29,17 @@ object BasicValueCaster extends ValueCaster
 {
 	// ATTRIBUTES    --------------
 	
-	private val alternativeDateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
+	private lazy val supportedLocalDateFormats = Vector(
+		DateTimeFormatter.ISO_LOCAL_DATE,
+		DateTimeFormatter.ofPattern("dd.MM.uuuu"),
+		DateTimeFormatter.ofPattern("MM/dd/uuuu"))
+	private lazy val supportedLocalDateTimeFormats = Vector(
+		DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+		DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm:ss"),
+		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm:ss"),
+		DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm"),
+		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm"))
+	private lazy val dateTimeSplitRegex = Regex("T") || Regex.whiteSpace
 	
 	override lazy val conversions = Set(
 		// Any type can be converted to a string using .toString, although some conversions may be considered more
@@ -156,8 +168,7 @@ object BasicValueCaster extends ValueCaster
 			case _ => value.content.map { _.toString() }
 		}
 	
-	private def intOf(value: Value): Option[Int] =
-	{
+	private def intOf(value: Value): Option[Int] = {
 		// Double, long, float and boolean can be cast to integers
 		// String needs to be parsed
 		value.dataType match {
@@ -166,32 +177,27 @@ object BasicValueCaster extends ValueCaster
 			case FloatType => Some(value.getFloat.intValue())
 			case BooleanType => Some(if (value.getBoolean) 1 else 0)
 			case DaysType => Some(value.getDays.length)
-			case StringType => Try { value.stringOr("0").toDouble.toInt }.toOption
+			case StringType => value.string.flatMap { stringToNumber(_) { _.toDouble.toInt } { _.toInt } }
 			case _ => None
 		}
 	}
-	
 	private def doubleOf(value: Value): Option[Double] =
 		value.dataType match {
 			case IntType => Some(value.getInt.toDouble)
 			case LongType => Some(value.getLong.toDouble)
 			case FloatType => Some(value.getFloat.toDouble)
 			case DurationType => Some(value.getDuration.toPreciseMillis)
-			case StringType =>
-				value.string.map { _.replace(',', '.').trim }
-					.flatMap { s => Try { s.toDouble }.toOption }
+			case StringType => value.string.flatMap { stringToNumber(_) { _.toDouble } { _.toDouble } }
 			case _ => None
 		}
-	
 	private def floatOf(value: Value): Option[Float] =
 		value.dataType match {
 			case IntType => Some(value.getInt.toFloat)
 			case LongType => Some(value.getLong.toFloat)
 			case DoubleType => Some(value.getDouble.toFloat)
-			case StringType => Try { value.stringOr("0").toFloat }.toOption
+			case StringType => value.string.flatMap { stringToNumber(_) { _.toFloat } { _.toFloat } }
 			case _ => None
 		}
-	
 	private def longOf(value: Value): Option[Long] =
 		value.dataType match {
 			case IntType => Some(value.getInt.toLong)
@@ -200,7 +206,7 @@ object BasicValueCaster extends ValueCaster
 			case InstantType => Some(value.getInstant.toEpochMilli)
 			case DurationType => Some(value.getDuration.toMillis)
 			case DaysType => Some(value.getDays.length.toLong)
-			case StringType => Try { value.stringOr("0").toDouble.toLong }.toOption
+			case StringType => value.string.flatMap { stringToNumber(_) { _.toDouble.toLong } { _.toLong } }
 			case _ => None
 		}
 	
@@ -208,25 +214,17 @@ object BasicValueCaster extends ValueCaster
 		value.dataType match {
 			case IntType => Some(value.getInt != 0)
 			case StringType =>
-				val s = value.getString.toLowerCase
-				if (s == "true")
-					Some(true)
-				else if (s == "false")
-					Some(false)
-				else if (s == "yes")
-					Some(true)
-				else if (s == "no")
-					Some(false)
-				else if (s == "y")
-					Some(true)
-				else if (s == "n")
-					Some(false)
-				else if (s == "1")
-					Some(true)
-				else if (s == "0")
-					Some(false)
-				else
-					None
+				value.getString.toLowerCase match {
+					case "true" => Some(true)
+					case "false" => Some(false)
+					case "yes" => Some(true)
+					case "no" => Some(false)
+					case "y" => Some(true)
+					case "n" => Some(false)
+					case "1" => Some(true)
+					case "0" => Some(false)
+					case _ => None
+				}
 			case _ => None
 		}
 	
@@ -241,27 +239,46 @@ object BasicValueCaster extends ValueCaster
 			case StringType =>
 				// Tries various parsing formats
 				val str = value.getString
+				// Priority 1: Instant format
 				Try { Instant.parse(str) }
+					// Prio 2: Zoned date time format
 					.orElse { Try(ZonedDateTime.parse(str).toInstant) }
+					.toOption
+					// Prio 3: Local date time format
 					.orElse {
-						Try {
-							val localDateTime = LocalDateTime.parse(str)
-							localDateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(localDateTime))
-						}
-					}.toOption
+						supportedLocalDateTimeFormats
+							.findMap { f => Try { LocalDateTime.parse(str, f) }.toOption }
+							.map { local => local.toInstant(ZoneId.systemDefault().getRules.getOffset(local)) }
+					}
+					// Prio 4: Local date format
+					.orElse {
+						supportedLocalDateFormats
+							.findMap { f => Try { LocalDate.parse(str, f) }.toOption }
+							.map { date =>
+								val dateTime = date.atStartOfDay()
+								dateTime.toInstant(ZoneId.systemDefault().getRules.getOffset(dateTime))
+							}
+					}
 			case _ => None
 		}
-	
 	private def localDateOf(value: Value): Option[LocalDate] =
 		value.dataType match {
 			case LocalDateTimeType => Some(value.getLocalDateTime.toLocalDate)
 			case DaysType => Some(LocalDate.ofEpochDay(value.getDays.length))
 			case StringType =>
-				val s = value.getString
-				Try { LocalDate.parse(s) }.orElse { Try { LocalDate.parse(s, alternativeDateFormat) } }.toOption
+				val str = value.getString
+				supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(str, f) }.toOption }
+					// Backup strategy: Extract the date portion from the input string
+					.orElse {
+						dateTimeSplitRegex.startIndexIteratorIn(str).nextOption().filter { _ > 0 }
+							.flatMap { timeStartIndex =>
+								val datePart = str.take(timeStartIndex)
+								// WET WET
+								supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(datePart, f) }.toOption }
+							}
+					}
 			case _ => None
 		}
-	
 	private def localTimeOf(value: Value): Option[LocalTime] =
 		value.dataType match {
 			case DurationType => Some(LocalTime.MIDNIGHT + value.getDuration)
@@ -269,13 +286,25 @@ object BasicValueCaster extends ValueCaster
 			case StringType => Try(LocalTime.parse(value.toString())).toOption
 			case _ => None
 		}
-	
 	private def localDateTimeOf(value: Value): Option[LocalDateTime] =
 		value.dataType match {
 			case InstantType => Some(LocalDateTime.ofInstant(value.getInstant, ZoneId.systemDefault()))
 			case LocalDateType => Some(value.getLocalDate.atStartOfDay())
 			case LocalTimeType => Some(Today.atTime(value.getLocalTime))
-			case StringType => Try(LocalDateTime.parse(value.toString())).toOption
+			case StringType =>
+				val str = value.getString
+				// Prio 1: Directly readable as local date time
+				supportedLocalDateTimeFormats.findMap { f => Try { LocalDateTime.parse(str, f) }.toOption }
+					// Prio 2: Converts from an instant (UTC) time to local time
+					.orElse { Try { Instant.parse(str).toLocalDateTime }.toOption }
+					// Prio 2: Converts from zoned time to local time
+					.orElse { Try { ZonedDateTime.parse(str).toInstant.toLocalDateTime }.toOption }
+					// Prio 3: Converts a local date to a local date time
+					.orElse {
+						supportedLocalDateFormats
+							.findMap { f => Try { LocalDate.parse(str, f).atStartOfDay() }.toOption }
+					}
+				
 			case PairType =>
 				val p = value.getPair
 				p.first.localDate.flatMap { date => p.second.localTime.map { LocalDateTime.of(date, _) } }
@@ -399,4 +428,16 @@ object BasicValueCaster extends ValueCaster
 			else
 				Value(Some(s), StringType)
 		}
+		
+	// Handles both the decimal and integral number form options
+	private def stringToNumber[N](str: String)(fromDecimal: String => N)(fromIntegral: String => N): Option[N] = {
+		if (str.isEmpty)
+			None
+		else if (str.contains(','))
+			Try { fromDecimal(str.replace(',', '.')) }.toOption
+		else if (str.contains('.'))
+			Try { fromDecimal(str) }.toOption
+		else
+			Try { fromIntegral(str) }.toOption
+	}
 }
