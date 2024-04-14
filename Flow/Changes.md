@@ -55,6 +55,7 @@
 - The `mirrorCondition` in **OptimizedMirror** is now stricter
   - Previously the value would still reflect the updated value when called directly
   - Also, now `.destiny` correctly changes when mirror condition seals to false
+- **XmlElement**`.toString` now yields XML instead of JSON.
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**

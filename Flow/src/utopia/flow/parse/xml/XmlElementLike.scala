@@ -116,8 +116,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     /**
       * @return A simplified model representation of this xml element
       */
-    def toSimpleModel =
-    {
+    def toSimpleModel = {
         val nameProperty = Constant("name", localName)
         toConstants match {
             // Case: This element consists of a single property
@@ -141,11 +140,9 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         }
     }
     
-    private def toConstants: Either[Constant, Vector[Constant]] =
-    {
+    private def toConstants: Either[Constant, Vector[Constant]] = {
         // Case: No children
-        if (children.isEmpty)
-        {
+        if (children.isEmpty) {
             // Case: Empty element with no attributes => Converts to name value pair
             if (attributes.isEmpty)
                 Left(Constant(localName, value))
@@ -157,8 +154,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                 Right((attributes +Constant("value", value)).properties)
         }
         // Case: Wraps a single child => Attempts to convert it into a single property
-        else if (children hasSize 1)
-        {
+        else if (children hasSize 1) {
             val childName = children.head.localName
             children.head.toConstants match {
                 // Case: The wrapped element consists of a single property
@@ -180,8 +176,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             val childrenProperty =Constant(localName, groupChildren(children.toVector))
             propertyWithAttributes(childrenProperty)
         }
-        else
-        {
+        else {
             val childConstants = children.map { _.localName }.distinct.map { childName =>
                 val children = childrenWithName(childName)
                 if (children.size > 1)
@@ -223,8 +218,8 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       */
     override def nav = name
     
-    override def toModel: Model =
-    {
+    override def toString = toXml
+    override def toModel: Model = {
         val atts = new VectorBuilder[(String, Value)]()
         atts += ("name" -> name.toString)
         
@@ -321,8 +316,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       * Prints an xml string from this element. Character data is represented as is.
       * @param xmlBuilder Builder for building the final xml string
       */
-    def appendToXml(xmlBuilder: mutable.StringBuilder): Unit =
-    {
+    def appendToXml(xmlBuilder: mutable.StringBuilder): Unit = {
         val namePart = name.toString
         val attsPart = attributesString.mapIfNotEmpty { " " + _ }
         
@@ -358,8 +352,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             }
     }
     
-    private def propertyWithAttributes(property: Constant) =
-    {
+    private def propertyWithAttributes(property: Constant) = {
         if (attributes.isEmpty)
             Left(property)
         else if (attributes.contains(property.name) && property.name.toLowerCase != "attributes")
