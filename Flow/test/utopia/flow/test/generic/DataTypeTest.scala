@@ -153,6 +153,7 @@ object DataTypeTest extends App
 	assert("2021-01-01".getLocalDateTime == LocalDateTime.of(2021, 1, 1, 0, 0))
 	// NB: This test doesn't resolve on every time zone
 	assert("2021-01-01T12:04:02Z".getLocalDate == LocalDate.of(2021, 1, 1), "2021-01-01T12:04:02Z".getLocalDate)
+	assert("04/15/2024".getLocalDate == LocalDate.of(2024, 4, 15))
 	
 	println("Success")
 }
