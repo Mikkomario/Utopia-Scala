@@ -330,12 +330,15 @@ object FileExtensions
 		  * @param another A sub-path
 		  * @return This path extended with another path
 		  */
-		def /(another: Path) = p.resolve(another)
+		def /(another: Path) = if (another.partsIterator.forall { _ == "." }) p else p.resolve(another)
 		/**
 		  * @param another A sub-path
 		  * @return This path extended with another path
 		  */
-		def /(another: String) = p.resolve(another)
+		def /(another: String) = another match {
+			case "." | "" => p
+			case p2 => p.resolve(p2)
+		}
 		
 		/**
 		  * @param count Number of elements to take (from the root)
