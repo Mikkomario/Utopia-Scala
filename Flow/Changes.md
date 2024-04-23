@@ -19,6 +19,7 @@
   The new implementation works the same way, regardless of compared collection type 
   (although it now requires **Seq** to be used)
 ### New features
+- Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
@@ -32,10 +33,16 @@
   - Added `.never` which is an alias for `Fixed(None)`
 - **FlagLike**
   - Added `.lightSwitch(...)` and `.switch(...)`, which are mapping functions specialized for boolean values
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.countAll` which returns the number of times each unique item appears in the collection
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **ResettableFlag**
   - Added `.switch()`
+- **String** (**StringExtensions**)
+  - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
+- **WeekDay** (object)
+  - Added `.matching(String)`
 ### Other changes
 - Rewrote the `.validate(AnyModel)` function in **ModelDeclaration**, so that it:
   - Uses `.apply(...)` instead of `.containsNonEmpty(...)` when testing for the required properties

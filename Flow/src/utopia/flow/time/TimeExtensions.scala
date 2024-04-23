@@ -723,12 +723,7 @@ object TimeExtensions
 		/**
 		 * @return Dates of this year
 		 */
-		def dates = IterableSpan.iterate(firstDay, lastDay) { (date, direction) =>
-			direction match {
-				case Positive => date.tomorrow
-				case Negative => date.yesterday
-			}
-		}
+		def dates = DateRange.inclusive(firstDay, lastDay)
 		
 		/**
 		  * @return January (1) of this year

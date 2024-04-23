@@ -1,6 +1,9 @@
 package utopia.flow.time
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.ordering.UsesSelfOrdering
+import utopia.flow.util.StringExtensions._
+
 import java.time.{DayOfWeek, LocalDate}
 import scala.language.implicitConversions
 
@@ -17,6 +20,11 @@ sealed trait WeekDay extends UsesSelfOrdering[WeekDay]
 	  * @return A java counterpart to this week day
 	  */
 	def toJava: DayOfWeek
+	
+	/**
+	 * @return Characters, when appearing in a string in order, may represent this weekday
+	 */
+	protected def keyChars: String
 	
 	
 	// COMPUTED	------------------------
@@ -124,6 +132,31 @@ object WeekDay
 	// OTHER	------------------------
 	
 	/**
+	 * Finds a week day that best matches the specified string.
+	 * Supports multiple string formats.
+	 * E.g. Monday matches to all of (not exclusively): "mo", "md", "mon", "monday"
+	 * @param dayName A string that represents a week day name
+	 * @return Week day that best matched the specified name.
+	 *         None if none of the days matched, or if input was too ambiguous (e.g. for "day" or "u").
+	 */
+	def matching(dayName: String) = {
+		// Reduces the number of valid options by making sure all input characters appear in the weekday names
+		_values.filter { _.toString.containsCharsInOrder(dayName, ignoreCase = true) }.emptyOneOrMany.flatMap {
+			// Case: Only one valid option remains => Returns that one
+			case Left(only) => Some(only)
+			// Case: Multiple valid options remain
+			case Right(options) =>
+				// Prioritizes days that start with the specified string (E.g. Monday with "mo")
+				options.find { _.toString.startsWithIgnoreCase(dayName) }
+					.orElse {
+						// If no match was found, attempts to find an option using "key characters"
+						// E.g. Tuesday using "ts"
+						options.find { d => dayName.containsCharsInOrder(d.keyChars, ignoreCase = true) }
+					}
+		}
+	}
+	
+	/**
 	  * @param dayIndex Week day index where monday is 1 and sunday is 7
 	  * @return Weekday matching specified index
 	  */
@@ -158,43 +191,47 @@ object WeekDay
 	
 	object Monday extends WeekDay
 	{
+		override val toString = "Monday"
+		override protected val keyChars: String = "md"
 		override def toJava = DayOfWeek.MONDAY
-		override def toString = "Monday"
 	}
-	
 	object Tuesday extends WeekDay
 	{
+		override val toString = "Tuesday"
+		override protected val keyChars: String = "ts"
 		override def toJava = DayOfWeek.TUESDAY
-		override def toString = "Tuesday"
+		
 	}
-	
 	object Wednesday extends WeekDay
 	{
+		override val toString = "Wednesday"
+		override protected val keyChars: String = "wd"
 		override def toJava = DayOfWeek.WEDNESDAY
-		override def toString = "Wednesday"
 	}
 	
 	object Thursday extends WeekDay
 	{
+		override val toString = "Thursday"
+		override protected val keyChars: String = "th"
 		override def toJava = DayOfWeek.THURSDAY
-		override def toString = "Thursday"
 	}
-	
 	object Friday extends WeekDay
 	{
+		override val toString = "Friday"
+		override protected val keyChars: String = "fr"
 		override def toJava = DayOfWeek.FRIDAY
-		override def toString = "Friday"
 	}
-	
 	object Saturday extends WeekDay
 	{
+		override val toString = "Saturday"
+		override protected val keyChars: String = "st"
 		override def toJava = DayOfWeek.SATURDAY
-		override def toString = "Saturday"
 	}
 	
 	object Sunday extends WeekDay
 	{
+		override val toString = "Sunday"
+		override protected val keyChars: String = "sn"
 		override def toJava = DayOfWeek.SUNDAY
-		override def toString = "Sunday"
 	}
 }

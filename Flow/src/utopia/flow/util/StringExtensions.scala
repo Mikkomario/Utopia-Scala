@@ -3,7 +3,7 @@ package utopia.flow.util
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.equality.{EqualsExtensions, EqualsFunction}
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -138,6 +138,54 @@ object StringExtensions
 		  */
 		def containsMany(searched: String, minimumOccurrences: Int = 2) =
 			indexOfIterator(searched).existsCount(minimumOccurrences) { _ => true }
+		
+		/**
+		 * Checks whether this string contains all the same characters as the specified string.
+		 * This string may be longer, however, and the specified characters may appear in different order.
+		 *
+		 * In order for the characters to match, they must appear at least as many times as in the specified string.
+		 * E.g. "Apple" contains "pAle" but not "palle" or "pale" (if case-sensitive).
+		 *
+		 * @param string A string that may be contained within this string
+		 * @param ignoreCase Whether this checking should be case-insensitive (default = false)
+		 * @return Whether all characters of the specified string appear within this string at least that many times.
+		 */
+		def containsAllCharsFrom(string: IterableOnce[Char], ignoreCase: Boolean = false) = {
+			// An empty string may only contain another empty string
+			if (s.isEmpty)
+				string.iterator.isEmpty
+			else {
+				// Checks whether the specified string or character set is too large to be contained within this string
+				val otherSize = string.knownSize
+				if (otherSize < 0 || otherSize <= s.length) {
+					val iterableS: Iterable[Char] = s
+					val compare = if (ignoreCase) EqualsFunction.charCaseInsensitive else EqualsFunction.default
+					string.countAll.forall { case (char, count) => iterableS.existsCount(count) { compare(_, char) } }
+				}
+				else
+					false
+			}
+		}
+		/**
+		 * Checks whether all the specified characters appear within this string,
+		 * and do so in the correct order.
+		 * Case-sensitive.
+		 *
+		 * @param chars Characters to search from this string
+		 * @param ignoreCase Whether this checking should be case-insensitive (default = false)
+		 * @return True if this string contains all of the specified characters
+		 *         (at least as many times as specified in 'chars') in the same order as they are specified in 'chars'.
+		 *
+		 *         E.g. "Utopia Flow" contains "tolo" but not "u" (if case-sensitive) nor "loto".
+		 */
+		def containsCharsInOrder(chars: IterableOnce[Char], ignoreCase: Boolean = false) = {
+			val compare = if (ignoreCase) EqualsFunction.charCaseInsensitive else EqualsFunction.default
+			var startIndex = 0
+			chars.iterator.forall { char =>
+				startIndex = s.indexWhere(compare(_, char), startIndex) + 1
+				startIndex > 0
+			}
+		}
 		
 		/**
 		 * @param prefix A prefix

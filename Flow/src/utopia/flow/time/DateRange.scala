@@ -1,16 +1,16 @@
 package utopia.flow.time
 
-import TimeExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.IterableHasEnds
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, IterableHasEnds}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.LocalDateType
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.DateRange.dateFormat
+import utopia.flow.time.TimeExtensions._
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -35,6 +35,11 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 		else
 			apply(first, last - 1)
 	}
+	/**
+	 * @param dates Dates to convert into a date range
+	 * @return A date range containing all of the specified dates
+	 */
+	def apply(dates: HasInclusiveEnds[LocalDate]) = inclusive(dates.start, dates.end)
 	
 	/**
 	  * Creates a new date range that doesn't include the end date
@@ -170,8 +175,7 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	  * @param daysAdvance Number of days to advance from the start of this range
 	  * @return A date along this range
 	  */
-	def apply(daysAdvance: Int) =
-	{
+	def apply(daysAdvance: Int) = {
 		// Checks the direction of advance
 		if (end >= start)
 			start + daysAdvance
@@ -185,14 +189,12 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	  */
 	def overlapsWith(other: DateRange) = other.headOption.exists(contains) ||
 		other.lastOption.exists(contains) || headOption.exists(other.contains)
-	
 	/**
 	  * @param other Another date range
 	  * @return The overlapping portion between these two ranges. None if there is no overlap. The resulting range is
 	  *         always chronological (start < end)
 	  */
-	def overlapWith(other: DateRange) =
-	{
+	def overlapWith(other: DateRange) = {
 		val r1 = chronological
 		val r2 = other.chronological
 		

@@ -359,6 +359,29 @@ object CollectionExtensions
 		  */
 		def caching = CachingSeq.from(i)
 		
+		/**
+		 * Counts how many times each item appears within this collection.
+		 * @return A map where the keys are the unique items in this collection and the values
+		 *         are the numbers of times they appear within this collection.
+		 *
+		 *         The resulting map has a default value of 0.
+		 */
+		def countAll: Map[A, Int] = {
+			val iter = i.iterator
+			if (iter.hasNext) {
+				val buffer = mutable.Map[A, Int]()
+				iter.foreach { a =>
+					buffer.updateWith(a) {
+						case Some(c) => Some(c + 1)
+						case None => Some(1)
+					}
+				}
+				buffer.toMap.withDefaultValue(0)
+			}
+			else
+				Map.empty.withDefaultValue(0)
+		}
+		
 		
 		// OTHER    --------------------------
 		
