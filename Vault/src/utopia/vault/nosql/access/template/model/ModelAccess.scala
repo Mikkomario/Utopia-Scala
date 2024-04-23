@@ -21,10 +21,16 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	// ABSTRACT	-------------------------
 	
 	/**
+	  * @return Ordering to use when no other ordering has been specified.
+	  */
+	protected def defaultOrdering: Option[OrderBy]
+	
+	/**
 	  * Reads the value / values of an individual column
 	  * @param column              Column to read
 	  * @param additionalCondition Additional search condition to apply (optional)
-	  * @param order               Ordering to use (optional)
+	  * @param order               Ordering to use (optional).
+	  *                            If omitted, uses this access point's default ordering, if one has been defined.
 	  * @param joins Joins to apply (to use in search) (default = empty)
 	  * @param joinType Join type to use in joins (default = Inner)
 	  * @param connection          DB Connection (implicit)
@@ -41,7 +47,8 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  * Reads the value of an individual column
 	  * @param column     Column to read
 	  * @param condition  Search condition to apply (will be added to the global condition)
-	  * @param order      Ordering to use (optional)
+	  * @param order      Ordering to use (optional).
+	  *                   If omitted, uses this access point's default ordering, if one has been defined.
 	  * @param joins Joins to apply (to use in search) (default = empty)
 	  * @param joinType Join type to use in joins (default = Inner)
 	  * @param connection DB Connection (implicit)
@@ -55,12 +62,14 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  * Reads the value of an individual attribute / column
 	  * @param attributeName Name of the attribute to read
 	  * @param condition     Search condition to apply (will be added to the global condition)
-	  * @param order         Ordering to use (optional)
+	  * @param order         Ordering to use (optional).
+	  *                      If omitted, uses this access point's default ordering, if one has been defined.
 	  * @param joins Joins to apply (to use in search) (default = empty)
 	  * @param joinType Join type to use in joins (default = Inner)
 	  * @param connection    DB Connection (implicit)
 	  * @return Value of that attribute (may be empty)
 	  */
+	// TODO: Rename to findProperty
 	def findAttribute(attributeName: String, condition: Condition, order: Option[OrderBy],
 	                  joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
 	                 (implicit connection: Connection) =

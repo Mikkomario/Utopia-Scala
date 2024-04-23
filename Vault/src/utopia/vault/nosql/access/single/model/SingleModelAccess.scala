@@ -20,20 +20,29 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 {
 	// IMPLEMENTED  -------------------------------
 	
+	/**
+	  * @return Ordering used by default, which also determines which of the items will be returned,
+	  *         in case there are many available.
+	  *         By default, uses the defaultOrdering specified in the factory used.
+	  *         May be overridden by subclasses.
+	  */
+	override protected def defaultOrdering = factory.defaultOrdering
+	
 	override protected def read(condition: Option[Condition], order: Option[OrderBy], joins: Seq[Joinable],
 	                            joinType: JoinType)
 	                           (implicit connection: Connection) =
 	{
+		val appliedOrdering = order.orElse(defaultOrdering)
 		condition match {
-			case Some(condition) => factory.find(condition, order, joins, joinType)
+			case Some(condition) => factory.find(condition, appliedOrdering, joins, joinType)
 			case None =>
 				factory match {
 					case rowFactory: FromRowFactory[A] =>
-						order match {
+						appliedOrdering match {
 							case Some(order) => rowFactory.firstUsing(order)
 							case None => rowFactory.any
 						}
-					case _ => factory.getAll(order).headOption // This is not recommended
+					case _ => factory.getAll(appliedOrdering).headOption // This is not recommended
 				}
 		}
 	}
@@ -45,7 +54,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	{
 		// Forms the query first
 		val statement = Select(joins.foldLeft(factory.target) { _.join(_, joinType) }, column) +
-			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(factory.defaultOrdering) + Limit(1)
+			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering) + Limit(1)
 		// Applies the query and parses results
 		connection(statement).firstValue
 	}

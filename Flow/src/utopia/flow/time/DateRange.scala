@@ -29,7 +29,7 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 	  * @param last The last day to include
 	  * @return A new date range that includes both dates
 	  */
-	def inclusive(first: LocalDate, last: LocalDate) = {
+	def inclusive(first: LocalDate, last: LocalDate): DateRange = {
 		if (last >= first)
 			apply(first, last + 1)
 		else
@@ -39,7 +39,7 @@ object DateRange extends FromModelFactoryWithSchema[DateRange]
 	 * @param dates Dates to convert into a date range
 	 * @return A date range containing all of the specified dates
 	 */
-	def apply(dates: HasInclusiveEnds[LocalDate]) = inclusive(dates.start, dates.end)
+	def apply(dates: HasInclusiveEnds[LocalDate]): DateRange = inclusive(dates.start, dates.end)
 	
 	/**
 	  * Creates a new date range that doesn't include the end date

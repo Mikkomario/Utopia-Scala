@@ -4,9 +4,21 @@ import scala.language.implicitConversions
 
 object DbPropertyDeclaration
 {
+	// IMPLICIT -----------------------------
+	
 	// Provides implicit access to both values
 	implicit def autoAccessName(d: DbPropertyDeclaration): String = d.name
 	implicit def autoAccessColumn(d: DbPropertyDeclaration): Column = d.column
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * @param table Table which contains this property
+	  * @param propName Name of this property
+	  * @return Wrapper for the property name as well as the matching table column
+	  */
+	def from(table: Table, propName: String) = apply(propName, table(propName))
 }
 
 /**

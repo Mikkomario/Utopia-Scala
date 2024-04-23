@@ -29,12 +29,15 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	
 	// IMPLEMENTED  ----------------------------
 	
+	override protected def defaultOrdering = factory.defaultOrdering
+	
 	override protected def read(condition: Option[Condition], order: Option[OrderBy], joins: Seq[Joinable],
 	                            joinType: JoinType)(implicit connection: Connection) =
 	{
+		val appliedOrdering = order.orElse(defaultOrdering)
 		condition match {
-			case Some(condition) => factory.findMany(condition, order, joins, joinType)
-			case None => factory.getAll(order)
+			case Some(condition) => factory.findMany(condition, appliedOrdering, joins, joinType)
+			case None => factory.getAll(appliedOrdering)
 		}
 	}
 	
@@ -44,7 +47,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	{
 		// Forms the query first
 		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
-			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(factory.defaultOrdering)
+			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering)
 		// Applies the query and parses results
 		connection(statement).rowValues
 	}

@@ -5,6 +5,7 @@ import utopia.ambassador.database.model.process.AuthPreparationModel
 import utopia.ambassador.model.partial.process.AuthPreparationData
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.flow.generic.model.immutable.Model
+import utopia.vault.model.immutable.DbPropertyDeclaration
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
@@ -18,13 +19,17 @@ object AuthPreparationFactory
 	extends FromValidatedRowModelFactory[AuthPreparation] with FromRowFactoryWithTimestamps[AuthPreparation] 
 		with Deprecatable
 {
+	// COMPUTED ------------------------
+	
+	private def model = AuthPreparationModel
+	
+	
 	// IMPLEMENTED	--------------------
 	
-	override def creationTimePropertyName = "created"
-	
-	override def nonDeprecatedCondition = AuthPreparationModel.nonDeprecatedCondition
-	
 	override def table = AmbassadorTables.authPreparation
+	
+	override def timestamp: DbPropertyDeclaration = model.created
+	override def nonDeprecatedCondition = model.nonDeprecatedCondition
 	
 	override def fromValidatedModel(valid: Model) =
 		AuthPreparation(valid("id").getInt, AuthPreparationData(valid("userId").getInt, 

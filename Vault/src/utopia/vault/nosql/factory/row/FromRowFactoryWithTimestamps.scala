@@ -4,9 +4,11 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator
 import utopia.vault.model.enumeration.ComparisonOperator.{Larger, LargerOrEqual, Smaller, SmallerOrEqual}
+import utopia.vault.model.immutable.DbPropertyDeclaration
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, JoinType, OrderBy}
+import utopia.vault.sql.OrderDirection.Descending
+import utopia.vault.sql.{Condition, JoinType, OrderBy, OrderDirection}
 
 import java.time.Instant
 
@@ -20,30 +22,43 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	// ABSTRACT	------------------------
 	
 	/**
-	  * @return Name of the property that represents item creation time
+	  * @return Declaration for the timestamp property
 	  */
-	def creationTimePropertyName: String
+	def timestamp: DbPropertyDeclaration
 	
 	
 	// COMPUTED	-------------------------
 	
 	/**
+	  * @return Name of the property that represents item creation time
+	  */
+	@deprecated("Please use .timestamp.name instead", "v1.19")
+	def creationTimePropertyName: String = timestamp.name
+	/**
 	  * @return Column that specifies row creation time
 	  */
-	def creationTimeColumn = column(creationTimePropertyName)
+	@deprecated("Please use .timestamp.column instead", "v1.19")
+	def creationTimeColumn = timestamp.column
 	/**
 	  * @return Ordering that uses row creation time (descending)
 	  */
-	def creationTimeOrdering = OrderBy.descending(creationTimeColumn)
+	@deprecated("Renamed to timestampOrdering", "v1.19")
+	def creationTimeOrdering = timestampOrdering
+	
+	/**
+	  * @return A descending timestamp-based ordering.
+	  *         I.e. an ordering that returns items from the latest to the earliest.
+	  */
+	def timestampOrdering = directionalTimestampOrdering(Descending)
 	
 	/**
 	  * @return The latest recorded item
 	  */
-	def latest(implicit connection: Connection) = maxBy(creationTimeColumn)
+	def latest(implicit connection: Connection) = maxBy(timestamp.column)
 	/**
 	  * @return The earliest recorded item
 	  */
-	def earliest(implicit connection: Connection) = minBy(creationTimeColumn)
+	def earliest(implicit connection: Connection) = minBy(timestamp.column)
 	
 	
 	// IMPLEMENTED	---------------------
@@ -51,10 +66,16 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	/**
 	  * @return Default ordering used by this factory (by default returns first the latest items)
 	  */
-	override def defaultOrdering = Some(OrderBy.descending(creationTimeColumn))
+	override def defaultOrdering: Option[OrderBy] = Some(timestampOrdering)
 	
 	
 	// OTHER	-------------------------
+	
+	/**
+	  * @param direction Desired ordering direction
+	  * @return A row timestamp -based ordering with the specified ordering direction
+	  */
+	def directionalTimestampOrdering(direction: OrderDirection) = OrderBy(timestamp, direction)
 	
 	/**
 	  * @param where      A search condition
@@ -65,7 +86,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  */
 	def findLatest(where: Condition, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
-		findMaxBy(creationTimeColumn, where, joins, joinType)
+		findMaxBy(timestamp.column, where, joins, joinType)
 	/**
 	  * @param where      A search condition
 	  * @param joins Joins to apply (default = empty)
@@ -75,7 +96,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  */
 	def findEarliest(where: Condition, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
 	                (implicit connection: Connection) =
-		findMinBy(creationTimeColumn, where, joins, joinType)
+		findMinBy(timestamp.column, where, joins, joinType)
 	
 	/**
 	  * Takes latest n items from the database
@@ -84,7 +105,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  * @return Latest 'maxNumberOfItems' items from database
 	  */
 	def takeLatest(maxNumberOfItems: Int)(implicit connection: Connection) =
-		take(maxNumberOfItems, creationTimeOrdering)
+		take(maxNumberOfItems, directionalTimestampOrdering(Descending))
 	
 	/**
 	  * Finds a specific number of latest items that satisfy specified search condition
@@ -94,7 +115,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  * @return Latest 'maxNumberOfItems' items that satisfy specified condition
 	  */
 	def takeLatestWhere(condition: Condition, maxNumberOfItems: Int)(implicit connection: Connection) =
-		take(maxNumberOfItems, creationTimeOrdering, Some(condition))
+		take(maxNumberOfItems, directionalTimestampOrdering(Descending), Some(condition))
 	
 	/**
 	  * @param threshold Time threshold
@@ -102,30 +123,27 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	  * @return A condition that accepts rows based on specified threshold and operator
 	  */
 	def creationCondition(threshold: Instant, operator: ComparisonOperator) =
-		creationTimeColumn.makeCondition(operator, threshold)
-	
+		timestamp.column.makeCondition(operator, threshold)
 	/**
 	  * @param threshold   Time threshold
 	  * @param isInclusive Whether the threshold should be included in return values (default = false)
 	  * @return A condition that accepts rows that were created before the specified time threshold
 	  */
-	def createdBeforeCondition(threshold: Instant, isInclusive: Boolean = false) = creationCondition(threshold,
-		if (isInclusive) SmallerOrEqual else Smaller)
-	
+	def createdBeforeCondition(threshold: Instant, isInclusive: Boolean = false) =
+		creationCondition(threshold, if (isInclusive) SmallerOrEqual else Smaller)
 	/**
 	  * @param threshold   Time threshold
 	  * @param isInclusive Whether the threshold should be included in return values (default = false)
 	  * @return A condition that accepts rows that were created after the specified time threshold
 	  */
-	def createdAfterCondition(threshold: Instant, isInclusive: Boolean = false) = creationCondition(threshold,
-		if (isInclusive) LargerOrEqual else Larger)
-	
+	def createdAfterCondition(threshold: Instant, isInclusive: Boolean = false) =
+		creationCondition(threshold, if (isInclusive) LargerOrEqual else Larger)
 	/**
 	  * @param start Minimum creation time
 	  * @param end   Maximum creation time
 	  * @return A condition that accepts items that were created between 'start' and 'end'
 	  */
-	def createdBetweenCondition(start: Instant, end: Instant) = creationTimeColumn.isBetween(start, end)
+	def createdBetweenCondition(start: Instant, end: Instant) = timestamp.isBetween(start, end)
 	
 	/**
 	  * @param threshold           Time threshold
@@ -138,7 +156,7 @@ trait FromRowFactoryWithTimestamps[+A] extends FromRowFactory[A]
 	                  additionalCondition: Option[Condition] = None)(implicit connection: Connection) =
 	{
 		val condition = createdBeforeCondition(threshold, isInclusive) && additionalCondition
-		take(maxNumberOfItems, creationTimeOrdering, Some(condition))
+		take(maxNumberOfItems, directionalTimestampOrdering(Descending), Some(condition))
 	}
 	
 	/**

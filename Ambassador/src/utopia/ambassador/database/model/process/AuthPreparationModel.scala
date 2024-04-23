@@ -6,7 +6,7 @@ import utopia.ambassador.model.partial.process.AuthPreparationData
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.model.immutable.{DbPropertyDeclaration, StorableWithFactory}
 import utopia.vault.nosql.storable.DataInserter
 import utopia.vault.nosql.storable.deprecation.Expiring
 
@@ -19,6 +19,11 @@ object AuthPreparationModel
 	extends DataInserter[AuthPreparationModel, AuthPreparation, AuthPreparationData] with Expiring
 {
 	// ATTRIBUTES	--------------------
+	
+	/**
+	  * Property that contains preparation creation time
+	  */
+	lazy val created = DbPropertyDeclaration.from(table, "created")
 	
 	/**
 	  * Name of the property that contains AuthPreparation userId
@@ -36,15 +41,17 @@ object AuthPreparationModel
 	  * Name of the property that contains client-specified states
 	  */
 	val clientStateAttName = "clientState"
-	/**
-	  * Name of the property that contains AuthPreparation created
-	  */
-	val createdAttName = "created"
 	
 	override val deprecationAttName = "expires"
 	
 	
 	// COMPUTED	--------------------
+	
+	/**
+	  * Name of the property that contains AuthPreparation created
+	  */
+	@deprecated("Please use created.name instead", "v2.1.7")
+	def createdAttName = created.name
 	
 	/**
 	  * Column that contains AuthPreparation userId
@@ -65,7 +72,8 @@ object AuthPreparationModel
 	/**
 	  * Column that contains AuthPreparation created
 	  */
-	def createdColumn = table(createdAttName)
+	@deprecated("Please use created.column instead", "v2.1.7")
+	def createdColumn = created.column
 	
 	/**
 	  * The factory object used by this model type
@@ -137,11 +145,10 @@ case class AuthPreparationModel(id: Option[Int] = None, userId: Option[Int] = No
 	
 	override def factory = AuthPreparationModel.factory
 	
-	override def valueProperties = 
-	{
-		import AuthPreparationModel._
-		Vector("id" -> id, userIdAttName -> userId, tokenAttName -> token, expiresAttName -> expires, 
-			createdAttName -> created)
+	override def valueProperties = {
+		val p = AuthPreparationModel
+		Vector("id" -> id, p.userIdAttName -> userId, p.tokenAttName -> token, p.expiresAttName -> expires,
+			p.created.name -> created)
 	}
 	
 	

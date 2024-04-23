@@ -23,7 +23,7 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 * @param connection Implicit database connection
 	 * @return The unique item accessed through this access point. None if no item was found.
 	 */
-	def pull(implicit connection: Connection) = read(accessCondition, factory.defaultOrdering)
+	def pull(implicit connection: Connection) = read(accessCondition)
 	
 	
 	// OTHER    -----------------------------
@@ -36,12 +36,13 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	 * @return All accessible values of that column. May contain empty values.
 	 */
 	def pullColumn(column: Column, joins: Joinable*)(implicit connection: Connection) =
-		readColumn(column, order = factory.defaultOrdering, joins = joins)
+		readColumn(column, joins = joins)
 	/**
 	 * Reads all accessible values of a column / attribute
 	 * @param attributeName Name of the targeted attribute
 	 * @param connection DB Connection (implicit)
 	 * @return All accessible values of that column / attribute. May contain empty values.
 	 */
+	// TODO: Rename to pullProperty
 	def pullAttribute(attributeName: String)(implicit connection: Connection) = pullColumn(table(attributeName))
 }
