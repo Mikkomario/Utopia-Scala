@@ -14,6 +14,7 @@
 ### Deprecations
 - Deprecated **ModelValidationResult** (now replaced with **Try**)
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
+- Renamed `.filterWithPaths(...)` in TreeLike to `.pathsToRootsWhere(...)` because the term "filter" is misleading
 ### Bugfixes
 - **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
   The new implementation works the same way, regardless of compared collection type 
@@ -25,10 +26,13 @@
 - Added **FromCollectionFactory** trait
 - Added **ZipBuilder** class
 - Added **PairOrVectorBuilder** class
+- Added **OpenEnumeration** and **OpenEnumerationValue** in order to facilitate the creation of cross-module enumerations
 ### New methods
 - **Changing**
   - Added `.viewWhile(FlagLike)`
   - Added `.onceFixedAt(...)`
+- **FileEditor**
+  - Added `.nextLineIterator`
 - **Fixed** (object)
   - Added `.never` which is an alias for `Fixed(None)`
 - **FlagLike**
@@ -39,8 +43,12 @@
   - Added `.mapResult(...)`
 - **ResettableFlag**
   - Added `.switch()`
+- **Seq** (**CollectionExtensions**)
+  - Added `.appendAllIfDistinct(...)`
 - **String** (**StringExtensions**)
   - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
+- **TreeLike**
+  - Added `.rootsWhereIterator(...)`, `.rootsBelowWhereIterator(...)` and `.pathsToRootsWhereIterator(...)`
 - **WeekDay** (object)
   - Added `.matching(String)`
 ### Other changes
@@ -65,6 +73,7 @@
   - Previously the value would still reflect the updated value when called directly
   - Also, now `.destiny` correctly changes when mirror condition seals to false
 - **XmlElement**`.toString` now yields XML instead of JSON.
+- **Regex** now extends **MayBeEmpty**
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**

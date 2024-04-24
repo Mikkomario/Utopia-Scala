@@ -2,6 +2,7 @@ package utopia.flow.parse.string
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -174,7 +175,7 @@ object Regex
   * @since 1.5.2019, v1+
   * @param string A regular expression
   */
-case class Regex(string: String)
+case class Regex(string: String) extends MaybeEmpty[Regex]
 {
 	// ATTRIBUTES	----------------
 	
@@ -207,10 +208,6 @@ case class Regex(string: String)
 			Regex(s"[^$string]")
 	}
 	
-	/**
-	  * @return Whether this regex is empty
-	  */
-	def isEmpty = string.isEmpty
 	/**
 	  * @return Whether this regex is defined (non-empty)
 	  */
@@ -271,6 +268,10 @@ case class Regex(string: String)
 	
 	
 	// IMPLEMENTED	----------------
+	
+	override def self: Regex = this
+	
+	override def isEmpty = string.isEmpty
 	
 	override def toString = string
 	

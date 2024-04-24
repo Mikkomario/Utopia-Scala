@@ -320,6 +320,31 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	def containsNav(nav: A): Boolean = (this.nav ~== nav) || navsBelowIterator.exists { _ ~== nav }
 	
 	/**
+	 * @param filter A filter/search function
+	 * @return An iterator that returns all top level nodes which satisfy the specified filter.
+	 *         Top level means that children of the returned nodes are not included separately.
+	 *        If this node satisfies the specified predicate, returns this node only.
+	 */
+	def rootsWhereIterator(filter: Repr => Boolean) =
+		if (filter(self)) Iterator.single(self) else rootsBelowWhereIterator(filter)
+	/**
+	 * @param filter A filter/search function
+	 * @return An iterator that returns all top level nodes which satisfy the specified filter.
+	 *         Top level means that children of the returned nodes are not included separately.
+	 *         Will never include this node.
+	 */
+	def rootsBelowWhereIterator(filter: Repr => Boolean): Iterator[Repr] = {
+		children.iterator.flatMap { n =>
+			// Case: The child matches the filter function => Accepts it and won't go deeper
+			if (filter(n))
+				Some(n)
+			// Case: Child not accepted => Checks whether any node below is
+			else
+				n.rootsBelowWhereIterator(filter)
+		}
+	}
+	
+	/**
 	  * Finds the first child node from this entire tree that matches the specified condition.
 	  * Returns the path to that node.
 	  * @param filter A search condition
@@ -336,6 +361,27 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 			children.findMap { _.findWithPath(filter) }.map { self +: _ }
 	}
 	/**
+	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
+	 * specified filter. Includes the "path" to all of the selected nodes as well.
+	 * If a node is selected, it's children are not tested anymore.
+	 * @param filter A filter function
+	 * @return Returns paths to all of the nodes that satisfy the specified filter function.
+	 *         Every path will start with this node and end with the node that fulfilled the specified function.
+	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
+	 *         The result is lazily computed and cached.
+	 */
+	def pathsToRootsWhereIterator(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }
+	/**
+	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
+	 * specified filter. Includes the "path" to all of the selected nodes as well.
+	 * If a node is selected, it's children are not tested anymore.
+	 * @param filter A filter function
+	 * @return An iterator that returns paths to all of the nodes that satisfy the specified filter function.
+	 *         Every path will start with this node and end with the node that fulfilled the specified function.
+	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
+	 */
+	def pathsToRootsWhere(filter: Repr => Boolean) = pathsToRootsWhereIterator(filter).caching
+	/**
 	  * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
 	  * specified filter. Includes the "path" to all of the selected nodes as well.
 	  * If a node is selected, it's children are not tested anymore.
@@ -345,7 +391,8 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         If this node fulfills the specified function, returns a single path consisting only of this node.
 	  *         The result is lazily computed and cached.
 	  */
-	def filterWithPaths(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }.caching
+	@deprecated("Please use .pathsToRootsWhere(...) instead, as the term filter is ambiguous in this setting", "v2.4")
+	def filterWithPaths(filter: Repr => Boolean) = pathsToRootsWhere(filter)
 	private def _filterWithPaths(filter: Repr => Boolean): Iterator[VectorBuilder[Repr @uncheckedVariance]] = {
 		// Case: This node represents a search result => Starts a new branch to it
 		if (filter(self)) {

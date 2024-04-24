@@ -1,6 +1,6 @@
 package utopia.flow.parse.file
 
-import utopia.flow.collection.mutable.iterator.PollingIterator
+import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollingIterator}
 
 import java.io.PrintWriter
 
@@ -12,6 +12,8 @@ import java.io.PrintWriter
  */
 class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWriter)
 {
+	// COMPUTED ----------------------
+	
 	/**
 	 * @return Whether current line is available (end of file hasn't yet been reached)
 	 */
@@ -32,6 +34,15 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	def currentLineOption = sourceLinesIterator.pollOption
 	
 	/**
+	 * @return An iterator that continually reads and returns the next line.
+	 *         Whenever next() is called on that iterator, the current line is set to that returned by the call.
+	 */
+	def nextLineIterator = OptionsIterator.continually { nextLineOption() }
+	
+	
+	// OTHER    ---------------------
+	
+	/**
 	 * Moves to the next line in the source document
 	 */
 	@throws[NoSuchElementException]("If end of file has been reached")
@@ -41,12 +52,10 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * returns false instead of throwing
 	 * @return False if trying to move to the next line after the end of the file
 	 */
-	def tryMoveToNextLine() =
-	{
+	def tryMoveToNextLine() = {
 		if (isEndOfFile)
 			false
-		else
-		{
+		else {
 			moveToNextLine()
 			true
 		}
@@ -57,10 +66,8 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * @param skipCondition A condition for moving forward
 	 * @return Whether there remains lines to target (end of file not reached)
 	 */
-	def moveToNextLineWhile(skipCondition: String => Boolean) =
-	{
-		while (hasCurrent && skipCondition(currentLine))
-		{
+	def moveToNextLineWhile(skipCondition: String => Boolean) = {
+		while (hasCurrent && skipCondition(currentLine)) {
 			moveToNextLine()
 		}
 		hasCurrent
@@ -78,8 +85,7 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * @return Line where this editor arrived at
 	 */
 	@throws[NoSuchElementException]("If there was no next line available")
-	def nextLine() =
-	{
+	def nextLine() = {
 		moveToNextLine()
 		currentLine
 	}
@@ -87,8 +93,7 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * Moves to the next line and returns it, if possible
 	 * @return Line where this editor arrived at. None if end of the file was reached.
 	 */
-	def nextLineOption() =
-	{
+	def nextLineOption() = {
 		if (tryMoveToNextLine())
 			currentLineOption
 		else
@@ -99,8 +104,7 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * @param condition A line search condition
 	 * @return Line that fulfilled that condition (current line). None if end of file was reached.
 	 */
-	def nextLineWhere(condition: String => Boolean) =
-	{
+	def nextLineWhere(condition: String => Boolean) = {
 		if (moveToNextLineWhile { !condition(_) })
 			Some(currentLine)
 		else
@@ -112,8 +116,7 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * @param newLine Line that will overwrite the current line
 	 */
 	@throws[NoSuchElementException]("If at the end of file")
-	def overwrite(newLine: String) =
-	{
+	def overwrite(newLine: String) = {
 		sourceLinesIterator.next()
 		writer.println(newLine)
 	}
@@ -122,8 +125,7 @@ class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWrit
 	 * @param newLines Lines that will replace the current line
 	 */
 	@throws[NoSuchElementException]("If at the end of file")
-	def overwriteWith(newLines: IterableOnce[String]) =
-	{
+	def overwriteWith(newLines: IterableOnce[String]) = {
 		sourceLinesIterator.next()
 		newLines.iterator.foreach(writer.println)
 	}

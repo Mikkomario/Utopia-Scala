@@ -1105,6 +1105,28 @@ object CollectionExtensions
 			else
 				buildFrom.fromSpecific(coll)(ops :+ item)
 		}
+		/**
+		 * Appends 0-n items to this collection, but only those which don't already appear in this collection
+		 * @param items Items to append, if distinct
+		 * @param buildFrom Implicit build-from
+		 * @tparam B type of items in the resulting collection
+		 * @tparam That Type of the resulting collection
+		 * @return Copy of this collection where all elements from 'items', which don't yet appear in this collection,
+		 *         have been appended.
+		 */
+		def appendAllIfDistinct[B >: seq.A, That](items: IterableOnce[B])
+		                                         (implicit buildFrom: BuildFrom[Repr, B, That]): That =
+		{
+			val iter = items.iterator
+			if (iter.hasNext) {
+				val builder = buildFrom.newBuilder(coll)
+				val ops = seq(coll)
+				builder ++= iter.filterNot(ops.contains)
+				builder.result()
+			}
+			else
+				buildFrom.fromSpecific(coll)(seq(coll))
+		}
 		
 		/**
 		  * Maps a single item in this sequence
