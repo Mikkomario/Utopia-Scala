@@ -1,11 +1,17 @@
 # Utopia Vault - List of Changes
 
-## v1.18.1 (in development)
+## v1.19 (in development)
 Supports **Flow v2.4**
+### Breaking changes
+- **LatestModelAccess** now extends **FilterableView**
+- `.earliest` in **SingleChronoRowModelAccess** now returns an access point, not the pulled item
+### Deprecations
+- Deprecated **FromRowFactoryWithTimestamps** in favor of the new version: **FromTimelineRowFactory**
 ### New features
 - Added **VaultContext** and **VaultContextWrapper** traits in order to facilitate Vault-based library creation
 - Added **FromIdFactory** and **HasId** traits
-- Added **StorableFactory** trait which facilitates access to database-properties
+- Added **StorableFactory** trait which uses the new **DbPropertyDeclaration** class and 
+  facilitates access to database-properties
 
 ## v1.18 - 22.01.2024
 This update focuses on improving grouped (i.e. multi-joined) result parsing.

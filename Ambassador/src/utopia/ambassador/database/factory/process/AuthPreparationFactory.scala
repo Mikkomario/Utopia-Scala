@@ -6,7 +6,7 @@ import utopia.ambassador.model.partial.process.AuthPreparationData
 import utopia.ambassador.model.stored.process.AuthPreparation
 import utopia.flow.generic.model.immutable.Model
 import utopia.vault.model.immutable.DbPropertyDeclaration
-import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
+import utopia.vault.nosql.factory.row.FromTimelineRowFactory
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.nosql.template.Deprecatable
 
@@ -16,7 +16,7 @@ import utopia.vault.nosql.template.Deprecatable
   * @since 2021-10-26
   */
 object AuthPreparationFactory 
-	extends FromValidatedRowModelFactory[AuthPreparation] with FromRowFactoryWithTimestamps[AuthPreparation] 
+	extends FromValidatedRowModelFactory[AuthPreparation] with FromTimelineRowFactory[AuthPreparation]
 		with Deprecatable
 {
 	// COMPUTED ------------------------

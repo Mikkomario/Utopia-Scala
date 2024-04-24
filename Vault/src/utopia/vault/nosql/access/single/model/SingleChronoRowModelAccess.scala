@@ -1,7 +1,5 @@
 package utopia.vault.nosql.access.single.model
 
-import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.distinct.LatestModelAccess
 import utopia.vault.nosql.view.ChronoRowFactoryView
 
 /**
@@ -12,15 +10,3 @@ import utopia.vault.nosql.view.ChronoRowFactoryView
   * @tparam Sub Type of the filtered copy of this view
   */
 trait SingleChronoRowModelAccess[+A, +Sub] extends SingleRowModelAccess[A] with ChronoRowFactoryView[A, Sub]
-{
-	/**
-	  * @return A copy of this access point that only targets the latest item
-	  */
-	def latest = LatestModelAccess[A](factory, accessCondition)
-	
-	/**
-	  * @param connection Implicit DB Connection
-	  * @return The earliest accessible item
-	  */
-	def earliest(implicit connection: Connection) = minBy(factory.creationTimeColumn)
-}

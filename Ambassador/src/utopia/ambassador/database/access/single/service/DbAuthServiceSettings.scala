@@ -7,6 +7,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.single.model.distinct.LatestModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView}
+import utopia.vault.sql.Condition
 
 /**
   * Used for accessing individual AuthServiceSettings
@@ -46,11 +47,22 @@ object DbAuthServiceSettings
 	
 	// NESTED   --------------------
 	
-	class DbSettingsForAuthService(serviceId: Int)
+	class DbSettingsForAuthService(serviceId: Int, additionalCondition: Option[Condition] = None)
 		extends UniqueAuthServiceSettingsAccess with LatestModelAccess[AuthServiceSettings] with SubView
 	{
+		override protected def self = this
+		
 		override protected def parent = DbAuthServiceSettings
-		override def filterCondition = this.model.withServiceId(serviceId).toCondition
+		override def filterCondition =
+			this.model.withServiceId(serviceId).toCondition && additionalCondition
+		
+		override def filter(additionalCondition: Condition) = {
+			val newCondition = this.additionalCondition match {
+				case Some(prev) => prev && additionalCondition
+				case None => additionalCondition
+			}
+			new DbSettingsForAuthService(serviceId, Some(newCondition))
+		}
 	}
 }
 
