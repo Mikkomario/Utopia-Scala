@@ -653,8 +653,7 @@ object FileExtensions
 		  * @param conflictResolve How file overlap conflicts should be handled. Default = Overwrite the old file.
 		  * @return Link to the target path. Failure if file moving failed or if couldn't replace an existing file
 		  */
-		def copyAs(targetPath: Path, conflictResolve: FileConflictResolution = Overwrite) =
-		{
+		def copyAs(targetPath: Path, conflictResolve: FileConflictResolution = Overwrite) = {
 			// May not need to perform any copy
 			if (targetPath == p)
 				Success(p)
