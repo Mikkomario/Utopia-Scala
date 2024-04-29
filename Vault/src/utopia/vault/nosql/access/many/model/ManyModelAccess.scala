@@ -80,11 +80,8 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	  * @param con Implicit DB Connection
 	  * @return A map that contains all read key-value pairs (as values)
 	  */
-	def pullColumnMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
-		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
-			accessCondition.map { Where(_) }
-		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
-	}
+	def pullColumnMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) =
+		readColumnMap(keyColumn, valueColumn, None, joins)
 	/**
 	  * Pulls a column-to-columns map based on the accessible items
 	  * @param keyColumn Column used as map keys
@@ -93,9 +90,49 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	  * @param con Implicit DB Connection
 	  * @return A map that contains all read values grouped by keys (as values)
 	  */
-	def pullColumnMultiMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) = {
+	def pullColumnMultiMap(keyColumn: Column, valueColumn: Column, joins: Joinable*)(implicit con: Connection) =
+		readColumnMultiMap(keyColumn, valueColumn, None, joins)
+	
+	/**
+	  * Finds a column-to-column map based on a subset of the accessible items
+	  * @param keyColumn Column used as map keys (should contain unique values)
+	  * @param valueColumn Column used as map values
+	  * @param condition Search / filter condition to apply
+	  * @param joins Joins to apply (optional)
+	  * @param con Implicit DB Connection
+	  * @return A map that contains all read key-value pairs (as values)
+	  * @see [[pullColumnMap]]
+	  */
+	def findColumnMap(keyColumn: Column, valueColumn: Column, condition: Condition, joins: Joinable*)
+	                 (implicit con: Connection) =
+		readColumnMap(keyColumn, valueColumn, Some(condition), joins)
+	/**
+	  * Finds a column-to-columns map based on a subset of the accessible items
+	  * @param keyColumn Column used as map keys
+	  * @param valueColumn Column used as individual values
+	  * @param condition A search condition to apply
+	  * @param joins Joins to apply (optional)
+	  * @param con Implicit DB Connection
+	  * @return A map that contains all read values grouped by keys (as values)
+	  */
+	def findColumnMultiMap(keyColumn: Column, valueColumn: Column, condition: Condition, joins: Joinable*)
+	                      (implicit con: Connection) =
+		readColumnMultiMap(keyColumn, valueColumn, Some(condition), joins)
+	
+	private def readColumnMap(keyColumn: Column, valueColumn: Column, condition: Option[Condition],
+	                          joins: Iterable[Joinable])
+	                 (implicit con: Connection) =
+	{
 		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
-			accessCondition.map { Where(_) }
+			mergeCondition(condition).map { Where(_) }
+		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
+	}
+	private def readColumnMultiMap(keyColumn: Column, valueColumn: Column, condition: Option[Condition],
+	                               joins: Iterable[Joinable])
+	                              (implicit con: Connection) =
+	{
+		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
+			mergeCondition(condition).map { Where(_) }
 		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.asMultiMap
 	}
 }
