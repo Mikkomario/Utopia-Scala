@@ -42,6 +42,9 @@
   - Added `.never` which is an alias for `Fixed(None)`
 - **FlagLike**
   - Added `.lightSwitch(...)` and `.switch(...)`, which are mapping functions specialized for boolean values
+- **Iterable** (**AsyncCollectionExtensions**)
+  - Added `.mapParallel(Int)(...)`, 
+    which utilizes multiple (although a limited number of) threads to map the collection contents
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.countAll` which returns the number of times each unique item appears in the collection
 - **PropertyFactory**

@@ -62,6 +62,12 @@ object ActionQueue
 		  * @return Action result. Failure if timeout was reached or if the process threw.
 		  */
 		def waitFor(timeout: Duration = Duration.Inf) = future.waitFor(timeout)
+		/**
+		  * Blocks until this action has started running.
+		  * @param timeout Maximum wait timeout. Default = infinite.
+		  * @return Success if wait succeeded. Failure if timeout was reached.
+		  */
+		def waitUntilStarted(timeout: Duration = Duration.Inf) = startFuture.waitFor(timeout)
 	}
 	
 	private abstract class InteractiveAction[+A] extends QueuedAction[A] with Runnable
@@ -70,10 +76,8 @@ object ActionQueue
 		
 		private val _statePointer = Volatile[BasicProcessState](NotStarted)
 		
-		override lazy val startFuture: Future[Unit] = _statePointer.findMapFuture {
-			case Completed => Some(())
-			case _ => None
-		}
+		override lazy val startFuture: Future[Unit] =
+			_statePointer.findMapFuture { state => if (state.hasStarted) Some(()) else None }
 		
 		
 		// COMPUTED ----------------------
