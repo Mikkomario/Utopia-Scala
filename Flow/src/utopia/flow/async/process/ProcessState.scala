@@ -56,9 +56,19 @@ sealed trait ProcessState
 object ProcessState
 {
 	/**
+	  * Common trait for the "basic" process states, which don't include features around breaking
+	  * (i.e. forcefully stopping) or looping
+	  */
+	sealed trait BasicProcessState extends ProcessState
+	/**
+	  * Common trait for the more advanced process states that rely on the features of breaking and/or looping
+	  */
+	sealed trait AdvancedProcessState extends ProcessState
+	
+	/**
 	  * State before the process has started (nor stopped / cancelled)
 	  */
-	case object NotStarted extends ProcessState
+	case object NotStarted extends BasicProcessState
 	{
 		override def hasStarted = false
 		override def isBroken = false
@@ -69,7 +79,7 @@ object ProcessState
 	/**
 	  * State when the process was stopped before it started
 	  */
-	case object Cancelled extends ProcessState
+	case object Cancelled extends AdvancedProcessState
 	{
 		override def hasStarted = false
 		override def isBroken = true
@@ -80,7 +90,7 @@ object ProcessState
 	/**
 	  * State where the process is running normally
 	  */
-	case object Running extends ProcessState
+	case object Running extends BasicProcessState
 	{
 		override def hasStarted = true
 		override def isBroken = false
@@ -91,7 +101,7 @@ object ProcessState
 	/**
 	  * State where the process is running, and is requested to rerun afterwards
 	  */
-	case object Looping extends ProcessState
+	case object Looping extends AdvancedProcessState
 	{
 		override def hasStarted = true
 		override def isBroken = false
@@ -102,7 +112,7 @@ object ProcessState
 	/**
 	  * State where the process has been broken and is in the process of terminating
 	  */
-	case object Stopping extends ProcessState
+	case object Stopping extends AdvancedProcessState
 	{
 		override def hasStarted = true
 		override def isBroken = true
@@ -113,7 +123,7 @@ object ProcessState
 	/**
 	  * State where the process was broken and has been terminated
 	  */
-	case object Stopped extends ProcessState
+	case object Stopped extends AdvancedProcessState
 	{
 		override def hasStarted = true
 		override def isBroken = true
@@ -124,7 +134,7 @@ object ProcessState
 	/**
 	  * State where the process finished naturally
 	  */
-	case object Completed extends ProcessState
+	case object Completed extends BasicProcessState
 	{
 		override def hasStarted = true
 		override def isBroken = false

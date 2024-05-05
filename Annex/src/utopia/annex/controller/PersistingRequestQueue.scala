@@ -3,6 +3,7 @@ package utopia.annex.controller
 import utopia.annex.model.request.{Persisting, RequestQueueable}
 import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
@@ -132,7 +133,7 @@ trait PersistingRequestQueue extends RequestQueue
 		errors
 	}
 	
-	private def pushPersisting(request: Persisting)(pushRequest: => Future[RequestResult]) = {
+	private def pushPersisting(request: Persisting)(pushRequest: => QueuedAction[RequestResult]) = {
 		// Uses pointers to determine when the data should be persisted and in which form
 		val sentFlag = Flag()
 		val modelPointer = request.persistingModelPointer

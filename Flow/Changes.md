@@ -19,6 +19,7 @@
 - **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
   The new implementation works the same way, regardless of compared collection type 
   (although it now requires **Seq** to be used)
+- **ActionQueue**`.pushAsync(...)` now properly blocks the start of the next action
 ### New features
 - Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
@@ -27,6 +28,10 @@
 - Added **ZipBuilder** class
 - Added **PairOrVectorBuilder** class
 - Added **OpenEnumeration** and **OpenEnumerationValue** in order to facilitate the creation of cross-module enumerations
+- Multiple new features to **ActionQueue**:
+  - Added `.asExecutionContext`
+  - The push and prepend functions now return a **QueuedAction** instead of a **Future**. **QueuedActions** support states. 
+    I.e. you may track when the wrapped action is actually started / running.
 ### New methods
 - **Changing**
   - Added `.viewWhile(FlagLike)`

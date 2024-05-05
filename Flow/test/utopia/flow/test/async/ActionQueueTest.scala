@@ -1,13 +1,14 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.async.context.{ActionQueue, ThreadPool}
 import utopia.flow.async.process.Wait
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.Random
 
 /**
@@ -27,7 +28,7 @@ object ActionQueueTest extends App
 	var generatedItems = 0
 	val maxGenItems = 1000
 	val random = new Random()
-	val completionsBuffer = new VectorBuilder[Future[Unit]]()
+	val completionsBuffer = new VectorBuilder[QueuedAction[Any]]()
 	
 	def task() = Wait(100.millis)
 	
@@ -47,7 +48,7 @@ object ActionQueueTest extends App
 	println("All completions created")
 	println(s"${completions.count { _.isCompleted }} / $maxGenItems items completed")
 	
-	val successes = completions.waitForSuccesses()
+	val successes = completions.flatMap { _.future.waitFor().toOption }
 	assert(successes.size == maxGenItems)
 	println("All completed!")
 }

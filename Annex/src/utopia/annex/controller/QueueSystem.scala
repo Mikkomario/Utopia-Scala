@@ -11,7 +11,6 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
