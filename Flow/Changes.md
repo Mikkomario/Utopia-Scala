@@ -45,8 +45,11 @@
 - **Iterable** (**AsyncCollectionExtensions**)
   - Added `.mapParallel(Int)(...)`, 
     which utilizes multiple (although a limited number of) threads to map the collection contents
-- **IterableOnce** (**CollectionExtensions**)
-  - Added `.countAll` which returns the number of times each unique item appears in the collection
+- **IterableOnce**
+  - **AsyncCollectionExtensions**
+    - Added `.foreachParallel(Int)(...)`
+  - **CollectionExtensions**
+    - Added `.countAll` which returns the number of times each unique item appears in the collection
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **ResettableFlag**
