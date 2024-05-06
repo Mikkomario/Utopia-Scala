@@ -1,9 +1,7 @@
 package utopia.flow.time
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.range.IterableSpan
 import utopia.flow.operator.ordering.SelfComparable
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
 import java.time._
 import java.time.format.DateTimeFormatter
@@ -87,7 +85,7 @@ object TimeExtensions
 		/**
 		  * The date time value of this instant in the UTC 'zulu' time zone
 		  */
-		def toUTCDateTime = i.atZone(ZoneId.of("Z")).toLocalDateTime
+		def toUTCDateTime = i.atZone(ZoneOffset.UTC).toLocalDateTime
 		
 		/**
 		 * @return Whether this instant is in the past
