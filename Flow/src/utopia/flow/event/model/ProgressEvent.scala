@@ -25,20 +25,25 @@ case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, 
 	// ATTRIBUTES   --------------------
 	
 	/**
-	 * Time when the process is projected to complete, based on the current progress and progress time so far.
-	 * None if the progress can't be projected yet (at 0% completion).
+	 * Projected duration from this event until process completion.
+	 * Infinite if the progress can't be projected yet (at 0% completion).
 	 */
-	lazy val projectedCompletion = {
+	lazy val projectedRemainingDuration = {
 		if (currentProgress >= 1.0)
-			Some(timestamp)
+			Duration.Zero
 		else if (currentProgress <= 0 || processTime <= Duration.Zero)
-			None
+			Duration.Inf
 		else {
 			val currentProgressPerSecond = currentProgress / processTime.toPreciseSeconds
 			val remainingSeconds = (1 - currentProgress) * currentProgressPerSecond
-			Some(timestamp + remainingSeconds.seconds)
+			remainingSeconds.seconds
 		}
 	}
+	/**
+	 * Time when the process is projected to complete, based on the current progress and progress time so far.
+	 * None if the progress can't be projected yet (at 0% completion).
+	 */
+	lazy val projectedCompletion = projectedRemainingDuration.finite.map { timestamp + _ }
 	
 	
 	// COMPUTED ------------------------

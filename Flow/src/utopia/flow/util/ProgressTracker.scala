@@ -4,11 +4,21 @@ import utopia.flow.event.listener.ProgressListener
 import utopia.flow.event.model.ProgressEvent
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.immutable.View
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 
 object ProgressTracker
 {
+	/**
+	 * Creates a new progress tracker
+	 * @param pointer The process value pointer to wrap
+	 * @param progressFrom A function which calculates the overall progress [0,1] from the specified process value.
+	 *                     Return value of 1 or higher is considered to represent process completion.
+	 * @tparam A Type of process values used
+	 * @return A new progress tracker
+	 */
+	def wrap[A](pointer: EventfulPointer[A])(progressFrom: A => Double) = new ProgressTracker[A](pointer)(progressFrom)
+	
 	/**
 	 * Creates a new progress tracker
 	 * @param initialValue Initial process value
@@ -17,7 +27,8 @@ object ProgressTracker
 	 * @tparam A Type of process values used
 	 * @return A new progress tracker
 	 */
-	def apply[A](initialValue: A)(progressFrom: A => Double) = new ProgressTracker[A](initialValue)(progressFrom)
+	def apply[A](initialValue: A)(progressFrom: A => Double) =
+		new ProgressTracker[A](EventfulPointer(initialValue))(progressFrom)
 	
 	/**
 	 * Creates a new progress tracker
@@ -37,24 +48,23 @@ object ProgressTracker
 
 /**
  * An interface for converting progress into progress events
- * @param initialValue Initial process value
+ * @param pointer The wrapped mutable process value pointer
  * @param progressFrom A function which converts the current process value to a progress from 0 to 1, where
  *                     1 represents process completion.
  * @tparam A Type of process values used
  * @author Mikko Hilpinen
  * @since 07.05.2024, v2.4
  */
-class ProgressTracker[A](initialValue: A)(progressFrom: A => Double) extends View[A]
+class ProgressTracker[A](val pointer: EventfulPointer[A])(progressFrom: A => Double) extends Pointer[A]
 {
 	// ATTRIBUTES   --------------------------
 	
 	private val processStarted = Now.toInstant
 	
-	private val _pointer = EventfulPointer(initialValue)
 	/**
 	 * Pointer that contains the currently tracked progress
 	 */
-	val progressPointer = _pointer.mapUntil(progressFrom) { _ >= 1.0 }
+	val progressPointer = pointer.mapUntil(progressFrom) { _ >= 1.0 }
 	
 	private var listeners = Vector[ProgressListener[A]]()
 	
@@ -76,18 +86,14 @@ class ProgressTracker[A](initialValue: A)(progressFrom: A => Double) extends Vie
 	 * @return The current progress [0,1]
 	 */
 	def progress = progressPointer.value
-	
-	/**
-	 * @return Pointer to the latest process value
-	 */
-	def pointer = _pointer.readOnly
 
 
 	// IMPLEMENTED  -------------------------
 	
-	override def value: A = _pointer.value
-	override def valueIterator = _pointer.valueIterator
-	override def mapValue[B](f: A => B) = _pointer.mapValue(f)
+	override def value: A = pointer.value
+	override def value_=(newValue: A): Unit = pointer.value = newValue
+	override def valueIterator = pointer.valueIterator
+	override def mapValue[B](f: A => B) = pointer.mapValue(f)
 	
 	
 	// OTHER    -----------------------------

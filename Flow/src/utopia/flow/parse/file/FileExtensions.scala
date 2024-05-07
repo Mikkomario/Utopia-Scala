@@ -674,8 +674,7 @@ object FileExtensions
 		}
 		private def recursiveCopyTo(targetDirectory: Path): Try[Path] = recursiveCopyAs(targetDirectory / fileName)
 		// First copies the file / directory, then the children files, if there are any
-		private def recursiveCopyAs(newPath: Path): Try[Path] =
-		{
+		private def recursiveCopyAs(newPath: Path): Try[Path] = {
 			// May need to delete the existing file first
 			newPath.delete().flatMap { _ => Try { Files.copy(p, newPath) } }.flatMap { newParent =>
 				children.flatMap { _.tryForeach { c => new RichPath(c).recursiveCopyTo(newParent).map { _ => () } } }
