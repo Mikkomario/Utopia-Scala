@@ -65,9 +65,10 @@ object ActionQueue
 		/**
 		  * Blocks until this action has started running.
 		  * @param timeout Maximum wait timeout. Default = infinite.
-		  * @return Success if wait succeeded. Failure if timeout was reached.
+		  * @return This action if wait succeeded. Failure if timeout was reached.
 		  */
-		def waitUntilStarted(timeout: Duration = Duration.Inf) = startFuture.waitFor(timeout)
+		def waitUntilStarted(timeout: Duration = Duration.Inf) =
+			startFuture.waitFor(timeout).map { _ => this }
 	}
 	
 	private abstract class InteractiveAction[+A] extends QueuedAction[A] with Runnable
