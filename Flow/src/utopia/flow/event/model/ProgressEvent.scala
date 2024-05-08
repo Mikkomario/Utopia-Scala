@@ -34,9 +34,8 @@ case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, 
 		else if (currentProgress <= 0 || processTime <= Duration.Zero)
 			Duration.Inf
 		else {
-			val currentProgressPerSecond = currentProgress / processTime.toPreciseSeconds
-			val remainingSeconds = (1 - currentProgress) * currentProgressPerSecond
-			remainingSeconds.seconds
+			val wholeProcessTime = processTime / currentProgress
+			wholeProcessTime * (1 - currentProgress)
 		}
 	}
 	/**

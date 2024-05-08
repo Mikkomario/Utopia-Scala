@@ -193,10 +193,11 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	def unary_! = {
 		if (string.startsWith("(?!") && string.endsWith(")"))
 			Regex(string.substring(3, string.length - 1))
-		else if (string.startsWith("(?!") && string.endsWith("$).*"))
-			Regex(string.substring(3, string.length - 4))
-		else if (hasBrackets)
-		{
+		else if (string.startsWith("(?!") && string.endsWith("$).*")) {
+			val dropCount = if (string.startsWith("(?!(?:")) 6 else 3
+			Regex(string.substring(dropCount, string.length - 4))
+		}
+		else if (hasBrackets) {
 			if (string.startsWith(Pattern.quote("[^")))
 				Regex(s"[${ string.substring(2) }")
 			else
@@ -206,6 +207,10 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 			Regex("(?!" + string + "$).*")
 		else
 			Regex(s"[^$string]")
+		/*
+		else
+			Regex(s"(?!(?:$string)$$).*")
+		 */
 	}
 	
 	/**
@@ -386,6 +391,40 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		}
 		else
 			str
+	}
+	/**
+	 * Replaces all instances within a string where this regular expression doesn't match string contents.
+	 * @param str String within which replacement is performed
+	 * @param replacement Replacing string (call-by-name, lazily initialized)
+	 * @return Copy of the specified string where all non-matching sequences have been replaced
+	 *         with the specified string
+	 */
+	def replaceOthers(str: String, replacement: => String): String = replaceOthers(str, Lazy(replacement))
+	/**
+	 * Replaces all instances within a string where this regular expression doesn't match string contents.
+	 * @param str String within which replacement is performed
+	 * @param replacement A view that will yield the replacing string
+	 * @return Copy of the specified string where all non-matching sequences have been replaced
+	 *         with the specified string
+	 */
+	def replaceOthers(str: String, replacement: View[String]) = {
+		val resultBuilder = new StringBuilder()
+		val matcher = pattern.matcher(str)
+		var lastMatchEnd = 0
+		// Finds all matches
+		while (matcher.find()) {
+			// If there was non-matching area in between, replaces that
+			if (matcher.start() > lastMatchEnd)
+				resultBuilder ++= replacement.value
+			// Adds the matching range
+			resultBuilder ++= matcher.group()
+			lastMatchEnd = matcher.end()
+		}
+		// If the end of the string didn't match, replaces it
+		if (str.length > lastMatchEnd)
+			resultBuilder ++= replacement.value
+			
+		resultBuilder.result()
 	}
 	/**
 	  * @param str A string

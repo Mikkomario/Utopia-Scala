@@ -10,6 +10,7 @@ import utopia.flow.event.model.ProgressEvent
  * @author Mikko Hilpinen
  * @since 07.05.2024, v2.4
  */
+// TODO: Add minimum and maximum forward time thresholds
 class SignificantProgressFilter[A](significantProgressThreshold: Double, listener: ProgressListener[A])
 	extends ProgressListener[A]
 {

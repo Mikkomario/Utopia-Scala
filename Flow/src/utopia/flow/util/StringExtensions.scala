@@ -472,6 +472,15 @@ object StringExtensions
 		  * which use the same name)
 		  */
 		def replaceEachMatchOf(regex: Regex, replacement: => String) = replaceAll(regex, replacement)
+		/**
+		 * Replaces all instances within this string where the specified regular expression doesn't match
+		 * string contents.
+		 * @param regex A regular expression used to match the preserved areas
+		 * @param replacement A view that will yield the replacing string
+		 * @return Copy of the specified string where all non-matching sequences have been replaced
+		 *         with the specified string
+		 */
+		def replaceAllExcept(regex: Regex, replacement: => String) = regex.replaceOthers(s, replacement)
 		
 		/**
 		  * @param other Another string

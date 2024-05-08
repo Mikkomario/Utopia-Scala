@@ -52,12 +52,15 @@
     - Added `.countAll` which returns the number of times each unique item appears in the collection
 - **PropertyFactory**
   - Added `.mapResult(...)`
+- **Regex**
+  - Added `.replaceOthers(String, String)` that works somewhat like `(!this).replaceAll(...)`, but does so more reliably
 - **ResettableFlag**
   - Added `.switch()`
 - **Seq** (**CollectionExtensions**)
   - Added `.appendAllIfDistinct(...)`
 - **String** (**StringExtensions**)
   - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
+  - Added `.replaceAllExcept(Regex, String)`
 - **TreeLike**
   - Added `.rootsWhereIterator(...)`, `.rootsBelowWhereIterator(...)` and `.pathsToRootsWhereIterator(...)`
 - **WeekDay** (object)
