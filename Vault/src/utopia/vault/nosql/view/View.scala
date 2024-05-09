@@ -76,10 +76,12 @@ trait View
 	
 	/**
 	  * @param where      A search condition
+	  * @param joins      Joins to apply to this search
 	  * @param connection Implicit database connection
 	  * @return Whether this view provides access to at least item (row) where the specified condition is met
 	  */
-	def exists(where: Condition)(implicit connection: Connection) = Exists(target, mergeCondition(where))
+	def exists(where: Condition, joins: Joinable*)(implicit connection: Connection) =
+		Exists(joins.foldLeft(target) { _ join _ }, mergeCondition(where))
 	
 	/**
 	  * @param column A column

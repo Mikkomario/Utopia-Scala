@@ -28,8 +28,7 @@ object Exists
 	  * @param connection Database connection (implicit)
 	  * @return Whether the table contains the specified index
 	  */
-	def index(table: Table, index: Value)(implicit connection: Connection) =
-	{
+	def index(table: Table, index: Value)(implicit connection: Connection) = {
 		if (table.hasPrimaryColumn)
 			apply(table, table.primaryColumn.get <=> index)
 		else
@@ -42,6 +41,6 @@ object Exists
 	  * @param connection DB Connection (implicit)
 	  * @return Whether the target contains any rows
 	  */
-	def any(target: SqlTarget)(implicit connection: Connection) = connection(Select.nothing(target) +
-		Limit(1)).nonEmpty
+	def any(target: SqlTarget)(implicit connection: Connection) =
+		connection(Select.nothing(target) + Limit(1)).nonEmpty
 }
