@@ -205,7 +205,7 @@ object References
       * @return A reference graph node representing the specified table (lazily initialized)
       */
     def toLinkGraphFrom(table: Table) = ViewGraphNode
-        .iterate(table) { table => from(table).map { ref => View(ref) -> View(ref.to.table) } }
+        .iterate(table) { table => from(table).map { ref => View.fixed(ref) -> View.fixed(ref.to.table) } }
     /**
       * Creates a new reference graph where leaving edges are the references coming **to** the node table.
       * I.e. all the references are associated with the tables they point towards, not where they originate from.
@@ -213,17 +213,19 @@ object References
       * @return A reference graph node representing the specified table (lazily initialized)
       */
     def toReverseLinkGraphFrom(table: Table) = ViewGraphNode
-        .iterate(table) { table => to(table).map { ref => View(ref) -> View(ref.from.table) } }
+        .iterate(table) { table => to(table).map { ref => View.fixed(ref) -> View.fixed(ref.from.table) } }
     /**
       * Creates a new reference graph that contains each reference twice:
       * Once in the table from which the reference originates and once in the table to which the reference points to.
       * In other words, all the edges in the resulting graph go both ways.
       * @param table The origin node table
-      * @return A reference graph node representing the specified table (lazily initialized)
+      * @return A reference graph node representing the specified table (lazily initialized).
+      *         Edges containing true as the second value are pointing in the same direction as the reference,
+      *         and those with false to the opposite.
       */
     def toBiDirectionalLinkGraphFrom(table: Table) = ViewGraphNode.iterate(table) { table =>
-        from(table).map { ref => View(ref -> true) -> View(ref.to.table) } ++
-            to(table).map { ref => View(ref -> false) -> View(ref.from.table) }
+        from(table).map { ref => View.fixed(ref -> true) -> View.fixed(ref.to.table) } ++
+            to(table).map { ref => View.fixed(ref -> false) -> View.fixed(ref.from.table) }
     }
     
     /**

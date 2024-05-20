@@ -92,6 +92,20 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 		originTables.findMap { left => References.connectionBetween(left, this) } match {
 			case Some(Pair(leftColumn, rightColumn)) => Success(Join(leftColumn, this, rightColumn, joinType))
 			case None =>
+				/* TODO: Add support for indirect multi-references
+				// Secondarily, finds indirect references
+				References.toBiDirectionalLinkGraphFrom(this)
+					.findShortestRoute { node => originTables.contains(node.value) } match
+				{
+					case Some((from, route)) =>
+					
+					case None =>
+						Failure(new NoReferenceFoundException(
+							s"Cannot find a reference between ${
+								originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
+								(tables :+ this).flatMap(References.from).mkString(", ")}]"))
+				}*/
+				
 				Failure(new NoReferenceFoundException(
 					s"Cannot find a reference between ${
 						originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${

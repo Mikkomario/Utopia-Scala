@@ -13,19 +13,18 @@ trait SqlTarget
     // ABSTRACT METHODS    --------------------
     
     /**
-     * Converts this sql target into an sql segment
-     */
-    def toSqlSegment: SqlSegment
-    
-    /**
       * @return Name of the targeted database
       */
     def databaseName: String
-    
     /**
       * @return Tables contained within this target
       */
     def tables: Vector[Table]
+    
+    /**
+      * Converts this sql target into an sql segment
+      */
+    def toSqlSegment: SqlSegment
     
     
     // OPERATORS    ----------------------------
@@ -33,8 +32,14 @@ trait SqlTarget
     /**
      * Joins another table to this target using by appending an already complete join
      */
-    def +(join: Join): SqlTarget =
-        SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.rightTable)
+    def +(join: Join): SqlTarget = {
+        val existingTables = tables
+        // Will ignore joins to tables already contained within this target
+        if (existingTables.contains(join.rightTable))
+            this
+        else
+            SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, existingTables :+ join.rightTable)
+    }
     
     
     // OTHER METHODS    ------------------------

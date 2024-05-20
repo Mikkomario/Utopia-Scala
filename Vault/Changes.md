@@ -17,6 +17,7 @@ Supports **Flow v2.4**
   - Added `.findColumnMap(...)` and `.findColumnMultiMap(...)`
 ### Other changes
 - **View**`.exists(...)` now supports joins
+- Joins are now omitted in instances where target already contains the joined table
 
 ## v1.18 - 22.01.2024
 This update focuses on improving grouped (i.e. multi-joined) result parsing.

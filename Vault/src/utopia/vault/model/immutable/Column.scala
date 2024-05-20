@@ -74,8 +74,9 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
                     case None => Failure(new NoReferenceFoundException(
                         s"$columnNameWithTable doesn't refer to any table"))
                 }
-            case None => Failure(new ColumnNotFoundException(s"None of tables ${
-                originTables.map { _.name }.mkString(", ") } contains column $columnNameWithTable"))
+            case None =>
+                Failure(new ColumnNotFoundException(s"None of tables ${
+                    originTables.map { _.name }.mkString(", ") } contains column $columnNameWithTable"))
         }
     }
     
