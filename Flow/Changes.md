@@ -32,6 +32,7 @@
   - Added `.asExecutionContext`
   - The push and prepend functions now return a **QueuedAction** instead of a **Future**. **QueuedActions** support states. 
     I.e. you may track when the wrapped action is actually started / running.
+- Added **StringUtils** object for converting data into a console-displayable table
 ### New methods
 - **Changing**
   - Added `.viewWhile(FlagLike)`

@@ -1,8 +1,10 @@
 package utopia.flow.test
 
+import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex.stringToRegex
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.StringUtils
 
 /**
  * Tests new string methods
@@ -69,6 +71,9 @@ object StringUtilsTest extends App
 	assert("XtestXX2".splitIterator("X").toVector == Vector("test", "2"))
 	
 	println("YV- 2716".filterWith(Regex.letterOrDigit))
+	
+	println(StringUtils.asciiTableFrom[String](Vector("ABC", "Test", "String"), Vector("Str", "Length", "Letter"),
+		Identity, _.length.toString, _.head.toString))
 	
 	println("Success!")
 }
