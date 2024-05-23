@@ -1,5 +1,7 @@
 package utopia.flow.util
 
+import utopia.flow.collection.CollectionExtensions._
+
 /**
   * Contains some utility functions related to Strings
   * @author Mikko Hilpinen
@@ -26,24 +28,24 @@ object StringUtils
 			 */
 			// Determines column values in order to know column widths
 			// 1. keys are column indices, 2. keys are item indices
-			val values = columns.map(items.map)
+			val values = columns.map { c => items.map { c(_).linesIterator.toVector } }
 			val xRange = values.indices
 			val actualHeaders = headers.padTo(values.size, "")
-			val columnWidths = xRange.map { x => values(x).view.map { _.length }.max max actualHeaders(x).length }
+			val columnWidths = xRange.map { x =>
+				values(x).view.map { _.view.map { _.length }.max }.max max actualHeaders(x).length
+			}
 			
 			// Generates the actual table
 			val separatorLine = s"\n+${ columnWidths.map { w => "-" * (w + 2) }.mkString("+") }+\n"
 			val builder = new StringBuilder(separatorLine)
 			
 			// Writes the headers
-			rowContents(xRange, actualHeaders, columnWidths, builder)
-			builder += '|'
+			rowContents(xRange, actualHeaders.map { Vector(_) }, columnWidths, builder)
 			
 			// Writes the table contents
 			items.indices.foreach { y =>
 				builder ++= separatorLine
 				rowContents(xRange, values.map { _(y) }, columnWidths, builder)
-				builder += '|'
 			}
 			builder ++= separatorLine
 			
@@ -51,9 +53,18 @@ object StringUtils
 		}
 	}
 	
-	private def rowContents(xRange: Iterable[Int], row: Seq[String], widths: Seq[Int], builder: StringBuilder) =
-		xRange.foreach { x =>
-			builder ++= "| "
-			builder ++= row(x).padTo(widths(x) + 1, ' ')
+	private def rowContents(xRange: Iterable[Int], row: Seq[Seq[String]], widths: Seq[Int], builder: StringBuilder,
+	                         index: Int = 0): Unit =
+	{
+		if (row.exists { _.hasSize > index }) {
+			if (index > 0)
+				builder += '\n'
+			xRange.foreach { x =>
+				builder ++= "| "
+				builder ++= row(x).getOrElse(index, "").padTo(widths(x) + 1, ' ')
+			}
+			builder += '|'
+			rowContents(xRange, row, widths, builder, index + 1)
 		}
+	}
 }

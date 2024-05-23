@@ -72,7 +72,7 @@ object StringUtilsTest extends App
 	
 	println("YV- 2716".filterWith(Regex.letterOrDigit))
 	
-	println(StringUtils.asciiTableFrom[String](Vector("ABC", "Test", "String"), Vector("Str", "Length", "Letter"),
+	println(StringUtils.asciiTableFrom[String](Vector("ABC", "Test", "2-line\nString"), Vector("Str", "Length", "Letter"),
 		Identity, _.length.toString, _.head.toString))
 	
 	println("Success!")
