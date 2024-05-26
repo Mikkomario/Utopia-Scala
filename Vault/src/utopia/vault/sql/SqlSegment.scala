@@ -124,6 +124,12 @@ case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: 
         this + other.map(convertToSegment)
     
     /**
+      * @param others A number of new sql segments to append
+      * @return Copy of this segment with the specified segments appended to it
+      */
+    def ++(others: IterableOnce[SqlSegment]) = others.iterator.foldLeft(this) { _ + _ }
+    
+    /**
      * Prepends this sql segment with an sql string. The new string will be added to the beginning 
      * of this segment. A whitespace character is added between the two segments.
      */

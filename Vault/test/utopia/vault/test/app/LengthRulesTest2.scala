@@ -7,7 +7,7 @@ import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.test.TestContext._
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, ConnectionPool}
-import utopia.vault.sql.{Delete, Insert, SelectAll}
+import utopia.vault.sql.{Delete, Insert, Select, SelectAll}
 import utopia.vault.test.database.TestTables
 
 /**
@@ -40,7 +40,7 @@ object LengthRulesTest2 extends App
 		val id3 = Insert(table, Model.from("num" -> 65)).generatedKeys.head.getInt
 		val id4 = Insert(table, Model.from("num" -> 124)).generatedKeys.head.getInt
 		
-		val items = con(SelectAll(table)).rows.map { _.toModel }.map { m => m("id").getInt -> m }.toMap
+		val items = con(Select.all(table)).rows.map { _.toModel }.map { m => m("id").getInt -> m }.toMap
 		
 		assert(items(id1)("str").getString == "12345")
 		assert(items(id3)("num").getInt == 65)

@@ -6,6 +6,7 @@ package utopia.vault.sql
  * @author Mikko Hilpinen
  * @since 22.5.2017
  */
+@deprecated("Please rather use Select.all(SqlTarget) instead", "v1.19")
 object SelectAll
 {
     /**

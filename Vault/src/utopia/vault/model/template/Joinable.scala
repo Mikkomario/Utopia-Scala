@@ -16,7 +16,9 @@ trait Joinable
 	/**
 	  * @param originTables Tables from which this item is joined
 	  * @param joinType Type of join to use (default = inner join)
-	  * @return A join statement applicable to that context. Failure if joining is impossible.
+	  * @return Join statements that connect this item to the specified origin tables.
+	  *         May return an empty vector if this item is already contained within the specified origin set.
+	  *         Failure if joining is impossible.
 	  */
-	def toJoinFrom(originTables: Vector[Table], joinType: JoinType = Inner): Try[Join]
+	def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = Inner): Try[Vector[Join]]
 }

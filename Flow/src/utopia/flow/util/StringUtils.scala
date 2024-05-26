@@ -2,6 +2,8 @@ package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
 
+import scala.annotation.tailrec
+
 /**
   * Contains some utility functions related to Strings
   * @author Mikko Hilpinen
@@ -32,7 +34,7 @@ object StringUtils
 			val xRange = values.indices
 			val actualHeaders = headers.padTo(values.size, "")
 			val columnWidths = xRange.map { x =>
-				values(x).view.map { _.view.map { _.length }.max }.max max actualHeaders(x).length
+				values(x).view.map { _.view.map { _.length }.maxOption.getOrElse(0) }.max max actualHeaders(x).length
 			}
 			
 			// Generates the actual table
@@ -53,8 +55,9 @@ object StringUtils
 		}
 	}
 	
+	@tailrec
 	private def rowContents(xRange: Iterable[Int], row: Seq[Seq[String]], widths: Seq[Int], builder: StringBuilder,
-	                         index: Int = 0): Unit =
+	                        index: Int = 0): Unit =
 	{
 		if (row.exists { _.hasSize > index }) {
 			if (index > 0)

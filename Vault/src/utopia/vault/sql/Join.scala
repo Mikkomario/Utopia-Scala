@@ -63,7 +63,8 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def toJoinFrom(originTables: Vector[Table], joinType: JoinType = joinType) = Success(this)
+	override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = joinType) =
+		Success(Vector(this))
 	
 	
 	// OTHER    --------------------------

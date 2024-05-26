@@ -45,7 +45,7 @@ trait Readable extends Storable
 	 * Updates this object based on the current database state. Requires an index
 	 * @return Whether any data was read
 	 */
-	def pull()(implicit connection: Connection): Boolean = pull(SelectAll(table))
+	def pull()(implicit connection: Connection): Boolean = pull(Select.all(table))
 	
 	/**
 	 * Updates this object based on the current database state. Only updates certain

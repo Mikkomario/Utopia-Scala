@@ -38,7 +38,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return The first item found
 	  */
 	def any(implicit connection: Connection) =
-		connection(SelectAll(target) + defaultOrdering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+		connection(Select.all(target) + defaultOrdering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
 	
 	
 	// IMPLEMENTED	----------------
@@ -58,7 +58,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	                  joinType: JoinType = Inner)(implicit connection: Connection) = {
 		val select = {
 			if (joins.isEmpty)
-				SelectAll(target)
+				Select.all(target)
 			else
 				Select.tables(joins.foldLeft(target) { _.join(_, joinType) }, tables)
 		}
@@ -106,7 +106,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	def take(maxNumberOfItems: Int, order: OrderBy, condition: Option[Condition] = None)
 	        (implicit connection: Connection) =
 	{
-		connection(SelectAll(target) + condition.map { Where(_) } + order +
+		connection(Select.all(target) + condition.map { Where(_) } + order +
 			Limit(maxNumberOfItems)).rows.flatMap(parseIfPresent)
 	}
 	
@@ -125,7 +125,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return First available result using that ordering
 	  */
 	def firstUsing(ordering: OrderBy)(implicit connection: Connection) =
-		connection(SelectAll(target) + ordering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+		connection(Select.all(target) + ordering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
 	/**
 	  * @param orderColumn Column to base ordering on
 	  * @param connection Implicit DB Connection
@@ -229,7 +229,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def foreachWhere[U](condition: Option[Condition])(operation: A => U)(implicit connection: Connection) =
 	{
-		val select = SelectAll(target)
+		val select = Select.all(target)
 		val statement = condition match {
 			case Some(condition) => select + Where(condition)
 			case None => select
@@ -265,7 +265,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return result once all entities have been folded
 	  */
 	def fold[B](where: Condition)(start: B)(f: (B, A) => B)(implicit connection: Connection) =
-		connection.fold(SelectAll(target) + Where(where))(start) { (v, row) =>
+		connection.fold(Select.all(target) + Where(where))(start) { (v, row) =>
 			parseIfPresent(row).map { f(v, _) }.getOrElse(v)
 		}
 	
@@ -279,12 +279,12 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return Reduce result. None if no entities where found
 	  */
 	def mapReduce[B](where: Condition)(map: A => B)(reduce: (B, B) => B)(implicit connection: Connection) =
-		connection.flatMapReduce(SelectAll(target) + Where(where)) { row => parseIfPresent(row).map(map) }(reduce)
+		connection.flatMapReduce(Select.all(target) + Where(where)) { row => parseIfPresent(row).map(map) }(reduce)
 	
 	private def getWithOrder(orderBy: OrderBy, where: Option[Condition] = None)
 	                        (implicit connection: Connection) =
 		where match {
 			case Some(condition) => find(condition, Some(orderBy))
-			case None => connection(SelectAll(target) + orderBy + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+			case None => connection(Select.all(target) + orderBy + Limit(1)).rows.headOption.flatMap(parseIfPresent)
 		}
 }

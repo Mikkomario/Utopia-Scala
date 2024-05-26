@@ -41,6 +41,21 @@ trait SqlTarget
             SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, existingTables :+ join.rightTable)
     }
     
+    /**
+      * Adds 0-n joins to this target
+      * @param joins Joins to append to this target
+      * @return Copy of this target with the joins included
+      */
+    def ++(joins: Seq[Join]): SqlTarget = {
+        val existingTables = tables
+        val newJoins = joins.filterNot { join => existingTables.contains(join.rightTable) }
+        if (newJoins.isEmpty)
+            this
+        else
+            SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
+                existingTables ++ newJoins.map { _.rightTable })
+    }
+    
     
     // OTHER METHODS    ------------------------
     
@@ -51,7 +66,7 @@ trait SqlTarget
       * @throws Exception If joining is impossible
       */
     @throws[Exception]("If joining is impossible")
-    def join(target: Joinable, joinType: JoinType = Inner) = this + target.toJoinFrom(tables, joinType).get
+    def join(target: Joinable, joinType: JoinType = Inner) = this ++ target.toJoinsFrom(tables, joinType).get
     
     /**
      * Joins another table into this sql target based on a reference in the provided column. 

@@ -11,7 +11,7 @@ object ConditionElement
 {
     // IMPLICIT ------------------------
     
-    implicit def valueToConditionElement(v: Value): ConditionElement = new ValueAsElement(v)
+    implicit def valueToConditionElement(v: Value): ConditionElement = ValueAsElement(v)
     implicit def indirectValueToConditionElement[V](v: V)(implicit f: V => Value): ConditionElement =
         valueToConditionElement(f(v))
     
@@ -22,16 +22,16 @@ object ConditionElement
       * @param sqlSegment An sql segment that represents a condition element
       * @return A condition element that wraps that sql segment
       */
-    def apply(sqlSegment: SqlSegment): ConditionElement = new SegmentAsElement(sqlSegment)
+    def apply(sqlSegment: SqlSegment): ConditionElement = SegmentAsElement(sqlSegment)
     
     
     // NESTED   ------------------------
     
-    private class ValueAsElement(val value: Value) extends ConditionElement {
+    private case class ValueAsElement(value: Value) extends ConditionElement {
         override def toSqlSegment = SqlSegment("?", Vector(value))
     }
     
-    private class SegmentAsElement(segment: SqlSegment) extends ConditionElement {
+    private case class SegmentAsElement(segment: SqlSegment) extends ConditionElement {
         override def toSqlSegment: SqlSegment = segment
     }
 }
@@ -92,8 +92,13 @@ trait ConditionElement
      * Creates a between condition that returns true when this element value is between the two 
      * provided values (inclusive)
      */
-    def isBetween(min: ConditionElement, max: ConditionElement) =
-        Condition(toSqlSegment + "BETWEEN" + min.toSqlSegment + "AND" + max.toSqlSegment)
+    def isBetween(min: ConditionElement, max: ConditionElement) = {
+        if (min == max)
+            <=>(min)
+        else
+            Condition(toSqlSegment + "BETWEEN" + min.toSqlSegment + "AND" + max.toSqlSegment)
+    }
+    
     /**
       * @param minMax Minimum and maximum allowed values (inclusive), as a pair
       * @return A condition that returns true if the tested value is

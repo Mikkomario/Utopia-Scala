@@ -30,17 +30,36 @@ case class ReferencePoint(table: Table, column: Column) extends Joinable
 {
     override def toString = s"${table.name}(${column.name})"
     
-    override def toJoinFrom(originTables: Vector[Table], joinType: JoinType) =
+    override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType) = {
+        // Primarily attempts to find a direct reference to this point
         References.to(this).find { ref => originTables.contains(ref.table) } match {
-            case Some(reference) => Success(Join(reference.column, table, column, joinType))
+            case Some(reference) => Success(Vector(Join(reference.column, table, column, joinType)))
             case None =>
-                if (originTables.contains(table))
-                    References.from(this) match {
-                        case Some(target) => Success(Join(column, target.table, target.column, joinType))
-                        case None => Failure(new NoReferenceFoundException(s"$this doesn't refer to any table"))
-                    }
-                else
-                    Failure(new NoReferenceFoundException(s"No reference was found between tables ${
-                        originTables.map { _.name }.mkString(", ")} and $this."))
+                // Secondarily looks for a reference from this point
+                val secondaryResult = {
+                    if (originTables.contains(table))
+                        References.from(this).map { target => Join(column, target.table, target.column, joinType) }
+                    else
+                        None
+                }
+                secondaryResult match {
+                    case Some(result) => Success(Vector(result))
+                    case None =>
+                        // As a tertiary option, looks for an indirect reference to this point
+                        References.toBiDirectionalLinkGraphFrom(table).shortestRoutesIterator
+                            .find { case (route, end) =>
+                                originTables.contains(end.value) && route.head.value._1.points.contains(this)
+                            } match
+                        {
+                            case Some((route, _)) =>
+                                Success(route.view.reverse.map { edge =>
+                                    val (reference, isReverse) = edge.value
+                                    (if (isReverse) reference.reverse else reference).toJoin
+                                }.toVector)
+                            case None => Failure(new NoReferenceFoundException(
+                                s"There are no references between $this and ${ originTables.mkString(" or ") }"))
+                        }
+                }
         }
+    }
 }

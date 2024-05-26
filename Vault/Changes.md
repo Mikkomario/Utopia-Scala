@@ -7,6 +7,7 @@ Supports **Flow v2.4**
 - `.earliest` in **SingleChronoRowModelAccess** now returns an access point, not the pulled item
 ### Deprecations
 - Deprecated **FromRowFactoryWithTimestamps** in favor of the new version: **FromTimelineRowFactory**
+- Deprecated **SelectAll** in favor of `Select.all(SqlTarget)`
 ### New features
 - Added **VaultContext** and **VaultContextWrapper** traits in order to facilitate Vault-based library creation
 - Added **FromIdFactory** and **HasId** traits
@@ -18,6 +19,12 @@ Supports **Flow v2.4**
 ### Other changes
 - **View**`.exists(...)` now supports joins
 - Joins are now omitted in instances where target already contains the joined table
+- Joins now support indirect table references
+  - E.g. If table A is joined to table C, but doesn't contain a direct reference to it, finds the shortest route 
+    of sequential references so that the two tables may be joined. The result of this may be, for example, A to B to C.
+  - Note: This is not supported in column-based joining 
+    as that model doesn't have sufficient data for making an indirect reference.
+- The Select statement now converts into Select * when all available columns are included in the search
 
 ## v1.18 - 22.01.2024
 This update focuses on improving grouped (i.e. multi-joined) result parsing.

@@ -5,7 +5,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, Exists, JoinType, OrderBy, Select, SelectAll, SqlTarget, Where}
+import utopia.vault.sql._
 
 /**
   * These factories are used for constructing object data from database results
@@ -65,7 +65,7 @@ trait FromResultFactory[+A]
 	  * @return All accessible items
 	  */
 	def all(implicit connection: Connection) =
-		apply(connection(SelectAll(target) + defaultOrdering))
+		apply(connection(Select.all(target) + defaultOrdering))
 	
 	
 	// OTHER	---------------
@@ -82,7 +82,7 @@ trait FromResultFactory[+A]
 	def iterator(condition: Option[Condition] = None, order: Option[OrderBy] = None,
 	             rowsPerQuery: Int = Connection.settings.maximumAmountOfRowsCached)(implicit connection: Connection) =
 		connection.iterator(
-			SelectAll(target) + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
+			Select.all(target) + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
 			.flatMap(apply)
 	
 	/**
@@ -101,7 +101,7 @@ trait FromResultFactory[+A]
 	{
 		val select = {
 			if (joins.isEmpty)
-				SelectAll(target)
+				Select.all(target)
 			else
 				Select.tables(joins.foldLeft(target) { _.join(_, joinType) }, tables)
 		}
@@ -143,7 +143,7 @@ trait FromResultFactory[+A]
 	  * @see #getMany(Condition)
 	  */
 	def getAll(order: Option[OrderBy] = None)(implicit connection: Connection) =
-		apply(connection(SelectAll(target) + order.orElse(defaultOrdering)))
+		apply(connection(Select.all(target) + order.orElse(defaultOrdering)))
 	
 	/**
 	  * Checks whether an object exists for the specified query

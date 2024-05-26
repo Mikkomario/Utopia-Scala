@@ -66,11 +66,11 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     
     override def toSqlSegment = SqlSegment(columnNameWithTable)
     
-    override def toJoinFrom(originTables: Vector[Table], joinType: JoinType) = {
+    override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType) = {
         originTables.find { _.contains(this) } match {
             case Some(table) =>
                 References.from(table, this) match {
-                    case Some(target) => Success(Join(this, target.table, target.column, joinType))
+                    case Some(target) => Success(Vector(Join(this, target.table, target.column, joinType)))
                     case None => Failure(new NoReferenceFoundException(
                         s"$columnNameWithTable doesn't refer to any table"))
                 }

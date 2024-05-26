@@ -86,30 +86,27 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	
 	override def tables = Vector(this)
 	
-	override def toJoinFrom(originTables: Vector[Table], joinType: JoinType = Inner) = {
+	override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = Inner) = {
 		// Finds the first table referencing (or being referenced by) the provided table and uses
 		// that for a join
 		originTables.findMap { left => References.connectionBetween(left, this) } match {
-			case Some(Pair(leftColumn, rightColumn)) => Success(Join(leftColumn, this, rightColumn, joinType))
+			case Some(Pair(leftColumn, rightColumn)) => Success(Vector(Join(leftColumn, this, rightColumn, joinType)))
 			case None =>
-				/* TODO: Add support for indirect multi-references
 				// Secondarily, finds indirect references
 				References.toBiDirectionalLinkGraphFrom(this)
 					.findShortestRoute { node => originTables.contains(node.value) } match
 				{
-					case Some((from, route)) =>
-					
+					case Some((_, route)) =>
+						Success(route.view.reverse.map { edge =>
+							val (reference, isReversed) = edge.value
+							if (isReversed) reference.reverse.toJoin else reference.toJoin
+						}.toVector)
 					case None =>
 						Failure(new NoReferenceFoundException(
 							s"Cannot find a reference between ${
 								originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
 								(tables :+ this).flatMap(References.from).mkString(", ")}]"))
-				}*/
-				
-				Failure(new NoReferenceFoundException(
-					s"Cannot find a reference between ${
-						originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
-						(tables :+ this).flatMap(References.from).mkString(", ")}]"))
+				}
 		}
 	}
 	
