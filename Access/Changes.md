@@ -1,5 +1,8 @@
 # Utopia Access - List of Changes
 
+## v1.5.1 (in development)
+New build supporting **Flow v2.4**
+
 ## v1.5 - 22.01.2024
 This update, while quite small in scale, contains a very important bugfix to the **Headers** class. 
 Some functions and classes have also been updated to match the more recent (Flow) style.
