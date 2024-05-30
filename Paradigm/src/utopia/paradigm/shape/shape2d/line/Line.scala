@@ -12,7 +12,7 @@ import utopia.flow.operator.equality.ApproxEquals
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.path.LinearPathLike
+import utopia.paradigm.path.{LinearPathLike, ProjectionPath}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -21,7 +21,7 @@ import utopia.paradigm.shape.shape2d.{LineProjectable, Matrix2D, ShapeConvertibl
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.DimensionalFactory
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.vector.DoubleVector
+import utopia.paradigm.shape.template.vector.{DoubleVector, NumericVectorLike}
 import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
@@ -72,7 +72,7 @@ object Line extends LineFactoryLike[Double, Point, Line] with FromModelFactory[L
 case class Line(override val ends: Pair[Point])
     extends LineLike[Double, Point, Vector2D, Vector2D, Line]
         with ShapeConvertible with ValueConvertible with ModelConvertible
-        with LineProjectable with LinearPathLike[Point]
+        with LineProjectable with LinearPathLike[Point] with ProjectionPath[Point]
         with Transformable[Line] with HasBounds
         with ApproxEquals[HasInclusiveEnds[HasDoubleDimensions]]
 {
@@ -88,6 +88,13 @@ case class Line(override val ends: Pair[Point])
      * A function for calculating the x-coordinate on this line when the y-coordinate is known
      */
     override lazy val xForY = super.xForY
+    
+    /**
+      * The t-axis position of this line's starting point
+      */
+    lazy val t0 = tFor(start)
+    
+    override lazy val length = super.length
     
     
     // COMPUTED PROPERTIES    ----------
@@ -108,11 +115,14 @@ case class Line(override val ends: Pair[Point])
     override def start = ends.first
     override def end = ends.second
     override def center = ends.merge { _ + _ } / 2.0
-    
     override def bounds = Bounds.between(start, end)
     
-    override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
+    override def tAxis: Vector2D = vector
+    override def tLength: Double = length
     
+    override def reversed = reverse
+    
+    override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
     override def toValue = new Value(Some(this), LineType)
     override def toModel = Model(Vector("start" -> start, "end" -> end))
     
@@ -231,24 +241,20 @@ case class Line(override val ends: Pair[Point])
      * that will be preserved of the line
      * @return The clipped line. None if this line is completely clipped off
      */
-    def clipped(clippingPlanePoint: Point, clippingPlaneNormal: Vector2D) =
-    {
+    def clipped(clippingPlanePoint: Point, clippingPlaneNormal: Vector2D) = {
         val origin = clippingPlanePoint.toVector dot clippingPlaneNormal
         val startDistance = start.toVector.dot(clippingPlaneNormal) - origin
         val endDistance = end.toVector.dot(clippingPlaneNormal) - origin
         
-        if (startDistance < 0 && endDistance < 0)
-        {
+        if (startDistance < 0 && endDistance < 0) {
             // If both start and end were clipped off, there's no line left
             None
         }
-        else if (startDistance >= 0 && endDistance >= 0)
-        {
+        else if (startDistance >= 0 && endDistance >= 0) {
             // If neither were clipped, the line is preserved
             Some(this)
         }
-        else
-        {
+        else {
             // Calculates the point where the clipping happens
             val t = startDistance / (startDistance - endDistance)
             val clippingPoint = start + vector * t

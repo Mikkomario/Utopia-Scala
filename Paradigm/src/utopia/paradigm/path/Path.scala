@@ -71,10 +71,8 @@ trait Path[+P] extends AnimationLike[P, Path] with HasInclusiveEnds[P]
 	// IMPLEMENTED	-----------------
 	
 	override def reversed: Path[P] = new ReversePath[P](this)
-	
 	override def curved(curvature: AnimationLike[Double, Any]): Path[P] = new CurvedPath[P](this, curvature)
+	override def repeated(times: Int): Path[P] = new RepeatingPath[P](this, times)
 	
 	override def map[B](f: P => B): Path[B] = MappedPath[P, B](this)(f)
-	
-	override def repeated(times: Int): Path[P] = new RepeatingPath[P](this, times)
 }

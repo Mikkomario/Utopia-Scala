@@ -10,6 +10,8 @@
 - Fixed (removed) **Parallelogramic**`.bounds` implementation
 - Fixed some issues with **Polygonic**`.convexParts`
 ### New features
+- Added **ProjectionPath** trait extended by **Line**
+  - This trait facilitates acquiring projected / matching points on a path 
 - Added **HasMutableSize** trait
 ### New methods
 - **Bounded**
