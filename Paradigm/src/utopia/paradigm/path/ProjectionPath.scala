@@ -37,7 +37,7 @@ trait ProjectionPath[+P] extends Path[P]
 	def tFor(p: NumericVectorLike[_, _, _]) = p.scalarProjection(tAxis)
 	/**
 	  * @param p A point
-	  * @return The t-axis progress within this line which matches that point.
+	  * @return The t-axis progress within this path which matches that point.
 	  *         E.g. Return value of 0 would match this path's start point and [[tLength]]
 	  *         would match this path's end point.
 	  *         Note: Returned dt value may be outside of this path's valid dt range.
@@ -46,13 +46,19 @@ trait ProjectionPath[+P] extends Path[P]
 	def dtFor(p: NumericVectorLike[_, _, _]) = tFor(p) - t0
 	/**
 	  * @param p A point
-	  * @return The t-axis progress within this line which matches that point.
+	  * @return The t-axis progress within this path which matches that point.
 	  *         E.g. Return value of 0 would match this path's start point and [[tLength]]
 	  *         would match this path's end point.
 	  *         None if the specified point doesn't match a point on this path.
 	  */
 	def liftDtFor(p: NumericVectorLike[_, _, _]) =
 		Some(dtFor(p)).filter { dt => dt >= 0 && dt <= tLength }
+	/**
+	  * @param p A point
+	  * @return The t-axis progress on this path which most closely matches that point.
+	  *         Limits to return values within this path.
+	  */
+	def capDtFor(p: NumericVectorLike[_, _, _]) = (dtFor(p) max 0) min tLength
 	
 	/**
 	  * @param dt Distance traveled along this path,
@@ -70,6 +76,14 @@ trait ProjectionPath[+P] extends Path[P]
 	  */
 	def liftForDt(dt: Double) = if (dt < 0 || dt > tLength) None else Some(forDt(dt))
 	/**
+	  * @param dt Distance traveled along this path
+	  *           where 0 matches the start of this path and [[tLength]] matches the end of this path.
+	  * @return A point on this path matching the specified travel distance.
+	  *         If the specified travel distance is out-of-bounds, returns the start or the end of this path.
+	  */
+	def capForDt(dt: Double) = forDt((dt max 0) min tLength)
+	
+	/**
 	  * @param t A t-axis position
 	  * @return A point along this path which has the same t-axis position.
 	  *         Note: Resulting point may lay outside of this path's range.
@@ -82,6 +96,13 @@ trait ProjectionPath[+P] extends Path[P]
 	  *         (i.e. if the specified t-axis position was out-of-bounds).
 	  */
 	def liftForT(t: Double) = liftForDt(t - t0)
+	/**
+	  * @param t A t-axis position
+	  * @return A point on this path which has the closest matching t-axis position.
+	  *         Limits to points on this path, meaning that the start or the end of this path may be returned
+	  *         instead of a projected position.
+	  */
+	def capForT(t: Double) = capForDt(t - t0)
 	
 	/**
 	  * @param p A point
@@ -96,4 +117,10 @@ trait ProjectionPath[+P] extends Path[P]
 	  *         None if no matching point exists within this path's t-axis range.
 	  */
 	def liftMatching(p: NumericVectorLike[_, _, _]) = liftDtFor(p).map(forDt)
+	/**
+	  * @param p A point
+	  * @return A point on this path most closely matching the specified point (in terms of its t-axis projection).
+	  *         Limits to points on this path, meaning that the t-axis projections might not actually match.
+	  */
+	def capMatching(p: NumericVectorLike[_, _, _]) = capForT(tFor(p))
 }
