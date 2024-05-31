@@ -59,5 +59,5 @@ trait ManyOrganizationDeletionsWithCancellationsAccess
 	  * @param threshold A time threshold
 	  * @return An access point to organization deletions that were cancelled before the specified threshold
 	  */
-	def cancelledBefore(threshold: Instant) = filter(cancellationFactory.createdBeforeCondition(threshold))
+	def cancelledBefore(threshold: Instant) = filter(cancellationFactory.beforeCondition(threshold))
 }

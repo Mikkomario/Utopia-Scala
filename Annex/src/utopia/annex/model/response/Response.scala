@@ -6,6 +6,7 @@ import utopia.disciple.http.response.BufferedResponse
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
 import scala.util.{Failure, Try}
@@ -191,7 +192,7 @@ object Response
 		  * @return An exception based on this failure
 		  */
 		def toException = {
-			val errorMessage = message.notEmpty match {
+			val errorMessage = NotEmpty(message) match {
 				case Some(message) => s"$message ($status)"
 				case None => s"Server responded with status $status"
 			}

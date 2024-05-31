@@ -10,6 +10,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -85,7 +86,7 @@ object AuthUtils
 				// State is added as a json value if it can be parsed
 				val allParams = Model.withConstants(stateParams) ++
 					preparation.flatMap { _.clientState }.map {Constant("state", _) } ++
-					errorMessage.notEmpty.map { Constant("error", _) }
+					NotEmpty(errorMessage).map { Constant("error", _) }
 				// Redirects the user
 				val parametersString = allParams.nonEmptyProperties
 					.map { att => s"${att.name}=${att.value.toJson}" }.mkString("&")

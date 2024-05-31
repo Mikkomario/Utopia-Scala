@@ -1,7 +1,7 @@
 package utopia.flow.util.console
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.util.StringExtensions._
 
 /**
  * A common trait for items which can be matched to a single part of console input

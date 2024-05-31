@@ -17,7 +17,7 @@ import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}
@@ -322,7 +322,7 @@ abstract class AuthorizedContext extends PostContext
 	                      (f: (K, Connection) => Result) =
 	{
 		// Checks the token from the bearer token authorization header
-		val result = request.headers.bearerAuthorization.notEmpty match {
+		val result = NotEmpty(request.headers.bearerAuthorization) match {
 			case Some(token) =>
 				// Validates the device token against database
 				connectionPool.tryWith { connection =>

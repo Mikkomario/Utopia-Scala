@@ -5,6 +5,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.logos.database.access.many.url.domain.DbDomains
 import utopia.logos.database.access.many.url.request_path.DbRequestPaths
@@ -186,7 +187,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			// Splits into parameter name and value
 			parameterAssignmentRegex.firstRangeFrom(assignment) match {
 				case Some(assignRange) =>
-					assignment.take(assignRange.start).notEmpty.map { paramName =>
+					NotEmpty(assignment.take(assignRange.start)).map { paramName =>
 						Constant(paramName, assignment.drop(assignRange.last + 1))
 					}
 				// Case: No assignment => Treats as null value

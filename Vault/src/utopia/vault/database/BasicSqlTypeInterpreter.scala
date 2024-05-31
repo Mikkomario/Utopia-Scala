@@ -1,6 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.columnlength.ColumnNumberLimit.{BigIntLimit, IntLimit, MediumIntLimit, SmallIntLimit, TinyIntLimit}
 import utopia.vault.database.columnlength.ColumnTextLimit.{LongTextLimit, MediumTextLimit, TextLimit, TinyTextLimit, VarcharLimit}
@@ -23,7 +24,7 @@ object BasicSqlTypeInterpreter extends SqlTypeInterpreter
         // TODO: Unsigned int should be read as long since it can have double as large a value
         // Doesn't include the text in parentheses '()', except in maximum length
         val (mainPart, parenthesisPart) = typeString.splitAtFirst("(").toTuple
-        val maxLength = parenthesisPart.untilFirst(")").notEmpty.flatMap { s => Try { s.toInt }.toOption }
+        val maxLength = NotEmpty(parenthesisPart.untilFirst(")")).flatMap { s => Try { s.toInt }.toOption }
         mainPart.toLowerCase match {
             case "int" => Some(IntType) -> Some(IntLimit(maxLength))
             case "smallint" => Some(IntType) -> Some(SmallIntLimit(maxLength))

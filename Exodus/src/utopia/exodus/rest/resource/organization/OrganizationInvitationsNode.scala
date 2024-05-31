@@ -11,17 +11,17 @@ import utopia.exodus.model.enumeration.ExodusScope.{CreateUser, JoinOrganization
 import utopia.exodus.model.enumeration.ExodusTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.exodus.util.ExodusContext
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.time.Now
+import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.Now
+import utopia.flow.util.NotEmpty
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
-import ExodusContext.uuidGenerator
-import utopia.flow.generic.model.immutable.Model
 
 object OrganizationInvitationsNode extends ExtendableOrganizationResourceFactory[OrganizationInvitationsNode]
 {
@@ -96,7 +96,7 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 										// Creates a new invitation and saves it
 										val invitation = InvitationModel.insert(InvitationData(organizationId,
 											newInvitation.startingRoleId, Now + newInvitation.duration,
-											recipientUserId, Some(recipientEmail), newInvitation.message.notEmpty,
+											recipientUserId, Some(recipientEmail), NotEmpty(newInvitation.message),
 											session.ownerId))
 										// Records a new email validation attempt based on the invitation,
 										// if possible
@@ -145,5 +145,5 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 	                                      description: String = "", invitationWasCreated: Boolean = false,
 	                                      invitationWasSent: Boolean = false) =
 		Model(Vector("was_created" -> invitationWasCreated, "was_sent" -> invitationWasSent,
-			"invitation" -> invitation.map { _.toModel }, "description" -> description.notEmpty))
+			"invitation" -> invitation.map { _.toModel }, "description" -> NotEmpty(description)))
 }

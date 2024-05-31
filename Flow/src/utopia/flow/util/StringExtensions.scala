@@ -538,10 +538,15 @@ object StringExtensions
 				lengthDifferenceResult
 		}
 		
-		/**
+		/*
 		  * @return Some(this) if not empty. None if empty.
 		  */
-		def notEmpty = if (s.isEmpty) None else Some(s)
+		def ifNotEmpty = if (s.isEmpty) None else Some(s)
+		/**
+		  * @param f Function to call for this string if this is not an empty string
+		  * @tparam U Arbitrary function result type
+		  */
+		def forNonEmpty[U](f: String => U): Unit = if (s.nonEmpty) f(s)
 		
 		// NB: These are copied from MayBeEmpty -
 		//  Can't inherit it because implicit casting then fails with StringOps ambiguity

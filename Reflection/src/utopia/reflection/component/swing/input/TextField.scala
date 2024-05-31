@@ -1,34 +1,34 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.context.TextContext
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.template.TextDrawerLike
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.Border
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
+import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorSet}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
-import utopia.genesis.graphics.DrawLevel.Normal
-import utopia.firmament.drawing.template.TextDrawerLike
-import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
-import utopia.reflection.component.template.Focusable
-import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.TextContext
-import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.reflection.component.template.layout.Alignable
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.swing.template.{CustomDrawComponent, JWrapper}
+import utopia.reflection.component.template.Focusable
+import utopia.reflection.component.template.layout.Alignable
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 import utopia.reflection.text.Prompt
 
 import java.awt.Graphics
@@ -263,10 +263,9 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	private val _textPointer = EventfulPointer(initialText)
 	override val valuePointer = _textPointer.map { text =>
 		// Text is trimmed before mapping. Empty strings are treated as None
-		val base = text.trim.notEmpty
+		val base = NotEmpty(text.trim)
 		// Applies possible regex filtering and then converts the text into a value
-		resultsParser(resultFilter match
-		{
+		resultsParser(resultFilter match {
 			case Some(regex) => base.flatMap(regex.findFirstFrom)
 			case None => base
 		})

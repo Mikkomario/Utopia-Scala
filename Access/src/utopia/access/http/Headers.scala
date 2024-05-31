@@ -7,14 +7,15 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.Now
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
 import java.nio.charset.{Charset, StandardCharsets}
-import java.time.{Instant, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
 import java.util.Base64
 import scala.io.Codec
 import scala.language.implicitConversions
@@ -189,7 +190,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * @return Decrypted Username and password from a basic authorization header. None if the header was missing, not
      *         a basic authorization or not properly encoded
      */
-    def basicAuthorization = authorization.notEmpty.flatMap { auth =>
+    def basicAuthorization = NotEmpty(authorization).flatMap { auth =>
         val (authType, encodedValue) = auth.splitAtFirst(" ").toTuple
         if (authType ~== "Basic")
             Try { Base64.getDecoder.decode(encodedValue) }.toOption.map {

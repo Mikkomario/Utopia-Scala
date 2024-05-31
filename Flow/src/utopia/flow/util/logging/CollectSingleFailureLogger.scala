@@ -1,6 +1,6 @@
 package utopia.flow.util.logging
 
-import utopia.flow.util.StringExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 

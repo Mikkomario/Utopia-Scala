@@ -108,11 +108,11 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 				email.headers.recipients.foreach { case (recipient, recipientType) =>
 						message.addRecipient(recipientType, new InternetAddress(recipient.toString))
 				}
-				email.inReplyTo.notEmpty.foreach { id => message.setHeader("In-Reply-To", s"<$id>") }
-				NotEmpty((email.references ++ email.inReplyTo.notEmpty).distinct).foreach { refs =>
+				NotEmpty(email.inReplyTo).foreach { id => message.setHeader("In-Reply-To", s"<$id>") }
+				NotEmpty((email.references ++ NotEmpty(email.inReplyTo)).distinct).foreach { refs =>
 					message.setHeader("References", refs.map { id => s"<$id>" }.mkString(" "))
 				}
-				val textPart = email.message.notEmpty.map { text =>
+				val textPart = NotEmpty(email.message).map { text =>
 					val part = new MimeBodyPart()
 					part.setContent(text, "text/html; charset=utf-8")
 					part

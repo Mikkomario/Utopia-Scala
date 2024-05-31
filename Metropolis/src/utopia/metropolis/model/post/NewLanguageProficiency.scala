@@ -1,13 +1,13 @@
 package utopia.metropolis.model.post
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.metropolis.model.error.IllegalPostModelException
 
 import scala.util.{Failure, Success}
@@ -19,7 +19,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		// Either language id or language code must be specified
 		val languageId = valid("language_id").int
-		val languageCode = valid("language_code").string.flatMap { _.trim.notEmpty }
+		val languageCode = valid("language_code").string.flatMap { s => NotEmpty(s.trim) }
 		if (languageId.isEmpty && languageCode.isEmpty)
 			Failure(new IllegalPostModelException("Either language_id (int) or language_code (string) must be specified"))
 		else

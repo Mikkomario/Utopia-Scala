@@ -2,6 +2,8 @@
 
 ## v2.4 (in development)
 ### Breaking changes
+- Removed `.notEmpty` from **StringExtensions** because of ambiguities when combined with **CollectionExtensions**
+  - Now present in **StringExtensions** as `.ifNotEmpty`
 - **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
 - **ModelLike** implementations are now required to provide `.generatesNonEmptyFor(String)`
 - **PropertyFactory** implementations are now required to provide `.generatesNonEmpty(String)`
@@ -72,6 +74,7 @@
 - **String** (**StringExtensions**)
   - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
   - Added `.replaceAllExcept(Regex, String)`
+  - Added `.forNonEmpty(...)`
 - **TreeLike**
   - Added `.rootsWhereIterator(...)`, `.rootsBelowWhereIterator(...)` and `.pathsToRootsWhereIterator(...)`
 - **Try** (**CollectionExtensions**)

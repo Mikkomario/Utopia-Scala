@@ -76,7 +76,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			// Checks if there exist any rules for tables referencing the table in question
 			val tree = References.referenceTree(rule.targetTable)
 			val restrictingChildren = nonEmptyRules.flatMap { childRule =>
-				tree.filterWithPaths { _.nav == childRule.targetTable }.map { childPath =>
+				tree.pathsToRootsWhere { _.nav == childRule.targetTable }.map { childPath =>
 					// Converts the table path to a reference path
 					// Throws possible errors here (those would result from logic / programming error)
 					// TODO: Sometimes the path is empty. Probably for self-referencing tables.

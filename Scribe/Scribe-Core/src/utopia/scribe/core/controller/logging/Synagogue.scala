@@ -4,6 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.StringExtensions._
 import utopia.scribe.core.model.enumeration.Severity
@@ -130,7 +131,7 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 				// If even this failed, prints to System.error
 				if (useSysErr) {
 					System.err.println(s"$severity failure in $context")
-					message.notEmpty.foreach { m => System.err.println(s"Message: $m") }
+					NotEmpty(message).foreach { m => System.err.println(s"Message: $m") }
 					val fullDetails = variantDetails ++ occurrenceDetails
 					fullDetails.notEmpty.foreach { d => System.err.println(s"Details: $d") }
 					error.foreach { _.printStackTrace() }

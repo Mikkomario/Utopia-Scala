@@ -30,7 +30,7 @@ object ConsoleExtensions
 		 * @return Read line as a string
 		 */
 		def printAndReadLine(prompt: String) = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			in.readLine()
 		}
 		/**
@@ -41,7 +41,7 @@ object ConsoleExtensions
 		 * @return Read line. None if user wrote an empty line.
 		 */
 		def readNonEmptyLine(prompt: String = "", retryPrompt: String = ""): Option[String] = {
-			val firstResult = printAndReadLine(prompt).notEmpty
+			val firstResult = NotEmpty(printAndReadLine(prompt))
 			if (firstResult.isDefined || retryPrompt.isEmpty)
 				firstResult
 			else
@@ -108,21 +108,21 @@ object ConsoleExtensions
 		 * @return Reads lines until a non-empty response is given
 		 */
 		def readLineUntilNotEmpty(prompt: String = "") = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			readLineIterator.find { _.nonEmpty }.get
 		}
 		/**
 		 * @return Reads lines while a non-empty response is given
 		 */
 		def readLineWhileNotEmpty(prompt: String = "") = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			readLineIterator.takeWhile { _.nonEmpty }.toVector
 		}
 		/**
 		 * Reads lines until a non-empty value is given
 		 */
 		def readUntilNotEmpty(prompt: String = "") = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			readIterator.find { _.isDefined }.get
 		}
 		
@@ -135,7 +135,7 @@ object ConsoleExtensions
 		 * @return Read valid item or None if user provided an empty input
 		 */
 		def readValidOrEmpty[A](initialPrompt: String = "")(validate: Value => Either[String, A]) = {
-			initialPrompt.notEmpty.foreach(println)
+			NotEmpty(initialPrompt).foreach(println)
 			readIterator.findMap { input =>
 				if (input.isEmpty)
 					Some(None)
@@ -158,7 +158,7 @@ object ConsoleExtensions
 		 * @return Date specified by the user. None if the user didn't specify a date or if date-parsing failed.
 		 */
 		def readDate(prompt: String = "") = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			println("\tInstruction: Supported format is dd.mm.yyyy")
 			println("\tIf some parts are left empty, current month and year are substituted")
 			println("\tAlso supports options: today, yesterday, last Monday, next Tuesday, etc.")
@@ -173,7 +173,7 @@ object ConsoleExtensions
 		 *         None if the user didn't specify input or if input couldn't be parsed.
 		 */
 		def readDateRange(prompt: String = "") = {
-			prompt.notEmpty.foreach(println)
+			NotEmpty(prompt).foreach(println)
 			println("\tInstruction: Supported format is dd.mm.yyyy, you may specify a range with '-'")
 			println("\tIf some parts are left empty, current month and year are substituted")
 			println("\tYou may also omit month and/or year in the first date if they are the same as in the following date. ")
