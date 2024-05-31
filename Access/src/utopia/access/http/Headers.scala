@@ -261,7 +261,10 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * Combines two headers with each other. If the headers have same keys, uses the keys from the 
      * rightmost headers
      */
-    def ++(headers: Headers) = Headers(fields ++ headers.fields)
+    def ++(headers: Headers) = headers.notEmpty match {
+        case Some(other) => Headers(fields ++ other.fields)
+        case None => this
+    }
     
     
     // OTHER METHODS    -----------

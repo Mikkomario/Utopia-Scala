@@ -2,6 +2,8 @@
 
 ## v1.0.2 (in development)
 Supports **Vault v1.19**
+### New features
+- The list command in the console app now shows top error message, also
 
 ## v1.0.1 - 22.01.2024
 Supports **Flow v2.3** and **Vault v1.18**

@@ -46,14 +46,21 @@
 - **HasTwoSides**
   - Added `.iteratorWithSides` from **Pair**
   - Added `.zipWithSide`
-- **Iterable** (**AsyncCollectionExtensions**)
-  - Added `.mapParallel(Int)(...)`, 
-    which utilizes multiple (although a limited number of) threads to map the collection contents
+- **Iterable** 
+  - **AsyncCollectionExtensions**
+    - Added `.mapParallel(Int)(...)`, 
+      which utilizes multiple (although a limited number of) threads to map the collection contents
+  - **CollectionExtensions**
+    - Added `.notEmpty`
+    - Added `.extremeByOption(Extreme)(...)`
 - **IterableOnce**
   - **AsyncCollectionExtensions**
     - Added `.foreachParallel(Int)(...)`
   - **CollectionExtensions**
+    - Added `.nonEmptyIterator`
     - Added `.countAll` which returns the number of times each unique item appears in the collection
+- **Iterator** (**CollectionExtensions**)
+  - Added `.notEmpty`
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **Regex**
@@ -67,6 +74,8 @@
   - Added `.replaceAllExcept(Regex, String)`
 - **TreeLike**
   - Added `.rootsWhereIterator(...)`, `.rootsBelowWhereIterator(...)` and `.pathsToRootsWhereIterator(...)`
+- **Try** (**CollectionExtensions**)
+  - Added `.foreachOrLog(...)`
 - **WeekDay** (object)
   - Added `.matching(String)`
 ### Other changes

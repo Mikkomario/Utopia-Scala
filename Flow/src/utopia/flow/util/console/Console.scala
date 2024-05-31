@@ -219,31 +219,36 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	
 	// OTHER    ----------------------------
 	
-	private def findClosestMatch(input: String, options: Iterable[Command]) =
-	{
-		// Prefers items with shorter names
-		val orderedOptions = options.toVector.sortBy { _.name.length }
-		val optionsWithAlias = orderedOptions.filter { _.hasAlias }.sortBy { _.alias.length }
-		val lowerIn = input.toLowerCase
-		
-		// Tests for a case where alias contains input
-		optionsWithAlias.find { _.alias.toLowerCase.contains(lowerIn) }
-			// Tests for a case where name contains input
-			.orElse { orderedOptions.find { _.name.toLowerCase.contains(lowerIn) } }
-			.orElse {
-				val inputChars = lowerIn.toSet
-				// Tests which alias contains most input characters
-				optionsWithAlias.map { command =>
-					val chars = command.alias.toLowerCase.toSet
-					command -> (chars & inputChars).size
-				}.maxByOption { _._2 }.filter { _._2 > 0 }.map { _._1 }
+	private def findClosestMatch(input: String, options: Iterable[Command]) = {
+		options.bestMatch { c => c.name.isSimilarTo(input, 2) || c.alias.notEmpty.exists { _.isSimilarTo(input, 1) } }
+			.oneOrMany match
+		{
+			case Left(only) => Some(only)
+			case Right(options) =>
+				// Prefers items with shorter names
+				val orderedOptions = options.sortBy { _.name.length }
+				val optionsWithAlias = orderedOptions.filter { _.hasAlias }.sortBy { _.alias.length }
+				val lowerIn = input.toLowerCase
+				
+				// Tests for a case where alias contains input
+				optionsWithAlias.find { _.alias.toLowerCase.contains(lowerIn) }
+					// Tests for a case where name contains input
+					.orElse { orderedOptions.find { _.name.toLowerCase.contains(lowerIn) } }
 					.orElse {
-						// Tests which name contains most input characters
-						orderedOptions.map { command =>
-							val chars = command.name.toLowerCase.toSet
-							command -> (chars & inputChars).size
-						}.maxByOption { _._2 }.filter { _._2 > 0 }.map { _._1 }
+						val inputChars = lowerIn.toSet
+						// Tests which alias contains most input characters
+						optionsWithAlias.map { command =>
+								val chars = command.alias.toLowerCase.toSet
+								command -> (chars & inputChars).size
+							}.maxByOption { _._2 }.filter { _._2 > 0 }.map { _._1 }
+							.orElse {
+								// Tests which name contains most input characters
+								orderedOptions.map { command =>
+									val chars = command.name.toLowerCase.toSet
+									command -> (chars & inputChars).size
+								}.maxByOption { _._2 }.filter { _._2 > 0 }.map { _._1 }
+							}
 					}
-			}
+		}
 	}
 }

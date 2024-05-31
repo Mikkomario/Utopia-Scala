@@ -342,6 +342,14 @@ object CollectionExtensions
 		// COMPUTED -----------------------------
 		
 		/**
+		  * @return Iterator of this collection. None if this collection is empty.
+		  */
+		def nonEmptyIterator = {
+			val iter = i.iterator
+			if (iter.hasNext) Some(iter) else None
+		}
+		
+		/**
 		  * @return Whether all items within this collection are considered equal (comparing with ==)
 		  */
 		def areAllEqual = {
@@ -646,6 +654,11 @@ object CollectionExtensions
 	class IterableOperations[Repr, I <: IsIterable[Repr]](coll: Repr, iter: I)
 	{
 		/**
+		  * @return This collection if not empty. Otherwise None.
+		  */
+		def notEmpty = if (iter(coll).isEmpty) None else Some(coll)
+		
+		/**
 		  * Collects the results of a 'takeWhile' operation, also returning the remaining items as a separate
 		  * collection.
 		  * In other words, collects into one collection all the initial consecutive items which satisfy the specified
@@ -940,6 +953,22 @@ object CollectionExtensions
 		  */
 		def minByOption[B](map: A => B)(implicit cmp: Ordering[B]): Option[A] =
 			if (t.isEmpty) None else Some(t.minBy(map))
+		/**
+		  * @param extreme Targeted extreme (minimum or maximum)
+		  * @param map Mapping function for acquiring compared values
+		  * @param ord Implicit ordering to use
+		  * @tparam B Type of compared values
+		  * @return The minimum or maximum item from this collection, based on the specified mapping.
+		  */
+		def extremeByOption[B](extreme: Extreme)(map: A => B)(implicit ord: Ordering[B]): Option[A] = {
+			if (t.isEmpty)
+				None
+			else
+				Some(extreme match {
+					case Min => t.minBy(map)
+					case Max => t.maxBy(map)
+				})
+		}
 		
 		/**
 		  * @param f A mapping function for ordered values
@@ -1596,6 +1625,11 @@ object CollectionExtensions
 	implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
 	{
 		/**
+		  * @return This iterator if not empty (i.e. has more elements), otherwise None.
+		  */
+		def notEmpty = if (i.hasNext) Some(i) else None
+		
+		/**
 		  * Enables polling on this iterator. This method yields a new iterator.
 		  * This iterator shouldn't be used after the copy has been acquired. Only the pollable copy of this
 		  * iterator should be used afterwards.
@@ -2141,6 +2175,16 @@ object CollectionExtensions
 		def getOrElseLog[B >: A](f: => B)(implicit log: Logger): B = getOrMap { error =>
 			log(error)
 			f
+		}
+		
+		/**
+		  * @param f A function called if this is a success
+		  * @param log Implicit logger to record a possible failure with
+		  * @tparam U Arbitrary function result type
+		  */
+		def foreachOrLog[U](f: A => U)(implicit log: Logger): Unit = t match {
+			case Success(a) => f(a)
+			case Failure(error) => log(error)
 		}
 		
 		/**

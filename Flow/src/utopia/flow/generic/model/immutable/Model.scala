@@ -1,6 +1,7 @@
 package utopia.flow.generic.model.immutable
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
@@ -187,17 +188,15 @@ class Model private(override val propertyMap: Map[String, Constant],
     /**
      * Creates a new model with the specified properties added
      */
-    def ++(props: IterableOnce[Constant]) = withProperties(this.properties ++ props)
+    def ++(props: IterableOnce[Constant]) = props.nonEmptyIterator match {
+        case Some(iter) => withProperties(this.properties ++ iter)
+        case None => self
+    }
     /**
      * Creates a new model that contains properties from both of these models.
       * The resulting model will still use this model's property factory.
      */
-    def ++(other: ModelLike[Constant]): Model = {
-        if (other.isEmpty)
-            this
-        else
-            this ++ other.properties
-    }
+    def ++(other: ModelLike[Constant]): Model = if (other.isEmpty) this else this ++ other.properties
     
     /**
      * Creates a new model without the exact specified property

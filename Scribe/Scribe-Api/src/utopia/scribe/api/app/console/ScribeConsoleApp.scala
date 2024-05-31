@@ -105,7 +105,7 @@ object ScribeConsoleApp extends App
 				}
 				
 				// Checks for new issues
-				val newIssueIds = DbIssueVariants.createdAfter(recent).issueIds
+				val newIssueIds = DbIssueVariants.after(recent).issueIds
 					.groupMapReduce(Identity) { _ => 1 } { _ + _ }
 					.toVector.reverseSorted
 				
@@ -266,7 +266,7 @@ object ScribeConsoleApp extends App
 						println(s"${issue.id}: ${issue.severity} @ ${issue.context}")
 						println(s"\t- First encountered ${timeDescription(issue.created)}")
 						lastOccurrence.foreach { last =>
-							println("s\t- Last occurrence:")
+							println("\t- Last occurrence:")
 							describeOccurrence(last)
 						}
 						println(s"\t- $numberOfOccurrences occurrences in total")
@@ -456,6 +456,7 @@ object ScribeConsoleApp extends App
 		}
 		println(s"\t- ${issue.id} ${issue.severity} ${issue.context}$state")
 		issue.latestOccurrence.foreach { latest =>
+			latest.errorMessages.headOption.foreach { message => println(s"\t\t- $message") }
 			val lastTime = latest.lastOccurrence
 			println(s"\t\t- Last occurred ${(Now - lastTime).description} ago")
 			val earliest = issue.earliestOccurrence match {
