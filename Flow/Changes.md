@@ -43,6 +43,9 @@
   - Added `.never` which is an alias for `Fixed(None)`
 - **FlagLike**
   - Added `.lightSwitch(...)` and `.switch(...)`, which are mapping functions specialized for boolean values
+- **HasTwoSides**
+  - Added `.iteratorWithSides` from **Pair**
+  - Added `.zipWithSide`
 - **Iterable** (**AsyncCollectionExtensions**)
   - Added `.mapParallel(Int)(...)`, 
     which utilizes multiple (although a limited number of) threads to map the collection contents

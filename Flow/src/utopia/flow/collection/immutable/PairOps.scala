@@ -4,7 +4,6 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
-import utopia.flow.operator.sign.Sign
 import utopia.flow.view.template.HasTwoSides
 
 import scala.annotation.switch
@@ -37,12 +36,6 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	
 	
 	// COMPUTED --------------------------
-	
-	/**
-	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
-	  *         Negative represents the left / first side, Positive represents the right / second side.
-	  */
-	def iteratorWithSides = iterator.zip(Sign.values)
 	
 	/**
 	  * @param ord Implicit ordering to apply
@@ -113,7 +106,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	override def tail = only(Last)
 	override def contains[B >: A](item: B) = first == item || second == item
 	
-	override def map[B](f: A => B) = newPair(f(first), f(second))
+	override def map[B](f: A => B): P[B] = newPair(f(first), f(second))
 	
 	override def reduce[B >: A](op: (B, B) => B) = merge(op)
 	

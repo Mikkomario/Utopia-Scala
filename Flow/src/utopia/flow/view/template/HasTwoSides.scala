@@ -35,6 +35,16 @@ trait HasTwoSides[+A]
 	def toTuple = first -> second
 	
 	/**
+	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.
+	  *         Negative represents the left / first side, Positive represents the right / second side.
+	  */
+	def iteratorWithSides = End.values.iterator.map { side => apply(side) -> side }
+	/**
+	  * @return Copy of this pair zipped with the sides on which the items appear
+	  */
+	def zipWithSide = zip(End.values)
+	
+	/**
 	  * @return Whether the two values in this pair are equal
 	  */
 	def isSymmetric(implicit eq: EqualsFunction[A] = EqualsFunction.default) = eq(first, second)
