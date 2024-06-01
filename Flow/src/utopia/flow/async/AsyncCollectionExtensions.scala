@@ -7,6 +7,7 @@ import scala.collection.BuildFrom
 import scala.collection.generic.{IsIterable, IsIterableOnce}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import scala.language.implicitConversions
 
 /**
   * An extension providing asynchronous collection functions
