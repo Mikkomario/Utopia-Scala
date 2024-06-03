@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.iterable.LazyPair
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
@@ -377,6 +378,13 @@ case class Pair[+A](first: A, second: A)
 	
 	
 	// OTHER    --------------------------
+	
+	/**
+	  * @param f A mapping function to apply on both sides of this pair, lazily
+	  * @tparam B Type of mapping function results
+	  * @return Lazily mapped copy of this pair
+	  */
+	def lazyMap[B](f: A => B) = LazyPair[B](f(first), f(second))
 	
 	/**
 	  * @param e An equals function

@@ -93,19 +93,24 @@ trait HasTwoSides[+A]
 	def foreachSide[U](f: (A, End) => U) = End.values.foreach { side => f(apply(side), side) }
 	
 	/**
+	  * @param f A function that returns true for the targeted item
+	  * @return Side of the item for which the specified function first returns true.
+	  *         None if the specified function returned false for both items.
+	  */
+	def sideWhere(f: A => Boolean): Option[End] = if (f(first)) Some(First) else if (f(second)) Some(Last) else None
+	
+	/**
 	  * @param item An item
 	  * @return The side (Negative for left / first, Positive for right / second) on which that item resides
 	  *         in this pair. None if that item is not in this pair.
 	  */
-	def sideOf[B >: A](item: B): Option[End] =
-		if (item == first) Some(First) else if (item == second) Some(Last) else None
+	def sideOf[B >: A](item: B): Option[End] = sideWhere { _ == item }
 	/**
 	  * @param item An item
 	  * @return The item opposite to the specified item.
 	  *         None if the specified item didn't appear in this pair.
 	  */
-	def oppositeOf[B >: A](item: B) =
-		if (item == first) Some(second) else if (item == second) Some(first) else None
+	def oppositeOf[B >: A](item: B) = oppositeToWhere { _ == item }
 	/**
 	  * Finds the item opposite to one matching a condition.
 	  * Works like find, except that this function returns the opposite item.

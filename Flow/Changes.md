@@ -49,6 +49,7 @@
 - **HasTwoSides**
   - Added `.iteratorWithSides` from **Pair**
   - Added `.zipWithSide`
+  - Added `.sideWhere(...)`
 - **Iterable** 
   - **AsyncCollectionExtensions**
     - Added `.mapParallel(Int)(...)`, 

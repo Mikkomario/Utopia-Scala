@@ -254,7 +254,9 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	def doubleDot(other: HasDoubleDimensions) = dimensions.mergeWith(other, 0.0) { n.toDouble(_) * _ }.sum
 	/**
 	  * Calculates the scalar projection of this vector over the other vector.
-	  * This is the same as the length of this vector's projection over the other vector
+	  * This is the same as the length of this vector's projection over the other vector, but preserving sign.
+	  * E.g. (-1,1) scalar projection over (1,0) is -1,
+	  * because it's traversal along the second vector X(1) is of length 1 to the opposite direction relative to that vector.
 	  */
 	def scalarProjection(other: HasDoubleDimensions with HasLength) = doubleDot(other) / other.length
 	/**

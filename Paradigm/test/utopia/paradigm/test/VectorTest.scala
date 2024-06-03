@@ -4,6 +4,7 @@ import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.ParadigmDataType
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
 object VectorTest extends App
@@ -64,6 +65,12 @@ object VectorTest extends App
     val v3 = Vector3D(1, 1, 1)
     
     assert(v3.normal isPerpendicularTo v3)
+    
+    // Tests projection sign handling
+    val v4 = Vector2D(1)
+    
+    assert(Vector2D(1, 1).scalarProjection(v4) ~== 1.0)
+    assert(Vector2D(-1, 1).scalarProjection(v4) ~== -1.0, Vector2D(-1, 1).scalarProjection(v4))
     
     println("Success")
 }
