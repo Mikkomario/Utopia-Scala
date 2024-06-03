@@ -28,6 +28,7 @@
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **FromCollectionFactory** trait
 - Added **ZipBuilder** class
+- Added **LazyPair** class
 - Added **PairOrVectorBuilder** class
 - Added **OpenEnumeration** and **OpenEnumerationValue** in order to facilitate the creation of cross-module enumerations
 - Multiple new features to **ActionQueue**:
