@@ -1,6 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
@@ -1292,7 +1293,7 @@ trait Changing[+A] extends Any with View[A]
 	{
 		// Case: No listeners => No events required
 		if (listeners.isEmpty)
-			Vector.empty
+			Empty
 		// Case: Listeners present => Informs them and collects the after effects to trigger later
 		//       (may schedule some listeners to be removed, based on their change responses)
 		else
@@ -1304,7 +1305,7 @@ trait Changing[+A] extends Any with View[A]
 						listener -> response
 					}
 				// Case: There wasn't a change event after all => Skips the process
-				case None => Vector.empty
+				case None => Empty
 			}
 	}
 	

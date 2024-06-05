@@ -4,7 +4,7 @@ import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{PostponingProcess, WaitTarget}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -165,7 +165,7 @@ object DrawableHandler
   */
 class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
                       override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority, Fps] = Map(),
-                      preDrawPriority: Priority = High, initialItems: IterableOnce[Drawable] = Vector.empty)
+                      preDrawPriority: Priority = High, initialItems: IterableOnce[Drawable] = Empty)
                      (implicit exc: ExecutionContext, log: Logger)
 	extends DeepHandler[Drawable](initialItems, visiblePointer) with Drawable with PaintManager
 {

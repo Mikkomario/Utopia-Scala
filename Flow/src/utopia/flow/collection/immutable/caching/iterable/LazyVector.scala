@@ -1,5 +1,6 @@
 package utopia.flow.collection.immutable.caching.iterable
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.builder.LazyBuilder
 import utopia.flow.collection.template.factory.LazyFactory
 import utopia.flow.view.immutable.caching.Lazy
@@ -14,7 +15,7 @@ object LazyVector extends SeqFactory[LazyVector] with LazyFactory[LazyVector]
 	/**
 	  * An empty lazily initialized vector
 	  */
-	private val _empty = new LazyVector(Vector.empty)
+	private val _empty = new LazyVector(Empty)
 	
 	
 	// IMPLEMENTED  -----------------------

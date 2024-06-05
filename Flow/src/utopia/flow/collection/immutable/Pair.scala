@@ -307,7 +307,7 @@ object Pair
 	
 	object PairFactory extends SeqFactory[IndexedSeq]
 	{
-		override def empty[A]: Vector[A] = Vector.empty
+		override def empty[A]: IndexedSeq[A] = Empty
 		
 		override def from[A](source: IterableOnce[A]): IndexedSeq[A] = source match {
 			// Case: Already an indexed sequence => Won't transform
@@ -343,7 +343,7 @@ case class Pair[+A](first: A, second: A)
 	override def iterableFactory = Pair.factory
 	
 	override def unary_- = Pair(second, first)
-	override protected def _empty: IndexedSeq[A] = Vector.empty
+	override protected def _empty: IndexedSeq[A] = Empty
 	
 	override protected def only(side: End): IndexedSeq[A] = Vector(apply(side))
 	override protected def newPair[B](first: => B, second: => B): Pair[B] = Pair(first, second)
@@ -373,7 +373,7 @@ case class Pair[+A](first: A, second: A)
 		else if (pred(second))
 			Vector(second)
 		else
-			Vector.empty
+			Empty
 	}
 	
 	

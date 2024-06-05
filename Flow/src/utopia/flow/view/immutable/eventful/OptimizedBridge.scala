@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 import utopia.flow.operator.Identity
@@ -215,7 +216,7 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		// IMPLEMENTED  --------------------
 		
 		override def shouldContinueListening: Boolean = shouldListen
-		override def afterEffects: Iterable[() => Unit] = Iterable.empty
+		override def afterEffects: Iterable[() => Unit] = Empty
 		
 		override def and[U](afterEffect: => U): ChangeResponse = new DetachIfAppropriate(Vector(() => afterEffect))
 		

@@ -1,5 +1,6 @@
 package utopia.logos.database.storable.word
 
+import utopia.flow.collection.immutable.Empty
 import utopia.logos.database.factory.word.TextStatementLinkDbFactory
 
 object TextStatementLinkModel
@@ -44,7 +45,7 @@ trait TextStatementLinkModel extends TextStatementLinkModelLike[TextStatementLin
 {
 	// IMPLEMENTED  -------------------------
 	
-	override protected def additionalValueProperties = Iterable.empty
+	override protected def additionalValueProperties = Empty
 	
 	override protected def buildCopy(id: Option[Int], textId: Option[Int], statementId: Option[Int],
 	                                 orderIndex: Option[Int]) =

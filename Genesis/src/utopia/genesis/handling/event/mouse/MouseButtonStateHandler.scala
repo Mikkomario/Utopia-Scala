@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -41,7 +42,7 @@ object MouseButtonStateHandler
   * @author Mikko Hilpinen
   * @since 05/02/2024, v4.0
   */
-class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateListener] = Iterable.empty,
+class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateListener] = Empty,
                               additionalCondition: Changing[Boolean] = AlwaysTrue)
 	extends DeepHandler[MouseButtonStateListener](initialListeners, additionalCondition)
 		with ConsumableEventHandler[MouseButtonStateListener, MouseButtonStateEvent] with MouseButtonStateListener

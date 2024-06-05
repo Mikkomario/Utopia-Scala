@@ -1,6 +1,6 @@
 package utopia.genesis.handling.template
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.view.mutable.Pointer
 import utopia.genesis.handling.template.Handlers.AnyHandler
@@ -18,7 +18,7 @@ object MutableHandlers extends FromCollectionFactory[AnyHandler, MutableHandlers
 	  * @param pointer A mutable pointer to the managed handlers
 	  * @return An instance that utilizes / wraps the specified pointer
 	  */
-	def apply(pointer: Pointer[Seq[AnyHandler]] = Pointer(Vector.empty)): MutableHandlers =
+	def apply(pointer: Pointer[Seq[AnyHandler]] = Pointer(Empty)): MutableHandlers =
 		new _MutableHandlers(pointer)
 	/**
 	  * @param handlers Set of handlers to assign initially

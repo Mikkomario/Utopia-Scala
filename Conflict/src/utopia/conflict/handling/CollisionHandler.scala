@@ -1,6 +1,7 @@
 package utopia.conflict.handling
 
 import utopia.conflict.collision.{Collision, CollisionShape}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.Actor
@@ -42,8 +43,7 @@ object CollisionHandler
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-class CollisionHandler(targetHandler: CollisionTargetHandler,
-                       initialListeners: IterableOnce[CollisionListener] = Iterable.empty)
+class CollisionHandler(targetHandler: CollisionTargetHandler, initialListeners: IterableOnce[CollisionListener] = Empty)
     extends CollisionPartyHandler[CollisionListener](initialListeners) with Actor
 {
     // ATTRIBUTES   --------------------

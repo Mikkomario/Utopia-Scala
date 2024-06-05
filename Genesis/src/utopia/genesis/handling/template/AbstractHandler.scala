@@ -1,5 +1,6 @@
 package utopia.genesis.handling.template
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.VolatileList
 
 /**
@@ -7,7 +8,7 @@ import utopia.flow.collection.mutable.VolatileList
   * @author Mikko Hilpinen
   * @since 30/01/2024, v4.0
   */
-abstract class AbstractHandler[A <: Handleable](initialItems: IterableOnce[A] = Vector.empty) extends Handler[A]
+abstract class AbstractHandler[A <: Handleable](initialItems: IterableOnce[A] = Empty) extends Handler[A]
 {
 	// ATTRIBUTES   ------------------------
 	

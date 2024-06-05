@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.keyboard
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -42,7 +43,7 @@ object KeyDownHandler
  * @author Mikko Hilpinen
  * @since 29/03/2024, v4.0
  */
-class KeyDownHandler(initialListeners: IterableOnce[KeyDownListener] = Iterable.empty,
+class KeyDownHandler(initialListeners: IterableOnce[KeyDownListener] = Empty,
                      additionalCondition: Changing[Boolean] = AlwaysTrue)
 	extends DeepHandler[KeyDownListener](initialListeners, additionalCondition)
 		with EventHandler[KeyDownListener, KeyDownEvent] with KeyDownListener

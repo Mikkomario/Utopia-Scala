@@ -1,6 +1,6 @@
 package utopia.flow.collection.template.factory
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 
 /**
   * Common trait for factory classes / objects that wrap / accept a collection of items
@@ -25,7 +25,7 @@ trait FromCollectionFactory[-A, +C]
 	/**
 	  * @return An empty collection
 	  */
-	def empty = from(Iterable.empty)
+	def empty = from(Empty)
 	
 	
 	// OTHER    ----------------------

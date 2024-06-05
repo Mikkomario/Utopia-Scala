@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -41,7 +42,7 @@ object MouseDragHandler
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class MouseDragHandler(initialListeners: IterableOnce[MouseDragListener] = Iterable.empty,
+class MouseDragHandler(initialListeners: IterableOnce[MouseDragListener] = Empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
 	extends DeepHandler[MouseDragListener](initialListeners, additionalCondition)
 		with EventHandler[MouseDragListener, MouseDragEvent] with MouseDragListener

@@ -1,6 +1,6 @@
 package utopia.flow.collection
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.mutable.iterator._
@@ -40,6 +40,7 @@ object CollectionExtensions
 	
 	// ITERABLE ONCE    ---------------------------------------
 	
+	// TODO: Move (some of) these to Iterator and/or Iterable instead
 	class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
 	{
 		/**
@@ -657,6 +658,123 @@ object CollectionExtensions
 		  * @return This collection if not empty. Otherwise None.
 		  */
 		def notEmpty = if (iter(coll).isEmpty) None else Some(coll)
+		
+		/**
+		  * Takes 'n' largest items from this collection
+		  * @param n Number of items to include in the result
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' largest items from this collection
+		  */
+		def takeMax(n: Int)(implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[iter.A]) = {
+			// Case: Taking no items => Returns an empty collection
+			if (n <= 0)
+				bf.fromSpecific(coll)(Empty)
+			// Case: Taking only one item => Same as maxOption with potentially different result type
+			else if (n == 1)
+				bf.fromSpecific(coll)(iter(coll).maxOption)
+			else {
+				val ops = iter(coll)
+				// Case: Taking all items => Returns this collection
+				if (ops.sizeCompare(n) <= 0)
+					coll
+				else {
+					val iterator = iter(coll).iterator
+					val buffer = mutable.Buffer[iter.A]()
+					buffer ++= iterator.collectNext(n).sorted
+					
+					iterator.foreach { item =>
+						val index = buffer.view.takeWhile { _ < item }.size
+						if (index > 0) {
+							buffer.remove(0)
+							buffer.insert(index - 1, item)
+						}
+					}
+					
+					bf.fromSpecific(coll)(buffer)
+				}
+			}
+		}
+		/**
+		  * Takes 'n' smallest items from this collection
+		  * @param n Number of items to include in the result
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' smallest items from this collection
+		  */
+		def takeMin(n: Int)(implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[iter.A]) =
+			takeMax(n)(bf, ord.reverse)
+		/**
+		  * Takes 'n' largest items from this collection based on mapping function results
+		  * @param n Number of items to include in the result
+		  * @param f Mapping function for acquiring the compared values
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' largest items from this collection
+		  */
+		// WET WET from takeMax - This version is optimized for this use-case (could still use a common function)
+		def takeMaxBy[B](n: Int)(f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[B]) = {
+			// Case: Taking no items => Returns an empty collection
+			if (n <= 0)
+				bf.fromSpecific(coll)(Empty)
+			// Case: Taking only one item => Same as maxOption with potentially different result type
+			else if (n == 1)
+				bf.fromSpecific(coll)(iter(coll).maxByOption(f))
+			else {
+				val ops = iter(coll)
+				// Case: Taking all items => Returns this collection
+				if (ops.sizeCompare(n) <= 0)
+					coll
+				else {
+					val iterator = iter(coll).iterator
+					val buffer = mutable.Buffer[(iter.A, B)]()
+					buffer ++= iterator.collectNext(n).map { a => a -> f(a) }.sortBy { _._2 }
+					
+					iterator.foreach { item =>
+						val mapResult = f(item)
+						val index = buffer.view.takeWhile { _._2 < mapResult }.size
+						if (index > 0) {
+							buffer.remove(0)
+							buffer.insert(index - 1, item -> mapResult)
+						}
+					}
+					
+					bf.fromSpecific(coll)(buffer.view.map { _._1 })
+				}
+			}
+		}
+		/**
+		  * Takes 'n' smallest items from this collection based on mapping function results
+		  * @param n Number of items to include in the result
+		  * @param f Mapping function for acquiring the compared values
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' smallest items from this collection
+		  */
+		def takeMinBy[B](n: Int)(f: iter.A => B)(implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[B]) =
+			takeMaxBy(n)(f)(bf, ord.reverse)
+		/**
+		  * Takes 'n' smallest or largest items from this collection
+		  * @param n Number of items to include in the result
+		  * @param extreme Targeted extreme, i.e. whether to take the largest or the smallest items
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' smallest or largest items from this collection
+		  */
+		def takeExtreme(n: Int, extreme: Extreme)(implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[iter.A]) =
+			takeMax(n)(bf, extreme.ascendingToExtreme(ord))
+		/**
+		  * Takes 'n' smallest or largest items from this collection based on mapping function results
+		  * @param n Number of items to include in the result
+		  * @param extreme Targeted extreme, i.e. whether to take the largest or the smallest items
+		  * @param f Mapping function for acquiring the compared values
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param ord Implicit ordering to apply
+		  * @return 'n' smallest or largest items from this collection
+		  */
+		def takeExtremeBy[B](n: Int, extreme: Extreme)(f: iter.A => B)
+		                    (implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[B]) =
+			takeMaxBy(n)(f)(bf, extreme.ascendingToExtreme(ord))
 		
 		/**
 		  * Collects the results of a 'takeWhile' operation, also returning the remaining items as a separate
@@ -1429,7 +1547,7 @@ object CollectionExtensions
 		  */
 		def pairedFrom[B >: A](start: B) = seq.headOption match {
 			case Some(first) => Pair(start, first) +: paired
-			case None => Vector.empty
+			case None => Empty
 		}
 		/**
 		  * Forms pairs based on the contents of this collection
@@ -1701,7 +1819,8 @@ object CollectionExtensions
 		  * @return The minimum and the maximum value found from this iterator.
 		  *         None if this iterator is empty.
 		  */
-		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) = if (i.hasNext) Some(minMaxBy(f)) else None
+		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) =
+			if (i.hasNext) Some(minMaxBy(f)) else None
 		
 		/**
 		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.

@@ -1,5 +1,6 @@
 package utopia.genesis.handling.action
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
@@ -40,8 +41,7 @@ object ActorHandler
   * @author Mikko Hilpinen
   * @since 6.4.2019, v2+
   */
-class ActorHandler(initialItems: IterableOnce[Actor] = Iterable.empty,
-                   additionalCondition: Changing[Boolean] = AlwaysTrue)
+class ActorHandler(initialItems: IterableOnce[Actor] = Empty, additionalCondition: Changing[Boolean] = AlwaysTrue)
 	extends DeepHandler[Actor](initialItems, additionalCondition) with Actor
 {
 	override def act(duration: FiniteDuration) = items.foreach { _.act(duration) }

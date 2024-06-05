@@ -8,6 +8,7 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.post.UserSettingsUpdate
 import utopia.metropolis.model.stored.user.UserSettings
@@ -62,7 +63,7 @@ object MySettingsNode extends ExtendableSessionResource
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def defaultFollowImplementations = Vector.empty
+	override protected def defaultFollowImplementations = Empty
 	
 	
 	// OTHER    ---------------------------------------

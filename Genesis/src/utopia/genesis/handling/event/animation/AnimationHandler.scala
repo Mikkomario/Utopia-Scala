@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.animation
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
@@ -44,7 +45,7 @@ object AnimationHandler
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-class AnimationHandler(initialListeners: IterableOnce[AnimationListener] = Iterable.empty,
+class AnimationHandler(initialListeners: IterableOnce[AnimationListener] = Empty,
                        additionalCondition: FlagLike = AlwaysTrue)
 	extends DeepHandler[AnimationListener](initialListeners, additionalCondition)
 		with EventHandler[AnimationListener, AnimationEvent] with AnimationListener

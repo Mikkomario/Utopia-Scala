@@ -1,5 +1,6 @@
 package utopia.flow.test
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.EqualsFunction
 
@@ -15,6 +16,8 @@ object EqualsTest extends App
 	assert("aAa" ~== "aaa")
 	assert("aba" !~== "aaa")
 	assert(new TestWrapper("saa") ~== new TestWrapper("soo"))
+	
+	assert(Empty.isInstanceOf[IterableOnce[_]])
 	
 	println("Success")
 	

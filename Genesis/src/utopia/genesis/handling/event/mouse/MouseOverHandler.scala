@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -46,7 +47,7 @@ object MouseOverHandler
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Iterable.empty,
+class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
 	extends DeepHandler[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener
 {

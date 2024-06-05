@@ -132,7 +132,7 @@ trait MatrixLike[+A, +C[_], +Repr] extends utopia.flow.collection.template.Matri
 				val start = (center - range) max 0
 				val end = (center + range) min (length - 1)
 				if (start > end)
-					Iterable.empty
+					Empty
 				else
 					start to end
 			}

@@ -1,7 +1,7 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
@@ -290,11 +290,11 @@ object FileExtensions
 							// Case: Directory reading failed => logs as an error and acts as if the directory was empty
 							case Failure(error) =>
 								log(error, s"Failed to read the children of $path")
-								Vector.empty
+								Empty
 						}
 					// Case: Regular file => No need to scan for child nodes
 					else
-						Vector.empty
+						Empty
 				}
 		}
 		

@@ -2,6 +2,7 @@ package utopia.manuscript.excel
 
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.PropertyFactory.ConstantFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -80,7 +81,7 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 		if (preLoad)
 			Model.withConstants(headers.keyToIndex.map { case (key, index) => Constant(key, apply(index)) })
 		else
-			Model(Vector.empty, new CellsToPropsFactory(headers))
+			Model(Empty, new CellsToPropsFactory(headers))
 	}
 	
 	/**

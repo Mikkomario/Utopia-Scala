@@ -26,6 +26,7 @@
 - Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
+- Added **Empty** object, an optimized empty **IndexedSeq** implementation
 - Added **FromCollectionFactory** trait
 - Added **ZipBuilder** class
 - Added **LazyPair** class
@@ -57,6 +58,9 @@
   - **CollectionExtensions**
     - Added `.notEmpty`
     - Added `.extremeByOption(Extreme)(...)`
+    - Added `.takeMax(Int)`, `.takeMin(Int)`, `.takeMaxBy(Int)(...)`, `.takeMinBy(Int)(...)`, 
+      `.takeExtreme(Int, Extreme)` and `.takeExtremeBy(Int, Extreme)(...)`, 
+      which collect n smallest or largest items from the collection
 - **IterableOnce**
   - **AsyncCollectionExtensions**
     - Added `.foreachParallel(Int)(...)`

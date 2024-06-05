@@ -1,5 +1,7 @@
 package utopia.flow.event.model
 
+import utopia.flow.collection.immutable.Empty
+
 import scala.language.implicitConversions
 
 /**
@@ -72,7 +74,7 @@ object ChangeResponse
 	case object Continue extends ChangeResponse
 	{
 		override val shouldContinueListening: Boolean = true
-		override val afterEffects: Iterable[() => Unit] = Vector.empty
+		override val afterEffects: Iterable[() => Unit] = Empty
 		
 		override def and[U](afterEffect: => U): ChangeResponse = ContinueAnd(Vector(() => afterEffect))
 	}
@@ -83,7 +85,7 @@ object ChangeResponse
 	case object Detach extends ChangeResponse
 	{
 		override val shouldContinueListening: Boolean = false
-		override val afterEffects: Iterable[() => Unit] = Vector.empty
+		override val afterEffects: Iterable[() => Unit] = Empty
 		
 		override def and[U](afterEffect: => U): ChangeResponse = DetachAnd(Vector(() => afterEffect))
 	}
