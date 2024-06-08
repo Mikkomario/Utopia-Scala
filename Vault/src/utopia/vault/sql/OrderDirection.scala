@@ -1,5 +1,7 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.Pair
+
 /**
  * Common trait for order directions
  * @author Mikko Hilpinen
@@ -34,5 +36,5 @@ object OrderDirection
 	/**
 	 * All possible order direction values
 	 */
-	val values = Vector(Ascending, Descending)
+	val values = Pair(Ascending, Descending)
 }

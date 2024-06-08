@@ -21,10 +21,10 @@ trait MultiCombiningFactory[+Combined, Parent, Child]
 	  * @param children Child items
 	  * @return A combination of these items
 	  */
-	def apply(parent: Parent, children: Vector[Child]): Combined
+	def apply(parent: Parent, children: Seq[Child]): Combined
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def apply(result: Result): Vector[Combined] = result.group(parentFactory, childFactory)(apply).toVector
+	override def apply(result: Result): Seq[Combined] = result.group(parentFactory, childFactory)(apply).toSeq
 }

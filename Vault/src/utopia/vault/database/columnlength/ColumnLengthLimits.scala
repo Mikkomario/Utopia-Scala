@@ -1,6 +1,6 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.immutable.DeepMap
+import utopia.flow.collection.immutable.{DeepMap, Pair}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.model.immutable.{Column, Table}
 
@@ -71,5 +71,5 @@ object ColumnLengthLimits
 	  * @param lengthLimits Length limits to apply, where keys are property names and values are length limits
 	  */
 	def update(databaseName: String, tableName: String, lengthLimits: IterableOnce[(String, ColumnLengthLimit)]) =
-		limits.update { _ ++ (Vector(databaseName, tableName) -> DeepMap.flat(lengthLimits)) }
+		limits.update { _ ++ (Pair(databaseName, tableName) -> DeepMap.flat(lengthLimits)) }
 }

@@ -12,7 +12,7 @@ object ContainerSingleSelectionManager
 	/**
 	  * Short version of typical pointer used in these methods
 	  */
-	private type P[X] = Changing[Vector[X]]
+	private type P[X] = Changing[Seq[X]]
 	
 	/**
 	  * Short version for a refreshable display component
@@ -89,7 +89,7 @@ object ContainerSingleSelectionManager
   * @author Mikko Hilpinen
   * @since 19.12.2020, Reflection v2
   */
-class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Component, +PA <: Changing[Vector[A]]]
+class ContainerSingleSelectionManager[A, -W, Display <: Refreshable[A] with Component, +PA <: Changing[Seq[A]]]
 (container: MutableMultiContainer[W, Display], contentPointer: PA,
  override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)

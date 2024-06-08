@@ -1,22 +1,17 @@
 package utopia.nexus.rest
 
 import utopia.access.http.Method._
+import utopia.access.http.Status._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.nexus.http.Path
-import utopia.nexus.http.Response
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.Now
+import utopia.nexus.http.{Path, Response, StreamedBody}
+import utopia.nexus.rest.ResourceSearchResult.Ready
 
 import java.io.File
 import java.nio.file.Files
-import scala.util.Try
-import scala.util.Failure
-import utopia.access.http.Status._
-import utopia.flow.generic.model.immutable.Model
-
-import java.time.LocalDateTime
-import utopia.nexus.http.StreamedBody
-
-import scala.util.Success
-import utopia.nexus.rest.ResourceSearchResult.Ready
+import scala.util.{Failure, Success, Try}
 
 /**
  * This resource is used for uploading and retrieving file data.<br>
@@ -76,20 +71,21 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         {
             val counter = Iterator.iterate(1) { _ + 1 }
             val nameFromParam = request.parameters("filename").string.orElse(request.parameters("name").string)
-            val partNames = request.body.map(p => p.name.getOrElse(nameFromParam.getOrElse(
-                    "upload_" + LocalDateTime.now()) + (if (request.body.size > 1) "_" + counter.next() else "")))
+            val partNames = request.body.map { p =>
+                p.name.getOrElse {
+                    s"upload_${Now.toLocalDateTime}${ if (request.body.size > 1) s"_${ counter.next() }" else "" }"
+                }
+            }
             
             val uploadResults = request.body.zip(partNames).map { case (b, partName) => upload(b, partName, remainingPath) }
             val successes = partNames.zip(uploadResults).filter(_._2.isSuccess).toMap.view.mapValues(_.get)
             
-            if (successes.isEmpty)
-            {
+            if (successes.isEmpty) {
                 // TODO: For some reason, the error message only tells the directory which couldn't be created
                 val errorMessage = Option(uploadResults.head.failed.get.getMessage)
                 errorMessage.map(Response.plainText(_, Forbidden)).getOrElse(Response.empty(Forbidden))
             }
-            else
-            {
+            else {
                 // TODO: Add better handling for cases where request path is empty for some reason
                 val myPath = myLocationFrom(request.path.getOrElse(Path(name)), remainingPath)
                 val resultUrls = successes.mapValues(p => (myPath/p).toServerUrl(context.settings))
@@ -116,30 +112,26 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
     private def makeDirectoryModel(directory: File, directoryAddress: String) = 
     {
         val allFiles = directory.listFiles().toSeq.groupBy { _.isDirectory() }
-        val files = allFiles.getOrElse(false, Vector()).map { directoryAddress + "/" + _.getName }
-        val directories = allFiles.getOrElse(true, Vector()).map { directoryAddress + "/" + _.getName }
+        val files = allFiles.getOrElse(false, Empty).map { f => s"$directoryAddress/${f.getName}" }
+        val directories = allFiles.getOrElse(true, Empty).map { f => s"$directoryAddress/${f.getName}" }
         
-        Model(Vector("files" -> files.toVector, "directories" -> directories.toVector))
+        Model(Pair("files" -> files.toVector, "directories" -> directories.toVector))
     }
     
-    private def upload(part: StreamedBody, partName: String, remainingPath: Option[Path])(implicit context: Context) = 
-    {
+    private def upload(part: StreamedBody, partName: String, remainingPath: Option[Path]) = {
         val makeDirectoryResult = remainingPath.map(_.toString()).map(
                 uploadPath.resolve).map(p => Try(Files.createDirectories(p))).getOrElse(Success(uploadPath))
         
-        if (makeDirectoryResult.isSuccess)
-        {
+        if (makeDirectoryResult.isSuccess) {
             // Generates the proper file name
-            val fileName = if (partName.contains(".")) partName else partName + "." + part.contentType.subType
+            val fileName = if (partName.contains(".")) partName else s"$partName.${ part.contentType.subType }"
             val filePath = makeDirectoryResult.get.resolve(fileName)
             
             // Writes the file, returns the server path for the targeted resource
             part.writeTo(filePath).map(_ => remainingPath.map(_/fileName) getOrElse Path(fileName))
         }
         else
-        {
             Failure(makeDirectoryResult.failed.get)
-        }
     }
     
     /*

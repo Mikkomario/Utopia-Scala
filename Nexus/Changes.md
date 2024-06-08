@@ -2,6 +2,8 @@
 
 ## v1.9.3 (in development)
 Supports **Flow v2.4**
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
 
 ## v1.9.2 - 22.01.2024
 Supports **Flow v2.3**

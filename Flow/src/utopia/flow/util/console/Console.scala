@@ -226,7 +226,7 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 			case Left(only) => Some(only)
 			case Right(options) =>
 				// Prefers items with shorter names
-				val orderedOptions = options.sortBy { _.name.length }
+				val orderedOptions = options.toSeq.sortBy { _.name.length }
 				val optionsWithAlias = orderedOptions.filter { _.hasAlias }.sortBy { _.alias.length }
 				val lowerIn = input.toLowerCase
 				

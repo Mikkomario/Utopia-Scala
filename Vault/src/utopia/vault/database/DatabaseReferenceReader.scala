@@ -1,5 +1,6 @@
 package utopia.vault.database
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
@@ -29,14 +30,10 @@ object DatabaseReferenceReader
      * same database
      * @param connection the database connection that is used
      */
-    def apply(tables: Set[Table])(implicit connection: Connection) = 
-    {
+    def apply(tables: Set[Table])(implicit connection: Connection) =
         if (tables.isEmpty)
-        {
-            Vector()
-        }
-        else 
-        {
+            Empty
+        else {
             val databaseName = tables.head.databaseName
             val tableOptions = tables.map(_.name: ConditionElement).toSeq
             val results = connection(Select(keys, keys.columns) + Where(
@@ -49,17 +46,15 @@ object DatabaseReferenceReader
             def findColumn(table: Table, keyName: String, row: ModelLike[Property]) =
                     table.columnWithColumnName(row(keyName).stringOr())
             
-            results.map( row => 
-            {
+            results.map { row =>
                 val sourceTable = findTable("tableName", row)
                 val sourceColumn = findColumn(sourceTable, "columnName", row)
                 val targetTable = findTable("referencedTableName", row)
                 val targetColumn = findColumn(targetTable, "referencedColumnName", row)
                 
                 Reference(sourceTable, sourceColumn, targetTable, targetColumn)
-            } )
+            }
         }
-    }
     
     /**
      * Sets up the References object to contain all references between the provided tables. If 

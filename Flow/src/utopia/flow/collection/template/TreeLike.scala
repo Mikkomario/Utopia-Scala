@@ -1,6 +1,7 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
 import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.MaybeEmpty
@@ -173,9 +174,9 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	/**
 	  * @return The leaf nodes that appear within this tree.
 	  *         Leaves are nodes that don't have any children, i.e. the "end" nodes.
-	  *         If this node is empty, returns a vector containing this node only.
+	  *         If this node is empty, returns a sequence containing this node only.
 	  */
-	def leaves: Vector[Repr] = if (isEmpty) Vector(self) else leavesBelow
+	def leaves: IndexedSeq[Repr] = if (isEmpty) Single(self) else leavesBelow
 	/**
 	  * @return All leaf nodes that appear under this node.
 	  *         This node is never included, even when it is a leaf node.
@@ -193,9 +194,9 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         If this node had 2 children, that each had 2 children, 4 branches of length 3 would be returned.
 	  *         As the size of the tree increases, the number of resulting branches increases exponentially.
 	  */
-	def branchesIterator = {
+	def branchesIterator: Iterator[IndexedSeq[Repr]] = {
 		if (isEmpty)
-			PollableOnce(Vector(self))
+			PollableOnce(Single(self))
 		else
 			_branchesIterator.map { _.result().reverse }
 	}
@@ -281,7 +282,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  * @param more Additional steps to take
 	  * @return Node at the end of the specified navigation path. May be generated.
 	  */
-	def apply(first: A, second: A, more: A*) = this / (Vector(first, second) ++ more)
+	def apply(first: A, second: A, more: A*) = this / (Pair(first, second) ++ more)
 	
 	/**
 	  * Finds a child directly under this node that matches the specified navigational step
@@ -354,9 +355,9 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         The node that first fulfilled the specified search condition always lies at the end of the path.
 	  *         This node is always located at the beginning of the resulting path.
 	  */
-	def findWithPath(filter: Repr => Boolean): Option[Vector[Repr]] = {
+	def findWithPath(filter: Repr => Boolean): Option[IndexedSeq[Repr]] = {
 		if (filter(self))
-			Some(Vector(self))
+			Some(Single(self))
 		else
 			children.findMap { _.findWithPath(filter) }.map { self +: _ }
 	}
@@ -414,5 +415,5 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  *         This node is always the first element in the returned path.
 	  *         The node containing the specified nav element is located at the end of this path.
 	  */
-	def pathTo(nav: A) = if (this.nav ~== nav) Some(Vector()) else findWithPath { _.nav ~== nav }
+	def pathTo(nav: A) = if (this.nav ~== nav) Some(Empty) else findWithPath { _.nav ~== nav }
 }

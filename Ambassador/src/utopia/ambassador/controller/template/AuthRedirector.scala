@@ -36,7 +36,7 @@ trait AuthRedirector
 	  * @param connection Implicit database connection
 	  * @return Parameters to add to the default parameters
 	  */
-	def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Seq[Scope])
 	                      (implicit connection: Connection): Model
 	
 	
@@ -51,7 +51,7 @@ trait AuthRedirector
 	  * @param connection Implicit DB Connection
 	  * @return Complete redirect url
 	  */
-	def redirectionFor(state: String, settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	def redirectionFor(state: String, settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Seq[Scope])
 	                  (implicit connection: Connection) =
 	{
 		// Determines the parameters to include

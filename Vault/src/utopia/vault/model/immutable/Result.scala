@@ -2,7 +2,7 @@ package utopia.vault.model.immutable
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.MaybeEmpty
 import utopia.vault.nosql.factory.row.FromRowFactory
 
@@ -24,7 +24,7 @@ object Result
   * @param generatedKeys Primary keys of newly generated rows (on insert)
   * @param updatedRowCount Number of updated rows (on update)
  */
-case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = Vector(), updatedRowCount: Int = 0)
+case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, updatedRowCount: Int = 0)
     extends MaybeEmpty[Result]
 {
     // COMPUTED PROPERTIES    ------------
@@ -326,7 +326,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       * @tparam R Type of the post-processed results
       * @return Post-processed results
       */
-    def groupAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Vector[Row]) => R) = {
+    def groupAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Seq[Row]) => R) = {
         val table = parentFactory.table
         // Groups the rows based on unique indices
         rows.filter { _.containsDataForTable(table) }.groupBy { _.indexForTable(table) }.flatMap { case (_, rows) =>
@@ -358,7 +358,7 @@ case class Result(rows: Vector[Row] = Vector(), generatedKeys: Vector[Value] = V
       * @return Joined results
       */
     def deepGroupAnd[P, M, RM, R](parentFactory: FromRowFactory[P], midFactory: FromRowFactory[M])
-                                 (postProcessMid: (M, Vector[Row]) => RM)
+                                 (postProcessMid: (M, Seq[Row]) => RM)
                                  (mergeTop: (P, Iterable[RM]) => R) =
     {
         val tp = parentFactory.table

@@ -6,6 +6,7 @@ import utopia.access.http.Status
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{FileBody, Request}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.test.TestContext._
@@ -37,7 +38,7 @@ object GatewayTest extends App
     println(response1.headers)
     println(response1.body)
     
-    val post1 =Request(uri, Post, Model(Vector("test" -> "a", "another" -> 2))).withModifiedHeaders(
+    val post1 =Request(uri, Post, Model(Pair("test" -> "a", "another" -> 2))).withModifiedHeaders(
             _.withTypeAccepted(Application/"json"))
     
     val response2 = makeRequest(post1)

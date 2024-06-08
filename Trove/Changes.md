@@ -1,5 +1,9 @@
 # Utopia Trove - List of Changes
 
+## v1.1.9 (in development)
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
+
 ## v1.1.8 - 22.01.2024
 Cleaned up the code a little.
 ### Breaking changes

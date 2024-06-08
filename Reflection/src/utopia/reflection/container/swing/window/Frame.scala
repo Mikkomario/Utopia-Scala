@@ -80,7 +80,8 @@ object Frame
     
     // NESTED   --------------------------------
     
-    private class ZeroSizePanel extends AwtComponentWrapperWrapper with ReflectionStackable with ReflectionStackLeaf with AwtContainerRelated
+    private class ZeroSizePanel
+        extends AwtComponentWrapperWrapper with ReflectionStackable with ReflectionStackLeaf with AwtContainerRelated
     {
         // ATTRIBUTES   ------------------------
         

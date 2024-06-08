@@ -20,8 +20,7 @@ trait ConstrainableWrapper extends Constrainable
 	// IMPLEMENTED	-------------------
 	
 	override def constraints = wrapped.constraints
-	
-	override def constraints_=(newConstraints: Vector[StackSizeModifier]) = wrapped.constraints = newConstraints
+	override def constraints_=(newConstraints: Seq[StackSizeModifier]) = wrapped.constraints = newConstraints
 	
 	override def calculatedStackSize = wrapped.calculatedStackSize
 }

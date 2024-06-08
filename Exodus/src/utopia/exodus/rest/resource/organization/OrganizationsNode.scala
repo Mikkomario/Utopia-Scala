@@ -7,6 +7,7 @@ import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.model.enumeration.ExodusScope.CreateOrganization
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -26,7 +27,7 @@ object OrganizationsNode extends ItemsByIdResource[AuthorizedContext]
 	// IMPLEMENTED	------------------------------
 	
 	override val name = "organizations"
-	override val allowedMethods = Vector(Post)
+	override val allowedMethods = Single(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{

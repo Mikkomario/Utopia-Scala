@@ -4,6 +4,7 @@ import utopia.firmament.component.stack.Stackable
 import utopia.genesis.graphics.DrawLevel
 import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.PreInitializedLazy
@@ -46,7 +47,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  */
 	def boundsPointer: Changing[Bounds]
 	
-	override def children: Seq[ReachComponentLike] = Vector()
+	override def children: Seq[ReachComponentLike] = Empty
 	
 	/**
 	  * @return Whether this component is partially or fully transparent
@@ -159,7 +160,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	def revalidate() = {
 		// Resets the cached stack size of this and upper components
 		resetCachedSize()
-		parentHierarchy.revalidate(Vector(this))
+		parentHierarchy.revalidate(Single(this))
 	}
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Calls the specified function
@@ -169,7 +170,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  */
 	def revalidateAndThen(f: => Unit) = {
 		resetCachedSize()
-		parentHierarchy.revalidateAndThen(Vector(this))(f)
+		parentHierarchy.revalidateAndThen(Single(this))(f)
 	}
 	/**
 	  * Resets the cached stack size of this component and all the children of this component.

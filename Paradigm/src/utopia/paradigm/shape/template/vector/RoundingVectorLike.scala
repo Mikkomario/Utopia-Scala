@@ -27,7 +27,7 @@ trait RoundingVectorLike[+Repr <: HasDimensions[RoundingDouble] with HasLength]
 	override protected def fromDoublesFactory: FromDimensionsFactory[Double, Repr] = factory.forDoubles
 	override def toDoublePrecision: Repr = self
 	
-	override def components: IndexedSeq[RoundingVector1D] =
+	override def components: Seq[RoundingVector1D] =
 		dimensions.zipWithAxis.map { case (d, axis) => RoundingVector1D(d, axis) }
 	
 	override def along(axis: Axis) = RoundingVector1D(apply(axis), axis)

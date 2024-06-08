@@ -12,7 +12,7 @@ import utopia.scribe.core.model.stored.logging.Issue
   * @param issue the issue to wrap
   * @param variants The variants of this issue, including detailed information
   */
-case class DetailedIssue(issue: Issue, variants: Vector[DetailedIssueVariant]) extends Extender[IssueData]
+case class DetailedIssue(issue: Issue, variants: Seq[DetailedIssueVariant]) extends Extender[IssueData]
 {
 	// COMPUTED ------------------------------
 	

@@ -40,7 +40,7 @@ trait UniqueAuthPreparationAccess
 	/**
 	  * Time when this AuthPreparation was first created. None if no instance (or value) was found.
 	  */
-	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
+	def created(implicit connection: Connection) = pullColumn(model.created).instant
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
@@ -63,7 +63,7 @@ trait UniqueAuthPreparationAccess
 	  * @return Whether any AuthPreparation instance was affected
 	  */
 	def created_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+		putColumn(model.created, newCreated)
 	
 	/**
 	  * Updates the expires of the targeted AuthPreparation instance(s)

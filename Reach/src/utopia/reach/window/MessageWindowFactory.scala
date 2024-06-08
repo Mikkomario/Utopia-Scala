@@ -30,7 +30,7 @@ trait MessageWindowFactory[A] extends InteractionWindowFactory[A]
 	/**
 	  * @return Blueprints for the buttons displayed on this window
 	  */
-	protected def buttonBlueprints: Vector[WindowButtonBlueprint[A]]
+	protected def buttonBlueprints: Seq[WindowButtonBlueprint[A]]
 	
 	
 	// IMPLEMENTED  ----------------------

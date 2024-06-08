@@ -10,6 +10,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.{Loop, PostponingProcess}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
@@ -136,7 +137,7 @@ object MasterScribe
 		
 		private lazy val requestQueue: RequestQueue = requestStoreLocation match {
 			case Some(path) =>
-				val (queue, errors) = PersistingRequestQueue(queueSystem, path, Vector(RequestHandler),
+				val (queue, errors) = PersistingRequestQueue(queueSystem, path, Single(RequestHandler),
 					saveLogic = OnlyOnTrigger)
 				// Logs possible request parsing errors
 				errors.headOption.foreach {
@@ -153,7 +154,7 @@ object MasterScribe
 		}
 		private lazy val sendIssuesProcess = PostponingProcess.by(issueBundleDuration) { sendPendingIssues() }
 		
-		private var limitListeners = Vector[MaximumLogLimitReachedListener]()
+		private var limitListeners: Seq[MaximumLogLimitReachedListener] = Empty
 		
 		
 		// INITIAL CODE ------------------------
@@ -255,7 +256,7 @@ object MasterScribe
 		
 		// OTHER    ----------------------------
 		
-		private def handlePostResult(issues: Vector[(ClientIssue, Instant)], result: RequestResult) = {
+		private def handlePostResult(issues: Iterable[(ClientIssue, Instant)], result: RequestResult) = {
 			result match {
 				// Case: Request was deprecated => Only logs locally (WET WET)
 				case RequestWasDeprecated =>
@@ -285,7 +286,7 @@ object MasterScribe
 				}
 				val issues = postRequest match {
 					case Some(postRequest) => postRequest.remainingIssues
-					case None => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Vector.empty)
+					case None => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Empty)
 				}
 				handlePostResult(issues, result)
 			}
@@ -310,7 +311,7 @@ object MasterScribe
 				// Logs non-critical errors using the backup logger
 				.toTryCatch
 		}
-		private class PostIssuesRequest(initialIssues: Vector[(ClientIssue, Instant)])
+		private class PostIssuesRequest(initialIssues: IndexedSeq[(ClientIssue, Instant)])
 			extends ApiRequest with Persisting
 		{
 			// ATTRIBUTES   --------------------
@@ -324,9 +325,9 @@ object MasterScribe
 				remainingIssuesPointer.map { issues =>
 					NotEmpty(issues).map { issues =>
 						Model.from(
-							"issues" -> issues.map { case (issue, lastUpdate) =>
-								issue.toModel + Constant("lastUpdated", lastUpdate)
-							}
+							"issues" -> issues
+								.map { case (issue, lastUpdate) => issue.toModel + Constant("lastUpdated", lastUpdate) }
+								.toVector
 						)
 					}
 				}
@@ -344,7 +345,7 @@ object MasterScribe
 			override def method: Method = Post
 			
 			// Updates the store durations of all the issues
-			override def body: Value = updateStoreDurations().map { _._1 }
+			override def body: Value = updateStoreDurations().map { _._1 }.toVector
 			
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated

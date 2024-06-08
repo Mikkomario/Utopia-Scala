@@ -3,6 +3,7 @@ package utopia.nexus.http
 import utopia.access.http.Method
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.Now
 
@@ -23,8 +24,8 @@ import java.time.Instant
  * @param created Creation time of this request (default = Now)
  */
 class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None,
-              val parameters: Model = Model(Vector()), val headers: Headers = Headers.empty,
-              val body: Seq[StreamedBody] = Vector(), rawCookies: Iterable[Cookie] = Vector(),
+              val parameters: Model = Model.empty, val headers: Headers = Headers.empty,
+              val body: Seq[StreamedBody] = Empty, rawCookies: Iterable[Cookie] = Empty,
               val created: Instant = Now)
 {
     // ATTRIBUTES    ---------------------------

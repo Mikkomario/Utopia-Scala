@@ -1,5 +1,6 @@
 package utopia.flow.util.console
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.console.Command.whiteSpacesOutsideQuotationsRegex
@@ -42,7 +43,7 @@ object Command
 	def apply(name: String, alias: String = "", help: String = "")
 	         (args: ArgumentSchema*)
 	         (execute: CommandArguments => Unit) =
-		new Command(name, alias, CommandArgumentsSchema(args.toVector), help)(execute)
+		new Command(name, alias, CommandArgumentsSchema(args), help)(execute)
 }
 
 /**
@@ -65,11 +66,10 @@ class Command(val name: String, val alias: String = "",
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def toString =
-	{
+	override def toString = {
 		val argsPart = argumentsSchema.arguments.map { arg => s" <${arg.name}>" }.mkString
-		val descPart = if (hasHelp) " // " + help else ""
-		nameAndAlias + argsPart + descPart
+		val descPart = if (hasHelp) s" // $help" else ""
+		s"$nameAndAlias$argsPart$descPart"
 	}
 	
 	
@@ -80,13 +80,13 @@ class Command(val name: String, val alias: String = "",
 	 * @param arguments Arguments for executing this command
 	 * @param jsonParser Implicit json parser
 	 */
-	def apply(arguments: Vector[String])(implicit jsonParser: JsonParser) =
+	def apply(arguments: Seq[String])(implicit jsonParser: JsonParser) =
 		execute(CommandArguments(argumentsSchema, arguments))
 	/**
 	 * Executes this command without arguments
 	 * @param jsonParser Implicit json parser
 	 */
-	def apply()(implicit jsonParser: JsonParser): Unit = apply(Vector())
+	def apply()(implicit jsonParser: JsonParser): Unit = apply(Empty)
 	/**
 	 * Executes this command with the specified arguments
 	 * @param firstParam First command argument
@@ -94,7 +94,7 @@ class Command(val name: String, val alias: String = "",
 	 * @param jsonParser Implicit json parser
 	 */
 	def apply(firstParam: String, moreParams: String*)(implicit jsonParser: JsonParser): Unit =
-		apply(firstParam +: moreParams.toVector)
+		apply(firstParam +: moreParams)
 	
 	/**
 	 * Processes the specified string into an argument list and then executes this command with those arguments
@@ -102,10 +102,5 @@ class Command(val name: String, val alias: String = "",
 	 * @param jsonParser Implicit json parser
 	 */
 	def parseAndExecute(argumentsString: String)(implicit jsonParser: JsonParser) =
-	{
-		if (argumentsString.isEmpty)
-			apply()
-		else
-			apply(whiteSpacesOutsideQuotationsRegex.split(argumentsString).toVector)
-	}
+		if (argumentsString.isEmpty) apply() else apply(whiteSpacesOutsideQuotationsRegex.split(argumentsString))
 }

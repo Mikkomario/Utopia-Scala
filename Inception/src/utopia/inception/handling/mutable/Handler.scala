@@ -26,7 +26,7 @@ abstract class Handler[A <: handling.Handleable](initialElements: IterableOnce[A
 {
     // ATTRIBUTES   -------------------
     
-    private val elements = VolatileList(initialElements)
+    private val elements = VolatileList.from(initialElements)
     
     
     // IMPLEMENTED    -----------------

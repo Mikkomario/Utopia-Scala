@@ -1,6 +1,6 @@
 package utopia.scribe.api.model.cached.logging
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.MaybeEmpty
@@ -34,7 +34,7 @@ object LogStoreDuration
 	  *
 	  * @return A set of durations that to be applied for issue merging
 	  */
-	def forMerge(thresholds: Vector[Pair[Duration]]) = apply(Map(Merge -> thresholds))
+	def forMerge(thresholds: Seq[Pair[Duration]]) = apply(Map(Merge -> thresholds))
 	
 	/**
 	  * @param thresholds Inactive duration thresholds (first value)
@@ -51,7 +51,7 @@ object LogStoreDuration
 	  *
 	  * @return A set of durations that are to be applied for issue deletion
 	  */
-	def forDeletion(thresholds: Vector[Pair[Duration]]) = apply(Map(Delete -> thresholds))
+	def forDeletion(thresholds: Seq[Pair[Duration]]) = apply(Map(Delete -> thresholds))
 }
 
 /**
@@ -87,7 +87,7 @@ object LogStoreDuration
   *                   provided that there haven't been any occurrences of that issue (variant) within
   *                   the last 7 days.
   */
-case class LogStoreDuration(thresholds: Map[CleanupOperation, Vector[Pair[Duration]]] = Map())
+case class LogStoreDuration(thresholds: Map[CleanupOperation, Seq[Pair[Duration]]] = Map())
 	extends MaybeEmpty[LogStoreDuration]
 {
 	// COMPUTED ----------------------
@@ -125,7 +125,7 @@ case class LogStoreDuration(thresholds: Map[CleanupOperation, Vector[Pair[Durati
 	  * @param operation Targeted cleanup operation type
 	  * @return Thresholds that apply to that operation type
 	  */
-	def apply(operation: CleanupOperation) = thresholds.getOrElse(operation, Vector.empty)
+	def apply(operation: CleanupOperation) = thresholds.getOrElse(operation, Empty)
 	/**
 	  * @param operation Targeted cleanup operation type
 	  * @param duration Applicable store or inactivity duration (role depends on the targeted operation)

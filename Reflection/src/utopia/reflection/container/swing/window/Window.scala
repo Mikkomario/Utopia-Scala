@@ -6,6 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -89,7 +90,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	// ATTRIBUTES   ----------------
 	
 	private var _isAttachedToMainHierarchy = false
-	private var _constraints = Vector[StackSizeModifier]()
+	private var _constraints: Seq[StackSizeModifier] = Empty
 	
 	private val cachedStackSize = ResettableLazy { calculatedStackSizeWithConstraints }
 	private val generatorActivated = new VolatileFlag()
@@ -102,7 +103,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	  */
 	lazy val notClosedFlag = !_closedFlag
 	
-	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 	
 	private val keyStateHandler = KeyStateHandler()
 	
@@ -182,8 +183,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	
 	override def constraints = _constraints
 	
-	override def constraints_=(newConstraints: Vector[StackSizeModifier]) =
-	{
+	override def constraints_=(newConstraints: Seq[StackSizeModifier]) = {
 		_constraints = newConstraints
 		revalidate()
 	}
@@ -191,12 +191,9 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	override def stackId = hashCode()
 	
 	override def isAttachedToMainHierarchy = _isAttachedToMainHierarchy
-	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
 		// Informs / affects the content of this window as well
-		if (_isAttachedToMainHierarchy != newAttachmentStatus)
-		{
+		if (_isAttachedToMainHierarchy != newAttachmentStatus) {
 			_isAttachedToMainHierarchy = newAttachmentStatus
 			fireStackHierarchyChangeEvent(newAttachmentStatus)
 			if (newAttachmentStatus)
@@ -206,7 +203,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 		}
 	}
 	
-	override def children = Vector(content)
+	override def children: Seq[Content] = Single(content)
 	
 	override def stackSize = cachedStackSize.value
 	
@@ -245,7 +242,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	override def updateLayout() = updateWindowBounds(resizePolicy.allowsProgramResize)
 	
 	override def resizeListeners = content.resizeListeners
-	override def resizeListeners_=(listeners: Vector[ResizeListener]) = content.resizeListeners = listeners
+	override def resizeListeners_=(listeners: Seq[ResizeListener]) = content.resizeListeners = listeners
 	
 	// Windows have no parents
 	override def parent = None
@@ -300,7 +297,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 		updateWindowBounds(true)
 		
 		if (!fullScreen)
-			position = ((Screen.size - size) / 2).toVector.toPoint
+			position = ((Screen.size - size) / 2).toPoint
 		
 		updateContentBounds()
 		
@@ -369,8 +366,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 				if (maxSize.fitsWithin(minSize))
 					component.setIconImage(maxImage)
 				// Case: Multiple icon sizes allowed
-				else
-				{
+				else {
 					// Shrinks the original image until minimum size is met
 					component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
 						.takeWhile { image => image.width >= minSize.width || image.height >= minSize.height }

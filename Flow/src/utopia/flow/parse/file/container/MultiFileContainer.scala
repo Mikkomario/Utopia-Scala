@@ -1,5 +1,7 @@
 package utopia.flow.parse.file.container
 
+import utopia.flow.collection.immutable.Empty
+
 import java.nio.file.Path
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -17,7 +19,7 @@ import scala.util.Try
   * @tparam A Type of individual items stored in this container
   */
 abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: JsonParser, logger: Logger)
-	extends FileContainer[Vector[A]](fileLocation)
+	extends FileContainer[Seq[A]](fileLocation)
 {
 	// ABSTRACT --------------------------------
 	
@@ -36,17 +38,16 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override protected def toValue(item: Vector[A]) = item.map(itemToValue)
+	override protected def toValue(item: Seq[A]) = item.map(itemToValue).toVector
 	
-	override protected def fromValue(value: Value) = value.vector match
-	{
+	override protected def fromValue(value: Value) = value.vector match {
 		case Some(values) =>
 			// Ignores parsing failures
 			values.flatMap { itemFromValue(_).toOption }
 		case None => empty
 	}
 	
-	override protected def empty = Vector()
+	override protected def empty = Empty
 	
 	
 	// OTHER    ---------------------------------

@@ -5,6 +5,7 @@ import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.many.organization.DbUserRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -21,11 +22,9 @@ import utopia.vault.database.Connection
 object RolesNode extends LeafResource[AuthorizedContext]
 {
 	override val name = "user-roles"
+	override val allowedMethods = Single(Get)
 	
-	override val allowedMethods = Vector(Get)
-	
-	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
-	{
+	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) = {
 		context.authorizedForScope(ReadGeneralData) { (session, connection) =>
 			implicit val c: Connection = connection
 			implicit val languageIds: LanguageIds = session.languageIds
@@ -33,10 +32,10 @@ object RolesNode extends LeafResource[AuthorizedContext]
 			val roles = DbUserRoles.detailed
 			// Supports simple model style if needed
 			session.modelStyle match {
-				case Full => Result.Success(roles.map { _.toModel })
+				case Full => Result.Success(roles.map { _.toModel }.toVector)
 				case Simple =>
 					val descriptionRoles = DbDescriptionRoles.all
-					Result.Success(roles.map { _.toSimpleModelUsing(descriptionRoles) })
+					Result.Success(roles.map { _.toSimpleModelUsing(descriptionRoles) }.toVector)
 			}
 		}
 	}

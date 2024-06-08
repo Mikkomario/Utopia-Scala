@@ -1,5 +1,7 @@
 package utopia.courier.model
 
+import utopia.flow.collection.immutable.Empty
+
 import java.nio.file.Path
 
 /**
@@ -9,4 +11,4 @@ import java.nio.file.Path
   * @param message Html message content of this email
   * @param attachmentPaths Paths to the files that are linked as attachments for this email
   */
-case class EmailContent(message: String = "", attachmentPaths: Vector[Path] = Vector())
+case class EmailContent(message: String = "", attachmentPaths: Seq[Path] = Empty)

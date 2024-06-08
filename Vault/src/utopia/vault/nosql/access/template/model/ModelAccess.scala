@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.template.model
 
+import utopia.flow.collection.immutable.Empty
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.template.Joinable
@@ -37,7 +38,7 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  * @return Value / values of that column (empty value(s) included)
 	  */
 	protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
-	                         order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                         order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	                        (implicit connection: Connection): V
 	
 	
@@ -55,7 +56,7 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  * @return Value of that column (may be empty)
 	  */
 	def findColumn(column: Column, condition: Condition, order: Option[OrderBy] = None,
-	               joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	               joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
 		readColumn(column, Some(condition), order, joins, joinType)
 	/**
@@ -71,7 +72,7 @@ trait ModelAccess[+M, +A, +V] extends Access[A] with FactoryView[M]
 	  */
 	// TODO: Rename to findProperty
 	def findAttribute(attributeName: String, condition: Condition, order: Option[OrderBy],
-	                  joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                  joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	                 (implicit connection: Connection) =
 		findColumn(table(attributeName), condition, order, joins, joinType)
 }

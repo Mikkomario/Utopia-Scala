@@ -9,6 +9,7 @@ import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.exodus.model.enumeration.ExodusScope.{JoinOrganization, ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -17,8 +18,8 @@ import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
 import utopia.metropolis.model.partial.organization.InvitationResponseData
 import utopia.metropolis.model.post.NewInvitationResponse
 import utopia.nexus.http.Path
-import utopia.nexus.rest.{LeafResource, Resource}
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
+import utopia.nexus.rest.{LeafResource, Resource}
 import utopia.nexus.result.Result
 import utopia.vault.database.Connection
 
@@ -30,7 +31,7 @@ import utopia.vault.database.Connection
 object MyInvitationsNode extends Resource[AuthorizedContext]
 {
 	override val name = "invitations"
-	override val allowedMethods = Vector(Get)
+	override val allowedMethods = Single(Get)
 	
 	override def follow(path: Path)(implicit context: AuthorizedContext) =
 	{
@@ -53,7 +54,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 			val emailAddress = token.token.pullValidatedEmailAddress
 			val invitations = openInvitationsAccess(token.ownerId, emailAddress) match {
 				case Some(access) => access.detailed
-				case None => Vector()
+				case None => Empty
 			}
 			val modelStyle = context.modelStyle.getOrElse(ExodusContext.defaultModelStyle)
 			val invitationModels = modelStyle match {
@@ -62,7 +63,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 					invitations.map { _.toSimpleModelUsing(descriptionRoles) }
 				case Full => invitations.map { _.toModel }
 			}
-			Result.Success(invitationModels)
+			Result.Success(invitationModels.toVector)
 		}
 	}
 	
@@ -99,7 +100,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 		// ATTRIBUTES   ------------------------
 		
 		override val name = "responses"
-		override val allowedMethods = Vector(Post)
+		override val allowedMethods = Single(Post)
 		
 		
 		// IMPLEMENTED  ------------------------
@@ -112,7 +113,7 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 				lazy val emailAddress = token.pullValidatedEmailAddress
 				lazy val invitations = openInvitationsAccess(token.ownerId, emailAddress) match {
 					case Some(access) => access.pull
-					case None => Vector()
+					case None => Empty
 				}
 				lazy val modelStyle = token.modelStyle
 				
@@ -140,11 +141,11 @@ object MyInvitationsNode extends Resource[AuthorizedContext]
 								// In that case, returns { invitations: [...], memberships: [...] }
 								Result.Success(Model(Vector(
 									"invitations" -> invitationModels,
-									"memberships" -> memberships.map { _.toModelWith(modelStyle) })))
+									"memberships" -> memberships.map { _.toModelWith(modelStyle) }.toVector)))
 							}
 							// If rejected, returns [Invitation & Response]
 							else
-								Result.Success(invitationModels)
+								Result.Success(invitationModels.toVector)
 						}
 					// Case: Not linked with an existing user => Fails
 					case None => Result.Failure(Forbidden, "You need to create a user account first")

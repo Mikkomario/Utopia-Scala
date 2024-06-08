@@ -1,5 +1,6 @@
 package utopia.vault.model.immutable
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.References
@@ -57,7 +58,7 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     
     def name = propertyName
     
-    override def alternativeNames = Vector(columnName)
+    override def alternativeNames = Single(columnName)
     
     override def isOptional = allowsNull
     
@@ -66,11 +67,11 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     
     override def toSqlSegment = SqlSegment(columnNameWithTable)
     
-    override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType) = {
+    override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) = {
         originTables.find { _.contains(this) } match {
             case Some(table) =>
                 References.from(table, this) match {
-                    case Some(target) => Success(Vector(Join(this, target.table, target.column, joinType)))
+                    case Some(target) => Success(Single(Join(this, target.table, target.column, joinType)))
                     case None => Failure(new NoReferenceFoundException(
                         s"$columnNameWithTable doesn't refer to any table"))
                 }
@@ -97,6 +98,6 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     
     // OTHER METHODS    ---------------------
     
-    private def makeCondition(operator: String, value: Value) = Condition(SqlSegment(
-        s"$columnNameWithTable $operator ?", Vector(value)))
+    private def makeCondition(operator: String, value: Value) =
+        Condition(SqlSegment(s"$columnNameWithTable $operator ?", Single(value)))
 }

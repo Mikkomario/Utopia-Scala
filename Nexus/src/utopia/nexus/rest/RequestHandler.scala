@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.logging.Logger
 import utopia.nexus.http.Path._
 import utopia.nexus.http.{Path, Request, Response}
@@ -45,7 +46,7 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     
     private def get(version: String)(implicit context: C) =
         Result.Success(Model(Vector("version" -> version,
-            "children" -> childResources.getOrElse(version.toLowerCase, Vector()).map { _.name }.toVector))).toResponse
+            "children" -> childResources.getOrElse(version.toLowerCase, Empty).map { _.name }.toVector))).toResponse
     
     
     // OPERATORS    -----------------------

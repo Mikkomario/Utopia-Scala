@@ -1,6 +1,7 @@
 package utopia.vault.nosql.factory.row
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.database.Connection
 import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.{Column, Result, Row}
@@ -43,8 +44,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	
 	// IMPLEMENTED	----------------
 	
-	override def apply(result: Result): Vector[A] =
-	{
+	override def apply(result: Result): Seq[A] = {
 		// Makes sure duplicate rows are not present by only including each index (group) once
 		// (Only works when all included tables use indexing)
 		val indices = tables.flatMap { table => table.primaryColumn }
@@ -54,8 +54,9 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 			result.rows.flatMap(parseIfPresent)
 	}
 	
-	override def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
-	                  joinType: JoinType = Inner)(implicit connection: Connection) = {
+	override def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
+	                  joinType: JoinType = Inner)(implicit connection: Connection) =
+	{
 		val select = {
 			if (joins.isEmpty)
 				Select.all(target)
@@ -143,7 +144,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param connection Implicit DB Connection
 	  * @return Maximum item (according to ordering) found
 	  */
-	def findMaxBy(orderColumn: Column, where: Condition, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	def findMaxBy(orderColumn: Column, where: Condition, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	           (implicit connection: Connection) =
 		find(where, Some(OrderBy.descending(orderColumn)), joins, joinType)
 	/**
@@ -187,7 +188,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param joinType Join type to use (default = inner)
 	  * @param connection  Database connection
 	  */
-	def findMinBy(orderColumn: Column, where: Condition, joins: Seq[Joinable] = Vector(),
+	def findMinBy(orderColumn: Column, where: Condition, joins: Seq[Joinable] = Empty,
 	              joinType: JoinType = Inner)(implicit connection: Connection) =
 		find(where, Some(OrderBy.descending(orderColumn)), joins, joinType)
 	
@@ -218,7 +219,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def findLinked(joined: Joinable, where: Condition, order: Option[OrderBy] = None, joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
-		find(where, order, Vector(joined), joinType)
+		find(where, order, Single(joined), joinType)
 	
 	/**
 	  * Performs an operation on each of the targeted entities

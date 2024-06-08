@@ -1,5 +1,7 @@
 package utopia.flow.collection.mutable.iterator
 
+import utopia.flow.collection.immutable.Single
+
 object BottomToTopIterator
 {
 	/**
@@ -28,7 +30,7 @@ class BottomToTopIterator[A](top: A)(goDeeper: A => IterableOnce[A]) extends Ite
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private var queuedSources = Vector(top -> goDeeper(top).iterator)
+	private var queuedSources: Seq[(A, Iterator[A])] = Single(top -> goDeeper(top).iterator)
 	
 	
 	// IMPLEMENTED  -----------------------------

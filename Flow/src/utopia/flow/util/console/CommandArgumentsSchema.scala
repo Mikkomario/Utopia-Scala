@@ -1,5 +1,6 @@
 package utopia.flow.util.console
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.MaybeEmpty
 
 object CommandArgumentsSchema
@@ -7,7 +8,7 @@ object CommandArgumentsSchema
 	/**
 	 * An empty schema
 	 */
-	val empty = CommandArgumentsSchema(Vector())
+	val empty = CommandArgumentsSchema(Empty)
 }
 
 /**
@@ -15,7 +16,7 @@ object CommandArgumentsSchema
  * @author Mikko Hilpinen
  * @since 26.6.2021, v1.10
  */
-case class CommandArgumentsSchema(arguments: Vector[ArgumentSchema]) extends MaybeEmpty[CommandArgumentsSchema]
+case class CommandArgumentsSchema(arguments: Seq[ArgumentSchema]) extends MaybeEmpty[CommandArgumentsSchema]
 {
 	// IMPLEMENTED  -----------------------
 	

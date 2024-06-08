@@ -1,7 +1,7 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
@@ -448,7 +448,7 @@ object FileExtensions
 		  * 3: The other path, relative to the common root path
 		  */
 		def commonParentWith(other: Path): (Option[Path], Path, Path) = {
-			val (common, relative, otherRelative) = commonParentWith(Vector(other))
+			val (common, relative, otherRelative) = commonParentWith(Single(other))
 			(common, relative, otherRelative.head)
 		}
 		/**

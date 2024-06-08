@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape1d.vector
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
@@ -72,7 +73,7 @@ case class Vector1D(override val length: Double, axis: Axis)
 	override protected def factory = Vector1D
 	override def value = length
 	
-	override def components = Vector(this)
+	override def components = Single(this)
 	
 	override def toUnit = factory(1.0, axis)
 	

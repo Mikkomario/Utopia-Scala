@@ -23,12 +23,10 @@ trait ReflectionStackableWrapper extends StackableWrapper with ReflectionStackab
 	override def stackId = wrapped.stackId
 	
 	override def isAttachedToMainHierarchy = wrapped.isAttachedToMainHierarchy
-	
 	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
 		wrapped.isAttachedToMainHierarchy_=(newAttachmentStatus)
 	
 	override def stackHierarchyListeners = wrapped.stackHierarchyListeners
-	
-	override def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]) =
+	override def stackHierarchyListeners_=(newListeners: Seq[StackHierarchyListener]) =
 		wrapped.stackHierarchyListeners = newListeners
 }

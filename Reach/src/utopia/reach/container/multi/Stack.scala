@@ -7,7 +7,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.sign.Sign.Negative
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.template.eventful.FlagLike
@@ -118,7 +118,7 @@ object StackSettings
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class StackSettings(customDrawers: Vector[CustomDrawer] = Vector.empty, axis: Axis2D = Axis.Y,
+case class StackSettings(customDrawers: Seq[CustomDrawer] = Empty, axis: Axis2D = Axis.Y,
                          layout: StackLayout = StackLayout.Fit, cap: StackLength = StackLength.fixedZero)
 	extends StackSettingsLike[StackSettings]
 {
@@ -126,7 +126,7 @@ case class StackSettings(customDrawers: Vector[CustomDrawer] = Vector.empty, axi
 	
 	override def withAxis(axis: Axis2D) = copy(axis = axis)
 	override def withCap(cap: StackLength) = copy(cap = cap)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 	override def withLayout(layout: StackLayout) = copy(layout = layout)
 }
 
@@ -168,7 +168,7 @@ trait StackSettingsWrapper[+Repr] extends StackSettingsLike[Repr]
 	
 	override def withAxis(axis: Axis2D) = mapSettings { _.withAxis(axis) }
 	override def withCap(cap: StackLength) = mapSettings { _.withCap(cap) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withLayout(layout: StackLayout) = mapSettings { _.withLayout(layout) }
 	
@@ -231,7 +231,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def segmented[C <: ReachComponentLike, R](content: Vector[OpenComponent[C, R]], group: SegmentGroup) = {
+	def segmented[C <: ReachComponentLike, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) = {
 		// Wraps the components in segments first
 		val wrapped = Open { hierarchy =>
 			val wrapResult = group.wrapUnderSingle(hierarchy, content)
@@ -243,7 +243,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		stack.withChild(content.map { _.component })
 	}
 	@deprecated("Renamed to .segmented(...)", "v1.1")
-	def withSegments[C <: ReachComponentLike, R](content: Vector[OpenComponent[C, R]], group: SegmentGroup) =
+	def withSegments[C <: ReachComponentLike, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) =
 		segmented(content, group)
 	
 	/**
@@ -266,7 +266,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @return A new stack with the two items in it
 	  */
 	def pair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                     forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Vector[C], R] =
+	                                     forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
 		// The first item always goes to the direction of the alignment
@@ -285,13 +285,13 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 			case None => (Y, alignment.vertical.sign.binaryOr(Negative), Center)
 		}
 		// Negative sign keeps order, positive swaps it
-		val orderedContent = content.mapComponent { pair => (pair * -sign).toVector }
+		val orderedContent = content.mapComponent { _ * -sign }
 		// Creates the stack
 		withAxisAndLayout(axis, if (forceFitLayout) Fit else layout)(orderedContent)
 	}
 	@deprecated("Renamed to .pair(...)", "v1.1")
 	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Vector[C], R] =
+	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
 		pair(content, alignment, forceFitLayout)
 }
 
@@ -515,9 +515,9 @@ trait Stack extends CustomDrawReachComponent with StackLike[ReachComponentLike]
 }
 
 private class _Stack(override val parentHierarchy: ComponentHierarchy,
-                     override val components: Vector[ReachComponentLike], override val direction: Axis2D,
+                     override val components: Seq[ReachComponentLike], override val direction: Axis2D,
                      override val layout: StackLayout, override val margin: StackLength,
-                     override val cap: StackLength, override val customDrawers: Vector[CustomDrawer])
+                     override val cap: StackLength, override val customDrawers: Seq[CustomDrawer])
 	extends Stack
 {
 	override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue

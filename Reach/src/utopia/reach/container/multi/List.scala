@@ -7,6 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -79,7 +80,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	def apply[R](group: SegmentGroup, contextBackgroundPointer: Changing[Color],
 	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
 	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
-	             customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
+	             customDrawers: Seq[CustomDrawer] = Empty, focusListeners: Seq[FocusListener] = Empty)
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
 	{
 		val rowDirection = group.rowDirection
@@ -96,7 +97,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val (content, result) = fill(rowContextIterator).toTuple
 		val mainStackContent = Open.using(Stack) { rowF =>
 			content.iterator.map { rowContent =>
-				val wrappedRowComponents = new OpenComponent(rowContent.components.iterator.toVector,
+				val wrappedRowComponents = new OpenComponent(Seq.from(rowContent.components),
 					rowContent.context.parentHierarchy)
 				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
 					.withCap(rowCap)(wrappedRowComponents)
@@ -173,7 +174,7 @@ case class ContextualListFactory(factory: ListFactory, context: ColorContext)
 	  * @return A new list (wrap result)
 	  */
 	def apply[R](group: SegmentGroup, insideRowLayout: StackLayout = Fit, edgeMargins: StackSize = StackSize.fixedZero,
-				 customDrawers: Vector[CustomDrawer] = Vector(), focusListeners: Seq[FocusListener] = Vector())
+				 customDrawers: Seq[CustomDrawer] = Empty, focusListeners: Seq[FocusListener] = Empty)
 				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
 		factory(group, Fixed(context.background), insideRowLayout, context.stackMargin,
 			context.smallStackMargin, edgeMargins, customDrawers, focusListeners)(fill)

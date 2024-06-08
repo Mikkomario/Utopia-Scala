@@ -1,5 +1,6 @@
 package utopia.flow.util.console
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
@@ -16,7 +17,7 @@ object CommandArguments
 	 * @param jsonParser json parser used (implicit)
 	 * @return New command arguments set
 	 */
-	def apply(schema: Vector[ArgumentSchema], input: Vector[String])
+	def apply(schema: Seq[ArgumentSchema], input: Seq[String])
 	         (implicit jsonParser: JsonParser): CommandArguments =
 		apply(CommandArgumentsSchema(schema), input)
 }
@@ -26,13 +27,12 @@ object CommandArguments
  * @author Mikko Hilpinen
  * @since 26.6.2021, v1.10
  */
-case class CommandArguments(schema: CommandArgumentsSchema, input: Vector[String])(implicit jsonParser: JsonParser)
+case class CommandArguments(schema: CommandArgumentsSchema, input: Seq[String])(implicit jsonParser: JsonParser)
 	extends ModelConvertible
 {
 	// ATTRIBUTES   -------------------------
 	
-	val (values, unrecognized) =
-	{
+	val (values, unrecognized) = {
 		// Groups the input into categories:
 		// Boolean Flags (-p, -more etc.)
 		val flagsBuilder = new VectorBuilder[ArgumentSchema]()
@@ -124,7 +124,7 @@ case class CommandArguments(schema: CommandArgumentsSchema, input: Vector[String
 	 * @return Whether these arguments explicitly specify a value for all of those parameters
 	 */
 	def specifiesValuesFor(firstParamName: String, secondParamName: String, moreParamNames: String*): Boolean =
-		(Vector(firstParamName, secondParamName) ++ moreParamNames).forall(specifiesValueFor)
+		(Pair(firstParamName, secondParamName) ++ moreParamNames).forall(specifiesValueFor)
 	
 	/**
 	 * @param schema An argument schema
@@ -148,5 +148,5 @@ case class CommandArguments(schema: CommandArgumentsSchema, input: Vector[String
 	 * @return Whether these arguments contain a non-empty value for all of those parameters
 	 */
 	def containsValuesFor(firstParamName: String, secondParamName: String, moreParamNames: String*) =
-		(Vector(firstParamName, secondParamName) ++ moreParamNames).forall(containsValueFor)
+		(Pair(firstParamName, secondParamName) ++ moreParamNames).forall(containsValueFor)
 }

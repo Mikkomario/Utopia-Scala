@@ -9,6 +9,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.combine.LinearScalable
@@ -163,7 +164,7 @@ object ViewImageLabelSettings
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class ViewImageLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
                                   insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
                                   alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
                                   colorOverlayPointer: Option[Changing[Color]] = None,
@@ -181,7 +182,7 @@ case class ViewImageLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.e
 	override def withAlignmentPointer(p: Changing[Alignment]): ViewImageLabelSettings = copy(alignmentPointer = p)
 	override def withColorOverlayPointer(p: Option[Changing[Color]]): ViewImageLabelSettings =
 		copy(colorOverlayPointer = p)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageLabelSettings =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewImageLabelSettings =
 		copy(customDrawers = drawers)
 	override def withImageScalingPointer(p: Changing[Double]): ViewImageLabelSettings =
 		copy(imageScalingPointer = p)
@@ -217,7 +218,7 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 	
 	override def alignmentPointer: Changing[Alignment] = settings.alignmentPointer
 	override def colorOverlayPointer: Option[Changing[Color]] = settings.colorOverlayPointer
-	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
+	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	override def imageScalingPointer: Changing[Double] = settings.imageScalingPointer
 	override def insetsPointer: Changing[StackInsets] = settings.insetsPointer
 	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
@@ -229,7 +230,7 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 		mapSettings { _.withAlignmentPointer(p) }
 	override def withColorOverlayPointer(p: Option[Changing[Color]]): Repr =
 		mapSettings { _.withColorOverlayPointer(p) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withImageScalingPointer(p: Changing[Double]): Repr =
 		mapSettings { _.withImageScalingPointer(p) }
@@ -470,7 +471,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
                      insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
                      transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
                      allowUpscalingPointer: Changing[Boolean] = AlwaysTrue,
-                     additionalCustomDrawers: Vector[CustomDrawer] = Vector(),
+                     additionalCustomDrawers: Seq[CustomDrawer] = Empty,
                      override val useLowPrioritySize: Boolean = false)
 	extends CustomDrawReachComponent with ImageLabel
 {

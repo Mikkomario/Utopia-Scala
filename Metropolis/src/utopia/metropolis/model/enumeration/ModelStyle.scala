@@ -1,6 +1,7 @@
 package utopia.metropolis.model.enumeration
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.EqualsExtensions._
 
 /**
@@ -29,7 +30,7 @@ object ModelStyle
 	/**
 	  * All available values of this enumeration
 	  */
-	val values: Vector[ModelStyle] = Vector(Full, Simple)
+	val values: Pair[ModelStyle] = Pair(Full, Simple)
 	
 	
 	// OTHER	--------------------

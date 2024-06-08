@@ -7,6 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.action.ActorHandler
@@ -44,11 +45,11 @@ import scala.concurrent.ExecutionContext
 abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 (actorHandler: ActorHandler, selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any,
  displayStackLayout: StackLayout = Fit,
- protected val currentSelectionOptionsPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+ protected val currentSelectionOptionsPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
  override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
  contentIsStateless: Boolean = false)
 (implicit exc: ExecutionContext)
-	extends StackableAwtComponentWrapperWrapper with SelectableWithPointers[Option[A], Vector[A]] with Focusable
+	extends StackableAwtComponentWrapperWrapper with SelectableWithPointers[Option[A], Seq[A]] with Focusable
 {
 	// ABSTRACT	--------------------------------
 	
@@ -144,15 +145,13 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 			}
 		}
 		
-		currentSelectionOptionsPointer.addContinuousListenerAndSimulateEvent(Vector()) { e =>
+		currentSelectionOptionsPointer.addContinuousListenerAndSimulateEvent(Empty) { e =>
 			// Displays either "no content" view or the selection stack view
 			if (e.newValue.isEmpty)
 				popupContentView.set(noResultsView)
-			else
-			{
+			else {
 				// If only one item is available, auto-selects that one
-				if (e.newValue.size == 1)
-				{
+				if (e.newValue.size == 1) {
 					if (isDisplayingPopUp)
 						displaysManager.value = Some(e.newValue.head)
 					else

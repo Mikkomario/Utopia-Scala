@@ -29,6 +29,7 @@
 - **Size** (object)
   - Added `.fullHd`
 ### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
 - Removed certain unnecessary transformations by adding a check for identity transforms in 
   **LinearTransformable** and **AffineTransformable**.
 - Slightly refactored **RelativePoint** mapping logic

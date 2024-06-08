@@ -2,6 +2,7 @@ package utopia.citadel.database.access.many.language
 
 import utopia.citadel.database.access.many.description.ManyDescribedAccessByIds
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.metropolis.model.combined.language.DescribedLanguage
 import utopia.metropolis.model.error.NoDataFoundException
 import utopia.metropolis.model.post.NewLanguageProficiency
@@ -32,13 +33,12 @@ object DbLanguages extends ManyLanguagesAccess with UnconditionalView
 	  * @param connection    DB Connection (implicit)
 	  * @return List of language -> familiarity pairs. Failure if some of the ids or codes were invalid
 	  */
-	def validateProposedProficiencies(proficiencies: Vector[NewLanguageProficiency])
-	                                 (implicit connection: Connection): Try[Vector[(Language, LanguageFamiliarity)]] =
+	def validateProposedProficiencies(proficiencies: Iterable[NewLanguageProficiency])
+	                                 (implicit connection: Connection): Try[IndexedSeq[(Language, LanguageFamiliarity)]] =
 	{
 		if (proficiencies.isEmpty)
-			Success(Vector())
-		else
-		{
+			Success(Empty)
+		else {
 			// Divides into groups so that checks can be made in bulks
 			val (familiaritiesByLanguageCode, familiaritiesByLanguageId) = proficiencies
 				.divideWith { p => p.language.mapBoth { _ -> p.familiarityId } { _ -> p.familiarityId } }

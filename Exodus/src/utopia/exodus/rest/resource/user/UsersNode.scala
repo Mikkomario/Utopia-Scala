@@ -16,6 +16,7 @@ import utopia.exodus.rest.resource.user.me.MeNode
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.util.{ExodusContext, PasswordHash}
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -35,7 +36,7 @@ object UsersNode extends Resource[AuthorizedContext]
 	// ATTRIBUTES   ---------------------------
 	
 	override val name = "users"
-	override val allowedMethods = Vector(Post)
+	override val allowedMethods = Single(Post)
 	
 	
 	// IMPLEMENTED	---------------------------

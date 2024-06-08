@@ -1,7 +1,7 @@
 package utopia.reach.dnd
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, DetachmentChoice}
 import utopia.flow.util.logging.Logger
@@ -40,7 +40,7 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 	private var mousePosition = Point.origin
 	private var hoverTargets = Set[DragAndDropTarget]()
 	
-	private val targetsPointer = EventfulPointer(Vector[DragAndDropTarget]())
+	private val targetsPointer = EventfulPointer[Seq[DragAndDropTarget]](Empty)
 	
 	
 	// INITIAL CODE -------------------------
@@ -60,7 +60,7 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 	// COMPUTED ------------------------------
 	
 	private def targets = targetsPointer.value
-	private def targets_=(newTargets: Vector[DragAndDropTarget]) = targetsPointer.value = newTargets
+	private def targets_=(newTargets: Seq[DragAndDropTarget]) = targetsPointer.value = newTargets
 	
 	
 	// OTHER    ------------------------------

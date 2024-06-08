@@ -27,7 +27,7 @@ object DetailedUser extends FromModelFactory[DetailedUser]
   * @author Mikko Hilpinen
   * @since 19.2.2022, v2.1
   */
-case class DetailedUser(settings: UserSettings, languages: Vector[DetailedUserLanguage])
+case class DetailedUser(settings: UserSettings, languages: Seq[DetailedUserLanguage])
 	extends Extender[UserSettingsData] with ModelConvertible with DescribedSimpleModelConvertible
 {
 	// COMPUTED -------------------------------
@@ -43,9 +43,9 @@ case class DetailedUser(settings: UserSettings, languages: Vector[DetailedUserLa
 	override def wrapped = settings.data
 	
 	override def toModel =
-		Model(Vector("id" -> id, "settings" -> settings.toModel, "languages" -> languages.map { _.toModel }))
+		Model(Vector("id" -> id, "settings" -> settings.toModel, "languages" -> languages.map { _.toModel }.toVector))
 	
 	override def toSimpleModelUsing(descriptionRoles: Iterable[DescriptionRole]) =
 		Model(Vector("id" -> id, "name" -> wrapped.name, "email" -> wrapped.email,
-			"languages" -> languages.map { _.toSimpleModelUsing(descriptionRoles) }))
+			"languages" -> languages.map { _.toSimpleModelUsing(descriptionRoles) }.toVector))
 }

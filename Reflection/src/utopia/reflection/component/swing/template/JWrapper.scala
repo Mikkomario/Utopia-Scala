@@ -18,8 +18,7 @@ object JWrapper
 **/
 trait JWrapper extends AwtComponentWrapper with SwingComponentRelated
 {
-    override def background_=(color: Color) =
-    {
+    override def background_=(color: Color) = {
         component.setBackground(color.toAwt)
         isTransparent_=(false)
     }

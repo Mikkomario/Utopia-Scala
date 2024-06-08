@@ -6,6 +6,7 @@ import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.collection.immutable.Empty
 
 object MutableCustomDrawReachComponent
 {
@@ -18,7 +19,7 @@ object MutableCustomDrawReachComponent
 	  * @param stackSize Stack size for this component (call by name)
 	  * @return A new component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Vector[CustomDrawer] = Vector())
+	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty)
 			 (stackSize: => StackSize): MutableCustomDrawReachComponent =
 	{
 		val c = new BasicComponent(parentHierarchy, stackSize)
@@ -50,7 +51,7 @@ trait MutableCustomDrawReachComponent extends CustomDrawReachComponent with Muta
 {
 	// ATTRIBUTES	--------------------------
 	
-	var customDrawers = Vector[CustomDrawer]()
+	var customDrawers: Seq[CustomDrawer] = Empty
 	
 	
 	// OTHER	------------------------------

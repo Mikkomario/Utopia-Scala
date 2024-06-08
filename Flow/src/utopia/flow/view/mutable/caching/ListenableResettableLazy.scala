@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.caching
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangingStoppedListener, LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
@@ -30,8 +31,8 @@ object ListenableResettableLazy
 		private var _value: Option[A] = None
 		
 		private val nextValuePromisePointer = Pointer.option[Promise[A]]()
-		private var generationListeners = Vector[LazyListener[A]]()
-		private var resetListeners = Vector[LazyResetListener[A]]()
+		private var generationListeners: Seq[LazyListener[A]] = Empty
+		private var resetListeners: Seq[LazyResetListener[A]] = Empty
 		
 		
 		// COMPUTED ----------------------------------

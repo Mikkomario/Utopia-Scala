@@ -4,6 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.organization.DbOrganizations
 import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.LeafResource
@@ -20,7 +21,7 @@ object PendingDeletionsForMyOrganizationsNode extends LeafResource[AuthorizedCon
 	// ATTRIBUTES   ------------------------
 	
 	override val name = "pending"
-	override val allowedMethods = Vector(Get)
+	override val allowedMethods = Single(Get)
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -32,13 +33,13 @@ object PendingDeletionsForMyOrganizationsNode extends LeafResource[AuthorizedCon
 			// Reads all user organization ids and pending deletions targeted towards those ids
 			val organizationIds = token.userAccess match {
 				case Some(access) => access.memberships.organizationIds
-				case None => Vector()
+				case None => Empty
 			}
 			val pendingDeletions = {
 				if (organizationIds.nonEmpty)
 					DbOrganizations(organizationIds.toSet).deletions.notCancelled.pull
 				else
-					Vector()
+					Empty
 			}
 			Result.Success(pendingDeletions.map { _.toModel })
 		}

@@ -1,5 +1,6 @@
 package utopia.flow.generic.model.mutable
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, PropertyChangeListener}
 import utopia.flow.event.model.PropertyChangeEvent.{PropertyAdded, PropertyRemoved, PropertySwapped, PropertyValueChange}
 import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
@@ -33,7 +34,7 @@ object MutableModel
     /**
       * @return An empty model
       */
-    def apply() = new MutableModel(Vector(), PropertyFactory.forVariables)
+    def apply() = new MutableModel(Empty, PropertyFactory.forVariables)
     
     /**
      * Creates a new model with an existing set of properties.
@@ -56,7 +57,7 @@ object MutableModel
       * @tparam V Type of properties within this model
       * @return An empty model
       */
-    def using[V <: Variable](propFactory: PropertyFactory[V]) = new MutableModel(Vector(), propFactory)
+    def using[V <: Variable](propFactory: PropertyFactory[V]) = new MutableModel(Empty, propFactory)
 }
 
 /**
@@ -71,9 +72,9 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     // ATTRIBUTES    --------------
     
     private var propMap = initialProps.map { v => v.name.toLowerCase -> v }.toMap
-    private var propOrder = initialProps.map { v => v.name.toLowerCase }.toVector.distinct
+    private var propOrder = initialProps.map { v => v.name.toLowerCase }.toSeq.distinct
     
-    private var _listeners = Vector[PropertyChangeListener[V]]()
+    private var _listeners: Seq[PropertyChangeListener[V]] = Empty
     
     // Stores property value listeners that are used for firing property change events
     private var valueListeners = Map[V, ChangeListener[Value]]()
@@ -90,7 +91,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
       * The listeners that are informed of changes within this model's properties
       */
     def listeners = _listeners
-    def listeners_=(newListeners: Vector[PropertyChangeListener[V]]) = {
+    def listeners_=(newListeners: Seq[PropertyChangeListener[V]]) = {
         // May start or stop listening to property value changes
         if (_listeners.isEmpty) {
             // Case: First listener added => starts listening

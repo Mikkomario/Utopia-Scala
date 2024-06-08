@@ -3,7 +3,7 @@ package utopia.reach.component.input.text
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
@@ -131,15 +131,15 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	override def customDrawers = labelSettings.customDrawers
 	override def drawsSelectionBackground = labelSettings.drawsSelectionBackground
 	override def highlightColorPointer = labelSettings.highlightColorPointer
-	override def focusListeners: Vector[FocusListener] = labelSettings.focusListeners
+	override def focusListeners: Seq[FocusListener] = labelSettings.focusListeners
 	
-	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+	override def withFocusListeners(listeners: Seq[FocusListener]): Repr =
 		mapLabelSettings { _.withFocusListeners(listeners) }
 	override def withCaretBlinkFrequency(frequency: Duration) =
 		withLabelSettings(labelSettings.withCaretBlinkFrequency(frequency))
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
 		withLabelSettings(labelSettings.withCustomCaretColorPointer(p))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
 	override def withDrawSelectionBackground(drawBackground: Boolean) =
 		withLabelSettings(labelSettings.withDrawSelectionBackground(drawBackground))
@@ -332,7 +332,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private var focusLeaveConditions = Vector[String => (String, Boolean)]()
+	private var focusLeaveConditions: Seq[String => (String, Boolean)] = Empty
 	
 	/**
 	  * A flag that contains true while this label is receiving text input (having focus)

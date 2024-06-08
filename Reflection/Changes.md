@@ -8,6 +8,7 @@
 - This module is no longer dependent from the **Inception** module
 - Pop-up windows now close (if specified to do so) only on mouse-presses, not on mouse-releases
 - Removed some classes that were deprecated at v2.0 (or earlier)
+- In some instances where **Vector** was used, **Seq** is now used
 
 ## v2.1.1 - 22.01.2024
 Supports **Flow v2.3** and **Paradigm** v1.5

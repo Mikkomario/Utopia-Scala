@@ -2,6 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.Wait
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
@@ -51,7 +52,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	private val queuedValuePointer = VolatileOption[(A, Instant)]()
 	private val valuePointer = Volatile(source.value)
 	
-	private var stopListeners = Vector[ChangingStoppedListener]()
+	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	
 	// INITIAL CODE -------------------------
@@ -88,7 +89,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 			valuePointer.once { v => e.oldValue.forall { _._1 == v } } { _ =>
 				valuePointer.clearListeners()
 				stopListeners.foreach { _.onChangingStopped() }
-				stopListeners = Vector()
+				stopListeners = Empty
 			}
 		}
 	}

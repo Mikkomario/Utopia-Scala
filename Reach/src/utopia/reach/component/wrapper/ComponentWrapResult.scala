@@ -11,12 +11,12 @@ object ComponentWrapResult
 	/**
 	  * Type of component wrap result that wraps multiple components
 	  */
-	type ComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Vector[C], R]
+	type ComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Seq[C], R]
 	/**
 	  * Type of component wrap result that wraps multiple switchable components and
 	  * includes their visibility pointers
 	  */
-	type SwitchableComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Vector[(C, Changing[Boolean])], R]
+	type SwitchableComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Seq[(C, Changing[Boolean])], R]
 	
 	
 	// IMPLICIT	------------------------

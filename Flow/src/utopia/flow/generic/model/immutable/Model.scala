@@ -1,6 +1,6 @@
 package utopia.flow.generic.model.immutable
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.mutable
@@ -19,7 +19,7 @@ object Model
     /**
      * An empty model with a basic constant generator
      */
-    val empty = new Model(Map(), Vector(), PropertyFactory.forConstants)
+    val empty = new Model(Map(), Empty, PropertyFactory.forConstants)
     
     /**
       * Checks whether the two models have equal non-empty properties.
@@ -46,7 +46,7 @@ object Model
     {
         // Filters out duplicates (case-insensitive) (if there are duplicates, last instance is used)
         val attributeMap = constants.groupBy { _.name.toLowerCase }.map { case (name, props) => name -> props.last }
-        val attributeOrder = constants.map { _.name.toLowerCase }.toVector.distinct
+        val attributeOrder = constants.map { _.name.toLowerCase }.toSeq.distinct
         new Model(attributeMap, attributeOrder, propFactory)
     }
     
@@ -86,19 +86,19 @@ object Model
       * @return A new model with all specified name-value pairs as attributes
       */
     def from(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
-        apply(Vector(first, second) ++ more)
+        apply(Pair(first, second) ++ more)
     /**
       * @param pair A name value -pair
       * @return A new model that contains the specified name-value pair
       */
-    def from(pair: (String, Value)): Model = apply(Vector(pair))
+    def from(pair: (String, Value)): Model = apply(Single(pair))
     /**
       * @param pair A name-values -pair
       * @param convert Implicit value conversion for the specified value
       * @tparam A Type of the specified value
       * @return A model that contains the specified name value pair
       */
-    def from[A](pair: (String, A))(implicit convert: A => Value): Model = apply(Vector(pair._1 -> convert(pair._2)))
+    def from[A](pair: (String, A))(implicit convert: A => Value): Model = apply(Single(pair._1 -> convert(pair._2)))
     
     /**
      * Converts a map of valueConvertible elements into a model format. The generator the model 
@@ -120,7 +120,7 @@ object Model
  * @since 29.11.2016
  */
 class Model private(override val propertyMap: Map[String, Constant],
-                    override protected val propertyOrder: Vector[String],
+                    override protected val propertyOrder: Seq[String],
                     propFactory: PropertyFactory[Constant])
     extends ModelLike[Constant] with EqualsBy with ValueConvertible with MaybeEmpty[Model] with ApproxSelfEquals[Model]
 {
@@ -154,7 +154,7 @@ class Model private(override val propertyMap: Map[String, Constant],
     
     override def nonEmpty = !isEmpty
     
-    protected override def equalsProperties: Seq[Any] = Vector(propertyMap)
+    protected override def equalsProperties: Seq[Any] = Single(propertyMap)
     override implicit def equalsFunction: EqualsFunction[Model] = Model.similarProperties
     
     override def toValue = new Value(Some(this), ModelType)
@@ -291,7 +291,7 @@ class Model private(override val propertyMap: Map[String, Constant],
       * @param newName New property name
       * @return A copy of this model with that one property renamed
       */
-    def renamed(oldName: String, newName: String): Model = renamed(Vector(oldName -> newName))
+    def renamed(oldName: String, newName: String): Model = renamed(Single(oldName -> newName))
     
     /**
       * Creates a copy of this model with sorted property order

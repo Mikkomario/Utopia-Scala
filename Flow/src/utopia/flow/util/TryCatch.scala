@@ -1,5 +1,6 @@
 package utopia.flow.util
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.logging.Logger
 
 import scala.language.implicitConversions
@@ -45,11 +46,11 @@ sealed trait TryCatch[+A]
 	/**
 	 * @return All failures encountered. May be critical or non-critical.
 	 */
-	def failures: Vector[Throwable]
+	def failures: IndexedSeq[Throwable]
 	/**
 	 * @return Encountered non-critical failures.
 	 */
-	def partialFailures: Vector[Throwable]
+	def partialFailures: IndexedSeq[Throwable]
 	
 	/**
 	 * Logs non-critical failures that were encountered and returns a Try
@@ -103,7 +104,7 @@ object TryCatch
 {
 	// IMPLICIT -------------------------
 	
-	implicit def fromTry[A](t: Try[(A, Vector[Throwable])]): TryCatch[A] = t match {
+	implicit def fromTry[A](t: Try[(A, IndexedSeq[Throwable])]): TryCatch[A] = t match {
 		case scala.util.Success((result, failures)) => Success(result, failures)
 		case scala.util.Failure(error) => Failure(error)
 	}
@@ -118,7 +119,7 @@ object TryCatch
 	 * @tparam A Type of successful value returned
 	 * @return Success or failure based on whether the specified function threw
 	 */
-	def apply[A](f: => (A, Vector[Throwable])): TryCatch[A] = Try(f) match {
+	def apply[A](f: => (A, IndexedSeq[Throwable])): TryCatch[A] = Try(f) match {
 		case scala.util.Success((value, failures)) => Success(value, failures)
 		case scala.util.Failure(error) => Failure(error)
 	}
@@ -132,7 +133,7 @@ object TryCatch
 	 * @param failures Non-critical failures encountered during the process
 	 * @tparam A Type of acquired result
 	 */
-	case class Success[+A](value: A, failures: Vector[Throwable] = Vector()) extends TryCatch[A]
+	case class Success[+A](value: A, failures: IndexedSeq[Throwable] = Empty) extends TryCatch[A]
 	{
 		// COMPUTED ----------------------------
 		
@@ -154,7 +155,7 @@ object TryCatch
 		override def success = Some(value)
 		override def failure: Option[Throwable] = None
 		override def anyFailure: Option[Throwable] = failures.headOption
-		override def partialFailures: Vector[Throwable] = failures
+		override def partialFailures: IndexedSeq[Throwable] = failures
 		
 		override def logToTry(implicit log: Logger) = {
 			logFailures()
@@ -191,8 +192,8 @@ object TryCatch
 		override def success = None
 		override def failure: Option[Throwable] = Some(cause)
 		override def anyFailure = Some(cause)
-		override def failures: Vector[Throwable] = Vector(cause)
-		override def partialFailures: Vector[Throwable] = Vector.empty
+		override def failures: IndexedSeq[Throwable] = Single(cause)
+		override def partialFailures: IndexedSeq[Throwable] = Empty
 		
 		override def logToTry(implicit log: Logger) = toTry
 		override def logToOption(implicit log: Logger) = {

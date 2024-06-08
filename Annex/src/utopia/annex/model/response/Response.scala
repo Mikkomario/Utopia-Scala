@@ -46,7 +46,7 @@ sealed trait RequestResult
 	  * @tparam A Type of parse result
 	  * @return Parsed response content on success. Failure if this response was not a success or if parsing failed.
 	  */
-	def manyParsedFromSuccess[A](parser: FromModelFactory[A]): Try[Vector[A]]
+	def manyParsedFromSuccess[A](parser: FromModelFactory[A]): Try[Seq[A]]
 }
 
 sealed trait RequestFailure extends RequestResult

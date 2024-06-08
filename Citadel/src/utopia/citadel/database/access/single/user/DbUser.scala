@@ -3,6 +3,7 @@ package utopia.citadel.database.access.single.user
 import utopia.citadel.database.access.many.description.{DbLanguageDescriptions, DbLanguageFamiliarityDescriptions}
 import utopia.citadel.database.factory.user.UserFactory
 import utopia.citadel.database.model.user.{UserLanguageLinkModel, UserModel, UserSettingsModel}
+import utopia.flow.collection.immutable.Empty
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.user.{DetailedUser, DetailedUserLanguage}
 import utopia.metropolis.model.partial.user.{UserLanguageLinkData, UserSettingsData}
@@ -53,8 +54,7 @@ object DbUser extends SingleRowModelAccess[User] with UnconditionalView with Ind
 	  * @param connection Implicit DB Connection
 	  * @return Inserted user data
 	  */
-	def insert(name: String, email: Option[String] = None,
-	           languageData: Vector[(Language, LanguageFamiliarity)] = Vector())
+	def insert(name: String, email: Option[String] = None, languageData: Seq[(Language, LanguageFamiliarity)] = Empty)
 	          (implicit connection: Connection) =
 	{
 		// Inserts new user data

@@ -1,6 +1,7 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.paradigm.color.ColorRole._
 
 object ColorScheme
@@ -59,7 +60,7 @@ case class ColorScheme(default: ColorSet, colors: Map[ColorRole, ColorSet])
 	/**
 	  * Standard ui colors (primary, secondary, tertiary) available in this color scheme (1-3 elements)
 	  */
-	lazy val standards = Vector(primary) ++ colors.get(Secondary) ++ colors.get(Tertiary)
+	lazy val standards = Single(primary) ++ colors.get(Secondary) ++ colors.get(Tertiary)
 	
 	
 	// COMPUTED	------------------------------

@@ -3,6 +3,7 @@ package utopia.nexus.http
 import utopia.access.http.ContentCategory._
 import utopia.access.http.{ContentType, Headers}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.AutoClose._
@@ -62,7 +63,7 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
     def bufferedJsonArray =
         bufferedToString.map { _.flatMap { JsonReader(_) }.flatMap { v =>
             if (v.isEmpty)
-                Success(Vector())
+                Success(Empty)
             else
                 v.vector.toTry { new DataTypeException(s"${v.description} can't be converted to a vector") }
         } }

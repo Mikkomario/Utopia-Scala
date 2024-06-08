@@ -5,6 +5,7 @@ import utopia.firmament.image.ButtonImageSet
 import utopia.firmament.model.enumeration.GuiElementState.{Disabled, Focused}
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
@@ -40,7 +41,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def withoutAction(images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
 					  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
-					  additionalDrawers: Vector[CustomDrawer] = Vector(),
+					  additionalDrawers: Seq[CustomDrawer] = Empty,
 					  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false) =
 		new MutableImageButton(parentHierarchy, images, insets, alignment, hotKeys, additionalDrawers,
 			allowUpscaling, useLowPrioritySize)
@@ -60,7 +61,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply(images: ButtonImageSet, insets: StackInsets = StackInsets.zero,
 			  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
-			  additionalDrawers: Vector[CustomDrawer] = Vector(),
+			  additionalDrawers: Seq[CustomDrawer] = Empty,
 			  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)(action: => Unit) =
 	{
 		val button = withoutAction(images, insets, alignment, hotKeys, additionalDrawers,
@@ -76,9 +77,9 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
   * @since 29.10.2020, v0.1
   */
 class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: ButtonImageSet,
-						 initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
-						 hotKeys: Set[HotKey] = Set(), additionalDrawers: Vector[CustomDrawer] = Vector(),
-						 allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)
+                         initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
+                         hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Empty,
+                         allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)
 	extends ReachComponentWrapper with MutableButtonLike
 {
 	// ATTRIBUTES	--------------------------------
@@ -113,8 +114,8 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	  */
 	val shadePointer = imagesPointer.lazyMap { _.focus.shade }
 	
-	override var focusListeners: Seq[FocusListener] = Vector[FocusListener](new ButtonDefaultFocusListener(_statePointer))
-	override protected var actions: Seq[() => Unit] = Vector()
+	override var focusListeners: Seq[FocusListener] = Single[FocusListener](new ButtonDefaultFocusListener(_statePointer))
+	override protected var actions: Seq[() => Unit] = Empty
 	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer,
 		transformationPointer, Fixed(allowUpscaling), additionalDrawers, useLowPrioritySize)
 	

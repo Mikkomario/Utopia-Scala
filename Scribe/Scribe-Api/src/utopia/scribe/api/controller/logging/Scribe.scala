@@ -2,6 +2,7 @@ package utopia.scribe.api.controller.logging
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.{Loop, Process}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -41,7 +42,7 @@ object Scribe
 	// Also contains the repeat interval, in case it needs to be modified
 	private var counterResetLoop: Option[(FiniteDuration, Process)] = None
 	
-	private var limitListeners = Vector[MaximumLogLimitReachedListener]()
+	private var limitListeners: Seq[MaximumLogLimitReachedListener] = Empty
 	
 	// Contains the latest timestamp when the counter reached 0 or 1
 	private val firstLogTimePointer = logCounter.incrementalMap { _ => Now.toInstant } { (previous, event) =>

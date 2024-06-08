@@ -3,6 +3,7 @@ package utopia.exodus.database
 import utopia.citadel.database.deletion.CitadelDataDeletionRules
 import CitadelDataDeletionRules.defaultHistoryDuration
 import utopia.exodus.database.model.auth.TokenModel
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.model.immutable.DataDeletionRule
 
@@ -42,7 +43,7 @@ object ExodusDataDeletionRules
 				DataDeletionRule(tokenModel.table, tokenModel.expiresAttName, duration),
 				DataDeletionRule(tokenModel.table, tokenModel.deprecatedAfterAttName, duration)
 			)
-		case None => Vector()
+		case None => Empty
 	}
 	
 	/**

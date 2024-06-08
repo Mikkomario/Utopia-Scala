@@ -1,18 +1,19 @@
 package utopia.flow.collection.mutable
 
 import utopia.flow.collection.immutable
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.equality.EqualsFunction
 
 object MutableTree
 {
-    def apply[T](content: T, children: Vector[MutableTree[T]] = Vector())(implicit equals: EqualsFunction[T]) =
+    def apply[T](content: T, children: Seq[MutableTree[T]] = Empty)(implicit equals: EqualsFunction[T]) =
         new MutableTree(content, children)
     
     def apply[T](content: T, child: MutableTree[T])(implicit equals: EqualsFunction[T]) =
-        new MutableTree(content, Vector(child))
+        new MutableTree(content, Single(child))
     
     def apply[T](content: T, firstC: MutableTree[T], secondC: MutableTree[T], more: MutableTree[T]*)(implicit equals: EqualsFunction[T]) =
-        new MutableTree(content, Vector(firstC, secondC) ++ more)
+        new MutableTree(content, Pair(firstC, secondC) ++ more)
 }
 
 /**
@@ -23,7 +24,7 @@ object MutableTree
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
-class MutableTree[A](var nav: A, initialChildren: Vector[MutableTree[A]] = Vector())
+class MutableTree[A](var nav: A, initialChildren: Seq[MutableTree[A]] = Empty)
                     (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
     extends MutableTreeLike[A, MutableTree[A]]
 {
@@ -54,5 +55,5 @@ class MutableTree[A](var nav: A, initialChildren: Vector[MutableTree[A]] = Vecto
         node
     }
     
-    override protected def setChildren(newChildren: Seq[MutableTree[A]]) = _children = newChildren.toVector
+    override protected def setChildren(newChildren: Seq[MutableTree[A]]) = _children = newChildren
 }

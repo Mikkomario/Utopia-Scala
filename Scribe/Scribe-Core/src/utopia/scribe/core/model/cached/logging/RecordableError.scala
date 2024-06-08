@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.cached.logging
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
@@ -17,7 +18,7 @@ object RecordableError extends FromModelFactory[RecordableError]
 	
 	private lazy val schema = ModelDeclaration(
 		PropertyDeclaration("className", StringType, Vector("class", "name", "type")),
-		PropertyDeclaration("stackTrace", ModelType, Vector("stack", "stack_trace")),
+		PropertyDeclaration("stackTrace", ModelType, Pair("stack", "stack_trace")),
 		PropertyDeclaration("message", StringType, isOptional = true),
 		PropertyDeclaration("cause", ModelType, isOptional = true)
 	)

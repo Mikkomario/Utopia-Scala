@@ -1,5 +1,7 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.{Pair, Single}
+
 import scala.language.implicitConversions
 import utopia.vault.model.immutable.Column
 import utopia.vault.sql.OrderDirection.{Ascending, Descending}
@@ -28,17 +30,17 @@ object OrderBy
      * @param column the column by which the results are ordered
      * @param direction Whether the results should be ascending or descending
      */
-    def apply(column: Column, direction: OrderDirection): OrderBy = apply(Vector((column, direction)))
+    def apply(column: Column, direction: OrderDirection): OrderBy = apply(Single((column, direction)))
     
     def apply(firstPair: (Column, OrderDirection), secondPair: (Column, OrderDirection),
-              morePairs: (Column, OrderDirection)*): OrderBy = apply(Vector(firstPair, secondPair) ++ morePairs)
+              morePairs: (Column, OrderDirection)*): OrderBy = apply(Pair(firstPair, secondPair) ++ morePairs)
     
     /**
      * Creates a new sql segment that orders by multiple columns using a either ascending or 
      * descending order for each
      */
     def apply(direction: OrderDirection, first: Column, second: Column, more: Column*): OrderBy =
-            apply((Vector(first, second) ++ more).map { (_, direction) })
+            apply((Pair(first, second) ++ more).map { (_, direction) })
     
     /**
       * Orders by specified column(s), ascending (= smallest to largest)
@@ -46,22 +48,21 @@ object OrderBy
       * @param more More order columns
       * @return An order by segment
       */
-    def ascending(first: Column, more: Column*) = apply((first +: more).toVector.map { _ -> Ascending })
-    
+    def ascending(first: Column, more: Column*) = apply((first +: more).map { _ -> Ascending })
     /**
       * Orders by specified column(s), descending (= largest to smallest)
       * @param first The first order column
       * @param more More order columns
       * @return An order by segment
       */
-    def descending(first: Column, more: Column*) = apply((first +: more).toVector.map { _ -> Descending })
+    def descending(first: Column, more: Column*) = apply((first +: more).map { _ -> Descending })
 }
 
 /**
  * Represents ordering in sql query
  * @param keys The keys ordering happens by. Most important order keys come first and less important later.
  */
-case class OrderBy(keys: Vector[(Column, OrderDirection)])
+case class OrderBy(keys: Seq[(Column, OrderDirection)])
 {
     // COMPUTED -----------------------
     

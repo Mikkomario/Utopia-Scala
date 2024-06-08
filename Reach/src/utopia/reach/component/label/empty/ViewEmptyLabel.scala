@@ -5,6 +5,7 @@ import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
@@ -30,14 +31,14 @@ trait ViewEmptyLabelSettingsLike[+Repr] extends VariableBackgroundAssignable[Rep
 	// ABSTRACT ----------------------------
 	
 	protected def backgroundPointer: Option[Either[Color, Changing[Color]]]
-	protected def drawersPointer: Changing[Vector[CustomDrawer]]
+	protected def drawersPointer: Changing[Seq[CustomDrawer]]
 	
-	def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): Repr
+	def withCustomDrawers(drawersPointer: Changing[Seq[CustomDrawer]]): Repr
 	
 	
 	// OTHER    --------------------------
 	
-	def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = withCustomDrawers(Fixed(drawers))
+	def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr = withCustomDrawers(Fixed(drawers))
 	def withCustomDrawer(drawer: CustomDrawer) = withCustomDrawers(drawersPointer.map { _ :+ drawer })
 }
 
@@ -47,10 +48,10 @@ object ViewEmptyLabelSettings
 }
 
 case class ViewEmptyLabelSettings(backgroundPointer: Option[Either[Color, Changing[Color]]] = None,
-                                  drawersPointer: Changing[Vector[CustomDrawer]] = Fixed(Vector()))
+                                  drawersPointer: Changing[Seq[CustomDrawer]] = Fixed(Empty))
 	extends ViewEmptyLabelSettingsLike[ViewEmptyLabelSettings]
 {
-	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): ViewEmptyLabelSettings =
+	override def withCustomDrawers(drawersPointer: Changing[Seq[CustomDrawer]]): ViewEmptyLabelSettings =
 		copy(drawersPointer = drawersPointer)
 	override def withBackground(background: Either[Color, Changing[Color]]): ViewEmptyLabelSettings =
 		copy(backgroundPointer = Some(background))
@@ -67,9 +68,9 @@ trait ViewEmptyLabelSettingsWrapper[+Repr] extends ViewEmptyLabelSettingsLike[Re
 	// IMPLEMENTED  ------------------------
 	
 	override protected def backgroundPointer: Option[Either[Color, Changing[Color]]] = settings.backgroundPointer
-	override protected def drawersPointer: Changing[Vector[CustomDrawer]] = settings.drawersPointer
+	override protected def drawersPointer: Changing[Seq[CustomDrawer]] = settings.drawersPointer
 	
-	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): Repr =
+	override def withCustomDrawers(drawersPointer: Changing[Seq[CustomDrawer]]): Repr =
 		mapSettings { _.withCustomDrawers(drawersPointer) }
 	override protected def withBackground(background: Either[Color, Changing[Color]]): Repr =
 		mapSettings { _.withBackground(background) }
@@ -151,7 +152,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	@deprecated("Please use .withCustomDrawers(Changing).apply(Changing) instead", "v1.1")
 	def apply(stackSizePointer: Changing[StackSize],
-	          customDrawersPointer: Changing[Vector[CustomDrawer]]): ViewEmptyLabel =
+	          customDrawersPointer: Changing[Seq[CustomDrawer]]): ViewEmptyLabel =
 		withCustomDrawers(customDrawersPointer).apply(stackSizePointer)
 	/**
 	 * Creates a new label with fixed stack size
@@ -160,7 +161,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 	 * @return A new label
 	 */
 	@deprecated("Please use .withCustomDrawers(Changing).apply(StackSize) instead", "v1.1")
-	def withStaticSize(stackSize: StackSize, customDrawersPointer: Changing[Vector[CustomDrawer]]) =
+	def withStaticSize(stackSize: StackSize, customDrawersPointer: Changing[Seq[CustomDrawer]]) =
 		apply(Fixed(stackSize), customDrawersPointer)
 	/**
 	 * Creates a new label with fixed custom drawers
@@ -169,7 +170,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 	 * @return A new label
 	 */
 	@deprecated("Please use .withCustomDrawers(Vector).apply(Changing) instead", "v1.1")
-	def withStaticDrawers(stackSizePointer: Changing[StackSize], customDrawers: Vector[CustomDrawer]) =
+	def withStaticDrawers(stackSizePointer: Changing[StackSize], customDrawers: Seq[CustomDrawer]) =
 		withCustomDrawers(customDrawers).apply(stackSizePointer)
 	/**
 	 * Creates a new label with a changing background color
@@ -215,7 +216,7 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 	override def withBackground(background: ColorRole) =
 		super[ContextualVariableBackgroundAssignable].withBackground(background)
 	
-	override def withCustomDrawers(drawersPointer: Changing[Vector[CustomDrawer]]): ContextualViewEmptyLabelFactory =
+	override def withCustomDrawers(drawersPointer: Changing[Seq[CustomDrawer]]): ContextualViewEmptyLabelFactory =
 		mapSettings { _.copy(drawersPointer = drawersPointer) }
 	override protected def withBackground(background: Either[Color, Changing[Color]]): ContextualViewEmptyLabelFactory =
 		mapSettings { _.copy(backgroundPointer = Some(background)) }
@@ -243,7 +244,7 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
  * @since 29.1.2021, v0.1
  */
 class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stackSizePointer: Changing[StackSize],
-                     val customDrawersPointer: Changing[Vector[CustomDrawer]])
+                     val customDrawersPointer: Changing[Seq[CustomDrawer]])
 	extends CustomDrawReachComponent
 {
 	// INITIAL CODE -------------------------------

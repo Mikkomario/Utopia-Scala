@@ -81,7 +81,8 @@ class Invitations(queueSystem: QueueSystem, maxResponseWait: FiniteDuration = 10
 		val schrodinger = new CachedFindSchrodinger(activeCached)
 		
 		// Completes the schrödinger asynchronously
-		schrodinger.completeWith(queue.push(request)) { _.vector(DetailedInvitation).parsed } { logger(_) }
+		schrodinger
+			.completeWith(queue.push(request)) { _.vector(DetailedInvitation).parsed.map { _.toVector } } { logger(_) }
 		
 		schrodinger.view
 	}

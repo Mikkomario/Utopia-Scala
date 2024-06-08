@@ -26,12 +26,12 @@ object CsvReader
 	  * @tparam A Type of function result
 	  * @return Failure if file handling failed. Function result otherwise.
 	  */
-	def iterateRawRowsIn[A](path: Path, separator: Regex = defaultSeparator)(f: Iterator[Vector[String]] => A)
+	def iterateRawRowsIn[A](path: Path, separator: Regex = defaultSeparator)(f: Iterator[IndexedSeq[String]] => A)
 	                       (implicit codec: Codec) =
 	{
 		IterateLines.fromPath(path) { linesIter =>
 			f(linesIter.filterNot { _.isEmpty }
-				.map { _.split(separator).toVector.map(processValue) })
+				.map { _.split(separator).map(processValue) })
 		}
 	}
 	

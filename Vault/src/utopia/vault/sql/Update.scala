@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
@@ -75,7 +76,7 @@ object Update
      * Creates an update segment that changes the value of a single column in the table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, Model(Vector(key -> value)))
+    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, Model(Single(key -> value)))
     
     /**
      * Creates an update segment that updates the value of an individual column
@@ -104,5 +105,5 @@ object Update
      * @return An update segment (select nothing segment if there's nothing to update)
      */
     def apply(target: SqlTarget, table: Table, key: String, value: Value): SqlSegment = apply(target, table,
-        Model(Vector(key -> value)))
+        Model(Single(key -> value)))
 }

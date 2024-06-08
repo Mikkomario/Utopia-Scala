@@ -56,7 +56,7 @@ case class LogStoreDurations(durations: Map[Severity, LogStoreDuration] = Map())
 	  *         The meaning of these thresholds depends on the type of targeted cleanup operation
 	  *         (See [[LogStoreDuration]] for more details).
 	  */
-	def apply(operation: CleanupOperation, severity: Severity): Vector[Pair[Duration]] = apply(severity)(operation)
+	def apply(operation: CleanupOperation, severity: Severity): Seq[Pair[Duration]] = apply(severity)(operation)
 	/**
 	  * @param operation Targeted cleanup operation
 	  * @param severity Targeted severity level

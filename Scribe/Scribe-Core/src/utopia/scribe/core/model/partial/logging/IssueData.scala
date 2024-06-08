@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.partial.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
@@ -29,7 +30,7 @@ object IssueData extends FromModelFactoryWithSchema[IssueData]
 	
 	override lazy val schema = 
 		ModelDeclaration(Vector(PropertyDeclaration("context", StringType), PropertyDeclaration("severity", 
-			IntType, Vector(), Unrecoverable.level), PropertyDeclaration("created", InstantType, 
+			IntType, Empty, Unrecoverable.level), PropertyDeclaration("created", InstantType,
 			isOptional = true)))
 	
 	

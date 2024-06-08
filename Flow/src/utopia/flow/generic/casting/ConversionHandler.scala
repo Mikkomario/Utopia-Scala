@@ -2,6 +2,7 @@ package utopia.flow.generic.casting
 
 import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
@@ -131,7 +132,7 @@ object ConversionHandler
 			// Prefers direct routes
 			val directEdges = origin.edgesTo(target)
 			if (directEdges.nonEmpty)
-				Some(ConversionRoute(Vector(directEdges.map { _.value }.minBy { _.cost })))
+				Some(ConversionRoute(Single(directEdges.map { _.value }.minBy { _.cost })))
 			else {
 				// If multiple cheapest routes are found, considers the return route, also
 				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.filterMinBy { _.size }

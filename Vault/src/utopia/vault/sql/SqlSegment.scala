@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
 
@@ -63,7 +64,7 @@ object SqlSegment
   * @param isSelect Whether this segment represents a select query
   * @param generatesKeys Whether this statement will generate new keys (= rows with auto-increment index) to the database
  */
-case class SqlSegment(sql: String, values: Seq[Value] = Vector(), databaseName: Option[String] = None,
+case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Option[String] = None,
                       targetTables: Set[Table] = HashSet(), events: Option[Result => Seq[TableUpdateEvent]] = None,
                       isSelect: Boolean = false, generatesKeys: Boolean = false)
 {

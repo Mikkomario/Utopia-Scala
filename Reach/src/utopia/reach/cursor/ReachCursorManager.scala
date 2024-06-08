@@ -1,6 +1,7 @@
 package utopia.reach.cursor
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.TryCache
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
@@ -36,7 +37,7 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 		new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB), new java.awt.Point(0, 0),
 		"blank cursor") }
 	
-	private var cursorComponents = Vector[CursorDefining]()
+	private var cursorComponents: Seq[CursorDefining] = Empty
 	
 	private val cursorCache = TryCache.releasing[Image, java.awt.Cursor](1.minutes, 5.minutes) { image =>
 		// Applies the image with proper os-supported measurements and applied alpha value. Will not crop the image.

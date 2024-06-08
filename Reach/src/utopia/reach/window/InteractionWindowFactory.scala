@@ -7,6 +7,7 @@ import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{HotKey, WindowButtonBlueprint}
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.SettableOnce
@@ -74,7 +75,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[TextContext]): (ReachComponentLike, Vector[WindowButtonBlueprint[A]], View[Boolean])
+	protected def createContent(factories: ContextualMixed[TextContext]): (ReachComponentLike, Seq[WindowButtonBlueprint[A]], View[Boolean])
 	
 	
 	// OTHER	-----------------------
@@ -138,7 +139,7 @@ trait InteractionWindowFactory[A]
 					val buttonsBuilder = new VectorBuilder[ButtonLike]()
 					
 					// Appends a single button row, if necessary
-					def appendButtons(blueprints: Vector[WindowButtonBlueprint[A]]): Unit = {
+					def appendButtons(blueprints: Seq[WindowButtonBlueprint[A]]): Unit = {
 						if (blueprints.nonEmpty) {
 							val (component, buttons) = buttonRow(factoriesWithoutContext, blueprints,
 								defaultButtonMargin, resultPromise,
@@ -174,9 +175,9 @@ trait InteractionWindowFactory[A]
 		window.withResult(resultFuture)
 	}
 	
-	private def buttonRow(factories: Mixed, buttons: Vector[WindowButtonBlueprint[A]],
+	private def buttonRow(factories: Mixed, buttons: Seq[WindowButtonBlueprint[A]],
 						  baseMargin: Double, resultPromise: Promise[A],
-						  defaultActionEnabled: => Boolean): (ReachComponentLike, Vector[ButtonLike]) =
+						  defaultActionEnabled: => Boolean): (ReachComponentLike, Seq[ButtonLike]) =
 	{
 		val nonScalingMargin = baseMargin.downscaling
 		
@@ -198,7 +199,7 @@ trait InteractionWindowFactory[A]
 			else
 				factories(AlignFrame)(alignment).build(Mixed) { factories =>
 					val button = actualize(factories, blueprints.head, resultPromise, defaultActionEnabled)
-					button -> Vector(button)
+					button -> Single(button)
 				}.parentAndResult
 		}
 		else {
@@ -218,10 +219,10 @@ trait InteractionWindowFactory[A]
 		}
 	}
 	
-	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Vector[Vector[WindowButtonBlueprint[A]]],
+	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Vector[Seq[WindowButtonBlueprint[A]]],
 									scalingMargin: StackLength, nonScalingMargin: StackLength,
 									resultPromise: Promise[A],
-									defaultActionEnabled: => Boolean): (Stack, Vector[ButtonLike]) =
+									defaultActionEnabled: => Boolean): (Stack, Seq[ButtonLike]) =
 	{
 		factory.row.withMargin(scalingMargin).build(Mixed) { factories =>
 			val (components, buttons) = buttonGroups.splitMap { group =>
@@ -236,7 +237,7 @@ trait InteractionWindowFactory[A]
 				}
 				else {
 					val button = actualize(factories(Mixed), group.head, resultPromise, defaultActionEnabled)
-					button -> Vector(button)
+					button -> Single(button)
 				}
 			}
 			components -> buttons.flatten

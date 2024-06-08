@@ -2,6 +2,8 @@ package utopia.reach.component.factory
 
 import utopia.firmament.image.ButtonImageEffect
 import utopia.firmament.image.ButtonImageEffect.{ChangeSize, Highlight, LowerAlphaOnDisabled}
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.util.Mutate
 import utopia.paradigm.transform.Adjustment
 
 /**
@@ -21,14 +23,14 @@ trait AppliesButtonImageEffectsFactory[+Repr]
 	/**
 	  * Effects applied to generated image sets
 	  */
-	def imageEffects: Vector[ButtonImageEffect]
+	def imageEffects: Seq[ButtonImageEffect]
 	/**
 	  * Effects applied to generated image sets
 	  * @param effects New image effects to use.
 	  * Effects applied to generated image sets
 	  * @return Copy of this factory with the specified image effects
 	  */
-	def withImageEffects(effects: Vector[ButtonImageEffect]): Repr
+	def withImageEffects(effects: Seq[ButtonImageEffect]): Repr
 	
 	
 	// COMPUTED --------------------
@@ -36,7 +38,7 @@ trait AppliesButtonImageEffectsFactory[+Repr]
 	/**
 	  * @return Copy of this factory that doesn't apply any image effects
 	  */
-	def withoutImageEffects = withImageEffects(Vector.empty)
+	def withoutImageEffects = withImageEffects(Empty)
 	
 	/**
 	  * @return Copy of this factory that uses a lower alpha channel value (i.e. higher transparency)
@@ -82,8 +84,7 @@ trait AppliesButtonImageEffectsFactory[+Repr]
 	  * @param f A mapping function that modifies applied image effects
 	  * @return Copy of this factory with modified effects
 	  */
-	def mapImageEffects(f: Vector[ButtonImageEffect] => Vector[ButtonImageEffect]) =
-		withImageEffects(f(imageEffects))
+	def mapImageEffects(f: Mutate[Seq[ButtonImageEffect]]) = withImageEffects(f(imageEffects))
 	
 	/**
 	  * Applies an image effect to generated components. Previously listed effects are also applied.
@@ -97,7 +98,7 @@ trait AppliesButtonImageEffectsFactory[+Repr]
 	  * @param effect An effect to add to the created components.
 	  * @return Copy of this factory that only applies the specified effect.
 	  */
-	def withSingleImageEffect(effect: ButtonImageEffect) = withImageEffects(Vector(effect))
+	def withSingleImageEffect(effect: ButtonImageEffect) = withImageEffects(Single(effect))
 	
 	/**
 	  * Applies 0-n image additional effects to generated components. Previously listed effects are also applied.

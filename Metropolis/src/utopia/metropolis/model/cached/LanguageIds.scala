@@ -9,13 +9,13 @@ object LanguageIds
 	  * @param ids Language ids to wrap (call-by-name)
 	  * @return A language ids instance based on those ids (lazy)
 	  */
-	def apply(ids: => Vector[Int]) = new LanguageIds(Lazy(ids))
+	def apply(ids: => Seq[Int]) = new LanguageIds(Lazy(ids))
 	/**
 	  * @param firstId Id of the most preferred language
 	  * @param moreIds Ids of the other languages from most preferred to least preferred
 	  * @return A language id list
 	  */
-	def apply(firstId: Int, moreIds: Int*): LanguageIds = apply(firstId +: moreIds.toVector)
+	def apply(firstId: Int, moreIds: Int*): LanguageIds = apply(firstId +: moreIds)
 }
 
 /**
@@ -24,7 +24,7 @@ object LanguageIds
   * @author Mikko Hilpinen
   * @since 15.10.2021, v1.3
   */
-class LanguageIds private(ids: Lazy[Vector[Int]]) extends Extender[Vector[Int]]
+class LanguageIds private(ids: Lazy[Seq[Int]]) extends Extender[Seq[Int]]
 {
 	// COMPUTED ------------------------------
 	

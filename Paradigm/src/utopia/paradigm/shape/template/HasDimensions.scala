@@ -53,7 +53,7 @@ trait HasDimensions[+A]
 	/**
 	  * @return The individual dimensional components that form the dimensions in this item
 	  */
-	def components: IndexedSeq[Dimension[A]] = dimensions.components
+	def components: Seq[Dimension[A]] = dimensions.components
 	
 	/**
 	  * @param ord Implicit ordering to use

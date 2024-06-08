@@ -3,6 +3,7 @@ package utopia.annex.model.request
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.model.Spirit
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
@@ -77,5 +78,5 @@ trait PostSpiritRequest[+S <: Spirit with ModelConvertible] extends ApiRequest w
 	override def deprecated = false
 	
 	override def persistingModelPointer =
-		Fixed(Some(Model(Vector("method" -> method.toString, "spirit" -> spirit.toModel))))
+		Fixed(Some(Model(Pair("method" -> method.toString, "spirit" -> spirit.toModel))))
 }

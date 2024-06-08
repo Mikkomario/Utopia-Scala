@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.enumeration.ComparisonOperator
@@ -28,7 +28,7 @@ object ConditionElement
     // NESTED   ------------------------
     
     private case class ValueAsElement(value: Value) extends ConditionElement {
-        override def toSqlSegment = SqlSegment("?", Vector(value))
+        override def toSqlSegment = SqlSegment("?", Single(value))
     }
     
     private case class SegmentAsElement(segment: SqlSegment) extends ConditionElement {

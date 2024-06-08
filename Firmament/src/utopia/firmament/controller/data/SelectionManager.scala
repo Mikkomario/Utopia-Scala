@@ -11,12 +11,12 @@ import utopia.flow.view.template.eventful.Changing
   * @author Mikko Hilpinen
   * @since 19.12.2020, Reflection v2
   * @tparam A Type of content in a display
-  * @tparam S Type of selection (E.g. Option[A] for 0-1 selections, A for 1 selection or Vector[A] for multiple selection)
+  * @tparam S Type of selection (E.g. Option[A] for 0-1 selections, A for 1 selection or Seq[A] for multiple selection)
   * @tparam C Type of display component
   * @tparam PA Type of pointer that contains the displayed content
   */
-trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Vector[A]]]
-	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, EventfulPointer[S], Vector[A], PA]
+trait SelectionManager[A, S, C <: Refreshable[A], +PA <: Changing[Seq[A]]]
+	extends ContentDisplayer[A, C, PA] with SelectionWithPointers[S, EventfulPointer[S], Seq[A], PA]
 		with InteractionWithPointer[S]
 {
 	// ABSTRACT	-----------------------

@@ -1,6 +1,6 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
@@ -17,13 +17,13 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 	// ATTRIBUTES   -------------------------
 	
 	// Stores the listeners in a pointer, because this mirror functions differently while there are listeners assigned
-	private val listenersPointer = EventfulPointer[Pair[Vector[ChangeListener[A]]]](Pair.twice(Vector.empty))
+	private val listenersPointer = EventfulPointer[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */
 	protected val hasListenersFlag: FlagLike = listenersPointer.strongMap { _.exists { _.nonEmpty } }
 	
-	private var stopListeners = Vector[ChangingStoppedListener]()
+	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -45,7 +45,7 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 		clearListeners()
 		if (stopListeners.nonEmpty) {
 			stopListeners.foreach { _.onChangingStopped() }
-			stopListeners = Vector()
+			stopListeners = Empty
 		}
 	}
 	

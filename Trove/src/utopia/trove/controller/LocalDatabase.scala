@@ -6,6 +6,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.CloseHook
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}
 import utopia.trove.event.DatabaseSetupEvent.{DatabaseConfigured, DatabaseStarted, SetupFailed, SetupSucceeded, UpdateApplied, UpdateFailed, UpdatesFound}
@@ -146,12 +147,11 @@ object LocalDatabase
 								SetupSucceeded(currentDbVersion)
 						}
 					}
-					else
-					{
+					else {
 						fireEvent(UpdatesFound(sources, currentDbVersion))
 						
 						connectionPool.tryWith { implicit connection =>
-							val versionsBackup: Vector[DatabaseVersion] = {
+							val versionsBackup: Seq[DatabaseVersion] = {
 								// Creates, recreates and/or uses the targeted database if necessary
 								if (currentDbVersion.isDefined) {
 									// If a full update will be introduced and there already exists a database version,
@@ -168,7 +168,7 @@ object LocalDatabase
 									// In case there is an update and db exists already, uses it
 									else {
 										connection.dbName = dbName
-										Vector()
+										Empty
 									}
 								}
 								// If there wasn't any target database before, creates one
@@ -177,7 +177,7 @@ object LocalDatabase
 									connection.createDatabase(dbName, defaultCharset, defaultCollate,
 										checkIfExists = false)
 									Connection.modifySettings { _.copy(defaultDBName = Some(dbName)) }
-									Vector()
+									Empty
 								}
 							}
 							

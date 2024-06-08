@@ -14,7 +14,7 @@ trait WeekDays extends Ordering[WeekDay]
 	/**
 	  * @return Week days. Ordered.
 	  */
-	def values: Vector[WeekDay]
+	def values: IndexedSeq[WeekDay]
 	
 	/**
 	  * @param day A weekday

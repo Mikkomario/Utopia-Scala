@@ -6,6 +6,7 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -68,7 +69,7 @@ trait SwitchSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with ButtonS
 	
 	override def withEnabledPointer(p: Changing[Boolean]) =
 		withButtonSettings(buttonSettings.withEnabledPointer(p))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
@@ -96,14 +97,14 @@ object SwitchSettings
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class SwitchSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class SwitchSettings(customDrawers: Seq[CustomDrawer] = Empty,
                           buttonSettings: ButtonSettings = ButtonSettings.default)
 	extends SwitchSettingsLike[SwitchSettings]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 }
 
 /**
@@ -133,7 +134,7 @@ trait SwitchSettingsWrapper[+Repr] extends SwitchSettingsLike[Repr]
 	override def customDrawers = settings.customDrawers
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	
 	

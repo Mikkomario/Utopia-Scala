@@ -13,6 +13,7 @@ import utopia.access.http.Status
 import utopia.access.http.Cookie
 import utopia.access.http.Headers
 import utopia.access.http.ContentType
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 object Response
@@ -24,7 +25,7 @@ object Response
      * @param body the model that forms the body of the response
      * @param status the status of the response
      */
-    def fromModel(body: Model, status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
+    def fromModel(body: Model, status: Status = OK, setCookies: Seq[Cookie] = Empty) =
         fromValue(body, status, setCookies)
     
     /**
@@ -32,7 +33,7 @@ object Response
      * @param body the vector that forms the body of the response
      * @param status the status of the response
      */
-    def fromVector(body: Vector[Value], status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
+    def fromVector(body: Vector[Value], status: Status = OK, setCookies: Seq[Cookie] = Empty) =
         fromValue(body, status, setCookies)
     
     /**
@@ -40,7 +41,7 @@ object Response
      * @param body the value that forms the body of the response
      * @param status the status of the response
      */
-    def fromValue(body: Value, status: Status = OK, setCookies: Seq[Cookie] = Vector()) =
+    def fromValue(body: Value, status: Status = OK, setCookies: Seq[Cookie] = Empty) =
         new Response(status, Headers.withCurrentDate.withContentType(Application/"json"), setCookies,
             Some(_.write(body.toJson.getBytes(StandardCharsets.UTF_8))))
     
@@ -52,7 +53,7 @@ object Response
      * @param status The status for the response. Default OK (200)
      */
     def fromFile(filePath: file.Path, contentType: Option[ContentType] = None, status: Status = OK, 
-            setCookies: Seq[Cookie] = Vector()) = 
+            setCookies: Seq[Cookie] = Empty) =
     {
         if (Files.exists(filePath) && !Files.isDirectory(filePath))
         {
@@ -75,7 +76,7 @@ object Response
     def plainText(message: String, status: Status = OK, charset: Charset = StandardCharsets.UTF_8) = 
     {
         val headers = Headers.withContentType(Text/"plain", Some(charset)).withCurrentDate
-        new Response(status, headers, Vector(), Some({ _.write(message.getBytes(charset)) }))
+        new Response(status, headers, Empty, Some({ _.write(message.getBytes(charset)) }))
     }
     
     /**
@@ -95,7 +96,7 @@ object Response
  * @param writeBody a function that writes the response body into a stream. None by default.
  */
 class Response(val status: Status = OK, val headers: Headers = Headers.empty,
-        val setCookies: Seq[Cookie] = Vector(), val writeBody: Option[OutputStream => Unit] = None)
+        val setCookies: Seq[Cookie] = Empty, val writeBody: Option[OutputStream => Unit] = None)
 {
     // OPERATORS    --------------------
     

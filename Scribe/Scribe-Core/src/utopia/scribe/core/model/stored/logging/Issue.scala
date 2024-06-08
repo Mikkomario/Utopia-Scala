@@ -32,5 +32,5 @@ case class Issue(id: Int, data: IssueData) extends StoredModelConvertible[IssueD
 	  * @param instances Occurrences of this issue, grouped by issue variant
 	  * @return Copy of this issue which includes the specified issue instances
 	  */
-	def withOccurrences(instances: Vector[IssueVariantInstances]) = IssueInstances(this, instances)
+	def withOccurrences(instances: Seq[IssueVariantInstances]) = IssueInstances(this, instances)
 }

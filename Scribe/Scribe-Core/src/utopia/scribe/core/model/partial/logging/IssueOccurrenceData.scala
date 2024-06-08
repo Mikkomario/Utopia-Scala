@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.partial.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
@@ -52,9 +53,9 @@ object IssueOccurrenceData extends FromModelFactoryWithSchema[IssueOccurrenceDat
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class IssueOccurrenceData(caseId: Int, errorMessages: Vector[String] = Vector.empty, 
-	details: Model = Model.empty, count: Int = 1, 
-	occurrencePeriod: Span[Instant] = Span.singleValue[Instant](Now)) 
+case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty,
+                               details: Model = Model.empty, count: Int = 1,
+                               occurrencePeriod: Span[Instant] = Span.singleValue[Instant](Now))
 	extends ModelConvertible
 {
 	// COMPUTED	--------------------
@@ -77,7 +78,7 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Vector[String] = Vect
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
-		Model(Vector("caseId" -> caseId, "errorMessages" -> errorMessages.map[Value] { v => v }, 
+		Model(Vector("caseId" -> caseId, "errorMessages" -> errorMessages.map[Value] { v => v }.toVector,
 			"details" -> details, "count" -> count, 
 			"occurrencePeriod" -> occurrencePeriod.ends.map[Value] { v => v }))
 }

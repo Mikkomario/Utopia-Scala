@@ -1,6 +1,7 @@
 package utopia.flow.collection.mutable
 
 import utopia.flow.collection
+import utopia.flow.collection.immutable.Empty
 
 /**
   * Tree nodes form individual trees. They can also be used as subtrees in other tree nodes. Like
@@ -57,7 +58,7 @@ trait MutableTreeLike[A, Repr <: MutableTreeLike[A, Repr]] extends collection.te
 	/**
 	  * Clears the node, removing any nodes below it
 	  */
-	def clear() = setChildren(Vector())
+	def clear() = setChildren(Empty)
 	
 	/**
 	  * Removes the direct children of this node that match the specified function

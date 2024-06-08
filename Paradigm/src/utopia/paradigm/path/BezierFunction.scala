@@ -19,24 +19,21 @@ object BezierFunction
 	 *         not work properly outside of the minimum and maximum x-range specified by these points (Eg. for 100 x
 	 *         if you only have control points between 0 and 10 x).
 	 */
-	def apply(points: Seq[Point]): Animation[Double] =
-	{
+	def apply(points: Seq[Point]): Animation[Double] = {
 		val functionPoints = points.sortBy { _.x }
 		val path = BezierPath.parts(functionPoints)
 		
-		FunctionPath(path.toVector, functionPoints.head.x, functionPoints.last.x)
+		FunctionPath(path, functionPoints.head.x, functionPoints.last.x)
 	}
 	
 	
 	// NESTED   ------------------------------
 	
-	private case class FunctionPath(paths: Vector[Path[Point]], startX: Double, endX: Double) extends Animation[Double]
+	private case class FunctionPath(paths: Seq[Path[Point]], startX: Double, endX: Double) extends Animation[Double]
 	{
-		override def apply(x: Double) =
-		{
+		override def apply(x: Double) = {
 			// Finds the correct path sequence
-			val p =
-			{
+			val p = {
 				if (x < startX)
 					paths.head
 				else if (x > endX)

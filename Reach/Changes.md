@@ -12,6 +12,7 @@
 - Moved **FramedFactory** to the **Firmament** module
 - Moved **PaintManager** and **Priority** to the **Genesis** module
 - **ImageLabelSettingsLike** and related settings-like traits now require a transformation to be specified 
+- In some instances where **Vector** was used, **Seq** is now used
 ### Deprecations
 - Deprecated **FocusableWithPointer**, as it is now redundant
 ### Bugfixes

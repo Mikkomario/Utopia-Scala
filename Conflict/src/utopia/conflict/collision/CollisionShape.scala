@@ -46,8 +46,7 @@ object CollisionShape
  * @param circleToPolygonEdges the amount of edges used when approximating a circle or an ellipsoid 
  * with a polygon
  */
-case class CollisionShape(convexPolygons: Vector[Polygonic], circles: Vector[Circle],
-                          circleToPolygonEdges: Int)
+case class CollisionShape(convexPolygons: Seq[Polygonic], circles: Seq[Circle], circleToPolygonEdges: Int)
     extends Transformable[CollisionShape]
 {
     // ATTRIBUTES    -------------------------

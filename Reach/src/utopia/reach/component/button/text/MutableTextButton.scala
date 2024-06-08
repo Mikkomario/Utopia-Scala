@@ -8,6 +8,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.GuiElementState.{Disabled, Focused}
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
@@ -151,10 +152,10 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	  */
 	val colorPointer = EventfulPointer(initialColor)
 	
-	var focusListeners: Seq[FocusListener] = Vector(new ButtonDefaultFocusListener(_statePointer))
+	var focusListeners: Seq[FocusListener] = Single(new ButtonDefaultFocusListener(_statePointer))
 	override val focusId = hashCode()
 	
-	override protected var actions: Seq[() => Unit] = Vector[() => Unit]()
+	override protected var actions: Seq[() => Unit] = Empty
 	
 	
 	// INITIAL CODE	---------------------------------

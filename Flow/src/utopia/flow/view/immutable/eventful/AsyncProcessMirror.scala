@@ -3,6 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.async.process.Process
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
@@ -143,7 +144,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 		AsyncMirrorValue(initialPlaceHolder, if (skipInitialProcess) None else Some(source.value)))
 	private val activeOriginPointer = pointer.map { _.activeOrigin }
 	
-	private var stopListeners = Vector[ChangingStoppedListener]()
+	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	
 	// INITIAL CODE ---------------------
@@ -175,7 +176,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()
 		stopListeners.foreach { _.onChangingStopped() }
-		stopListeners = Vector()
+		stopListeners = Empty
 	}
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) =

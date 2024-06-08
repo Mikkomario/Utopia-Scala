@@ -1,9 +1,10 @@
 package utopia.firmament.localization
 
+import utopia.flow.collection.immutable.Single
+
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-
 import scala.language.implicitConversions
 import utopia.flow.time.TimeExtensions._
 
@@ -153,7 +154,7 @@ object DisplayFunction
 	  * @param string The string that will be interpolated using parameter item (single argument)
 	  * @return A new display function that uses a static string with interpolation
 	  */
-	def interpolating(string: LocalizedString) = new DisplayFunction[Any](item => string.interpolated(Vector(item)))
+	def interpolating(string: LocalizedString) = new DisplayFunction[Any](item => string.interpolated(Single(item)))
 	
 	/**
 	 * @param whenDefined A display function to use when an item has been defined

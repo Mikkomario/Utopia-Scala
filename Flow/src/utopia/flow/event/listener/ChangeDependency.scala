@@ -1,5 +1,6 @@
 package utopia.flow.event.listener
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.event.model.ChangeResponse.{Continue, ContinueAnd}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 
@@ -87,7 +88,7 @@ trait ChangeDependency[-A] extends ChangeListener[A]
 	
 	override def onChangeEvent(event: ChangeEvent[A]): ChangeResponse = {
 		beforeChangeEvent(event) match {
-			case Some(effect) => ContinueAnd(Vector(effect))
+			case Some(effect) => ContinueAnd(Single(effect))
 			case None => Continue
 		}
 	}

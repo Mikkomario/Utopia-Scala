@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.access.single.logging.stack_trace_element_record
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
 import utopia.scribe.api.database.model.logging.StackTraceElementRecordModel
@@ -51,13 +52,12 @@ object DbStackTraceElementRecord extends SingleRowModelAccess[StackTraceElementR
 	  *         Right) Stack trace elements that already existed in the database.
 	  *         No new inserts have been made.
 	  */
-	def store(trace: StackTrace)(implicit connection: Connection): Either[Vector[StackTraceElementRecord], Vector[StackTraceElementRecord]] =
-	{
+	def store(trace: StackTrace)(implicit connection: Connection): Sided[Seq[StackTraceElementRecord]] = {
 		// Stores the elements from bottom to top, avoiding duplicates
 		val elements = trace.bottomToTop
 		elements.oneOrMany match {
 			// Case: There is only a single element => Stores it, if it is new
-			case Left(single) => store(dataFrom(single)).mapEither { Vector(_) }
+			case Left(single) => store(dataFrom(single)).mapEither { Single(_) }
 			// Case: There are multiple elements to store
 			case Right(elements) =>
 				val remainingIterator = elements.tail.iterator

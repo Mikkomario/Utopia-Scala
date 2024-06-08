@@ -11,7 +11,7 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
  * @author Mikko Hilpinen
  * @since 11.7.2021, v1.8
  */
-trait ManyColumnAccess[+V] extends ColumnAccess[V, Vector[V]] with ManyAccess[V]
+trait ManyColumnAccess[+V] extends ColumnAccess[V, Seq[V]] with ManyAccess[V]
 {
 	// COMPUTED ---------------------------
 	

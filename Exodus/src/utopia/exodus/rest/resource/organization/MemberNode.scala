@@ -9,6 +9,7 @@ import utopia.citadel.model.enumeration.CitadelUserRole.Owner
 import utopia.exodus.model.enumeration.ExodusScope.PersonalActions
 import utopia.exodus.model.enumeration.ExodusTask.RemoveMember
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.nexus.http.Path
 import utopia.nexus.rest.ResourceWithChildren
 import utopia.nexus.result.Result
@@ -23,7 +24,7 @@ import utopia.vault.database.Connection
   */
 case class MemberNode(organizationId: Int, userId: Option[Int]) extends ResourceWithChildren[AuthorizedContext]
 {
-	override val allowedMethods = Vector(Delete)
+	override val allowedMethods = Single(Delete)
 	
 	override def name = userId match
 	{
@@ -31,7 +32,7 @@ case class MemberNode(organizationId: Int, userId: Option[Int]) extends Resource
 		case None => "me"
 	}
 	
-	override def children = Vector(MemberRolesNode(organizationId, userId))
+	override def children = Single(MemberRolesNode(organizationId, userId))
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{

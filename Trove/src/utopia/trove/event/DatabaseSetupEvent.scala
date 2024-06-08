@@ -1,5 +1,6 @@
 package utopia.trove.event
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Version
 import utopia.trove.model.stored.DatabaseVersion
 import utopia.trove.model.DatabaseStructureSource
@@ -65,7 +66,7 @@ object DatabaseSetupEvent
 	  * @param filesToImport Files that will be imported
 	  * @param currentVersion Current database version (None if no version is installed yet)
 	  */
-	case class UpdatesFound(filesToImport: Vector[DatabaseStructureSource],
+	case class UpdatesFound(filesToImport: Seq[DatabaseStructureSource],
 							currentVersion: Option[DatabaseVersion] = None) extends DatabaseSetupEvent
 	
 	/**
@@ -74,7 +75,7 @@ object DatabaseSetupEvent
 	  * @param remainingUpdates Updates still remaining to be applied (empty if this was the last update)
 	  */
 	case class UpdateApplied(appliedUpdate: DatabaseStructureSource,
-							 remainingUpdates: Vector[DatabaseStructureSource] = Vector()) extends DatabaseSetupEvent
+							 remainingUpdates: Seq[DatabaseStructureSource] = Empty) extends DatabaseSetupEvent
 	
 	/**
 	  * An event generated when database configuration or starting fails. Database won't be usable at all in this case.

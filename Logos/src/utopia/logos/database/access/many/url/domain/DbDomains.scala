@@ -1,6 +1,6 @@
 package utopia.logos.database.access.many.url.domain
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.model.partial.url.DomainData
 import utopia.vault.database.Connection
@@ -44,7 +44,7 @@ object DbDomains extends ManyDomainsAccess with UnconditionalView
 			Pair(inserted, existing)
 		}
 		else
-			Pair.twice(Vector())
+			Pair.twice(Empty)
 	}
 	
 	

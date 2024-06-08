@@ -1,6 +1,7 @@
 package utopia.flow.test.collection
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.ordering.SomeBeforeNone
 
 /**
@@ -71,6 +72,18 @@ object CollectionTest extends App
 	
 	// Tests SomeBeforeNone
 	assert(Vector[Option[Int]](None, Some(1), Some(2)).sorted[Option[Int]](SomeBeforeNone) == Vector(Some(1), Some(2), None))
+	
+	// Tests takeMax etc.
+	assert(v1.takeMax(2).toSet == Set(3, 4))
+	assert(v1.takeMin(2).toSet == Set(1, 2))
+	// NB: Slightly ambiguous use-case
+	assert(words.takeMaxBy(2) { _.length }.toSet == Set("Apina", "Banaani"))
+	assert(words.takeMinBy(2) { _.length }.toSet == Set("Apina", "Car"))
+	
+	// Tests equality for custom collections
+	assert(Empty == Vector())
+	assert(Single(1) == Vector(1))
+	assert(Pair(1, 2) == Vector(1, 2))
 	
 	println("Success!")
 }

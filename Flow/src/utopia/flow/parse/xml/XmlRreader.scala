@@ -1,5 +1,6 @@
 package utopia.flow.parse.xml
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
@@ -381,7 +382,7 @@ private class UnfinishedElement(name: NamespacedString, attributes: Map[Namespac
 {
     // ATTRIBUTES    -----------------------
     
-    var children = Vector[UnfinishedElement]()
+    var children: Seq[UnfinishedElement] = Empty
     var text = ""
     
     

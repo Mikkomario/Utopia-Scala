@@ -1,5 +1,6 @@
 package utopia.firmament.model
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.MaybeEmpty
 
 object RowGroups
@@ -8,7 +9,7 @@ object RowGroups
 	  * @param groups Input row groups
 	  * @return A set of input rows based on those groups
 	  */
-	def apply[R](groups: Vector[RowGroup[R]]) = new RowGroups(groups)
+	def apply[R](groups: Seq[RowGroup[R]]) = new RowGroups(groups)
 	
 	/**
 	  * @param first First group
@@ -17,19 +18,19 @@ object RowGroups
 	  * @return A set of input rows based on those groups
 	  */
 	def apply[R](first: RowGroup[R], second: RowGroup[R], more: RowGroup[R]*): RowGroups[R] =
-		apply(Vector(first, second) ++ more)
+		apply(Pair(first, second) ++ more)
 	
 	/**
 	  * @param group Only row group
 	  * @return A set of input rows that only contains that group
 	  */
-	def singleGroup[R](group: RowGroup[R]) = apply(Vector(group))
+	def singleGroup[R](group: RowGroup[R]) = apply(Single(group))
 	
 	/**
 	  * @param rows Input rows
 	  * @return A set of input rows where the specified rows form a single group
 	  */
-	def singleGroup[R](rows: Vector[R]): RowGroups[R] = singleGroup(RowGroup(rows))
+	def singleGroup[R](rows: Seq[R]): RowGroups[R] = singleGroup(RowGroup(rows))
 	
 	/**
 	  * @param first First row
@@ -37,7 +38,7 @@ object RowGroups
 	  * @param more More rows
 	  * @return A set of input rows where the specified rows form a single group
 	  */
-	def singleGroup[R](first: R, second: R, more: R*): RowGroups[R] = singleGroup(Vector(first, second) ++ more)
+	def singleGroup[R](first: R, second: R, more: R*): RowGroups[R] = singleGroup(Pair(first, second) ++ more)
 	
 	/**
 	  * @param row Input row
@@ -49,7 +50,7 @@ object RowGroups
 	  * @param rows Input rows
 	  * @return A set of rows where each of the specified rows forms its own group
 	  */
-	def separateGroups[R](rows: Vector[R]) = apply(rows.map(RowGroup.singleRow))
+	def separateGroups[R](rows: Seq[R]) = apply(rows.map(RowGroup.singleRow))
 	
 	/**
 	  * @param first First row
@@ -57,7 +58,7 @@ object RowGroups
 	  * @param more More rows
 	  * @return A set of rows where each of the specified rows forms its own group
 	  */
-	def separateGroups[R](first: R, second: R, more: R*): RowGroups[R] = separateGroups(Vector(first, second) ++ more)
+	def separateGroups[R](first: R, second: R, more: R*): RowGroups[R] = separateGroups(Pair(first, second) ++ more)
 }
 
 /**
@@ -67,7 +68,7 @@ object RowGroups
   * @param groups Input row groups that form this main group
   * @tparam Row Type of rows in these groups
   */
-class RowGroups[+Row](val groups: Vector[RowGroup[Row]]) extends MaybeEmpty[RowGroups[Row]]
+class RowGroups[+Row](val groups: Seq[RowGroup[Row]]) extends MaybeEmpty[RowGroups[Row]]
 {
 	// COMPUTED	----------------------------
 	
@@ -80,12 +81,10 @@ class RowGroups[+Row](val groups: Vector[RowGroup[Row]]) extends MaybeEmpty[RowG
 	  * @return Whether this set consists only of a single group
 	  */
 	def isSingleGroup = groups.size == 1
-	
 	/**
 	  * @return Whether this set consists of multiple groups
 	  */
 	def isMultipleGroups = groups.size > 1
-	
 	/**
 	  * @return Whether this set consists only of a single row
 	  */

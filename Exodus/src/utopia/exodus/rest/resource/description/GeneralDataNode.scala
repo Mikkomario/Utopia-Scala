@@ -4,6 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, ManyDescribedAccess}
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.metropolis.model.cached.LanguageIds
@@ -57,12 +58,12 @@ trait GeneralDataNode[+A <: ModelConvertible with SimplyDescribed] extends Resou
 	  * @param languageIds Implicit language ids
 	  * @return This node's data, including descriptions in the specified language(s)
 	  */
-	protected def describedItems(implicit connection: Connection, languageIds: LanguageIds): Vector[A]
+	protected def describedItems(implicit connection: Connection, languageIds: LanguageIds): Seq[A]
 	
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override def allowedMethods = Vector(Get)
+	override def allowedMethods = Single(Get)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
@@ -84,10 +85,10 @@ trait GeneralDataNode[+A <: ModelConvertible with SimplyDescribed] extends Resou
 		val combined = describedItems
 		// Converts the results to correct format
 		resultStyle match {
-			case Full => Result.Success(combined.map { _.toModel })
+			case Full => Result.Success(combined.map { _.toModel }.toVector)
 			case Simple =>
 				val roles = DbDescriptionRoles.pull
-				Result.Success(combined.map { _.toSimpleModelUsing(roles) })
+				Result.Success(combined.map { _.toSimpleModelUsing(roles) }.toVector)
 		}
 	}
 }

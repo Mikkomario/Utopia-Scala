@@ -1,6 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.model.immutable.{Table, TableUpdateEvent}
@@ -19,8 +20,8 @@ object Triggers
 	private var queue: Option[ActionQueue] = None
 	
 	private val globalListeners = VolatileList[TableUpdateListener]()
-	private val databaseListeners = Volatile(Map[String, Vector[TableUpdateListener]]())
-	private val tableListeners = Volatile(Map[(String, String), Vector[TableUpdateListener]]())
+	private val databaseListeners = Volatile(Map[String, Seq[TableUpdateListener]]())
+	private val tableListeners = Volatile(Map[(String, String), Seq[TableUpdateListener]]())
 	
 	
 	// OTHER    ------------------------------------
@@ -60,7 +61,7 @@ object Triggers
 	def addDatabaseListener(databaseName: String)(listener: TableUpdateListener) =
 	{
 		val lowerName = databaseName.toLowerCase
-		databaseListeners.update { old => old + (lowerName -> (old.getOrElse(lowerName, Vector()) :+ listener)) }
+		databaseListeners.update { old => old + (lowerName -> (old.getOrElse(lowerName, Empty) :+ listener)) }
 	}
 	/**
 	  * Adds a new listener to be informed of future events concerning a specific table
@@ -70,7 +71,7 @@ object Triggers
 	  */
 	def addTableListener(databaseName: String, tableName: String)(listener: TableUpdateListener) = {
 		val namePair = databaseName.toLowerCase -> tableName.toLowerCase
-		tableListeners.update { old => old + (namePair -> (old.getOrElse(namePair, Vector()) :+ listener)) }
+		tableListeners.update { old => old + (namePair -> (old.getOrElse(namePair, Empty) :+ listener)) }
 	}
 	/**
 	  * Adds a new listener to be informed of future events concerning a specific table
@@ -91,6 +92,6 @@ object Triggers
 	}
 	
 	private def listenersFor(databaseName: String, tableName: String) =
-		globalListeners.value ++ databaseListeners.value.getOrElse(databaseName.toLowerCase, Vector()) ++
-			tableListeners.value.getOrElse(databaseName.toLowerCase -> tableName.toLowerCase, Vector())
+		globalListeners.value ++ databaseListeners.value.getOrElse(databaseName.toLowerCase, Empty) ++
+			tableListeners.value.getOrElse(databaseName.toLowerCase -> tableName.toLowerCase, Empty)
 }

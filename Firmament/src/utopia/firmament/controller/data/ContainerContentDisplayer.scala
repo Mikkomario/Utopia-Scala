@@ -12,7 +12,7 @@ object ContainerContentDisplayer
 	/**
 	  * Short version of typical pointer used in these methods
 	  */
-	private type P[X] = Changing[Vector[X]]
+	private type P[X] = Changing[Seq[X]]
 	/**
 	  * Short version for a refreshable display component
 	  */
@@ -73,11 +73,11 @@ object ContainerContentDisplayer
 											  (makeDisplay: A => W) =
 		apply[A, W, Display, P[A]](container, contentPointer, sameItemCheck, Some(equalsCheck))(makeDisplay)
 			
-	def apply[A, W, Display <: Refreshable[A] with Component, P <: Changing[Vector[A]]](container: MutableMultiContainer[W, Display],
-	                                                                                    contentPointer: P,
-	                                                                                    sameItemCheck: EqualsFunction[A] = EqualsFunction.default,
-	                                                                                    equalsCheck: Option[EqualsFunction[A]] = None)
-	                                                                                   (makeItem: A => W) =
+	def apply[A, W, Display <: Refreshable[A] with Component, P <: Changing[Seq[A]]](container: MutableMultiContainer[W, Display],
+	                                                                                 contentPointer: P,
+	                                                                                 sameItemCheck: EqualsFunction[A] = EqualsFunction.default,
+	                                                                                 equalsCheck: Option[EqualsFunction[A]] = None)
+	                                                                                (makeItem: A => W) =
 	{
 		val displayer = new ContainerContentDisplayer[A, W, Display, P](container, contentPointer, sameItemCheck, equalsCheck)(makeItem)
 		displayer.setup()
@@ -106,7 +106,7 @@ object ContainerContentDisplayer
   * @param makeItem A function for producing new displays
   */
 class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
-	+P <: Changing[Vector[A]]] protected(protected val container: MutableMultiContainer[W, Display],
+	+P <: Changing[Seq[A]]] protected(protected val container: MutableMultiContainer[W, Display],
                                          override val contentPointer: P,
                                          sameItemCheck: EqualsFunction[A] = EqualsFunction.default,
                                          equalsCheck: Option[EqualsFunction[A]] = None)
@@ -125,9 +125,9 @@ class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
 	override protected def representSameItem(a: A, b: A) = sameItemCheck(a, b)
 	override protected def itemsAreEqual(a: A, b: A) = equalsCheck.getOrElse(sameItemCheck)(a, b)
 	
-	override def displays = container.components.toVector
+	override def displays = container.components
 	
-	override protected def addDisplaysFor(values: Vector[A], index: Int) = {
+	override protected def addDisplaysFor(values: Seq[A], index: Int) = {
 		// Uses stored backup components if possible
 		val existingSlots = capacity.mutate { current =>
 			if (current.isEmpty)

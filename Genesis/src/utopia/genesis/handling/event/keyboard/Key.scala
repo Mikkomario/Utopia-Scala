@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.keyboard
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -21,7 +22,7 @@ trait Key extends EqualsBy
 	
 	// IMPLEMENTED  ---------------------
 	
-	override protected def equalsProperties: Seq[Any] = Vector(index)
+	override protected def equalsProperties: Seq[Any] = Single(index)
 }
 
 object Key

@@ -9,7 +9,7 @@ import utopia.vault.nosql.factory.FromResultFactory
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait ManyIdAccess[+ID] extends IdAccess[ID, Vector[ID]] with ManyColumnAccess[ID]
+trait ManyIdAccess[+ID] extends IdAccess[ID, Seq[ID]] with ManyColumnAccess[ID]
 
 object ManyIdAccess
 {

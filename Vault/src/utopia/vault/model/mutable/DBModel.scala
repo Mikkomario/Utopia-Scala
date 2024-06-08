@@ -1,5 +1,6 @@
 package utopia.vault.model.mutable
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.mutable.{MutableModel, Variable}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.generic.model.template
@@ -33,7 +34,7 @@ object DBModel
 * @since 22.5.2018
 **/
 class DBModel(override val table: Table)
-    extends MutableModel[Variable](Vector(), table.toModelDeclaration.toVariableFactory) with Storable with Readable
+    extends MutableModel[Variable](Empty, table.toModelDeclaration.toVariableFactory) with Storable with Readable
 {
     // COMPUTED    -------------------
     

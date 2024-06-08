@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.model.immutable.{Column, ReferencePoint, Table}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType._
@@ -48,7 +49,7 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 	def toSqlSegment = {
 		val base = SqlSegment(s"$joinType JOIN ${ rightTable.sqlName } ON ${
 			leftColumn.columnNameWithTable } = ${ rightColumn.columnNameWithTable }",
-			Vector(), Some(rightTable.databaseName), Set(rightTable))
+			Empty, Some(rightTable.databaseName), Set(rightTable))
 		condition match {
 			case Some(c) => base + "AND" + c.segment
 			case None => base
@@ -63,8 +64,8 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = joinType) =
-		Success(Vector(this))
+	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = joinType) =
+		Success(Single(this))
 	
 	
 	// OTHER    --------------------------

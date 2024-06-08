@@ -1,5 +1,6 @@
 package utopia.paradigm.color
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
@@ -19,9 +20,9 @@ object Hsl extends FromModelFactoryWithSchema[Hsl]
 	// ATTRIBUTES   ----------------
 	
 	override val schema = ModelDeclaration(Vector(
-		PropertyDeclaration("hue", AngleType, Vector("h")),
-		PropertyDeclaration("saturation", DoubleType, Vector("s")),
-		PropertyDeclaration("luminosity", DoubleType, Vector("luminance", "l"))
+		PropertyDeclaration("hue", AngleType, Single("h")),
+		PropertyDeclaration("saturation", DoubleType, Single("s")),
+		PropertyDeclaration("luminosity", DoubleType, Pair("luminance", "l"))
 	))
 	
 	

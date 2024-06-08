@@ -1,6 +1,7 @@
 package utopia.firmament.drawing.immutable
 
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.flow.collection.immutable.Empty
 
 /**
   * Common trait for copyable factories that create items that support custom drawing
@@ -14,12 +15,12 @@ trait CustomDrawableFactory[+Repr]
 	/**
 	  * @return Custom drawers placed on the created items
 	  */
-	def customDrawers: Vector[CustomDrawer]
+	def customDrawers: Seq[CustomDrawer]
 	/**
 	  * @param drawers New custom drawers to place
 	  * @return Copy of this factory that uses the specified custom drawers
 	  */
-	def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr
+	def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr
 	
 	
 	// COMPUTED ---------------------
@@ -27,7 +28,7 @@ trait CustomDrawableFactory[+Repr]
 	/**
 	  * @return Copy of this factory without any of the previously assigned custom drawers
 	  */
-	def withoutCustomDrawers = withCustomDrawers(Vector())
+	def withoutCustomDrawers = withCustomDrawers(Empty)
 	
 	
 	// OTHER    ---------------------

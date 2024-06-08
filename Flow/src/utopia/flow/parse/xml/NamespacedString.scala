@@ -1,5 +1,6 @@
 package utopia.flow.parse.xml
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.{ApproxEquals, EqualsBy, EqualsFunction}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
@@ -63,7 +64,7 @@ case class NamespacedString(local: String)(implicit val namespace: Namespace)
 	
 	// IMPLEMENTED  -----------------------------
 	
-	protected override def equalsProperties: Seq[Any] = Vector(local, namespace)
+	protected override def equalsProperties: Seq[Any] = Pair(local, namespace)
 	
 	override def toString = if (hasNamespace) s"$namespace:$local" else local
 	

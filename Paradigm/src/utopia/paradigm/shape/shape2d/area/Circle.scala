@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape2d.area
 
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -83,7 +84,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
     
     override def toValue = new Value(Some(this), CircleType)
     
-    override def toModel = Model(Vector("origin" -> origin, "radius" -> radius))
+    override def toModel = Model(Pair("origin" -> origin, "radius" -> radius))
     
     override def contains(point: DoubleVector) = point.distanceFrom(origin) <= radius
     
@@ -149,8 +150,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
      * @return Empty vector if there is no intersection (no contact or containment), one point if 
      * there is only a single intersection point, two points otherwise
      */
-    def circleIntersection(other: Circle) = 
-    {
+    def circleIntersection(other: Circle) = {
         // References: http://paulbourke.net/geometry/circlesphere/
         // Distance vector D with length of d
         val distanceVector = (other.origin - this.origin).toVector
@@ -160,9 +160,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
 	    // Also, if the circles are identical, there are infinite number of collision 
 		// points (they cannot be calculated)
         if (distance > radius + other.radius || distance < (radius - other.radius).abs || this == other)
-        {
-            Vector[Point]()
-        }
+            Empty
         else
         {
             /* We can form triangles using points P0, P1, P2 and P3(s)
@@ -202,18 +200,15 @@ case class Circle(origin: Point = Point.origin, radius: Double)
             
             // If may be that there is only a single collision point on the distance vector
             if (h ~== 0.0)
-            {
-                Vector(P2)
-            }
-            else
-            {
+                Single(P2)
+            else {
                 /*
         		 * From we see that H (P3 - P2) is perpendicular to D and has length h.
         		 * From these we can calculate
         		 * 		P3 = P2 +- H
         		 */
                 val heightVector = distanceVector.normal2D.withLength(h)
-                Vector(P2 + heightVector, P2 - heightVector)
+                Pair(P2 + heightVector, P2 - heightVector)
             }
         }
     }
@@ -223,17 +218,17 @@ case class Circle(origin: Point = Point.origin, radius: Double)
      * @return if there is collision, the minimum translation vector that gets this circle out 
      * of the collision. None otherwise.
      */
-    def collisionMtvWith(other: Circle): Option[Vector2D] = collisionMtvWith(other, Vector((other.origin - origin).toVector))
+    def collisionMtvWith(other: Circle): Option[Vector2D] =
+        collisionMtvWith(other, Single((other.origin - origin).toVector))
     
     /**
      * Calculates two collision points using a very simple algorithm. The collision points will be 
      * along the minimum translation vector and one of them is at the edge of this circle.
      * @param mtv The circle's minimum translation vector in the collision
      */
-    def simpleCollisionPoints(mtv: Vector2D) =
-    {
+    def simpleCollisionPoints(mtv: Vector2D) = {
         val firstPoint = origin - mtv.withLength(radius)
-        Vector(firstPoint, firstPoint + mtv)
+        Pair(firstPoint, firstPoint + mtv)
     }
     
     /*

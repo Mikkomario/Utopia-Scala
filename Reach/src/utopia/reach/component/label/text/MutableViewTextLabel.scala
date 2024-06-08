@@ -9,6 +9,7 @@ import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
@@ -83,7 +84,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 }
 
 case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLabelFactory, context: TextContext,
-                                                 customDrawers: Vector[CustomDrawer] = Vector(), isHint: Boolean = false)
+                                                 customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextContextualFactory[ContextualMutableViewTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[TextContext, ContextualMutableViewTextLabelFactory]
 		with CustomDrawableFactory[ContextualMutableViewTextLabelFactory]
@@ -100,7 +101,7 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	
 	override def self: ContextualMutableViewTextLabelFactory = this
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualMutableViewTextLabelFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualMutableViewTextLabelFactory =
 		copy(customDrawers = drawers)
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)

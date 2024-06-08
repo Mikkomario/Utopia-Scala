@@ -19,6 +19,6 @@ object VaryingIssueFactory extends MultiCombiningFactory[VaryingIssue, Issue, Is
 	
 	override def parentFactory = IssueFactory
 	
-	override def apply(issue: Issue, variants: Vector[IssueVariant]) = VaryingIssue(issue, variants)
+	override def apply(issue: Issue, variants: Seq[IssueVariant]) = VaryingIssue(issue, variants)
 }
 

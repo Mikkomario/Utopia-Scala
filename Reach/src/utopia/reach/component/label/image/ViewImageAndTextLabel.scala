@@ -10,7 +10,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Medium, Small}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.reach.component.factory.UnresolvedFramedFactory.sides
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
@@ -151,7 +151,7 @@ object ViewImageAndTextLabelSettings
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-case class ViewImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class ViewImageAndTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
                                          imageSettings: ViewImageLabelSettings = defaultImageSettings,
                                          separatingMargin: Option[SizeCategory] = Some(Small),
                                          insets: UnresolvedStackInsets = sides.symmetric(Left(Medium)),
@@ -166,7 +166,7 @@ case class ViewImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = V
 		copy(separatingMargin = margin)
 	override def withForceEqualBreadth(force: Boolean) = copy(forceEqualBreadth = force)
 	override def withImageSettings(settings: ViewImageLabelSettings) = copy(imageSettings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewImageAndTextLabelSettings =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewImageAndTextLabelSettings =
 		copy(customDrawers = drawers)
 	override def withInsets(insets: UnresolvedStackInsets): ViewImageAndTextLabelSettings = copy(insets = insets)
 	
@@ -208,7 +208,7 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	override def withIsHintPointer(p: Changing[Boolean]): Repr = mapSettings { _.withIsHintPointer(p) }
 	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
 		mapSettings { _.withSeparatingMargin(margin) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withForceEqualBreadth(force: Boolean) = mapSettings { _.withForceEqualBreadth(force) }
 	override def withImageSettings(settings: ViewImageLabelSettings) =

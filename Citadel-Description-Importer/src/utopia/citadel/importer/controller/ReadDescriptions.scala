@@ -30,12 +30,10 @@ object ReadDescriptions
 	  * @param jsonParser Implicit json parser
 	  * @return Success or a failure
 	  */
-	def apply(path: Path)(implicit connection: Connection, jsonParser: JsonParser): Try[Unit] =
-	{
+	def apply(path: Path)(implicit connection: Connection, jsonParser: JsonParser): Try[Unit] = {
 		jsonParser(path).flatMap { input =>
 			// Checks whether the input consists of a single object or multiple objects
-			val targetObjects = input.vector match
-			{
+			val targetObjects = input.vector match {
 				case Some(values) => values.flatMap { _.model }
 				case None => input.model.toVector
 			}
@@ -53,8 +51,7 @@ object ReadDescriptions
 	  * @param connection Implicit DB Connection
 	  * @return Success or failure
 	  */
-	def apply(targets: Vector[Model])(implicit connection: Connection) =
-	{
+	def apply(targets: Iterable[Model])(implicit connection: Connection) = {
 		// Makes sure all targets are valid
 		targets.tryMap { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
 			// Reads required data (languages and description roles)
@@ -67,11 +64,11 @@ object ReadDescriptions
 	}
 	
 	private def handleTarget(access: LinkedDescriptionsAccess, model: Model, languageIds: Map[String, Int],
-	                         descriptionRoles: Vector[DescriptionRole])
+	                         descriptionRoles: Iterable[DescriptionRole])
 	                        (implicit connection: Connection) =
 	{
 		// Finds the roles that are mentioned
-		descriptionRoles.view.foreach { role =>
+		descriptionRoles.foreach { role =>
 			model(role.jsonKeyPlural).model.foreach { input =>
 				// Expect model keys to be language codes
 				(input.propertyNames.toSet & languageIds.keySet).foreach { languageCode =>

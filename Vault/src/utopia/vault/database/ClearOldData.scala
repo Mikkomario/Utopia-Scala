@@ -7,6 +7,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
@@ -29,7 +30,7 @@ object ClearOldData
 	  * @param rule Data deletion rule
 	  * @param connection Implicit DB Connection
 	  */
-	def once(rule: DataDeletionRule)(implicit connection: Connection): Unit = once(Vector(rule))
+	def once(rule: DataDeletionRule)(implicit connection: Connection): Unit = once(Single(rule))
 	/**
 	  * Clears old data once (immediately)
 	  * @param first The first deletion rule to apply
@@ -38,7 +39,7 @@ object ClearOldData
 	  * @param connection Implicit DB Connection
 	  */
 	def once(first: DataDeletionRule, second: DataDeletionRule, more: DataDeletionRule*)
-	        (implicit connection: Connection): Unit = once(Vector(first, second) ++ more)
+	        (implicit connection: Connection): Unit = once(Pair(first, second) ++ more)
 	
 	/**
 	  * Constructs a daily task / loop for deleting old data
@@ -82,11 +83,11 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 					// TODO: Sometimes the path is empty. Probably for self-referencing tables.
 					referencePathFrom(rule.targetTable, childPath.drop(1).map { _.nav }).get
 				}
-			}.toVector
+			}.toSeq
 			// Creates the deletion rule for the primary table
 			TableDeletionRule(rule.targetTable, rule.timePropertyName, rule.standardLiveDuration,
 				rule.conditionalLiveDurations, restrictingChildren)
-		}.toVector
+		}
 	}
 	
 	
@@ -99,7 +100,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	def apply()(implicit connection: Connection) = deleteIteration(Now, finalRules, Set())
 	
 	@scala.annotation.tailrec
-	private def deleteIteration(deletionTime: Instant, remainingRules: Vector[TableDeletionRule],
+	private def deleteIteration(deletionTime: Instant, remainingRules: Iterable[TableDeletionRule],
 								handledTables: Set[Table])(implicit connection: Connection): Unit =
 	{
 		// During this iteration, can only handle tables that don't refer to unhandled tables
@@ -139,11 +140,11 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			val target = targetFrom(rule.table, restrictions)
 			val noJoinConditions = restrictions.flatMap { _.lastOption.map { _.to.column.isNull } }
 			
-			connection(Delete(target, Vector(rule.table)) + Where(baseDeletionCondition && noJoinConditions))
+			connection(Delete(target, Single(rule.table)) + Where(baseDeletionCondition && noJoinConditions))
 		}
 	}
 	
-	private def referencePathFrom(primaryTable: Table, childPath: Vector[Table]) = {
+	private def referencePathFrom(primaryTable: Table, childPath: Seq[Table]) = {
 		var lastTable = primaryTable
 		childPath.tryMap { nextTable =>
 			val reference = References.fromTo(nextTable, lastTable).headOption.orElse { References.fromTo(lastTable,
@@ -168,7 +169,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	private case class TableDeletionRule(table: Table, timePropertyName: String,
 	                                     baseLiveDuration: Duration = Duration.Inf,
 	                                     conditionalPeriods: Map[Condition, FiniteDuration] = Map(),
-	                                     restrictiveChildPaths: Vector[Vector[Reference]] = Vector())
+	                                     restrictiveChildPaths: Seq[Seq[Reference]] = Empty)
 	{
 		lazy val timeColumn = table(timePropertyName)
 		

@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.template
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 import utopia.vault.model.template.Joinable
@@ -27,7 +28,7 @@ trait Access[+A] extends View
 	  * @return Read data
 	  */
 	protected def read(condition: Option[Condition] = None, order: Option[OrderBy] = None,
-	                   joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                   joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	                  (implicit connection: Connection): A
 	
 	
@@ -42,7 +43,7 @@ trait Access[+A] extends View
 	  * @param connection Implicit database connection
 	  * @return Read items
 	  */
-	def find(condition: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	def find(condition: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	         joinType: JoinType = Inner)
 	        (implicit connection: Connection) =
 		read(Some(mergeCondition(condition)), order, joins, joinType)
@@ -60,6 +61,6 @@ trait Access[+A] extends View
 	def findNotLinkedTo(table: Table, linkCondition: Option[Condition] = None, order: Option[OrderBy] = None)
 	                   (implicit connection: Connection) =
 		forNotLinkedTo(table, linkCondition) { (c, join) =>
-			find(c, order, Vector(join), JoinType.Left)
+			find(c, order, Single(join), JoinType.Left)
 		} { read(order = order) }
 }

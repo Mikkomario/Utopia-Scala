@@ -85,9 +85,19 @@ object ValueConversions
 		override implicit def toValue: Value = new Value(Some(d), DurationType)
 	}
 	
-	implicit class ValueOfVector[V](val v: Vector[V])(implicit f: V => Value) extends ValueConvertible
+	implicit class ValueOfSeq[V](val v: Seq[V])(implicit f: V => Value) extends ValueConvertible
 	{
-		def toValue = new Value(Some(v.map(f)), VectorType)
+		def toValue = v match {
+			case p: Pair[V] => new Value(Some(p.map(f)), PairType)
+			case v: Vector[V] => new Value(Some(v.map(f)), VectorType)
+			case i: IterableOnce[V] =>
+				if (i.knownSize == 2) {
+					val iter = i.iterator.map(f)
+					new Value(Some(Pair(iter.next(), iter.next())), PairType)
+				}
+				else
+					new Value(Some(Vector.from(i.iterator.map(f))), VectorType)
+		}
 	}
 	
 	implicit class ValueOfOption[V](val v: Option[V])(implicit f: V => ValueConvertible) extends ValueConvertible
@@ -98,10 +108,11 @@ object ValueConversions
 		}
 	}
 	
+	/*
 	implicit class ValueOfPair[V](val p: Pair[V])(implicit f: V => Value) extends ValueConvertible
 	{
 		override implicit def toValue: Value = new Value(Some(p.map(f)), PairType)
-	}
+	}*/
 	
 	/*
     implicit class ValueOfVectorConvertible[V](val v: Vector[V])(implicit f: V => ValueConvertible) extends ValueConvertible

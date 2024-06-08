@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.LazyListener
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.SettableOnce
@@ -28,7 +29,7 @@ object ListenableLazy
 		// ATTRIBUTES   -------------------------------
 		
 		// The listeners are stored until a value is generated
-		private var queuedListeners = Vector[LazyListener[A]]()
+		private var queuedListeners: Seq[LazyListener[A]] = Empty
 		private var generated: Option[A] = None
 		
 		private val _stateView = SettableOnce[A]()
@@ -54,7 +55,7 @@ object ListenableLazy
 			generated = Some(newValue)
 			// Informs the listeners
 			queuedListeners.foreach { _.onValueGenerated(newValue) }
-			queuedListeners = Vector()
+			queuedListeners = Empty
 			_stateView.set(newValue)
 			// Returns the new value
 			newValue

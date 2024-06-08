@@ -15,6 +15,7 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.NotEmpty
@@ -115,7 +116,7 @@ abstract class AuthorizedContext extends PostContext
 				languages.sortBy { l => -acceptedLanguages(l.isoCode.toLowerCase) }
 			}
 			else
-				Vector()
+				Empty
 		}
 	}
 	/**
@@ -137,7 +138,7 @@ abstract class AuthorizedContext extends PostContext
 			if (languagesFromHeaders.nonEmpty)
 				LanguageIds(languagesFromHeaders.map { _.id })
 			else
-				LanguageIds(Vector())
+				LanguageIds(Empty)
 		}
 	}
 	
@@ -298,7 +299,7 @@ abstract class AuthorizedContext extends PostContext
 	  */
 	def authorizedForScopes(firstScope: ScopeIdWrapper, secondScope: ScopeIdWrapper, moreScopes: ScopeIdWrapper*)
 	                       (f: (ScopedToken, Connection) => Result): Response =
-		authorizedForScopesWithIds((Vector(firstScope, secondScope) ++ moreScopes).map { _.id }.toSet)(f)
+		authorizedForScopesWithIds((Pair(firstScope, secondScope) ++ moreScopes).map { _.id }.toSet)(f)
 	
 	/**
 	  * Searches the bearer token authorization header for a valid token

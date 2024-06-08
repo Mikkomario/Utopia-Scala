@@ -9,6 +9,7 @@ import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDra
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.Single
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.filter.{AcceptAll, Filter}
@@ -86,7 +87,7 @@ trait SelectionListSettingsLike[+Repr] extends StackSettingsLike[Repr]
 	
 	override def withAxis(axis: Axis2D) = withStackSettings(stackSettings.withAxis(axis))
 	override def withCap(cap: StackLength) = withStackSettings(stackSettings.withCap(cap))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withStackSettings(stackSettings.withCustomDrawers(drawers))
 	override def withLayout(layout: StackLayout) = withStackSettings(stackSettings.withLayout(layout))
 	
@@ -211,7 +212,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
@@ -261,7 +262,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
@@ -331,7 +332,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -381,7 +382,7 @@ object SelectionList extends SelectionListSetup()
   * @author Mikko Hilpinen
   * @since 19.12.2020, v0.1
   */
-class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Vector[A]]]
+class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Seq[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
@@ -389,13 +390,13 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
  alternativeKeyCondition: => Boolean)
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
-		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Vector[A], P] with CursorDefining
+		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P] with CursorDefining
 {
 	// ATTRIBUTES	---------------------------------
 	
 	override lazy val focusId = hashCode()
 	private val focusTracker = new FocusStateTracker(false)
-	override var focusListeners: Seq[FocusListener] = Vector(focusTracker)
+	override var focusListeners: Seq[FocusListener] = Single(focusTracker)
 	
 	private val stack = MutableStack(parentHierarchy)
 		.withSettings(settings.stackSettings)

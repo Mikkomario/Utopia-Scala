@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.template
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.shape.template.DimensionalFactory.MappedDimensionalFactory
@@ -81,12 +81,12 @@ trait DimensionalFactory[-D, +R]
 	/**
 	  * @return A new item where all dimensions are zero
 	  */
-	def apply(): R = apply(Vector())
+	def apply(): R = apply(Empty)
 	/**
 	  * @param x An x-component
 	  * @return A new item with the specified x-component and other components as zero
 	  */
-	def apply(x: D): R = apply(Vector(x))
+	def apply(x: D): R = apply(Single(x))
 	/**
 	  * @param x An x-component
 	  * @param y An y-component

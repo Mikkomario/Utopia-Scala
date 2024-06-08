@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape1d.vector
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.shape.shape1d.RoundingDouble
@@ -33,7 +34,7 @@ case class RoundingVector1D(value: RoundingDouble, axis: Axis)
 	override def self: RoundingVector1D = this
 	override protected def factory = RoundingVector1D
 	
-	override def components = Vector(this)
+	override def components = Single(this)
 	
 	override def toUnit = super.toUnit
 	

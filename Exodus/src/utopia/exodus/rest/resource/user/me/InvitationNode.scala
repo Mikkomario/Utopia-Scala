@@ -1,6 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.nexus.rest.{NotImplementedResource, ResourceWithChildren}
 
 /**
@@ -12,5 +13,5 @@ case class InvitationNode(invitationId: Int)
 	extends ResourceWithChildren[AuthorizedContext] with NotImplementedResource[AuthorizedContext]
 {
 	override def name = invitationId.toString
-	override def children = Vector(InvitationResponseNode(invitationId))
+	override def children = Single(InvitationResponseNode(invitationId))
 }

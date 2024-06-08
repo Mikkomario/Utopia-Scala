@@ -5,6 +5,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
@@ -14,7 +15,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.Flag
 
 import java.nio.file.Path
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 object PersistingRequestQueue
@@ -35,7 +36,7 @@ object PersistingRequestQueue
 	  */
 	def apply(master: QueueSystem, fileLocation: Path, handlers: Iterable[PersistedRequestHandler],
 			  width: Int = 1, saveLogic: SaveTiming = OnJvmClose)
-			 (implicit exc: ExecutionContext, jsonParser: JsonParser, logger: Logger): (PersistingRequestQueue, Vector[Throwable]) =
+			 (implicit exc: ExecutionContext, jsonParser: JsonParser, logger: Logger): (PersistingRequestQueue, Seq[Throwable]) =
 	{
 		val queue = new SimpleQueue(fileLocation, master, width, saveLogic)
 		val errors = queue.start(handlers)
@@ -74,7 +75,7 @@ trait PersistingRequestQueue extends RequestQueue
 	/**
 	  * @return A container used for holding the persisted requests
 	  */
-	protected def requestContainer: FileContainer[Vector[Model]]
+	protected def requestContainer: FileContainer[Seq[Model]]
 	
 	
 	// IMPLEMENTED	---------------------
@@ -108,7 +109,7 @@ trait PersistingRequestQueue extends RequestQueue
 	  * @return A list of errors that occurred while parsing the requests
 	  */
 	def start(handlers: Iterable[PersistedRequestHandler]) = {
-		val persistedModels = requestContainer.pointer.popAll()
+		val persistedModels = requestContainer.pointer.getAndSet(Empty)
 		val errors = persistedModels.flatMap { requestModel =>
 			NotEmpty(handlers.caching.filter { _.shouldHandle(requestModel) }) match {
 				case Some(handlers) =>

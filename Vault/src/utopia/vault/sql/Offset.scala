@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 
 /**
@@ -14,5 +15,5 @@ object Offset
 	 * @param numberOfRowsToSkip Number of rows to skip in result
 	 * @return offset sql segment
 	 */
-	def apply(numberOfRowsToSkip: Int) = SqlSegment("OFFSET ?", Vector(numberOfRowsToSkip))
+	def apply(numberOfRowsToSkip: Int) = SqlSegment("OFFSET ?", Single(numberOfRowsToSkip))
 }

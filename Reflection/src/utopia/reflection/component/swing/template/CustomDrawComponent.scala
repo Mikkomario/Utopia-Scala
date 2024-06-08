@@ -3,6 +3,7 @@ package utopia.reflection.component.swing.template
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.genesis.graphics.Drawer
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 
 import java.awt.{Graphics, Graphics2D}
@@ -18,7 +19,7 @@ trait CustomDrawComponent extends MutableCustomDrawable
 {
 	// ATTRIBUTES	----------------------
 	
-	override var customDrawers = Vector[CustomDrawer]()
+	override var customDrawers: Seq[CustomDrawer] = Empty
 	
 	
 	// OTHER	--------------------------

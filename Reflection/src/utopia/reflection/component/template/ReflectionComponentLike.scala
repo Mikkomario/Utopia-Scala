@@ -1,6 +1,7 @@
 package utopia.reflection.component.template
 
 import utopia.firmament.component.Component
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -15,8 +16,8 @@ trait ReflectionComponentLike extends Component
 {
     // ABSTRACT    ------------------------
     
-    def resizeListeners: Vector[ResizeListener]
-    def resizeListeners_=(listeners: Vector[ResizeListener]): Unit
+    def resizeListeners: Seq[ResizeListener]
+    def resizeListeners_=(listeners: Seq[ResizeListener]): Unit
     
     /**
       * @return The parent component of this component
@@ -158,7 +159,7 @@ trait ReflectionComponentLike extends Component
     /**
      * Removes all resize listeners from this wrapper
      */
-    def clearResizeListeners() = resizeListeners = Vector()
+    def clearResizeListeners() = resizeListeners = Empty
     
     
     // NESTED CLASSES    ----------------

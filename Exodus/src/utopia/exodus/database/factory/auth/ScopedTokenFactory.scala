@@ -14,14 +14,13 @@ object ScopedTokenFactory extends MultiCombiningFactory[ScopedToken, Token, Toke
 {
 	// IMPLEMENTED	--------------------
 	
+	override def parentFactory = TokenFactory
 	override def childFactory = TokenScopeLinkFactory
 	
 	override def isAlwaysLinked = false
 	
 	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition
 	
-	override def parentFactory = TokenFactory
-	
-	override def apply(token: Token, scopeLink: Vector[TokenScopeLink]) = ScopedToken(token, scopeLink)
+	override def apply(token: Token, scopeLink: Seq[TokenScopeLink]) = ScopedToken(token, scopeLink)
 }
 

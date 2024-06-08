@@ -19,9 +19,8 @@ trait MutableCustomDrawableWrapper extends MutableCustomDrawable
 	
 	// IMPLEMENTED	------------------------
 	
-	override def customDrawers_=(drawers: Vector[CustomDrawer]) = drawable.customDrawers = drawers
-	
 	override def customDrawers = drawable.customDrawers
+	override def customDrawers_=(drawers: Seq[CustomDrawer]) = drawable.customDrawers = drawers
 	
 	override def drawBounds = drawable.drawBounds
 	

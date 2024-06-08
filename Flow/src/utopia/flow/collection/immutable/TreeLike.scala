@@ -28,7 +28,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	/**
 	  * @return A copy of this tree without any child nodes included
 	  */
-	def withoutChildren = createCopy(children = Vector[Repr]())
+	def withoutChildren = createCopy(children = Empty)
 	
 	
 	// IMPLEMENTED  ------------
@@ -103,7 +103,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  */
 	def ++(other: IterableOnce[Repr]) = {
 		// Combines the trees by nav, where possible (one tree at a time)
-		other.iterator.foldLeft(Vector(self)) { (existingTrees, newTree) =>
+		other.iterator.foldLeft(Single(self): IndexedSeq[Repr]) { (existingTrees, newTree) =>
 			existingTrees.mergeOrAppend(newTree) { _.nav ~== newTree.nav } { _ :++ _.children }
 		}
 	}
@@ -189,7 +189,7 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	  * @param f     A mapping function that modifies the node(s) at the end of the specified path
 	  * @return A modified copy of this tree
 	  */
-	def mapPath(start: A, next: A, more: A*)(f: Repr => Repr): Repr = mapPath(Vector(start, next) ++ more)(f)
+	def mapPath(start: A, next: A, more: A*)(f: Repr => Repr): Repr = mapPath(Pair(start, next) ++ more)(f)
 	
 	/**
 	  * Filters the children directly under this node

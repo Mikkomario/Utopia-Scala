@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.view.immutable.View
@@ -122,7 +122,7 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 					afterEffects
 				
 				// Case: No update (unexpected) => No-op
-				case None => Vector()
+				case None => Empty
 			}
 		}
 		override def value: O = bridge.value

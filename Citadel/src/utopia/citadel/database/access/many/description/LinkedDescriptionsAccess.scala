@@ -4,6 +4,7 @@ import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
 import utopia.citadel.database.factory.description.LinkedDescriptionFactory
 import utopia.citadel.database.model.description.DescriptionLinkModelFactory
 import utopia.citadel.model.cached.DescriptionLinkTable
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.description.LinkedDescription
@@ -93,9 +94,8 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		 * @return Read descriptions, grouped by target id
 		 */
 		def inPreferredLanguages(implicit connection: Connection,
-		                                  languageIds: LanguageIds): Map[Int, Vector[LinkedDescription]] =
-			languageIds.headOption match
-			{
+		                                  languageIds: LanguageIds): Map[Int, Seq[LinkedDescription]] =
+			languageIds.headOption match {
 				case Some(languageId: Int) =>
 					// In the first iteration, reads all descriptions. After that divides into sub-groups
 					val readDescriptions = inLanguageWithId(languageId).pull.groupBy { _.targetId }
@@ -137,7 +137,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  */
 		def withRolesInPreferredLanguages(roleIds: Set[Int])
 		                                 (implicit connection: Connection,
-		                                  languageIds: LanguageIds): Map[Int, Vector[LinkedDescription]] =
+		                                  languageIds: LanguageIds): Map[Int, Seq[LinkedDescription]] =
 		{
 			if (languageIds.isEmpty || targetIds.isEmpty || roleIds.isEmpty)
 				Map()
@@ -179,7 +179,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  * @return This item's descriptions in specified languages (secondary languages are used when no primary
 		  *         language description is found)
 		  */
-		def inPreferredLanguages(implicit connection: Connection, languageIds: LanguageIds): Vector[LinkedDescription] =
+		def inPreferredLanguages(implicit connection: Connection, languageIds: LanguageIds): Seq[LinkedDescription] =
 		{
 			languageIds.headOption match {
 				case Some(languageId) =>
@@ -190,7 +190,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 						readDescriptions ++ withRolesInPreferredLanguages(missingRoleIds)(connection, languageIds.tail)
 					else
 						readDescriptions
-				case None => Vector()
+				case None => Empty
 			}
 		}
 		
@@ -216,12 +216,12 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  * @return Newly inserted description links
 		  */
 		def update(newDescription: NewDescription, authorId: Option[Int] = None)
-		          (implicit connection: Connection): Vector[LinkedDescription] =
+		          (implicit connection: Connection): Iterable[LinkedDescription] =
 		{
 			// Updates each role + text pair separately
 			newDescription.descriptions.map { case (role, text) =>
 				update(DescriptionData(role, newDescription.languageId, text, authorId))
-			}.toVector
+			}
 		}
 		/**
 		  * Updates a single description for this item
@@ -229,8 +229,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  * @param connection     DB Connection
 		  * @return Newly inserted description
 		  */
-		def update(newDescription: DescriptionData)(implicit connection: Connection) =
-		{
+		def update(newDescription: DescriptionData)(implicit connection: Connection) = {
 			// Must first deprecate the old version of this description
 			deprecate(newDescription.languageId, newDescription.roleId)
 			// Then inserts a new description
@@ -272,7 +271,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 		  *         language description is found)
 		  */
 		def withRolesInPreferredLanguages(roleIds: Set[Int])(
-			implicit connection: Connection, languageIds: LanguageIds): Vector[LinkedDescription] =
+			implicit connection: Connection, languageIds: LanguageIds): Seq[LinkedDescription] =
 		{
 			// Reads descriptions in target languages until either all description types have been read or all language
 			// options exhausted
@@ -285,7 +284,7 @@ trait LinkedDescriptionsAccess extends LinkedDescriptionsForManyAccessLike with 
 							connection, languageIds.tail)
 					else
 						readDescriptions
-				case None => Vector()
+				case None => Empty
 			}
 		}
 	}

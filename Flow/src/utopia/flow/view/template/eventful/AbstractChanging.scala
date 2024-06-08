@@ -1,6 +1,6 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
@@ -19,7 +19,7 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	// ATTRIBUTES   -----------------
 	
 	// First value contains high priority listeners, second contains standard priority listeners
-	private var _listeners = Pair.twice(Vector[ChangeListener[A]]())
+	private var _listeners = Pair.twice[Seq[ChangeListener[A]]](Empty)
 	
 	// Caches the withState -version
 	override lazy val withState = super.withState
@@ -31,13 +31,13 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	  * Replaces the high-priority listeners assigned to this changing item
 	  * @param newListeners New set of high-priority listeners
 	  */
-	protected def highPriorityListeners_=(newListeners: Vector[ChangeListener[A]]) =
+	protected def highPriorityListeners_=(newListeners: Seq[ChangeListener[A]]) =
 		_listeners = _listeners.withFirst(newListeners)
 	/**
 	  * Replaces the standard-priority listeners assigned to this changing item
 	  * @param newListeners New set of standard-priority listeners
 	  */
-	protected def standardListeners_=(newListeners: Vector[ChangeListener[A]]) =
+	protected def standardListeners_=(newListeners: Seq[ChangeListener[A]]) =
 		_listeners = _listeners.withSecond(newListeners)
 	
 	/**
@@ -50,12 +50,12 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	  * @param newListeners New listeners to assign
 	  */
 	@deprecated("Replaced with .standardListeners = ...", "v2.2")
-	def listeners_=(newListeners: Vector[ChangeListener[A]]) = standardListeners = newListeners
+	def listeners_=(newListeners: Seq[ChangeListener[A]]) = standardListeners = newListeners
 	
 	@deprecated("Replaced with .highPriorityListeners", "v2.2")
 	def dependencies = highPriorityListeners
 	@deprecated("Replaced with .highPriorityListeners = ...", "v2.2")
-	def dependencies_=(newDependencies: Vector[ChangeListener[A]]) = highPriorityListeners = newDependencies
+	def dependencies_=(newDependencies: Seq[ChangeListener[A]]) = highPriorityListeners = newDependencies
 	
 	
 	// IMPLEMENTED	----------------
@@ -78,7 +78,7 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 	/**
 	  * Removes all change listeners from this item
 	  */
-	def clearListeners() = _listeners = Pair.twice(Vector.empty)
+	def clearListeners() = _listeners = Pair.twice(Empty)
 	
 	/**
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.

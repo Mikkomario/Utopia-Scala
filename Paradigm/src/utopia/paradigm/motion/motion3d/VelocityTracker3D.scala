@@ -15,22 +15,20 @@ class VelocityTracker3D(maxHistoryDuration: Duration, minCacheInterval: Duration
 	extends VelocityTracker[Vector3D, Velocity3D, Acceleration3D, MovementStatus3D, MovementHistory3D](
 		maxHistoryDuration, minCacheInterval)
 {
+	override protected def zeroPosition = Vector3D.zero
+	override protected def zeroVelocity = Velocity3D.zero
+	override protected def zeroAcceleration = Acceleration3D.zero
+	
 	override protected def calculateVelocity(distance: Vector3D, duration: FiniteDuration) =
 		distance.traversedIn(duration)
 	
 	override protected def calculateAcceleration(velocityChange: Velocity3D, duration: FiniteDuration) =
 		velocityChange.acceleratedIn(duration)
 	
-	override protected def combineHistory(positionHistory: Vector[(Vector3D, Instant)],
-										  velocityHistory: Vector[(Velocity3D, Instant)],
-										  accelerationHistory: Vector[(Acceleration3D, Instant)]) =
+	override protected def combineHistory(positionHistory: Seq[(Vector3D, Instant)],
+										  velocityHistory: Seq[(Velocity3D, Instant)],
+										  accelerationHistory: Seq[(Acceleration3D, Instant)]) =
 		MovementHistory3D(positionHistory, velocityHistory, accelerationHistory)
-	
-	override protected def zeroPosition = Vector3D.zero
-	
-	override protected def zeroVelocity = Velocity3D.zero
-	
-	override protected def zeroAcceleration = Acceleration3D.zero
 	
 	override protected def combine(position: Vector3D, velocity: Velocity3D, acceleration: Acceleration3D) =
 		MovementStatus3D(position, velocity, acceleration)

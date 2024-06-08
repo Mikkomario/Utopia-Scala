@@ -1,6 +1,7 @@
 package utopia.courier.controller.read
 
 import utopia.courier.model.read.FolderPath
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.LazyTree
 
 import scala.language.implicitConversions
@@ -55,7 +56,7 @@ object TargetFolders
 	 * @return An implementation that targets the specified folders
 	 */
 	def apply(firstFolder: String, secondFolder: String, moreFolders: String*): TargetFolders =
-		apply(Vector(firstFolder, secondFolder) ++ moreFolders)
+		apply(Pair(firstFolder, secondFolder) ++ moreFolders)
 	
 	
 	// NESTED   -------------------------

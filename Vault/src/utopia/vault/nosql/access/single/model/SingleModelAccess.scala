@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.single.model
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
@@ -48,7 +49,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	}
 	
 	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
-	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	                                  joinType: JoinType = Inner)
 	                                 (implicit connection: Connection) =
 	{
@@ -74,7 +75,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  *         (and other search criteria)
 	  */
 	def firstColumnUsing(column: Column, order: OrderBy, additionalCondition: Option[Condition] = None,
-	                     joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                     joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	                    (implicit connection: Connection) =
 		readColumn(column, additionalCondition, Some(order), joins, joinType)
 	
@@ -91,7 +92,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  *         (and other search criteria)
 	  */
 	def topColumnBy(readColumn: Column, orderingColumn: Column, orderDirection: OrderDirection,
-	                additionalCondition: Option[Condition] = None, joins: Seq[Joinable] = Vector(),
+	                additionalCondition: Option[Condition] = None, joins: Seq[Joinable] = Empty,
 	                joinType: JoinType = Inner)
 	               (implicit connection: Connection) =
 		firstColumnUsing(readColumn, OrderBy(orderingColumn, orderDirection), additionalCondition, joins, joinType)
@@ -107,7 +108,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  * @return Value of the specified column in the row with the maximum value in the other column
 	  */
 	def maxColumnBy(readColumn: Column, orderingColumn: Column, additionalCondition: Option[Condition] = None,
-	                joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	               (implicit connection: Connection) =
 		topColumnBy(readColumn, orderingColumn, Descending, additionalCondition, joins, joinType)
 	/**
@@ -121,7 +122,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  * @return Value of the specified column in the row with the minimum value in the other column
 	  */
 	def minColumnBy(readColumn: Column, orderingColumn: Column, additionalCondition: Option[Condition] = None,
-	                joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	                joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	               (implicit connection: Connection) =
 		topColumnBy(readColumn, orderingColumn, Ascending, additionalCondition, joins, joinType)
 	
@@ -135,7 +136,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  * @return Largest accessible value of that column
 	  */
 	def maxColumn(column: Column, additionalCondition: Option[Condition] = None,
-	              joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	              joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	             (implicit connection: Connection) =
 		maxColumnBy(column, column, additionalCondition, joins, joinType)
 	/**
@@ -148,7 +149,7 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	  * @return Smallest accessible value of that column
 	  */
 	def minColumn(column: Column, additionalCondition: Option[Condition] = None,
-	              joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	              joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	             (implicit connection: Connection) =
 		minColumnBy(column, column, additionalCondition, joins, joinType)
 }

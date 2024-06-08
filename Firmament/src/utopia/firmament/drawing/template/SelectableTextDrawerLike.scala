@@ -34,7 +34,7 @@ trait SelectableTextDrawerLike extends CustomDrawer
 	  * @return The strings in text that are drawn normally (with their positions) and strings which should be drawn
 	  *         with highlighting (with their positions and highlight bounds)
 	  */
-	def drawTargets: (Vector[(String, Point)], Vector[(String, Point, Bounds)])
+	def drawTargets: (Seq[(String, Point)], Seq[(String, Point, Bounds)])
 	
 	/**
 	  * @return The drawn caret bounds

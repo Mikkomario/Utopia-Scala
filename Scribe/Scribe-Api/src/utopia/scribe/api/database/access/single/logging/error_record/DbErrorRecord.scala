@@ -64,7 +64,7 @@ object DbErrorRecord extends SingleRowModelAccess[ErrorRecord] with Unconditiona
 	                 (implicit connection: Connection): Sided[ErrorRecordWithStackTrace] =
 	{
 		val storedStackTrace = DbStackTraceElementRecord.store(error.stackTrace)
-		val dependencies: Sided[(Vector[StackTraceElementRecord], Option[Int])] = cause match {
+		val dependencies: Sided[(Seq[StackTraceElementRecord], Option[Int])] = cause match {
 			case Right(existingCause) => storedStackTrace.mapEither { _ -> existingCause.map { _.id } }
 			case Left(newCause) => Left(storedStackTrace.either -> Some(newCause.id))
 		}

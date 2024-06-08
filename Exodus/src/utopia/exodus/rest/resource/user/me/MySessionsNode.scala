@@ -14,6 +14,7 @@ import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.metropolis.model.post.NewSessionRequest
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{LeafResource, Resource, ResourceWithChildren}
@@ -32,7 +33,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 	override val name = "sessions"
 	override val children = Vector[Resource[AuthorizedContext]](
 		CurrentSessionNode, PreviousSessionsNode, OtherSessionsNode)
-	override val allowedMethods = Vector(Post, Delete)
+	override val allowedMethods = Pair(Post, Delete)
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -250,7 +251,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 		// ATTRIBUTES   ------------------
 		
 		override val name = "current"
-		override val allowedMethods = Vector(Delete)
+		override val allowedMethods = Single(Delete)
 		
 		
 		// IMPLEMENTED  ------------------
@@ -264,7 +265,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 		// ATTRIBUTES   ------------------
 		
 		override val name = "other"
-		override val allowedMethods = Vector(Delete)
+		override val allowedMethods = Single(Delete)
 		
 		
 		// IMPLEMENTED  ------------------
@@ -278,7 +279,7 @@ object MySessionsNode extends ResourceWithChildren[AuthorizedContext]
 		// ATTRIBUTES   ------------------
 		
 		override val name = "previous"
-		override val allowedMethods = Vector(Delete)
+		override val allowedMethods = Single(Delete)
 		
 		
 		// IMPLEMENTED  ------------------

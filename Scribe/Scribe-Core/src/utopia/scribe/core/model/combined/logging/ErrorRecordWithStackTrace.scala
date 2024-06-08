@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.ErrorRecordData
 import utopia.scribe.core.model.stored.logging.{ErrorRecord, StackTraceElementRecord}
@@ -10,7 +11,7 @@ import utopia.scribe.core.model.stored.logging.{ErrorRecord, StackTraceElementRe
   * @since 23.5.2023, v0.1
   */
 case class ErrorRecordWithStackTrace(error: ErrorRecord,
-                                     stackTraceElements: Vector[StackTraceElementRecord] = Vector.empty,
+                                     stackTraceElements: Seq[StackTraceElementRecord] = Empty,
                                      cause: Option[ErrorRecordWithStackTrace] = None)
 	extends Extender[ErrorRecordData]
 {

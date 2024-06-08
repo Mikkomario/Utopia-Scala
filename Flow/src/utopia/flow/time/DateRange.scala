@@ -152,7 +152,7 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	override def headOption = if (isEmpty) None else Some(head)
 	override def lastOption = if (isEmpty) None else Some(last)
 	
-	override def toModel = Model(Vector("start" -> start, "end" -> end))
+	override def toModel = Model(Pair("start" -> start, "end" -> end))
 	
 	override protected def traverse(from: LocalDate, direction: Sign) = direction match {
 		case Positive => from.tomorrow

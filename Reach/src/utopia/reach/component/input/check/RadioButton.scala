@@ -5,6 +5,7 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{HotKey, StandardSizeAdjustable}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Normal
@@ -68,7 +69,7 @@ trait RadioButtonSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with Bu
 	
 	override def withEnabledPointer(p: Changing[Boolean]) =
 		withButtonSettings(buttonSettings.withEnabledPointer(p))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
@@ -98,7 +99,7 @@ object RadioButtonSettings
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class RadioButtonSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class RadioButtonSettings(customDrawers: Seq[CustomDrawer] = Empty,
                                buttonSettings: ButtonSettings = ButtonSettings.default,
                                selectedColorRole: ColorRole = ColorRole.Secondary)
 	extends RadioButtonSettingsLike[RadioButtonSettings]
@@ -106,7 +107,7 @@ case class RadioButtonSettings(customDrawers: Vector[CustomDrawer] = Vector.empt
 	// IMPLEMENTED	--------------------
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 	override def withSelectedColorRole(role: ColorRole) = copy(selectedColorRole = role)
 }
 
@@ -137,7 +138,7 @@ trait RadioButtonSettingsWrapper[+Repr] extends RadioButtonSettingsLike[Repr]
 	override def selectedColorRole = settings.selectedColorRole
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withSelectedColorRole(role: ColorRole) = mapSettings { _.withSelectedColorRole(role) }
 	

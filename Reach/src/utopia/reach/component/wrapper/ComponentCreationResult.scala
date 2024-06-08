@@ -19,12 +19,12 @@ object ComponentCreationResult
 	/**
 	  * Component creation result that wraps multiple components at once
 	  */
-	type ComponentsResult[+C, +R] = ComponentCreationResult[Vector[C], R]
+	type ComponentsResult[+C, +R] = ComponentCreationResult[Seq[C], R]
 	/**
 	  * Component creation result that wraps a primary component (of type M),
 	  * plus potentially multiple layers (of type C), with an additional result (of type R)
 	  */
-	type LayersResult[+M, +C, +R] = ComponentCreationResult[(M, Vector[(C, LayerPositioning)]), R]
+	type LayersResult[+M, +C, +R] = ComponentCreationResult[(M, Seq[(C, LayerPositioning)]), R]
 	/**
 	  * A wrapper that wraps multiple creation results, containing an additional result of its own
 	  */
@@ -55,18 +55,18 @@ object ComponentCreationResult
 	implicit def componentPairToResult[C <: ReachComponentLike](componentPair: Pair[C]): CreationWrapper[Pair[C]] =
 		new ComponentCreationResult[Pair[C], Unit](componentPair, ())
 	
-	implicit def componentVectorToResult[C <: ReachComponentLike](components: Vector[C]): CreationWrapper[Vector[C]] =
-		new ComponentCreationResult[Vector[C], Unit](components, ())
+	implicit def componentSeqToResult[C <: ReachComponentLike](components: Seq[C]): CreationWrapper[Seq[C]] =
+		new ComponentCreationResult[Seq[C], Unit](components, ())
 	
 	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
 	(components: IterableOnce[(C, Changing[Boolean])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	
-	implicit def autoWrapSwitchableComponents[C](c: Vector[OpenComponent[C, Changing[Boolean]]]): SwitchableOpenComponents[C, Unit] =
+	implicit def autoWrapSwitchableComponents[C](c: Seq[OpenComponent[C, Changing[Boolean]]]): SwitchableOpenComponents[C, Unit] =
 		ComponentCreationResult(c)
 	
-	implicit def containerVectorToResult[P](containers: Vector[ComponentWrapResult[P, _, _]]): CreationWrapper[Vector[P]] =
-		ComponentCreationResult[Vector[P]](containers.map { _.parent })
+	implicit def containerSeqToResult[P](containers: Seq[ComponentWrapResult[P, _, _]]): CreationWrapper[Seq[P]] =
+		ComponentCreationResult[Seq[P]](containers.map { _.parent })
 	
 	implicit def wrapToResult[P, R](wrapResult: ComponentWrapResult[P, _, R]): ComponentCreationResult[P, R] =
 		new ComponentCreationResult[P, R](wrapResult.parent, wrapResult.result)
@@ -89,7 +89,7 @@ object ComponentCreationResult
 	 * @tparam R Type of additional result
 	 * @return A new component creation result
 	 */
-	def many[C, R](items: Vector[C], result: R) = new ComponentCreationResult(items, result)
+	def many[C, R](items: Seq[C], result: R) = new ComponentCreationResult(items, result)
 	
 	/**
 	  * Creates a component creation result for building layered views
@@ -101,7 +101,7 @@ object ComponentCreationResult
 	  * @tparam R Type of the creation result
 	  * @return A new component creation result
 	  */
-	def layers[M, C, R](main: M, layers: Vector[(C, LayerPositioning)], result: R): LayersResult[M, C, R] =
+	def layers[M, C, R](main: M, layers: Seq[(C, LayerPositioning)], result: R): LayersResult[M, C, R] =
 		ComponentCreationResult(main -> layers, result)
 	/**
 	  * Creates a component creation result for building layered views (without using an additional creation result)
@@ -111,7 +111,7 @@ object ComponentCreationResult
 	  * @tparam C Type of the layer components
 	  * @return A new component creation result
 	  */
-	def layers[M, C](main: M, layers: Vector[(C, LayerPositioning)]): LayersResult[M, C, Unit] =
+	def layers[M, C](main: M, layers: Seq[(C, LayerPositioning)]): LayersResult[M, C, Unit] =
 		this.layers(main, layers, ())
 }
 

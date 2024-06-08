@@ -2,6 +2,7 @@ package utopia.nexus.rest.scalable
 
 import utopia.access.http.Method
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.nexus.rest.{Context, Resource}
 
 /**
@@ -13,8 +14,8 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private var customUseCaseImplementations = Map[Method, Vector[UseCaseImplementation[C, P]]]()
-	private var customFollowImplementations = Vector[FollowImplementation[C]]()
+	private var customUseCaseImplementations = Map[Method, Seq[UseCaseImplementation[C, P]]]()
+	private var customFollowImplementations: Seq[FollowImplementation[C]] = Empty
 	
 	
 	// ABSTRACT ----------------------------------
@@ -33,7 +34,7 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	
 	override def useCaseImplementations = {
 		val default = defaultUseCaseImplementations
-			.map { case (method, implementation) => method -> Vector(implementation) }
+			.map { case (method, implementation) => method -> Single(implementation) }
 		customUseCaseImplementations.mergeWith(default) { _ ++ _ }
 	}
 	
@@ -51,7 +52,7 @@ abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 	 */
 	def extendWith(method: Method, useCaseImplementation: UseCaseImplementation[C, P]) =
 		customUseCaseImplementations += (method ->
-			(useCaseImplementation +: customUseCaseImplementations.getOrElse(method, Vector())))
+			(useCaseImplementation +: customUseCaseImplementations.getOrElse(method, Empty)))
 	/**
 	 * Extends the capabilities of this node by adding a new follow implementation.
 	 * The new implementation will be the first one called.

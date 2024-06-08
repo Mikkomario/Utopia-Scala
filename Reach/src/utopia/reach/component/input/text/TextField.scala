@@ -7,8 +7,8 @@ import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.generic.casting.ValueConversions._
@@ -30,7 +30,7 @@ import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
 import utopia.reach.component.template.ReachComponentWrapper
-import utopia.reach.component.template.focus.{FocusableWithPointerWrapper, FocusableWithState, FocusableWrapper}
+import utopia.reach.component.template.focus.FocusableWithPointerWrapper
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reach.focus.FocusListener
@@ -148,7 +148,7 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 	override def withLabelSettings(settings: SelectableTextLabelSettings) =
 		withEditingSettings(editingSettings.withLabelSettings(settings))
 	override def withMaxLength(max: Option[Int]) = withEditingSettings(editingSettings.withMaxLength(max))
-	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+	override def withFocusListeners(listeners: Seq[FocusListener]): Repr =
 		mapLabelSettings { _.withFocusListeners(listeners) }
 	
 	
@@ -558,7 +558,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 						if (markMinMax.first)
 							allowedRange.ends.mkString(" - ").noLanguageLocalizationSkipped
 						else
-							s"Up to %s".autoLocalized.interpolated(Vector(allowedRange.end))
+							s"Up to %s".autoLocalized.interpolated(Single(allowedRange.end))
 					}
 					else
 						s"${allowedRange.start}+".noLanguageLocalizationSkipped
@@ -586,10 +586,10 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 				implicit val ord: Ordering[A] = allowedRange.ordering
 				if (input < allowedRange.start)
 					InputValidationResult
-						.Failure("Minimum value is %i".autoLocalized.interpolated(Vector(allowedRange.start)))
+						.Failure("Minimum value is %i".autoLocalized.interpolated(Single(allowedRange.start)))
 				else if (input > allowedRange.end)
 					InputValidationResult
-						.Failure("Maximum value is %i".autoLocalized.interpolated(Vector(allowedRange.end)))
+						.Failure("Maximum value is %i".autoLocalized.interpolated(Single(allowedRange.end)))
 				else
 					validate match {
 						case Some(validation) => validation(Some(input))
@@ -757,7 +757,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 				case _ => ()
 			}
 			val appliedLabelSettings = settings.editingSettings
-				.withAdditionalFocusListeners(Vector(fieldContext.focusListener, mainFocusListener))
+				.withAdditionalFocusListeners(Pair(fieldContext.focusListener, mainFocusListener))
 				.withAdditionalCustomDrawers(fieldContext.promptDrawers)
 			EditableTextLabel.withContext(fieldContext.parentHierarchy, labelContextPointer)
 				.withSettings(appliedLabelSettings)
@@ -773,7 +773,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 						_.withContextPointer(fieldContext.contextPointer).apply(
 							textLengthPointer,
 							DisplayFunction.functionToDisplayFunction[Int] { length =>
-								s"%i / %i".noLanguage.localized.interpolated(Vector(length, maxLength))
+								s"%i / %i".noLanguage.localized.interpolated(Pair(length, maxLength))
 							})
 					}(parentHierarchy.top)
 				}

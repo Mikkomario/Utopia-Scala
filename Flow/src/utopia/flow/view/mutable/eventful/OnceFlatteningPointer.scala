@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny.MaySeal
 import utopia.flow.event.model.{ChangeEvent, Destiny}
@@ -55,8 +55,8 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	// ATTRIBUTES   ------------------------
 	
 	// The listeners are stored until the pointer is appropriated
-	private var queuedListeners = Pair.twice(Vector[ChangeListener[A]]())
-	private var queuedStopListeners = Vector[ChangingStoppedListener]()
+	private var queuedListeners = Pair.twice[Seq[ChangeListener[A]]](Empty)
+	private var queuedStopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	private var pointer: Option[Changing[A]] = None
 	
@@ -149,7 +149,7 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 			
 			// Moves the stop listeners over as well
 			queuedStopListeners.foreach { pointer.addChangingStoppedListenerAndSimulateEvent(_) }
-			queuedStopListeners = Vector()
+			queuedStopListeners = Empty
 		}
 		else if (!this.pointer.contains(pointer))
 			throw new IllegalStateException("Pointer had already been assigned")

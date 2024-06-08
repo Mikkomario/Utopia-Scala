@@ -1,6 +1,7 @@
 package utopia.reach.component.button
 
 import utopia.firmament.model.HotKey
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
@@ -30,7 +31,7 @@ trait ButtonSettingsLike[+Repr]
 	/**
 	  * Focus listeners that should receive focus events from this button
 	  */
-	def focusListeners: Vector[FocusListener]
+	def focusListeners: Seq[FocusListener]
 	
 	/**
 	  * A pointer that determines whether this button is interactive or not
@@ -45,7 +46,7 @@ trait ButtonSettingsLike[+Repr]
 	  *                  Focus listeners that should receive focus events from this button
 	  * @return Copy of this factory with the specified focus listeners
 	  */
-	def withFocusListeners(listeners: Vector[FocusListener]): Repr
+	def withFocusListeners(listeners: Seq[FocusListener]): Repr
 	/**
 	  * The keys used for triggering this button even when it doesn't have focus
 	  * @param keys New hot keys to use.
@@ -74,7 +75,7 @@ trait ButtonSettingsLike[+Repr]
 	// OTHER	--------------------
 	
 	def mapEnabledPointer(f: Mutate[FlagLike]) = withEnabledPointer(f(enabledPointer))
-	def mapFocusListeners(f: Vector[FocusListener] => Vector[FocusListener]) =
+	def mapFocusListeners(f: Seq[FocusListener] => Seq[FocusListener]) =
 		withFocusListeners(f(focusListeners))
 	def mapHotKeys(f: Set[HotKey] => Set[HotKey]) = withHotKeys(f(hotKeys))
 	
@@ -123,13 +124,13 @@ object ButtonSettings
   * @since 31.05.2023, v1.1
   */
 case class ButtonSettings(enabledPointer: FlagLike = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
-                          focusListeners: Vector[FocusListener] = Vector.empty)
+                          focusListeners: Seq[FocusListener] = Empty)
 	extends ButtonSettingsLike[ButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withEnabledPointer(p: Changing[Boolean]) = copy(enabledPointer = p)
-	override def withFocusListeners(listeners: Vector[FocusListener]) = copy(focusListeners = listeners)
+	override def withFocusListeners(listeners: Seq[FocusListener]) = copy(focusListeners = listeners)
 	override def withHotKeys(keys: Set[HotKey]) = copy(hotKeys = keys)
 }
 
@@ -161,7 +162,7 @@ trait ButtonSettingsWrapper[+Repr] extends ButtonSettingsLike[Repr]
 	override def hotKeys = settings.hotKeys
 	
 	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		mapSettings { _.withFocusListeners(listeners) }
 	override def withHotKeys(keys: Set[HotKey]) = mapSettings { _.withHotKeys(keys) }
 	

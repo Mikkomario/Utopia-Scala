@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.xml.XmlElementLike.isAllowedInContent
 import utopia.flow.util.StringExtensions._
@@ -126,9 +127,9 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
                     Model.withConstants(Vector(nameProperty, constant.withName("value")))
                 // Specifies element name if possible
                 else if (constant.name == "name")
-                    Model.withConstants(Vector(constant))
+                    Model.withConstants(Single(constant))
                 else
-                    Model.withConstants(Vector(nameProperty, constant))
+                    Model.withConstants(Pair(nameProperty, constant))
             // Case: This element consists of multiple properties => wraps those properties into a model
             case Right(constants) =>
                 val base = Model.withConstants(constants)
@@ -140,7 +141,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
         }
     }
     
-    private def toConstants: Either[Constant, Vector[Constant]] = {
+    private def toConstants: Either[Constant, Seq[Constant]] = {
         // Case: No children
         if (children.isEmpty) {
             // Case: Empty element with no attributes => Converts to name value pair
@@ -295,7 +296,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
       * @return Value of the child element at the end of the specified path. Empty value if no such child was found.
       */
     def valueOfChild(firstChildName: String, secondChildName: String, more: String*) = {
-        val path = Vector(firstChildName, secondChildName) ++ more
+        val path = Pair(firstChildName, secondChildName) ++ more
         path.foldLeftIterator(Some(self): Option[Repr]) { (elem, next) => elem.flatMap { _.childWithName(next) } }
             .takeTo { _.isEmpty }
             .last
@@ -347,7 +348,7 @@ trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
             childResults.flatMap { _.leftOption }.map { _.value }
         else
             childResults.map {
-                case Left(constant) => Model.withConstants(Vector(constant))
+                case Left(constant) => Model.withConstants(Single(constant))
                 case Right(constants) => Model.withConstants(constants)
             }
     }

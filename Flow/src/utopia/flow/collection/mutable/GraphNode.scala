@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable
 
-import utopia.flow.collection.immutable.GraphEdge
+import utopia.flow.collection.immutable.{Empty, GraphEdge}
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template
 import utopia.flow.collection.template.GraphNode.AnyNode
@@ -22,7 +22,7 @@ class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N
     
     // IMPLEMENTED    --------------
     
-    var leavingEdges = Vector[Edge]()
+    var leavingEdges: IndexedSeq[Edge] = Empty
     
     override def self = this
     

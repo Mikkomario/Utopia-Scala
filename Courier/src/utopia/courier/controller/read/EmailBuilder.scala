@@ -1,6 +1,7 @@
 package utopia.courier.controller.read
 
 import utopia.courier.model.{Email, EmailContent, EmailHeaders}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.string.StringFrom
@@ -61,7 +62,7 @@ class EmailBuilder(headers: EmailHeaders, attachmentsStoreDirectory: Option[Path
 	override def result() ={
 		val attachments = attachmentsBuilder match {
 			case Some(builder) => builder.result()
-			case None => Vector()
+			case None => Empty
 		}
 		Success(Email(headers, EmailContent(bodyBuilder.result(), attachments)))
 	}

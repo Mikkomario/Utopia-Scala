@@ -2,6 +2,7 @@ package utopia.firmament.controller.data
 
 import utopia.firmament.component.display.{PoolWithPointer, Refreshable}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.Changing
@@ -15,21 +16,21 @@ import utopia.flow.view.template.eventful.Changing
  *  @tparam C Type of display component
  *  @tparam P Type of reflected content source
   */
-trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] extends PoolWithPointer[Vector[A], P]
+trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Seq[A]]] extends PoolWithPointer[Seq[A], P]
 {
 	// ABSTRACT	----------------------
 	
 	/**
 	  * @return The currently used displays
 	  */
-	def displays: Vector[C]
+	def displays: Seq[C]
 	
 	/**
 	  * Adds new displays for new values
 	  * @param values New values that need to be displayed
 	  * @param index Index where to add these displays
 	  */
-	protected def addDisplaysFor(values: Vector[A], index: Int): Unit
+	protected def addDisplaysFor(values: Seq[A], index: Int): Unit
 	
 	/**
 	  * Removes unnecessary displays
@@ -74,7 +75,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 	/**
 	  * Sets up this manager once other attributes have been initialized. Enables content change listening.
 	  */
-	protected def setup() = contentPointer.addListenerAndSimulateEvent(Vector())(ContentUpdateListener)
+	protected def setup() = contentPointer.addListenerAndSimulateEvent(Empty)(ContentUpdateListener)
 	
 	/**
 	  * Finds a display currently showing provided element
@@ -102,14 +103,14 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 	
 	// NESTED CLASSES	-------------
 	
-	private object ContentUpdateListener extends ChangeListener[Vector[A]]
+	private object ContentUpdateListener extends ChangeListener[Seq[A]]
 	{
-		override def onChangeEvent(event: ChangeEvent[Vector[A]]) = {
+		override def onChangeEvent(event: ChangeEvent[Seq[A]]) = {
 			setContent(event.newValue)
 			finalizeRefresh()
 		}
 		
-		private def setContent(newValues: Vector[A]) = {
+		private def setContent(newValues: Seq[A]) = {
 			val d = displays
 			val oldContentSize = d.size
 			val newContentSize = newValues.size
@@ -208,7 +209,7 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Vector[A]]] exten
 			}
 		}
 		
-		private def update(targetRange: Range, items: Vector[A]) =
+		private def update(targetRange: Range, items: Seq[A]) =
 			displays.slice(targetRange).foreachWith(items) { (d, i) => d.content = i }
 	}
 }

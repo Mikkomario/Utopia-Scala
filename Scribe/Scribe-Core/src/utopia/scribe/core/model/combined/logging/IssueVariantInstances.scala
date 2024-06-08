@@ -22,7 +22,7 @@ object IssueVariantInstances
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-case class IssueVariantInstances(variant: IssueVariant, occurrences: Vector[IssueOccurrence]) 
+case class IssueVariantInstances(variant: IssueVariant, occurrences: Seq[IssueOccurrence])
 	extends Extender[IssueVariantData]
 {
 	// COMPUTED	--------------------

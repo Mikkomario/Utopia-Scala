@@ -4,6 +4,7 @@ import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.context.BaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.FlagLike
@@ -107,7 +108,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 {
 	// ATTRIBUTES	------------------------
 	
-	private val _componentsPointer = EventfulPointer[Vector[C]](Vector())
+	private val _componentsPointer = EventfulPointer[Seq[C]](Empty)
 	private var pointers = Map[Int, Pointer[Boolean]]()
 	
 	private var _direction = initialDirection

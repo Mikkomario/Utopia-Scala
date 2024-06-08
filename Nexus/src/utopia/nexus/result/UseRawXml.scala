@@ -5,6 +5,7 @@ import utopia.access.http.Status
 import utopia.nexus.http.Request
 import utopia.nexus.http.Response
 import utopia.access.http.Headers
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
 
 import java.nio.charset.StandardCharsets
@@ -23,7 +24,7 @@ case class UseRawXml(rootElementName: String = "Response") extends RawResultPars
 	    val element = parseElement(rootElementName, data)
 	    val charset = request.headers.preferredCharset getOrElse StandardCharsets.UTF_8
 	    
-	    new Response(status, Headers.withContentType(Application.xml, Some(charset)), Vector(),
+	    new Response(status, Headers.withContentType(Application.xml, Some(charset)), Empty,
 	            Some(stream => XmlWriter.writeElementToStream(stream, element, charset)))
 	}
 	

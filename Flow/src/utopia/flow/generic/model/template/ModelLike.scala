@@ -43,7 +43,7 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * @return Property names (lower case) in order.
 	  *         Contains the names of all of this model's properties.
 	  */
-	protected def propertyOrder: Vector[String]
+	protected def propertyOrder: Seq[String]
 	
 	/**
 	  * Generates a new property with the specified name

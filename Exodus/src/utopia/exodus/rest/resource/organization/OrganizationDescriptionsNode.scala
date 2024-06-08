@@ -7,6 +7,7 @@ import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOr
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.exodus.model.enumeration.ExodusTask.DocumentOrganization
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.cached.LanguageIds
@@ -28,7 +29,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResourc
 	// IMPLEMENTED	-----------------------------
 	
 	override val name = "descriptions"
-	override val allowedMethods = Vector(Get, Put)
+	override val allowedMethods = Pair(Get, Put)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
@@ -41,7 +42,7 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResourc
 				val descriptions = DbOrganizationDescriptions(organizationId).inPreferredLanguages
 				// Supports simple model style also
 				Result.Success(session.modelStyle match {
-					case Full => descriptions.map { _.toModel }
+					case Full => descriptions.map { _.toModel }.toVector
 					case Simple =>
 						Model.withConstants(SimplyDescribed.descriptionPropertiesFrom(
 							descriptions.map { _.description }, DbDescriptionRoles.pull))
@@ -67,9 +68,9 @@ case class OrganizationDescriptionsNode(organizationId: Int) extends LeafResourc
 								dbDescriptions.inLanguageWithId(newDescription.languageId)
 									.withRoleIds(missingRoleIds).pull
 							else
-								Vector()
+								Empty
 						}
-						Result.Success((insertedDescriptions ++ otherDescriptions).map { _.toModel })
+						Result.Success((insertedDescriptions ++ otherDescriptions).map { _.toModel }.toVector)
 					}
 					else
 						Result.Failure(NotFound, s"There doesn't exist any language with id ${newDescription.languageId}")

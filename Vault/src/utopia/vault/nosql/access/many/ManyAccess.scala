@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.template.Access
   * @author Mikko Hilpinen
   * @since 30.1.2020, v1.4
   */
-trait ManyAccess[+A] extends Access[Vector[A]]
+trait ManyAccess[+A] extends Access[Seq[A]]
 {
 	// COMPUTED	--------------------
 	

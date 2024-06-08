@@ -7,6 +7,7 @@ import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -47,7 +48,7 @@ trait TextButtonFactoryLike[+Repr]
   */
 case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
                                        settings: ButtonSettings = ButtonSettings.default,
-                                       customDrawers: Vector[CustomDrawer] = Vector.empty)
+                                       customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[ContextualTextButtonFactory]
 		with TextContextualFactory[ContextualTextButtonFactory]
 {
@@ -57,7 +58,7 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
 	
 	override def withContext(newContext: TextContext) = copy(context = newContext)
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualTextButtonFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualTextButtonFactory =
 		copy(customDrawers = drawers)
 	
 	
@@ -82,7 +83,7 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
   */
 case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
                              settings: ButtonSettings = ButtonSettings.default,
-                             customDrawers: Vector[CustomDrawer] = Vector.empty)
+                             customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[TextButtonFactory]
 		with FromContextFactory[TextContext, ContextualTextButtonFactory]
 {
@@ -92,7 +93,7 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
 		ContextualTextButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): TextButtonFactory = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): TextButtonFactory = copy(customDrawers = drawers)
 	
 	
 	// OTHER	-----------------------------------
@@ -154,7 +155,7 @@ object TextButton extends TextButtonSetup()
   */
 class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
                  color: Color, settings: ButtonSettings = ButtonSettings.default, borderWidth: Double = 0.0,
-                 customDrawers: Vector[CustomDrawer] = Vector.empty,
+                 customDrawers: Seq[CustomDrawer] = Empty,
                  allowTextShrink: Boolean = false)(action: => Unit)
 	extends AbstractButton(settings) with ReachComponentWrapper
 {

@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.factory.logging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.scribe.core.model.combined.logging.IssueInstances
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.nosql.factory.FromResultFactory
@@ -29,11 +30,11 @@ object IssueInstancesFactory extends FromResultFactory[IssueInstances]
 	
 	override def defaultOrdering = None
 	
-	override def apply(result: Result): Vector[IssueInstances] = result.split(table).iterator
+	override def apply(result: Result): IndexedSeq[IssueInstances] = result.split(table).iterator
 		.map { result =>
 			parentFactory(result.rows.head).map { issue =>
 				val variants = childFactory(result)
 				IssueInstances(issue, variants)
 			}
-		}.toTry.getOrMap { error => ErrorHandling.modelParsePrinciple.handle(error); Vector() }
+		}.toTry.getOrMap { error => ErrorHandling.modelParsePrinciple.handle(error); Empty }
 }

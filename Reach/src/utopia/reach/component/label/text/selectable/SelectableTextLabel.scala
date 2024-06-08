@@ -4,6 +4,7 @@ import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
@@ -126,8 +127,8 @@ object SelectableTextLabelSettings
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class SelectableTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
-                                       focusListeners: Vector[FocusListener] = Vector.empty,
+case class SelectableTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
+                                       focusListeners: Seq[FocusListener] = Empty,
                                        highlightColorPointer: Changing[ColorRole] = Fixed(ColorRole.Secondary),
                                        customCaretColorPointer: Option[Changing[ColorRole]] = None,
                                        caretBlinkFrequency: Duration = ComponentCreationDefaults.caretBlinkFrequency,
@@ -136,14 +137,14 @@ case class SelectableTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vec
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withFocusListeners(listeners: Vector[FocusListener]): SelectableTextLabelSettings =
+	override def withFocusListeners(listeners: Seq[FocusListener]): SelectableTextLabelSettings =
 		copy(focusListeners = listeners)
 	
 	override def withCaretBlinkFrequency(frequency: Duration) =
 		copy(caretBlinkFrequency = frequency)
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
 		copy(customCaretColorPointer = p)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		copy(customDrawers = drawers)
 	override def withDrawSelectionBackground(drawBackground: Boolean) =
 		copy(drawsSelectionBackground = drawBackground)
@@ -179,15 +180,15 @@ trait SelectableTextLabelSettingsWrapper[+Repr] extends SelectableTextLabelSetti
 	override def customDrawers = settings.customDrawers
 	override def drawsSelectionBackground = settings.drawsSelectionBackground
 	override def highlightColorPointer = settings.highlightColorPointer
-	override protected def focusListeners: Vector[FocusListener] = settings.focusListeners
+	override protected def focusListeners: Seq[FocusListener] = settings.focusListeners
 	
-	override def withFocusListeners(listeners: Vector[FocusListener]): Repr =
+	override def withFocusListeners(listeners: Seq[FocusListener]): Repr =
 		mapSettings { _.withFocusListeners(listeners) }
 	override def withCaretBlinkFrequency(frequency: Duration) =
 		mapSettings { _.withCaretBlinkFrequency(frequency) }
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
 		mapSettings { _.withCustomCaretColorPointer(p) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withDrawSelectionBackground(drawBackground: Boolean) =
 		mapSettings { _.withDrawSelectionBackground(drawBackground) }

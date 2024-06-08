@@ -110,7 +110,7 @@ object StackLength
 								 firstPriority: LengthPriority, secondOptimal: Double, secondPriority: LengthPriority) =
 	{
 		val isSameLength = firstOptimal == secondOptimal
-		val options = Vector(firstOptimal -> firstPriority, secondOptimal -> secondPriority).sortBy { _._1 }
+		val options = Pair(firstOptimal -> firstPriority, secondOptimal -> secondPriority).sortBy { _._1 }
 		/* Shrinking is allowed if:
 			- If Smaller optimal value allows shrinking
 			- If the two optimal values are equal AND one of them allows shrinking
@@ -414,7 +414,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 				}
 			}
 		}
-		val newMax = Vector(max, other.max).flatten.reduceOption { _ min _ }
+		val newMax = Pair(max, other.max).flatten.reduceOption { _ min _ }
 		
 		val priorities = Pair(priority, other.priority)
 		// Assigns shrinking, if possible. Avoids expansion, unless both options support it.
@@ -465,7 +465,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	 */
 	def combineWith(other: StackLength) = {
 	    val newMin = min max other.min
-	    val newMax = Vector(max, other.max).flatten.reduceOption { _ min _ }
+	    val newMax = Pair(max, other.max).flatten.reduceOption { _ min _ }
 	    
 		// May pick the smaller optimal length in case the larger optimal is easily shrank
 	    val newOptimal =

@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.vault.model.enumeration.BasicCombineOperator
 import utopia.vault.model.immutable.Storable
 
@@ -103,13 +104,13 @@ case class Condition(segment: SqlSegment)
      * Combines this and another condition together using a logical AND. The conditions are wrapped in 
      * single parentheses '()' and performed together, from left to right.
      */
-    def &&(other: Condition): Condition = this && Vector(other)
+    def &&(other: Condition): Condition = this && Single(other)
     
     /**
      * Combines the conditions together using a logical AND. All of the conditions are wrapped in 
      * single parentheses '()' and performed together, from left to right.
      */
-    def &&(first: Condition, second: Condition, more: Condition*): Condition = this && (Vector(first, second) ++ more)
+    def &&(first: Condition, second: Condition, more: Condition*): Condition = this && (Pair(first, second) ++ more)
     
     /**
       * @param other Another condition
@@ -127,13 +128,13 @@ case class Condition(segment: SqlSegment)
      * Combines this and another condition together using a logical OR. The conditions are wrapped in 
      * single parentheses '()' and performed together, from left to right.
      */
-    def ||(other: Condition): Condition = this || Vector(other)
+    def ||(other: Condition): Condition = this || Single(other)
     
     /**
      * Combines the conditions together using a logical OR. All of the conditions are wrapped in 
      * single parentheses '()' and performed together, from left to right.
      */
-    def ||(first: Condition, second: Condition, more: Condition*): Condition = this || (Vector(first, second) ++ more)
+    def ||(first: Condition, second: Condition, more: Condition*): Condition = this || (Pair(first, second) ++ more)
     
     /**
       * @param other Another condition
@@ -153,7 +154,7 @@ case class Condition(segment: SqlSegment)
      * Combines this and another condition together using a logical XOR. The logical value is true 
      * when both of the conditions have different values
      */
-    def xor(other: Condition) = combine(Vector(other), "XOR")
+    def xor(other: Condition) = combine(Single(other), "XOR")
     
     /**
       * Combines this condition with other conditions using specified operator
@@ -169,7 +170,7 @@ case class Condition(segment: SqlSegment)
       * @param operator Operator used when combining these conditions
       * @return A combination of these two conditions
       */
-    def combineWith(other: Condition, operator: BasicCombineOperator): Condition = combineWith(Vector(other), operator)
+    def combineWith(other: Condition, operator: BasicCombineOperator): Condition = combineWith(Single(other), operator)
     
     private def combine(others: Seq[Condition], separator: String) = 
     {

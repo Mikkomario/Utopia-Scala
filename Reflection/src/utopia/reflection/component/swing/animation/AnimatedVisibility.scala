@@ -57,15 +57,13 @@ class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorH
 	private lazy val empty = new EmptyLabel().withStackSize(StackSize.fixedZero)
 	private val panel = new SwitchPanel[AwtStackable](if (initialState == Visible) display else empty)
 	
-	private var targetState = initialState match
-	{
+	private var targetState = initialState match {
 		case static: Visibility => static
 		case transition: VisibilityChange => transition.targetState
 	}
 	// Currently active transition as a future.
 	// If initial state was transitive, this is initialized as an active transition.
-	private val lastTransition = Volatile(initialState match
-	{
+	private val lastTransition = Volatile(initialState match {
 		case static: Visibility => Future.successful(static)
 		case transition: VisibilityChange => startTransition(transition.targetState)
 	})

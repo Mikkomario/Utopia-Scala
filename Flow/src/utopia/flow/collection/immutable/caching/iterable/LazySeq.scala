@@ -24,7 +24,7 @@ object LazySeq extends SeqFactory[LazySeq] with LazyFactory[LazySeq]
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case l: LazySeq[A] => l
-		case v: LazyVector[A] => new LazySeq[A](CachingSeq.from(v.lazyContents))
+		case v: LazySeqLike[A, _] => new LazySeq[A](CachingSeq.from(v.lazyContents))
 		case c: CachingSeq[A] => new LazySeq[A](c.map(Lazy.initialized))
 		case c => new LazySeq[A](CachingSeq(c.iterator.map(Lazy.initialized)))
 	}

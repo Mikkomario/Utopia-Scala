@@ -1,5 +1,6 @@
 package utopia.vault.nosql.factory.row.model
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
@@ -42,7 +43,7 @@ trait FromRowModelFactory[+A] extends FromRowFactory[A] with FromModelFactory[A]
     
     override def joinType = JoinType.Inner
     
-    override val joinedTables = Vector()
+    override val joinedTables = Empty
     
     override def apply(row: Row) = apply(row(table))
 }

@@ -13,7 +13,7 @@ import utopia.metropolis.model.stored.organization.{OrganizationDeletion, Organi
   * @since 2021-10-23
   */
 case class OrganizationDeletionWithCancellations(deletion: OrganizationDeletion, 
-	cancellations: Vector[OrganizationDeletionCancellation]) 
+	cancellations: Seq[OrganizationDeletionCancellation])
 	extends Extender[OrganizationDeletionData] with ModelConvertible
 {
 	// COMPUTED	--------------------
@@ -37,7 +37,7 @@ case class OrganizationDeletionWithCancellations(deletion: OrganizationDeletion,
 	{
 		val base = deletion.toModel
 		if (isCancelled)
-			base + Constant("cancellations", cancellations.map { _.toModel })
+			base + Constant("cancellations", cancellations.map { _.toModel }.toVector)
 		else
 			base
 	}

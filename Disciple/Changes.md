@@ -1,5 +1,9 @@
 # Utopia Disciple - List of Changes
 
+## v1.6.4 (in development)
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
+
 ## v1.6.3 - 22.01.2024
 Supports **Flow v2.3**
 ### Breaking changes

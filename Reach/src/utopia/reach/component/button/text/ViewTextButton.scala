@@ -5,6 +5,7 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.{Color, ColorRole}
@@ -38,7 +39,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 
 case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                                            settings: ButtonSettings = ButtonSettings.default,
-                                           customDrawers: Vector[CustomDrawer] = Vector.empty)
+                                           customDrawers: Seq[CustomDrawer] = Empty)
 	extends VariableContextualFactory[TextContext, ContextualViewTextButtonFactory]
 		with ButtonSettingsWrapper[ContextualViewTextButtonFactory]
 		with CustomDrawableFactory[ContextualViewTextButtonFactory] with PartOfComponentHierarchy
@@ -48,7 +49,7 @@ case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, 
 	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextButtonFactory =
 		copy(contextPointer = p)
 	override def withSettings(settings: ButtonSettings): ContextualViewTextButtonFactory = copy(settings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewTextButtonFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextButtonFactory =
 		copy(customDrawers = drawers)
 	
 	
@@ -133,7 +134,7 @@ case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, 
 class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                         contentPointer: Changing[A], settings: ButtonSettings = ButtonSettings.default,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-                        additionalDrawers: Vector[CustomDrawer] = Vector.empty)
+                        additionalDrawers: Seq[CustomDrawer] = Empty)
                        (action: A => Unit)
 	extends AbstractButton(settings) with ReachComponentWrapper
 {

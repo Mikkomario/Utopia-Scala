@@ -19,8 +19,7 @@ object BezierPath
 	  * @return A bezier path between paths
 	  * @throws IllegalArgumentException If points is empty
 	  */
-	def apply[P <: Combinable[P, P] with LinearScalable[P] with HasLength]
-	(points: Seq[P], sequencesPerPart: Int = 6) =
+	def apply[P <: Combinable[P, P] with LinearScalable[P] with HasLength](points: Seq[P], sequencesPerPart: Int = 6) =
 	{
 		if (points.isEmpty)
 			throw new IllegalArgumentException("Bezier path must be initialized with at least 1 point")
@@ -28,13 +27,12 @@ object BezierPath
 			EmptyPath(points.head)
 		else if (points hasSize 2)
 			LinearPath(points.head, points(1))
-		else
-		{
+		else {
 			val paths = calculatePath(points)
 			if (sequencesPerPart > 0)
-				CompoundPath(paths.map { _.withStandardizedVelocity(sequencesPerPart) }.toVector)
+				CompoundPath(paths.map { _.withStandardizedVelocity(sequencesPerPart) })
 			else
-				CompoundPath(paths.toVector)
+				CompoundPath(paths)
 		}
 	}
 	
@@ -78,11 +76,9 @@ object BezierPath
 		
 		// Calculates the real target. Again, each value is dependent from the one before
 		val firstTarget = baseTarget.head / mainDiagonal.head
-		val target: Vector[P] = (1 until n).foldMapToVector(firstTarget)
-		{
-			(last, i) =>
-				val scale = 1 / (mainDiagonal(i) - lowerDiagonal(i - 1) * upperDiagonal(i - 1))
-				(baseTarget(i) - last * lowerDiagonal(i - 1)) * scale
+		val target: Vector[P] = (1 until n).foldMapToVector(firstTarget) { (last, i) =>
+			val scale = 1 / (mainDiagonal(i) - lowerDiagonal(i - 1) * upperDiagonal(i - 1))
+			(baseTarget(i) - last * lowerDiagonal(i - 1)) * scale
 		}
 		
 		// Calculates the first control points from end to beginning

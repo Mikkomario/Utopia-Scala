@@ -111,7 +111,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	private val showCaretListener = ChangeListener.onAnyChange { if (hasFocus) CaretBlinker.show() }
 	
 	override val focusListeners: Seq[FocusListener] = FocusHandler +: settings.focusListeners
-	override val customDrawers: Vector[CustomDrawer] = mainDrawer +: settings.customDrawers
+	override val customDrawers: Seq[CustomDrawer] = mainDrawer +: settings.customDrawers
 	
 	/**
 	  * A pointer that contains true while this label allows text selection (being in focus)

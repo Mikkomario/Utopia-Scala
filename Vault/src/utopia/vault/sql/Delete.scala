@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Table
 import utopia.vault.model.immutable.TableUpdateEvent.DataDeleted
@@ -36,7 +37,7 @@ object Delete
       * contain the deleted table.
       * @param table The table from which rows are deleted
       */
-    def apply(target: SqlTarget, table: Table): SqlSegment = apply(target, Vector(table))
+    def apply(target: SqlTarget, table: Table): SqlSegment = apply(target, Single(table))
     /**
      * Creates an sql segment that deletes rows from a single table. This segment is often followed 
      * by a where clause and possibly a limit as well.
@@ -47,7 +48,7 @@ object Delete
      * @return A delete statement targeting that table
      */
     def apply(table: Table) = SqlSegment("DELETE FROM", events =
-        Some(_ => Vector(DataDeleted(table)))) + table.toSqlSegment
+        Some(_ => Single(DataDeleted(table)))) + table.toSqlSegment
     
     /**
      * Performs one or more delete queries on a table in a way that deletes only a certain number of items per query.

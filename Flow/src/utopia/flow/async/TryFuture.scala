@@ -1,5 +1,6 @@
 package utopia.flow.async
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.TryCatch
 
 import scala.concurrent.Future
@@ -52,7 +53,7 @@ object TryFuture
 	 * @tparam A Type of the successfully acquired value
 	 * @return A new resolved future that contains a successful TryCatch
 	 */
-	def successCatching[A](value: A, errors: Vector[Throwable] = Vector.empty) =
+	def successCatching[A](value: A, errors: IndexedSeq[Throwable] = Empty) =
 		Future.successful(TryCatch.Success(value, errors))
 	/**
 	  * @param error An error / cause of failure

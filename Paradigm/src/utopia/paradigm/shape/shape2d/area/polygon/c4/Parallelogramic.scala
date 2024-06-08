@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -94,7 +95,7 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	)
 	override def edges = Vector(topEdge, rightEdge, bottomEdge, leftEdge)
 	
-	override def collisionAxes = Vector(topEdge, rightEdge).map { _.normal2D }
+	override def collisionAxes: Seq[Vector2D] = Pair(topEdge, rightEdge).map { _.normal2D }
 	
 	override def center = topLeftCorner + (topEdge / 2) + (rightEdge / 2)
 	override def maxEdgeLength = topEdge.length max rightEdge.length

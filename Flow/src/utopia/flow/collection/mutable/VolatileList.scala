@@ -1,35 +1,38 @@
 package utopia.flow.collection.mutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.{SeqFactory, mutable}
 
-object VolatileList
+object VolatileList extends SeqFactory[VolatileList]
 {
+	// IMPLEMENTED  --------------------
+	
+	override def empty[A] = new VolatileList[A](Empty)
+	override def newBuilder[A] = new VectorBuilder[A]().mapResult { apply(_) }
+	
+	override def from[A](source: IterableOnce[A]) = VolatileList[A](IndexedSeq.from(source))
+	
+	
+	// OTHER    ------------------------
+	
     /**
      * Creates a new empty list
      */
-    def apply[T]() = new VolatileList[T](Vector())
+    def apply[T]() = empty[T]
     
     /**
      * Creates a new list with a single item
      */
-    def apply[T](item: T) = new VolatileList[T](Vector(item))
-    
-	def apply[T](items: IterableOnce[T]) = new VolatileList[T](Vector.from(items))
-	
+    def apply[T](item: T) = new VolatileList[T](Single(item))
+	def apply[T](items: IndexedSeq[T]) = new VolatileList[T](items)
     /**
      * Creates a new list with multiple items
      */
-    def apply[T](first: T, second: T, more: T*) = new VolatileList(Vector(first, second) ++ more)
-	
-	/**
-	  * @tparam A The target type
-	  * @return A can build from for Volatile lists of target type
-	  */
-	implicit def factory[A]: VolatileListFactory = new VolatileListFactory
+    def apply[T](first: T, second: T, more: T*) = new VolatileList(Pair(first, second) ++ more)
 }
 
 /**
@@ -37,7 +40,7 @@ object VolatileList
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileList[T] private(list: Vector[T])
+class VolatileList[T] private(list: IndexedSeq[T])
 	extends Volatile(list) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
 {
     // IMPLEMENTED    ---------------
@@ -48,17 +51,14 @@ class VolatileList[T] private(list: Vector[T])
 	
 	def length: Int = value.length
 	
-	override def update(idx: Int, elem: T): Unit = update { _.updated(idx, elem) }
-	
 	override def empty = VolatileList()
 	
-	override protected def fromSpecific(coll: IterableOnce[T]) = VolatileList(coll)
-	
-	override protected def newSpecificBuilder = new VolatileListBuilder[T]
-	
-	override def iterableFactory = VolatileList.factory[T]
+	override def update(idx: Int, elem: T): Unit = update { _.updated(idx, elem) }
 	
 	override def seq = this
+	override def iterableFactory = VolatileList
+	override protected def newSpecificBuilder = VolatileList.newBuilder
+	override protected def fromSpecific(coll: IterableOnce[T]) = VolatileList.from(coll)
 	
 	
 	// OPERATORS    ----------------
@@ -67,7 +67,6 @@ class VolatileList[T] private(list: Vector[T])
 	 * Adds a new item to the end of this list
 	 */
 	def :+=(item: T) = update { _ :+ item }
-	
 	/**
 	 * Adds a new item to the beginning of this list
 	 */
@@ -77,17 +76,15 @@ class VolatileList[T] private(list: Vector[T])
 	 * Adds multiple new items to this list
 	 */
 	def ++=(items: IterableOnce[T]) = update { _ ++ items }
-	
 	/**
 	 * Adds multiple new items to this list
 	 */
-	def ++=(first: T, second: T, more: T*): Unit = ++=(Vector(first, second) ++ more)
+	def ++=(first: T, second: T, more: T*): Unit = ++=(Pair(first, second) ++ more)
 	
 	/**
 	 * Removes an item from this list
 	 */
 	def -=(item: Any) = update { _ filterNot { _ == item } }
-	
 	/**
 	 * Removes multiple items from this list
 	 */
@@ -99,7 +96,7 @@ class VolatileList[T] private(list: Vector[T])
 	/**
 	 * Clears all items from this list
 	 */
-	def clear() = value = Vector()
+	def clear() = value = Empty
 	
 	/**
 	 * Removes and returns the first item in this list
@@ -120,34 +117,5 @@ class VolatileList[T] private(list: Vector[T])
 	  * Clears this list of all items
 	  * @return All items that were removed from this list
 	  */
-	def popAll() = getAndSet(Vector())
-}
-
-class VolatileListBuilder[A] extends mutable.Builder[A, VolatileList[A]]
-{
-	// ATTRIBUTES    ---------------------
-	
-	private val builder = new VectorBuilder[A]()
-	
-	
-	// IMPLEMENTED    --------------------
-	
-	override def addOne(elem: A) =
-	{
-		builder += elem
-		this
-	}
-	
-	override def clear() = builder.clear()
-	
-	override def result() = VolatileList(builder.result())
-}
-
-class VolatileListFactory extends SeqFactory[VolatileList]
-{
-	override def from[A](source: IterableOnce[A]) = VolatileList[A](source)
-	
-	override def empty[A] = VolatileList[A]()
-	
-	override def newBuilder[A] = new VolatileListBuilder[A]
+	def popAll() = getAndSet(Empty)
 }

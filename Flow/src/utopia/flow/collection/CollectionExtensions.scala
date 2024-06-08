@@ -1,8 +1,8 @@
 package utopia.flow.collection
 
-import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -43,6 +43,36 @@ object CollectionExtensions
 	// TODO: Move (some of) these to Iterator and/or Iterable instead
 	class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
 	{
+		/**
+		  * Splits this collection into a number of smaller pieces. Preserves order.
+		  * @param maxLength Maximum length of each segment
+		  * @param buildFrom A build from (implicit)
+		  * @return An iterator that returns segments of this collection where each segment is at most 'maxLength' long
+		  */
+		def segmentsIterator(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Iterator[Repr] = {
+			val ops = iter(coll)
+			val knownSize = ops.knownSize
+			if (knownSize >= 0 && knownSize <= maxLength)
+				Iterator.single(coll)
+			else {
+				val iterator = ops.iterator
+				OptionsIterator.continually {
+					if (iterator.hasNext)
+						Some(buildFrom.fromSpecific(coll)(iterator.takeNext(maxLength)))
+					else
+						None
+				}
+			}
+		}
+		/**
+		  * Splits this collection into a number of smaller pieces. Preserves order.
+		  * @param maxLength Maximum length of each segment
+		  * @param buildFrom A build from (implicit)
+		  * @return This sequence split into possibly larger number of smaller sequences
+		  */
+		def splitToSegments(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): IndexedSeq[Repr] =
+			OptimizedIndexedSeq.from(segmentsIterator(maxLength))
+		
 		/**
 		  * Filters this collection so that only distinct values remain. Uses a special function to determine equality
 		  * @param equals    A function that determines whether two values are equal
@@ -145,6 +175,7 @@ object CollectionExtensions
 		  * @tparam Values Type of values collections in the final map
 		  * @return A multi map based on this iteration mapping
 		  */
+		@deprecated("Please use .groupMap(...) instead", "v2.4")
 		def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
 			implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
 		/**
@@ -156,6 +187,7 @@ object CollectionExtensions
 		  * @tparam Values Type of values collections in the final map
 		  * @return A multi map based on this iteration mapping
 		  */
+		@deprecated("Please use .groupMap instead", "v2.4")
 		def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
 		{
 			val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
@@ -479,7 +511,7 @@ object CollectionExtensions
 		  * @param f A function for separating / mapping the items
 		  * @tparam L Type of left group items
 		  * @tparam R Type of right group items
-		  * @return The Left group and then the Right group (as Vectors)
+		  * @return The Left group and then the Right group (as sequences)
 		  */
 		def divideWith[L, R](f: A => Either[L, R]) = {
 			val lBuilder = new VectorBuilder[L]()
@@ -654,6 +686,8 @@ object CollectionExtensions
 	
 	class IterableOperations[Repr, I <: IsIterable[Repr]](coll: Repr, iter: I)
 	{
+		// private lazy val ops = iter(coll)
+		
 		/**
 		  * @return This collection if not empty. Otherwise None.
 		  */
@@ -775,6 +809,48 @@ object CollectionExtensions
 		def takeExtremeBy[B](n: Int, extreme: Extreme)(f: iter.A => B)
 		                    (implicit bf: BuildFrom[Repr, iter.A, Repr], ord: Ordering[B]) =
 			takeMaxBy(n)(f)(bf, extreme.ascendingToExtreme(ord))
+		
+		/**
+		  * Finds the item(s) that best match the specified conditions
+		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
+		  *                 important than those which are introduced the last.
+		  * @return The items in this collection that best match the specified conditions
+		  */
+		def bestMatch(matchers: IterableOnce[iter.A => Boolean])(implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
+			matchers.iterator.foldLeft(coll) { _bestMatch(_, _) }
+		def bestMatch(firstMatcher: iter.A => Boolean, secondMatcher: iter.A => Boolean, more: (iter.A => Boolean)*)
+		             (implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
+			bestMatch(Pair(firstMatcher, secondMatcher) ++ more)
+		/**
+		  * Filters this collection with the specified filter function, but if the results would be empty, returns
+		  * this collection instead
+		  * @param matcher A filter / matcher function
+		  * @return Filtered results, or this collection if resulting collection was empty
+		  */
+		def bestMatch(matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) =
+			_bestMatch(coll, matcher)
+		
+		private def _bestMatch(coll: Repr, matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
+			val ops = iter(coll)
+			// Case: 1 or 0 items => Result will always be the best match
+			if (ops.sizeCompare(2) < 0)
+				coll
+			else {
+				val iter = ops.iterator
+				// Scans the collection for the first match => Result determines whether a new collection will be formed
+				iter.find(matcher) match {
+					// Case: Found a match => Generates a new collection by finding the remaining matches
+					case Some(firstMatch) =>
+						if (iter.hasNext)
+							bf.fromSpecific(coll)(Iterator.single(firstMatch) ++ iter.filter(matcher))
+						// Case: No more items available => No need to search for further matches
+						else
+							bf.fromSpecific(coll)(Single(firstMatch))
+					// Case: No match found => Returns the original collection
+					case None => coll
+				}
+			}
+		}
 		
 		/**
 		  * Collects the results of a 'takeWhile' operation, also returning the remaining items as a separate
@@ -1131,41 +1207,6 @@ object CollectionExtensions
 			hasSize.of(other) && t.iterator.zip(other.iterator).forall { case (a, b) => eq(a, b) }
 		
 		/**
-		  * Finds the item(s) that best match the specified conditions
-		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
-		  *                 important than those which are introduced the last.
-		  * @return The items in this collection that best match the specified conditions
-		  */
-		def bestMatch(matchers: Seq[A => Boolean]): Vector[A] = {
-			// If there is only a single option, that is the best match. If there are 0 options, there's no best match
-			// If there are no matchers left, cannot make a distinction between items
-			if (hasSize < 2 || matchers.isEmpty)
-				t.toVector
-			else {
-				val nextMatcher = matchers.head
-				val matched = t.filter(nextMatcher)
-				
-				// If matcher found some results, limits to those. if not, cannot use that group
-				if (matched.nonEmpty)
-					matched.bestMatch(matchers.drop(1))
-				else
-					bestMatch(matchers.drop(1))
-			}
-		}
-		def bestMatch(firstMatcher: A => Boolean, secondMatcher: A => Boolean, more: (A => Boolean)*): Vector[A] =
-			bestMatch(Vector(firstMatcher, secondMatcher) ++ more)
-		/**
-		  * Filters this collection with the specified filter function, but if the results would be empty, returns
-		  * this collection instead
-		  * @param matcher A filter / matcher function
-		  * @return Filtered results, or this collection if resulting collection was empty
-		  */
-		def bestMatch(matcher: A => Boolean) = {
-			val matched = t.filter(matcher)
-			if (matched.isEmpty) t.toVector else matched.toVector
-		}
-		
-		/**
 		  * Compares this set of items with another set. Lists items that have been added and removed, plus the changes
 		  * between items that have stayed
 		  * @param another   Another Iterable
@@ -1187,9 +1228,9 @@ object CollectionExtensions
 			val myKeys = meByKey.keySet
 			val theirKeys = theyByKey.keySet
 			
-			val onlyInMe = (myKeys -- theirKeys).toVector.map { meByKey(_) }
-			val onlyInThem = (theirKeys -- myKeys).toVector.map { theyByKey(_) }
-			val merged = (myKeys & theirKeys).toVector.map { key => merge(key, meByKey(key), theyByKey(key)) }
+			val onlyInMe = (myKeys -- theirKeys).view.map { meByKey(_) }.toVector
+			val onlyInThem = (theirKeys -- myKeys).view.map { theyByKey(_) }.toVector
+			val merged = (myKeys & theirKeys).view.map { key => merge(key, meByKey(key), theyByKey(key)) }.toVector
 			
 			(onlyInMe, merged, onlyInThem)
 		}
@@ -1398,30 +1439,6 @@ object CollectionExtensions
 			buildFrom.fromSpecific(coll)(iter.zipWithIndex.flatMap { case (a, i) => if (i == index) None else Some(a) })
 		
 		/**
-		  * Splits this collection into a number of smaller pieces. Preserves order.
-		  * @param maxLength Maximum length of each segment
-		  * @param buildFrom A build from (implicit)
-		  * @return This sequence split into possibly larger number of smaller sequences
-		  */
-		def splitToSegments(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Vector[Repr] = {
-			val seqOps = seq(coll)
-			if (seqOps.sizeCompare(maxLength) <= 0)
-				Vector(buildFrom.fromSpecific(coll)(seqOps))
-			else {
-				val factory = buildFrom.toFactory(coll)
-				val builder = new VectorBuilder[Repr]
-				val iter = seqOps.iterator
-				while (iter.hasNext) {
-					val segmentBuilder = factory.newBuilder
-					iter.forNext(maxLength) { segmentBuilder += _ }
-					builder += segmentBuilder.result()
-				}
-				
-				builder.result()
-			}
-		}
-		
-		/**
 		  * Performs specified operation for each item in this sequence. Called function will also receive item index
 		  * in this sequence
 		  * @param f A function called for each item
@@ -1440,8 +1457,7 @@ object CollectionExtensions
 		  * @return A collection that contains the collected items in the same order as they appear in this
 		  *         collection (left to right)
 		  */
-		def takeRightWhile[That](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, That]): That =
-		{
+		def takeRightWhile[That](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, That]): That = {
 			val seqOps = seq(coll)
 			// Collects the items to a buffer first in order to reverse the order afterwards
 			val bufferBuilder = new VectorBuilder[seq.A]()
@@ -1559,7 +1575,7 @@ object CollectionExtensions
 		  */
 		def pairedBetween[B >: A](ends: Pair[B]) = {
 			if (seq.isEmpty)
-				Vector(ends)
+				Single(ends)
 			else
 				Pair(ends.first, seq.head) +: paired :+ Pair(seq.last, ends.second)
 		}
@@ -1573,7 +1589,7 @@ object CollectionExtensions
 		  * @return A sorted copy of this collection
 		  */
 		def sortedWith(firstOrdering: Ordering[A], secondOrdering: Ordering[A], moreOrderings: Ordering[A]*) =
-			seq.sorted(new CombinedOrdering[A](Vector(firstOrdering, secondOrdering) ++ moreOrderings))
+			seq.sorted(new CombinedOrdering[A](Pair(firstOrdering, secondOrdering) ++ moreOrderings))
 		
 		/**
 		  * Performs a map operation until a non-empty value is returned. Returns both the mapped value and the mapped index.
@@ -2611,6 +2627,7 @@ object CollectionExtensions
 		/**
 		  * @return This collection as a multi map
 		  */
+		@deprecated("Deprecated for removal. Please use .groupMap(...) instead", "v2.4")
 		def asMultiMap: Map[K, Vector[V]] = list.toMultiMap[K, V, Vector[V]] { t => t }
 	}
 	
@@ -2632,8 +2649,7 @@ object CollectionExtensions
 		  * @tparam B The type of steps
 		  * @return All of the steps mapped into a collection
 		  */
-		def foldMapToVector[B](start: B)(map: (B, Int) => B)(implicit factory: Factory[B, Vector[B]]): Vector[B] =
-		{
+		def foldMapToVector[B](start: B)(map: (B, Int) => B)(implicit factory: Factory[B, Vector[B]]): Vector[B] = {
 			val builder = factory.newBuilder
 			var last = start
 			builder += last

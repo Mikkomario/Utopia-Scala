@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape2d.line
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.shape.template.{DimensionalFactory, HasDimensions}
 
@@ -66,7 +66,7 @@ trait LineFactoryLike[-D, P <: Combinable[HasDimensions[D], P], +L]
      */
     def edgesForVertices(vertices: Seq[P], close: Boolean = true) = {
         if (vertices.size < 2)
-            Vector()
+            Empty
         else {
             val buffer = new VectorBuilder[L]()
             vertices.iterator.paired.foreach { buffer += apply(_) }

@@ -12,6 +12,7 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.{EmailValidator, ExodusContext}
+import utopia.flow.collection.immutable.Empty
 import utopia.metropolis.util.MetropolisRegex
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{LeafResource, ResourceWithChildren}
@@ -38,7 +39,7 @@ object EmailsNode extends ResourceWithChildren[AuthorizedContext]
 	// IMPLEMENTED	---------------------------
 	
 	override def allowedMethods =
-		if (ExodusContext.isEmailValidationSupported) defaultSupportedMethods else Vector()
+		if (ExodusContext.isEmailValidationSupported) defaultSupportedMethods else Empty
 	
 	// POST used for validating new email addresses
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =

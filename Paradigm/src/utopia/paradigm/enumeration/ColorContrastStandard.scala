@@ -1,5 +1,6 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.paradigm.enumeration.ColorContrastStandard.{largeTextThreshold, largeTextThresholdBold}
 import utopia.paradigm.measurement.Distance
@@ -86,7 +87,7 @@ object ColorContrastStandard
 	/**
 	  * All registered color contrast standards from more to less strict (enhanced & minimum)
 	  */
-	lazy val values = Vector[ColorContrastStandard](Enhanced, Minimum)
+	lazy val values = Pair[ColorContrastStandard](Enhanced, Minimum)
 	
 	
 	// OTHER	-----------------------------

@@ -4,6 +4,7 @@ import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.{Sign, SignOrZero}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.SignOrZero.Neutral
@@ -472,7 +473,7 @@ object LengthExtensions
 							// Case: Decreased margins
 							else {
 								val usedEndMargin = Stacker.adjustLengths(
-									Vector(targetEndMargin, targetStartMargin), emptyLength).head
+									Pair(targetEndMargin, targetStartMargin), emptyLength).head
 								emptyLength - usedEndMargin
 							}
 						}
@@ -486,7 +487,7 @@ object LengthExtensions
 							// Case: Decreased margins
 							else {
 								val usedStartMargin = Stacker.adjustLengths(
-									Vector(targetStartMargin, targetEndMargin), emptyLength).head
+									Pair(targetStartMargin, targetEndMargin), emptyLength).head
 								usedStartMargin
 							}
 						}
@@ -516,7 +517,7 @@ object LengthExtensions
 			val areaBefore = (referenceAreaStart - withinStart) max 0
 			val areaAfter = (withinEnd - referenceAreaEnd) max 0
 			// Primary direction is listed first so that it is preferred
-			val areas = Vector(Positive -> areaAfter, Negative -> areaBefore)
+			val areas = Pair(Positive -> areaAfter, Negative -> areaBefore)
 				.sortBy { _._1 != preferredDirection }
 			
 			val preferredLength = optimalLength + optimalMargin

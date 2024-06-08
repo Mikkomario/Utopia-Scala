@@ -13,7 +13,7 @@ import java.time.Instant
   */
 class LazyEmailHeadersView(getSender: => String, getSubject: => String, getMessageId: => String, getSendTime: => Instant,
                            getRecipients: => Recipients = Recipients.empty, getInReplyTo: => String,
-                           getReferences: => Vector[String], geReplyTo: => Option[EmailAddress] = None,
+                           getReferences: => Seq[String], geReplyTo: => Option[EmailAddress] = None,
                            override val receiveTime: Instant = Now)
 	extends EmailHeaders
 {
@@ -26,7 +26,7 @@ class LazyEmailHeadersView(getSender: => String, getSubject: => String, getMessa
 	override lazy val sendTime = getSendTime
 	override lazy val messageId: String = getMessageId
 	override lazy val inReplyTo: String = getInReplyTo
-	override lazy val references: Vector[String] = getReferences
+	override lazy val references: Seq[String] = getReferences
 	
 	
 	// COMPUTED ------------------------------------

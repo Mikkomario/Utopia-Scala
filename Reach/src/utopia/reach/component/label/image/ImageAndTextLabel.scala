@@ -9,7 +9,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Small, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
@@ -181,7 +181,7 @@ trait ImageAndTextLabelSettingsLike[ImgSettings <: ImageLabelSettingsLike[ImgSet
 	  * @param drawers Custom drawers to assign to created components
 	  * @return Copy of this factory with the specified image custom drawers
 	  */
-	def withImageCustomDrawers(drawers: Vector[CustomDrawer]) =
+	def withImageCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withImageSettings(imageSettings.withCustomDrawers(drawers))
 	/**
 	  * @param scaling Scaling applied to the drawn images
@@ -221,7 +221,7 @@ object ImageAndTextLabelSettings
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class ImageAndTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
                                      imageSettings: ImageLabelSettings = defaultImageSettings,
                                      separatingMargin: Option[SizeCategory] = Some(Small),
                                      insets: UnresolvedStackInsets = ImageAndTextLabelSettings.defaultInsets,
@@ -241,7 +241,7 @@ case class ImageAndTextLabelSettings(customDrawers: Vector[CustomDrawer] = Vecto
 	// IMPLEMENTED	--------------------
 	
 	override def withInsets(insets: UnresolvedStackInsets): ImageAndTextLabelSettings = copy(insets = insets)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageAndTextLabelSettings =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ImageAndTextLabelSettings =
 		copy(customDrawers = drawers)
 	override def withForceEqualBreadth(force: Boolean): ImageAndTextLabelSettings =
 		copy(forceEqualBreadth = force)
@@ -287,7 +287,7 @@ trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsL
 	override def insets: UnresolvedStackInsets = settings.insets
 	
 	override def withInsets(insets: UnresolvedStackInsets): Repr = mapSettings { _.withInsets(insets) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withForceEqualBreadth(force: Boolean): Repr = mapSettings { _.withForceEqualBreadth(force) }
 	override def withImageSettings(settings: ImageLabelSettings): Repr =

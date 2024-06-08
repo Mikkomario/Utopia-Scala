@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.IssueData
 import utopia.scribe.core.model.stored.logging.{Issue, IssueOccurrence, IssueVariant}
@@ -9,7 +10,7 @@ import utopia.scribe.core.model.stored.logging.{Issue, IssueOccurrence, IssueVar
   * @author Mikko Hilpinen
   * @since 26.05.2023, v0.1
   */
-case class VaryingIssue(issue: Issue, variants: Vector[IssueVariant]) extends Extender[IssueData]
+case class VaryingIssue(issue: Issue, variants: Seq[IssueVariant]) extends Extender[IssueData]
 {
 	// COMPUTED	--------------------
 	
@@ -30,10 +31,10 @@ case class VaryingIssue(issue: Issue, variants: Vector[IssueVariant]) extends Ex
 	  * @param occurrences Issue occurrences to attach (only those related to this issue will be included)
 	  * @return Copy of this issue with occurrences included
 	  */
-	def withOccurrences(occurrences: Vector[IssueOccurrence]) = {
+	def withOccurrences(occurrences: Seq[IssueOccurrence]) = {
 		val occurrencesByVariantId = occurrences.groupBy { _.caseId }
 		IssueInstances(issue, variants.map { v =>
-			v.withOccurrences(occurrencesByVariantId.getOrElse(v.id, Vector.empty))
+			v.withOccurrences(occurrencesByVariantId.getOrElse(v.id, Empty))
 		})
 	}
 }

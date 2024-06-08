@@ -3,6 +3,7 @@ package utopia.firmament.component.stack
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.flow.collection.immutable.Empty
 
 /**
   * This stackable caches the calculated stack size
@@ -14,7 +15,7 @@ trait CachingStackable extends Stackable with Constrainable
 	// ATTRIBUTES	-----------------
 	
 	// TODO: Make these abstract, also
-	private var _constraints = Vector[StackSizeModifier]()
+	private var _constraints: Seq[StackSizeModifier] = Empty
 	// NB: Rounding is an experimental update added 29.7.2023, v1.1 - remove if not useful
 	private val cachedStackSize = ResettableLazy[StackSize] { calculatedStackSizeWithConstraints.round }
 	
@@ -23,7 +24,7 @@ trait CachingStackable extends Stackable with Constrainable
 	
 	override def constraints = _constraints
 	
-	override def constraints_=(newConstraints: Vector[StackSizeModifier]) = {
+	override def constraints_=(newConstraints: Seq[StackSizeModifier]) = {
 		_constraints = newConstraints
 		resetCachedSize()
 	}

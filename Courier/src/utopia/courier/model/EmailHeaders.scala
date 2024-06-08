@@ -1,6 +1,7 @@
 package utopia.courier.model
 
 import utopia.courier.model.write.Recipients
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.time.Now
 
 import java.time.Instant
@@ -25,7 +26,7 @@ object EmailHeaders
 	  */
 	def apply(sender: EmailAddress, recipients: Recipients = Recipients.empty, subject: String = "No Subject",
 	          messageId: String = UUID.randomUUID().toString, inReplyTo: String = "",
-	          references: Vector[String] = Vector(),
+	          references: Seq[String] = Empty,
 	          replyTo: Option[EmailAddress] = None, sendTime: Instant = Now, receiveTime: Instant = Now): EmailHeaders =
 		_EmailHeaders(sender, recipients, subject, messageId, inReplyTo, references, replyTo, sendTime, receiveTime)
 	
@@ -42,7 +43,7 @@ object EmailHeaders
 	  */
 	def outgoing(sender: EmailAddress, recipients: Recipients, subject: String = "No Subject",
 	             messageId: String = "", inReplyTo: String = "",
-	             references: Vector[String] = Vector(), replyTo: Option[EmailAddress] = None) =
+	             references: Seq[String] = Empty, replyTo: Option[EmailAddress] = None) =
 		apply(sender, recipients, subject, messageId, inReplyTo, references, replyTo)
 	
 	/**
@@ -60,7 +61,7 @@ object EmailHeaders
 	  */
 	def incoming(sender: EmailAddress, subject: String, messageId: String, sendTime: Instant,
 	             recipients: Recipients = Recipients.empty, inReplyTo: String = "",
-	             references: Vector[String] = Vector(),
+	             references: Seq[String] = Empty,
 	             replyTo: Option[EmailAddress] = None, receiveTime: Instant = Now) =
 		apply(sender, recipients, subject, messageId, inReplyTo, references, replyTo.filterNot { _ == sender },
 			sendTime, receiveTime)
@@ -70,7 +71,7 @@ object EmailHeaders
 	
 	case class _EmailHeaders(sender: EmailAddress, recipients: Recipients, subject: String,
 	                        messageId: String = UUID.randomUUID().toString, inReplyTo: String,
-	                        references: Vector[String],
+	                        references: Seq[String],
 	                        customReplyTo: Option[EmailAddress], sendTime: Instant, receiveTime: Instant)
 		extends EmailHeaders
 	{
@@ -115,7 +116,7 @@ trait EmailHeaders
 	/**
 	  * @return Ids of the messages referenced by this message, from oldest to most recent
 	  */
-	def references: Vector[String]
+	def references: Seq[String]
 	
 	/**
 	  * @return Email subject

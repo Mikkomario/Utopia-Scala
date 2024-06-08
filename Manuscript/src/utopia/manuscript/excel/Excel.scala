@@ -5,6 +5,7 @@ import org.apache.poi.openxml4j.opc.{OPCPackage, PackageAccess}
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 
@@ -19,7 +20,7 @@ object Excel
 	/**
 	  * File extensions that can be read by this object (in lower case)
 	  */
-	val supportedExtensions = Vector("xlsx", "xls")
+	val supportedExtensions = Pair("xlsx", "xls")
 	
 	
 	// OTHER    -------------------------

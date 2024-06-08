@@ -1,5 +1,6 @@
 package utopia.terra.model.world
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator._
@@ -177,7 +178,7 @@ trait WorldDistance
 	override def self: WorldDistance = this
 	override def zero: WorldDistance = WorldDistance.zero
 	
-	override protected def equalsProperties: Seq[Any] = Vector(vectorLength)
+	override protected def equalsProperties: Seq[Any] = Single(vectorLength)
 	
 	override def toString = distance.toString
 	

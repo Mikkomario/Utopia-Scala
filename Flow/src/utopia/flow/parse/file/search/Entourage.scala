@@ -1,8 +1,8 @@
 package utopia.flow.parse.file.search
 
 import java.nio.file.Path
-
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.immutable.Empty
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -11,13 +11,13 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
-class Entourage[R](origin: Mine[R], size: Int, startingPath: Vector[Mine[R]] = Vector())
+class Entourage[R](origin: Mine[R], size: Int, startingPath: Seq[Mine[R]] = Empty)
 			   (private val search: Path => R) extends Explorer(origin, startingPath)
 {
 	// ATTRIBUTES	-------------------
 	
 	private var deployedMinerCount = 0
-	private var sentCompletions: Vector[Future[Any]] = Vector()
+	private var sentCompletions: IndexedSeq[Future[Any]] = Empty
 	
 	
 	// IMPLEMENTED	-------------------
@@ -90,8 +90,7 @@ class Entourage[R](origin: Mine[R], size: Int, startingPath: Vector[Mine[R]] = V
 			false
 	}
 	
-	private def deploySingleLocationMiner()(implicit exc: ExecutionContext) =
-	{
+	private def deploySingleLocationMiner()(implicit exc: ExecutionContext) = {
 		// Deploys the miner to current location
 		sentCompletions :+= new Miner(origin, currentRoute)(search).mineCurrentLocationThenExplore()
 		deployedMinerCount += 1

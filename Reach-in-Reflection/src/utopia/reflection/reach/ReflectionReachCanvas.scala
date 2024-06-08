@@ -1,5 +1,6 @@
 package utopia.reflection.reach
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -81,7 +82,7 @@ object ReflectionReachCanvas
 	                            child: ReflectionComponentLike with AwtComponentRelated)
 		extends AwtComponentWrapper
 	{
-		override val children = Vector(child)
+		override val children = Single(child)
 	}
 }
 
@@ -131,8 +132,8 @@ class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachCompo
 	
 	private var _visible = true
 	
-	private var _stackHierarchyListeners = Vector[StackHierarchyListener]()
-	private var _resizeListeners = Vector[ResizeListener]()
+	private var _stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
+	private var _resizeListeners: Seq[ResizeListener] = Empty
 	
 	override lazy val parent: Option[ReflectionComponentLike] =
 		Option(component.getParent).map { new ParentWrapper(_, this) }
@@ -154,8 +155,8 @@ class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachCompo
 	override def bounds = super[ReachCanvas].bounds
 	override def bounds_=(b: Bounds) = super[ReachCanvas].bounds_=(b)
 	
-	override def resizeListeners: Vector[ResizeListener] = _resizeListeners
-	override def resizeListeners_=(listeners: Vector[ResizeListener]): Unit = _resizeListeners = listeners
+	override def resizeListeners: Seq[ResizeListener] = _resizeListeners
+	override def resizeListeners_=(listeners: Seq[ResizeListener]): Unit = _resizeListeners = listeners
 	
 	override def visible: Boolean = _visible
 	override def visible_=(isVisible: Boolean): Unit = {
@@ -177,8 +178,8 @@ class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachCompo
 	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean): Unit =
 		attachmentPointer.value = newAttachmentStatus
 	
-	override def stackHierarchyListeners: Vector[StackHierarchyListener] = _stackHierarchyListeners
-	override def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]): Unit =
+	override def stackHierarchyListeners: Seq[StackHierarchyListener] = _stackHierarchyListeners
+	override def stackHierarchyListeners_=(newListeners: Seq[StackHierarchyListener]): Unit =
 		_stackHierarchyListeners = newListeners
 	
 	override def revalidate() = super[ReflectionStackable].revalidate()

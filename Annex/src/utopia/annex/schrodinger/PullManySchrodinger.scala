@@ -3,6 +3,7 @@ package utopia.annex.schrodinger
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead}
 import utopia.annex.model.response.RequestResult
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.Fixed
@@ -18,7 +19,7 @@ object PullManySchrodinger
 	/**
 	  * A schrödinger that has failed because it was empty
 	  */
-	lazy val failedAsEmpty = wrap(Fixed(Vector(), Failure(new IllegalStateException("Empty results")), Dead))
+	lazy val failedAsEmpty = wrap(Fixed(Empty, Failure(new IllegalStateException("Empty results")), Dead))
 	
 	
 	// CONSTRUCTOR  ----------------------------
@@ -33,7 +34,7 @@ object PullManySchrodinger
 	  * @tparam R The remotely store item variants (instances)
 	  * @return A new schrödinger that wraps the specified pointer
 	  */
-	def wrap[L, R](pointer: Changing[(Vector[L], Try[Vector[R]], SchrodingerState)]) =
+	def wrap[L, R](pointer: Changing[(Seq[L], Try[Seq[R]], SchrodingerState)]) =
 		new PullManySchrodinger[L, R](pointer)
 	/**
 	  * Creates a schrödinger that has already resolved into a success or a failure
@@ -43,8 +44,8 @@ object PullManySchrodinger
 	  * @tparam A Type of individual pulled items
 	  * @return A schrödinger with static state (dead or alive)
 	  */
-	def resolved[A](results: Try[Vector[A]], requireNonEmpty: Boolean = false) =
-		wrap(Fixed(Schrodinger.testEmptyState(Vector[A](), results, requireNonEmpty)(Identity)))
+	def resolved[A](results: Try[Seq[A]], requireNonEmpty: Boolean = false) =
+		wrap(Fixed(Schrodinger.testEmptyState(Empty: Seq[A], results, requireNonEmpty)(Identity)))
 	/**
 	  * Creates a schrödinger that has already resolved into a success or a failure
 	  * @param items         Pulled items
@@ -53,7 +54,7 @@ object PullManySchrodinger
 	  * @tparam A Type of individual pulled items
 	  * @return A schrödinger with static state (dead or alive)
 	  */
-	def resolved[A](items: Vector[A], requireNonEmpty: Boolean): PullManySchrodinger[A, A] =
+	def resolved[A](items: Seq[A], requireNonEmpty: Boolean): PullManySchrodinger[A, A] =
 		resolved(Success(items), requireNonEmpty)
 	
 	/**
@@ -62,19 +63,19 @@ object PullManySchrodinger
 	  * @tparam A Type of individual items
 	  * @return A successfully resolved schrödinger
 	  */
-	def successful[A](items: Vector[A]) = wrap(Fixed((items, Success(items), Alive)))
+	def successful[A](items: Seq[A]) = wrap(Fixed((items, Success(items), Alive)))
 	/**
 	  * @param cause Cause of failure
 	  * @tparam A Type of items, if this schrödinger were successful
 	  * @return A resolved, failed schrödinger
 	  */
-	def failed[A](cause: Throwable) = wrap[A, A](Fixed((Vector(), Failure(cause), Dead)))
+	def failed[A](cause: Throwable) = wrap[A, A](Fixed((Empty, Failure(cause), Dead)))
 	
 	/**
 	  * Creates a schrodinger that contains 0-n locally cached values until server results arrive,
 	  * from which are parsed a new set of items, if possible.
 	  * Typically used when updating locally cached data.
-	  * @param local        A result based on local data pull (0-n items as a Vector)
+	  * @param local        A result based on local data pull (0-n items as a Seq)
 	  * @param resultFuture A future that will contain the server response, if successful
 	  * @param parser       A parser used for parsing items from a server response
 	  * @param emptyIsDead  Whether an empty result (0 items) should be considered Dead and not Alive.
@@ -86,9 +87,9 @@ object PullManySchrodinger
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def apply[L, R](local: Vector[L], resultFuture: Future[RequestResult], parser: FromModelFactory[R],
+	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult], parser: FromModelFactory[R],
 	                emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext) =
-		wrap(Schrodinger.getPointer(local, Vector[R](), resultFuture, emptyIsDead) { _.parseMany(parser) } {
+		wrap(Schrodinger.getPointer(local, Empty: Seq[R], resultFuture, emptyIsDead) { _.parseMany(parser) } {
 			_.map(localize) })
 	
 	/**
@@ -106,17 +107,17 @@ object PullManySchrodinger
 	def remote[A](resultFuture: Future[RequestResult], parser: FromModelFactory[A],
 	              emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	             (implicit exc: ExecutionContext) =
-		wrap(Schrodinger.remoteGetPointer[Vector[A]](Vector(), resultFuture, emptyIsDead,
+		wrap(Schrodinger.remoteGetPointer[Seq[A]](Empty, resultFuture, emptyIsDead,
 			expectFailure) { _.parseMany(parser) })
 }
 
 /**
   * A schrödinger that represents an attempt to read 0-n items from local and/or remote data.
-  * Read items are stored in a Vector. Remote pull is either a success or a failure.
+  * Read items are stored in a Seq. Remote pull is either a success or a failure.
   * @author Mikko Hilpinen
   * @since 23.12.2022, v1.4
   * @tparam L The locally stored item variants (spirits)
   * @tparam R The remotely store item variants (instances)
   */
-class PullManySchrodinger[+L, +R](pointer: Changing[(Vector[L], Try[Vector[R]], SchrodingerState)])
-	extends Schrodinger[Vector[L], Try[Vector[R]]](pointer)
+class PullManySchrodinger[+L, +R](pointer: Changing[(Seq[L], Try[Seq[R]], SchrodingerState)])
+	extends Schrodinger[Seq[L], Try[Seq[R]]](pointer)

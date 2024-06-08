@@ -4,6 +4,7 @@ import utopia.courier.model.read.DeletionRule.NeverDelete
 import utopia.courier.model.read.{DeletableEmail, DeletionRule, FolderPath, ReadSettings}
 import utopia.courier.model.{Email, EmailAddress}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -262,7 +263,7 @@ class EmailReader[A](settings: ReadSettings,
 					store.connect(settings.hostAddress, settings.authentication.user, settings.authentication.password)
 					// Determines the targeted folders
 					val folderTree = LazyTree
-						.iterate(Lazy { store.getDefaultFolder -> FolderPath(Vector()) }) { case (folder, path) =>
+						.iterate(Lazy { store.getDefaultFolder -> FolderPath(Empty) }) { case (folder, path) =>
 							folder.list().iterator.map { subFolder => Lazy { subFolder -> (path/subFolder.getName) } }
 						}
 					// Prepares the folders for reading
@@ -475,7 +476,7 @@ class EmailReader[A](settings: ReadSettings,
 		private def unqueueDeletions() = {
 			deletionQueuePointer.mutate { queue =>
 				// Deletes contents from one folder at a time
-				val deleteResults = queue.asMultiMap.map { case (folder, messages) =>
+				val deleteResults = queue.groupMap { _._1 } { _._2 }.map { case (folder, messages) =>
 					// Case: Folder is currently open => Simply flags the messages as deleted
 					if (folder.isOpen)
 						Try { messages.foreach(delete) }
@@ -489,7 +490,7 @@ class EmailReader[A](settings: ReadSettings,
 				// Queues the encountered failures to this iterator
 				// It is possible, however, that these won't ever be read
 				deleteResults.iterator.foreach { _.failure.foreach(this.queue) }
-				deleteResults.exists { _.isFailure } -> Vector()
+				deleteResults.exists { _.isFailure } -> Empty
 			}
 		}
 	}

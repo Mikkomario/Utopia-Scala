@@ -118,7 +118,8 @@ object ResponseBody
 	  */
 	case object Empty extends ResponseBody(Value.empty)
 	{
-		override def vector[A](implicit parser: FromModelFactory[A]) = VectorContent(Vector())
+		override def vector[A](implicit parser: FromModelFactory[A]) =
+			VectorContent(utopia.flow.collection.immutable.Empty)
 		
 		override def tryParseSingleWith[A](parser: FromModelFactory[A]) =
 			Failure(new EmptyResponseException("Can't parse item from an empty response body"))

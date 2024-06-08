@@ -83,7 +83,7 @@ object StatementText
  * @author Mikko Hilpinen
  * @since 11/03/2024, v1.0
  */
-case class StatementText(words: Vector[WordOrLinkText], delimiter: String = "")
+case class StatementText(words: Seq[WordOrLinkText], delimiter: String = "")
 {
 	// ATTRIBUTES   -----------------------
 	

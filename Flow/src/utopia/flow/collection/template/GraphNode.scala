@@ -1,8 +1,8 @@
 package utopia.flow.collection.template
 
-import utopia.flow.collection.immutable.{Graph, Tree}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.{Empty, Graph, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.GraphNode.{AnyNode, PathsFinder}
 import utopia.flow.operator.Identity
@@ -22,23 +22,23 @@ object GraphNode
 	(start: GNode, destinations: Set[GNode => Boolean], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
 	(implicit ord: Ordering[C])
 	{
-		def apply(): Map[GNode, (Set[Vector[Edge]], C)] = {
+		def apply(): Map[GNode, (Set[Seq[Edge]], C)] = {
 			// Filters out destinations that are immediately completed
 			val incompleteDestinations = destinations.filterNot { _(start) }
 			// Case: All destinations are already reached
 			if (incompleteDestinations.isEmpty) {
 				if (destinations.nonEmpty)
-					Map(start -> (Set(Vector[Edge]()) -> startCost))
+					Map(start -> (Set(Seq[Edge]()) -> startCost))
 				else
 					Map()
 			}
 			// Case: Actual search is required
 			else {
-				val result = apply(Map(start -> new PathFinder(start, startCost, Set(Vector()))), Set(),
-					incompleteDestinations, Vector(), Map())
+				val result = apply(Map(start -> new PathFinder(start, startCost, Set(Empty))), Set(),
+					incompleteDestinations, Empty, Map())
 				// Adds some auto-completed destinations, if there were some
 				if (incompleteDestinations.hasSize < destinations)
-					result + (start -> (Set(Vector[Edge]()) -> startCost))
+					result + (start -> (Set[Seq[Edge]](Empty) -> startCost))
 				else
 					result
 			}
@@ -48,7 +48,7 @@ object GraphNode
 		private def apply(origins: Map[GNode, PathFinder], pastNodes: Set[AnyNode],
 		                  remainingDestinations: Iterable[GNode => Boolean],
 		                  improvableDestinations: Iterable[(GNode => Boolean, C)],
-		                  pastResults: Map[GNode, (Set[Vector[Edge]], C)]): Map[GNode, (Set[Vector[Edge]], C)] =
+		                  pastResults: Map[GNode, (Set[Seq[Edge]], C)]): Map[GNode, (Set[Seq[Edge]], C)] =
 		{
 			val currentMinCost = origins.valuesIterator.map { _.currentCost }.min
 			// Selects the next iteration origins - Nodes with the lowest current cost
@@ -165,7 +165,7 @@ object GraphNode
 				apply(nextFinders, blockedNodes, destinations, improvable, results)
 		}
 		
-		private class PathFinder(val currentNode: GNode, val currentCost: C, val pathHistory: Set[Vector[Edge]])
+		private class PathFinder(val currentNode: GNode, val currentCost: C, val pathHistory: Set[Seq[Edge]])
 		{
 			def next(blockedNodes: Set[AnyNode]) = {
 				currentNode.leavingEdges.filterNot { e => blockedNodes.contains(e.end) }
@@ -187,7 +187,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 {
     // TYPES    --------------------
 	
-    type Route = Vector[Edge]
+    type Route = Seq[Edge]
     
     
     // ABSTRACT --------------------
@@ -259,12 +259,12 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         then routes of length 1 to this node's siblings, then routes of length 2 and so on.
 	  *
 	  *         The values returned by the returned iterator consist of two parts:
-	  *         1) Route to the node in question as a vector of edges
+	  *         1) Route to the node in question as a sequence of edges
 	  *         2) The node at the end of that route
 	  */
 	def shortestRoutesIterator = {
 		val visitedNodes = mutable.Set[Any](this)
-		OrderedDepthIterator(Iterator.single(Vector[Edge]() -> self)) { case (route, lastNode) =>
+		OrderedDepthIterator(Iterator.single[(Seq[Edge], GNode)](Empty -> self)) { case (route, lastNode) =>
 			lastNode.leavingEdges.iterator.flatMap { edge =>
 				val node = edge.end
 				if (visitedNodes.contains(node))
@@ -390,7 +390,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  * @param more More edges
 	  * @return The node(s) at the end of the path
 	  */
-	def /(first: E, second: E, more: E*): Set[GNode] = this / (Vector(first, second) ++ more)
+	def /(first: E, second: E, more: E*): Set[GNode] = this / (Pair(first, second) ++ more)
     
     
     // OTHER METHODS    ------------
@@ -430,7 +430,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	def findCheapestRoutesTo[C](destinations: Set[GNode => Boolean], startCost: C)
 	                           (costOf: Edge => C)
 	                           (sumOf: (C, C) => C)
-	                           (implicit ord: Ordering[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+	                           (implicit ord: Ordering[C]): Map[GNode, (Set[Seq[Edge]], C)] =
 		new PathsFinder[N, E, GNode, Edge, C](self, destinations, startCost)(costOf)(sumOf).apply()
 	/**
 	  * Finds the cheapest routes to multiple destination searches at once
@@ -443,7 +443,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  */
 	def findCheapestRoutesTo[C](destinations: Set[GNode => Boolean])
 	                           (costOf: Edge => C)
-	                           (implicit n: Numeric[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+	                           (implicit n: Numeric[C]): Map[GNode, (Set[Seq[Edge]], C)] =
 		findCheapestRoutesTo[C](destinations, n.zero)(costOf)(n.plus)
 	/**
 	  * Finds the cheapest routes to a node found with a find function
@@ -457,7 +457,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         Otherwise 1) the destination node, 2) cheapest routes to that node and 3) cost of those routes
 	  */
 	def findCheapestRoutes[C](startCost: C)(find: GNode => Boolean)(costOf: Edge => C)(sumOf: (C, C) => C)
-	                           (implicit ord: Ordering[C]): Option[(GNode, Set[Vector[Edge]], C)] =
+	                           (implicit ord: Ordering[C]): Option[(GNode, Set[Seq[Edge]], C)] =
 		findCheapestRoutesTo[C](Set(find), startCost)(costOf)(sumOf).headOption
 			.map { case (node, (routes, cost)) => (node, routes, cost) }
 	/**
@@ -470,7 +470,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         Otherwise 1) the destination node, 2) cheapest routes to that node and 3) cost of those routes
 	  */
 	def findCheapestRoutes[C](find: GNode => Boolean)(costOf: Edge => C)
-	                         (implicit n: Numeric[C]): Option[(GNode, Set[Vector[Edge]], C)] =
+	                         (implicit n: Numeric[C]): Option[(GNode, Set[Seq[Edge]], C)] =
 		findCheapestRoutes[C](n.zero)(find)(costOf)(n.plus)
 	
 	/**
@@ -485,7 +485,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         1) All cheapest routes o that node and 2) the cost of those routes
 	  */
 	def cheapestRoutesToMany[C](destinations: Set[AnyNode], startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
-	                       (implicit ord: Ordering[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+	                       (implicit ord: Ordering[C]): Map[GNode, (Set[Seq[Edge]], C)] =
 		findCheapestRoutesTo[C](destinations.map { d => _ == d }, startCost)(costOf)(sumOf)
 	/**
 	  * Finds the cheapest routes to multiple nodes at once
@@ -497,7 +497,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         1) All cheapest routes o that node and 2) the cost of those routes
 	  */
 	def cheapestRoutesToMany[C](destinations: Set[AnyNode])(costOf: Edge => C)
-	                       (implicit n: Numeric[C]): Map[GNode, (Set[Vector[Edge]], C)] =
+	                       (implicit n: Numeric[C]): Map[GNode, (Set[Seq[Edge]], C)] =
 		cheapestRoutesToMany[C](destinations, n.zero)(costOf)(n.plus)
 	/**
 	  * Finds the cheapest routes to another node
@@ -511,10 +511,10 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  *         2) Cost of those routes (zero if no routes were found)
 	  */
 	def cheapestRoutesTo[C](destination: AnyNode, startCost: C)(costOf: Edge => C)(sumOf: (C, C) => C)
-	                       (implicit ord: Ordering[C]): (Set[Vector[Edge]], C) =
+	                       (implicit ord: Ordering[C]): (Set[Seq[Edge]], C) =
 		cheapestRoutesToMany[C](Set(destination), startCost)(costOf)(sumOf).headOption match {
 			case Some((_, result)) => result
-			case None => Set[Vector[Edge]]() -> startCost
+			case None => Set[Seq[Edge]]() -> startCost
 		}
 	/**
 	  * Finds the cheapest routes to another node
@@ -525,7 +525,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	  * @return 1) Routes found to to the targeted node (may be empty),
 	  *         2) Cost of those routes (zero if no routes were found)
 	  */
-	def cheapestRoutesTo[C](destination: AnyNode)(costOf: Edge => C)(implicit n: Numeric[C]): (Set[Vector[Edge]], C) =
+	def cheapestRoutesTo[C](destination: AnyNode)(costOf: Edge => C)(implicit n: Numeric[C]): (Set[Seq[Edge]], C) =
 		cheapestRoutesTo[C](destination, n.zero)(costOf)(n.plus)
 	
 	/**
@@ -608,7 +608,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 		// If trying to find routes to self, will have to handle limitations a bit differently
 		if (node == this) {
 			leavingEdges.find { _.end == this } match {
-				case Some(zeroRoute) => Vector(Vector(zeroRoute))
+				case Some(zeroRoute) => Single(Single(zeroRoute))
 				case None => leavingEdges.flatMap { e => e.end.routesTo(this, Set()).map { route => e +: route } }
 			}
 		}
@@ -616,8 +616,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 			routesTo(node, Set())
 	}
     // Uses recursion
-    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Iterable[Route] =
-    {
+    private def routesTo(node: AnyNode, visitedNodes: Set[AnyNode]): Iterable[Route] = {
 		// Tries to find the destination from each connected edge that leads to a new node
 		val newVisitedNodes = visitedNodes + this
 	
@@ -625,7 +624,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
 		availableEdges.find { _.end == node } match
 		{
-			case Some(directRoute) => Vector(Vector(directRoute))
+			case Some(directRoute) => Single(Single(directRoute))
 			case None =>
 				// If there didn't exist a direct path, tries to find an indirect one
 				// Attaches this element at the beginning of each returned route (if there were any returned)

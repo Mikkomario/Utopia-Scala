@@ -2,6 +2,7 @@ package utopia.disciple.http.response
 
 import utopia.access.http.{Headers, Status, StatusGroup}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -158,12 +159,11 @@ object ResponseParser
 	  *         If the response contained a non-vector value, it is wrapped in a vector.
 	  */
 	def valuesWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
-		parseOrDefault(Vector[Value]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
-			if (value.isEmpty)
-				Vector()
-			else
-				value.vectorOr(Vector(value))
-		} }
+		parseOrDefault[IndexedSeq[Value]](Empty) { (stream, headers, _) =>
+			parseValue(stream, headers, parsers).map { value =>
+				if (value.isEmpty) Empty else value.vectorOr(Vector(value))
+			}
+		}
 	/**
 	  * @param parsers         Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
@@ -172,9 +172,11 @@ object ResponseParser
 	  *         Contains a failure on parsing failures.
 	  */
 	def tryValuesWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
-		defaultOnEmpty(Vector[Value]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { v =>
-			if (v.isEmpty) Vector() else v.vectorOr(Vector(v))
-		} }
+		defaultOnEmpty[IndexedSeq[Value]](Empty) { (stream, headers, _) =>
+			parseValue(stream, headers, parsers).map { v =>
+				if (v.isEmpty) Empty else v.vectorOr(Vector(v))
+			}
+		}
 	/**
 	  * @param parsers Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
@@ -183,12 +185,11 @@ object ResponseParser
 	  *         If the response contained a singular model, it is wrapped in a vector.
 	  */
 	def modelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec, logger: Logger) =
-		parseOrDefault(Vector[Model]()) { (stream, headers, _) => parseValue(stream, headers, parsers).map { value =>
-			if (value.isEmpty)
-				Vector()
-			else
-				value.vectorOr { Vector(value) }.flatMap { _.model }
-		} }
+		parseOrDefault[IndexedSeq[Model]](Empty) { (stream, headers, _) =>
+			parseValue(stream, headers, parsers).map { value =>
+				if (value.isEmpty) Empty else value.vectorOr { Vector(value) }.flatMap { _.model }
+			}
+		}
 	/**
 	  * @param parsers         Available json parsers
 	  * @param defaultEncoding Encoding assumed when no encoding information is present in the response headers (implicit)
@@ -197,9 +198,11 @@ object ResponseParser
 	  *         Contains a failure if json parsing or any model parsing failed.
 	  */
 	def tryModelsWith(parsers: Iterable[JsonParser])(implicit defaultEncoding: Codec) =
-		defaultOnEmpty(Vector[Model]()) { (stream, headers, _) => parseValue(stream, headers, parsers).flatMap { v =>
-			v.getVector.tryMap { _.tryModel }
-		} }
+		defaultOnEmpty[IndexedSeq[Model]](Empty) { (stream, headers, _) =>
+			parseValue(stream, headers, parsers).flatMap { v =>
+				v.getVector.tryMap { _.tryModel }
+			}
+		}
 	
 	/**
 	  * Creates a bew response parser based on the two specified functions

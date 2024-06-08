@@ -2,6 +2,7 @@ package utopia.flow.collection.immutable.caching.cache
 
 import utopia.flow.async.process.{LoopingProcess, Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -75,7 +76,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 				val needsNotify = queuedExpirationsPointer.mutate { queue =>
 					// Case: There were no other expirations queued
 					if (queue.isEmpty)
-						false -> Vector(expirationTime -> key)
+						false -> Single(expirationTime -> key)
 					else
 						queue.findLastIndexWhere { case (time, _) => time < expirationTime } match {
 							// Case: The new expiration is executed after some other expiration =>

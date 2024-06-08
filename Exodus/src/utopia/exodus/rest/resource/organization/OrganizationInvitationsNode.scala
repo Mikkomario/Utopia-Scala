@@ -13,6 +13,7 @@ import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, Ext
 import utopia.exodus.util.ExodusContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
@@ -136,7 +137,7 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 	
 	// IMPLEMENTED  -----------------------
 	
-	override protected def defaultFollowImplementations = Vector()
+	override protected def defaultFollowImplementations = Empty
 	
 	
 	// OTHER	---------------------------

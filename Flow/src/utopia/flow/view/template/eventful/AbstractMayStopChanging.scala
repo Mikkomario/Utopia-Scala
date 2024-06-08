@@ -1,5 +1,6 @@
 package utopia.flow.view.template.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 
 /**
@@ -13,7 +14,7 @@ abstract class AbstractMayStopChanging[A] extends AbstractChanging[A] with MaySt
 {
 	// ATTRIBUTES   ------------------------
 	
-	private var stopListeners = Vector[ChangingStoppedListener]()
+	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -22,7 +23,7 @@ abstract class AbstractMayStopChanging[A] extends AbstractChanging[A] with MaySt
 		clearListeners()
 		if (stopListeners.nonEmpty) {
 			stopListeners.foreach { _.onChangingStopped() }
-			stopListeners = Vector()
+			stopListeners = Empty
 		}
 	}
 	

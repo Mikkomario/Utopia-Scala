@@ -17,6 +17,7 @@ object DefaultRedirector extends AuthRedirector
 {
 	override def parameterEncoding = None
 	
-	override def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
-	                               (implicit connection: Connection) = Model.empty
+	override def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Seq[Scope])
+	                               (implicit connection: Connection) =
+		Model.empty
 }

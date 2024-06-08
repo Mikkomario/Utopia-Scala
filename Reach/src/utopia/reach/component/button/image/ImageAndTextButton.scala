@@ -75,11 +75,11 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	override def withInsets(insets: UnresolvedStackInsets): Repr = mapLabelSettings { _.withInsets(insets) }
 	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
 		mapLabelSettings { _.withSeparatingMargin(margin) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
 	override def withEnabledPointer(p: Changing[Boolean]) =
 		withButtonSettings(buttonSettings.withEnabledPointer(p))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withForceEqualBreadth(force: Boolean) =
 		withLabelSettings(labelSettings.withForceEqualBreadth(force))
@@ -116,7 +116,7 @@ object ImageAndTextButtonSettings
   */
 case class ImageAndTextButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.default,
                                       labelSettings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
-                                      imageEffects: Vector[ButtonImageEffect] = ComponentCreationDefaults.inButtonImageEffects)
+                                      imageEffects: Seq[ButtonImageEffect] = ComponentCreationDefaults.inButtonImageEffects)
 	extends ImageAndTextButtonSettingsLike[ImageAndTextButtonSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -124,7 +124,7 @@ case class ImageAndTextButtonSettings(buttonSettings: ButtonSettings = ButtonSet
 	override def self: ImageAndTextButtonSettings = this
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withImageEffects(effects: Vector[ButtonImageEffect]) = copy(imageEffects = effects)
+	override def withImageEffects(effects: Seq[ButtonImageEffect]) = copy(imageEffects = effects)
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) = copy(labelSettings = settings)
 }
 
@@ -156,7 +156,7 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
 	
 	override def withButtonSettings(settings: ButtonSettings): Repr =
 		mapSettings { _.withButtonSettings(settings) }
-	override def withImageEffects(effects: Vector[ButtonImageEffect]) =
+	override def withImageEffects(effects: Seq[ButtonImageEffect]) =
 		mapSettings { _.withImageEffects(effects) }
 	override def withLabelSettings(settings: ImageAndTextLabelSettings) =
 		mapSettings { _.withLabelSettings(settings) }

@@ -17,7 +17,7 @@ object FolderPath
 	 * @param path A folder path as a string
 	 * @return The specified path as a folder path
 	 */
-	def apply(path: String): FolderPath = apply(delimiterRegex.split(path).toVector)
+	def apply(path: String): FolderPath = apply(delimiterRegex.split(path))
 }
 
 /**
@@ -25,7 +25,7 @@ object FolderPath
  * @author Mikko Hilpinen
  * @since 13.10.2023, v1.1
  */
-case class FolderPath(parts: Vector[String]) extends MaybeEmpty[FolderPath]
+case class FolderPath(parts: Seq[String]) extends MaybeEmpty[FolderPath]
 {
 	// COMPUTED --------------------------
 	

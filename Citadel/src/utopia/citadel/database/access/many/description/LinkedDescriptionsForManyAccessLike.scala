@@ -31,7 +31,7 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 	  * @return Read descriptions, grouped by target id
 	  */
 	protected def findInPreferredLanguages(remainingTargetIds: Set[Int], remainingRoleIds: Set[Int])(
-		implicit connection: Connection, languageIds: LanguageIds): Map[Int, Vector[LinkedDescription]] =
+		implicit connection: Connection, languageIds: LanguageIds): Map[Int, Seq[LinkedDescription]] =
 	{
 		// Reads descriptions in target languages until either all description types have been read or all language
 		// options exhausted
@@ -79,9 +79,9 @@ trait LinkedDescriptionsForManyAccessLike extends LinkedDescriptionsAccessLike
 	// Continues read through recursion, if possible. Utilizes (and includes) existing read results.
 	// LanguageIds and roles should be passed as they were at the start of the last read
 	protected def readRemaining(remainingRoleIds: Set[Int], lastAccessPoint: LinkedDescriptionsForManyAccessLike,
-	                            lastReadResults: Map[Int, Vector[LinkedDescription]])
+	                            lastReadResults: Map[Int, Seq[LinkedDescription]])
 	                           (implicit connection: Connection,
-	                            languageIds: LanguageIds): Map[Int, Vector[LinkedDescription]] =
+	                            languageIds: LanguageIds): Map[Int, Seq[LinkedDescription]] =
 	{
 		val remainingLanguageIds = languageIds.tail
 		if (remainingLanguageIds.nonEmpty) {

@@ -5,6 +5,7 @@
 - 0.0 North is now considered equal to 0.0 South (and same with East & West)
 ### Other changes
 - **GridArea**`.origin` is now public
+- In some instances where **Vector** was used, **Seq** is now used
 
 ## v1.1 - 22.01.2024
 As expected, the first post-release update contains major refactoring, as well as some bugfixes. 

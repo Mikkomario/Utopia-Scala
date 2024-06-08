@@ -35,7 +35,7 @@ trait LocalStringLike[Repr] extends Combinable[Repr, Repr] with MaybeEmpty[Repr]
 	  * @param regex The part which splits this string
 	  * @return Split parts
 	  */
-	def split(regex: String): Vector[Repr]
+	def split(regex: String): Seq[Repr]
 	
 	/**
 	  * Creates an interpolated version of this string where segments marked with %s, %S, %i or %d are replaced with

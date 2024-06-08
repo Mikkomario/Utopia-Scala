@@ -49,7 +49,7 @@ object DbRequestPaths extends ManyRequestPathsAccess with UnconditionalView
 			Pair(inserted.groupBy { _.domainId }, existingPerDomain)
 		}
 		else
-			Pair.twice(Map.empty[Int, Vector[RequestPath]])
+			Pair.twice(Map.empty[Int, Seq[RequestPath]])
 	}
 	
 	

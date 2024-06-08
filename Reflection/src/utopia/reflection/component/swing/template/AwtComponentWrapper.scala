@@ -3,6 +3,7 @@ package utopia.reflection.component.swing.template
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Component
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent, MouseButtonStateHandler, MouseButtonStates, MouseMoveHandler, MouseWheelHandler}
@@ -25,7 +26,7 @@ object AwtComponentWrapper
      */
     // TODO: Consider wrapping the whole hierarchy
     def apply(component: java.awt.Component): AwtComponentWrapper =
-        new SimpleAwtComponentWrapper(component, Vector())
+        new SimpleAwtComponentWrapper(component, Empty)
 }
 
 /**
@@ -53,7 +54,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
      * will by default only be informed on size changes made through this wrapper. Size changes
      * that happen directly in the component are ignored by default
      */
-    override var resizeListeners = Vector[ResizeListener]()
+    override var resizeListeners: Seq[ResizeListener] = Empty
     /**
      * Removes a resize listener from the informed listeners
      */
@@ -109,7 +110,7 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
       * @return The parent component of this component (wrapped)
       */
     override def parent: Option[AwtComponentWrapper] =
-        Option(component.getParent).map { new SimpleAwtComponentWrapper(_, Vector(this)) }
+        Option(component.getParent).map { new SimpleAwtComponentWrapper(_, Single(this)) }
     
     /**
       * @return Whether this component is currently visible
@@ -241,7 +242,8 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
 private class SimpleAwtComponentWrapper(val component: java.awt.Component, override val children: Seq[Component])
     extends AwtComponentWrapper
 
-private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtComponentWrapper, getSize: () => StackSize, update: () => Unit)
+private class AwtComponentWrapperWrapperWithStackable(override val wrapped: AwtComponentWrapper,
+                                                      getSize: () => StackSize, update: () => Unit)
     extends CachingReflectionStackable with AwtComponentWrapperWrapper with ReflectionStackLeaf
 {
     // IMPLEMENTED  ---------------------

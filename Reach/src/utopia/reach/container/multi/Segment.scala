@@ -3,6 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.genesis.graphics.Drawer
@@ -34,7 +35,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	  */
 	val alignAxis = direction.perpendicular
 	
-	private var containers = Vector[SegmentContainer]()
+	private var containers: Seq[SegmentContainer] = Empty
 	private val lengthCache = ResettableLazy(calculatedLength)
 	
 	
@@ -119,7 +120,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override def calculatedStackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
 		
-		override def children = Vector(wrappedComponent)
+		override def children = Single(wrappedComponent)
 		
 		override def resetCachedSize() = {
 			super.resetCachedSize()

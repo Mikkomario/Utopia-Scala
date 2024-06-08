@@ -64,7 +64,7 @@ trait RadioButtonGroupSettingsLike[+Repr] extends StackSettingsLike[Repr]
 	
 	override def withAxis(axis: Axis2D) = withStackSettings(stackSettings.withAxis(axis))
 	override def withCap(cap: StackLength) = withStackSettings(stackSettings.withCap(cap))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withStackSettings(stackSettings.withCustomDrawers(drawers))
 	override def withLayout(layout: StackLayout) = withStackSettings(stackSettings.withLayout(layout))
 	
@@ -170,7 +170,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	  * @throws IllegalArgumentException If the specified set of options is empty
 	  */
 	@throws[IllegalArgumentException]("If the specified set of options is empty")
-	def apply[A](options: Vector[(A, LocalizedString)]): RadioButtonGroup[A] = {
+	def apply[A](options: Seq[(A, LocalizedString)]): RadioButtonGroup[A] = {
 		if (options.isEmpty)
 			throw new IllegalArgumentException("There must be at least one available option")
 		else
@@ -185,7 +185,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	  * @tparam A Type of selected value
 	  * @return A new radio button group
 	  */
-	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A],
+	def apply[A](options: Seq[(A, LocalizedString)], valuePointer: EventfulPointer[A],
 	             hotKeys: Map[A, Set[HotKey]] = Map()) =
 	{
 		val group = new RadioButtonGroup[A](parentHierarchy, contextPointer, options, valuePointer, settings, hotKeys)
@@ -204,10 +204,10 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	  * @tparam A Type of selected value
 	  * @return A new radio button group
 	  */
-	def apply[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
+	def apply[A](options: Seq[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
 		apply[A](options, valuePointer, Map[A, Set[HotKey]]())
 	@deprecated("Renamed to .apply(...)", "v1.1")
-	def withPointer[A](options: Vector[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
+	def withPointer[A](options: Seq[(A, LocalizedString)], valuePointer: EventfulPointer[A]): RadioButtonGroup[A] =
 		apply[A](options, valuePointer)
 }
 
@@ -241,10 +241,10 @@ object RadioButtonGroup extends RadioButtonGroupSetup()
   * @since 9.3.2021, v0.1
   */
 class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
-                          options: Vector[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
+                          options: Seq[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                           hotKeys: Map[A, Set[HotKey]] = Map())
-	extends ReachComponentWrapper with Pool[Vector[A]] with InteractionWithPointer[A]
+	extends ReachComponentWrapper with Pool[Seq[A]] with InteractionWithPointer[A]
 		with ManyFocusableWrapper
 {
 	// ATTRIBUTES	------------------------

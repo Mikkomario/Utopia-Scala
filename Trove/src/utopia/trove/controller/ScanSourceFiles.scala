@@ -1,5 +1,7 @@
 package utopia.trove.controller
 
+import utopia.flow.collection.immutable.{Empty, Single}
+
 import java.nio.file.Path
 import utopia.flow.util.Version
 import utopia.flow.parse.file.FileExtensions._
@@ -63,16 +65,13 @@ object ScanSourceFiles
 			}.sortBy { _.targetVersion }
 			
 			if (sources.isEmpty)
-				Vector()
-			else
-			{
+				Empty
+			else {
 				// Checks which of the sources need to be read
-				currentDbVersion match
-				{
+				currentDbVersion match {
 					case Some(currentVersion) =>
 						val latestVersion = sources.last.targetVersion
-						if (latestVersion > currentVersion)
-						{
+						if (latestVersion > currentVersion) {
 							// Reads only update files, if they form a path to the latest version.
 							// Otherwise reads the full version, if present.
 							val updates = sources.filter { _.fileType == Changes }.dropWhile { s =>
@@ -82,10 +81,10 @@ object ScanSourceFiles
 								updates.lastOption.exists { _.targetVersion == latestVersion })
 								updates
 							else
-								sources.findLast { _.fileType == Full }.map { Vector(_) }.getOrElse(updates)
+								sources.findLast { _.fileType == Full }.map { Single(_) }.getOrElse(updates)
 						}
 						else
-							Vector()
+							Empty
 					case None => sources.findLast { _.fileType == Full }.toVector
 				}
 			}

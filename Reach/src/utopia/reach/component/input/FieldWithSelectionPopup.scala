@@ -12,7 +12,7 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
 import utopia.flow.operator.Identity
@@ -256,7 +256,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def withListAxis(axis: Axis2D) = mapListStackSettings { _.withAxis(axis) }
 	def withListLayout(layout: StackLayout) = mapListStackSettings { _.withLayout(layout) }
 	def withListCap(cap: StackLength) = mapListStackSettings { _.withCap(cap) }
-	def withListCustomDrawers(drawers: Vector[CustomDrawer]) = mapListStackSettings { _.withCustomDrawers(drawers) }
+	def withListCustomDrawers(drawers: Seq[CustomDrawer]) = mapListStackSettings { _.withCustomDrawers(drawers) }
 	
 	def withAdditionalActivationKeys(keys: IterableOnce[Key]) = mapActivationKeys { _ ++ keys }
 	def activatedWithKey(key: Key) = mapActivationKeys { _ + key }
@@ -422,7 +422,7 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	  * @return A new field
 	  */
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-		P <: Changing[Vector[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
+		P <: Changing[Seq[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
 	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
 	                              sameItemCheck: Option[EqualsFunction[A]] = None)
 	                             (makeField: FieldCreationContext => C)
@@ -482,7 +482,7 @@ object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
   * @tparam P Type of content pointer used
   */
 class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
-	+P <: Changing[Vector[A]]]
+	+P <: Changing[Seq[A]]]
 (parentHierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext],
  isEmptyPointer: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
@@ -493,7 +493,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
 (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
-		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Vector[A], P]
+		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P]
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -590,7 +590,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 				lastSelectedValuePointer.clear()
 		}
 		// May deselect the current value or select the previously selected value on content changes
-		val contentUpdateListener = ChangeListener[Vector[A]] { e =>
+		val contentUpdateListener = ChangeListener[Seq[A]] { e =>
 			valuePointer.update {
 				// Case: No value currently selected => Attempts to select the previously selected value
 				case None => lastSelectedValuePointer.value.filter { e.newValue.containsEqual(_) }
@@ -600,7 +600,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		}
 		if (isAttached) {
 			valuePointer.addListenerAndSimulateEvent(None)(updateLastValueListener)
-			contentPointer.addListenerAndSimulateEvent(Vector())(contentUpdateListener)
+			contentPointer.addListenerAndSimulateEvent(Empty)(contentUpdateListener)
 			KeyboardEvents += FieldKeyListener
 			CommonMouseEvents += PopupHideMouseListener
 		}
@@ -703,9 +703,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 									topAndBottomFactories(settings.extraOptionLocation).parentHierarchy,
 									popUpContextPointer)
 								if (settings.extraOptionLocation == First)
-									Vector(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
+									Pair(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
 								else
-									Vector(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+									Pair(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
 							}
 						// CAse: No additional view used => Always displays the main content
 						case None => makeMainContent(factories)

@@ -1,5 +1,6 @@
 package utopia.terra.model.map
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -28,5 +29,5 @@ trait MapPointLike[V, +Repr] extends Combinable[MapPoint[V], Repr] with LinearSc
 	
 	// IMPLEMENTED  -----------------------
 	
-	override protected def equalsProperties: Seq[Any] = Vector(vector, mapLocation)
+	override protected def equalsProperties: Seq[Any] = Pair(vector, mapLocation)
 }

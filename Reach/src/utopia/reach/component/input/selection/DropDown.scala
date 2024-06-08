@@ -3,6 +3,7 @@ package utopia.reach.component.input.selection
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.{ScrollingContext, TextContext}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -82,7 +83,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of content pointer used
 	  * @return A new field
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Vector[A]]]
+	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
@@ -118,7 +119,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 						}
 					}
 					// Wraps the label as a focusable component
-					Focusable.wrap(label, Vector(fieldContext.focusListener))
+					Focusable.wrap(label, Single(fieldContext.focusListener))
 				}(makeDisplay) { _ => None }
 		// Adds mouse interaction to the field
 		field.addMouseButtonListener(new FieldFocusMouseListener(field))
@@ -141,7 +142,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of content pointer used
 	  * @return A new field
 	  */
-	def simple[A, P <: Changing[Vector[A]]](contentPointer: P,
+	def simple[A, P <: Changing[Seq[A]]](contentPointer: P,
 	                                        valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
 	                                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                                        sameItemCheck: Option[EqualsFunction[A]] = None)

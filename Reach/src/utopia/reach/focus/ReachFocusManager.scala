@@ -1,15 +1,16 @@
 package utopia.reach.focus
 
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.operator.ordering.CombinedOrdering
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
-import utopia.firmament.awt.AwtComponentExtensions._
-import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.operator.sign.Sign
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import java.awt.event.{FocusEvent, WindowAdapter, WindowEvent}
 import scala.collection.immutable.HashMap
@@ -25,7 +26,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	
 	// Orders points from top to bottom, left to right
 	private implicit val focusOrdering: Ordering[Point] =
-		new CombinedOrdering[Point](Vector(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))
+		new CombinedOrdering[Point](Pair(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))
 	
 	private val targetsPointer = EventfulPointer(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
@@ -354,9 +355,9 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 			else
 				Right(hierarchy.head -> (hierarchy.tail, target))
 		}
-		val groupedDeepTargets = deepTargets.asMultiMap
+		val groupedDeepTargets = deepTargets.groupMap { _._1 } { _._2 }
 		
-		(directTargets.map { c => c.position -> Vector(c) } ++
+		(directTargets.map { c => c.position -> Single(c) } ++
 			groupedDeepTargets.map { case (c, targets) => c.position -> sortComponents(targets) })
 			.sortBy { _._1 }.flatMap { _._2 }
 	}
@@ -411,7 +412,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		
 		private def windowsFrom(event: FocusEvent) = Option(event.getOppositeComponent) match {
 			case Some(component) => component.parentWindowsIterator.toVector
-			case None => Vector()
+			case None => Empty
 		}
 	}
 	

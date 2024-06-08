@@ -172,7 +172,7 @@ object DragAndDropEvent
 	  *                         relative to the top-left corner of the canvas component
 	  * @param files The files that were dropped
 	  */
-	case class Drop(relativePosition: Point, positionInCanvas: Point, files: Vector[Path])
+	case class Drop(relativePosition: Point, positionInCanvas: Point, files: Seq[Path])
 		extends RelativeDragAndDropEvent
 	{
 		override def isFinal: Boolean = true

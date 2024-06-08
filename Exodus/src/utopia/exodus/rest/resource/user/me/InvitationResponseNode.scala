@@ -7,6 +7,7 @@ import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.exodus.model.enumeration.ExodusScope.JoinOrganization
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.metropolis.model.combined.organization.InvitationWithResponse
@@ -27,7 +28,7 @@ case class InvitationResponseNode(invitationId: Int) extends LeafResource[Author
 	// IMPLEMENTED	--------------------------
 	
 	override def name = "response"
-	override def allowedMethods = Vector(Post)
+	override def allowedMethods = Single(Post)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{

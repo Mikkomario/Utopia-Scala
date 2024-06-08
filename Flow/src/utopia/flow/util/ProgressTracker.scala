@@ -1,5 +1,6 @@
 package utopia.flow.util
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ProgressListener
 import utopia.flow.event.model.ProgressEvent
 import utopia.flow.time.Now
@@ -66,7 +67,7 @@ class ProgressTracker[A](val pointer: EventfulPointer[A])(progressFrom: A => Dou
 	 */
 	val progressPointer = pointer.mapUntil(progressFrom) { _ >= 1.0 }
 	
-	private var listeners = Vector[ProgressListener[A]]()
+	private var listeners: IndexedSeq[ProgressListener[A]] = Empty
 	
 	
 	// INITIAL CODE -------------------------

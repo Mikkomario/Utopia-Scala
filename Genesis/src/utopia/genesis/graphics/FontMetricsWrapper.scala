@@ -1,5 +1,6 @@
 package utopia.genesis.graphics
 
+import utopia.flow.collection.immutable.Single
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -85,7 +86,7 @@ case class FontMetricsWrapper(private val wrapped: FontMetrics)
 	  */
 	def caretCoordinatesFrom(text: String) = {
 		if (text.isEmpty)
-			Vector(0)
+			Single(0)
 		else {
 			val totalWidth = widthOf(text)
 			val charWidths = text.map(widthOf)

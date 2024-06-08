@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.model.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -150,9 +151,10 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = None, 
-	errorMessages: Vector[String] = Vector.empty, details: Model = Model.empty, count: Option[Int] = None, 
-	earliest: Option[Instant] = None, latest: Option[Instant] = None) 
+case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = None,
+                                errorMessages: Seq[String] = Empty, details: Model = Model.empty,
+                                count: Option[Int] = None,
+                                earliest: Option[Instant] = None, latest: Option[Instant] = None)
 	extends StorableWithFactory[IssueOccurrence]
 {
 	// IMPLEMENTED	--------------------
@@ -162,7 +164,11 @@ case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = No
 	override def valueProperties = {
 		import IssueOccurrenceModel._
 		Vector("id" -> id, caseIdAttName -> caseId, 
-			errorMessagesAttName -> (NotEmpty(errorMessages) match { case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value; case None => Value.empty }),
+			errorMessagesAttName ->
+				(NotEmpty(errorMessages) match {
+					case Some(v) => (v.map[Value] { v => v }.toVector: Value).toJson: Value
+					case None => Value.empty
+				}),
 			detailsAttName -> details.notEmpty.map { _.toJson }, countAttName -> count, 
 			earliestAttName -> earliest, latestAttName -> latest)
 	}

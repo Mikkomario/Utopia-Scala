@@ -8,6 +8,7 @@ import utopia.firmament.factory.FramedFactory
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
@@ -38,7 +39,7 @@ trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with PartO
   * @since 20.07.2023, v1.1
   */
 case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
-                                      customDrawers: Vector[CustomDrawer] = Vector(), isHint: Boolean = false)
+                                      customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextLabelFactoryLike[ContextualTextLabelFactory]
 		with TextContextualFactory[ContextualTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[TextContext, ContextualTextLabelFactory]
@@ -56,7 +57,7 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	override def self: ContextualTextLabelFactory = this
 	
 	override def withContext(context: TextContext) = copy(context = context)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualTextLabelFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualTextLabelFactory =
 		copy(customDrawers = drawers)
 	
 	
@@ -102,7 +103,7 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
   */
 case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
                             alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
-                            customDrawers: Vector[CustomDrawer] = Vector())
+                            customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextLabelFactoryLike[TextLabelFactory]
 		with FromContextFactory[TextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
 		with CustomDrawableFactory[TextLabelFactory] with BackgroundAssignable[TextLabelFactory]
@@ -114,7 +115,7 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withInsets(insets: StackInsetsConvertible): TextLabelFactory = copy(insets = insets.toInsets)
 	override def withBackground(background: Color): TextLabelFactory = withCustomDrawer(BackgroundDrawer(background))
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
 	override def withContext(context: TextContext) = ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
 	
 	
@@ -156,13 +157,13 @@ object TextLabel extends Cff[TextLabelFactory]
   */
 class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
                 override val textDrawContext: TextDrawContext,
-                additionalDrawers: Seq[CustomDrawer] = Vector(), override val allowTextShrink: Boolean = false)
+                additionalDrawers: Seq[CustomDrawer] = Empty, override val allowTextShrink: Boolean = false)
 	extends CustomDrawReachComponent with TextComponent
 {
 	// ATTRIBUTES	-----------------------------
 	
 	override val measuredText = measure(text)
-	override val customDrawers = additionalDrawers.toVector :+
+	override val customDrawers = additionalDrawers :+
 		TextDrawer(measuredText, textDrawContext.font, textDrawContext.insets, textDrawContext.color, textDrawContext.alignment)
 	
 	

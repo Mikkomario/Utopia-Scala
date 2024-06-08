@@ -12,11 +12,10 @@ import utopia.vault.nosql.factory.multi.MultiCombiningFactory
 object UserRoleWithRightsFactory extends MultiCombiningFactory[UserRoleWithRights, UserRole, UserRoleRight]
 {
 	override def parentFactory = UserRoleFactory
-	
 	override def childFactory = UserRoleRightFactory
 	
 	override def isAlwaysLinked = false
 	
-	override def apply(parent: UserRole, children: Vector[UserRoleRight]) =
+	override def apply(parent: UserRole, children: Seq[UserRoleRight]) =
 		UserRoleWithRights(parent.id, children.map { _.taskId }.toSet)
 }

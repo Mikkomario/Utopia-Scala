@@ -55,11 +55,11 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	override def imageSettings: ViewImageLabelSettings = labelSettings.imageSettings
 	override def separatingMargin: Option[SizeCategory] = labelSettings.separatingMargin
 	override def forceEqualBreadth: Boolean = labelSettings.forceEqualBreadth
-	override def customDrawers: Vector[CustomDrawer] = labelSettings.customDrawers
+	override def customDrawers: Seq[CustomDrawer] = labelSettings.customDrawers
 	override def insets: UnresolvedStackInsets = labelSettings.insets
 	
 	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
-	def withFocusListeners(listeners: Vector[FocusListener]) =
+	def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
@@ -69,7 +69,7 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	override def withForceEqualBreadth(force: Boolean): Repr = mapLabelSettings { _.withForceEqualBreadth(force) }
 	override def withImageSettings(settings: ViewImageLabelSettings): Repr =
 		mapLabelSettings { _.withImageSettings(settings) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		mapLabelSettings { _.withCustomDrawers(drawers) }
 	override def withInsets(insets: UnresolvedStackInsets): Repr = mapLabelSettings { _.withInsets(insets) }
 	

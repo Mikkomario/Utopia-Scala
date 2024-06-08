@@ -1,6 +1,6 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.collection.immutable.TreeLike
+import utopia.flow.collection.immutable.{Empty, Single, TreeLike}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template
@@ -102,7 +102,7 @@ object XmlElement extends FromModelFactory[XmlElement]
             }
             else
                 Namespace.empty -> c
-        }.asMultiMap.view.mapValues { Model.withConstants(_) }.toMap
+        }.groupMap { _._1 } { _._2 }.view.mapValues { Model.withConstants(_) }.toMap
         
         new XmlElement(name, value, namespacedAttributes, children)
     }
@@ -117,7 +117,7 @@ object XmlElement extends FromModelFactory[XmlElement]
       * @return A new xml element
       */
     def namespaced(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
-                   children: Vector[XmlElement] = Vector())
+                   children: Seq[XmlElement] = Empty)
                   (implicit namespace: Namespace) =
         apply(namespace(name), value, Map(namespace -> attributes), children)
     /**
@@ -129,7 +129,7 @@ object XmlElement extends FromModelFactory[XmlElement]
       * @return A new xml element
       */
     def local(name: String, value: Value = Value.emptyWithType(StringType), attributes: Model = Model.empty,
-              children: Vector[XmlElement] = Vector()) =
+              children: Seq[XmlElement] = Empty) =
         namespaced(name, value, attributes, children)(Namespace.empty)
     
     /**
@@ -180,7 +180,7 @@ object XmlElement extends FromModelFactory[XmlElement]
  */
 case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType(StringType),
                       attributeMap: Map[Namespace, Model] = Map.empty,
-                      override val children: Vector[XmlElement] = Vector())
+                      override val children: Seq[XmlElement] = Empty)
     extends XmlElementLike[XmlElement] with TreeLike[NamespacedString, XmlElement]
 {
     // ATTRIBUTES   ----------------------------
@@ -196,7 +196,7 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
     override protected def newNode(content: NamespacedString) = XmlElement(content)
     
     override protected def createCopy(content: NamespacedString, children: Seq[XmlElement]) =
-        copy(name = content, children = children.toVector)
+        copy(name = content, children = children)
     
     
     // OTHER METHODS    ------------------------
@@ -241,7 +241,7 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
     def withAttribute(attribute: Constant)(implicit namespace: Namespace) = {
         val newModel = attributeMap.get(namespace) match {
             case Some(model) => model + attribute
-            case None => Model.withConstants(Vector(attribute))
+            case None => Model.withConstants(Single(attribute))
         }
         withAttributes(attributeMap + (namespace -> newModel))
     }
@@ -257,12 +257,12 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
       * @param children New set of children
       * @return A copy of this element with exactly those children
       */
-    def withChildren(children: Vector[XmlElement]) = createCopy(children = children)
+    def withChildren(children: Seq[XmlElement]) = createCopy(children = children)
     /**
       * @param child A child element
       * @return A copy of this element with only that child
       */
-    def withChild(child: XmlElement) = withChildren(Vector(child))
+    def withChild(child: XmlElement) = withChildren(Single(child))
     
     /**
       * Performs a mapping operation for all direct children that have the specified name

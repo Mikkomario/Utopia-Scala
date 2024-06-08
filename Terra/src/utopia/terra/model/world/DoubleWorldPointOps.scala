@@ -1,5 +1,6 @@
 package utopia.terra.model.world
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike}
@@ -30,7 +31,7 @@ trait DoubleWorldPointOps[+V <: DoubleVectorLike[V], P, +Aerial, +T]
 	
 	// IMPLEMENTED  ------------------
 	
-	override protected def equalsProperties: Seq[Any] = Vector(vector, worldView)
+	override protected def equalsProperties: Seq[Any] = Pair(vector, worldView)
 	
 	override def +(other: LatLongRotation): P = at(latLong + other)
 	override def +(vectorTravel: DoubleVector): P = at(vector + vectorTravel)

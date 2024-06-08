@@ -1,17 +1,16 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, Exists, Join, JoinType, Limit, Select, SqlSegment, SqlTarget, Where}
+import utopia.vault.sql._
 
-import scala.collection.immutable.HashSet
 import scala.util.{Failure, Success}
 
 /**
@@ -23,7 +22,7 @@ import scala.util.{Failure, Success}
   * @param databaseName The name of the database that contains this table
   * @param columns The columns that belong to this table
   */
-case class Table(name: String, databaseName: String, columns: Vector[Column]) extends SqlTarget with Joinable
+case class Table(name: String, databaseName: String, columns: Seq[Column]) extends SqlTarget with Joinable
 {
 	// ATTRIBUTES    ---------------------------
 	
@@ -51,7 +50,7 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	
 	override def toString = name
 	
-	override def toSqlSegment = SqlSegment(sqlName, Vector(), Some(databaseName), HashSet(this))
+	override def toSqlSegment = SqlSegment(sqlName, Empty, Some(databaseName), Set(this))
 	
 	/**
 	  * @return The name of this table in sql format (same as original name but surrounded with `backticks`). If this
@@ -84,13 +83,13 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def tables = Vector(this)
+	override def tables = Single(this)
 	
-	override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = Inner) = {
+	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner) = {
 		// Finds the first table referencing (or being referenced by) the provided table and uses
 		// that for a join
 		originTables.findMap { left => References.connectionBetween(left, this) } match {
-			case Some(Pair(leftColumn, rightColumn)) => Success(Vector(Join(leftColumn, this, rightColumn, joinType)))
+			case Some(Pair(leftColumn, rightColumn)) => Success(Single(Join(leftColumn, this, rightColumn, joinType)))
 			case None =>
 				// Secondarily, finds indirect references
 				References.toBiDirectionalLinkGraphFrom(this)
@@ -131,8 +130,8 @@ case class Table(name: String, databaseName: String, columns: Vector[Column]) ex
 	/**
 	  * Finds columns matching the provided property names
 	  */
-	def apply(propertyName: String, second: String, others: String*): Vector[Column] =
-		apply(Vector(propertyName, second) ++ others)
+	def apply(propertyName: String, second: String, others: String*): Seq[Column] =
+		apply(Pair(propertyName, second) ++ others)
 	
 	
 	// OTHER METHODS    ------------------------

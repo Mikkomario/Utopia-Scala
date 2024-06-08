@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
@@ -58,7 +59,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	
 	// Stop listeners are stored here while the source pointer is changing
 	// Once (if) the source stops changing, transfers these over to the resulting pointer
-	private var queuedStopListeners = Vector[ChangingStoppedListener]()
+	private var queuedStopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	// Listener that listens to mid-pointers and updates the simulated value
 	private val valueUpdatingListener = ChangeListener[R] { event => pointer.value = event.newValue }
@@ -81,7 +82,7 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 		// Transfers the stop-listeners over
 		val finalPointer = pointerPointer.value
 		queuedStopListeners.foreach { finalPointer.addChangingStoppedListenerAndSimulateEvent(_) }
-		queuedStopListeners = Vector()
+		queuedStopListeners = Empty
 	}
 	
 	

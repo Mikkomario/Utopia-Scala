@@ -60,8 +60,7 @@ object Extensions
           * Checks if there's collision between the two polygon instances. Returns collision data if
           * there is collision. <b>Only works with convex polygons</b>
           */
-        def checkCollisionWithConvex(other: Polygonic) =
-        {
+        def checkCollisionWithConvex(other: Polygonic) = {
             // Uses collision axes from both polygons, doesn't need to repeat parallel axes
             val mtv = p.collisionMtvWith(other)
             mtv.map { mtv => new Collision(mtv, collisionPoints(other, mtv)) }
@@ -71,8 +70,7 @@ object Extensions
           * Checks if there's collision between this polygon and the provided circle shape. Returns
           * collision data if there is a collision.
           */
-        def checkCollisionWith(circle: Circle) =
-        {
+        def checkCollisionWith(circle: Circle) = {
             val mtv = p.collisionMtvWith(circle, p.collisionAxes :+ (p.center - circle.origin).toVector)
             mtv.map { mtv => new Collision(mtv, circle.simpleCollisionPoints(-mtv)) }
         }
@@ -81,8 +79,7 @@ object Extensions
           * Checks if there's collision between this polygon and a line segment. Returns collision data
           * if there is a collision
           */
-        def checkCollisionWith(line: Line) =
-        {
+        def checkCollisionWith(line: Line) = {
             val mtv = p.collisionMtvWith(line, p.collisionAxes ++ line.collisionAxes)
             mtv.map { mtv => new Collision(mtv, collisionPoints(line, mtv)) }
         }

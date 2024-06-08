@@ -1,5 +1,6 @@
 package utopia.flow.collection.mutable.builder
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.mutable
@@ -30,7 +31,7 @@ class CompoundingMapBuilder[K, V](initialState: Map[K, V] = Map[K, V]())
 	override protected def newBuilder(): mutable.Builder[(K, V), mutable.Map[K, V]] =
 		new MutableMapBuilder(builderPointer.newValue())
 	
-	override protected def append(newItems: mutable.Map[K, V]) = lastResult ++ newItems
+	override protected def append(newItems: mutable.Map[K, V]): Map[K, V] = lastResult ++ newItems
 	
 	// Always knows size because of the type of builder utilized
 	override def size = {
@@ -59,7 +60,7 @@ class CompoundingMapBuilder[K, V](initialState: Map[K, V] = Map[K, V]())
 	override def get(key: K) = currentBuilder.flatMap { _.get(key) }.orElse { lastResult.get(key) }
 	
 	override def -(key: K) = currentState - key
-	override def -(key1: K, key2: K, keys: K*) = currentState -- (Vector(key1, key2) ++ keys)
+	override def -(key1: K, key2: K, keys: K*) = currentState -- (Pair(key1, key2) ++ keys)
 	
 	override def contains(key: K) = lastResult.contains(key) || currentBuilder.exists { _.contains(key) }
 }

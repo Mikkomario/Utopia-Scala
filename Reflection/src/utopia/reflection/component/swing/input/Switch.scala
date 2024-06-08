@@ -5,6 +5,7 @@ import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreati
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.eventful.AlwaysTrue
@@ -75,7 +76,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	override val stackSize = StackSize(targetWidth, targetWidth.noMax * Switch.maxHeightRatio)
 	override val valuePointer = EventfulPointer(initialState)
 	
-	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 	
 	
 	// INITIAL CODE	-----------------

@@ -52,7 +52,7 @@ trait ManyAuthPreparationsAccess
 	  * creationTimes of the accessible AuthPreparations
 	  */
 	def creationTimes(implicit connection: Connection) = 
-		pullColumn(model.createdColumn).flatMap { value => value.instant }
+		pullColumn(model.created).flatMap { value => value.instant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
@@ -80,7 +80,7 @@ trait ManyAuthPreparationsAccess
 	  * @return Whether any AuthPreparation instance was affected
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+		putColumn(model.created, newCreated)
 	
 	/**
 	  * Updates the expires of the targeted AuthPreparation instance(s)

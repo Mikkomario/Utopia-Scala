@@ -1,6 +1,6 @@
 package utopia.flow.parse.string
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.immutable.View
@@ -485,7 +485,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	def split(str: String): IndexedSeq[String] = {
 		val ranges = rangesFrom(str)
 		if (ranges.isEmpty)
-			Vector(str)
+			Single(str)
 		else {
 			val firstPart = str.substring(0, ranges.head.start)
 			val middleParts = ranges.paired.map { case Pair(prevRange, nextRange) =>

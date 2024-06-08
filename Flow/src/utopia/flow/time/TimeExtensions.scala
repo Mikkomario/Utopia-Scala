@@ -846,7 +846,7 @@ object TimeExtensions
 		  * @param range A range of dates
 		  * @return The portion of that range that overlaps with this year. 0-2 different ranges.
 		  */
-		def apply(range: YearlyDateRange): Vector[DateRange] = range.at(y)
+		def apply(range: YearlyDateRange): IndexedSeq[DateRange] = range.at(y)
 	}
 	
 	implicit class ExtendedMonthDay(val md: MonthDay) extends AnyVal with SelfComparable[MonthDay]

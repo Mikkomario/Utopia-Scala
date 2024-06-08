@@ -2,6 +2,7 @@ package utopia.reach.drawing
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
@@ -58,12 +59,12 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	private lazy val jComponent = canvas.component
 	
 	// Area being drawn currently -> queued areas
-	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Vector[Bounds]])](None -> Map())
+	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Seq[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	// TODO: Consider using a MutableImage as a buffer?
 	private val bufferPointer = VolatileOption[Image]()
 	// None while overfilled, a vector of update images otherwise
-	private val queuedUpdatesPointer = VolatileOption[Vector[(Image, Point)]]()
+	private val queuedUpdatesPointer = VolatileOption[Seq[(Image, Point)]]()
 	
 	
 	// COMPUTED ----------------------------------
@@ -96,22 +97,20 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 				// Case: Draw process currently active => queues the region
 				else {
 					// Checks whether the region could be merged into one of the existing regions
-					val existingRegions = queue.getOrElse(priority, Vector())
+					val existingRegions = queue.getOrElse(priority, Empty)
 					val newRegions = {
 						if (existingRegions.isEmpty)
-							Vector(region)
+							Single(region)
 						else {
 							val newRegionsBuilder = new VectorBuilder[Bounds]()
 							var mergeSucceeded = false
 							existingRegions.foreach { b =>
 								if (mergeSucceeded)
 									newRegionsBuilder += b
-								else
-								{
+								else {
 									// Merge is considered successful is less than 10% of extra space is added
-									val merged = Bounds.around(Vector(region, b))
-									if (merged.area <= (region.area + b.area) * 1.1)
-									{
+									val merged = Bounds.around(Pair(region, b))
+									if (merged.area <= (region.area + b.area) * 1.1) {
 										mergeSucceeded = true
 										newRegionsBuilder += merged
 									}
@@ -134,7 +133,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 			val componentBounds = Bounds(Point.origin, component.size)
 			val shouldPaintNow = queuePointer.mutate { case (processing, _) =>
 				if (processing.nonEmpty)
-					false -> (processing -> Map(priority -> Vector(componentBounds)))
+					false -> (processing -> Map(priority -> Single(componentBounds)))
 				else
 					true -> (Some(componentBounds) -> Map())
 			}
@@ -231,7 +230,7 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 							updates
 								.divideBy { case (image, position) => Bounds(position, image.size).overlapsWith(region) }
 								.toTuple
-						case None => Vector() -> updates
+						case None => Empty -> updates
 					}
 					// Calculates the new buffer state
 					val newImage = {
@@ -252,11 +251,11 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 				case None =>
 					val newImage = componentImage
 					bufferPointer.setOne(newImage)
-					newImage -> Some(Vector())
+					newImage -> Some(Empty)
 			}
 		}
 		else {
-			queuedUpdatesPointer.setOne(Vector())
+			queuedUpdatesPointer.setOne(Empty)
 			baseImage
 		}
 	}

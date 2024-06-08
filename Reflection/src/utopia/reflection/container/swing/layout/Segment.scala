@@ -13,6 +13,7 @@ import utopia.reflection.container.swing.Panel
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.event.StackHierarchyListener
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -35,7 +36,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	  */
 	val alignAxis = direction.perpendicular
 	
-	private var containers = Vector[SegmentContainer]()
+	private var containers: Seq[SegmentContainer] = Empty
 	private val lengthCache = ResettableLazy(calculatedLength)
 	
 	
@@ -101,7 +102,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		val isUpdatingFlag = new VolatileFlag()
 		private var _isAttached = false
 		
-		override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+		override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 		
 		
 		// INITIAL CODE	-------------------------
@@ -115,7 +116,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override lazy val stackId = hashCode()
 		
-		override def children = Vector(wrappedComponent)
+		override def children = Single(wrappedComponent)
 		
 		override def resetCachedSize() =
 		{

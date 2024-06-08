@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape2d.vector.point
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.{Combinable, LinearScalable, Subtractable}
 import utopia.flow.operator.equality.EqualsBy
@@ -165,7 +166,7 @@ trait RelativePoint
 	
 	override def self: RelativePoint = this
 	
-	override protected def equalsProperties = Vector(relative, absolute)
+	override protected def equalsProperties = Pair(relative, absolute)
 	
 	override def toString = s"{ \"absolute\": $absolute, \"relative\": $relative }"
 	

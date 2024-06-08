@@ -1,5 +1,6 @@
 package utopia.vault.nosql.factory
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table}
@@ -40,7 +41,7 @@ trait FromResultFactory[+A]
 	  * @param result A database query result to be parsed
 	  * @return Parsed objects
 	  */
-	def apply(result: Result): Vector[A]
+	def apply(result: Result): Seq[A]
 	
 	
 	// COMPUTED	---------------
@@ -95,7 +96,7 @@ trait FromResultFactory[+A]
 	  * @param joinType Type of join to use when joining content (default = inner join)
 	  * @return Parsed instance data that matches the search condition
 	  */
-	def findMany(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	def findMany(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	             joinType: JoinType = Inner)
 	            (implicit connection: Connection) =
 	{
@@ -120,7 +121,7 @@ trait FromResultFactory[+A]
 	  */
 	def findManyLinked(joined: Joinable, where: Condition, order: Option[OrderBy] = None,
 	                   joinType: JoinType = Inner)(implicit connection: Connection) =
-		findMany(where, order, Vector(joined), joinType)
+		findMany(where, order, Single(joined), joinType)
 	
 	/**
 	  * Finds the instances with the specified ids
@@ -133,7 +134,7 @@ trait FromResultFactory[+A]
 		table.primaryColumn match
 		{
 			case Some(idColumn) => findMany(idColumn.in(ids), order)
-			case None => Vector()
+			case None => Empty
 		}
 	
 	/**
@@ -177,7 +178,7 @@ trait FromResultFactory[+A]
 	  * @return database data parsed into an instance. None if no data was found with the provided
 	  * condition
 	  */
-	def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	         joinType: JoinType = Inner)(implicit connection: Connection) =
 		findMany(where, order, joins, joinType).headOption
 }

@@ -7,6 +7,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.{HotKey, RowGroup, RowGroups, WindowButtonBlueprint}
 import utopia.flow.async.process.Delay
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -61,7 +62,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
 	  */
-	protected def inputTemplate: (Vector[RowGroups[InputRowBlueprint]], N)
+	protected def inputTemplate: (Seq[RowGroups[InputRowBlueprint]], N)
 	
 	/**
 	  * @return Icon representing window close action (used in warning pop-ups and the default close button)
@@ -75,7 +76,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @return Combined component
 	  */
 	protected def buildLayout(factories: ContextualMixed[TextContext],
-	                          content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
+	                          content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 	                          context: N): ReachComponentLike
 	
 	/**
@@ -89,7 +90,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  */
 	protected def specifyButtons(context: N,
 								 input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
-								 warn: (String, LocalizedString) => Unit): (Vector[WindowButtonBlueprint[A]], View[Boolean])
+								 warn: (String, LocalizedString) => Unit): (Seq[WindowButtonBlueprint[A]], View[Boolean])
 	
 	/**
 	  * @return Text to display on the default close button. Empty if no default close button should be displayed.
@@ -179,7 +180,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// The pop-up contains a close button and the warning text
 			Framing(hierarchy).withContext(context.textContext).small.build(Stack) { stackF =>
 				stackF.centeredRow.build(Mixed) { factories =>
-					Vector(
+					Pair(
 						factories(ImageButton).icon(closeIcon) { windowPointer.onceSet { _.close() } },
 						factories(TextLabel)(message)
 					)
@@ -350,7 +351,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val field = blueprint(factories.parentHierarchy, context.fieldContext)
 		fieldsBuilder += blueprint.key -> field
 		// Field ordering depends on the blueprint alignment
-		val components = if (fieldNameIsFirst) Vector(fieldNameLabel, field.field) else Vector(field.field, fieldNameLabel)
+		val components = if (fieldNameIsFirst) Pair(fieldNameLabel, field.field) else Pair(field.field, fieldNameLabel)
 		
 		// Attaches field visibility pointer as a result
 		ComponentCreationResult.many(components, blueprint.visibilityPointer)

@@ -3,6 +3,7 @@ package utopia.firmament.component.stack
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.firmament.model.stack.modifier.{StackLengthModifier, StackSizeModifier}
+import utopia.flow.collection.immutable.Empty
 
 /**
   * A common trait for stackable instances that can apply stack size constraints
@@ -16,11 +17,11 @@ trait Constrainable extends StackSizeCalculating
 	/**
 	  * @return Stack size modifiers applied to this component's stack size
 	  */
-	def constraints: Vector[StackSizeModifier]
+	def constraints: Seq[StackSizeModifier]
 	/**
 	  * @param newConstraints New modifiers for this component's stack size
 	  */
-	def constraints_=(newConstraints: Vector[StackSizeModifier]): Unit
+	def constraints_=(newConstraints: Seq[StackSizeModifier]): Unit
 	
 	
 	// COMPUTED	-----------------------
@@ -65,5 +66,5 @@ trait Constrainable extends StackSizeCalculating
 	/**
 	  * Clears all stack size constraints
 	  */
-	def clearConstraints() = constraints = Vector()
+	def clearConstraints() = constraints = Empty
 }

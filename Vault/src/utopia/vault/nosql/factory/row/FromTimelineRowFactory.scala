@@ -1,5 +1,6 @@
 package utopia.vault.nosql.factory.row
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator
@@ -98,7 +99,7 @@ trait FromTimelineRowFactory[+A] extends FromRowFactory[A]
 	  * @param connection DB Connection (implicit)
 	  * @return Latest item in database that satisfies the specified condition
 	  */
-	def findLatest(where: Condition, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	def findLatest(where: Condition, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
 		findMaxBy(timestamp.column, where, joins, joinType)
 	/**
@@ -108,7 +109,7 @@ trait FromTimelineRowFactory[+A] extends FromRowFactory[A]
 	  * @param connection DB Connection (implicit)
 	  * @return Earliest item in database that satisfies the specified condition
 	  */
-	def findEarliest(where: Condition, joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	def findEarliest(where: Condition, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	                (implicit connection: Connection) =
 		findMinBy(timestamp.column, where, joins, joinType)
 	

@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape1d
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -74,5 +75,5 @@ trait Dimension[+A] extends View[A] with HasDimensions[A]
 	
 	override def dimensions = Dimensions(zeroValue)(Vector.fill(axis.index)(zeroValue) :+ value)
 	
-	override def components = Vector(this)
+	override def components: Seq[Dimension[A]] = Single(this)
 }

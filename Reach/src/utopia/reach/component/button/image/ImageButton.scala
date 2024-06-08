@@ -65,11 +65,11 @@ trait ImageButtonSettingsLike[+Repr]
 	override def apply(alignment: Alignment): Repr = mapImageSettings { _.withAlignment(alignment) }
 	override def withAlignment(alignment: Alignment) = withImageSettings(imageSettings.withAlignment(alignment))
 	override def withColor(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		withImageSettings(imageSettings.withCustomDrawers(drawers))
 	override def withEnabledPointer(p: Changing[Boolean]) =
 		withButtonSettings(buttonSettings.withEnabledPointer(p))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	override def withImageScaling(scaling: Double) = withImageSettings(imageSettings.withImageScaling(scaling))
@@ -101,7 +101,7 @@ object ImageButtonSettings
   */
 case class ImageButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.default,
                                imageSettings: ImageLabelSettings = ImageLabelSettings.default,
-                               imageEffects: Vector[ButtonImageEffect] = ComponentCreationDefaults.asButtonImageEffects)
+                               imageEffects: Seq[ButtonImageEffect] = ComponentCreationDefaults.asButtonImageEffects)
 	extends ImageButtonSettingsLike[ImageButtonSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -109,7 +109,7 @@ case class ImageButtonSettings(buttonSettings: ButtonSettings = ButtonSettings.d
 	override def self: ImageButtonSettings = this
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withImageEffects(effects: Vector[ButtonImageEffect]) = copy(imageEffects = effects)
+	override def withImageEffects(effects: Seq[ButtonImageEffect]) = copy(imageEffects = effects)
 	override def withImageSettings(settings: ImageLabelSettings) = copy(imageSettings = settings)
 }
 
@@ -141,8 +141,8 @@ trait ImageButtonSettingsWrapper[+Repr] extends ImageButtonSettingsLike[Repr]
 	override def imageSettings = settings.imageSettings
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
-	override def withImageEffects(effects: Vector[ButtonImageEffect]) = mapSettings { _.withImageEffects(effects) }
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withImageEffects(effects: Seq[ButtonImageEffect]) = mapSettings { _.withImageEffects(effects) }
 	override def withImageSettings(settings: ImageLabelSettings) = mapSettings { _.withImageSettings(settings) }
 	
 	

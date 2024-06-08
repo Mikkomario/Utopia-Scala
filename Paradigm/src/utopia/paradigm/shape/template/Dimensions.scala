@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.equality.{EqualsBy, EqualsFunction}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.MayBeZero
@@ -65,7 +65,7 @@ object Dimensions
 		/**
 		  * An empty set of dimensions (0 length)
 		  */
-		override lazy val empty = apply(Vector())
+		override lazy val empty = apply(Empty)
 		/**
 		  * A set of dimensions with length 1 with 0 value
 		  */
@@ -115,7 +115,7 @@ object Dimensions
 		  */
 		def apply(axis: Axis, value: A): Dimensions[A] = {
 			if (axis.index == 0)
-				new Dimensions[A](lazyZero, Vector(value))
+				new Dimensions[A](lazyZero, Single(value))
 			else
 				apply(Vector.fill(axis.index)(zero) :+ value)
 		}
@@ -195,7 +195,7 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	
 	override def length = values.length
 	
-	override def empty = withDimensions(Vector())
+	override def empty = withDimensions(Empty)
 	
 	override protected def equalsProperties: Seq[Any] = zeroValue +: values
 	

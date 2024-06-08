@@ -19,7 +19,7 @@ trait SqlTarget
     /**
       * @return Tables contained within this target
       */
-    def tables: Vector[Table]
+    def tables: Seq[Table]
     
     /**
       * Converts this sql target into an sql segment

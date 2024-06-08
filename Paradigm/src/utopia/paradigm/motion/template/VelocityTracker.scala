@@ -1,5 +1,6 @@
 package utopia.paradigm.motion.template
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
@@ -24,9 +25,9 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 {
 	// ATTRIBUTES	-----------------------
 	
-	private var _positionHistory = Vector[(X, Instant)]()
-	private var _velocityHistory = Vector[(V, Instant)]()
-	private var _accelerationHistory = Vector[(A, Instant)]()
+	private var _positionHistory: Seq[(X, Instant)] = Empty
+	private var _velocityHistory: Seq[(V, Instant)] = Empty
+	private var _accelerationHistory: Seq[(A, Instant)] = Empty
 	
 	private var cachedValue: Option[H] = None
 	
@@ -37,8 +38,8 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	
 	protected def calculateAcceleration(velocityChange: V, duration: FiniteDuration): A
 	
-	protected def combineHistory(positionHistory: Vector[(X, Instant)], velocityHistory: Vector[(V, Instant)],
-								 accelerationHistory: Vector[(A, Instant)]): H
+	protected def combineHistory(positionHistory: Seq[(X, Instant)], velocityHistory: Seq[(V, Instant)],
+								 accelerationHistory: Seq[(A, Instant)]): H
 	
 	
 	// COMPUTED	----------------------------

@@ -3,6 +3,7 @@ package utopia.firmament.context
 import utopia.firmament.image.ButtonImageEffect
 import utopia.firmament.image.ButtonImageEffect.{Highlight, LowerAlphaOnDisabled}
 import utopia.firmament.model.Margins
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
@@ -81,11 +82,11 @@ object ComponentCreationDefaults
 	  * (NB: Doesn't apply to buttons completely consisting of an image label).
 	  * See [[asButtonImageEffects]]
 	  */
-	var inButtonImageEffects = Vector[ButtonImageEffect](LowerAlphaOnDisabled())
+	var inButtonImageEffects: Seq[ButtonImageEffect] = Single(LowerAlphaOnDisabled())
 	/**
 	  * Effects that apply to all images that are converted into buttons without placing them in
 	  * another frame / setting.
 	  * See [[inButtonImageEffects]]
 	  */
-	var asButtonImageEffects = Vector[ButtonImageEffect](LowerAlphaOnDisabled(), Highlight())
+	var asButtonImageEffects: Seq[ButtonImageEffect] = Pair(LowerAlphaOnDisabled(), Highlight())
 }

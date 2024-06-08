@@ -1,5 +1,9 @@
 # Utopia Disciple - List of changes
 
+## v2.1.7 (in development)
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
+
 ## v2.1.6 - 22.01.2024
 Scala version update & cleanup.
 ### Breaking changes

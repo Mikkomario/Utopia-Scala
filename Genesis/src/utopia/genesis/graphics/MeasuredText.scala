@@ -1,6 +1,7 @@
 package utopia.genesis.graphics
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.sign.Sign
@@ -50,10 +51,10 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			if (allowLineBreaks) {
 				// Makes sure the line breaks at the end of the text are also included
 				val lineBreaksAtEnd = text.reverseIterator.takeWhile { c => Regex.newLine(c.toString) }.size
-				(text.linesIterator.map { _.stripControlCharacters } ++ Vector.fill(lineBreaksAtEnd) { "" }).toVector
+				(text.linesIterator.map { _.stripControlCharacters } ++ Iterator.fill(lineBreaksAtEnd) { "" }).toVector
 			}
 			else
-				Vector(text.stripControlCharacters)
+				Single(text.stripControlCharacters)
 		}
 		// Also applies automatic line-breaks, if applicable
 		lineSplitThreshold match {
@@ -395,10 +396,10 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param highlightedCaretRanges Areas within this text to highlight
 	  * @return Standard draw targets + highlight draw targets (which include bounds)
 	  */
-	def drawTargets(highlightedCaretRanges: Iterable[Range] = Vector()): (Vector[(String, Point)], Vector[(String, Point, Bounds)]) = {
+	def drawTargets(highlightedCaretRanges: Iterable[Range] = Empty): (Vector[(String, Point)], IndexedSeq[(String, Point, Bounds)]) = {
 		// If there aren't any highlighted ranges, uses the cached values
 		if (highlightedCaretRanges.isEmpty || isEmpty)
-			defaultDrawTargets -> Vector()
+			defaultDrawTargets -> Empty
 		else {
 			// Converts the ranges to { line index: Character ranges } -map
 			val ranges = highlightedCaretRanges.iterator.flatMap { range =>
@@ -406,7 +407,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 				val (endLineIndex, endIndexOnLine) = mapCaretIndex(range.last)
 				// Case: Range is contained within a single line
 				if (startLineIndex == endLineIndex)
-					Vector(startLineIndex -> (startIndexOnLine -> Some(endIndexOnLine)))
+					Single(startLineIndex -> (startIndexOnLine -> Some(endIndexOnLine)))
 				// Case: Range spans multiple lines
 				else {
 					// Adds the end of the starting line
@@ -418,9 +419,9 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 						startLine +: (startLineIndex + 1).until(endLineIndex)
 							.map { lineIndex => lineIndex -> (0 -> None) } :+ endLine
 					else
-						Vector(startLine, endLine)
+						Pair(startLine, endLine)
 				}
-			}.toVector.asMultiMap
+			}.toVector.groupMap { _._1 } { _._2 }
 			
 			// Collects draw targets, one line at a time
 			val normalStringsBuffer = new VectorBuilder[(String, Point)]
@@ -478,7 +479,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  *         All coordinates are relative to a (0,0) anchor position,
 	  *         which is determined by text area size and alignment.
 	  */
-	private def boundsOf(lines: Seq[String]): (Bounds, Vector[(Bounds, Point)]) = {
+	private def boundsOf(lines: Seq[String]): (Bounds, IndexedSeq[(Bounds, Point)]) = {
 		val numberOfLines = lines.size
 		
 		// In case there is only 0-1 line(s) of text, skips the more complex calculations
@@ -492,7 +493,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			// Bounds of this text area
 			val areaBounds = Bounds(topLeft, lineBounds.size)
 			
-			(areaBounds, Vector(areaBounds -> textStart))
+			(areaBounds, Single(areaBounds -> textStart))
 		}
 		else {
 			// Calculates size information about the whole set of lines

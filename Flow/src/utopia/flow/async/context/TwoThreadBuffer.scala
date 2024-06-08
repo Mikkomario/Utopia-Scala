@@ -2,6 +2,7 @@ package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
@@ -167,7 +168,7 @@ object TwoThreadBuffer
 		 * @param max The largest number of items that may be returned from this function.
 		 * @return Next min-max items from this input.
 		 */
-		def collectNextBetween(min: Int, max: Int): Vector[A] = {
+		def collectNextBetween(min: Int, max: Int): IndexedSeq[A] = {
 			val immediate = immediately.collectNext(max)
 			if (immediate.hasSize < min)
 				immediate ++ this.collectNext(min - immediate.size)
@@ -198,7 +199,7 @@ object TwoThreadBuffer
 		 * @param n Maximum number of immediately available items to pull
 		 * @return The next immediately available items (up to 'n' items). May be empty.
 		 */
-		def collectNext(n: Int): Vector[A]
+		def collectNext(n: Int): IndexedSeq[A]
 	}
 }
 
@@ -503,7 +504,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 		
 		// OTHER    ---------------------
 		
-		private def noMoreItems() = throw new IllegalStateException(
+		private def noMoreItems(): Nothing = throw new IllegalStateException(
 			"next() called on an empty iterator; There won't be any more items in this buffer.")
 			
 		
@@ -523,17 +524,13 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
 			
 			override def nextOption() = takeFromBuffer[Option[A]](None) { b => Some(b.head) -> b.tail }
 			
-			override def collectNext(n: Int) = {
-				if (n <= 0)
-					Vector.empty
-				else
-					takeFromBuffer[Vector[A]](Vector.empty) { _.splitAt(n) }
-			}
+			override def collectNext(n: Int) =
+				if (n <= 0) Empty else takeFromBuffer[IndexedSeq[A]](Empty) { _.splitAt(n) }
 			
 			
 			// OTHER    ---------------
 			
-			private def takeFromBuffer[R](ifEmpty: => R)(ifNonEmpty: Vector[A] => (R, Vector[A])) =
+			private def takeFromBuffer[R](ifEmpty: => R)(ifNonEmpty: IndexedSeq[A] => (R, IndexedSeq[A])) =
 				buffer.mutate { b =>
 					// Case: No immediate items available
 					if (b.isEmpty)

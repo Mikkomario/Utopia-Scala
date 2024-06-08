@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsFunction
 
 /**
@@ -13,7 +14,7 @@ import utopia.flow.operator.equality.EqualsFunction
  * @author Mikko Hilpinen
  * @since 23.04.2024, v2.4
  */
-class OpenEnumeration[V <: OpenEnumerationValue[A], A](initialValues: Vector[V] = Vector.empty,
+class OpenEnumeration[V <: OpenEnumerationValue[A], A](initialValues: Seq[V] = Empty,
                                                        identifiersMatch: EqualsFunction[A] = EqualsFunction.default)
 {
 	// ATTRIBUTES   --------------------------

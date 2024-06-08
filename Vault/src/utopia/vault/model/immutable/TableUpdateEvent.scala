@@ -24,7 +24,7 @@ object TableUpdateEvent
 	  * @param insertedModels Models that were inserted to the table (property names as keys)
 	  * @param generatedKeys Row ids that were generated for the new data (if table uses auto-increment indexing)
 	  */
-	case class DataInserted(table: Table, insertedModels: Seq[ModelLike[Property]], generatedKeys: Vector[Value])
+	case class DataInserted(table: Table, insertedModels: Seq[ModelLike[Property]], generatedKeys: Seq[Value])
 		extends TableUpdateEvent
 	{
 		override def tableName = table.name

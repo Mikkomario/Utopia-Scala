@@ -1,5 +1,6 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 
 /**
@@ -14,5 +15,5 @@ object Limit
      * Creates a new sql segment that limits the amount of returned rows to that of the parameter value
      * @param maxRows How many rows should the result contain at maximum
      */
-    def apply(maxRows: Int) = SqlSegment("LIMIT ?", Vector(maxRows))
+    def apply(maxRows: Int) = SqlSegment("LIMIT ?", Single(maxRows))
 }

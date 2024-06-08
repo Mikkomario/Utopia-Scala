@@ -1,6 +1,7 @@
 package utopia.vault.nosql.view
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.database.{Connection, References}
 import utopia.vault.model.immutable.{Column, Storable, Table}
 import utopia.vault.model.template.Joinable
@@ -128,7 +129,7 @@ trait View
 	  *              Default = this view's primary table.
 	  * @param connection DB Connection (implicit)
 	  */
-	def deleteWhere(condition: Condition, joins: Vector[Joinable] = Vector(), table: Table = table)
+	def deleteWhere(condition: Condition, joins: Seq[Joinable] = Empty, table: Table = table)
 	               (implicit connection: Connection): Unit =
 		_delete(table, Some(condition), joins)
 	/**
@@ -141,7 +142,7 @@ trait View
 	def deleteNotLinkedTo(table: Table, linkCondition: Option[Condition] = None, deletedTable: Table = table)
 	                     (implicit connection: Connection) =
 		forNotLinkedTo(table, linkCondition) { (c, join) =>
-			deleteWhere(c, Vector(join), deletedTable)
+			deleteWhere(c, Single(join), deletedTable)
 		} { delete(deletedTable) }
 	
 	/**
@@ -175,7 +176,7 @@ trait View
 		}
 	}
 	
-	private def _delete(table: Table, condition: Option[Condition] = None, joins: Vector[Joinable] = Vector())
+	private def _delete(table: Table, condition: Option[Condition] = None, joins: Seq[Joinable] = Empty)
 	                   (implicit connection: Connection): Unit =
 	{
 		// Applies additional joins

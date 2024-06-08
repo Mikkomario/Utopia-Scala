@@ -1,6 +1,7 @@
 package utopia.scribe.core.controller.logging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
@@ -31,12 +32,12 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 {
 	// ATTRIBUTES   --------------------------
 	
-	private var scribes = Vector[Scribe]()
-	private var loggers = Vector[Logger]()
+	private var scribes: Seq[Scribe] = Empty
+	private var loggers: Seq[Logger] = Empty
 	
 	// Logging implementations where entries are copied to (besides the primary scribes / loggers)
-	private var copyToLoggers: Vector[Logger] = Vector.empty
-	private var copyToScribes: Vector[Scribe] = Vector.empty
+	private var copyToLoggers: Seq[Logger] = Empty
+	private var copyToScribes: Seq[Scribe] = Empty
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -177,7 +178,7 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 	                            (modifyForLoggingFailures: L => Logger) =
 	{
 		// Delegates further and further, until there is nothing more to log
-		loggers.foldLeft(Vector[Throwable]() -> true) { case ((errors, shouldLog), logger) =>
+		loggers.foldLeft((Empty: IndexedSeq[Throwable]) -> true) { case ((errors, shouldLog), logger) =>
 			// Case: Logging is still to be done successfully
 			if (shouldLog) {
 				Try { logPrimary(logger, errors.nonEmpty) } match {
@@ -203,7 +204,7 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 	
 	// Assumes a non-empty set of errors
 	// Returns remaining logging failures
-	private def logLoggingFailures(logger: Logger, errors: Vector[Throwable]) = {
+	private def logLoggingFailures(logger: Logger, errors: Seq[Throwable]) = {
 		// Logs until logging fails
 		val errorsIter = errors.iterator
 		val (lastLogError, lastLogResult) = errorsIter
@@ -211,7 +212,7 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 			.collectTo { _._2.isFailure }.last
 		lastLogResult match {
 			// Case: All failures were logged successfully
-			case Success(_) => Vector.empty
+			case Success(_) => Empty
 			// Case: Some or all failures couldn't be logged (delegates further)
 			case Failure(loggingError) => lastLogError +: errorsIter.toVector :+ loggingError
 		}

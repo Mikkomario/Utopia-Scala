@@ -1,5 +1,6 @@
 package utopia.access.http
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.util.UncertainBoolean
@@ -271,7 +272,7 @@ class Status(val name: String, val code: Int, val isTemporary: UncertainBoolean 
     
     // IMPLEMENTED    ----------------------
     
-    protected override def equalsProperties = Vector(code)
+    protected override def equalsProperties = Single(code)
     
     override def toString = s"$name ($code)"
 }

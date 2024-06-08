@@ -1,6 +1,7 @@
 package utopia.reach.container
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.genesis.graphics.{PaintManager, Priority}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -158,7 +159,7 @@ trait ReachCanvasLike
 				oldChildBounds.foreach { case (child, oldBounds) =>
 					val currentBounds = child.bounds
 					if (currentBounds != oldBounds) {
-						repaintZonesBuilder += (Bounds.around(Vector(oldBounds, currentBounds)) +
+						repaintZonesBuilder += (Bounds.around(Pair(oldBounds, currentBounds)) +
 							child.parentHierarchy.positionToTopModifier)
 						if (oldBounds.size != currentBounds.size)
 							nextSizeChangeChildrenBuilder += child

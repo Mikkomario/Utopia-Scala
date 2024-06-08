@@ -7,6 +7,8 @@ Supports **Flow v2.4**
   meaning that they wouldn't get delivered to the server (fixed)
 ### New features
 - Added **NoOpScribe** for situations where you don't want to set up any logging
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
 
 ## v1.0.1 - 22.01.2024
 This update focuses on enabling you to print error data to console as well as to the default target (server database).

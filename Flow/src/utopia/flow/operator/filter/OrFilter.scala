@@ -1,5 +1,7 @@
 package utopia.flow.operator.filter
 
+import utopia.flow.collection.immutable.Pair
+
 object OrFilter
 {
 	/**
@@ -9,7 +11,7 @@ object OrFilter
 	  * @tparam T Filtered type
 	  * @return A filter that accepts an item if any of the provided filters does
 	  */
-	def apply[T](first: Filter[T], second: Filter[T], more: Filter[T]*) = new OrFilter(Vector(first, second) ++ more)
+	def apply[T](first: Filter[T], second: Filter[T], more: Filter[T]*) = new OrFilter(Pair(first, second) ++ more)
 }
 
 /**

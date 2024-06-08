@@ -5,6 +5,7 @@ import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.color.Color
@@ -218,7 +219,7 @@ trait ReflectionStackable extends Stackable with ReflectionComponentLike
 	  * Child components under this stackable instance (all of which should be stackable)
 	  */
 	// TODO: Remove?
-	override def children: Seq[ReflectionStackable] = Vector()
+	override def children: Seq[ReflectionStackable] = Empty
 	
 	/**
 	  * @return Whether this stackable instance is currently attached to the main stack hierarchy
@@ -236,12 +237,12 @@ trait ReflectionStackable extends Stackable with ReflectionComponentLike
 	/**
 	  * @return Stack hierarchy listeners currently registered for this component
 	  */
-	def stackHierarchyListeners: Vector[StackHierarchyListener]
+	def stackHierarchyListeners: Seq[StackHierarchyListener]
 	/**
 	  * Updates the stack hierarchy listeners currently registered for this component
 	  * @param newListeners New stack hierarchy listeners to receive events from this component's state changes
 	  */
-	def stackHierarchyListeners_=(newListeners: Vector[StackHierarchyListener]): Unit
+	def stackHierarchyListeners_=(newListeners: Seq[StackHierarchyListener]): Unit
 	
 	
 	// COMPUTED	---------------------

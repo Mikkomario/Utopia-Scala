@@ -1,5 +1,6 @@
 package utopia.paradigm.path
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.HasLength
 import utopia.paradigm.animation.AnimationLike
@@ -25,7 +26,7 @@ object Path
 		  * @tparam B The type of resulting path
 		  * @return A path that starts with this path and continues with the another
 		  */
-		def +[B >: A](another: PathWithDistance[B]) = CompoundPath(Vector(p, another))
+		def +[B >: A](another: PathWithDistance[B]) = CompoundPath(Pair(p, another))
 	}
 	
 	

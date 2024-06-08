@@ -15,7 +15,7 @@ trait CustomDrawable
 	/**
 	  * @return The custom drawers associated with this component
 	  */
-	def customDrawers: Vector[CustomDrawer]
+	def customDrawers: Seq[CustomDrawer]
 	/**
 	  * @return The area where this drawable does custom drawing
 	  */
@@ -35,6 +35,6 @@ trait CustomDrawable
 	  */
 	def customDraw(level: DrawLevel, drawer: Drawer) = {
 		val b = drawBounds
-		customDrawers.filter { _.drawLevel == level }.foreach { _.draw(drawer, b) }
+		customDrawers.view.filter { _.drawLevel == level }.foreach { _.draw(drawer, b) }
 	}
 }

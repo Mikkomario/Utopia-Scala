@@ -1,5 +1,6 @@
 package utopia.paradigm.color
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -103,7 +104,7 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color])
 	/**
 	  * @return Color options in this setin no specific order
 	  */
-	def values = Vector(default) ++ variants.valuesIterator
+	def values = Single(default) ++ variants.valuesIterator
 	
 	/*
 	  * @param context Color context

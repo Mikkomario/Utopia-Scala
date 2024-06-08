@@ -3,6 +3,7 @@ package utopia.exodus.rest.resource.organization
 import utopia.access.http.Method.Get
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.nexus.http.Path
@@ -19,8 +20,7 @@ import utopia.vault.database.Connection
 case class OrganizationMembersNode(organizationId: Int) extends Resource[AuthorizedContext]
 {
 	override val name = "users"
-	
-	override val allowedMethods = Vector(Get)
+	override val allowedMethods = Single(Get)
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: AuthorizedContext) =
 	{
@@ -37,7 +37,7 @@ case class OrganizationMembersNode(organizationId: Int) extends Resource[Authori
 			// Produces a response based on the read data
 			// Supports styling options
 			val style = session.modelStyle
-			Result.Success(memberships.map { _.toModelWith(style) })
+			Result.Success(memberships.map { _.toModelWith(style) }.toVector)
 		}
 	}
 	

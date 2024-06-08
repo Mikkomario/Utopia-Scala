@@ -1,7 +1,7 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4.bounds
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -13,7 +13,7 @@ import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.{Axis, Direction2D}
+import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
 import utopia.paradigm.generic.ParadigmDataType.BoundsType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape1d.range.Span1D
@@ -44,7 +44,7 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
     /**
       * Collision axes used when testing for containment / overlap with Bounds
       */
-    lazy val collisionAxes = Vector(X.unit.toVector2D, Y.unit.toVector2D)
+    lazy val collisionAxes = Axis2D.values.map { _.unit.toVector2D }
     
     /**
       * An approximate equality function for two sets of bounds
@@ -186,7 +186,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     override def bounds = this
     
     override implicit def equalsFunction: EqualsFunction[Bounds] = Bounds.approxEquals
-    override protected def equalsProperties = Vector(dimensions)
+    override protected def equalsProperties = Single(dimensions)
     
     override def topLeftCorner = Point(dimensions.map { _.start })
     override def bottomRightCorner: Point = Point(dimensions.map { _.end })

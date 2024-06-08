@@ -2,6 +2,7 @@ package utopia.vault.util
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.util.logging.Logger
@@ -60,7 +61,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 		val shouldStart = queue.mutate { pending =>
 			// Case: No actions are pending at this time => Starts the emptying process
 			if (pending.isEmpty)
-				true -> Vector(action)
+				true -> Single(action)
 			// Case: There are already actions pending => Adds to the list of waiting actions
 			else
 				false -> (pending :+ action)
@@ -76,7 +77,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 						queue.mutate { q =>
 							// Case: Last action was just completed => Completes
 							if (q.hasSize < 2)
-								None -> Vector()
+								None -> Empty
 							// Case: There are more actions to complete => Starts the next one
 							else {
 								val remaining = q.tail

@@ -8,7 +8,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -64,7 +64,7 @@ trait CheckBoxSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with Butto
 	
 	override def withEnabledPointer(p: Changing[Boolean]) =
 		withButtonSettings(buttonSettings.withEnabledPointer(p))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
@@ -84,7 +84,7 @@ object CheckBoxSettings
 	// IMPLICIT ------------------------
 	
 	// Implicitly converts from button settings
-	implicit def wrap(buttonSettings: ButtonSettings): CheckBoxSettings = apply(Vector(), buttonSettings)
+	implicit def wrap(buttonSettings: ButtonSettings): CheckBoxSettings = apply(Empty, buttonSettings)
 }
 /**
   * Combined settings used when constructing check boxs
@@ -93,14 +93,14 @@ object CheckBoxSettings
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-case class CheckBoxSettings(customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class CheckBoxSettings(customDrawers: Seq[CustomDrawer] = Empty,
                             buttonSettings: ButtonSettings = ButtonSettings.default)
 	extends CheckBoxSettingsLike[CheckBoxSettings]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withButtonSettings(settings: ButtonSettings) = copy(buttonSettings = settings)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 }
 
 /**
@@ -130,7 +130,7 @@ trait CheckBoxSettingsWrapper[+Repr] extends CheckBoxSettingsLike[Repr]
 	override def customDrawers = settings.customDrawers
 	
 	override def withButtonSettings(settings: ButtonSettings) = mapSettings { _.withButtonSettings(settings) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	
 	

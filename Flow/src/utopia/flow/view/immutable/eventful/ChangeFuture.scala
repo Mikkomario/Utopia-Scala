@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
@@ -60,7 +61,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	
 	private val resultPointer = VolatileOption[A]()
 	
-	private var stopListeners = Vector[ChangingStoppedListener]()
+	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	
 	// INITIAL CODE	------------------------------
@@ -80,7 +81,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		
 		// Forgets about the listeners and dependencies afterwards
 		clearListeners()
-		stopListeners = Vector()
+		stopListeners = Empty
 	}
 	
 	

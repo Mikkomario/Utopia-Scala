@@ -6,6 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -108,7 +109,7 @@ trait ViewStackFactoryLike[+Repr]
 							val commonHierarchy = content.head.hierarchy
 							content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
 							new OpenComponent(content.map { _.component }, commonHierarchy)
-						case None => new OpenComponent(Vector[C](), new SeedHierarchyBlock(parentHierarchy.top))
+						case None => new OpenComponent(Empty: Seq[C], new SeedHierarchyBlock(parentHierarchy.top))
 					}
 					stackF(mergedContent)
 			}
@@ -177,7 +178,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
                             axisPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
                             marginPointer: Changing[StackLength] = Fixed(StackLength.any),
                             capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                            customDrawers: Vector[CustomDrawer] = Vector(), segmentGroup: Option[SegmentGroup] = None)
+                            customDrawers: Seq[CustomDrawer] = Empty, segmentGroup: Option[SegmentGroup] = None)
 	extends ViewStackFactoryLike[ViewStackFactory] with NonContextualViewContainerFactory[Stack, ReachComponentLike]
 		with FromGenericContextFactory[BaseContext, ContextualViewStackFactory]
 {
@@ -188,7 +189,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
 	override def withMarginPointer(p: Changing[StackLength]): ViewStackFactory = copy(marginPointer = p)
 	override def withCapPointer(p: Changing[StackLength]): ViewStackFactory = copy(capPointer = p)
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewStackFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewStackFactory =
 		copy(customDrawers = drawers)
 	
 	override def withContext[N <: BaseContext](context: N) =
@@ -200,7 +201,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
                                                          axisPointer: Changing[Axis2D] = Fixed(Y),
                                                          layoutPointer: Changing[StackLayout] = Fixed(Fit),
                                                          capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                                                         customDrawers: Vector[CustomDrawer] = Vector(),
+                                                         customDrawers: Seq[CustomDrawer] = Empty,
                                                          segmentGroup: Option[SegmentGroup] = None,
                                                          customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
                                                          relatedFlag: Changing[Boolean] = AlwaysFalse)
@@ -228,7 +229,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	override def withMarginPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] =
 		copy(customMarginPointer = Some(Right(p)))
 	override def withCapPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] = copy(capPointer = p)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewStackFactory[N] =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewStackFactory[N] =
 		copy(customDrawers = drawers)
 	
 	override def withContext[N2 <: BaseContext](newContext: N2) =
@@ -275,11 +276,11 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
   */
 // TODO: Create a variant that works with static components
 class ViewStack(override val parentHierarchy: ComponentHierarchy,
-                componentData: Vector[(ReachComponentLike, Changing[Boolean])],
+                componentData: Seq[(ReachComponentLike, Changing[Boolean])],
                 directionPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
                 marginPointer: Changing[StackLength] = Fixed(StackLength.any),
                 capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                override val customDrawers: Vector[CustomDrawer] = Vector())
+                override val customDrawers: Seq[CustomDrawer] = Empty)
 	extends Stack
 {
 	// ATTRIBUTES	-------------------------------

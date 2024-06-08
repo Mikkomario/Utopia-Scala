@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape1d.vector
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.operator.HasLength
@@ -68,7 +69,7 @@ trait Vector1DLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDoubles]
 	override def zero = factory.zeroAlong(axis)
 	override def unary_- = factory(n.negate(value), axis)
 	
-	override def components = Vector(this)
+	override def components: Seq[Dimension[D]] = Single(this)
 	
 	override def *(n: D) = factory(this.n.times(value, n), axis)
 	override def /(div: D) = factory(n.div(value, div), axis)

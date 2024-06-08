@@ -3,6 +3,7 @@ package utopia.reach.container.wrapper.scrolling
 import utopia.firmament.component.container.single.ScrollViewLike
 import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
 import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.action.ActorHandler
@@ -90,7 +91,7 @@ case class ScrollViewFactory(parentHierarchy: ComponentHierarchy)
 
 case class InitializedScrollViewFactory(parentHierarchy: ComponentHierarchy, axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
                                         maxOptimalLengths: Dimensions[Option[Double]] = Dimensions(None).empty,
-                                        customDrawers: Vector[CustomDrawer] = Vector(),
+                                        customDrawers: Seq[CustomDrawer] = Empty,
                                         limitsToContentSize: Boolean = false)
                                        (implicit override val scrollContext: ScrollingContext)
 	extends ScrollViewFactoryLike[InitializedScrollViewFactory]
@@ -111,7 +112,7 @@ case class InitializedScrollViewFactory(parentHierarchy: ComponentHierarchy, axi
 	override def withMaxOptimalLengths(maxOptimalLengths: Dimensions[Option[Double]]) =
 		copy(maxOptimalLengths = maxOptimalLengths)
 	override def withLimitsToContentSize(limits: Boolean) = copy(limitsToContentSize = limits)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 }
 
 case class ContextualScrollViewFactory[N](parentHierarchy: ComponentHierarchy, context: N)
@@ -133,7 +134,7 @@ case class ContextualScrollViewFactory[N](parentHierarchy: ComponentHierarchy, c
 case class InitializedContextualScrollViewFactory[N](parentHierarchy: ComponentHierarchy, context: N, axis: Axis2D = Y,
                                                      scrollBarMargin: Size = Size.zero,
                                                      maxOptimalLengths: Dimensions[Option[Double]] = Dimensions(None).empty,
-                                                     customDrawers: Vector[CustomDrawer] = Vector(),
+                                                     customDrawers: Seq[CustomDrawer] = Empty,
                                                      limitsToContentSize: Boolean = false)
                                                     (implicit override val scrollContext: ScrollingContext)
 	extends ScrollViewFactoryLike[InitializedContextualScrollViewFactory[N]]
@@ -151,7 +152,7 @@ case class InitializedContextualScrollViewFactory[N](parentHierarchy: ComponentH
 		copy(maxOptimalLengths = maxOptimalLengths)
 	override def withLimitsToContentSize(limits: Boolean) =
 		copy(limitsToContentSize = limits)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		copy(customDrawers = drawers)
 }
 
@@ -166,7 +167,7 @@ class ScrollView(override val parentHierarchy: ComponentHierarchy, override val 
                  override val scrollBarMargin: Size = Size.zero,
                  scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
                  override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
-                 additionalDrawers: Vector[CustomDrawer] = Vector(),
+                 additionalDrawers: Seq[CustomDrawer] = Empty,
                  override val limitsToContentSize: Boolean = false,
                  override val scrollBarIsInsideContent: Boolean = true)
 	extends CustomDrawReachComponent with ScrollViewLike[ReachComponentLike]

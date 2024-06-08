@@ -20,5 +20,5 @@ trait Joinable
 	  *         May return an empty vector if this item is already contained within the specified origin set.
 	  *         Failure if joining is impossible.
 	  */
-	def toJoinsFrom(originTables: Vector[Table], joinType: JoinType = Inner): Try[Vector[Join]]
+	def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner): Try[Seq[Join]]
 }

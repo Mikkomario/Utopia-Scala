@@ -9,6 +9,8 @@ object Empty extends IndexedSeq[Nothing]
 {
 	// IMPLEMENTED  ---------------------
 	
+	override def iterableFactory = OptimizedIndexedSeq
+	
 	override def length: Int = 0
 	override def iterator: Iterator[Nothing] = Iterator.empty
 	override def reverseIterator = iterator
@@ -74,10 +76,10 @@ object Empty extends IndexedSeq[Nothing]
 	}
 	override def sameElements[B >: Nothing](o: IterableOnce[B]) = o.iterator.isEmpty
 	
-	override def appended[B >: Nothing](elem: B) = Vector(elem)
-	override def prepended[B >: Nothing](elem: B) = Vector(elem)
+	override def appended[B >: Nothing](elem: B) = Single(elem)
+	override def prepended[B >: Nothing](elem: B) = Single(elem)
 	override def appendedAll[B >: Nothing](suffix: IterableOnce[B]) = IndexedSeq.from(suffix)
 	override def prependedAll[B >: Nothing](prefix: IterableOnce[B]) = IndexedSeq.from(prefix)
 	
-	override def padTo[B >: Nothing](len: Int, elem: B) = Vector.fill(len)(elem)
+	override def padTo[B >: Nothing](len: Int, elem: B) = OptimizedIndexedSeq.fill(len)(elem)
 }

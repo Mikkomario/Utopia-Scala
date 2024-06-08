@@ -6,6 +6,7 @@ import utopia.firmament.component.display.Refreshable
 import utopia.firmament.controller.data.{ContainerContentDisplayer, ContentManager, SelectionKeyListener, SelectionManager}
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
@@ -42,7 +43,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forStatelessItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]],
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Seq[A]],
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, equalsCheck)(makeDisplay)
 	
@@ -51,7 +52,7 @@ object ContainerSelectionManager
 	  * items will be linked in any way.
 	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
-	  * @param initialItems Initially displayed content (default = empty vector)
+	  * @param initialItems Initially displayed content (default = empty seq)
 	  * @param equalsCheck Function for checking item equality (default = standard equals (== -operator))
 	  * @param makeDisplay Function for creating new displays
 	  * @tparam A Type of displayed item
@@ -59,7 +60,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forStatelessItems[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector(),
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Seq[A] = Empty,
 	 equalsCheck: EqualsFunction[A] = EqualsFunction.default)(makeDisplay: A => Display) =
 		forStatelessItemsPointer[A, Display](container, selectionAreaDrawer,
 			EventfulPointer(initialItems), equalsCheck)(makeDisplay)
@@ -80,7 +81,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forImmutableStatesPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Seq[A]])(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some((a: A, b: A) => a == b))(makeDisplay)
@@ -91,7 +92,7 @@ object ContainerSelectionManager
 	  * (Eg. by checking related database item row id)
 	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
-	  * @param initialItems Initially displayed content (default = empty vector)
+	  * @param initialItems Initially displayed content (default = empty seq)
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance. If you would use
 	  *                      a standard equals function (==), please call 'forStatelessItems' instead since
 	  *                      equals function is used for checking display equality.
@@ -101,7 +102,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forImmutableStates[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Seq[A] = Empty)(
 		sameItemCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forImmutableStatesPointer[A, Display](container, selectionAreaDrawer, EventfulPointer(initialItems))(sameItemCheck)(makeDisplay)
 	
@@ -121,7 +122,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forMutableItemsPointer[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Vector[A]])(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, contentPointer: EventfulPointer[Seq[A]])(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		new ContainerSelectionManager[A, Display](container, selectionAreaDrawer, contentPointer, sameItemCheck,
 			Some(equalsCheck))(makeDisplay)
@@ -132,7 +133,7 @@ object ContainerSelectionManager
 	  * need to trigger updates for the container's displays.
 	  * @param container Container that will hold the displays
 	  * @param selectionAreaDrawer A drawer that will highlight the selected area
-	  * @param initialItems Initially displayed content (default = empty vector)
+	  * @param initialItems Initially displayed content (default = empty seq)
 	  * @param sameItemCheck Function for checking whether the two items represent the same instance.
 	  *                      (Eg. by checking unique id)
 	  * @param equalsCheck Function for checking whether the two items are considered completely equal display-wise
@@ -142,7 +143,7 @@ object ContainerSelectionManager
 	  * @return New content manager
 	  */
 	def forMutableItems[A, Display <: ReflectionStackable with Refreshable[A]]
-	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Vector[A] = Vector())(
+	(container: SelectStack[Display], selectionAreaDrawer: CustomDrawer, initialItems: Seq[A] = Empty)(
 		sameItemCheck: EqualsFunction[A])(equalsCheck: EqualsFunction[A])(makeDisplay: A => Display) =
 		forMutableItemsPointer[A, Display](container, selectionAreaDrawer, EventfulPointer(initialItems))(
 			sameItemCheck)(equalsCheck)(makeDisplay)
@@ -155,10 +156,10 @@ object ContainerSelectionManager
   */
 class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 (container: SelectStack[C], selectionAreaDrawer: CustomDrawer,
- contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+ contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
  sameItemCheck: EqualsFunction[A] = EqualsFunction.default, equalsCheck: Option[EqualsFunction[A]] = None)(makeItem: A => C)
-	extends ContainerContentDisplayer[A, C, C, EventfulPointer[Vector[A]]](container, contentPointer,
-		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, EventfulPointer[Vector[A]]]
+	extends ContainerContentDisplayer[A, C, C, EventfulPointer[Seq[A]]](container, contentPointer,
+		sameItemCheck, equalsCheck)(makeItem) with SelectionManager[A, Option[A], C, EventfulPointer[Seq[A]]]
 		with ContentManager[A, C]
 {
 	// ATTRIBUTES   --------------------

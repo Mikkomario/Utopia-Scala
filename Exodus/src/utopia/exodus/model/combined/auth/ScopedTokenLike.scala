@@ -21,7 +21,7 @@ trait ScopedTokenLike extends Extender[TokenData]
 	/**
 	  * @return Links between this token and the associated scopes
 	  */
-	def scopeLinks: Vector[TokenScopeLink]
+	def scopeLinks: Seq[TokenScopeLink]
 	
 	
 	// COMPUTED -------------------------

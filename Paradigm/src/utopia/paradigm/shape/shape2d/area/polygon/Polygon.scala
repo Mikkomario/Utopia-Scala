@@ -20,7 +20,7 @@ object Polygon
   * @author Mikko Hilpinen
   * @since Genesis 17.4.2019, v2+
   */
-case class Polygon(corners: Vector[Point]) extends Polygonic
+case class Polygon(corners: IndexedSeq[Point]) extends Polygonic
 {
 	// ATTRIBUTES	--------------------
 	

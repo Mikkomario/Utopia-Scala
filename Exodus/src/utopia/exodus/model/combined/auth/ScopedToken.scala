@@ -7,7 +7,7 @@ import utopia.exodus.model.stored.auth.{Token, TokenScopeLink, TokenType}
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
-case class ScopedToken(token: Token, scopeLinks: Vector[TokenScopeLink]) extends ScopedTokenLike
+case class ScopedToken(token: Token, scopeLinks: Seq[TokenScopeLink]) extends ScopedTokenLike
 {
 	// OTHER    ------------------------
 	

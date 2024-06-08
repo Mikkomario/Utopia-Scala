@@ -1,5 +1,6 @@
 package utopia.conflict.collision
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -19,7 +20,7 @@ import utopia.paradigm.transform.Transformable
  * first time
  */
 // TODO: Should accept a lazy set of collision points instead of a call-by-name function
-class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point])
+class Collision(val mtv: Vector2D, calculateCollisionPoints: => Seq[Point])
     extends Transformable[Collision] with EqualsBy
 {
     // ATTRIBUTES    ---------------------
@@ -34,7 +35,7 @@ class Collision(val mtv: Vector2D, calculateCollisionPoints: => Vector[Point])
     
     override def identity: Collision = this
     
-    protected override def equalsProperties = Vector(mtv, collisionPoints)
+    protected override def equalsProperties = Pair(mtv, collisionPoints)
     
     
     // OPERATORS    ----------------------

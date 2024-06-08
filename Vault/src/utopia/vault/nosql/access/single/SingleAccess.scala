@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.single
 
+import utopia.flow.collection.immutable.Empty
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.template.Joinable
@@ -26,7 +27,7 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @param connection Implicit DB Connection
 	  * @return The first accessible item when using the specified ordering (and other search criteria)
 	  */
-	def firstUsing(ordering: OrderBy, additionalCondition: Option[Condition] = None, joins: Seq[Joinable] = Vector(),
+	def firstUsing(ordering: OrderBy, additionalCondition: Option[Condition] = None, joins: Seq[Joinable] = Empty,
 	               joinType: JoinType = Inner)
 	              (implicit connection: Connection) =
 		read(mergeCondition(additionalCondition), Some(ordering), joins, joinType)
@@ -39,7 +40,7 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @param connection Implicit DB Connection
 	  * @return The first accessible item when using the specified ordering and search condition
 	  */
-	def findFirstUsing(ordering: OrderBy, condition: Condition, joins: Seq[Joinable] = Vector(),
+	def findFirstUsing(ordering: OrderBy, condition: Condition, joins: Seq[Joinable] = Empty,
 	                   joinType: JoinType = Inner)(implicit connection: Connection) =
 		firstUsing(ordering, Some(condition), joins, joinType)
 	
@@ -54,7 +55,7 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @return The item with a min/max value in the specified column
 	  */
 	def topBy(orderingColumn: Column, orderDirection: OrderDirection, additionalCondition: Option[Condition] = None,
-	          joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	          joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	         (implicit connection: Connection) =
 		firstUsing(OrderBy(orderingColumn, orderDirection), additionalCondition, joins, joinType)
 	
@@ -68,7 +69,7 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @return The item with the smallest value in the specified column
 	  */
 	def minBy(column: Column, additionalCondition: Option[Condition] = None,
-	          joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	          joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	         (implicit connection: Connection) =
 		topBy(column, Ascending, additionalCondition, joins, joinType)
 	/**
@@ -90,7 +91,7 @@ trait SingleAccess[+A] extends Access[Option[A]]
 	  * @return The item with the largest value in the specified column
 	  */
 	def maxBy(column: Column, additionalCondition: Option[Condition] = None,
-	          joins: Seq[Joinable] = Vector(), joinType: JoinType = Inner)
+	          joins: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	         (implicit connection: Connection) =
 		topBy(column, Descending, additionalCondition, joins, joinType)
 	/**

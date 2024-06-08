@@ -8,7 +8,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{Border, TextDrawContext}
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -42,7 +42,7 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
   * @param promptDrawers     Custom drawers to assign for prompt drawing
   */
 case class FieldCreationContext(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
-                                focusListener: FocusChangeListener, promptDrawers: Vector[CustomDrawer])
+                                focusListener: FocusChangeListener, promptDrawers: Seq[CustomDrawer])
 
 /**
   * A set of context variables provided when creating an additional right side label
@@ -288,7 +288,7 @@ trait FieldSettingsLike[+Repr]
 	  * @param drawers Custom drawers to assign to created components
 	  * @return Copy of this factory with the specified image custom drawers
 	  */
-	def withImageCustomDrawers(drawers: Vector[CustomDrawer]) =
+	def withImageCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withImageSettings(imageSettings.withCustomDrawers(drawers))
 	/**
 	  * @param p Pointer that determines image scaling, in addition to the original image scaling
@@ -638,7 +638,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 			case Some(openHintArea) =>
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
 				ViewStack(parentHierarchy)
-					.withoutMargin(Vector(framedMainArea.withResult(AlwaysTrue), openHintArea)).parent
+					.withoutMargin(Pair(framedMainArea.withResult(AlwaysTrue), openHintArea)).parent
 			// Case: Only main area used => uses framing only
 			case None => makeContentFraming(Framing(parentHierarchy), openMainArea).parent
 		}
@@ -703,9 +703,9 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 		// Draws background (optional) and border
 		val drawers = {
 			if (settings.fillBackground)
-				Vector(makeBackgroundDrawer(), borderDrawer)
+				Pair(makeBackgroundDrawer(), borderDrawer)
 			else
-				Vector(borderDrawer)
+				Single(borderDrawer)
 		}
 		factory(borderInsets.fixed).withCustomDrawers(drawers)(framingContent).withResult(content.result)
 	}
@@ -768,10 +768,10 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 				}
 				
 				val wrappedField = makeField(FieldCreationContext(factories.next().parentHierarchy,
-					contentContextPointer, FocusTracker, Vector(namePromptDrawer) ++ promptDrawer))
+					contentContextPointer, FocusTracker, Single(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items
-				Vector(ComponentCreationResult(nameLabel, nameVisibilityPointer),
+				Pair(ComponentCreationResult(nameLabel, nameVisibilityPointer),
 					ComponentCreationResult(wrappedField, AlwaysTrue)) -> wrappedField
 			}
 		}
@@ -822,7 +822,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 						val hintLabel = Open.using(ViewTextLabel) { _.withContextPointer(hintContextPointer)(hintTextPointer) }
 						val stack = Open.using(ViewStack) {
 							_.row
-								.apply(Vector(
+								.apply(Pair(
 									hintLabel.withResult(hintVisibilityPointer),
 									rightComponent.withResult(AlwaysTrue)
 								))

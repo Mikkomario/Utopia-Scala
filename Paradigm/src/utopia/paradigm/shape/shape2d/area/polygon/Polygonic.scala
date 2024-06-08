@@ -1,13 +1,14 @@
 package utopia.paradigm.shape.shape2d.area.polygon
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape2d.area.{Area2D, Circle, polygon}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.{Matrix2D, LineProjectable, ShapeConvertible}
+import utopia.paradigm.shape.shape2d.{LineProjectable, Matrix2D, ShapeConvertible}
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.VectorProjectable
@@ -40,7 +41,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	def sides = {
 		val c = corners
 		if (c.isEmpty)
-			Vector()
+			Empty
 		else
 			(c :+ c.head).paired.map { Line(_) }
 	}
@@ -59,7 +60,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 		if (e.nonEmpty)
 			(e.last +: e).paired.map { p => p.second.direction - p.first.direction }
 		else
-			Vector()
+			Empty
 	}
 	/**
 	  * @return The angles at each corner of this shape
@@ -84,7 +85,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	/**
 	  * @return The collision axes that should be considered when testing this instance
 	  */
-	def collisionAxes = edges.distinctWith { _ isParallelWith _ }.map { _.normal2D }
+	def collisionAxes: Seq[Vector2D] = edges.distinctWith { _ isParallelWith _ }.map { _.normal2D }
 	
 	/**
 	  * @return The length of the longest edge in this polygon
@@ -100,7 +101,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def circleAround = {
 		val origin = center
-		val radius = corners.map { c => (c - origin).toVector.length }.max
+		val radius = corners.map { c => (c - origin).length }.max
 		Circle(origin, radius)
 	}
 	/**
@@ -108,7 +109,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def circleInside = {
 		val origin = center
-		val radius = corners.map { vertex => (vertex - origin).toVector.length }.min
+		val radius = corners.map { vertex => (vertex - origin).length }.min
 		Circle(origin, radius)
 	}
 	
@@ -116,14 +117,10 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * Divides this polygon into convex portions. Each of the returned parts is convex and can
 	  * be used in collision checks
 	  */
-	def convexParts: Vector[Polygonic] = {
+	def convexParts: Seq[Polygonic] = {
 		val c = corners
-		println(s"\nFinding convex parts from ${ c.mkString(" -> ") } ($rotationDirection)")
-		
-		if (c.size < 3) {
-			println("Too small a polygon")
-			Vector(this)
-		}
+		if (c.size < 3)
+			Single(this)
 		else {
 			val dir = rotationDirection
 			val r = rotations
@@ -145,7 +142,6 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 						// Case: Second broken index was found =>
 						// Cuts this polygon between these two indices and continues recursively
 						case Some(secondBrokenIndex) =>
-							println(s"Cuts between $firstBrokenIndex and $secondBrokenIndex")
 							val (firstPart, secondPart) = cutBetween(firstBrokenIndex, secondBrokenIndex)
 							firstPart.convexParts ++ secondPart.convexParts
 						// Case: Only one broken index found =>
@@ -165,7 +161,6 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 							}
 							
 							if (remainingOutcomeIndex >= 0) {
-								println(s"Remaining outcome index = $remainingOutcomeIndex; Cuts between $firstBrokenIndex & $remainingOutcomeIndex")
 								val (firstPart, secondPart) = cutBetween(firstBrokenIndex, remainingOutcomeIndex)
 								firstPart.convexParts ++ secondPart.convexParts
 							}
@@ -176,13 +171,11 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 									rotation.isZero || rotation.direction == rotationDirection
 								}
 								val (firstPart, secondPart) = cutBetween(outcomeIndex, firstBrokenIndex)
-								println(s"Outcome index = $outcomeIndex; Cuts between $firstBrokenIndex & $outcomeIndex")
 								firstPart.convexParts ++ secondPart.convexParts
 							}
 					}
 				case None =>
-					println("Convex")
-					Vector(this)
+					Single(this)
 			}
 		}
 	}
@@ -323,6 +316,6 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 		
 		val cutVertices = c.slice(index1, index2 + 1)
 		val remainingVertices = c.take(index1 + 1) ++ c.drop(index2)
-		Polygon(remainingVertices.toVector) -> Polygon(cutVertices.toVector)
+		Polygon(remainingVertices) -> Polygon(cutVertices)
 	}
 }

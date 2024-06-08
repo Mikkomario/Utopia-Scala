@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.string.Regex
@@ -32,10 +32,15 @@ object StringExtensions
 		def escapeBackSlashes = s.replace("\\", "\\\\")
 		
 		/**
+		  * @return Iterator returning all words that belong to this string.
+		  *         <b>This includes all non-whitespace characters but not newline characters</b>
+		  */
+		def wordsIterator = s.linesIterator
+			.flatMap { _.split(" ").toVector.map { _.trim }.filter { _.nonEmpty } }
+		/**
 		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
 		 */
-		def words = s.linesIterator.toVector.flatMap { _.split(" ").toVector
-			.map { _.trim }.filter { _.nonEmpty } }
+		def words = wordsIterator.toVector
 		
 		/**
 		 * @return The first word in this string (may include any characters except whitespace)
@@ -112,7 +117,7 @@ object StringExtensions
 		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
 		 */
 		def containsAll(first: String, second: String, more: String*): Boolean =
-			containsAll(Vector(first, second) ++ more)
+			containsAll(Pair(first, second) ++ more)
 		
 		/**
 		 * @param strings A number of strings
@@ -129,7 +134,7 @@ object StringExtensions
 		 * @return Whether this string contains all of the provided sub-strings (case-insensitive)
 		 */
 		def containsAllIgnoreCase(first: String, second: String, more: String*): Boolean = containsAllIgnoreCase(
-			Vector(first, second) ++ more)
+			Pair(first, second) ++ more)
 		/**
 		  * Checks whether multiple instances of the searched string can be found from this string
 		  * @param searched A searched string
@@ -429,12 +434,12 @@ object StringExtensions
 			val dividerIndices = indexOfIterator(divider).toVector
 			// Case: No dividers => returns the string as is
 			if (dividerIndices.isEmpty)
-				Vector(s)
+				Single(s)
 			else {
 				val divLength = divider.length
 				// Collects the strings between dividers. Includes the dividers themselves.
 				val (finalStart, firstParts) = dividerIndices
-					.foldLeft((0, Vector[String]())) { case ((start, collected), next) =>
+					.foldLeft((0, Empty: IndexedSeq[String])) { case ((start, collected), next) =>
 						val nextStart = next + divLength
 						val part = s.substring(start, nextStart)
 						nextStart -> (collected :+ part)

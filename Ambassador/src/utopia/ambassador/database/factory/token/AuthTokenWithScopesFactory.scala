@@ -25,6 +25,6 @@ object AuthTokenWithScopesFactory extends MultiCombiningFactory[AuthTokenWithSco
 	
 	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition
 	
-	override def apply(parent: AuthToken, children: Vector[AuthTokenScope]) =
-		AuthTokenWithScopes(parent, children.map { _.scope }.toSet)
+	override def apply(parent: AuthToken, children: Seq[AuthTokenScope]) =
+		AuthTokenWithScopes(parent, children.view.map { _.scope }.toSet)
 }

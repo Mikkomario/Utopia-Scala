@@ -2,6 +2,7 @@ package utopia.firmament.component.container.many
 
 import utopia.firmament.component.Component
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 
 /**
 * This trait is extended by classes that may contain one or multiple components
@@ -79,7 +80,7 @@ trait MutableMultiContainer[-A, C <: Component] extends MultiContainer[C]
 	/**
 	 * Adds multiple items to this container
 	 */
-	def ++=(first: A, second: A, more: A*): Unit = ++=(Vector(first, second) ++ more)
+	def ++=(first: A, second: A, more: A*): Unit = ++=(Pair(first, second) ++ more)
 	
 	/**
 	 * Removes multiple items from this container

@@ -1,5 +1,6 @@
 package utopia.firmament.component
 
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeChoice}
@@ -44,7 +45,7 @@ trait Component extends HasMutableBounds
     /**
       * @return The components under this component
       */
-    def children: Seq[Component] = Vector()
+    def children: Seq[Component] = Empty
     
     
     // COMPUTED    ---------------------------

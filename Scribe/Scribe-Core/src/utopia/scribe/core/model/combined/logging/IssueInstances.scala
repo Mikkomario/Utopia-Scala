@@ -1,6 +1,7 @@
 package utopia.scribe.core.model.combined.logging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
@@ -26,7 +27,7 @@ object IssueInstances
   * @author Mikko Hilpinen
   * @since 25.5.2023, v0.1
   */
-case class IssueInstances(issue: Issue, variants: Vector[IssueVariantInstances] = Vector()) extends Extender[IssueData]
+case class IssueInstances(issue: Issue, variants: Seq[IssueVariantInstances] = Empty) extends Extender[IssueData]
 {
 	// ATTRIBUTES   ------------------
 	

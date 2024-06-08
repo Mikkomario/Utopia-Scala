@@ -8,6 +8,7 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -46,7 +47,7 @@ object SearchFrom
 	def wrapFieldWithContext[A, C <: AwtStackable with Refreshable[A]]
 	(searchField: TextField[String], noResultsView: AwtStackable, displayStackLayout: StackLayout = Fit,
 	 searchIcon: Option[Image] = None,
-	 contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+	 contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 selectedValuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
@@ -87,7 +88,7 @@ object SearchFrom
 	  */
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(selectionPrompt: LocalizedString, standardWidth: StackLength, displayStackLayout: StackLayout = Fit,
-	 searchIcon: Option[Image] = None, contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+	 searchIcon: Option[Image] = None, contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 selectedValuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
@@ -124,7 +125,7 @@ object SearchFrom
 	def contextualWithTextOnly[A](selectionPrompt: LocalizedString, standardWidth: StackLength,
 	                              displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                              displayStackLayout: StackLayout = Leading, searchIcon: Option[Image] = None,
-	                              contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+	                              contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	                              selectedValuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	                              shouldDisplayPopUpOnFocusGain: Boolean = true,
 	                              sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
@@ -152,7 +153,7 @@ object SearchFrom
 	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
 					  (implicit context: TextContext) =
 		ViewLabel.contextual(searchStringPointer,
-			new DisplayFunction[String](s => noResultsText.interpolated(Vector(s))))
+			new DisplayFunction[String](s => noResultsText.interpolated(Single(s))))
 }
 
 /**
@@ -181,7 +182,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 (searchField: TextField[String], override protected val noResultsView: AwtStackable, actorHandler: ActorHandler,
  selectionDrawer: CustomDrawer, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
  searchIcon: Option[Image] = None, searchIconInsets: StackInsets = StackInsets.any,
- override val contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+ override val contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
  selectedValuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
  shouldDisplayPopUpOnFocusGain: Boolean = true, sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
  contentIsStateless: Boolean = true)
@@ -199,7 +200,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	private val defaultWidth = searchField.targetWidth
 	
 	private var currentSearchString = ""
-	private var currentOptions: Vector[(String, A)] = Vector()
+	private var currentOptions: Seq[(String, A)] = Empty
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -223,7 +224,7 @@ class SearchFrom[A, C <: AwtStackable with Refreshable[A]]
 	}
 	
 	// When content updates, changes selection options and updates field size
-	contentPointer.addContinuousListenerAndSimulateEvent(Vector()) { e =>
+	contentPointer.addContinuousListenerAndSimulateEvent(Empty) { e =>
 		currentOptions = e.newValue.map { a => itemToSearchString(a) -> a }
 		updateDisplayedOptions()
 		searchField.targetWidth = (if (content.isEmpty) defaultWidth else currentSearchStackSize.width) +

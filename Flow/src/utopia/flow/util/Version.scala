@@ -69,7 +69,7 @@ object Version
  * @param numbers Version numbers, from most to least important
  * @param suffix A possible suffix for this version (empty string = no suffix)
  */
-case class Version private(numbers: Vector[Int], suffix: String) extends SelfComparable[Version]
+case class Version private(numbers: Seq[Int], suffix: String) extends SelfComparable[Version]
 {
 	// COMPUTED	------------------------
 	
@@ -127,8 +127,7 @@ case class Version private(numbers: Vector[Int], suffix: String) extends SelfCom
 	
 	override def self = this
 	
-	override def toString =
-	{
+	override def toString = {
 		val numString = numbers.padTo(2, 0).mkString(".")
 		s"v${ if (hasSuffix) s"$numString-$suffix" else numString }"
 	}
@@ -139,10 +138,8 @@ case class Version private(numbers: Vector[Int], suffix: String) extends SelfCom
 		if (numCompare == 0) None else Some(numCompare)
 	}.getOrElse {
 		val lengthCompare = numbers.size.compareTo(o.numbers.size)
-		if (lengthCompare == 0)
-		{
-			if (hasSuffix)
-			{
+		if (lengthCompare == 0) {
+			if (hasSuffix) {
 				if (o.hasSuffix)
 					suffix.compareTo(o.suffix)
 				else

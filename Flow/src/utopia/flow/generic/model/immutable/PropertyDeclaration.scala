@@ -1,5 +1,6 @@
 package utopia.flow.generic.model.immutable
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType
 
@@ -17,7 +18,7 @@ object PropertyDeclaration
       *                   (default = false = the property shall be required and must not be empty)
       * @return A new property declaration
       */
-    def apply(name: String, dataType: DataType, alternativeNames: Vector[String] = Vector(),
+    def apply(name: String, dataType: DataType, alternativeNames: Seq[String] = Empty,
               defaultValue: Value = Value.empty, isOptional: Boolean = false): PropertyDeclaration =
         PropertyDeclarationImpl(name, alternativeNames, dataType, defaultValue, isOptional)
     
@@ -28,7 +29,7 @@ object PropertyDeclaration
       * @param alternativeNames Alternative names for this property (default = empty)
       * @return A new property declaration
       */
-    def required(name: String, dataType: DataType, alternativeNames: Vector[String] = Vector()): PropertyDeclaration =
+    def required(name: String, dataType: DataType, alternativeNames: Seq[String] = Empty): PropertyDeclaration =
         apply(name, dataType, alternativeNames, Value.emptyWithType(dataType))
     
     /**
@@ -40,7 +41,7 @@ object PropertyDeclaration
       * @param alternativeNames Alternative property names (default = empty)
       * @return A new property declaration
       */
-    def optional(name: String, dataType: DataType, alternativeNames: Vector[String] = Vector()) =
+    def optional(name: String, dataType: DataType, alternativeNames: Seq[String] = Empty) =
         apply(name, dataType, alternativeNames, Value.emptyWithType(dataType), isOptional = true)
     
     /**
@@ -50,13 +51,13 @@ object PropertyDeclaration
       * @param alternativeNames Alternative property names (default = empty)
       * @return A new property declaration
       */
-    def withDefault(name: String, defaultValue: Value, alternativeNames: Vector[String] = Vector()): PropertyDeclaration =
+    def withDefault(name: String, defaultValue: Value, alternativeNames: Seq[String] = Empty): PropertyDeclaration =
         apply(name, defaultValue.dataType, alternativeNames, defaultValue, isOptional = true)
     
     
     // NESTED   ----------------------
     
-    private case class PropertyDeclarationImpl(override val name: String, override val alternativeNames: Vector[String],
+    private case class PropertyDeclarationImpl(override val name: String, override val alternativeNames: Seq[String],
                                                override val dataType: DataType,
                                                override val defaultValue: Value = Value.empty,
                                                override val isOptional: Boolean = false)
@@ -79,7 +80,7 @@ trait PropertyDeclaration extends Equals
     /**
       * @return Alternative names for this property
       */
-    def alternativeNames: Vector[String]
+    def alternativeNames: Seq[String]
     /**
       * @return Primary data type for the value in this property
       */
@@ -119,7 +120,7 @@ trait PropertyDeclaration extends Equals
                 val builder = new VectorBuilder[Constant]()
                 builder += Constant("datatype", dataType.name)
                 if (alternativeNames.nonEmpty)
-                    builder += Constant("alt_names", alternativeNames)
+                    builder += Constant("alt_names", alternativeNames.toVector)
                 if (defaultValue.nonEmpty)
                     builder += Constant("default", defaultValue)
                 if (isOptional)

@@ -3,6 +3,7 @@ package utopia.citadel.database.access.many.description
 import utopia.citadel.util.CitadelContext
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.{ExpiringLazy, RefreshingLazy}
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
@@ -23,20 +24,18 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 	// ATTRIBUTES   ----------------
 	
 	// Caches all description roles, since they are needed relatively often and change rarely
-	private lazy val cache: Option[Lazy[Vector[DescriptionRole]]] =
-	{
+	private lazy val cache: Option[Lazy[Seq[DescriptionRole]]] = {
 		val cacheDuration = CitadelContext.descriptionRoleCacheDuration
 		if (cacheDuration <= Duration.Zero)
 			None
-		else
-		{
+		else {
 			import CitadelContext.executionContext
 			import CitadelContext.connectionPool
 			
 			def _readValues = connectionPool.tryWith { implicit c => super.pull }
 				.getOrMap { error =>
 					ErrorHandling.defaultPrinciple.handle(error)
-					Vector()
+					Empty
 				}
 			
 			if (cacheDuration > 1.minutes)

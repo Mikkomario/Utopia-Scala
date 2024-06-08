@@ -5,6 +5,7 @@ import utopia.firmament.component.stack.HasStackSize
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading, Trailing}
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -109,7 +110,7 @@ object Stacker
 			
 			// First adjusts the length of low priority items, then of all remaining items (if necessary)
 			val groupedTargets = targets.groupBy { _.isLowPriorityFor(lengthAdjustment) }
-			val lowPrioTargets = groupedTargets.getOrElse(true, Vector())
+			val lowPrioTargets = groupedTargets.getOrElse(true, Empty)
 			
 			val remainingAdjustment =
 			{

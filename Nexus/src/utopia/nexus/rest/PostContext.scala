@@ -4,6 +4,7 @@ import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.Status.BadRequest
 import utopia.access.http.error.ContentTypeException
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -141,14 +142,14 @@ abstract class PostContext extends Context
 	  * @param f Function that will be called if a json body was present. Accepts a vector of values. Returns result.
 	  * @return Function result or a failure if no value could be read
 	  */
-	def handleArrayPost(f: Vector[Value] => Result) = handleValuePost { v: Value =>
+	def handleArrayPost(f: Seq[Value] => Result) = handleValuePost { v: Value =>
 		if (v.isEmpty)
-			f(Vector())
+			f(Empty)
 		else
 			v.vector match {
 				case Some(vector) => f(vector)
 				// Wraps the value into a vector if necessary
-				case None => f(Vector(v))
+				case None => f(Single(v))
 			}
 	}
 	/**
@@ -159,7 +160,7 @@ abstract class PostContext extends Context
 	  * @tparam A Type of parsed item
 	  * @return Function result or failure in case of parsing failures
 	  */
-	def handleModelArrayPost[A](parser: Model => Try[A])(f: Vector[A] => Result) = handleArrayPost { values =>
+	def handleModelArrayPost[A](parser: Model => Try[A])(f: Seq[A] => Result) = handleArrayPost { values =>
 		values.tryMap { v => parser(v.getModel) } match {
 			case Success(parsed) => f(parsed)
 			case Failure(error) => Result.Failure(BadRequest, error.getMessage)
@@ -173,7 +174,7 @@ abstract class PostContext extends Context
 	  * @tparam A Type of parsed item
 	  * @return Function result or failure in case of parsing failures
 	  */
-	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Vector[A] => Result): Result =
+	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Seq[A] => Result): Result =
 		handleModelArrayPost[A] { m: Model => parser(m) }(f)
 	/**
 	  * Processes the request body in three parts:

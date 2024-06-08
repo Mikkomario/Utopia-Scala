@@ -1,5 +1,6 @@
 package utopia.terra.model.angular
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.sign.Signed
 import utopia.paradigm.angular.{DirectionalRotationLike, Rotation}
@@ -48,5 +49,5 @@ trait CompassRotationLike[+Direction <: Signed[Direction] with CompassDirection,
 	override def isZero = value.isZero
 	override def nonZero = value.nonZero
 	
-	override protected def equalsProperties: Seq[Any] = Vector(unidirectional)
+	override protected def equalsProperties: Seq[Any] = Single(unidirectional)
 }

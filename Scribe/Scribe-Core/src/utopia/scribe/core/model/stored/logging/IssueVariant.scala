@@ -32,5 +32,5 @@ case class IssueVariant(id: Int, data: IssueVariantData) extends StoredModelConv
 	  * @param occurrences Occurrences to attach to this issue variant
 	  * @return Model that contains this issue variant with the specified occurrences
 	  */
-	def withOccurrences(occurrences: Vector[IssueOccurrence]) = IssueVariantInstances(this, occurrences)
+	def withOccurrences(occurrences: Seq[IssueOccurrence]) = IssueVariantInstances(this, occurrences)
 }

@@ -1,7 +1,6 @@
 package utopia.reflection.component.template
 
 import utopia.firmament.component.ComponentWrapper
-import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -25,7 +24,7 @@ trait ReflectionComponentWrapper extends ReflectionComponentLike with ComponentW
 	// IMPLEMENTED	---------------
 	
 	override def resizeListeners = wrapped.resizeListeners
-	override def resizeListeners_=(listeners: Vector[ResizeListener]) = wrapped.resizeListeners = listeners
+	override def resizeListeners_=(listeners: Seq[ResizeListener]) = wrapped.resizeListeners = listeners
 	
 	override def parent = wrapped.parent
 	

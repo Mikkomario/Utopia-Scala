@@ -1,5 +1,6 @@
 package utopia.firmament.model
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.MaybeEmpty
 
 object RowGroup
@@ -8,22 +9,20 @@ object RowGroup
 	  * @param rows Input rows
 	  * @return A group based on those rows
 	  */
-	def apply[R](rows: Vector[R]) = new RowGroup(rows)
-	
+	def apply[R](rows: Seq[R]) = new RowGroup(rows)
 	/**
 	  * @param first First input row
 	  * @param second Second input row
 	  * @param more More input rows
 	  * @return A group based on those rows
 	  */
-	def apply[R](first: R, second: R, more: R*): RowGroup[R] =
-		apply(Vector(first, second) ++ more)
+	def apply[R](first: R, second: R, more: R*): RowGroup[R] = apply(Pair(first, second) ++ more)
 	
 	/**
 	  * @param row The only input row for this group
 	  * @return A group that consists only of the specified row
 	  */
-	def singleRow[R](row: R) = apply(Vector(row))
+	def singleRow[R](row: R) = apply(Single(row))
 }
 
 /**
@@ -33,7 +32,7 @@ object RowGroup
   * @param rows Input rows that form this group
   * @tparam Row Row type
   */
-class RowGroup[+Row](val rows: Vector[Row]) extends MaybeEmpty[RowGroup[Row]]
+class RowGroup[+Row](val rows: Seq[Row]) extends MaybeEmpty[RowGroup[Row]]
 {
 	// COMPUTED	----------------------
 	

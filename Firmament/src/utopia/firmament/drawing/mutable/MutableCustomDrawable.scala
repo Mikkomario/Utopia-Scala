@@ -1,6 +1,7 @@
 package utopia.firmament.drawing.mutable
 
 import utopia.firmament.drawing.template.{CustomDrawable, CustomDrawer}
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -18,7 +19,7 @@ trait MutableCustomDrawable extends CustomDrawable
 	  * Updates this component's custom drawers
 	  * @param drawers The new custom drawers for this component
 	  */
-	def customDrawers_=(drawers: Vector[CustomDrawer]): Unit
+	def customDrawers_=(drawers: Seq[CustomDrawer]): Unit
 	
 	
 	// OTHER	----------------
@@ -36,7 +37,7 @@ trait MutableCustomDrawable extends CustomDrawable
 	/**
 	  * Clears all custom drawers from this component
 	  */
-	def clearCustomDrawers() = customDrawers = Vector()
+	def clearCustomDrawers() = customDrawers = Empty
 	/**
 	  * Wraps a function into a custom drawer and adds it to this component
 	  * @param drawLevel Target draw level (default = normal)

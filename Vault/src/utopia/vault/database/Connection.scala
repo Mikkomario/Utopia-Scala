@@ -1,6 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueConverterManager
@@ -25,11 +26,11 @@ object Connection
     /**
      * The converter that converts values to sql compatible format
      */
-    val sqlValueConverter = new ValueConverterManager(Vector(BasicSqlValueConverter))
+    val sqlValueConverter = new ValueConverterManager(Single(BasicSqlValueConverter))
     /**
      * The generator that converts sql data (object + type) into a value
      */
-    val sqlValueGenerator = new SqlValueGeneratorManager(Vector(BasicSqlValueGenerator))
+    val sqlValueGenerator = new SqlValueGeneratorManager(Single(BasicSqlValueGenerator))
     
     /**
      * The settings used for establishing new connections
@@ -340,7 +341,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    def executeQuery(sql: String, values: Seq[Value] = Vector(), requireTargetedDb: Boolean = false) =
+    def executeQuery(sql: String, values: Seq[Value] = Empty, requireTargetedDb: Boolean = false) =
         _executeQuery(possiblyTargetedConnection(requireTargetedDb), sql, values)
     
     /**
@@ -350,7 +351,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
       */
     def existsDatabaseWithName(databaseName: String) = executeQuery(
         "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ? LIMIT 1",
-        Vector(databaseName)).nonEmpty
+        Single(databaseName)).nonEmpty
     
     /**
       * Checks whether there exists a database table combination
@@ -360,7 +361,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
       */
     def existsTable(databaseName: String, tableName: String) = executeQuery(
         "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1",
-        Vector(databaseName, tableName)).nonEmpty
+        Pair(databaseName, tableName)).nonEmpty
     
     /**
       * Creates a new database
@@ -458,25 +459,23 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                         val foundResult = statement.execute()
                         // Case: Expecting generated keys
                         if (returnGeneratedKeys)
-                            Result(Vector(), generatedKeysFromResult(statement, selectedTables))
+                            Result(Empty, generatedKeysFromResult(statement, selectedTables))
                         else {
                             // Collects the result rows or update count from the first result
-                            var rows = {
+                            var rows: Seq[Row] = {
                                 if (foundResult)
                                     statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
                                 else
-                                    Vector()
+                                    Empty
                             }
                             var updateCount = if (foundResult) 0 else statement.getUpdateCount
                             // Handles possible additional results
                             var expectsMore = foundResult || updateCount >= 0
-                            while (expectsMore)
-                            {
+                            while (expectsMore) {
                                 // Case: Additional result with more rows
                                 if (statement.getMoreResults)
-                                    rows ++= statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
-                                else
-                                {
+                                    rows = rows ++ statement.getResultSet.consume { rowsFromResult(_, selectedTables) }
+                                else {
                                     val newUpdateCount = statement.getUpdateCount
                                     // Case: No more results
                                     if (newUpdateCount < 0)
@@ -501,13 +500,12 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     @throws(classOf[EnvironmentNotSetupException])
     @throws(classOf[NoConnectionException])
     @throws(classOf[SQLException])
-    private def _executeQuery(connection: java.sql.Connection, sql: String, values: Seq[Value] = Vector()) =
+    private def _executeQuery(connection: java.sql.Connection, sql: String, values: Seq[Value] = Empty) =
     {
         // Empty statements are not executed
         if (sql.isEmpty)
-            Vector[Map[String, String]]()
-        else
-        {
+            Empty
+        else {
             // Creates the statement
             connection.prepareStatement(sql).consume { statement =>
                 // Inserts provided values
@@ -522,8 +520,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                     
                     // Parses data out of the result
                     val buffer = Vector.newBuilder[Map[String, String]]
-                    while (results.next())
-                    {
+                    while (results.next()) {
                         buffer += columnIndices.flatMap { case (name, index) =>
                             stringFromResult(results, index).map { (name, _) } }.toMap
                     }
@@ -561,18 +558,16 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
         connection.createStatement().consume { _.executeUpdate(sql) }
     
     private def splitToStatements(statementString: String) = {
-        if (statementString.contains(';'))
-        {
-            val parts = statementString.split(";").toVector.map { _.trim }.filterNot { _.isEmpty }
-            if (parts.size > 1)
-            {
+        if (statementString.contains(';')) {
+            val parts = statementString.split(";").view.map { _.trim }.filterNot { _.isEmpty }.toVector
+            if (parts.size > 1) {
                 if (statementString.trim.endsWith(";"))
                     Left((parts.head, parts.tail, None))
                 else
                     Left((parts.head, parts.drop(1).dropRight(1), Some(parts.last)))
             }
             else
-                Left((parts.head, Vector(), None))
+                Left((parts.head, Empty, None))
         }
         else
             Right(statementString)
@@ -580,11 +575,9 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     
     private def printIfDebugging(message: => String) = if (Connection.settings.debugPrintsEnabled) println(message)
     
-    private def setValues(statement: PreparedStatement, values: Seq[Value]) = 
-    {
+    private def setValues(statement: PreparedStatement, values: Seq[Value]) = {
         values.indices.foreach { i =>
-            Connection.sqlValueConverter(values(i)) match
-            {
+            Connection.sqlValueConverter(values(i)) match {
                 case Some((objectValue, jdbcType)) => statement.setObject(i + 1, objectValue, jdbcType)
                 case None => statement.setNull(i + 1, Types.NULL)
             }
@@ -608,7 +601,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                 (_, meta.getColumnType(index), index) } }) }
         }
         // [(name, sqlType, index)]
-        val nonColumnIndices = indicesForTables.getOrElse(None, Vector())
+        val nonColumnIndices = indicesForTables.getOrElse(None, Empty)
             .map { index => (meta.getColumnName(index), meta.getColumnType(index), index) }
         val hasContentOutsideTables = nonColumnIndices.nonEmpty
         

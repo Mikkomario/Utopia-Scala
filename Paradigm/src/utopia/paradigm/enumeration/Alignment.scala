@@ -1,6 +1,6 @@
 package utopia.paradigm.enumeration
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.SignOrZero
 import utopia.paradigm.enumeration
@@ -331,7 +331,7 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 				secondary
 			// Case: Neither of the modes fit => Returns the one that has less overlap (shifted)
 			else {
-				val better = Vector(primary, secondary).minBy { area =>
+				val better = Pair(primary, secondary).minBy { area =>
 					area.overlapWith(within) match {
 						case Some(overlap) => overlap.area
 						case None => 0.0
@@ -561,7 +561,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		
 		override def affectedAxes = Set(axis)
 		
-		override def directions = Vector(direction)
+		override def directions = Single(direction)
 	}
 	
 	/**
@@ -664,7 +664,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		override def swingComponents =
 			HashMap(X -> SwingConstants.CENTER, Y -> SwingConstants.CENTER)
 		
-		override def directions = Vector[Direction2D]()
+		override def directions = Empty
 		
 		override def horizontalDirection = None
 		override def verticalDirection = None
@@ -680,7 +680,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		
 		override def swingComponents = HashMap(X -> SwingConstants.CENTER, Y -> SwingConstants.TOP)
 		
-		override def directions = Vector(Direction2D.Up, Direction2D.Left)
+		override def directions = Pair(Direction2D.Up, Direction2D.Left)
 		
 		override def horizontalDirection = Some(Direction2D.Left)
 		
@@ -698,7 +698,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		override def swingComponents =
 			HashMap(X -> SwingConstants.TRAILING, Y -> SwingConstants.TOP)
 		
-		override def directions = Vector(Direction2D.Up, Direction2D.Right)
+		override def directions = Pair(Direction2D.Up, Direction2D.Right)
 		
 		override def horizontalDirection = Some(Direction2D.Right)
 		
@@ -716,7 +716,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		override def swingComponents =
 			HashMap(X -> SwingConstants.LEADING, Y -> SwingConstants.BOTTOM)
 		
-		override def directions = Vector(Direction2D.Down, Direction2D.Left)
+		override def directions = Pair(Direction2D.Down, Direction2D.Left)
 		
 		override def horizontalDirection = Some(Direction2D.Left)
 		
@@ -734,7 +734,7 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		override def swingComponents =
 			HashMap(X -> SwingConstants.TRAILING, Y -> SwingConstants.BOTTOM)
 		
-		override def directions = Vector(Direction2D.Down, Direction2D.Right)
+		override def directions = Pair(Direction2D.Down, Direction2D.Right)
 		
 		override def horizontalDirection = Some(Direction2D.Right)
 		

@@ -1,5 +1,6 @@
 package utopia.flow.operator.sign
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator.sign.UncertainSign.UncertainBinarySign
@@ -217,7 +218,7 @@ object UncertainSign extends UncertainSign
 		/**
 		  * All values of this enumeration (positive, negative)
 		  */
-		val values = Vector[CertainBinarySign](CertainlyPositive, CertainlyNegative)
+		val values = Pair[CertainBinarySign](CertainlyPositive, CertainlyNegative)
 		
 		
 		// OTHER    -----------------------

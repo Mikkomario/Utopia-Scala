@@ -69,7 +69,7 @@ sealed trait Direction2DLike[+Parallel, +Perpendicular] extends Reversible[Paral
 	  * @return Directions perpendicular to this direction. First the direction to counterclockwise direction,
 	  *         then the direction to clockwise direction
 	  */
-	def perpendicular = Vector(rotatedQuarterCounterClockwise, rotatedQuarterClockwise)
+	def perpendicular = Pair(rotatedQuarterCounterClockwise, rotatedQuarterClockwise)
 	
 	/**
 	  * @return A unit vector pointing towards this direction

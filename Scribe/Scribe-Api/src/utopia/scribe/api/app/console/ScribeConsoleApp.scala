@@ -3,6 +3,7 @@ package utopia.scribe.api.app.console
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType, IntType, StringType}
@@ -65,13 +66,13 @@ object ScribeConsoleApp extends App
 	
 	// Tracks program state in separate pointers
 	
-	private val queuedIssuesPointer = Pointer(Vector.empty[Either[Int, IssueInstances]] -> 0)
-	private val queuedVariantsPointer = EventfulPointer(Vector.empty[IssueVariantInstances] -> 0)
+	private val queuedIssuesPointer = Pointer[(Seq[Either[Int, IssueInstances]], Int)](Empty -> 0)
+	private val queuedVariantsPointer = EventfulPointer[(Seq[IssueVariantInstances], Int)](Empty -> 0)
 	private val queuedErrorIdPointer = EventfulPointer.empty[Int]()
 	
 	// More issues and more occurrences are mutually exclusive
 	private val moreIssuesOrOccurrencesPointer =
-		EventfulPointer[(Either[Vector[IssueOccurrenceData], Vector[IssueInstances]], Int)](Left(Vector.empty) -> 0)
+		EventfulPointer[(Either[Seq[IssueOccurrenceData], Seq[IssueInstances]], Int)](Left(Vector.empty) -> 0)
 	
 	private val hasMoreVariantsPointer = queuedVariantsPointer
 		.map { case (variants, nextIndex) => nextIndex < variants.size }
@@ -169,7 +170,7 @@ object ScribeConsoleApp extends App
 			val occurrencesPerVariantId = DbIssueOccurrences.since(since, includePartialRanges = true).pull
 				.groupBy { _.caseId }
 			if (occurrencesPerVariantId.isEmpty)
-				Vector()
+				Empty
 			else {
 				val variantsPerIssueId = DbIssueVariants(occurrencesPerVariantId.keySet).pull
 					.map { v => v.withOccurrences(occurrencesPerVariantId(v.id).reverseSorted) }

@@ -3,6 +3,7 @@ package utopia.reach.component.input.check
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -91,7 +92,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 					View { contextPointer.value.background.shade })
 				
 				// Places the radio button on the left and the text field on the right
-				Vector(radioButton, label) -> radioButton
+				Pair(radioButton, label) -> radioButton
 			}
 		// Repaints the component when drawn background color changes (if applicable)
 		if (drawsBackground)

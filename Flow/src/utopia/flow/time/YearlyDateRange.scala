@@ -1,5 +1,6 @@
 package utopia.flow.time
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
 
 import java.time.{LocalDate, MonthDay, Year}
@@ -51,26 +52,19 @@ case class YearlyDateRange(start: MonthDay, end: MonthDay)
 	
 	/**
 	  * @param year Target year
-	  * @return This date range during that year. 0-2 separate ranges. 0 ranges if this range is empty.
+	  * @return This date range during that year. 1-2 separate ranges.
 	  *         If this range can be expressed as a single complete range of days during that year, returns 1 range.
 	  *         Otherwise returns 2 ranges (one for the beginning of the year and one for the end of the year).
 	  */
-	def at(year: Year): Vector[DateRange] =
-	{
-		// Case: Empty range => returns empty vector
+	def at(year: Year): IndexedSeq[DateRange] = {
 		if (spansFullYear)
-			Vector(year.firstDay to year.lastDay)
+			Single(year.firstDay to year.lastDay)
 		// Case: End of year is not passed => returns a single complete range
 		else if (isSingleRangePerYear)
-			Vector(year(start) toExclusive year(end))
+			Single(year(start) toExclusive year(end))
 		// Case: Range passes end of year => returns start of year segment and the end of year segment separately
 		else
-		{
-			Vector(
-				year.firstDay toExclusive year(end),
-				year(start) to year.lastDay
-			)
-		}
+			Pair(year.firstDay toExclusive year(end), year(start) to year.lastDay)
 	}
 	
 	/**

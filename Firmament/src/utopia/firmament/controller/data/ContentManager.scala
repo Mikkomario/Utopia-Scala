@@ -12,8 +12,8 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
   * @tparam A Type of item displayed in a single display component
  *  @tparam C Type of display component
   */
-trait ContentManager[A, C <: Refreshable[A]] extends ContentDisplayer[A, C, EventfulPointer[Vector[A]]]
-	with RefreshableWithPointer[Vector[A]]
+trait ContentManager[A, C <: Refreshable[A]] extends ContentDisplayer[A, C, EventfulPointer[Seq[A]]]
+	with RefreshableWithPointer[Seq[A]]
 {
 	/**
 	  * Replaces a single item in content with a new version. This is only useful when content has mutable states.

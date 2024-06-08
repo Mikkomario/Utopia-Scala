@@ -1,5 +1,7 @@
 package utopia.trove.model.enumeration
 
+import utopia.flow.collection.immutable.Pair
+
 /**
   * Enumeration for different sql file purposes
   * @author Mikko Hilpinen
@@ -14,7 +16,7 @@ object SqlFileType
 	/**
 	  * All values of this enumeration
 	  */
-	val values = Vector[SqlFileType](Full, Changes)
+	val values = Pair[SqlFileType](Full, Changes)
 	
 	
 	// OTHER	------------------------

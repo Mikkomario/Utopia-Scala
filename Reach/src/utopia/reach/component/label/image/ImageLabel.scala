@@ -7,6 +7,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.factory.FramedFactory
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
@@ -149,9 +150,9 @@ object ImageLabelSettings
 	}
 }
 case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
-                               imageScaling: Double = 1.0, transformation: Option[Matrix2D] = None,
-                               colorOverlay: Option[Color] = None, customDrawers: Vector[CustomDrawer] = Vector.empty,
-                               usesLowPrioritySize: Boolean = false)
+                              imageScaling: Double = 1.0, transformation: Option[Matrix2D] = None,
+                              colorOverlay: Option[Color] = None, customDrawers: Seq[CustomDrawer] = Empty,
+                              usesLowPrioritySize: Boolean = false)
 	extends ImageLabelSettingsLike[ImageLabelSettings]
 {
 	// COMPUTED ----------------------------
@@ -175,7 +176,7 @@ case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: 
 	override def withColor(color: Option[Color]): ImageLabelSettings = copy(colorOverlay = color)
 	override def withUseLowPrioritySize(lowPriority: Boolean): ImageLabelSettings =
 		copy(usesLowPrioritySize = lowPriority)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ImageLabelSettings = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ImageLabelSettings = copy(customDrawers = drawers)
 	override def apply(alignment: Alignment) = copy(alignment = alignment)
 }
 
@@ -194,7 +195,7 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 	override def alignment: Alignment = settings.alignment
 	override def colorOverlay: Option[Color] = settings.colorOverlay
 	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
-	override def customDrawers: Vector[CustomDrawer] = settings.customDrawers
+	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	override def transformation: Option[Matrix2D] = settings.transformation
 	
 	override def withInsets(insets: StackInsetsConvertible): Repr = mapSettings { _.withInsets(insets) }
@@ -202,7 +203,7 @@ trait ImageLabelSettingsWrapper[+Repr] extends ImageLabelSettingsLike[Repr]
 	override def withColor(color: Option[Color]): Repr = mapSettings { _.withColor(color) }
 	override def withUseLowPrioritySize(lowPriority: Boolean): Repr = mapSettings { _.withUseLowPrioritySize(lowPriority) }
 	override def apply(alignment: Alignment): Repr = mapSettings { _(alignment) }
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr = mapSettings { _.withCustomDrawers(drawers) }
 	override def withTransformation(transformation: Option[Matrix2D]): Repr =
 		mapSettings { _.withTransformation(transformation) }
 	
@@ -253,7 +254,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, image: Image,
 	                          transformation: Option[Matrix2D] = None,
 	                          override val insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
-	                          additionalCustomDrawers: Vector[CustomDrawer] = Vector(), override val allowUpscaling: Boolean = true,
+	                          additionalCustomDrawers: Seq[CustomDrawer] = Empty, override val allowUpscaling: Boolean = true,
 	                          override val useLowPrioritySize: Boolean = false)
 		extends CustomDrawReachComponent with ImageLabel
 	{

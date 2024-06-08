@@ -1,6 +1,7 @@
 package utopia.firmament.component.container.single
 
 import utopia.firmament.component.stack.Stackable
+import utopia.flow.collection.immutable.Single
 import utopia.paradigm.enumeration.Axis2D
 /**
   * Scroll views are containers that allow horizontal or vertical content scrolling
@@ -68,7 +69,7 @@ trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
 	
 	// IMPLEMENTED	----------------
 	
-	override def axes = Vector(axis)
+	override def axes: Seq[Axis2D] = Single(axis)
 	
 	
 	// OTHER	----------------------

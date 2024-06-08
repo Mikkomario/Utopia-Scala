@@ -9,6 +9,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
@@ -62,17 +63,17 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	@deprecated("Replaced with .apply(StackInsetsConvertible).apply(OpenComponent)", "v1.1")
 	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], insets: StackInsetsConvertible,
-										  customDrawers: Vector[CustomDrawer] = Vector()): ComponentWrapResult[Framing, C, R] =
+										  customDrawers: Seq[CustomDrawer] = Empty): ComponentWrapResult[Framing, C, R] =
 		apply(insets).withCustomDrawers(customDrawers).apply(content)
 }
 
 case class InitializedFramingFactory(parentHierarchy: ComponentHierarchy, insets: StackInsets,
-                                     customDrawers: Vector[CustomDrawer] = Vector())
+                                     customDrawers: Seq[CustomDrawer] = Empty)
 	extends FramingFactoryLike[InitializedFramingFactory]
 		with NonContextualWrapperContainerFactory[Framing, ReachComponentLike]
 {
 	override def withInsets(insets: StackInsetsConvertible): InitializedFramingFactory = copy(insets = insets.toInsets)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): InitializedFramingFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedFramingFactory =
 		copy(customDrawers = drawers)
 }
 
@@ -99,7 +100,7 @@ object ContextualFramingFactory
 }
 
 case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                      customDrawers: Vector[CustomDrawer] = Vector(),
+                                                      customDrawers: Seq[CustomDrawer] = Empty,
                                                       customInsets: Either[SizeCategory, StackInsets] = Left(Medium))
 	extends FramingFactoryLike[ContextualFramingFactory[N]]
 		with ContextualWrapperContainerFactory[N, BaseContext, Framing, ReachComponentLike, ContextualFramingFactory]
@@ -133,7 +134,7 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
 	
 	override def withInsets(insets: StackInsetsConvertible): ContextualFramingFactory[N] =
 		copy(customInsets = Right(insets.toInsets))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualFramingFactory[N] =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualFramingFactory[N] =
 		copy(customDrawers = drawers)
 	
 	override def withInsets(insetSize: SizeCategory) = copy(customInsets = Left(insetSize))
@@ -145,5 +146,5 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
   * @since 7.10.2020, v0.1
   */
 class Framing(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-			  override val insets: StackInsets, override val customDrawers: Vector[CustomDrawer] = Vector())
+			  override val insets: StackInsets, override val customDrawers: Seq[CustomDrawer] = Empty)
 	extends CustomDrawReachComponent with FramingLike[ReachComponentLike]

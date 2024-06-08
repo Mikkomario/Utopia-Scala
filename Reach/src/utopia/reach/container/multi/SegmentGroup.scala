@@ -3,6 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -25,7 +26,7 @@ object SegmentGroup
 	  * @param layouts Layouts to use in row segments (ordered)
 	  * @return A new segmented group that produces rows
 	  */
-	def rowsWithLayouts(layouts: Vector[StackLayout]) = new SegmentGroup(layouts = layouts)
+	def rowsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(layouts = layouts)
 	
 	/**
 	  * @param first First segment layout
@@ -34,13 +35,13 @@ object SegmentGroup
 	  * @return A new segmented group that produces rows
 	  */
 	def rowsWithLayouts(first: StackLayout, second: StackLayout, more: StackLayout*): SegmentGroup =
-		rowsWithLayouts(Vector(first, second) ++ more)
+		rowsWithLayouts(Pair(first, second) ++ more)
 	
 	/**
 	  * @param layouts Layouts to use in column segments (ordered)
 	  * @return A new segmented group that produces columns
 	  */
-	def columnsWithLayouts(layouts: Vector[StackLayout]) = new SegmentGroup(Y, layouts)
+	def columnsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(Y, layouts)
 	
 	/**
 	  * @param first First segment layout
@@ -49,7 +50,7 @@ object SegmentGroup
 	  * @return A new segmented group that produces columns
 	  */
 	def columnsWithLayouts(first: StackLayout, second: StackLayout, more: StackLayout*): SegmentGroup =
-		columnsWithLayouts(Vector(first, second) ++ more)
+		columnsWithLayouts(Pair(first, second) ++ more)
 }
 
 /**
@@ -60,11 +61,11 @@ object SegmentGroup
   *                     Default = X.
   * @param layouts Layouts to be used with different segments, ordered. Default = all use Fit.
   */
-class SegmentGroup(val rowDirection: Axis2D = X, layouts: Vector[StackLayout] = Vector())
+class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty)
 {
 	// ATTRIBUTES	---------------------------
 	
-	private var segments = Vector[Segment]()
+	private var segments: Seq[Segment] = Empty
 	
 	
 	// OTHER	-------------------------------
@@ -106,6 +107,6 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Vector[StackLayout] = 
 			}
 			segments ++= newSegments
 		}
-		row.indices.map { i => segments(i).wrap(nextHierarchy, row(i), i + 1) }.toVector
+		row.indices.map { i => segments(i).wrap(nextHierarchy, row(i), i + 1) }
 	}
 }

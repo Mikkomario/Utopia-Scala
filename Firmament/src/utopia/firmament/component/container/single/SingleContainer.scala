@@ -1,6 +1,7 @@
 package utopia.firmament.component.container.single
 
 import utopia.firmament.component.Component
+import utopia.flow.collection.immutable.Single
 
 /**
   * A common trait for containers that always contain a single component
@@ -19,5 +20,5 @@ trait SingleContainer[+C <: Component] extends Component
 	
 	// IMPLEMENTED	-----------------
 	
-	override def children = Vector(content)
+	override def children: Seq[C] = Single(content)
 }

@@ -1,5 +1,6 @@
 package utopia.reach.component.factory
 
+import utopia.flow.util.Mutate
 import utopia.reach.focus.FocusListener
 
 /**
@@ -14,12 +15,12 @@ trait FocusListenableFactory[+Repr]
 	/**
 	  * @return Currently attached focus listeners
 	  */
-	protected def focusListeners: Vector[FocusListener]
+	protected def focusListeners: Seq[FocusListener]
 	/**
 	  * @param listeners Focus listeners to attach to this component (exclusive)
 	  * @return Copy of this factory with the specified focus listeners (only)
 	  */
-	def withFocusListeners(listeners: Vector[FocusListener]): Repr
+	def withFocusListeners(listeners: Seq[FocusListener]): Repr
 	
 	
 	// OTHER    ----------------------------
@@ -28,8 +29,7 @@ trait FocusListenableFactory[+Repr]
 	  * @param f A mapping function used to modify the focus listeners attached to this factory
 	  * @return Copy of this factory with modified listeners
 	  */
-	def mapFocusListeners(f: Vector[FocusListener] => Vector[FocusListener]) =
-		withFocusListeners(f(focusListeners))
+	def mapFocusListeners(f: Mutate[Seq[FocusListener]]) = withFocusListeners(f(focusListeners))
 	
 	/**
 	  * @param listeners Focus listeners to assign

@@ -40,7 +40,7 @@ object NewUser extends FromModelFactory[NewUser]
   * @param requestRefreshToken Whether a refresh token should be generated and returned upon user creation
   *                            (default = false)
   */
-case class NewUser(name: String, password: String, languages: Vector[NewLanguageProficiency],
+case class NewUser(name: String, password: String, languages: Seq[NewLanguageProficiency],
                    email: Option[String] = None, requestRefreshToken: Boolean = false)
 	extends ModelConvertible
 {
@@ -56,7 +56,7 @@ case class NewUser(name: String, password: String, languages: Vector[NewLanguage
 	
 	override def toModel = {
 		Model(Vector[(String, Value)]("name" -> name, "email" -> email, "password" -> password,
-			"languages" -> languages.map { _.toModel }, "request_refresh_token" -> requestRefreshToken))
+			"languages" -> languages.map { _.toModel }.toVector, "request_refresh_token" -> requestRefreshToken))
 	}
 	
 	

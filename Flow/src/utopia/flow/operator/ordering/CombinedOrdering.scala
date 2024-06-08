@@ -1,6 +1,7 @@
 package utopia.flow.operator.ordering
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 
 object CombinedOrdering
 {
@@ -14,7 +15,7 @@ object CombinedOrdering
 	  *         where former orderings return an identical value
 	  */
 	def apply[A](firstOrdering: Ordering[_ >: A], secondOrdering: Ordering[_ >: A], moreOrderings: Ordering[_ >: A]*) =
-		new CombinedOrdering[A](Vector(firstOrdering, secondOrdering) ++ moreOrderings)
+		new CombinedOrdering[A](Pair(firstOrdering, secondOrdering) ++ moreOrderings)
 }
 
 /**

@@ -2,6 +2,7 @@ package utopia.paradigm.path
 
 import utopia.flow.operator.HasLength
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.path.Path.PathWithDistance
 
 object CompoundPath
@@ -15,7 +16,7 @@ object CompoundPath
 	  * @return A new compound path
 	  */
 	def apply[P](first: PathWithDistance[P], second: PathWithDistance[P], more: PathWithDistance[P]*): CompoundPath[P] =
-		CompoundPath(Vector(first, second) ++ more)
+		CompoundPath(Pair(first, second) ++ more)
 }
 
 /**
@@ -23,7 +24,7 @@ object CompoundPath
   * @author Mikko Hilpinen
   * @since Genesis 20.6.2019, v2.1+
   */
-case class CompoundPath[+P](parts: Vector[PathWithDistance[P]]) extends Path[P] with HasLength
+case class CompoundPath[+P](parts: Seq[PathWithDistance[P]]) extends Path[P] with HasLength
 {
 	// ATTRIBUTES   -------------------
 	
@@ -42,38 +43,31 @@ case class CompoundPath[+P](parts: Vector[PathWithDistance[P]]) extends Path[P] 
 	
 	override def end = parts.last.end
 	
-	override def apply(t: Double) =
-	{
+	override def apply(t: Double) = {
 		// Handles cases where t is out of bounds
 		if (t <= 0)
 			parts.head(t * (1 / (parts.head.length / length)))
-		else if (t >= 1)
-		{
+		else if (t >= 1) {
 			val lastLength = parts.last.length
 			val startT = (length - lastLength) / length
 			val tInPart = (t - startT) * (1 / (lastLength / length))
 			parts.last(tInPart)
 		}
-		else
-		{
+		else {
 			// Traverses paths until a suitable is found
 			val targetPosition = t * length
 			var traversed = 0.0
-			parts.findMap
-			{
-				part =>
-					val length = part.length
-					if (traversed + length >= targetPosition)
-					{
-						val positionInPart = targetPosition - traversed
-						val tInsidePart = positionInPart / length
-						Some(part(tInsidePart))
-					}
-					else
-					{
-						traversed += length
-						None
-					}
+			parts.findMap { part =>
+				val length = part.length
+				if (traversed + length >= targetPosition) {
+					val positionInPart = targetPosition - traversed
+					val tInsidePart = positionInPart / length
+					Some(part(tInsidePart))
+				}
+				else {
+					traversed += length
+					None
+				}
 			}.get
 		}
 	}

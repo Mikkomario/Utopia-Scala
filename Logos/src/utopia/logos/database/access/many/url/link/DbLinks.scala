@@ -1,7 +1,7 @@
 package utopia.logos.database.access.many.url.link
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.string.Regex
@@ -153,7 +153,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 					linksToInsert -> existing
 				}
 				else
-					linksToFreelyInsert -> Vector()
+					linksToFreelyInsert -> Empty
 			}
 			// Inserts link data
 			val insertedLinks = model.insert(linksToInsert)

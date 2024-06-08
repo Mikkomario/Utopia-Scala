@@ -1,9 +1,13 @@
 package utopia.disciple.http.request
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import TimeoutType._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 
 object Timeout
 {
@@ -179,31 +183,23 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @param other Another timeout
 	  * @return A combination of these timeouts where the smaller value is used for each specified type
 	  */
-	def min(other: Timeout) =
-	{
-		val allKeys = thresholds.keySet ++ other.thresholds.keySet
-		val newThresholds = allKeys.map { key =>
-			val value = Vector(get(key), other.get(key)).flatten.min
-			key -> value
-		}
-		Timeout(newThresholds.toMap)
-	}
-	
+	def min(other: Timeout) = extremeWith(other, Min)
 	/**
 	  * @param other Another timeout
 	  * @return A combination of these timeouts where the larger value is used for each type specified in both timeouts.
 	  *         If a timeout threshold is only specified in a single timeout instance, it is left unspecified in the
 	  *         combined instance.
 	  */
-	def max(other: Timeout) =
-	{
-		val keys = thresholds.keySet & other.thresholds.keySet
-		val newThresholds = keys.map { key =>
-			val value = Vector(get(key), get(key)).flatten.max
-			key -> value
-		}
-		Timeout(newThresholds.toMap)
-	}
+	def max(other: Timeout) = extremeWith(other, Max)
+	/**
+	  * @param other Another timeout
+	  * @param extreme Targeted extreme (Min for selecting the smallest timeouts, Max for selecting the largest)
+	  * @return A combination of these timeouts where the larger or smaller value is
+	  *         used for each type specified in both timeouts.
+	  *         If a timeout threshold is only specified in a single timeout instance,
+	  *         that value is used in the combined instance.
+	  */
+	def extremeWith(other: Timeout, extreme: Extreme) = mergeWith(other) { _(extreme) }
 	
 	/**
 	  * @param other Another timeout
@@ -211,13 +207,15 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  *         If a timeout threshold only exists in a single timeout instance, that threshold is used as is.
 	  *         Therefore calling this method may actually shorten the resulting timeout from infinite to a specified value.
 	  */
-	def +(other: Timeout) =
-	{
-		val keys = thresholds.keySet ++ other.thresholds.keySet
-		val newThresholds = keys.map { key =>
-			val value = Vector(get(key), get(key)).flatten.reduce { _ + _ }
-			key -> value
-		}
-		Timeout(newThresholds.toMap)
-	}
+	def +(other: Timeout) = mergeWith(other) { _.reduce { _ + _ } }
+	
+	/**
+	  * Merges this timeout collection with another
+	  * @param other Another timeout collection
+	  * @param select Function called for selecting between the available (1-2) timeout options
+	  * @return Combined timeout collection
+	  */
+	def mergeWith(other: Timeout)(select: Seq[FiniteDuration] => FiniteDuration) =
+		Timeout((thresholds.keySet & other.thresholds.keySet)
+			.map { key => key -> select(Pair(this, other).flatMap { _.get(key) }) }.toMap)
 }

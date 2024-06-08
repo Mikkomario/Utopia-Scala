@@ -2,6 +2,7 @@ package utopia.access.http.error
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.access.http.ContentType
+import utopia.flow.collection.immutable.Empty
 
 object ContentTypeException
 {
@@ -11,8 +12,7 @@ object ContentTypeException
 	  * @param allowed Content types allowed (default = empty)
 	  * @return A new exception
 	  */
-	def notAccepted(proposed: ContentType, allowed: Seq[ContentType] = Vector()) =
-	{
+	def notAccepted(proposed: ContentType, allowed: Seq[ContentType] = Empty) = {
 		val allowedString = {
 			if (allowed.isEmpty)
 				""

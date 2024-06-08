@@ -136,7 +136,7 @@ object DeepMap
   * @since 25.12.2021, v1.14.1
   */
 case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, V], V]])
-	extends MapAccess[Iterable[K], V] with Iterable[(Vector[K], V)] with ModelConvertible
+	extends MapAccess[Iterable[K], V] with Iterable[(IndexedSeq[K], V)] with ModelConvertible
 {
 	// COMPUTED -------------------------------
 	
@@ -169,9 +169,9 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 		Model.withConstants(constants)
 	}
 	
-	override def iterator: Iterator[(Vector[K], V)] = wrapped.iterator.flatMap { case (key, value) =>
+	override def iterator: Iterator[(IndexedSeq[K], V)] = wrapped.iterator.flatMap { case (key, value) =>
 		value match {
-			case Right(direct) => Some(Vector(key) -> direct)
+			case Right(direct) => Some(Single(key) -> direct)
 			case Left(nested) => nested.iterator.map { case (path, value) => (key +: path) -> value }
 		}
 	}
@@ -207,7 +207,7 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	  * @param more More path parts
 	  * @return A nested map at the end of that path (or an empty map)
 	  */
-	def nested(first: K, second: K, more: K*): DeepMap[K, V] = nested(Vector(first, second) ++ more)
+	def nested(first: K, second: K, more: K*): DeepMap[K, V] = nested(Pair(first, second) ++ more)
 	
 	/**
 	  * @param path A path to look up
@@ -225,7 +225,7 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	  * @param more Deeper keys
 	  * @return A value from that path. None if no value was found
 	  */
-	def get(key1: K, key2: K, more: K*): Option[V] = get(Vector(key1, key2) ++ more)
+	def get(key1: K, key2: K, more: K*): Option[V] = get(Pair(key1, key2) ++ more)
 	
 	/**
 	  * @param key A key
@@ -256,7 +256,7 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 	  * @param more More path parts
 	  * @return A nested map at the end of that path. None if that path didn't point to a nested map
 	  */
-	def getNested(first: K, second: K, more: K*): Option[DeepMap[K, V]] = getNested(Vector(first, second) ++ more)
+	def getNested(first: K, second: K, more: K*): Option[DeepMap[K, V]] = getNested(Pair(first, second) ++ more)
 	
 	/**
 	  * @param key A key

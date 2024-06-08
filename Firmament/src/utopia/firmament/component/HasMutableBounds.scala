@@ -3,10 +3,9 @@ package utopia.firmament.component
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape1d.vector.Vector1D
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
-import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 object HasMutableBounds
@@ -67,11 +66,11 @@ trait HasMutableBounds extends HasBounds
     
     // COMPUTED    -----------------------
     
-    def position_+=(adjustment: Vector3D) = position = position + adjustment
-    def position_-=(adjustment: Vector3D) = position += (-adjustment)
+    def position_+=(adjustment: HasDoubleDimensions) = position = position + adjustment
+    def position_-=(adjustment: HasDoubleDimensions) = position = position -adjustment
     
-    def size_+=(adjustment: Size) = size = size + adjustment
-    def size_-=(adjustment: Size) = size += (-adjustment)
+    def size_+=(adjustment: HasDoubleDimensions) = size = size + adjustment
+    def size_-=(adjustment: HasDoubleDimensions) = size = size - adjustment
     
 	def x = position.x
     def x_=(newX: Double) = position = position.withX(newX)

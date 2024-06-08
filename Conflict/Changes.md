@@ -10,8 +10,9 @@ Refactoring based on Genesis changes
 - **Collidable** was replaced with **CanCollideWith**
 - **CollisionHandler** class was completely rewritten
   - The new implementation is mutable. Immutable version was removed.
-### Other
+### Other changes
 - This module is no longer dependent from the **Inception** module
+- **Collision** and **CollisionShape** now use **Seq** instead of **Vector**
 - This release has not been properly tested. Exercise discretion.
 
 ## v1.4.5 - 22.01.2024

@@ -15,7 +15,7 @@ trait WrappingContainer[C <: ReflectionComponentLike, Wrap] extends Container[C]
 	/**
 	  * @return Wrappers managed by this container
 	  */
-	protected def wrappers: Vector[Wrap]
+	protected def wrappers: IndexedSeq[Wrap]
 	
 	/**
 	  * @param wrapper A wrapper
@@ -32,11 +32,10 @@ trait WrappingContainer[C <: ReflectionComponentLike, Wrap] extends Container[C]
 	
 	// IMPLEMENTED	----------------------------
 	
+	override def components = wrappers.map(unwrap)
+	
 	override protected def remove(component: C) = {
 		val wrappers = this.wrappers
 		wrappers.findIndexWhere { unwrap(_) == component }.foreach { index => removeWrapper(wrappers(index), index) }
 	}
-	
-	
-	override def components = wrappers.map(unwrap)
 }

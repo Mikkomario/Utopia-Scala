@@ -9,6 +9,7 @@ import utopia.firmament.drawing.view.TextViewDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
@@ -22,7 +23,7 @@ import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.genesis.graphics.Priority
 
 case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
-                                          customDrawers: Vector[CustomDrawer] = Vector(),
+                                          customDrawers: Seq[CustomDrawer] = Empty,
                                           isHintPointer: Changing[Boolean] = AlwaysFalse,
                                           drawBackground: Boolean = false)
 	extends VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewTextLabelFactory]
@@ -48,7 +49,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	// IMPLEMENTED	-----------------------------
 	
 	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextLabelFactory = copy(contextPointer = p)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualViewTextLabelFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextLabelFactory =
 		copy(customDrawers = drawers)
 	
 	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
@@ -116,7 +117,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
   * Used for constructing new view text labels
   * @param parentHierarchy A component hierarchy the new labels will be placed in
   */
-case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawers: Vector[CustomDrawer] = Vector.empty,
+case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty,
                                 allowsTextToShrink: Boolean = false)
 	extends FromVariableContextFactory[TextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ViewTextLabelFactory] with BackgroundAssignable[ViewTextLabelFactory]
@@ -131,7 +132,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ViewTextLabelFactory = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewTextLabelFactory = copy(customDrawers = drawers)
 	override def withBackground(background: Color): ViewTextLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
 	
@@ -245,7 +246,7 @@ object ViewTextLabel extends Cff[ViewTextLabelFactory]
 class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
                         stylePointer: Changing[TextDrawContext], allowTextShrinkPointer: Changing[Boolean] = AlwaysFalse,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-                        additionalDrawers: Seq[CustomDrawer] = Vector())
+                        additionalDrawers: Seq[CustomDrawer] = Empty)
 	extends CustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
@@ -256,7 +257,7 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 	val textPointer = contentPointer.mergeWithWhile(stylePointer, parentHierarchy.linkPointer) { (content, style) =>
 		measure(displayFunction(content), style)
 	}
-	override val customDrawers =  additionalDrawers.toVector :+ TextViewDrawer(textPointer, stylePointer)
+	override val customDrawers =  additionalDrawers :+ TextViewDrawer(textPointer, stylePointer)
 	
 	
 	// INITIAL CODE	-------------------------------------

@@ -1,6 +1,7 @@
 package utopia.courier.model.write
 
 import utopia.courier.model.EmailAddress
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.StringExtensions._
 
 import javax.mail.Message.RecipientType
@@ -19,9 +20,9 @@ object Recipients
 	// IMPLICIT ----------------------------------
 	
 	implicit def emailToRecipients(email: EmailAddress): Recipients = apply(email)
-	implicit def addressListToRecipients(list: Vector[EmailAddress]): Recipients = apply(list)
-	implicit def stringListToRecipients(list: Vector[String]): Recipients = apply(list.map(EmailAddress.apply))
-	implicit def mapToRecipients(map: Map[RecipientType, Vector[EmailAddress]]): Recipients = apply(map)
+	implicit def addressListToRecipients(list: Seq[EmailAddress]): Recipients = apply(list)
+	implicit def stringListToRecipients(list: Seq[String]): Recipients = apply(list.map(EmailAddress.apply))
+	implicit def mapToRecipients(map: Map[RecipientType, Seq[EmailAddress]]): Recipients = apply(map)
 	
 	
 	// OTHER    ----------------------------------
@@ -31,7 +32,7 @@ object Recipients
 	  * @param addresses Recipient email addresses
 	  * @return A new recipients list
 	  */
-	def apply(recipientType: RecipientType, addresses: Vector[EmailAddress]): Recipients =
+	def apply(recipientType: RecipientType, addresses: Seq[EmailAddress]): Recipients =
 		apply(Map(recipientType -> addresses))
 	/**
 	  * @param recipientType Recipient type
@@ -40,20 +41,20 @@ object Recipients
 	  * @return A new recipients list
 	  */
 	def apply(recipientType: RecipientType, firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
-		apply(recipientType, firstAddress +: moreAddresses.toVector)
+		apply(recipientType, firstAddress +: moreAddresses)
 	
 	/**
 	  * @param addresses Recipient addresses
 	  * @return A new recipients list
 	  */
-	def apply(addresses: Vector[EmailAddress]): Recipients = apply(RecipientType.TO, addresses)
+	def apply(addresses: Seq[EmailAddress]): Recipients = apply(RecipientType.TO, addresses)
 	/**
 	  * @param firstAddress First recipient email address
 	  * @param moreAddresses More email addresses
 	  * @return A new recipients list
 	  */
 	def apply(firstAddress: EmailAddress, moreAddresses: EmailAddress*): Recipients =
-		apply(firstAddress +: moreAddresses.toVector)
+		apply(firstAddress +: moreAddresses)
 }
 
 /**
@@ -61,7 +62,7 @@ object Recipients
   * @author Mikko Hilpinen
   * @since 13.9.2021, v0.1
   */
-case class Recipients(addressesByType: Map[RecipientType, Vector[EmailAddress]])
+case class Recipients(addressesByType: Map[RecipientType, Seq[EmailAddress]])
 	extends Iterable[(EmailAddress, RecipientType)]
 {
 	// COMPUTED ---------------------------------
@@ -104,7 +105,7 @@ case class Recipients(addressesByType: Map[RecipientType, Vector[EmailAddress]])
 	  * @param recipientType Type of recipient
 	  * @return Addresses linked with that recipient type
 	  */
-	def apply(recipientType: RecipientType) = addressesByType.getOrElse(recipientType, Vector())
+	def apply(recipientType: RecipientType) = addressesByType.getOrElse(recipientType, Empty)
 	
 	/**
 	  * @param address A new email address + recipient type -pair

@@ -2,6 +2,7 @@
 
 ## v2.4 (in development)
 ### Breaking changes
+- In most places where **Vector** was used required, **Seq** is now used
 - Removed `.notEmpty` from **StringExtensions** because of ambiguities when combined with **CollectionExtensions**
   - Now present in **StringExtensions** as `.ifNotEmpty`
 - **ModelDeclaration**`.validate(AnyModel)` now returns a **Try** instead of **ModelValidationResult**
@@ -27,6 +28,8 @@
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **Empty** object, an optimized empty **IndexedSeq** implementation
+- Added **Single** class, an optimized **IndexedSeq** implementation for individual items
+- Added **OptimizedIndexedSeq** for building instances of **Empty**, **Single**, **Pair** or **Vector**
 - Added **FromCollectionFactory** trait
 - Added **ZipBuilder** class
 - Added **LazyPair** class

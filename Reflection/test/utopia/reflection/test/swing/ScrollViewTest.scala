@@ -97,7 +97,7 @@ object ScrollViewTest extends App
 	frame.visible = true
 }
 
-private class ContentUpdateLoop(val target: Refreshable[Vector[Int]])(implicit exc: ExecutionContext)
+private class ContentUpdateLoop(val target: Refreshable[Seq[Int]])(implicit exc: ExecutionContext)
 	extends LoopingProcess
 {
 	// ATTRIBUTES	---------------------

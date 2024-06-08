@@ -1,5 +1,7 @@
 package utopia.firmament.component.input
 
+import utopia.flow.collection.immutable.{Empty, Single}
+
 import scala.collection.BuildFrom
 
 object Selectable
@@ -39,13 +41,13 @@ object Selectable
 		  * If no item is selected, selects the first item
 		  * @param bf Build from (implicit)
 		  */
-		def selectAny()(implicit bf: BuildFrom[Vector[A], A, CS]) = if (!s.isSelected) selectFirst()
+		def selectAny()(implicit bf: BuildFrom[Single[A], A, CS]) = if (!s.isSelected) selectFirst()
 		
 		/**
 		  * Selects the first item in this selectable
 		  * @param bf Build from (implicit)
 		  */
-		def selectFirst()(implicit bf: BuildFrom[Vector[A], A, CS]) = s.selected.headOption.foreach(selectOne)
+		def selectFirst()(implicit bf: BuildFrom[Single[A], A, CS]) = s.selected.headOption.foreach(selectOne)
 		
 		/**
 		  * Selects all currently available items
@@ -57,14 +59,14 @@ object Selectable
 		  * Selects no items
 		  * @param bf Build from (implicit)
 		  */
-		def clearSelection()(implicit bf: BuildFrom[Vector[A], A, CS]) = selectMany(Vector[A]())
+		def clearSelection()(implicit bf: BuildFrom[IndexedSeq[A], A, CS]) = selectMany(Empty)
 		
 		/**
 		  * Selects exactly one item
 		  * @param item Target item
 		  * @param bf Build from (implicit)
 		  */
-		def selectOne(item: A)(implicit bf: BuildFrom[Vector[A], A, CS]) = selectMany(Vector(item))
+		def selectOne(item: A)(implicit bf: BuildFrom[Single[A], A, CS]) = selectMany(Single(item))
 		
 		/**
 		 * Selects the items that satisfy the specified search condition

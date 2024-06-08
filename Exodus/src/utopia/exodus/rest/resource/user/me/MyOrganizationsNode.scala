@@ -4,6 +4,7 @@ import utopia.access.http.Method.Get
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.exodus.model.enumeration.ExodusScope.ReadOrganizationData
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.metropolis.model.cached.LanguageIds
@@ -23,8 +24,8 @@ object MyOrganizationsNode extends ResourceWithChildren[AuthorizedContext]
 	// ATTRIBUTES   ------------------------
 	
 	override val name = "organizations"
-	override val allowedMethods = Vector(Get)
-	override val children = Vector(DeletionsForMyOrganizationsNode)
+	override val allowedMethods = Single(Get)
+	override val children = Single(DeletionsForMyOrganizationsNode)
 	
 	
 	// IMPLEMENTED	------------------------

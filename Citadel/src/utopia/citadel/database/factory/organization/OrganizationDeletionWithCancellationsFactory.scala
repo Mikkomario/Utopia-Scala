@@ -21,8 +21,7 @@ object OrganizationDeletionWithCancellationsFactory
 	
 	override def parentFactory = OrganizationDeletionFactory
 	
-	override def apply(deletion: OrganizationDeletion, 
-		cancellations: Vector[OrganizationDeletionCancellation]) = 
+	override def apply(deletion: OrganizationDeletion, cancellations: Seq[OrganizationDeletionCancellation]) =
 		OrganizationDeletionWithCancellations(deletion, cancellations)
 }
 

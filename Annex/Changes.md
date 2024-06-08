@@ -4,6 +4,8 @@
 ### Bugfixes
 - Persisted requests are now removed from the request container regardless of whether there was a request handler 
   that was able to process them
+### Other changes
+- In many instances where **Vector** was required, **Seq** is now used
 
 ## v1.7 - 22.01.2024
 This update focuses on persisting request handling (i.e. offline support across use-sessions). 

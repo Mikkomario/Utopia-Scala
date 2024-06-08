@@ -8,7 +8,7 @@ import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -174,7 +174,7 @@ trait DurationFieldSettingsLike[+Repr]
 		withLabelSettings(labelSettings.withCaretBlinkFrequency(frequency))
 	override def withCustomCaretColorPointer(p: Option[Changing[ColorRole]]) =
 		withLabelSettings(labelSettings.withCustomCaretColorPointer(p))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]) =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
 	override def withDrawSelectionBackground(drawBackground: Boolean) =
 		withLabelSettings(labelSettings.withDrawSelectionBackground(drawBackground))
@@ -184,7 +184,7 @@ trait DurationFieldSettingsLike[+Repr]
 		withFieldSettings(fieldSettings.withFieldNamePointer(p))
 	override def withFillBackground(fill: Boolean) = withFieldSettings(fieldSettings.withFillBackground(fill))
 	override def withFocusColorRole(color: ColorRole) = withFieldSettings(fieldSettings.withFocusColorRole(color))
-	override def withFocusListeners(listeners: Vector[FocusListener]) =
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withLabelSettings(labelSettings.withFocusListeners(listeners))
 	override def withHighlightColorPointer(p: Changing[ColorRole]) =
 		withLabelSettings(labelSettings.withHighlightColorPointer(p))
@@ -493,7 +493,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 			val components = {
 				// Case: There is only a single field to use => wraps it
 				if (inputFields.size < 2)
-					Vector(inputFields.head)
+					Single(inputFields.head)
 				// Case: There are multiple fields to combine => Places them in a stack
 				else {
 					// Also automatically transfers the focus between fields when they get filled
@@ -519,7 +519,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 								.hint.text(Fixed(settings.separator))
 						}
 						inputFields.dropRight(1).zip(separatorFields)
-							.flatMap { case (field, separator) => Vector(field, separator) } :+ inputFields.last
+							.flatMap { case (field, separator) => Pair(field, separator) } :+ inputFields.last
 					}
 					else
 						inputFields

@@ -1,5 +1,6 @@
 package utopia.reflection.component.template.layout.stack
 
+import utopia.flow.collection.immutable.Empty
 import utopia.reflection.event.StackHierarchyListener
 
 /**
@@ -14,17 +15,15 @@ trait ReflectionStackLeaf extends ReflectionStackable
 	
 	private var _isAttachedToMainHierarchy = false
 	
-	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 	
 	
 	// IMPLEMENTED	-----------------------
 	
 	override def isAttachedToMainHierarchy = _isAttachedToMainHierarchy
 	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
-		if (newAttachmentStatus != _isAttachedToMainHierarchy)
-		{
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
+		if (newAttachmentStatus != _isAttachedToMainHierarchy) {
 			_isAttachedToMainHierarchy = newAttachmentStatus
 			fireStackHierarchyChangeEvent(newAttachmentStatus)
 		}

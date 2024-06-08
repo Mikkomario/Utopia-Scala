@@ -43,5 +43,5 @@ trait TypedTokenLike extends Extender[TokenData]
 	  * @param scopes Scope information to include
 	  * @return A copy of this token with scope information included
 	  */
-	def withScopes(scopes: Vector[TokenScope]) = FullToken(token, tokenType, scopes)
+	def withScopes(scopes: Seq[TokenScope]) = FullToken(token, tokenType, scopes)
 }

@@ -340,18 +340,18 @@ case class Pair[+A](first: A, second: A)
 	// IMPLEMENTED  ----------------------
 	
 	override def self = this
-	override def iterableFactory = Pair.factory
+	override def iterableFactory = OptimizedIndexedSeq
 	
 	override def unary_- = Pair(second, first)
 	override protected def _empty: IndexedSeq[A] = Empty
 	
-	override protected def only(side: End): IndexedSeq[A] = Vector(apply(side))
+	override protected def only(side: End): IndexedSeq[A] = Single(apply(side))
 	override protected def newPair[B](first: => B, second: => B): Pair[B] = Pair(first, second)
 	
 	override protected def _fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
-		Pair.factory.from(coll)
+		OptimizedIndexedSeq.from(coll)
 	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] =
-		Pair.factory.newBuilder
+		OptimizedIndexedSeq.newBuilder
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -368,13 +368,38 @@ case class Pair[+A](first: A, second: A)
 			if (pred(second))
 				this
 			else
-				Vector(first)
+				Single(first)
 		}
 		else if (pred(second))
-			Vector(second)
+			Single(second)
 		else
 			Empty
 	}
+	override def filterNot(pred: A => Boolean) = filter { !pred(_) }
+	
+	override def take(n: Int) = n match {
+		case 1 => Single(first)
+		case x if x >= 2 => self
+		case _ => _empty
+	}
+	override def takeRight(n: Int) = n match {
+		case 1 => Single(second)
+		case x if x >= 2 => self
+		case _ => _empty
+	}
+	override def drop(n: Int) = n match {
+		case 1 => Single(second)
+		case x if x <= 0 => self
+		case _ => _empty
+	}
+	override def dropRight(n: Int) = n match {
+		case 1 => Single(first)
+		case x if x <= 0 => self
+		case _ => _empty
+	}
+	
+	override def appended[B >: A](elem: B) = Vector(first, second, elem)
+	override def prepended[B >: A](elem: B) = Vector(elem, first, second)
 	
 	
 	// OTHER    --------------------------

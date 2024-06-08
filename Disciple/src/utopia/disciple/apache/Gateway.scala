@@ -18,6 +18,7 @@ import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
@@ -71,12 +72,12 @@ object Gateway
 	  *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 	  * @return A new gateway instance
 	  */
-	def apply(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
+	def apply(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
 	          maxConnectionsTotal: Int = 10,
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
-	          requestInterceptors: Seq[RequestInterceptor] = Vector(),
-	          responseInterceptors: Seq[ResponseInterceptor] = Vector(),
+	          requestInterceptors: Seq[RequestInterceptor] = Empty,
+	          responseInterceptors: Seq[ResponseInterceptor] = Empty,
 	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	          disableTrustStoreVerification: Boolean = false) =
 		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
@@ -117,12 +118,12 @@ object Gateway
 	  * @param customizeClient A function for customizing the http client when it is first created
 	  * @return A new gateway instance
 	  */
-	def custom(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
+	def custom(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
 	           maxConnectionsTotal: Int = 10,
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
-	           requestInterceptors: Seq[RequestInterceptor] = Vector(),
-	           responseInterceptors: Seq[ResponseInterceptor] = Vector(),
+	           requestInterceptors: Seq[RequestInterceptor] = Empty,
+	           responseInterceptors: Seq[ResponseInterceptor] = Empty,
 	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
@@ -167,12 +168,12 @@ object Gateway
   *                                      If you wish to fix these errors properly instead, please check:
   *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 **/
-class Gateway(jsonParsers: Vector[JsonParser] = Vector(JsonReader), maxConnectionsPerRoute: Int = 2,
+class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
               maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
-              requestInterceptors: Seq[RequestInterceptor] = Vector(),
-              responseInterceptors: Seq[ResponseInterceptor] = Vector(),
+              requestInterceptors: Seq[RequestInterceptor] = Empty,
+              responseInterceptors: Seq[ResponseInterceptor] = Empty,
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
               allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
               disableTrustStoreVerification: Boolean = false)

@@ -32,7 +32,7 @@ case class GoogleRedirector(shouldUserSelectAccount: Boolean = false, shouldAlwa
 	override def parameterEncoding = Some(Codec.UTF8)
 	
 	// Could also add prompt (none | consent and/or select_account)
-	override def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Vector[Scope])
+	override def extraParametersFor(settings: AuthServiceSettings, preparation: AuthPreparation, scopes: Seq[Scope])
 	                               (implicit connection: Connection) =
 	{
 		// By default, includes access_type, include_granted_scopes and prompt

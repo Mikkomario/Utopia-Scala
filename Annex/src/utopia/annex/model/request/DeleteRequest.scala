@@ -1,6 +1,7 @@
 package utopia.annex.model.request
 
 import utopia.access.http.Method.Delete
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
@@ -56,5 +57,5 @@ trait DeleteRequest extends ApiRequest with Persisting
 	override def deprecated = false
 	
 	override def persistingModelPointer =
-		Fixed(Some(Model(Vector("method" -> method.toString, "path" -> path))))
+		Fixed(Some(Model(Pair("method" -> method.toString, "path" -> path))))
 }

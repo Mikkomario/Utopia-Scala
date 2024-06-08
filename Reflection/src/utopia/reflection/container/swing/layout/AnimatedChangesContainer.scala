@@ -73,7 +73,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 	}
 	
 	override protected def add(components: IterableOnce[C], index: Int): Unit =
-		Vector.from(components).reverseIterator.foreach { add(_, index) }
+		Seq.from(components).reverseIterator.foreach { add(_, index) }
 	
 	override protected def remove(components: IterableOnce[C]): Unit = components.iterator.foreach(remove)
 	
@@ -176,8 +176,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 					maxRefreshRate, fadingIsEnabled) // FIXME: Remove this once content tracking changes
 	}
 	
-	private def trueIndex(projectedIndex: Int, data: Vector[(_, Boolean)]) =
-	{
+	private def trueIndex(projectedIndex: Int, data: Iterable[(_, Boolean)]) = {
 		val removeCountBeforeIndex = data.take(projectedIndex + 1).count { _._2 }
 		// If there are removing items directly after the specified index, will move the index to the right
 		val removeCountAfterIndex = data.drop(projectedIndex + removeCountBeforeIndex).takeWhile { _._2 }.size

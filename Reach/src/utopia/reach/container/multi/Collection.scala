@@ -11,6 +11,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -135,7 +136,7 @@ case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: A
                              insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
                              innerMargin: StackLength = StackLength.any,
                              outerMargin: StackLength = StackLength.fixedZero,
-                             splitThreshold: Option[Double] = None, customDrawers: Vector[CustomDrawer] = Vector())
+                             splitThreshold: Option[Double] = None, customDrawers: Seq[CustomDrawer] = Empty)
 	extends CollectionFactoryLike[CollectionFactory]
 		with NonContextualCombiningContainerFactory[Collection, ReachComponentLike]
 		with FromGenericContextFactory[BaseContext, ContextualCollectionFactory]
@@ -148,7 +149,7 @@ case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: A
 	override def withInnerMargin(margin: StackLength): CollectionFactory = copy(innerMargin = margin)
 	override def withOuterMargin(margin: StackLength): CollectionFactory = copy(outerMargin = margin)
 	override def withSplitThreshold(threshold: Double): CollectionFactory = copy(splitThreshold = Some(threshold))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): CollectionFactory = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): CollectionFactory = copy(customDrawers = drawers)
 	
 	override def withContext[N <: BaseContext](context: N): ContextualCollectionFactory[N] =
 		ContextualCollectionFactory[N](parentHierarchy, context, primaryAxis, insideRowLayout, betweenRowsLayout,
@@ -161,7 +162,7 @@ case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: Compo
                                                           betweenRowsLayout: StackLayout = Leading,
                                                           outerMargin: StackLength = StackLength.fixedZero,
                                                           splitThreshold: Option[Double] = None,
-                                                          customDrawers: Vector[CustomDrawer] = Vector(),
+                                                          customDrawers: Seq[CustomDrawer] = Empty,
                                                           customInnerMargin: Option[StackLength] = None,
                                                           areRelated: Boolean = false)
 	extends CollectionFactoryLike[ContextualCollectionFactory[N]]
@@ -192,7 +193,7 @@ case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: Compo
 	override def withOuterMargin(margin: StackLength): ContextualCollectionFactory[N] = copy(outerMargin = margin)
 	override def withSplitThreshold(threshold: Double): ContextualCollectionFactory[N] =
 		copy(splitThreshold = Some(threshold))
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualCollectionFactory[N] =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualCollectionFactory[N] =
 		copy(customDrawers = drawers)
 	
 	
@@ -328,7 +329,7 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 	
 	// OTHER    --------------------------
 	
-	private def actualizeLayout(area: Size, layout: Vector[Vector[(ReachComponentLike, StackSize)]],
+	private def actualizeLayout(area: Size, layout: Seq[Seq[(ReachComponentLike, StackSize)]],
 	                            removeMargins: Boolean = false) =
 	{
 		val actualInnerMargin = if (removeMargins) innerMargin.noMin else innerMargin
@@ -391,5 +392,5 @@ private class _Collection(override val parentHierarchy: ComponentHierarchy,
                           override val components: Seq[ReachComponentLike], override val primaryAxis: Axis2D,
                           override val insideRowLayout: StackLayout, override val betweenRowsLayout: StackLayout,
                           override val innerMargin: StackLength, override val outerMargin: StackLength,
-                          override val splitThreshold: Option[Double], override val customDrawers: Vector[CustomDrawer])
+                          override val splitThreshold: Option[Double], override val customDrawers: Seq[CustomDrawer])
 	extends CustomDrawReachComponent with Collection

@@ -6,6 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackInsetsConvertible, StackLength}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
@@ -284,11 +285,11 @@ object OpenComponent
 	/**
 	  * Type of open component that wraps multiple components
 	  */
-	type BundledOpenComponents[+C, +R] = OpenComponent[Vector[C], R]
+	type BundledOpenComponents[+C, +R] = OpenComponent[Seq[C], R]
 	/**
 	  * Type for separate open components
 	  */
-	type SeparateOpenComponents[+C, +R] = Vector[OpenComponent[C, R]]
+	type SeparateOpenComponents[+C, +R] = Seq[OpenComponent[C, R]]
 	/**
 	  * Type for separate open components that may be switched on or off using a specific pointer.
 	  * Typically used in view containers.
@@ -297,7 +298,7 @@ object OpenComponent
 	/**
 	  * Type of open component that wraps a main component, plus possibly multiple additional layers.
 	  */
-	type OpenLayerComponents[+M, +C, +R] = OpenComponent[(M, Vector[(C, LayerPositioning)]), R]
+	type OpenLayerComponents[+M, +C, +R] = OpenComponent[(M, Seq[(C, LayerPositioning)]), R]
 	
 	
 	// IMPLICIT	-----------------------------
@@ -317,7 +318,7 @@ object OpenComponent
 		  * @param customDrawers Custom drawers to apply to this component
 		  * @return A new framing with this component inside it (contains the same custom result as this one)
 		  */
-		def framed(insets: StackInsetsConvertible, customDrawers: Vector[CustomDrawer] = Vector()) =
+		def framed(insets: StackInsetsConvertible, customDrawers: Seq[CustomDrawer] = Empty) =
 		{
 			Open.using(Framing) { ff =>
 				val wrapping = ff.apply(insets).withCustomDrawers(customDrawers)(c)
@@ -332,11 +333,11 @@ object OpenComponent
 		  * @return A new framing with this component inside it (contains the same custom result as this one)
 		  */
 		def framed(insets: StackInsetsConvertible, backgroundColor: Color): OpenComponent[Framing, R] =
-			framed(insets, Vector(BackgroundDrawer(backgroundColor)))
+			framed(insets, Single(BackgroundDrawer(backgroundColor)))
 	}
 	
 	// Extension for sequence of wrapped components
-	implicit class MultiOpenComponent[C <: ReachComponentLike, R](val c: OpenComponent[Vector[C], R]) extends AnyVal
+	implicit class MultiOpenComponent[C <: ReachComponentLike, R](val c: OpenComponent[Seq[C], R]) extends AnyVal
 	{
 		/**
 		  * Creates a stack that will hold these components
@@ -353,7 +354,7 @@ object OpenComponent
 		  *         as this one.
 		  */
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+				  customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
 			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			Open.withContext(context).apply(Stack) { sf =>
 				val settings = StackSettings(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers)
@@ -375,7 +376,7 @@ object OpenComponent
 		  *         as this one.
 		  */
 		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-				  customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+				  customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
 				 (implicit context: BaseContext, canvas: ReachCanvas) =
 			stack(X, layout, cap, customDrawers, areRelated)
 		
@@ -393,7 +394,7 @@ object OpenComponent
 		  *         as this one.
 		  */
 		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
-				customDrawers: Vector[CustomDrawer] = Vector(), areRelated: Boolean = false)
+				customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
 			   (implicit context: BaseContext, canvas: ReachCanvas) =
 			stack(Y, layout, cap, customDrawers, areRelated)
 	}

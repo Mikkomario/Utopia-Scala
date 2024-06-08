@@ -10,6 +10,7 @@ import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.firmament.model.{Border, TextDrawContext}
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.handling.action.ActorHandler
@@ -55,7 +56,7 @@ object DropDown
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, displayStackLayout: StackLayout = Fit,
-	 contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+	 contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
@@ -99,7 +100,7 @@ object DropDown
 	def contextualWithTextOnly[A]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
 	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	 contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+	 contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
@@ -123,7 +124,7 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
  textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,
  imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlackDisabled,
  borderWidth: Double = 1.0, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,
- override val contentPointer: EventfulPointer[Vector[A]] = EventfulPointer[Vector[A]](Vector()),
+ override val contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
  valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None), textHasMinWidth: Boolean = true,
  allowImageUpscaling: Boolean = false, shouldDisplayPopUpOnFocusGain: Boolean = true,
  sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
@@ -141,7 +142,8 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 		finalTextInsets, textAlignment, textHasMinWidth)
 	private val imageLabel = new ImageLabel(icon, allowUpscaling = allowImageUpscaling)
 	
-	private val view = Stack.rowWithItems(Vector(textLabel, imageLabel.framed(imageInsets + borderWidth)), StackLength.fixedZero)
+	private val view = Stack
+		.rowWithItems(Pair(textLabel, imageLabel.framed(imageInsets + borderWidth)), StackLength.fixedZero)
 	
 	
 	// INITIAL CODE	------------------------------

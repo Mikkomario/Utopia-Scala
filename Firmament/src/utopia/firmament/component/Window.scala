@@ -11,6 +11,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
@@ -761,7 +762,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		}
 	}
 	
-	override def children: Vector[Component] = Vector(content)
+	override def children: Seq[Component] = Single(content)
 	
 	override def calculatedStackSize = {
 		val availableScreenSize = if (respectScreenInsets) screenSize - screenInsets.total else screenSize

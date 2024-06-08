@@ -1,8 +1,7 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.template.{GraphEdge, GraphNode}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Graph.{GraphViewEdge, GraphViewNode}
+import utopia.flow.collection.template.{GraphEdge, GraphNode}
 import utopia.flow.operator.MaybeEmpty
 
 object Graph
@@ -55,10 +54,10 @@ case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = fal
 	
 	private lazy val nodesByContent = connections.flatMap { case (start, _, end) => Set(start, end) }.map { n =>
 		n -> (GNode(n): GraphViewNode[N, E]) }.toMap
-	private lazy val edgesByStartNode = connections.toMultiMap { case (start, content, end) =>
-		start -> (GEdge(content, end): GraphViewEdge[N, E]) }
-	private lazy val edgesByEndNode = connections.toMultiMap { case (start, content, end) =>
-		end -> (GEdge(content, start): GraphViewEdge[N, E]) }
+	private lazy val edgesByStartNode = connections
+		.groupMap { _._1 } { case (_, content, end) => GEdge(content, end): GraphViewEdge[N, E] }
+	private lazy val edgesByEndNode = connections
+		.groupMap { _._3 } { case (start, content, _) => GEdge(content, start): GraphViewEdge[N, E] }
 	
 	/**
 	 * @return All nodes within this graph

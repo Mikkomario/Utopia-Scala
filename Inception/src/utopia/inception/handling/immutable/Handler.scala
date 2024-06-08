@@ -49,7 +49,7 @@ abstract class Handler[A <: utopia.inception.handling.Handleable](initialElement
 {
 	// ATTRIBUTES	--------------------
 	
-	private val elements = VolatileList(initialElements)
+	private val elements = VolatileList.from(initialElements)
 	
 	
 	// IMPLEMENTED	--------------------

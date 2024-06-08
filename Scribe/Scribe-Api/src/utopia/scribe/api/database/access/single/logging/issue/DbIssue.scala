@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.access.single.logging.issue
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -123,13 +124,13 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 					case None => error.messages
 				}
 			// Case: No error specified => Uses the specified error message, unless empty
-			case None => Vector(message).filter { _.nonEmpty }
+			case None => Single(message).filter { _.nonEmpty }
 		}
 		// Stores an issue occurrence
 		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages,
 			occurrenceDetails.sorted, occurrences, timeRange))
 		// Combines the data together and returns
-		DetailedIssue(issue, Vector(DetailedIssueVariant(variant, storedError, Vector(occurrence))))
+		DetailedIssue(issue, Single(DetailedIssueVariant(variant, storedError, Single(occurrence))))
 	}
 	
 	/**

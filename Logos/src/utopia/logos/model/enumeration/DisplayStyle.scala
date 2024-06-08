@@ -1,5 +1,6 @@
 package utopia.logos.model.enumeration
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.IntType
@@ -32,7 +33,7 @@ object DisplayStyle
 {
 	// ATTRIBUTES	--------------------
 	
-	private var _values: Vector[DisplayStyle] = Vector(Default)
+	private var _values: Seq[DisplayStyle] = Single(Default)
 	
 	
 	// COMPUTED	--------------------

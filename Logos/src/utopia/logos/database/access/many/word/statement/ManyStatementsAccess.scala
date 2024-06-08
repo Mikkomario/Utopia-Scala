@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.word.statement
 
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.factory.word.StatementDbFactory
 import utopia.logos.database.storable.url.LinkPlacementModel
@@ -103,13 +104,13 @@ trait ManyStatementsAccess
 			lengthLimit.map { wordLinkModel.withOrderIndex(_).toCondition }) { (wordCondition, wordJoin) =>
 			forNotLinkedTo(linkLinkModel.table,
 				lengthLimit.map { linkLinkModel.withOrderIndex(_).toCondition }) { (linkCondition, linkJoin) =>
-				find(wordCondition && linkCondition, joins = Vector(wordJoin, linkJoin))
-			} { find(wordCondition, joins = Vector(wordJoin)) }
+				find(wordCondition && linkCondition, joins = Pair(wordJoin, linkJoin))
+			} { find(wordCondition, joins = Single(wordJoin)) }
 		} { findNotLinkedTo(linkLinkModel.table) }
 	}
 	
 	private def findWithReferenceAtIndex(model: StatementLinkedModel, refColumn: Column, refId: Int, index: Int)
 	                                    (implicit connection: Connection) =
-		find((refColumn <=> refId) && (model.orderIndexColumn <=> index), joins = Vector(model.table))
+		find((refColumn <=> refId) && (model.orderIndexColumn <=> index), joins = Single(model.table))
 }
 

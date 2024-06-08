@@ -1,14 +1,14 @@
 package utopia.paradigm.shape.shape2d.line
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LineType
 import utopia.paradigm.generic.ParadigmValue._
@@ -21,7 +21,7 @@ import utopia.paradigm.shape.shape2d.{LineProjectable, Matrix2D, ShapeConvertibl
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.DimensionalFactory
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-import utopia.paradigm.shape.template.vector.{DoubleVector, NumericVectorLike}
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
@@ -124,7 +124,7 @@ case class Line(override val ends: Pair[Point])
     
     override def toShape = new Line2D.Double(start.x, start.y, end.x, end.y)
     override def toValue = new Value(Some(this), LineType)
-    override def toModel = Model(Vector("start" -> start, "end" -> end))
+    override def toModel = Model(Pair("start" -> start, "end" -> end))
     
     override def ~==(other: HasInclusiveEnds[HasDoubleDimensions]) =
         (start ~== other.start) && (end ~== other.end)
@@ -185,8 +185,7 @@ case class Line(override val ends: Pair[Point])
      * infinite length. Defaults to true.
      * @return The intersection points between this line (segment) and the circle
      */
-    def circleIntersection(circle: Circle, onlyPointsInSegment: Boolean = true) =
-    {
+    def circleIntersection(circle: Circle, onlyPointsInSegment: Boolean = true) = {
         /* Circle Equation: |x - c|^2 = r^2
          * where x is a point on the circle, c is circle origin and r is circle radius
          *
@@ -213,9 +212,9 @@ case class Line(override val ends: Pair[Point])
         val discriminant = math.pow(b, 2) - 4 * a * c
         
         if (discriminant < 0)
-            Vector[Point]()
+            Empty
         else {
-            var intersectionPoints = Vector[Point]()
+            var intersectionPoints: IndexedSeq[Point] = Empty
             
             // t = (-b +- sqrt(d)) / 2a
             val tEnter = (-b - math.sqrt(discriminant)) / (2 * a)

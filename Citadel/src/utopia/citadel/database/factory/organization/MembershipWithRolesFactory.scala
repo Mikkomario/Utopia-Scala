@@ -16,13 +16,12 @@ object MembershipWithRolesFactory
 	// IMPLEMENTED	----------------------------
 	
 	override def parentFactory = MembershipFactory
-	
 	override def childFactory = MemberRoleLinkFactory
-	
-	override def nonDeprecatedCondition = parentFactory.nonDeprecatedCondition &&
-		childFactory.nonDeprecatedCondition
 	
 	override def isAlwaysLinked = false
 	
-	override def apply(parent: Membership, children: Vector[MemberRoleLink]) = MembershipWithRoles(parent, children.toSet)
+	override def nonDeprecatedCondition =
+		parentFactory.nonDeprecatedCondition && childFactory.nonDeprecatedCondition
+	
+	override def apply(parent: Membership, children: Seq[MemberRoleLink]) = MembershipWithRoles(parent, children.toSet)
 }

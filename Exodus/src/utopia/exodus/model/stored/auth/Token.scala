@@ -68,7 +68,7 @@ case class Token(id: Int, data: TokenData) extends Stored[TokenData, Int]
 	  * @param scopeLinks Scope links to attach to this token
 	  * @return A copy of this token which includes the specified token scope links
 	  */
-	def withScopeLinks(scopeLinks: Vector[TokenScopeLink]) = ScopedToken(this, scopeLinks)
+	def withScopeLinks(scopeLinks: Seq[TokenScopeLink]) = ScopedToken(this, scopeLinks)
 	
 	/**
 	  * @param attempt Email validation attempt data

@@ -18,7 +18,7 @@ object CustomDrawReachComponent
 	  * @param stackSize Stack size to be used with this component (call by name)
 	  * @return A new custom draw component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Vector[CustomDrawer])
+	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer])
 			 (stackSize: => StackSize): CustomDrawReachComponent =
 		new BasicComponent(parentHierarchy, customDrawers, stackSize)
 	
@@ -26,7 +26,7 @@ object CustomDrawReachComponent
 	// NESTED	------------------------------
 	
 	private class BasicComponent(override val parentHierarchy: ComponentHierarchy,
-								 override val customDrawers: Vector[CustomDrawer],
+								 override val customDrawers: Seq[CustomDrawer],
 								 getStackSize: => StackSize)
 		extends CustomDrawReachComponent
 	{

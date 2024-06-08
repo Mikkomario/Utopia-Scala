@@ -3,6 +3,7 @@ package utopia.flow.async.process
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResult
 import utopia.flow.operator.ordering.CombinedOrdering
@@ -120,7 +121,7 @@ object TimedTask
 	  * @return A new timed task
 	  */
 	def dailyAt[U](time: LocalTime, secondTime: LocalTime, moreTimes: LocalTime*)(f: => U) = {
-		val times = (Vector(time, secondTime) ++ moreTimes).sorted
+		val times = (Pair(time, secondTime) ++ moreTimes).sorted
 		def nextTime = {
 			val currentTime = Now.toLocalTime
 			(times.find { _ >= currentTime } match {
@@ -164,7 +165,7 @@ object TimedTask
 	  * @return new timed task
 	  */
 	def weeklyAt[U](times: IterableOnce[(WeekDay, LocalTime)])(f: => U)(implicit w: WeekDays) = {
-		val _times = Vector.from(times).sorted(CombinedOrdering(
+		val _times = Seq.from(times).sorted(CombinedOrdering(
 			Ordering.by { p: (WeekDay, LocalTime) => p._1 }, Ordering.by { p: (WeekDay, LocalTime) => p._2 }))
 		if (_times.isEmpty)
 			immediately.once(())
@@ -197,7 +198,7 @@ object TimedTask
 	  */
 	def weeklyAt[U](firstTime: (WeekDay, LocalTime), secondTime: (WeekDay, LocalTime), more: (WeekDay, LocalTime)*)
 	               (f: => U)(implicit w: WeekDays): TimedTask =
-		weeklyAt[U](Vector(firstTime, secondTime) ++ more)(f)
+		weeklyAt[U](Pair(firstTime, secondTime) ++ more)(f)
 	
 	
 	// NESTED   ----------------------------

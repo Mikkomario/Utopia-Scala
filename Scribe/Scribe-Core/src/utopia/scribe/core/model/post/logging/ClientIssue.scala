@@ -1,6 +1,7 @@
 package utopia.scribe.core.model.post.logging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
@@ -31,14 +32,14 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 	private lazy val schema: ModelDeclaration = ModelDeclaration(
 		PropertyDeclaration("version", StringType),
 		PropertyDeclaration("context", StringType),
-		PropertyDeclaration("severityLevel", IntType, Vector("severity", "severity_level"), Severity.default.level),
-		PropertyDeclaration("variantDetails", ModelType, Vector("variant_details", "variant"), isOptional = true),
+		PropertyDeclaration("severityLevel", IntType, Pair("severity", "severity_level"), Severity.default.level),
+		PropertyDeclaration("variantDetails", ModelType, Pair("variant_details", "variant"), isOptional = true),
 		PropertyDeclaration("error", ModelType, isOptional = true),
 		PropertyDeclaration("message", StringType, isOptional = true),
-		PropertyDeclaration("occurrenceDetails", ModelType, Vector("occurrence_details", "details"), isOptional = true),
+		PropertyDeclaration("occurrenceDetails", ModelType, Pair("occurrence_details", "details"), isOptional = true),
 		PropertyDeclaration("storeDuration", DurationType, Vector("history", "duration", "store_duration"),
 			Duration.Zero),
-		PropertyDeclaration("instances", IntType, Vector("count"), 1)
+		PropertyDeclaration("instances", IntType, Single("count"), 1)
 	)
 	
 	

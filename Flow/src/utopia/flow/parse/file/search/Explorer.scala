@@ -1,15 +1,15 @@
 package utopia.flow.parse.file.search
 
 import scala.concurrent.{ExecutionContext, Future}
-
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 
 /**
  * Explorers can traverse in the mines
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
-abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Vector[Mine[R]] = Vector())
+abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Seq[Mine[R]] = Empty)
 {
 	// ABSTRACT	------------------------
 	

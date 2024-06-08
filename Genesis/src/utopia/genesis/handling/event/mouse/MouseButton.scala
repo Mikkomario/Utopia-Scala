@@ -1,5 +1,6 @@
 package utopia.genesis.handling.event.mouse
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsBy
 
 trait MouseButton extends EqualsBy
@@ -20,7 +21,7 @@ trait MouseButton extends EqualsBy
     
     // IMPLEMENTED  ----------------
     
-    override protected def equalsProperties= Vector(index)
+    override protected def equalsProperties= Single(index)
 }
 
 /**

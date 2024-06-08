@@ -5,6 +5,7 @@ import utopia.access.http.Status.{Forbidden, NotFound}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.ExodusScope.{ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
@@ -24,7 +25,7 @@ case class OtherUserNode(userId: Int) extends Resource[AuthorizedContext]
 {
 	override def name = userId.toString
 	
-	override def allowedMethods = Vector(Get)
+	override def allowedMethods = Single(Get)
 	
 	// Handles this path and the /settings -path using the same logic
 	override def follow(path: Path)(implicit context: AuthorizedContext) = {

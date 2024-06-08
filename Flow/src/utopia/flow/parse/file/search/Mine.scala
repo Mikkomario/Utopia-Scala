@@ -3,7 +3,7 @@ package utopia.flow.parse.file.search
 import java.nio.file.Path
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.collection.immutable.Tree
+import utopia.flow.collection.immutable.{Empty, Tree}
 import utopia.flow.parse.file.search.ExcavationStatus.{Finished, Passed, Started, Unexplored}
 import utopia.flow.view.immutable.caching.VolatileLazy
 import utopia.flow.view.mutable.async.Volatile
@@ -23,7 +23,7 @@ class Mine[R](val directory: Path)
 	
 	private val _status: Volatile[ExcavationStatus] = Volatile(Unexplored)
 	// Underlying pathways are lazily initialized
-	private val _pathWays = VolatileLazy { directory.subDirectories.getOrElse(Vector()).map { new Mine[R](_) } }
+	private val _pathWays = VolatileLazy { directory.subDirectories.getOrElse(Empty).map { new Mine[R](_) } }
 	private var foundResults: Option[R] = None
 	
 	

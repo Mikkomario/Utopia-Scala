@@ -24,6 +24,7 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Replaced **Camera** with **Repositioner**
 - Replaced **Animator** with a new implementation
 - **Animator**'s handling states can't be mutated anymore
+- In some instances where **Vector** was used, **Seq** is now used
 ### Deprecations
 - Deprecated **Animator** and **AnimatorWithTransform** for removal
 - Deprecated **KeyStatus** in favor of **KeyboardState**

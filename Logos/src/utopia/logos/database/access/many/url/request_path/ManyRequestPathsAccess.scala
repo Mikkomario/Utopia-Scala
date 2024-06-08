@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.url.request_path
 
+import utopia.flow.collection.immutable.Empty
 import utopia.logos.database.access.many.url.domain.DbDomains
 import utopia.logos.database.factory.url.RequestPathDbFactory
 import utopia.logos.model.combined.url.DetailedRequestPath
@@ -49,7 +50,7 @@ trait ManyRequestPathsAccess
 			paths.map { p => DetailedRequestPath(p, domainMap(p.domainId)) }
 		}
 		else
-			Vector()
+			Empty
 	}
 	
 	

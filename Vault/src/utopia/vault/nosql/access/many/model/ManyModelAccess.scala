@@ -1,6 +1,6 @@
 package utopia.vault.nosql.access.many.model
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
@@ -15,7 +15,7 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
-trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vector[A], Vector[Value]]
+trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[A], Seq[Value]]
 {
 	// COMPUTED --------------------------------
 	
@@ -42,7 +42,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	}
 	
 	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
-	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Vector(),
+	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	                                  joinType: JoinType = Inner)(implicit connection: Connection) =
 	{
 		// Forms the query first
@@ -123,7 +123,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	                          joins: Iterable[Joinable])
 	                 (implicit con: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
+		val statement = Select(joins.foldLeft(target) { _ join _ }, Pair(keyColumn, valueColumn)) +
 			mergeCondition(condition).map { Where(_) }
 		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
 	}
@@ -131,8 +131,8 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Vect
 	                               joins: Iterable[Joinable])
 	                              (implicit con: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _ join _ }, Vector(keyColumn, valueColumn)) +
+		val statement = Select(joins.foldLeft(target) { _ join _ }, Pair(keyColumn, valueColumn)) +
 			mergeCondition(condition).map { Where(_) }
-		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.asMultiMap
+		con(statement).rows.groupMap { _(keyColumn) } { _(valueColumn) }
 	}
 }

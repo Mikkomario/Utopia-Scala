@@ -215,7 +215,7 @@ trait Storable extends ModelConvertible
      * @return whether any update was performed
      */
     def updateProperties(name1: String, more: String*)(implicit connection: Connection): Boolean = 
-            updateProperties(Vector(name1) ++ more)
+            updateProperties(name1 +: more)
     
     /**
      * Creates an update statement that updates only the specified properties
@@ -230,7 +230,7 @@ trait Storable extends ModelConvertible
      * Creates an update statement that updates only the specified properties
      */
     def updateStatementForProperties(name1: String, more: String*): SqlSegment =
-            updateStatementForProperties(Vector(name1) ++ more)
+        updateStatementForProperties(name1 +: more)
     
     /**
      * Pushes storable data to the database, but will always insert the instance as a new row 

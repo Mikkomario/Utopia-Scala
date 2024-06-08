@@ -23,28 +23,24 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	/**
 	  * @return Recorded positions over a time period
 	  */
-	def positionHistory: Vector[(X, Instant)]
-	
+	def positionHistory: Seq[(X, Instant)]
 	/**
 	  * @return Recorded velocities over a time period
 	  */
-	def velocityHistory: Vector[(V, Instant)]
-	
+	def velocityHistory: Seq[(V, Instant)]
 	/**
 	  * @return Recorded accelerations over a time period
 	  */
-	def accelerationHistory: Vector[(A, Instant)]
+	def accelerationHistory: Seq[(A, Instant)]
 	
 	/**
 	  * @return A (0,0) position
 	  */
 	protected def zeroPosition: X
-	
 	/**
 	  * @return A zero vector velocity
 	  */
 	protected def zeroVelocity: V
-	
 	/**
 	  * @return A vero vector acceleration
 	  */
@@ -65,17 +61,14 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @return Latest recorded position
 	  */
 	def latestPosition = positionHistory.lastOption.map { _._1 }.getOrElse(zeroPosition)
-	
 	/**
 	  * @return Latest recorded velocity
 	  */
 	def latestVelocity = velocityHistory.lastOption.map { _._1 }.getOrElse(zeroVelocity)
-	
 	/**
 	  * @return Latest recorded acceleration
 	  */
 	def latestAcceleration = accelerationHistory.lastOption.map { _._1 }.getOrElse(zeroAcceleration)
-	
 	/**
 	  * @return Latest recorded status
 	  */
@@ -90,12 +83,10 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @return Average position over recorded history
 	  */
 	def averagePosition = average(positionHistory, zeroPosition)
-	
 	/**
 	  * @return Average velocity over recorded history
 	  */
 	def averageVelocity = average(velocityHistory, zeroVelocity)
-	
 	/**
 	  * @return Average acceleration over recorded history
 	  */
@@ -105,7 +96,6 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @return Whether the tracked movement has stopped (velocity-wise)
 	  */
 	def isNotMoving = velocityHistory.lastOption.forall { _._1.isZero }
-	
 	/**
 	  * @return Whether the tracked movement is still active (has velocity)
 	  */
@@ -115,7 +105,6 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @return Whether the tracked movement has stopped accelerating or decelerating
 	  */
 	def isNotAccelerating = accelerationHistory.lastOption.forall { _._1.isZero }
-	
 	/**
 	  * @return Whether the tracked movement is accelerating or decelerating
 	  */
@@ -128,8 +117,7 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @param time Target time point (should not be in the past) (call by name)
 	  * @return Projected status at specified time point based on the latest known state
 	  */
-	def futureStatusAt(time: => Instant) =
-	{
+	def futureStatusAt(time: => Instant) = {
 		positionHistory.lastOption match {
 			case Some((lastPosition, lastTime)) =>
 				// Checks velocity and acceleration that have affected the position since
@@ -168,15 +156,14 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  */
 	def averageAccelerationSince(threshold: Instant) = averageSince(accelerationHistory, threshold, latestAcceleration)
 	
-	private def averageSince[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Vector[(Z, Instant)], threshold: Instant,
+	private def averageSince[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Seq[(Z, Instant)], threshold: Instant,
 	                                                                       latest: => Z) =
 	{
 		val targetGroup = items.reverseIterator.takeWhile { _._2 >= threshold }.toVector
 		average(targetGroup, latest)
 	}
 	
-	private def average[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Vector[(Z, Instant)], zero: => Z) =
-	{
+	private def average[Z <: Combinable[Z, Z] with LinearScalable[Z]](items: Seq[(Z, Instant)], zero: => Z) = {
 		val targetGroupSize = items.size
 		if (targetGroupSize == 0)
 			zero

@@ -1,13 +1,14 @@
 package utopia.exodus.model.combined.auth
 
 import utopia.exodus.model.stored.auth.{Scope, Token, TokenScopeLink, TokenType}
+import utopia.flow.collection.immutable.Empty
 
 /**
   * Combines scope and type information to a token
   * @author Mikko Hilpinen
   * @since 19.2.2022, v4.0
   */
-case class DetailedToken(token: Token, tokenType: TokenType, scopeLinks: Vector[TokenScopeLink] = Vector())
+case class DetailedToken(token: Token, tokenType: TokenType, scopeLinks: Seq[TokenScopeLink] = Empty)
 	extends ScopedTokenLike with TypedTokenLike
 {
 	// IMPLEMENTED  --------------------------

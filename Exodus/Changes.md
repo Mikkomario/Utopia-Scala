@@ -1,5 +1,9 @@
 # Utopia Exodus - List of Changes
 
+## v4.1.6 (in development)
+### Other changes
+- In some instances where **Vector** was used, **Seq** is now used
+
 ## v4.1.5 - 22.01.2024
 Supports **Flow v2.3** and **Vault v1.18**
 ### Breaking changes

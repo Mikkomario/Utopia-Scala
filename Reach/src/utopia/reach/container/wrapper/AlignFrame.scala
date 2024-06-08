@@ -3,6 +3,7 @@ package utopia.reach.container.wrapper
 import utopia.firmament.component.container.single.AlignFrameLike
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
@@ -64,7 +65,7 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 	 */
 	@deprecated("Please use .apply(Alignment).apply(OpenComponent) instead", "v1.1")
 	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], alignment: Alignment,
-	                                      customDrawers: Vector[CustomDrawer] = Vector()) =
+	                                      customDrawers: Seq[CustomDrawer] = Empty) =
 	{
 		val frame = new AlignFrame(parentHierarchy, content.component, alignment, customDrawers)
 		content attachTo frame
@@ -72,12 +73,12 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 }
 
 case class InitializedAlignFrameFactory(parentHierarchy: ComponentHierarchy, alignment: Alignment,
-                                        customDrawers: Vector[CustomDrawer] = Vector())
+                                        customDrawers: Seq[CustomDrawer] = Empty)
 	extends AlignFrameFactoryLike[InitializedAlignFrameFactory]
 		with NonContextualWrapperContainerFactory[AlignFrame, ReachComponentLike]
 		with FromGenericContextFactory[Any, InitializedContextualAlignFrameFactory]
 {
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): InitializedAlignFrameFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedAlignFrameFactory =
 		copy(customDrawers = drawers)
 	
 	override def withContext[N <: Any](context: N): InitializedContextualAlignFrameFactory[N] =
@@ -107,14 +108,14 @@ case class ContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, c
 
 case class InitializedContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, context: N,
                                                      alignment: Alignment,
-                                                     customDrawers: Vector[CustomDrawer] = Vector())
+                                                     customDrawers: Seq[CustomDrawer] = Empty)
 	extends AlignFrameFactoryLike[InitializedContextualAlignFrameFactory[N]]
 		with ContextualWrapperContainerFactory[N, Any, AlignFrame, ReachComponentLike, InitializedContextualAlignFrameFactory]
 {
 	override def withContext[N2 <: Any](newContext: N2): InitializedContextualAlignFrameFactory[N2] =
 		copy(context = newContext)
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): InitializedContextualAlignFrameFactory[N] =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedContextualAlignFrameFactory[N] =
 		copy(customDrawers = drawers)
 }
 
@@ -124,5 +125,5 @@ case class InitializedContextualAlignFrameFactory[N](parentHierarchy: ComponentH
  * @since 30.1.2021, v0.1
  */
 class AlignFrame(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-                 override val alignment: Alignment, override val customDrawers: Vector[CustomDrawer] = Vector())
+                 override val alignment: Alignment, override val customDrawers: Seq[CustomDrawer] = Empty)
 	extends CustomDrawReachComponent with AlignFrameLike[ReachComponentLike]

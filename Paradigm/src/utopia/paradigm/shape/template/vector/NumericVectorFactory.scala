@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.template.vector
 
+import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.shape.template.{Dimensional, DimensionsWrapperFactory, HasDimensions}
 
@@ -125,7 +126,7 @@ trait NumericVectorFactory[D, +V] extends DimensionsWrapperFactory[D, V]
 	  * @return A vector where each dimension is the minimum between these points.
 	  *         Empty vector if the specified set of items was empty.
 	  */
-	def topLeft[V2 <: Dimensional[D, V2]](first: V2, second: V2, more: V2*): V = topLeft(Vector(first, second) ++ more)
+	def topLeft[V2 <: Dimensional[D, V2]](first: V2, second: V2, more: V2*): V = topLeft(Pair(first, second) ++ more)
 	/**
 	  * @param points A set of points
 	  * @tparam V2 Type of points
@@ -147,7 +148,7 @@ trait NumericVectorFactory[D, +V] extends DimensionsWrapperFactory[D, V]
 	  *         Empty vector if the specified set of items was empty.
 	  */
 	def bottomRight[V2 <: Dimensional[D, V2]](first: V2, second: V2, more: V2*): V =
-		bottomRight(Vector(first, second) ++ more)
+		bottomRight(Pair(first, second) ++ more)
 	/**
 	  * @param points A set of points
 	  * @tparam V2 Type of points

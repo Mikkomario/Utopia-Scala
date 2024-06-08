@@ -1,7 +1,9 @@
 package utopia.paradigm.shape.shape2d.line
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.HasLength
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.FromDimensionsFactory
 import utopia.paradigm.shape.template.vector.NumericVectorLike
 
@@ -77,7 +79,7 @@ trait LineLike[D, P <: NumericVectorLike[D, P, _], +V <: NumericVectorLike[D, V,
     /**
       * The axes that are necessary to include when checking collisions for this line
       */
-    def collisionAxes = Vector(vector.toDoublePrecision, vector.normal2D)
+    def collisionAxes: Seq[VD] = Pair(vector.toDoublePrecision, vector.normal2D)
     
     /**
       * The center of the line segment

@@ -3,6 +3,8 @@
 ## v1.1.1 (in development)
 ### Bugfixes
 - Email reading would previously fail (at least in some situations) because of a message-indexing failure
+### Other changes
+- In multiple instances where **Vector** was used, **Seq** is now used
 
 ## v1.1 - 22.01.2024
 A major update for the email-reading side. 

@@ -8,6 +8,7 @@ import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -41,12 +42,12 @@ trait LayersFactoryLike[+Repr] extends PartOfComponentHierarchy with CustomDrawa
 	}
 }
 
-case class LayersFactory(parentHierarchy: ComponentHierarchy, customDrawers: Vector[CustomDrawer] = Vector.empty)
+case class LayersFactory(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty)
 	extends LayersFactoryLike[LayersFactory] with FromGenericContextFactory[Any, ContextualLayersFactory]
 {
 	// IMPLEMENTED  -----------------------
 	
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): LayersFactory = copy(customDrawers = drawers)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): LayersFactory = copy(customDrawers = drawers)
 	
 	override def withContext[N <: Any](context: N): ContextualLayersFactory[N] =
 		ContextualLayersFactory(parentHierarchy, context, customDrawers)
@@ -70,18 +71,18 @@ case class LayersFactory(parentHierarchy: ComponentHierarchy, customDrawers: Vec
 	  */
 	def build[MF, CF, M <: ReachComponentLike, C <: ReachComponentLike, R](mainFactory: Cff[MF], layersFactory: Cff[CF])
 	                                                                      (fill: (MF, CF) => LayersResult[M, C, R]) =
-		apply(Open[(M, Vector[(C, LayerPositioning)]), R] { hierarchy =>
+		apply(Open[(M, Seq[(C, LayerPositioning)]), R] { hierarchy =>
 			fill(mainFactory(hierarchy), layersFactory(hierarchy)) })
 }
 
 case class ContextualLayersFactory[+N](parentHierarchy: ComponentHierarchy, context: N,
-                                       customDrawers: Vector[CustomDrawer] = Vector.empty)
+                                       customDrawers: Seq[CustomDrawer] = Empty)
 	extends LayersFactoryLike[ContextualLayersFactory[N]] with GenericContextualFactory[N, Any, ContextualLayersFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	
 	override def withContext[N2 <: Any](newContext: N2): ContextualLayersFactory[N2] = copy(context = newContext)
-	override def withCustomDrawers(drawers: Vector[CustomDrawer]): ContextualLayersFactory[N] =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualLayersFactory[N] =
 		copy(customDrawers = drawers)
 		
 	
@@ -109,7 +110,7 @@ case class ContextualLayersFactory[+N](parentHierarchy: ComponentHierarchy, cont
 	  */
 	def build[MF, CF, M <: ReachComponentLike, C <: ReachComponentLike, R](mainFactory: Ccff[N, MF], layersFactory: Ccff[N, CF])
 	                          (fill: (MF, CF) => LayersResult[M, C, R]) =
-		apply(Open.contextual(context).apply[ContextualMixed[N], (M, Vector[(C, LayerPositioning)]), R](Mixed) { factories =>
+		apply(Open.contextual(context).apply[ContextualMixed[N], (M, Seq[(C, LayerPositioning)]), R](Mixed) { factories =>
 			fill(factories(mainFactory), factories(layersFactory))
 		})
 }
@@ -233,5 +234,5 @@ trait Layers extends CustomDrawReachComponent with MultiContainer[ReachComponent
 private class _Layers(override val parentHierarchy: ComponentHierarchy,
                       override val mainLayer: ReachComponentLike,
                       override val overlays: Seq[(ReachComponentLike, LayerPositioning)],
-                      override val customDrawers: Vector[CustomDrawer])
+                      override val customDrawers: Seq[CustomDrawer])
 	extends Layers

@@ -7,6 +7,7 @@ import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, ExtendableSessionResourceFactory, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle.{Full, Simple}
@@ -59,5 +60,5 @@ class TaskNode(val taskId: Int) extends ExtendableSessionResource
 	override def name = taskId.toString
 	
 	override protected def defaultUseCaseImplementations = Map(Get -> defaultGet)
-	override protected def defaultFollowImplementations = Vector()
+	override protected def defaultFollowImplementations = Empty
 }

@@ -4,6 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.mutable.DataType.{DoubleType, IntType, LongType}
 import utopia.flow.parse.json.JsonReadEvent.{ArrayEnd, ArrayStart, Assignment, ObjectEnd, ObjectStart, Quote, Separator}
 
@@ -341,12 +342,10 @@ object JsonReader extends JsonParser
 		}
 	}
 	
-	private def separatorsBefore(data: Data, usedCount: Int, beforeStringIndex: Int) =
-	{
+	private def separatorsBefore(data: Data, usedCount: Int, beforeStringIndex: Int) = {
 		if (data.separatorCount <= usedCount)
-			Vector()
-		else
-		{
+			Empty
+		else {
 			val result = new VectorBuilder[Int]()
 			var i = usedCount
 			while (i < data.separatorCount && data.separatorIndices(i) < beforeStringIndex)
@@ -382,20 +381,17 @@ object JsonReader extends JsonParser
 		openCloseRanges.result()
 	}
 	
-	private def separateQuotes(quoteIndices: Seq[Int], totalLength: Int) =
-	{
+	private def separateQuotes(quoteIndices: Seq[Int], totalLength: Int) = {
 		// If there are no quotes, treats all as non-quoted
 		if (quoteIndices.isEmpty)
-			Vector() -> Vector(0 until totalLength)
+			Empty -> Single(0 until totalLength)
 		// Groups the indices to pairs
 		else if (quoteIndices.size % 2 != 0)
 			throw new InvalidFormatException(s"JSON contained an uneven number of quotation markers")
-		else
-		{
+		else {
 			// Separates into quote- and non-quote sections (starts and ends are inclusive, but contain quote markers in quotes)
 			val quotes = (quoteIndices.indices by 2).map { i => quoteIndices(i) to quoteIndices(i + 1) }
-			if (quotes.nonEmpty)
-			{
+			if (quotes.nonEmpty) {
 				val nonQuoteBuilder = new VectorBuilder[Range]()
 				if (quotes.head.start != 0)
 					nonQuoteBuilder += (0 to quotes.head.start)
@@ -407,17 +403,14 @@ object JsonReader extends JsonParser
 				quotes -> nonQuoteBuilder.result()
 			}
 			else
-				quotes -> Vector()
+				quotes -> Empty
 		}
 	}
 	
-	private def onlyIndicesInRanges(indices: Vector[Int], ranges: Seq[Range]) =
-	{
+	private def onlyIndicesInRanges(indices: Seq[Int], ranges: Seq[Range]) = {
 		indices.filter { index =>
-		
 			// Expects ranges to be ordered, so finds the first range that could contain the target index
 			ranges.findMap { range =>
-				
 				if (range.end < index)
 					None
 				else if (range.contains(index))

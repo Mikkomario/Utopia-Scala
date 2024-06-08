@@ -1,5 +1,6 @@
 package utopia.vault.model.immutable
 
+import utopia.flow.collection.immutable.Single
 import utopia.vault.database.References
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.template.Joinable
@@ -30,10 +31,10 @@ case class ReferencePoint(table: Table, column: Column) extends Joinable
 {
     override def toString = s"${table.name}(${column.name})"
     
-    override def toJoinsFrom(originTables: Vector[Table], joinType: JoinType) = {
+    override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) = {
         // Primarily attempts to find a direct reference to this point
         References.to(this).find { ref => originTables.contains(ref.table) } match {
-            case Some(reference) => Success(Vector(Join(reference.column, table, column, joinType)))
+            case Some(reference) => Success(Single(Join(reference.column, table, column, joinType)))
             case None =>
                 // Secondarily looks for a reference from this point
                 val secondaryResult = {
@@ -43,7 +44,7 @@ case class ReferencePoint(table: Table, column: Column) extends Joinable
                         None
                 }
                 secondaryResult match {
-                    case Some(result) => Success(Vector(result))
+                    case Some(result) => Success(Single(result))
                     case None =>
                         // As a tertiary option, looks for an indirect reference to this point
                         References.toBiDirectionalLinkGraphFrom(table).shortestRoutesIterator

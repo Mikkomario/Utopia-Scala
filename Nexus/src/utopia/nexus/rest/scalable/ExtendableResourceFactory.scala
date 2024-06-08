@@ -1,6 +1,7 @@
 package utopia.nexus.rest.scalable
 
 import utopia.access.http.Method
+import utopia.flow.collection.immutable.Empty
 import utopia.nexus.rest.Context
 
 /**
@@ -12,8 +13,8 @@ abstract class ExtendableResourceFactory[A, C <: Context, P, +R <: ExtendableRes
 {
 	// ATTRIBUTES   --------------------
 	
-	private var useCaseExtensions = Map[Method, Vector[A => UseCaseImplementation[C, P]]]()
-	private var followExtensions = Vector[A => FollowImplementation[C]]()
+	private var useCaseExtensions = Map[Method, Seq[A => UseCaseImplementation[C, P]]]()
+	private var followExtensions: Seq[A => FollowImplementation[C]] = Empty
 	
 	
 	// ABSTRACT ------------------------
@@ -34,8 +35,7 @@ abstract class ExtendableResourceFactory[A, C <: Context, P, +R <: ExtendableRes
 	 * @param param Resource creation parameter
 	 * @return A new resource
 	 */
-	def apply(param: A) =
-	{
+	def apply(param: A) = {
 		// Creates the base resource version
 		val resource = buildBase(param)
 		// Applies extensions
@@ -52,7 +52,7 @@ abstract class ExtendableResourceFactory[A, C <: Context, P, +R <: ExtendableRes
 	 * @param useCase A function that creates use cases based on the specified parameters
 	 */
 	def addUseCase(method: Method, useCase: A => UseCaseImplementation[C, P]) =
-		useCaseExtensions += (method -> (useCase +: useCaseExtensions.getOrElse(method, Vector())))
+		useCaseExtensions += (method -> (useCase +: useCaseExtensions.getOrElse(method, Empty)))
 	/**
 	 * Adds a new follow implementation to all resources that will be generated from this factory
 	 * @param follow A function that creates follow implementations based on the specified parameters

@@ -5,6 +5,7 @@
 - Moved **DrawLevel** to **Genesis**
 - **HotKey** no longer contains property `.characters` and now uses **Key** instead of key index (Int)
 - **ImageDrawer** is now a trait and not a class
+- In some instances where **Vector** was used, **Seq** is now used
 ### Deprecations
 - Deprecated **ImageDrawerLike** in favor of the new **ImageDrawer** trait / implementation
 - Deprecated **ImageViewDrawer** in favor of the new **ViewImageDrawer**

@@ -20,7 +20,7 @@ object IssueVariantInstancesFactory
 	
 	override def parentFactory = IssueVariantFactory
 	
-	override def apply(variant: IssueVariant, occurrences: Vector[IssueOccurrence]) = 
+	override def apply(variant: IssueVariant, occurrences: Seq[IssueOccurrence]) =
 		IssueVariantInstances(variant, occurrences)
 }
 

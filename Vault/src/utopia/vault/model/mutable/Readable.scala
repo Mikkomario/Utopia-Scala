@@ -1,5 +1,6 @@
 package utopia.vault.model.mutable
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
@@ -39,7 +40,7 @@ trait Readable extends Storable
 	 * @param propertyName the name of the property
 	 * @param value the new value for the property
 	 */
-	def set(propertyName: String, value: Value): Unit = set(Model(Vector(propertyName -> value)))
+	def set(propertyName: String, value: Value): Unit = set(Model(Single(propertyName -> value)))
 	
 	/**
 	 * Updates this object based on the current database state. Requires an index

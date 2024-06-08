@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
@@ -61,7 +62,7 @@ object CopyOnDemand
 		
 		// Stores the last look-up value
 		private var cachedValue = source.value
-		private var changingStoppedListeners = Vector[ChangingStoppedListener]()
+		private var changingStoppedListeners: Seq[ChangingStoppedListener] = Empty
 		
 		
 		// INITIAL CODE -----------------------

@@ -1,5 +1,6 @@
 package utopia.reflection.container.stack.template
 
+import utopia.flow.collection.immutable.Empty
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.template.ContainerLike
 import utopia.reflection.event.StackHierarchyListener
@@ -15,7 +16,7 @@ trait StackContainerLike[C <: ReflectionStackable] extends ContainerLike[C] with
 	
 	private var _isAttachedToMainHierarchy = false
 	
-	override var stackHierarchyListeners = Vector[StackHierarchyListener]()
+	override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 	
 	
 	// IMPLEMENTED	-----------------------

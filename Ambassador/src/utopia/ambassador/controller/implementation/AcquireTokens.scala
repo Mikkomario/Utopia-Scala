@@ -27,6 +27,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
@@ -231,14 +232,14 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 						val expiration = requestTime + body("expires_in").int.map { _.seconds }
 							.getOrElse(defaultSessionDuration)
 						val rawScopes = body("scope").string match {
-							case Some(scope) => scope.split(" ").toVector.map { _.trim }.filter { _.nonEmpty }
+							case Some(scope) => scope.split(" ").view.map { _.trim }.filter { _.nonEmpty }.toVector
 							case None =>
 								logger(new NoSuchElementException(
 									s"No 'scope' attribute in response body. Available properties: [${
 										body.nonEmptyProperties.map { _.name }.mkString(", ")
 									}]"),
 									"No scope attribute in token response body")
-								Vector()
+								Empty
 						}
 						
 						connectionPool.tryWith { implicit connection =>
@@ -275,7 +276,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 								}
 							}
 							// Returns the tokens and the scopes
-							Vector(refreshToken, accessToken).flatten
+							Pair(refreshToken, accessToken).flatten
 						}
 					}
 					else
@@ -299,14 +300,12 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 		}
 	}
 	
-	private def processScopes(serviceId: Int, scopes: Vector[String])(implicit connection: Connection) =
-	{
+	private def processScopes(serviceId: Int, scopes: Seq[String])(implicit connection: Connection) = {
 		// Matches with existing scopes
 		val existingScopes = DbAuthService(serviceId).scopes.matchingAnyOfNames(scopes).pull
 		// Checks if there were new scopes introduced and saves those to the DB if necessary
 		val newScopes = scopes.filterNot { scopeName => existingScopes.exists { _.name == scopeName } }
-		if (newScopes.nonEmpty)
-		{
+		if (newScopes.nonEmpty) {
 			val insertedScopes = ScopeModel.insert(newScopes.map { ScopeData(serviceId, _) })
 			existingScopes ++ insertedScopes
 		}
@@ -314,7 +313,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 			existingScopes
 	}
 	
-	private def insertToken(userId: Int, token: String, scopes: Vector[Scope], expiration: Option[Instant] = None,
+	private def insertToken(userId: Int, token: String, scopes: Seq[Scope], expiration: Option[Instant] = None,
 	                        isRefreshToken: Boolean = false)(implicit connection: Connection) =
 	{
 		// Inserts the token first

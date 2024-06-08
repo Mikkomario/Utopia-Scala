@@ -3,6 +3,7 @@ package utopia.paradigm.generic
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.generic.ParadigmDataType._
@@ -55,7 +56,7 @@ object ParadigmValue
         def sizeOr(default: => Size = Size.zero) = size.getOrElse(default)
         def lineOr(default: => Line = Line.zero) = line.getOrElse(default)
         def circleOr(default: => Circle = Circle(Point.origin, 0)) = circle.getOrElse(default)
-        def polygonOr(default: => Polygonic = Polygon(Vector())) = polygon.getOrElse(default)
+        def polygonOr(default: => Polygonic = Polygon(Empty)) = polygon.getOrElse(default)
         def boundsOr(default: => Bounds = Bounds.zero) = bounds.getOrElse(default)
         def angleOr(default: => Angle = Angle.zero) = angle.getOrElse(default)
         def rotationOr(default: => DirectionalRotation = Rotation.clockwise.zero) = rotation.getOrElse(default)

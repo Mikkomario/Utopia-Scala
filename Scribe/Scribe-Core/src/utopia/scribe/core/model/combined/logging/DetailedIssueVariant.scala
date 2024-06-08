@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.template.Extender
 import utopia.scribe.core.model.partial.logging.IssueVariantData
 import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
@@ -14,7 +15,7 @@ import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
   * @param occurrences Occurrences of this issue variant
   */
 case class DetailedIssueVariant(variant: IssueVariant, error: Option[ErrorRecordWithStackTrace] = None,
-                                occurrences: Vector[IssueOccurrence] = Vector())
+                                occurrences: Seq[IssueOccurrence] = Empty)
 	extends Extender[IssueVariantData]
 {
 	// COMPUTED -----------------------------

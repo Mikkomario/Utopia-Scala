@@ -5,6 +5,7 @@ Supports **Flow v2.4**
 ### Breaking changes
 - **LatestModelAccess** now extends **FilterableView**
 - `.earliest` in **SingleChronoRowModelAccess** now returns an access point, not the pulled item
+- In some instances where **Vector** was used, **Seq** is now used
 ### Deprecations
 - Deprecated **FromRowFactoryWithTimestamps** in favor of the new version: **FromTimelineRowFactory**
 - Deprecated **SelectAll** in favor of `Select.all(SqlTarget)`

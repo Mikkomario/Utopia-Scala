@@ -73,10 +73,10 @@ object MyLanguagesNode extends LeafResource[AuthorizedContext]
 		val languages = DbUser(userId).languageLinks.detailed.sortBy { _.familiarity.wrapped.orderIndex }
 		// Supports simple model style
 		Result.Success(token.modelStyle match {
-			case Full => languages.map { _.toModel }
+			case Full => languages.map { _.toModel }.toVector
 			case Simple =>
 				val roles = DbDescriptionRoles.pull
-				languages.map { _.toSimpleModelUsing(roles) }
+				languages.map { _.toSimpleModelUsing(roles) }.toVector
 		})
 	}
 	

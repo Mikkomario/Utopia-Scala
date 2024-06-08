@@ -117,7 +117,7 @@ object InputWindowTest extends App
 		}
 		
 		override protected def buildLayout(factories: ContextualMixed[TextContext],
-		                                   content: Vector[OpenComponent[ReachComponentLike, Changing[Boolean]]],
+		                                   content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 		                                   context: Unit) =
 		{
 			val framingMargin = margins.medium.downscaling x margins.medium.any

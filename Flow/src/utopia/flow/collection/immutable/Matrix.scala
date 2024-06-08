@@ -97,8 +97,8 @@ object Matrix
 	
 	private class EmptyMatrix[+A] extends Matrix[A]
 	{
-		override lazy val columns: IndexedSeq[IndexedSeq[A]] = Vector()
-		override lazy val rows: IndexedSeq[IndexedSeq[A]] = Vector()
+		override lazy val columns: IndexedSeq[IndexedSeq[A]] = Empty
+		override lazy val rows: IndexedSeq[IndexedSeq[A]] = Empty
 		override lazy val columnsView: IndexedSeqView[IndexedSeqView[A]] = new EmptyIndexedSeqView[IndexedSeqView[A]]()
 		override lazy val rowsView: IndexedSeqView[IndexedSeqView[A]] = new EmptyIndexedSeqView[IndexedSeqView[A]]()
 		

@@ -110,8 +110,7 @@ case class DescriptionLinkModelFactory(linkTable: DescriptionLinkTable)
 	 * @param connection Implicit DB Connection
 	 * @return Inserted description links
 	 */
-	def insert(targetId: Int, data: Seq[DescriptionData])(implicit connection: Connection): Vector[LinkedDescription] =
-	{
+	def insert(targetId: Int, data: Seq[DescriptionData])(implicit connection: Connection): Seq[LinkedDescription] = {
 		val descriptions = DescriptionModel.insert(data)
 		val linkIds = Insert(table, descriptions.map { d => apply(None, Some(targetId), Some(d.id)).toModel })
 			.generatedIntKeys

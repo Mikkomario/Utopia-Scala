@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.caching
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{LazyListener, LazyResetListener}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.ListenableLazy
@@ -27,8 +28,8 @@ class ListenableMutableLazy[A](generator: => A) extends MutableLazy[A] with List
 {
 	// ATTRIBUTES   ------------------------
 	
-	private var listeners = Vector[LazyListener[A]]()
-	private var resetListeners = Vector[LazyResetListener[A]]()
+	private var listeners: Seq[LazyListener[A]] = Empty
+	private var resetListeners: Seq[LazyResetListener[A]] = Empty
 	
 	private val statePointer = EventfulPointer.empty[A]()
 	

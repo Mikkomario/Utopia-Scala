@@ -5,6 +5,7 @@ import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.ScrollBarBounds
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -156,7 +157,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	// IMPLEMENTED	----------------
 	
-	override def children = Vector(content)
+	override def children: Seq[C] = Single(content)
 	
 	override def calculatedStackSize = {
 		val contentSize = content.stackSize
@@ -507,7 +508,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		private var isDraggingContent = false
 		private var contentDragPosition = Point.origin
 		
-		private var velocities = Vector[(Instant, Velocity2D, FiniteDuration)]()
+		private var velocities: Seq[(Instant, Velocity2D, FiniteDuration)] = Empty
 		
 		// Listens to left mouse presses & releases
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftPressed
@@ -609,7 +610,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 					// Calculates the scrolling velocity
 					val now = Instant.now
 					val velocityData = velocities.dropWhile { _._1 < now - dragDuration }
-					velocities = Vector()
+					velocities = Empty
 					
 					if (velocityData.nonEmpty) {
 						val actualDragDuration = now - velocityData.head._1

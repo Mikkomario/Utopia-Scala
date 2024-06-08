@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.url.link
 
+import utopia.flow.collection.immutable.Empty
 import utopia.logos.database.access.many.url.request_path.DbRequestPaths
 import utopia.logos.database.factory.url.LinkDbFactory
 import utopia.logos.model.combined.url.DetailedLink
@@ -51,7 +52,7 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 			links.map { link => DetailedLink(link, pathMap(link.requestPathId)) }
 		}
 		else
-			Vector()
+			Empty
 	}
 	
 	

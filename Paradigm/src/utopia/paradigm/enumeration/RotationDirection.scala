@@ -1,5 +1,6 @@
 package utopia.paradigm.enumeration
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.sign.{BinarySigned, Sign}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
@@ -39,7 +40,7 @@ object RotationDirection
     /**
       * All possible values of this trait / enum
       */
-    val values = Vector[RotationDirection](Clockwise, Counterclockwise)
+    val values = Pair[RotationDirection](Clockwise, Counterclockwise)
     
     
     // COMPUTED -------------------------

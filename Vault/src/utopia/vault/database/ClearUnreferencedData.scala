@@ -2,6 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.immutable.{Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, JoinType, SqlTarget, Where}
@@ -53,7 +54,7 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 	// Orders the deletions so that the possibly referencing tables are cleared first
 	private lazy val deletionTargets = orderTargets(targets.toVector.map { case (table, ignored) =>
 		// Searches for the references towards that table, but ignores specified tables
-		DeletionTarget(table, References.to(table).filterNot { ref => ignored.contains(ref.from.table) }.toVector)
+		DeletionTarget(table, References.to(table).filterNot { ref => ignored.contains(ref.from.table) })
 	})
 	
 	
@@ -64,16 +65,13 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 	  * @param connection Implicit database connection
 	  * @return The number of deleted items
 	  */
-	def apply()(implicit connection: Connection) = deletionTargets.map { target =>
-		connection(target.toSqlStatement).updatedRowCount
-	}.sum
+	def apply()(implicit connection: Connection) =
+		deletionTargets.map { target => connection(target.toSqlStatement).updatedRowCount }.sum
 	
-	private def orderTargets(targets: Vector[DeletionTarget]): Vector[DeletionTarget] =
-	{
+	private def orderTargets(targets: Seq[DeletionTarget]): Seq[DeletionTarget] = {
 		if (targets.size < 2)
 			targets
-		else
-		{
+		else {
 			// Finds the targets which contain references to other tables
 			val targetsByReferenceCount = targets.groupBy { target =>
 				targets.map { _.references.count { _.from.table == target.table } }.sum
@@ -83,9 +81,8 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 			// If the results were split, attempts to order the groups with references
 			if (maxReferenceCount == 0 || targetsByReferenceCount.size == 1)
 				targets
-			else
-			{
-				val zeroReferenceTargets = targetsByReferenceCount.getOrElse(0, Vector())
+			else {
+				val zeroReferenceTargets = targetsByReferenceCount.getOrElse(0, Empty)
 				val orderedReferencingTargets = (targetsByReferenceCount - 0)
 					.toVector.sortBy { -_._1 }.map { _._2 }.flatMap(orderTargets)
 				orderedReferencingTargets ++ zeroReferenceTargets
@@ -96,8 +93,7 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 	
 	// NESTED   ------------------------------
 	
-	case class DeletionTarget(table: Table, references: Vector[Reference])
-	{
+	private case class DeletionTarget(table: Table, references: Seq[Reference]) {
 		def toSqlStatement = {
 			// Performs all reference joins
 			val target = references.foldLeft(table: SqlTarget) { (target, reference) =>

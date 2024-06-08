@@ -2,6 +2,7 @@ package utopia.firmament.drawing.view
 
 import utopia.firmament.drawing.template.SelectableTextDrawerLike
 import utopia.firmament.model.TextDrawContext
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -20,7 +21,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
   * @since 4.11.2020, Reflection v2
   */
 case class SelectableTextViewDrawer(textPointer: Changing[MeasuredText], stylePointer: View[TextDrawContext],
-                                    selectedRangesPointer: Changing[Iterable[Range]] = Fixed(Vector()),
+                                    selectedRangesPointer: Changing[Iterable[Range]] = Fixed(Empty),
                                     caretPositionPointer: Changing[Option[Int]] = Fixed(None),
                                     highlightedTextColorPointer: View[Color] = View.fixed(Color.textBlack),
                                     highlightedBackgroundPointer: View[Option[Color]] = View.fixed(None),

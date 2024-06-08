@@ -4,6 +4,7 @@ import utopia.disciple.http.request.Request
 import utopia.disciple.http.response.{Response, StreamedResponse}
 import utopia.flow.async.context.CloseHook
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -101,7 +102,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 					queue.find { case (req, p, _) => p.isEmpty && req == request } match {
 						case Some((_, promise, _)) =>
 							promise.set(response -> Now)
-							Vector() -> queue
+							Empty -> queue
 						// Case: The response doesn't fit any of the queued requests
 						// This may cause severe logic errors, as the queue might now be broken
 						// This may happen if another interceptor modifies the outgoing requests
