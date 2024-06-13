@@ -1,6 +1,6 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.process.ProcessState.{Completed, Running}
+import utopia.flow.async.process.ProcessState.Running
 import utopia.flow.async.process.{TimedTask, TimedTasks, Wait}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -79,7 +79,8 @@ object ChangingTimedTasksTest extends App
 		nextTimePointer.value = None
 		
 		Wait(0.5.seconds)
-		tasks.state == Completed
+		// NB: Doesn't work in loop mode
+		// assert(tasks.state == Completed, tasks.state)
 		Wait(1.5.seconds)
 		assert(counter.value == 4)
 		
@@ -106,7 +107,7 @@ object ChangingTimedTasksTest extends App
 	println("\nPart 1: Testing as loop")
 	testTask(useLoop = true)
 	
-	println("Part 2: Testing as TimedTasks")
+	println("\nPart 2: Testing as TimedTasks")
 	testTask(useLoop = false)
 	
 	println("Success!")

@@ -10,9 +10,7 @@ import utopia.flow.generic.model.mutable.DataType
   */
 object ConversionRoutesTest extends App
 {
-	
-	
-	val types = DataType.values.toVector.sortBy { _.name }
+	val types = DataType.values.sortBy { _.name }
 	
 	types.foreach { target =>
 		println(s"\n${target.name.toUpperCase} \t---------------")

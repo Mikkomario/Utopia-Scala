@@ -2,9 +2,8 @@ package utopia.flow.test.parse
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.xml.{XmlElement, XmlReader, XmlWriter}
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.xml.{XmlElement, XmlReader, XmlWriter}
 
 import java.nio.file.Paths
 import scala.util.Try
@@ -40,7 +39,7 @@ object XmlTest extends App
 	println(parsed.get.toJson)
 	
 	// Makes sure model parsing works for xml elements
-	assert(parsed.get == root)
+	assert(parsed.get ~== root)
 	
 	// Tries to write the xml data to a file
 	val testFile = Paths.get("test/XmlTest.xml")
@@ -53,7 +52,7 @@ object XmlTest extends App
 	println(parsed2.get.toXml)
 	println(parsed2.get.toJson)
 	
-	assert(parsed2.get == root)
+	assert(parsed2.get ~== root)
 	
 	// Parses an element from the xml file (sax)
 	val parsed3 = XmlReader.readFile(file = testFile) { reader =>

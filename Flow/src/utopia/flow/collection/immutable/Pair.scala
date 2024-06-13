@@ -21,6 +21,7 @@ object Pair
 	/**
 	  * @return A factory used for constructing Pairs or other indexed sequences, depending on the input size
 	  */
+	@deprecated("Please use OptimizedIndexedSeq instead", "v2.4")
 	def factory = PairFactory
 	
 	
@@ -187,6 +188,7 @@ object Pair
 	  * Otherwise builds a Vector.
 	  * @tparam A Type of items placed in the resulting collection.
 	  */
+	@deprecated("Please use OptimizedIndexedSeq.newBuilder instead", "v2.4")
 	class PairOrVectorBuilder[A] extends mutable.Builder[A, Either[Vector[A], Pair[A]]]
 	{
 		// ATTRIBUTES   -------------------
@@ -305,6 +307,7 @@ object Pair
 		}
 	}
 	
+	@deprecated("Please use OptimizedIndexedSeq instead", "v2.4")
 	object PairFactory extends SeqFactory[IndexedSeq]
 	{
 		override def empty[A]: IndexedSeq[A] = Empty
@@ -357,6 +360,8 @@ case class Pair[+A](first: A, second: A)
 	// IMPLEMENTED  ----------------------
 	
 	override def view = new PairView[A](first, second)
+	
+	override def toString() = s"Pair($first, $second)"
 	
 	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = super[PairOps].sorted[B]
 	

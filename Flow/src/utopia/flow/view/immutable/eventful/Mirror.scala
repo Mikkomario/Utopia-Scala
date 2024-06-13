@@ -79,4 +79,6 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 	}
 	
 	override def readOnly = this
+	
+	override def toString = s"Mirror of $source while $condition; Currently ${_value} $destiny"
 }

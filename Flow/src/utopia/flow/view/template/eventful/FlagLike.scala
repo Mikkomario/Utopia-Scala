@@ -28,6 +28,8 @@ object FlagLike
 	{
 		//noinspection PostfixUnaryOperation
 		override lazy val unary_! = super.unary_!
+		
+		override def toString = s"FlagLike($wrapped)"
 	}
 }
 

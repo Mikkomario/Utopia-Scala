@@ -357,8 +357,11 @@ trait TimedTask
 		// cancels / stops this process
 		waitPointerPointer.flatMap { _.withState }
 			.addListenerAndSimulateEvent(ChangeResult.temporal(None)) { event =>
-				if (event.newValue.containsFinal(None))
+				// println(event)
+				if (event.newValue.containsFinal(None)) {
+					// println("Wait pointer got fixed to None => Stops looping")
 					Detach.and { process.stop() }
+				}
 				else
 					Continue
 			}

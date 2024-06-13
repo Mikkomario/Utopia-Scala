@@ -96,6 +96,8 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 			inputs.mapAndMerge { _.origin.destiny } { _ + _ }.possibleToSealIf(stopCondition.isDefined)
 	}
 	
+	override def toString = s"Light merge of $origin1 and $origin2; Currently $value $destiny; Stopped = $stopped"
+	
 	override def stop(): Future[Any] = {
 		if (!stopped) {
 			stopped = true

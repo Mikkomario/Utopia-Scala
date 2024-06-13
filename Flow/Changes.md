@@ -88,6 +88,8 @@
   - Added `.rootsWhereIterator(...)`, `.rootsBelowWhereIterator(...)` and `.pathsToRootsWhereIterator(...)`
 - **Try** (**CollectionExtensions**)
   - Added `.foreachOrLog(...)`
+- **TryCatch**
+  - Added a couple mapping functions and `.orElse(TryCatch)`
 - **WeekDay** (object)
   - Added `.matching(String)`
 ### Other changes

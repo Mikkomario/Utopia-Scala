@@ -12,8 +12,6 @@ import utopia.flow.parse.xml.XmlElement
  */
 object XmlToSimpleModelTest extends App
 {
-	
-	
 	def printElement(elem: XmlElement) =
 	{
 		println()

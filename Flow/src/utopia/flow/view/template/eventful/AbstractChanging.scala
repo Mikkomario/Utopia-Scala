@@ -118,6 +118,7 @@ abstract class AbstractChanging[A] extends ChangingWithListeners[A]
 			// Whenever the origin's value changes, calculates a new value
 			val oldValue = value
 			val newValue = map(oldValue, e1)
+			
 			// If the new value is different from the previous state, updates the value and generates a new change event
 			if (newValue != oldValue) {
 				set(newValue)

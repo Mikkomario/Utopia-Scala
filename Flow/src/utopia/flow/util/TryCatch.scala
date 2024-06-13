@@ -46,11 +46,11 @@ sealed trait TryCatch[+A]
 	/**
 	 * @return All failures encountered. May be critical or non-critical.
 	 */
-	def failures: IndexedSeq[Throwable]
+	def failures: Seq[Throwable]
 	/**
 	 * @return Encountered non-critical failures.
 	 */
-	def partialFailures: IndexedSeq[Throwable]
+	def partialFailures: Seq[Throwable]
 	
 	/**
 	 * Logs non-critical failures that were encountered and returns a Try
@@ -78,6 +78,35 @@ sealed trait TryCatch[+A]
 	  * @return Some on success, None on failure
 	  */
 	def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A]
+	
+	/**
+	  * @param backup A value to use as a backup if this TryCatch is a failure
+	  * @tparam B Type of the backup success value
+	  * @return If this is a success, returns this, otherwise returns the backup value
+	  */
+	def orElse[B >: A](backup: => TryCatch[B]): TryCatch[B]
+	
+	/**
+	  * @param f A mapping function to apply to a successful value, if available
+	  * @tparam B Type of the mapping function's result
+	  * @return Copy of this result where a successful value has been mapped, if applicable
+	  */
+	def map[B](f: A => B): TryCatch[B]
+	/**
+	  * @param f A mapping function to apply to a successful value, if available.
+	  *          Yields a TryCatch.
+	  * @tparam B Type of the mapping function's result
+	  * @return Copy of this result where a successful value has been mapped, if applicable.
+	  *         May map from success into a failure.
+	  */
+	def flatMap[B](f: A => TryCatch[B]): TryCatch[B]
+	/**
+	  * @param f A mapping function to apply to a successful value, if available. Yields a Try.
+	  * @tparam B Type of the mapping function's result
+	  * @return Copy of this result where a successful value has been mapped, if applicable.
+	  *         May map from success into a failure.
+	  */
+	def tryMap[B](f: A => Try[B]): TryCatch[B]
 	
 	/**
 	 * @param failures Additional non-critical failures to assign to this item (call-by-name)
@@ -124,6 +153,17 @@ object TryCatch
 		case scala.util.Failure(error) => Failure(error)
 	}
 	
+	/**
+	  * Wraps / converts a regular try into a TryCatch
+	  * @param t Try to convert
+	  * @tparam A Type of wrapped success value
+	  * @return A TryCatch representing the specified Try
+	  */
+	def wrap[A](t: Try[A]): TryCatch[A] = t match {
+		case scala.util.Success(v) => Success(v)
+		case scala.util.Failure(error) => Failure(error)
+	}
+	
 	
 	// NESTED   -------------------------
 	
@@ -133,7 +173,7 @@ object TryCatch
 	 * @param failures Non-critical failures encountered during the process
 	 * @tparam A Type of acquired result
 	 */
-	case class Success[+A](value: A, failures: IndexedSeq[Throwable] = Empty) extends TryCatch[A]
+	case class Success[+A](value: A, failures: Seq[Throwable] = Empty) extends TryCatch[A]
 	{
 		// COMPUTED ----------------------------
 		
@@ -155,7 +195,7 @@ object TryCatch
 		override def success = Some(value)
 		override def failure: Option[Throwable] = None
 		override def anyFailure: Option[Throwable] = failures.headOption
-		override def partialFailures: IndexedSeq[Throwable] = failures
+		override def partialFailures: Seq[Throwable] = failures
 		
 		override def logToTry(implicit log: Logger) = {
 			logFailures()
@@ -172,6 +212,26 @@ object TryCatch
 		override def logToOptionWithMessage(message: => String)(implicit log: Logger): Option[A] = {
 			logFailures(message)
 			Some(value)
+		}
+		
+		override def orElse[B >: A](backup: => TryCatch[B]): TryCatch[B] = this
+		
+		override def map[B](f: A => B): TryCatch[B] = Success(f(value), failures)
+		override def flatMap[B](f: A => TryCatch[B]): TryCatch[B] = {
+			val mapResult = f(value)
+			if (failures.isEmpty)
+				mapResult
+			else
+				mapResult match {
+					case Success(newVal, newFailures) => Success(newVal, failures ++ newFailures)
+					case f: Failure[B] => f
+				}
+		}
+		override def tryMap[B](f: A => Try[B]): TryCatch[B] = {
+			f(value) match {
+				case scala.util.Success(v) => copy(v)
+				case scala.util.Failure(error) => Failure(error)
+			}
 		}
 		
 		override def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A] =
@@ -205,6 +265,12 @@ object TryCatch
 			log(cause, message)
 			None
 		}
+		
+		override def orElse[B >: A](backup: => TryCatch[B]): TryCatch[B] = backup
+		
+		override def map[B](f: A => B): TryCatch[B] = Failure(cause)
+		override def flatMap[B](f: A => TryCatch[B]): TryCatch[B] = Failure(cause)
+		override def tryMap[B](f: A => Try[B]): TryCatch[B] = Failure(cause)
 		
 		override def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A] = this
 	}

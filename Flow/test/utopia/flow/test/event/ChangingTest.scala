@@ -12,6 +12,20 @@ import scala.util.Try
   */
 object ChangingTest extends App
 {
+	// Tests listening
+	val o7 = EventfulPointer(1)
+	var lastO7EventValue = -1
+	
+	o7.addListenerAndSimulateEvent(-1) { e => lastO7EventValue = e.newValue }
+	
+	assert(lastO7EventValue == 1)
+	
+	o7.value = 55
+	assert(lastO7EventValue == 55)
+	
+	o7.value = -2
+	assert(lastO7EventValue == -2)
+	
 	// Tests mapping
 	val origin = EventfulPointer(1)
 	val mapped = origin.map { _ % 2 }
@@ -40,6 +54,31 @@ object ChangingTest extends App
 	assert(originChanges == 2)
 	assert(mappedChanges == 1)
 	
+	// Tests light merge listening
+	println("\nTesting light merge listening")
+	val o5 = EventfulPointer(1)
+	val o6 = EventfulPointer(2)
+	val lm2 = o5.lightMergeWith(o6) { _ + _ }
+	var lastLm2EventValue = -1
+	
+	lm2.addChangingStoppedListenerAndSimulateEvent { throw new IllegalStateException("'lm2' stopped changing") }
+	println("Adding listener to lm2")
+	lm2.addListenerAndSimulateEvent(-1) { e => lastLm2EventValue = e.newValue }
+	
+	println(lm2)
+	assert(lm2.hasListeners)
+	assert(lastLm2EventValue == 3)
+	
+	o5.value = 4
+	println(lm2)
+	assert(lm2.hasListeners)
+	assert(lastLm2EventValue == 6, lastLm2EventValue)
+	
+	o6.value = -2
+	assert(lm2.hasListeners)
+	assert(lastLm2EventValue == 2, lastLm2EventValue)
+	assert(lm2.value == 2)
+	
 	// Tests merging
 	val o2 = EventfulPointer(1)
 	val o3 = EventfulPointer(2)
@@ -66,7 +105,12 @@ object ChangingTest extends App
 	assert(merged.value == 2)
 	assert(lightMerged.value == 2)
 	assert(mergeMapped.value == -2)
-	assert(lightMergeMapped.value == -2)
+	assert(o2.mayChange)
+	assert(o3.mayChange)
+	assert(merged.mayChange)
+	assert(lightMerged.mayChange)
+	assert(lightMergeMapped.mayChange)
+	assert(lightMergeMapped.value == -2, lightMergeMapped.value)
 	
 	// Tests merging edge case (event-firing in option + tuple types)
 	val o4 = EventfulPointer(None)

@@ -27,6 +27,8 @@ object Empty extends IndexedSeq[Nothing]
 	override def headOption = None
 	override def lastOption = None
 	
+	override def toString() = "Empty"
+	
 	override def isDefinedAt(idx: Int) = false
 	override def apply(i: Int): Nothing =
 		throw new IndexOutOfBoundsException("apply(Int) called on an empty collection")

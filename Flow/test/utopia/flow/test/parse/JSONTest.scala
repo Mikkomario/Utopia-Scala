@@ -15,8 +15,6 @@ import java.time.Instant
  */
 object JSONTest extends App
 {
-	
-	
 	def assertJSON(value: Value, json: String) =
 	{
 		val result = value.toJson
@@ -75,7 +73,7 @@ object JSONTest extends App
 	
 	val readModel2Converted = JsonReader(readModel2.toJson).get.getModel
 	println(readModel2Converted)
-	assert(readModel2 == readModel2Converted)
+	assert(readModel2 ~== readModel2Converted, s"$readModel2 $readModel2Converted")
 	
 	// Tests more difficult data types
 	val prop4 = Constant("test4", v)
@@ -94,7 +92,7 @@ object JSONTest extends App
 	assert(readModel3("test5").dataType == ModelType)
 	
 	// Tests value reading vs. model reading
-	assert(JsonReader(readModel2.toJson).get.getModel == readModel2)
+	assert(JsonReader(readModel2.toJson).get.getModel ~== readModel2)
 	
 	// This kind of setting was causing a problem earlier
 	val test = Vector(1)

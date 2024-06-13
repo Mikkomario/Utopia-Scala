@@ -95,4 +95,6 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: FlagLike 
 	override def destiny: Destiny = origin.destiny.sealedIf { condition.isAlwaysFalse }
 	
 	override def readOnly = this
+	
+	override def toString = s"Mirroring $origin when $condition, caching = ${!cachingDisabled}, currently $value $destiny"
 }

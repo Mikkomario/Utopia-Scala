@@ -1,10 +1,9 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{SeqFactory, mutable}
+import scala.collection.{SeqFactory, View, mutable}
 
 /**
   * Factory for constructing indexed sequences with following underlying classes:
@@ -42,16 +41,26 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 				// Case: Unknown number of items
 				case _ =>
 					source match {
-						// Case: Iterable collection => Utilizes isEmpty & hasSize
+						case v: View[A] =>
+							// WET WET
+							val iter = v.iterator
+							if (iter.hasNext) {
+								val builder = new OptimizedSeqBuilder[A]()
+								builder ++= iter
+								builder.result()
+							}
+							else
+								Empty
+							
+						// Case: Iterable collection => Utilizes isEmpty
 						case i: Iterable[A] =>
 							if (i.isEmpty)
 								Empty
-							else if (i hasSize 2) {
-								val iter = i.iterator
-								Pair.fill(iter.next())
+							else {
+								val builder = new OptimizedSeqBuilder[A]()
+								builder ++= i
+								builder.result()
 							}
-							else
-								Vector.from(i)
 						// Case: Only iterable once => Utilizes the collection iterator and uses a builder
 						case source =>
 							val iter = source.iterator
@@ -139,6 +148,11 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 				lazyBuilder.value.addAll(xs)
 			else {
 				xs match {
+					// Case: View => Converts to an iterator
+					case v: View[A] =>
+						val iter = v.iterator
+						if (iter.hasNext)
+							addFrom(iter)
 					// Case: Iterable => Utilizes nonEmpty & knownSize
 					case i: Iterable[A] =>
 						if (i.nonEmpty) {

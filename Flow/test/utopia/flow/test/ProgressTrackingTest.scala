@@ -19,6 +19,7 @@ object ProgressTrackingTest extends App
 			e.projectedRemainingDuration.description } remaining")
 	}
 	
+	println(s"Updating progress, ETA completion in 10 sec")
 	(1 to 10).foreach { i =>
 		Wait(1.seconds)
 		tracker.value = i

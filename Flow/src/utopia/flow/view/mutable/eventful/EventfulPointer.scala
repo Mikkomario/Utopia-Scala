@@ -63,6 +63,8 @@ object EventfulPointer
 			fireEventIfNecessary(oldValue, newValue).foreach { _() }
 		}
 		
+		override def toString = s"EventfulPointer(${_value})"
+		
 		// Can never stop changing, so listener assignment is not needed either
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}

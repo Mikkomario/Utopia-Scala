@@ -42,6 +42,8 @@ case class Single[+A](value: A)
 	override protected def reversed = this
 	override def distinct = this
 	
+	override def toString() = s"Single($value)"
+	
 	override def zipWithIndex = Single(value -> 0)
 	
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] =
@@ -105,39 +107,46 @@ case class Single[+A](value: A)
 	override def appended[B >: A](elem: B) = Pair(value, elem)
 	override def prepended[B >: A](elem: B) = Pair(elem, value)
 	
-	override def appendedAll[B >: A](suffix: IterableOnce[B]) = suffix match {
-		case i: Iterable[B] =>
-			i.emptyOneOrMany match {
-				case None => this
-				case Some(Left(only)) => Pair(value, only)
-				case Some(Right(many)) => Vector.from(View.concat(this, many))
-			}
-		case i =>
-			val iter = i.iterator
-			if (iter.hasNext)
-				OptimizedIndexedSeq.from(iterator ++ iter)
-			else
-				this
-	}
-	// WET WET
-	override def prependedAll[B >: A](prefix: IterableOnce[B]) = prefix match {
-		case i: Iterable[B] =>
-			i.emptyOneOrMany match {
-				case None => this
-				case Some(Left(only)) => Pair(only, value)
-				case Some(Right(many)) => Vector.from(View.concat(many, this))
-			}
-		case i =>
-			val iter = i.iterator
-			if (iter.hasNext)
-				OptimizedIndexedSeq.from(iter ++ iterator)
-			else
-				this
-	}
+	override def appendedAll[B >: A](suffix: IterableOnce[B]) =
+		_addAll(suffix)(Pair.apply) { _.iterator ++ _ }
+	override def prependedAll[B >: A](prefix: IterableOnce[B]) =
+		_addAll(prefix) { (a, b) => Pair(b, a) } { (a, b) => b.iterator ++ a }
 	
 	override def padTo[B >: A](len: Int, elem: B) = len match {
 		case 2 => Pair(value, elem)
 		case x if x <= 1 => this
 		case _ => Vector.from(iterator ++ Iterator.fill(len)(elem))
 	}
+	
+	
+	// OTHER    ----------------------------
+	
+	private def _addAll[B >: A](c: IterableOnce[B])(toPair: (A, B) => Pair[B])
+	                           (combine: (IterableOnce[A], IterableOnce[B]) => IterableOnce[B]): IndexedSeq[B] =
+		c.knownSize match {
+			case 0 => this
+			case 1 => toPair(value, c.iterator.next())
+			case x if x > 1 => Vector.from(combine(this, c))
+			case _ =>
+				c match {
+					case v: View[B] =>
+						val iter = v.iterator
+						if (iter.hasNext)
+							OptimizedIndexedSeq.from(combine(this, iter))
+						else
+							this
+					case i: Iterable[B] =>
+						i.emptyOneOrMany match {
+							case None => this
+							case Some(Left(only)) => toPair(value, only)
+							case Some(Right(many)) => Vector.from(combine(this, many))
+						}
+					case i =>
+						val iter = i.iterator
+						if (iter.hasNext)
+							OptimizedIndexedSeq.from(combine(this, iter))
+						else
+							this
+				}
+		}
 }

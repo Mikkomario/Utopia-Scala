@@ -6,9 +6,9 @@ import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingSto
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
-import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -16,9 +16,9 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
 import utopia.flow.view.template.eventful.FlagLike.wrap
 
-import scala.language.implicitConversions
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object Changing
