@@ -13,7 +13,7 @@ object CachingSeq extends SeqFactory[CachingSeq]
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val _empty = new CachingSeq(Iterator.empty)
+	private val _empty = new CachingSeq(Iterator.empty, externallyKnownSize = Some(0))
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -21,7 +21,7 @@ object CachingSeq extends SeqFactory[CachingSeq]
 	override def from[A](source: IterableOnce[A]) = source match {
 		case c: CachingSeq[A] => c
 		case v: Vector[A] => initialized(v)
-		case c => new CachingSeq[A](c.iterator)
+		case c => new CachingSeq[A](c.iterator, externallyKnownSize = Some(c.knownSize).filter { _ >= 0 })
 	}
 	
 	override def empty[A]: CachingSeq[A] = _empty
@@ -45,10 +45,12 @@ object CachingSeq extends SeqFactory[CachingSeq]
 		if (preCached.isEmpty)
 			from(source)
 		else
-			new CachingSeq[A](source.iterator, preCached)
+			new CachingSeq[A](source.iterator, preCached,
+				Some(source.knownSize).filter { _ >= 0 }.map { _ + preCached.size })
 	}
 	
-	def apply[A](items: View[A]*) = new CachingSeq[A](items.iterator.map { _.value })
+	def apply[A](items: View[A]*) = new CachingSeq[A](items.iterator.map { _.value },
+		externallyKnownSize = Some(items.size))
 	
 	/**
 	  * Creates a new pre-initialized sequence by wrapping a vector
@@ -56,16 +58,17 @@ object CachingSeq extends SeqFactory[CachingSeq]
 	  * @tparam A Type of items in that vector
 	  * @return A sequence wrapping that vector
 	  */
-	def initialized[A](vector: Vector[A]) = new CachingSeq[A](Iterator.empty, vector)
+	def initialized[A](vector: Vector[A]) = new CachingSeq[A](Iterator.empty, vector, Some(vector.size))
 	
 	/**
 	  * @param item A single item (lazily initialized / call-by-name)
 	  * @tparam A Type of that item
 	  * @return A caching iterable that will contain that item only
 	  */
-	def single[A](item: => A) = new CachingSeq[A](PollableOnce(item))
+	def single[A](item: => A) = new CachingSeq[A](PollableOnce(item), externallyKnownSize = Some(1))
 	
-	def fromFunctions[A](items: (() => A)*): CachingSeq[A] = new CachingSeq[A](items.iterator.map { _() })
+	def fromFunctions[A](items: (() => A)*): CachingSeq[A] =
+		new CachingSeq[A](items.iterator.map { _() }, externallyKnownSize = Some(items.size))
 }
 
 /**
@@ -73,9 +76,9 @@ object CachingSeq extends SeqFactory[CachingSeq]
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A]())
+class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A](), externallyKnownSize: Option[Int] = None)
 	extends AbstractCachingIterable[A, CompoundingVectorBuilder[A @uncheckedVariance], Vector[A]](
-		source, new CompoundingVectorBuilder[A](preCached))
+		source, new CompoundingVectorBuilder[A](preCached), externallyKnownSize)
 		with Seq[A] with SeqOps[A, CachingSeq, CachingSeq[A]]
 {
 	// ATTRIBUTES   ----------------------------
@@ -93,7 +96,9 @@ class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A]())
 	
 	override def isEmpty = super[AbstractCachingIterable].isEmpty
 	
-	override def apply(i: Int) = builder.getOption(i).getOrElse { iterator.drop(i - builder.size + 1).next() }
+	override def lift = getOption
+	
+	override def apply(i: Int) = builder.getOption(i).getOrElse { cacheIterator.drop(i - builder.size).next() }
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
 		CachingSeq.from(coll)
@@ -111,39 +116,106 @@ class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A]())
 	// Avoids calculating the total length of this collection, if at all possible
 	override def isDefinedAt(idx: Int) = if (idx < 0) false else sizeCompare(idx) > 0
 	
-	override def padTo[B >: A](len: Int, elem: B) = {
-		if (sizeCompare(len) >= 0)
-			this
-		else
-			super.padTo(len, elem)
+	override def take(n: Int) = {
+		if (n <= 0)
+			empty
+		else {
+			val kn = knownSize
+			if (kn >= 0 && kn <= n)
+				this
+			else if (n <= minSize || n <= currentSize)
+				CachingSeq.initialized(builder.currentState.take(n))
+			else {
+				val preCached = builder.currentState
+				new CachingSeq[A](iterator.slice(preCached.size, n), preCached, if (kn >= 0) Some(n) else None)
+			}
+		}
 	}
+	override def takeRight(n: Int) = {
+		if (n <= 0)
+			empty
+		else {
+			val kn = knownSize
+			if (kn >= 0 && kn <= n)
+				this
+			else if (isFullyCached)
+				CachingSeq.initialized(builder.currentState.takeRight(n))
+			else if (kn >= 0)
+				drop(kn - n)
+			else
+				super.takeRight(n)
+		}
+	}
+	
+	override def drop(n: Int) = {
+		if (n <= 0)
+			this
+		else {
+			val kn = Some(knownSize).filter { _ >= 0 }
+			if (kn.exists { _ <= n })
+				empty
+			else {
+				val knownRemainingSize = kn.map { _ - n }
+				if (n < minSize || n < currentSize) {
+					val preCached = builder.currentState
+					new CachingSeq[A](iterator.drop(preCached.size), preCached.drop(n), knownRemainingSize)
+				}
+				else
+					new CachingSeq[A](iterator.drop(n), externallyKnownSize = knownRemainingSize)
+			}
+		}
+	}
+	override def dropRight(n: Int) = {
+		if (n <= 0)
+			this
+		else {
+			val kn = knownSize
+			if (kn >= 0 && kn <= n)
+				empty
+			else if (isFullyCached)
+				CachingSeq.initialized(builder.currentState.dropRight(n))
+			else if (kn >= 0)
+				take(kn - n)
+			else
+				super.dropRight(n)
+		}
+	}
+	
+	override def padTo[B >: A](len: Int, elem: B) =
+		if (sizeCompare(len) >= 0) this else super.padTo(len, elem)
 	
 	override def prepended[B >: A](elem: B) = {
 		if (isFullyCached)
 			CachingSeq.initialized(elem +: fullyCached())
 		else
-			new CachingSeq[B](Iterator.single(elem) ++ iterator)
+			new CachingSeq[B](Iterator.single(elem) ++ iterator,
+				externallyKnownSize = externallyKnownSize.map { _ + 1 })
 	}
 	override def appended[B >: A](elem: B) = {
 		if (isFullyCached)
 			CachingSeq(Iterator.single(elem), fullyCached())
 		else
-			new CachingSeq[B](iterator :+ elem)
+			new CachingSeq[B](iterator :+ elem, externallyKnownSize = externallyKnownSize.map { _ + 1 })
 	}
 	override def prependedAll[B >: A](prefix: IterableOnce[B]) = {
 		val iter = prefix.iterator
 		if (iter.hasNext)
-			new CachingSeq[B](iter ++ iterator)
+			new CachingSeq[B](iter ++ iterator,
+				externallyKnownSize = Some(knownSize).filter { _ >= 0 }
+					.flatMap { mySize => Some(prefix.knownSize).filter { _ >= 0 }.map { mySize + _ } })
 		else
 			this
 	}
 	override def appendedAll[B >: A](suffix: IterableOnce[B]) = {
 		val iter = suffix.iterator
 		if (iter.hasNext) {
+			val newKnownSize = Some(knownSize).filter { _ >= 0 }
+				.flatMap { mySize => Some(suffix.knownSize).filter { _ >= 0 }.map { mySize + _ } }
+			
 			if (isFullyCached)
-				new CachingSeq[B](iter, fullyCached())
+				new CachingSeq[B](iter, fullyCached(), externallyKnownSize = newKnownSize)
 			else
-				new CachingSeq[B](iterator ++ iter)
+				new CachingSeq[B](iterator ++ iter, externallyKnownSize = newKnownSize)
 		}
 		else
 			this

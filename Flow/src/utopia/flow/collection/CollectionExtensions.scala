@@ -17,7 +17,7 @@ import utopia.flow.view.mutable.eventful.Flag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
-import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, mutable}
+import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, View, mutable}
 import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
@@ -492,12 +492,19 @@ object CollectionExtensions
 		def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
 		
 		/**
+		  * @param f A mapping function
+		  * @tparam B Type of mapping results
+		  * @return A collection where the items in this collection are lazily mapped and then cached
+		  */
+		def mapCaching[B](f: A => B) =
+			new CachingSeq[B](i.iterator.map(f), externallyKnownSize = Some(i.knownSize).filter { _ >= 0 })
+		/**
 		  * Lazily maps the contents of this collection.
 		  * @param f A mapping function
 		  * @tparam B Mapping result type
 		  * @return A lazily initialized collection containing the mapping results
 		  */
-		def lazyMap[B](f: A => B) = LazySeq[B](i.iterator.map { a => Lazy { f(a) } })
+		def lazyMap[B](f: A => B) = LazySeq[B](View.from(i).map { a => Lazy { f(a) } })
 		/**
 		  * Lazily maps the contents of this collection
 		  * @param f A mapping function that returns 0-n lazily initialized items for each element
@@ -2206,6 +2213,14 @@ object CollectionExtensions
 	
 	implicit class RichOption[A](val o: Option[A]) extends AnyVal
 	{
+		/**
+		  * @return Either a collection that contains a single value, or one which contains no values
+		  */
+		def emptyOrSingle = o match {
+			case Some(v) => Single(v)
+			case None => Empty
+		}
+		
 		/**
 		  * Converts this option to a try
 		  * @param generateFailure A function for generating a throwable for a failure if one is needed

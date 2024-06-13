@@ -12,11 +12,16 @@ import scala.annotation.unchecked.uncheckedVariance
   * Implementing classes **must** make sure the builder parameter only receives items of type A.
   * As a consequence, they may use covariance in A and @uncheckedVariance in builder.A
   *
+  * @param source Iterator from which data is collected and cached
+  * @param builder A compounding builder used in the caching process
+  * @param externallyKnownSize Known size of the existing builder content + remaining input.
+  *                            None if not known (default).
+  *
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
 abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @uncheckedVariance, _, _, To], +To <: Iterable[A]]
-(source: Iterator[A], protected val builder: B)
+(source: Iterator[A], protected val builder: B, externallyKnownSize: Option[Int] = None)
 	extends Iterable[A]
 {
 	// COMPUTED --------------------------------
@@ -56,7 +61,10 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 			new AppendIfNecessaryIterator()
 	}
 	
-	override def isEmpty = builder.isEmpty && source.isEmpty
+	override def isEmpty = externallyKnownSize match {
+		case Some(kn) => kn <= 0
+		case None => builder.isEmpty && source.isEmpty
+	}
 	
 	// Doesn't record the intermediate state unless necessary
 	override def head = builder.headOption.getOrElse { AppendingIterator.next() }
@@ -66,31 +74,33 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 	override def lastOption =
 		if (isFullyCached) builder.currentState.lastOption else AppendingIterator.lastOption
 	
-	override def size = {
-		if (isFullyCached)
-			Some(knownSize).filter { _ >= 0 }.getOrElse { builder.currentSize + AppendingIterator.size }
-		else
-			builder.currentSize + AppendingIterator.size
-	}
-	override def knownSize = if (isFullyCached) builder.knownSize else -1
+	override def size =
+		Some(knownSize).filter { _ >= 0 }.getOrElse { builder.currentSize + AppendingIterator.size }
+	override def knownSize = externallyKnownSize.getOrElse { if (isFullyCached) builder.knownSize else -1 }
 	
 	override def sizeCompare(otherSize: Int) = {
-		// Compares first with the minimum size, which is cheapest to calculate
-		val minCompare = minSize - otherSize
-		// Case: Result may be determined using the minimum size => Uses that
-		if (minCompare > 0)
-			minCompare
+		// Utilizes knownSize, if available
+		val kn = knownSize
+		if (kn >= 0)
+			kn.compareTo(otherSize)
 		else {
-			// Next compares with the current builder state (may require builder update)
-			val currentCompare = builder.currentSize - otherSize
-			// Case: Result may be determined with the current builder state => Uses that
-			if (currentCompare > 0)
-				currentCompare
+			// Compares first with the minimum size, which is cheapest to calculate
+			val minCompare = minSize - otherSize
+			// Case: Result may be determined using the minimum size => Uses that
+			if (minCompare > 0)
+				minCompare
 			else {
-				// Finally, if the previous comparisons were ambiguous,
-				// attempts to cache just enough (diff + 1) items to determine the order
-				val offset = -currentCompare
-				AppendingIterator.take(offset + 1).size - offset
+				// Next compares with the current builder state (may require builder update)
+				val currentCompare = builder.currentSize - otherSize
+				// Case: Result may be determined with the current builder state => Uses that
+				if (currentCompare > 0)
+					currentCompare
+				else {
+					// Finally, if the previous comparisons were ambiguous,
+					// attempts to cache just enough (diff + 1) items to determine the order
+					val offset = -currentCompare
+					AppendingIterator.take(offset + 1).size - offset
+				}
 			}
 		}
 	}

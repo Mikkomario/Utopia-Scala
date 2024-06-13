@@ -22,6 +22,7 @@
 - **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
   The new implementation works the same way, regardless of compared collection type 
   (although it now requires **Seq** to be used)
+- Fixed a bug in **CachingSeq**`.apply(Int)`
 - **ActionQueue**`.pushAsync(...)` now properly blocks the start of the next action
 ### New features
 - Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
@@ -70,6 +71,7 @@
   - **CollectionExtensions**
     - Added `.nonEmptyIterator`
     - Added `.countAll` which returns the number of times each unique item appears in the collection
+    - Added `.mapCaching(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.notEmpty`
 - **PropertyFactory**
@@ -121,6 +123,7 @@
 - Minor optimization to **VolatileList** -constructing
 - Optimized certain Pair functions
   - E.g. `++` now returns a **Pair** if no elements are added
+- Size-related optimizations to **CachingSeq**
 
 ## v2.3 - 22.01.2024
 This update contains a very large number of new methods, features and bugfixes. 

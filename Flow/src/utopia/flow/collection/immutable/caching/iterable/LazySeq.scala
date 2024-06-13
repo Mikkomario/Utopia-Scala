@@ -26,7 +26,9 @@ object LazySeq extends SeqFactory[LazySeq] with LazyFactory[LazySeq]
 		case l: LazySeq[A] => l
 		case v: LazySeqLike[A, _] => new LazySeq[A](CachingSeq.from(v.lazyContents))
 		case c: CachingSeq[A] => new LazySeq[A](c.map(Lazy.initialized))
-		case c => new LazySeq[A](CachingSeq(c.iterator.map(Lazy.initialized)))
+		case c =>
+			new LazySeq[A](new CachingSeq(c.iterator.map(Lazy.initialized),
+				externallyKnownSize = Some(c.knownSize).filter { _ >= 0 }))
 	}
 	
 	
