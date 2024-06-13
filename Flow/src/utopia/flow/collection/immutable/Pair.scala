@@ -338,7 +338,7 @@ object Pair
  * @since 21.9.2021, v1.12
  */
 case class Pair[+A](first: A, second: A)
-	extends PairOps[A, IndexedSeq, IndexedSeq[A], Pair, Pair[A]] with IndexedSeq[A]
+	extends IndexedSeq[A] with PairOps[A, IndexedSeq, IndexedSeq[A], Pair, Pair[A]]
 {
 	// IMPLEMENTED  ----------------------
 	

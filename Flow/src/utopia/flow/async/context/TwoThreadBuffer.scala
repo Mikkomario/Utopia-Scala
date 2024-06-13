@@ -2,7 +2,7 @@ package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
@@ -77,7 +77,7 @@ object TwoThreadBuffer
 		 * If this buffer is full, blocks until at least one element has been read first.
 		 * @param item An item to add to this buffer
 		 */
-		def push(item: A): Unit = push(Iterable.single(item))
+		def push(item: A): Unit = push(Single(item))
 		
 		/**
 		 * Alias for [[push]]
