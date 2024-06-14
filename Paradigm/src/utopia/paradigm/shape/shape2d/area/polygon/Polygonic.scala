@@ -30,7 +30,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	/**
 	  * @return The corners of this shape, ordered
 	  */
-	def corners: IndexedSeq[Point]
+	def corners: Seq[Point]
 	
 	
 	// COMPUTED	----------------
