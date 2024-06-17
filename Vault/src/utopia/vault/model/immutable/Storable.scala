@@ -9,6 +9,7 @@ import utopia.vault.database.{Connection, DBException}
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
+import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
@@ -42,14 +43,9 @@ object Storable
  * @author Mikko Hilpinen
  * @since 10.6.2017
  */
-trait Storable extends ModelConvertible
+trait Storable extends ModelConvertible with HasTable
 {
     // ABSTRACT PROPERTIES & METHODS    --------------
-    
-    /**
-     * The table the instance uses to store its data
-     */
-    def table: Table
     
     /**
      * The model properties of this storable instance

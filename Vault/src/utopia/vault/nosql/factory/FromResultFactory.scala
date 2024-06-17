@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.template.{HasTable, Joinable}
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql._
 
@@ -13,14 +13,9 @@ import utopia.vault.sql._
   * @author Mikko Hilpinen
   * @since 8.7.2019, v1.1.1+
   */
-trait FromResultFactory[+A]
+trait FromResultFactory[+A] extends HasTable
 {
 	// ABSTRACT	---------------
-	
-	/**
-	  * @return The primary table used for reading results data for this factory
-	  */
-	def table: Table
 	
 	/**
 	  * @return Default ordering to apply by this factory (used when no Order By is specified explicitly)

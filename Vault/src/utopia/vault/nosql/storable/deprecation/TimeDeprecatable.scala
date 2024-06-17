@@ -1,7 +1,8 @@
 package utopia.vault.nosql.storable.deprecation
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.model.immutable.{DataDeletionRule, Table}
+import utopia.vault.model.immutable.DataDeletionRule
+import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.template.Deprecatable
 
 import java.time.Instant
@@ -12,14 +13,10 @@ import scala.concurrent.duration.FiniteDuration
  * @author Mikko Hilpinen
  * @since 26.9.2021, v1.10
  */
-trait TimeDeprecatable extends Deprecatable
+trait TimeDeprecatable extends Deprecatable with HasTable
 {
 	// ABSTRACT ----------------------------------
 	
-	/**
-	 * @return The table used by this class
-	 */
-	def table: Table
 	/**
 	 * @return Name of the property that contains item deprecation time
 	 */

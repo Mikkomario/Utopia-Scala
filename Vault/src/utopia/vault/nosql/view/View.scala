@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.database.{Connection, References}
 import utopia.vault.model.immutable.{Column, Storable, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.template.{HasTable, Joinable}
 import utopia.vault.sql.{Condition, Delete, Exists, Join, SqlTarget, Where}
 
 /**
@@ -13,14 +13,10 @@ import utopia.vault.sql.{Condition, Delete, Exists, Join, SqlTarget, Where}
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   */
-trait View
+trait View extends HasTable
 {
 	// ABSTRACT	----------------------
 	
-	/**
-	  * @return The primary table viewed through this access point
-	  */
-	def table: Table
 	/**
 	  * @return The target segment (table + possible joins) viewed through this view
 	  */

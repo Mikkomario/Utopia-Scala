@@ -1,22 +1,14 @@
 package utopia.vault.nosql.template
 
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.template.HasTable
 
 /**
   * A common trait for access points that use indexed tables
   * @author Mikko Hilpinen
   * @since 30.1.2020, v1.4
   */
-trait Indexed
+trait Indexed extends HasTable
 {
-	// ABSTRACT -----------------------
-	
-	/**
-	  * @return Table used by this class
-	  */
-	def table: Table
-	
-	
 	// COMPUTED	-----------------------
 	
 	/**

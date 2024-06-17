@@ -14,6 +14,7 @@ Supports **Flow v2.4**
 - Added **FromIdFactory** and **HasId** traits
 - Added **StorableFactory** trait which uses the new **DbPropertyDeclaration** class and 
   facilitates access to database-properties
+- Added **HasTable** trait
 ### New methods
 - **ManyModelAccess**
   - Added `.findColumnMap(...)` and `.findColumnMultiMap(...)`
