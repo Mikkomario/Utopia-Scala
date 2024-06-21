@@ -64,6 +64,7 @@
     - Added `.takeMax(Int)`, `.takeMin(Int)`, `.takeMaxBy(Int)(...)`, `.takeMinBy(Int)(...)`, 
       `.takeExtreme(Int, Extreme)` and `.takeExtremeBy(Int, Extreme)(...)`, 
       which collect n smallest or largest items from the collection
+    - Added `.findForAll(...)`
 - **IterableOnce**
   - **AsyncCollectionExtensions**
     - Added `.foreachParallel(Int)(...)`

@@ -43,6 +43,13 @@ object CollectionExtensions
 	// TODO: Move (some of) these to Iterator and/or Iterable instead
 	class IterableOnceOperations[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
 	{
+		// ATTRIBUTES   -----------------------
+		
+		private lazy val ops = iter(coll)
+		
+		
+		// OTHER    ---------------------------
+		
 		/**
 		  * Splits this collection into a number of smaller pieces. Preserves order.
 		  * @param maxLength Maximum length of each segment
@@ -50,7 +57,6 @@ object CollectionExtensions
 		  * @return An iterator that returns segments of this collection where each segment is at most 'maxLength' long
 		  */
 		def segmentsIterator(maxLength: Int)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Iterator[Repr] = {
-			val ops = iter(coll)
 			val knownSize = ops.knownSize
 			if (knownSize >= 0 && knownSize <= maxLength)
 				Iterator.single(coll)
@@ -81,11 +87,10 @@ object CollectionExtensions
 		  */
 		def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
 		{
-			val iterOps = iter(coll)
 			val builder = buildFrom.newBuilder(coll)
 			val collected = mutable.HashSet[iter.A]()
 			
-			iterOps.iterator.foreach { item =>
+			ops.iterator.foreach { item =>
 				if (!collected.exists { e => equals(e, item) }) {
 					builder += item
 					collected += item
@@ -117,7 +122,7 @@ object CollectionExtensions
 		  */
 		def zipAndMerge[B, R, That](other: IterableOnce[B])(merge: (iter.A, B) => R)
 		                           (implicit buildFrom: BuildFrom[Repr, R, That]): That =
-			buildFrom.fromSpecific(coll) { iter(coll).iterator.zip(other).map { case (a, b) => merge(a, b) } }
+			buildFrom.fromSpecific(coll) { ops.iterator.zip(other).map { case (a, b) => merge(a, b) } }
 		/**
 		  * Zips the values of this collection with their map results
 		  * @param f A mapping function
@@ -127,7 +132,7 @@ object CollectionExtensions
 		  * @return Collection that contains all items from this collection, coupled with their map results
 		  */
 		def zipMap[B, That](f: iter.A => B)(implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That =
-			buildFrom.fromSpecific(coll)(iter(coll).iterator.map { a => (a, f(a)) })
+			buildFrom.fromSpecific(coll)(ops.iterator.map { a => (a, f(a)) })
 		/**
 		  * Joins the values of this collection with their 0-n map results, returning the values as individual pairs
 		  * @param f Mapping function
@@ -138,7 +143,7 @@ object CollectionExtensions
 		  */
 		def zipFlatMap[B, That](f: iter.A => IterableOnce[B])
 		                       (implicit buildFrom: BuildFrom[Repr, (iter.A, B), That]): That =
-			buildFrom.fromSpecific(coll)(iter(coll).iterator.flatMap { a => f(a).iterator.map { a -> _ } })
+			buildFrom.fromSpecific(coll)(ops.iterator.flatMap { a => f(a).iterator.map { a -> _ } })
 		
 		/**
 		  * This function works like foldLeft, except that it stores each step (including the start) into a seq
@@ -154,8 +159,7 @@ object CollectionExtensions
 			var last = start
 			builder += last
 			
-			val iterOps = iter(coll)
-			iterOps.iterator.foreach { item =>
+			ops.iterator.foreach { item =>
 				last = map(last, item)
 				builder += last
 			}
@@ -191,8 +195,7 @@ object CollectionExtensions
 		def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
 		{
 			val buffer = mutable.Map.empty[Key, mutable.Builder[Value, Values]]
-			val iterOps = iter(coll)
-			iterOps.iterator.foreach { item =>
+			ops.iterator.foreach { item =>
 				val (key, value) = f(item)
 				buffer.getOrElseUpdate(key, bf.newBuilder(coll)) += value
 			}
@@ -205,8 +208,7 @@ object CollectionExtensions
 		  * @return Failure if any of the operations failed, success otherwise.
 		  */
 		def tryForeach[U](f: iter.A => Try[U]): Try[Unit] = {
-			val iterOps = iter(coll)
-			iterOps.iterator.map(f).find { _.isFailure } match {
+			ops.iterator.map(f).find { _.isFailure } match {
 				case Some(failure) => failure.map { _ => () }
 				case None => Success(())
 			}
@@ -269,10 +271,8 @@ object CollectionExtensions
 		  * @return All elements of this collection until the first item that matches the specified condition +
 		  *         the matching item itself. Contains all items of this collection if the condition was never met.
 		  */
-		def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That = {
-			val iterOps = iter(coll)
-			buildFrom.fromSpecific(coll)(TerminatingIterator(iterOps.iterator)(endCondition))
-		}
+		def takeTo[That](endCondition: iter.A => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, That]): That =
+			buildFrom.fromSpecific(coll)(TerminatingIterator(ops.iterator)(endCondition))
 		
 		/**
 		  * Divides the items in this collection into two groups, based on boolean result
@@ -284,7 +284,7 @@ object CollectionExtensions
 		def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) = {
 			val falseBuilder = bf.newBuilder(coll)
 			val trueBuilder = bf.newBuilder(coll)
-			iter(coll).iterator.foreach { a => if (f(a)) trueBuilder += a else falseBuilder += a }
+			ops.iterator.foreach { a => if (f(a)) trueBuilder += a else falseBuilder += a }
 			Pair(falseBuilder.result(), trueBuilder.result())
 		}
 		
@@ -302,7 +302,7 @@ object CollectionExtensions
 		                   (implicit bf: BuildFrom[Repr, iter.A, To], ord: Ordering[B]) =
 		{
 			// Iterates over all items in this collection
-			val iterator = iter(coll).iterator
+			val iterator = ops.iterator
 			if (iterator.hasNext) {
 				// Collects the current best results into 'lastBuilder'
 				val actualOrdering = extreme.ascendingToExtreme(ord)
@@ -693,12 +693,17 @@ object CollectionExtensions
 	
 	class IterableOperations[Repr, I <: IsIterable[Repr]](coll: Repr, iter: I)
 	{
-		// private lazy val ops = iter(coll)
+		// ATTRIBUTES   -----------------------
+		
+		private lazy val ops = iter(coll)
+		
+		
+		// COMPUTED ---------------------------
 		
 		/**
 		  * @return This collection if not empty. Otherwise None.
 		  */
-		def notEmpty = if (iter(coll).isEmpty) None else Some(coll)
+		def notEmpty = if (ops.isEmpty) None else Some(coll)
 		
 		/**
 		  * Takes 'n' largest items from this collection
@@ -713,14 +718,13 @@ object CollectionExtensions
 				bf.fromSpecific(coll)(Empty)
 			// Case: Taking only one item => Same as maxOption with potentially different result type
 			else if (n == 1)
-				bf.fromSpecific(coll)(iter(coll).maxOption)
+				bf.fromSpecific(coll)(ops.maxOption)
 			else {
-				val ops = iter(coll)
 				// Case: Taking all items => Returns this collection
 				if (ops.sizeCompare(n) <= 0)
 					coll
 				else {
-					val iterator = iter(coll).iterator
+					val iterator = ops.iterator
 					val buffer = mutable.Buffer[iter.A]()
 					buffer ++= iterator.collectNext(n).sorted
 					
@@ -760,14 +764,13 @@ object CollectionExtensions
 				bf.fromSpecific(coll)(Empty)
 			// Case: Taking only one item => Same as maxOption with potentially different result type
 			else if (n == 1)
-				bf.fromSpecific(coll)(iter(coll).maxByOption(f))
+				bf.fromSpecific(coll)(ops.maxByOption(f))
 			else {
-				val ops = iter(coll)
 				// Case: Taking all items => Returns this collection
 				if (ops.sizeCompare(n) <= 0)
 					coll
 				else {
-					val iterator = iter(coll).iterator
+					val iterator = ops.iterator
 					val buffer = mutable.Buffer[(iter.A, B)]()
 					buffer ++= iterator.collectNext(n).map { a => a -> f(a) }.sortBy { _._2 }
 					
@@ -818,6 +821,43 @@ object CollectionExtensions
 			takeMaxBy(n)(f)(bf, extreme.ascendingToExtreme(ord))
 		
 		/**
+		 * Attempts to successfully "find" a value for each item in this collection.
+		 * If the "find" process fails for one item, this process is considered to have failed for this whole
+		 * collection and the process fails.
+		 * @param f Function which returns either Some containing a successful mapping / find result or None.
+		 * @param bf Implicit build-from for the resulting collection on success
+		 * @tparam B Type of map / find results, when successful
+		 * @tparam To Type of the resulting collection, when successful
+		 * @return If 'f' yielded Some for all items in this collection,
+		 *         returns a new collection containing the find / map results.
+		 *         If 'f' yielded None for any item, returns None.
+		 */
+		def findForAll[B, To](f: iter.A => Option[B])(implicit bf: BuildFrom[Repr, B, To]) = {
+			val iter = ops.iterator
+			if (iter.hasNext) {
+				// Maps and stores items as long as 'f' yields Some
+				val builder = bf.newBuilder(coll)
+				var successful = true
+				while (successful && iter.hasNext) {
+					f(iter.next()) match {
+						case Some(a) => builder += a
+						// Case: 'f' yielded None => Cancels the mapping process
+						case None => successful = false
+					}
+				}
+				// Case: All items successfully mapped => Returns the mapped collection
+				if (successful)
+					Some(builder.result())
+				// Case: Mapping failed => Returns None
+				else
+					None
+			}
+			// Case: Empty collection => Returns immediately without mapping
+			else
+				Some(bf.fromSpecific(coll)(Empty))
+		}
+		
+		/**
 		  * Finds the item(s) that best match the specified conditions
 		  * @param matchers Search conditions used. The conditions that are introduced first are considered more
 		  *                 important than those which are introduced the last.
@@ -838,7 +878,6 @@ object CollectionExtensions
 			_bestMatch(coll, matcher)
 		
 		private def _bestMatch(coll: Repr, matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
-			val ops = iter(coll)
 			// Case: 1 or 0 items => Result will always be the best match
 			if (ops.sizeCompare(2) < 0)
 				coll
@@ -871,7 +910,6 @@ object CollectionExtensions
 		  *         followed by the remaining items.
 		  */
 		def popWhile(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
-			val ops = iter(coll)
 			val popBuilder = bf.newBuilder(coll)
 			val remainBuilder = bf.newBuilder(coll)
 			val foundFlag = Flag()
@@ -898,10 +936,7 @@ object CollectionExtensions
 		  */
 		def zipPad[B, To](other: Iterable[B], myPadding: => iter.A, theirPadding: => B)
 		                 (implicit bf: BuildFrom[Repr, (iter.A, B), To]) =
-		{
-			val ops = iter(coll)
 			bf.fromSpecific(coll)(ZipPadIterator(ops.iterator, other.iterator, myPadding, theirPadding))
-		}
 		/**
 		  * 'Zips' this collection with another, padding the one that is shorter so that all items from both
 		  * collections are included in the resulting collection.
@@ -931,7 +966,6 @@ object CollectionExtensions
 		def mapOrAppend(f: iter.A => Option[iter.A])(append: => iter.A)
 		               (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
 		{
-			val ops = iter(coll)
 			val builder = buildFrom.newBuilder(coll)
 			var found = false
 			ops.iterator.foreach { a =>
