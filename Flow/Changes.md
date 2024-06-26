@@ -14,8 +14,11 @@
 - **EqualsBy**`.equalsProperties` now returns **Seq** instead of **Iterable**
 - The write functions in **FileExtensions**, which accept a function, now return the return value of that 
   function, and no longer the path itself.
+- **Graph** search functions now assume that the edge cost function always returns a value greater than zero
+  - While this may result in incomplete results if ignored, that shouldn't cause much harm in most use-cases
 ### Deprecations
 - Deprecated **ModelValidationResult** (now replaced with **Try**)
+- Deprecated all existing graph search functions in favor of new versions with different syntax
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
 - Renamed `.filterWithPaths(...)` in TreeLike to `.pathsToRootsWhere(...)` because the term "filter" is misleading
 ### Bugfixes
@@ -25,12 +28,14 @@
 - Fixed a bug in **CachingSeq**`.apply(Int)`
 - **ActionQueue**`.pushAsync(...)` now properly blocks the start of the next action
 ### New features
+- Added a more advanced (and optimized) interface for **Graph**-searches
 - Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **Empty** object, an optimized empty **IndexedSeq** implementation
 - Added **Single** class, an optimized **IndexedSeq** implementation for individual items
 - Added **OptimizedIndexedSeq** for building instances of **Empty**, **Single**, **Pair** or **Vector**
+- Added **ConsecutivelyDistinctIterator** class
 - Added **FromCollectionFactory** trait
 - Added **ZipBuilder** class
 - Added **LazyPair** class
@@ -74,6 +79,9 @@
     - Added `.mapCaching(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.notEmpty`
+  - Added `.consecutivelyDistinct`
+- **PollingIterator** (object)
+  - Added `.from(Iterator)`
 - **PropertyFactory**
   - Added `.mapResult(...)`
 - **Regex**
@@ -116,6 +124,7 @@
   - Previously the value would still reflect the updated value when called directly
   - Also, now `.destiny` correctly changes when mirror condition seals to false
 - **XmlElement**`.toString` now yields XML instead of JSON.
+- **Iterator**`.pollable` now tests if the iterator is already pollable
 - **Regex** now extends **MayBeEmpty**
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions

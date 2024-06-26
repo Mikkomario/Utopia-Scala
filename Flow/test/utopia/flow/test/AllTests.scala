@@ -2,7 +2,7 @@ package utopia.flow.test
 
 import utopia.flow.test.async.{AsyncTest, AsyncViewTest, FutureRaceTest, LoopTest2}
 import utopia.flow.test.collection.CollectionTest
-import utopia.flow.test.datastructure.{GraphTest, TreeNodeTest, WeakListTest}
+import utopia.flow.test.datastructure.{MutableGraphTest, TreeNodeTest, WeakListTest}
 import utopia.flow.test.generic.{DataTypeTest, ModelConvertibleTest, ModelTest, ValueAccessorTest}
 import utopia.flow.test.parse.{JSONTest, XmlTest}
 import utopia.flow.test.time.TimeNumberTest
@@ -27,7 +27,7 @@ object AllTests extends App
 	run(DataTypeTest)
 	run(CollectionTest)
 	run(TreeNodeTest)
-	run(GraphTest)
+	run(MutableGraphTest)
 	run(ValueAccessorTest)
 	run(ModelTest)
 	run(ModelConvertibleTest)

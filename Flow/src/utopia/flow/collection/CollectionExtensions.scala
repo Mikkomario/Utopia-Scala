@@ -1810,7 +1810,15 @@ object CollectionExtensions
 		  * iterator should be used afterwards.
 		  * @return A copy of this iterator that allows polling (checking of the next item without advancing)
 		  */
-		def pollable = PollingIterator[A](i)
+		def pollable = PollingIterator.from[A](i)
+		
+		/**
+		  * @return Copy of this iterator which skips values
+		  *         that would have been identical between two consecutive iterations.
+		  *         E.g. If the original form of this iterator would have returned [1, 1, 2, 1, 1],
+		  *         this resulting iterator would return [1, 2, 1].
+		  */
+		def consecutivelyDistinct = ConsecutivelyDistinctIterator[A](i)
 		
 		/**
 		  * Retrieves the first and the last item from this iterator.

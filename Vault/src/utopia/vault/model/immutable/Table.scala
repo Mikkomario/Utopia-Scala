@@ -93,10 +93,10 @@ case class Table(name: String, databaseName: String, columns: Seq[Column]) exten
 			case None =>
 				// Secondarily, finds indirect references
 				References.toBiDirectionalLinkGraphFrom(this)
-					.findShortestRoute { node => originTables.contains(node.value) } match
+					.shortestRoutesTo { node => originTables.contains(node.value) }.cheapest match
 				{
-					case Some((_, route)) =>
-						Success(route.view.reverse.map { edge =>
+					case Some(result) =>
+						Success(result.anyRoute.view.reverse.map { edge =>
 							val (reference, isReversed) = edge.value
 							if (isReversed) reference.reverse.toJoin else reference.toJoin
 						}.toVector)

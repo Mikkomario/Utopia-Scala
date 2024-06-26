@@ -16,6 +16,17 @@ object PollingIterator
 	  */
 	def apply[A](source: Iterator[A]): PollingIterator[A] = new PollingIteratorImplementation[A](source)
 	
+	/**
+	  * @param iterator An iterator to convert into a polling iterator
+	  * @tparam A Type of values returned by the specified iterator
+	  * @return A polling iterator based on the specified iterator.
+	  *         Returns the specified iterator in case it supports polling already.
+	  */
+	def from[A](iterator: Iterator[A]) = iterator match {
+		case p: PollingIterator[A] => p
+		case i => apply(i)
+	}
+	
 	
 	// NESTED   ---------------------------
 	

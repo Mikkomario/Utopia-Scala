@@ -5,7 +5,7 @@ import utopia.flow.collection.mutable.GraphNode
 /**
  * This test tests the features implemented in graph, graphNode and graphEdge
  */
-object GraphTest extends App
+object MutableGraphTest extends App
 {
 	println("Running Graph Test")
 	
@@ -47,16 +47,19 @@ object GraphTest extends App
 	assert(node1 / Vector(1, 5, 1) == Set(node5))
 	
 	// The shortest route should be 1 -> 4 -> 5
-	assert(node1.shortestRouteTo(node5).get.size == 2)
+	assert(node1.shortestRoutesToNode(node5).get.routes.head.size == 2)
 	// The cheapest route (weights considered) should be 1 -> 2 -> 3 -> 5
 	println()
 	node1.routesTo(node5).foreach { route =>
 		println(s"- ${route.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")} (${ route.foldLeft(0) { _ + _.value } })")
 	}
 	println()
-	val cheapestRoutes = node1.cheapestRoutesTo(node5) { _.value }
-	cheapestRoutes._1.foreach { r => println(r.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")) }
-	println(cheapestRoutes._2)
+	node1.cheapestRoutesToNode(node5) { _.value } match {
+		case Some(result) =>
+			result.routes.foreach { r => println(r.map { e => s"to ${e.end.value} (${e.value})" }.mkString(" => ")) }
+			println(result.cost)
+		case None => println("No routes exist from 1 to 5")
+	}
 	/*
 	val cheapestRoute = node1.cheapestRouteTo(node5) { edge => edge.content }
 	assert(cheapestRoute.get.size == 3, cheapestRoute.get.map { _.end.content })

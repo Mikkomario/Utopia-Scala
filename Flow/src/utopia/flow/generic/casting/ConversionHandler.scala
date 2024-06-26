@@ -3,6 +3,7 @@ package utopia.flow.generic.casting
 import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.template.GraphEdge
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
@@ -134,16 +135,19 @@ object ConversionHandler
 			if (directEdges.nonEmpty)
 				Some(ConversionRoute(Single(directEdges.map { _.value }.minBy { _.cost })))
 			else {
-				// If multiple cheapest routes are found, considers the return route, also
-				val routes = origin.cheapestRoutesTo(target) { _.value.cost }._1.filterMinBy { _.size }
+				// If multiple cheapest routes are found, considers the return routes, also
+				val routes = origin.cheapestRoutesToNode(target) { _.value.cost } match {
+					case Some(result) => result.routes.filterMinBy { _.size }
+					case None => Set.empty
+				}
 				if (routes.size > 1) {
 					// (Route, Number of irrevocable steps, return cost)
-					val routesWithReturnCosts = routes.map { route =>
-						val returnRoutes = route.dropRight(1)
-							.map { edge => edge.end.cheapestRouteTo(origin) { _.value.cost } }
-						(route, returnRoutes.count { _.isEmpty },
-							returnRoutes.flatten.foldLeft(0) { _ + _.foldLeft(0) { _ + _.value.cost } })
-					}
+					val routesWithReturnCosts: Set[(Seq[GraphEdge[ConversionStep, GraphNode[DataType, ConversionStep]]], Int, Int)] =
+						routes.map { route =>
+							val returnRoutes = route.dropRight(1)
+								.map { edge => edge.end.cheapestRoutesToNode(origin) { _.value.cost } }
+							(route, returnRoutes.count { _.isEmpty }, returnRoutes.view.flatten.map { _.cost }.sum)
+						}
 					val bestRoute = routesWithReturnCosts.filterMinBy { _._2 }.minBy { _._3 }._1
 					Some(ConversionRoute(bestRoute.map { _.value }))
 				}
