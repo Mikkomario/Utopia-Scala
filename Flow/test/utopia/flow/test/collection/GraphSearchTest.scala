@@ -214,5 +214,74 @@ object GraphSearchTest extends App
 	assert(s2.current.successes.size == 4)
 	assert(!s2.hasNext)
 	
+	// TEST 3   ------------------------
+	
+	// Starting from (1), looks for any route to a node larger than (2),
+	// which costs less than 7
+	/*
+		(1) -[1]- (2) -[8]- (3)
+		 |         |
+		[7]       [2]
+		 |         |
+		(4) -[3]- (5) -[4]- (6)
+		 |         |
+		[1]       [1]
+		 |         |
+		(7) -[1]- (8)
+	 */
+	// Should identify 1 -> 2 -> 5 (cost 3)
+	// Having not visited (4), (3) or (5)
+	// Tests exclusive search first, then the inclusive version
+	println("\n\nTest 3")
+	
+	val s3 = graph(1).searchForOne { _.value > 2 } { _.value }
+	
+	assert(s3.current.isEmpty)
+	assert(s3.current.temporaryStages.view.map { _.node.value }.toSet == Set(1))
+	assert(s3.current.minFutureCost == 0)
+	assert(s3.hasNext)
+	
+	// Step 1: Leaves (1), discovers (4) and (2), where 4 is considered a result
+	println(s3.next())
+	
+	assert(s3.current.foundResults)
+	assert(s3.current.successes.size == 1)
+	assert(s3.current.foundAllResults)
+	assert(s3.current.successes.only
+		.exists { r => r.node.value == 4 && r.cost == 7 && r.routes.size == 1 && r.routes.head.size == 1 &&
+			r.mayBeSuboptimal })
+	assert(s3.current.minFutureCost == 1)
+	assert(s3.current.mayBeSuboptimal)
+	assert(s3.current.temporaryStages.view.map { _.node.value }.toSet == Set(2, 4))
+	assert(s3.hasNext)
+	
+	// Step 2: Leaves (2), discovers (3) and (5)
+	// (5) Should be counted the new result with cost 3 (optimal), (4) should no longer be considered a result
+	println(s3.next())
+	
+	assert(s3.current.foundResults)
+	assert(s3.current.foundAllResults)
+	assert(s3.current.successes.only.exists { r =>
+		r.node.value == 5 && r.cost == 3 && r.routes.size == 1 && r.routes.head.size == 2 && r.isDestination &&
+			r.isConfirmedAsOptimal
+	})
+	assert(s3.current.isConfirmedAsOptimal)
+	assert(s3.current.temporaryStages.view.map { _.node.value }.toSet == Set(3, 4, 5))
+	assert(!s3.hasNext)
+	
+	// Tests using search with findOneCheaperThan
+	println("\nTest 3 v2")
+	val s3v2 = graph(1).search { _.value > 2 } { _.value }
+	
+	assert(s3v2.findOneCheaperThan(7).exists { r =>
+		r.node.value == 5 && r.cost == 3 && r.isConfirmedAsOptimal
+	})
+	println(s3v2.current)
+	assert(s3v2.current.temporaryStages.view.map { _.node.value }.toSet == Set(3, 4, 5))
+	assert(s3v2.current.foundResults)
+	assert(s3v2.current.isPartial)
+	assert(s3v2.current.successes.size == 3)
+	assert(s3v2.hasNext)
+	
 	println("Done!")
 }

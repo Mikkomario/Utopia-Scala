@@ -14,10 +14,14 @@
   - This trait facilitates acquiring projected / matching points on a path 
 - Added **HasMutableSize** trait
 ### New methods
+- **Angle** (object)
+  - Added `.random`
 - **Bounded**
   - Added `.withCenter`
 - **Bounds** (object)
   - Added `.aroundPoints(IterableOnce[HasDoubleDimensions])`
+- **Circle** (object)
+  - Added `.enclosing(Iterable)` which creates a circle that encloses a number of other circles
 - **HasBounds**
   - Added `.center`
 - **RelativePoint**

@@ -61,6 +61,11 @@ object Angle extends RotationFactory[Angle]
       */
     override def threeQuarters = up
     
+    /**
+      * @return A random angle
+      */
+    def random = radians(math.random() * 2 * math.Pi)
+    
     
     // IMPLEMENTED  ----------------------
     

@@ -1,5 +1,6 @@
 package utopia.genesis.graphics
 
+import utopia.flow.operator.combine.{Combinable, Subtractable}
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.genesis.graphics.DrawLevel.Normal
 
@@ -29,8 +30,11 @@ object DrawOrder
   * @param orderIndex More precise draw-order index within 'level'.
   *                   Larger indexes are drawn after (i.e. above) lower indexes.
   */
-case class DrawOrder(level: DrawLevel = Normal, orderIndex: Int = 0) extends SelfComparable[DrawOrder]
+case class DrawOrder(level: DrawLevel = Normal, orderIndex: Int = 0)
+	extends SelfComparable[DrawOrder] with Combinable[Int, DrawOrder] with Subtractable[Int, DrawOrder]
 {
+	// IMPLEMENTED  -------------------
+	
 	override def self = this
 	
 	override def compareTo(o: DrawOrder) = {
@@ -40,4 +44,7 @@ case class DrawOrder(level: DrawLevel = Normal, orderIndex: Int = 0) extends Sel
 		else
 			levelCompare
 	}
+	
+	override def +(other: Int): DrawOrder = copy(orderIndex = orderIndex + other)
+	override def -(other: Int): DrawOrder = this + (-other)
 }

@@ -10,7 +10,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 /**
  * Used for generating mouse drag events based on mouse button and mouse move events.
- * Remember to add this tracker to appropriate handlers.
+ * Remember to add this tracker to appropriate handlers (MouseButtonStateHandler & MouseMoveHandler).
  * @author Mikko Hilpinen
  * @since 20.2.2023, v3.2.1
  */

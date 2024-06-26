@@ -89,10 +89,33 @@ case class MouseWheelEvent(wheelTurn: Double, override val position: RelativePoi
                            override val consumeEvent: Option[ConsumeEvent] = None)
 	extends MouseEvent[MouseWheelEvent] with Consumable[MouseWheelEvent]
 {
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return The amount of "notches" turned "upwards" (i.e. away from the user)
+	  */
+	def up = -wheelTurn
+	/**
+	  * @return The amount of "notches" turned "downwards" (i.e. towards the user)
+	  */
+	def down = wheelTurn
+	
+	
+	// IMPLEMENTED  -------------------------
+	
 	override def self = this
 	
 	override def withPosition(position: RelativePoint): MouseWheelEvent = copy(position = position)
 	
 	override def consumed(event: ConsumeEvent) =
 		if (isConsumed) this else copy(consumeEvent = Some(event))
+		
+	
+	// OTHER    -----------------------------
+	
+	/**
+	  * @param direction Targeted direction
+	  * @return The amount of wheel turn (in "notches") towards the specified direction
+	  */
+	def towards(direction: VerticalDirection) = direction.sign * wheelTurn
 }
