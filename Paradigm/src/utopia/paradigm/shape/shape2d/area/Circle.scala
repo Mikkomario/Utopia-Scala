@@ -24,6 +24,7 @@ import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.LinearSizeAdjustable
 
 import java.awt.geom.Ellipse2D
+import scala.collection.mutable
 import scala.util.Success
 
 object Circle extends FromModelFactory[Circle]
@@ -53,6 +54,35 @@ object Circle extends FromModelFactory[Circle]
 	def within(bounds: Bounds) = apply(bounds.center, bounds.size.minDimension / 2)
 	
 	/**
+	  * @param a First point to enclose
+	  * @param b Second point to enclose
+	  * @return A circle which just encloses these two points (both will lie at the circle edge)
+	  */
+	def enclosing(a: DoubleVector, b: DoubleVector): Circle = {
+		// Determines the radius vector and uses that to determine the origin and the radius length
+		val r = (b - a) / 2.0
+		Circle((a + r).toPoint, r.length)
+	}
+	/**
+	  * @param a First point to enclose
+	  * @param b Second point to enclose
+	  * @param c Third point to enclose
+	  * @return Smallest circle which encloses all the specified 3 points
+	  */
+	def enclosing(a: DoubleVector, b: DoubleVector, c: DoubleVector) = _enclosing3(Vector(a, b, c))
+	/**
+	  * Creates the smallest possible circle which encloses the specified n points
+	  * @param points Points to enclose
+	  * @return A circle which encloses the specified n points
+	  */
+	def enclosing(points: Seq[DoubleVector]): Circle = {
+		if (points.hasSize <= 3)
+			enclosing3OrLess(points)
+		else
+			_enclosing(points, Empty, 0)
+	}
+	
+	/**
 	  * Finds the smallest circle that contains all the specified circles
 	  * @param circles Circles that need to be contained within the resulting circle
 	  * @param errorMargin Largest allowed error.
@@ -60,7 +90,7 @@ object Circle extends FromModelFactory[Circle]
 	  *                    Default = Epsilon = Very very small.
 	  * @return The smallest circle which contains all of the specified circles.
 	  */
-	def enclosing(circles: Iterable[Circle], errorMargin: Double = 1e-6) = {
+	def enclosingCircles(circles: Iterable[Circle], errorMargin: Double = 1e-6) = {
 		if (circles.isEmpty)
 			zero
 		else if (circles.hasSize(1))
@@ -105,6 +135,62 @@ object Circle extends FromModelFactory[Circle]
 	@throws[UnsupportedOperationException]("If 'circles' is empty")
 	def weighedCentroidOf(circles: Iterable[Circle]) =
 		circles.view.map { c => c.origin * c.radius }.reduce { _ + _ } / circles.view.map { _.radius }.sum
+	
+	private def _enclosing(points: Seq[DoubleVector], perimeterPoints: Seq[DoubleVector], processed: Int): Circle =
+	{
+		// Returns once all points have been processed or when 3 perimeter points have been identified
+		if (points.hasSize(processed) || perimeterPoints.size == 3)
+			enclosing3OrLess(perimeterPoints)
+		else {
+			// Creates a circle without a specific point and checks whether it will be consequently left outside
+			// (Uses recursion to get the circle)
+			val testedCircle = _enclosing(points, perimeterPoints, processed + 1)
+			val testedPoint = points(processed)
+			
+			// Case: The tested point is contained within the circle => No modification needed
+			if (testedCircle.contains(testedPoint))
+				testedCircle
+			// Case: The tested point is outside the circle => It shall be considered a perimeter point
+			else
+				_enclosing(points, perimeterPoints :+ testedPoint, processed + 1)
+		}
+	}
+	
+	// Assumes that the size of 'points' is 3 or less
+	private def enclosing3OrLess(points: Seq[DoubleVector]): Circle = points.size match {
+		case 0 => zero
+		case 1 => Circle(points.head.toPoint, 0.0)
+		case 2 => enclosing(points.head, points(1))
+		case _ => _enclosing3(points)
+	}
+	
+	// Assumes that 'points' contains exactly 3 items
+	private def _enclosing3(points: Seq[DoubleVector]): Circle = {
+		// Checks whether this circle may be defined with only 2 points instead
+		points.indices
+			.findMap { removedIndex =>
+				val remaining = points.withoutIndex(removedIndex)
+				Some(enclosing(remaining.head, remaining(1))).filter { _.contains(points(removedIndex)) }
+			}
+			// If not, encloses the three points instead
+			.getOrElse { _enclosing3(points.head, points(1), points(2)) }
+	}
+	
+	// NB: Doesn't optimize by testing if can enclose 2 instead (use _enclosing3(Seq) for that)
+	private def _enclosing3(a: DoubleVector, b: DoubleVector, c: DoubleVector): Circle = {
+		// Calculates A-B and A-C vectors and their dot products
+		val ab = b - a
+		val ac = c - a
+		val dotAb = ab doubleDot ab
+		val dotAc = ac doubleDot ac
+		// Uses these to calculate A-O vector, which is the vector from A to the circle origin O
+		val d2 = (ab.x * ac.y - ab.y * ac.x) * 2.0
+		val ao = Vector2D((ac.y * dotAb - ab.y * dotAc) / d2, (ab.x * dotAc - ac.x * dotAb) / d2)
+		val origin = a + ao
+		
+		// Uses this information to form the circle
+		Circle(origin.toPoint, ao.length)
+	}
 }
 
 /**

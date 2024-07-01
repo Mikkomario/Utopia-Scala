@@ -21,7 +21,8 @@
 - **Bounds** (object)
   - Added `.aroundPoints(IterableOnce[HasDoubleDimensions])`
 - **Circle** (object)
-  - Added `.enclosing(Iterable)` which creates a circle that encloses a number of other circles
+  - Added `.enclosing(Seq)` and `.enclosingCircles(Iterable)` 
+    which create a circle that encloses a number of points or circles
 - **HasBounds**
   - Added `.center`
 - **RelativePoint**

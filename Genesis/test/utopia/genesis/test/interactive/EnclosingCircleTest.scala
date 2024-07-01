@@ -40,7 +40,8 @@ object EnclosingCircleTest extends App
 	// Creates a circle which always encloses the others
 	val enclosingCirclePointer = EventfulPointer(Circle.zero)
 	circlePointers.foreach { _.addAnyChangeListener {
-		enclosingCirclePointer.value = Circle.enclosing(circlePointers.map { _.value }, 0.25)
+		enclosingCirclePointer.value = Circle.enclosing(circlePointers.map { _.value.origin })
+		// enclosingCirclePointer.value = Circle.enclosingCircles(circlePointers.map { _.value }, 0.25)
 	} }
 	handlers += new CircleDrawer(enclosingCirclePointer, Hsl(Angle.random, saturation = 0.5))
 	
