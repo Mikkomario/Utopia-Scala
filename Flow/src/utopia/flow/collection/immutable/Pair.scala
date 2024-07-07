@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.OptimizedIndexedSeq.BuildOptimizedSeqFrom
 import utopia.flow.collection.immutable.caching.iterable.LazyPair
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
 import utopia.flow.operator.Reversible
@@ -10,8 +11,9 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{SeqFactory, mutable}
+import scala.collection.{BuildFrom, SeqFactory, mutable}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
@@ -26,6 +28,20 @@ object Pair
 	
 	
 	// IMPLICIT ----------------------------------
+	
+	/*
+	implicit def objectToBuildFrom[A](@unused o: Pair.type): BuildFrom[Any, A, IndexedSeq[A]] =
+		new BuildOptimizedSeqFrom[A]()
+	*/
+	implicit def buildFrom[A, B]: BuildFrom[Pair[A], B, IndexedSeq[B]] = new BuildOptimizedSeqFrom[Pair[A], B]()
+	
+	/*
+	implicit val rangeRepr: IsIterable[Range] { type A = Int; type C = IndexedSeq[Int] } =
+	new IsIterable[Range] {     type A = Int     type C = IndexedSeq[Int]
+	def apply(coll: Range): IterableOps[Int, IndexedSeq, IndexedSeq[Int]] = coll   }
+	 */
+	implicit def pairIsIterable[A]: PairIsIterable[A] = new PairIsIterable[A]()
+	// implicit def pairIsIterableOnce[A]: PairIsIterableOnce[A] = new PairIsIterableOnce[A]()
 	
 	implicit def tupleToPair[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
 	implicit def pairToTuple[A](pair: Pair[A]): (A, A) = pair.toTuple
@@ -46,6 +62,34 @@ object Pair
 	  * @return A new pair with two values of the specified function
 	  */
 	def fill[A](item: => A) = apply(item, item)
+	
+	
+	// NESTED   ------------------------------------
+	
+	implicit def pairIsSeq[A]: PairIsSeq[A] = new PairIsSeq[A]()
+	
+	class PairIsSeq[CA] extends IsSeq[Pair[CA]]
+	{
+		override def apply(coll: Pair[CA]) = coll
+		
+		override type C = IndexedSeq[CA]
+		override type A = CA
+	}
+	
+	class PairIsIterable[CA] extends IsIterable[Pair[CA]]
+	{
+		override type C = IndexedSeq[CA]
+		override type A = CA
+		
+		override def apply(coll: Pair[CA]) = coll
+	}
+	
+	class PairIsIterableOnce[CA] extends IsIterableOnce[Pair[CA]]
+	{
+		override type A = CA
+		
+		override def apply(coll: Pair[CA]) = coll
+	}
 	
 	
 	// EXTENSIONS ----------------------------------
@@ -361,7 +405,7 @@ case class Pair[+A](first: A, second: A)
 	
 	override def view = new PairView[A](first, second)
 	
-	override def toString() = s"Pair($first, $second)"
+	override def toString = s"Pair($first, $second)"
 	
 	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = super[PairOps].sorted[B]
 	

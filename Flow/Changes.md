@@ -80,6 +80,9 @@
 - **Iterator** (**CollectionExtensions**)
   - Added `.notEmpty`
   - Added `.consecutivelyDistinct`
+- **PairOps**
+  - Added `.findForBoth(...)` which functions like `.findForAll(...)` in **CollectionExtensions**, 
+    but preserves **Pair** type.
 - **PollingIterator** (object)
   - Added `.from(Iterator)`
 - **PropertyFactory**
@@ -130,8 +133,9 @@
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**
 - Minor optimization to **VolatileList** -constructing
-- Optimized certain Pair functions
+- Optimized certain **Pair** functions
   - E.g. `++` now returns a **Pair** if no elements are added
+- **Pair** now also introduces its own **BuildFrom**, **IsIterable** and **IsSeq**
 - Size-related optimizations to **CachingSeq**
 
 ## v2.3 - 22.01.2024

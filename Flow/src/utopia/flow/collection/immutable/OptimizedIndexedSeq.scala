@@ -3,7 +3,7 @@ package utopia.flow.collection.immutable
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{SeqFactory, View, mutable}
+import scala.collection.{BuildFrom, SeqFactory, View, mutable}
 
 /**
   * Factory for constructing indexed sequences with following underlying classes:
@@ -96,6 +96,13 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 	
 	
 	// NESTED   ---------------------------
+	
+	class BuildOptimizedSeqFrom[-From, A] extends BuildFrom[From, A, IndexedSeq[A]]
+	{
+		override def fromSpecific(from: From)(it: IterableOnce[A]): IndexedSeq[A] = OptimizedIndexedSeq.from(it)
+		
+		override def newBuilder(from: From): mutable.Builder[A, IndexedSeq[A]] = OptimizedIndexedSeq.newBuilder
+	}
 	
 	/**
 	  * A builder class that builds a Pair if the input is exactly two items.

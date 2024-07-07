@@ -1,8 +1,10 @@
 package utopia.flow.test.collection
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions.{iterableOperations, _}
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.ordering.SomeBeforeNone
+
+import scala.util.Success
 
 /**
  * A test for Flow collections / collection extensions
@@ -84,6 +86,23 @@ object CollectionTest extends App
 	assert(Empty == Vector())
 	assert(Single(1) == Vector(1))
 	assert(Pair(1, 2) == Vector(1, 2))
+	
+	// import Pair.pairIsIterableOnce
+	// import Pair._
+	
+	val asd = Pair(1, 2).tryMap { i => Success(i) }
+	val asd4 = Pair[Int](1, 2).findForAll { Some(_) }
+	
+	val pairTest = iterableOperations(Pair[Int](1, 2))//(Pair.pairIsSeq[Int])//(Pair.pairIsSeq)
+	val asd2: Option[IndexedSeq[Int]] = pairTest.findForAll { Some(_) }
+	val pairTest2 = iterableOnceOperations(Pair[Int](1, 2))
+	
+	val asd5 = Pair(1, 2).takeRightWhile { _ => true }
+	
+	// val asd3 = pairTest2.tryMap[Int, IndexedSeq[Int]] { a: Int => Success(a) }
+	// val asd2 = pairTest.findForAll { Some(_) }
+	
+	// val asd2: IndexedSeq[Int] = Pair(1, 2).findForAll[Int] { Some(_) }
 	
 	println("Success!")
 }

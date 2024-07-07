@@ -106,6 +106,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	override def tail = only(Last)
 	override def contains[B >: A](item: B) = first == item || second == item
 	
+	// NB: Shows an error in the IDE, but builds. The P & CC type relationship seems to be too complex for IDEA.
 	override def map[B](f: A => B): P[B] = newPair(f(first), f(second))
 	
 	override def reduce[B >: A](op: (B, B) => B) = merge(op)
@@ -181,6 +182,17 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  * @return A mapped copy of this pair
 	  */
 	def mapWithSides[B](f: (A, End) => B) = newPair(f(first, First), f(second, Last))
+	
+	/**
+	  * Attempts to perform a mapping function for both items in this pair.
+	  * Only yields a result if both mappings yield Some value.
+	  * @param f A mapping function which may "fail" by yielding None.
+	  * @tparam B Type of mapping results.
+	  * @return If 'f' returned Some for both items in this pair, returns the mapped values as a pair.
+	  *         Otherwise returns None.
+	  */
+	def findForBoth[B](f: A => Option[B]) =
+		f(first).flatMap { first => f(second).map { newPair(first, _) } }
 	
 	/**
 	  * @param f A reduce function that accepts the second item, then the first item

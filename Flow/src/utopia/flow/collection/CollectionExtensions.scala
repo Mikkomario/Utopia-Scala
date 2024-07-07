@@ -1,5 +1,6 @@
 package utopia.flow.collection
 
+import utopia.flow.collection.immutable.Pair.PairIsIterable
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
@@ -36,6 +37,8 @@ object CollectionExtensions
 	  * Type where the item exists either on the Left or the Right side
 	  */
 	type Sided[+A] = Either[A, A]
+	
+	implicit def pairIsIterable[A]: PairIsIterable[A] = Pair.pairIsIterable
 	
 	
 	// ITERABLE ONCE    ---------------------------------------
