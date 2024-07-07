@@ -93,6 +93,7 @@
   - Added `.switch()`
 - **Seq** (**CollectionExtensions**)
   - Added `.appendAllIfDistinct(...)`
+  - Added `.groupConsecutiveWith(...)`
 - **String** (**StringExtensions**)
   - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
   - Added `.replaceAllExcept(Regex, String)`

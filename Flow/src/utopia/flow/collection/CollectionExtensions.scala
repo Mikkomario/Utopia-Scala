@@ -1323,6 +1323,13 @@ object CollectionExtensions
 	
 	class SeqOperations[Repr, S <: IsSeq[Repr]](coll: Repr, seq: S)
 	{
+		// ATTRIBUTES   ------------------------
+		
+		private lazy val ops = seq(coll)
+		
+		
+		// OTHER    ----------------------------
+		
 		/**
 		 * @param item An item to append to this collection, provided it is distinct
 		 * @param buildFrom Implicit build-from
@@ -1331,7 +1338,6 @@ object CollectionExtensions
 		 * @return Copy of this collection that contains the specified item
 		 */
 		def appendIfDistinct[B >: seq.A, That](item: B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
-			val ops = seq(coll)
 			if (ops.contains(item))
 				buildFrom.fromSpecific(coll)(ops)
 			else
@@ -1352,7 +1358,6 @@ object CollectionExtensions
 			val iter = items.iterator
 			if (iter.hasNext) {
 				val builder = buildFrom.newBuilder(coll)
-				val ops = seq(coll)
 				builder ++= iter.filterNot(ops.contains)
 				builder.result()
 			}
@@ -1369,10 +1374,9 @@ object CollectionExtensions
 		  */
 		def mapIndex[B >: seq.A, That](index: Int)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
 		{
-			val seqOps = seq(coll)
 			buildFrom.fromSpecific(coll)(new AbstractView[B] {
 				override def iterator: AbstractIterator[B] = new AbstractIterator[B] {
-					val it = seqOps.iterator
+					val it = ops.iterator
 					var nextIndex = 0
 					
 					override def hasNext = it.hasNext
@@ -1400,7 +1404,6 @@ object CollectionExtensions
 		  * @return Copy of this collection with the first or the last item mapped (unless empty)
 		  */
 		def mapEnd[B >: seq.A, That](end: End)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
-			val ops = seq(coll)
 			if (ops.isEmpty)
 				buildFrom.fromSpecific(coll)(Iterator.empty)
 			else {
@@ -1439,7 +1442,7 @@ object CollectionExtensions
 		  */
 		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
 		{
-			seq(coll).indexWhere(find) match {
+			ops.indexWhere(find) match {
 				case index if index >= 0 => mapIndex(index)(map)
 				case _ => coll
 			}
@@ -1455,7 +1458,6 @@ object CollectionExtensions
 		  */
 		def findAndPop[B >: seq.A](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
 		{
-			val ops = seq(coll)
 			ops.indexWhere(f) match {
 				case index if index >= 0 => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
 				case _ => None -> coll
@@ -1471,11 +1473,10 @@ object CollectionExtensions
 			if (index < 0)
 				coll
 			else {
-				val seqOps = seq(coll)
-				if (seqOps.sizeCompare(index) <= 0)
+				if (ops.sizeCompare(index) <= 0)
 					coll
 				else
-					_withoutIndex(seqOps.iterator, index)
+					_withoutIndex(ops.iterator, index)
 			}
 		}
 		private def _withoutIndex(iter: Iterator[seq.A], index: Int)
@@ -1507,6 +1508,41 @@ object CollectionExtensions
 			val bufferBuilder = new VectorBuilder[seq.A]()
 			seqOps.reverseIterator.takeWhile(f).foreach { bufferBuilder += _ }
 			buildFrom.fromSpecific(coll)(bufferBuilder.result().reverse)
+		}
+		
+		/**
+		  * Groups consecutive items together (from left to right) based on a custom inclusion function.
+		  * May only join consecutive items together.
+		  * @param f A function used for determining whether the next item should be included in the specified group.
+		  *          Whenever this function returns false, a new group is started.
+		  * @param bf A build-from for the resulting collection containing the collected groups
+		  * @tparam To Type of the resulting collection
+		  * @return Collected groups
+		  */
+		def groupConsecutiveWith[To](f: (Seq[seq.A], seq.A) => Boolean)
+		                            (implicit bf: BuildFrom[Repr, Seq[seq.A], To]) =
+		{
+			// Case: This sequence contains less than 2 items => No grouping is required
+			if (ops.sizeCompare(2) < 0)
+				bf.fromSpecific(coll)(ops.headOption.map { Single(_) })
+			// Case: 2 or more items available => Performs grouping
+			else {
+				// Collects here the completed groups
+				val groupsBuilder = bf.newBuilder(coll)
+				// Tests one item at a time
+				val lastGroup = ops.view.tail.foldLeft[IndexedSeq[seq.A]](Single(ops.head)) { (building, next) =>
+					// Case: Item may be added to this group => Continues building it
+					if (f(building, next))
+						building :+ next
+					// Case: Item may not be added => Completes the group and starts a new one
+					else {
+						groupsBuilder += building
+						Single(next)
+					}
+				}
+				groupsBuilder += lastGroup
+				groupsBuilder.result()
+			}
 		}
 	}
 	
