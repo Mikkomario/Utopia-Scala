@@ -33,7 +33,7 @@ object CollectionTest extends App
 	val result3: Vector[String] = words.bestMatch(conditions3)
 	
 	assert(result1 == Vector("Apina", "Banaani"))
-	assert(result2 == Vector("Car"))
+	assert(result2 == Vector("Car"), result2)
 	assert(result3 == words)
 	
 	assert(words.mapFirstWhere { _.startsWith("C") } { _.toUpperCase } == Vector("Apina", "Banaani", "CAR", "David"))
@@ -87,22 +87,16 @@ object CollectionTest extends App
 	assert(Single(1) == Vector(1))
 	assert(Pair(1, 2) == Vector(1, 2))
 	
-	// import Pair.pairIsIterableOnce
-	// import Pair._
+	// Tests consecutive grouping
+	val joined = Vector(1, 3, 5, 2, 4, 1).groupConsecutiveWith { _.last % 2 == _ % 2 }
 	
-	val asd = Pair(1, 2).tryMap { i => Success(i) }
-	val asd4 = Pair[Int](1, 2).findForAll { Some(_) }
+	assert(joined.size == 3)
+	assert(joined.head == Vector(1, 3, 5))
+	assert(joined(1) == Pair(2, 4))
+	assert(joined(2) == Single(1))
 	
-	val pairTest = iterableOperations(Pair[Int](1, 2))//(Pair.pairIsSeq[Int])//(Pair.pairIsSeq)
-	val asd2: Option[IndexedSeq[Int]] = pairTest.findForAll { Some(_) }
-	val pairTest2 = iterableOnceOperations(Pair[Int](1, 2))
-	
-	val asd5 = Pair(1, 2).takeRightWhile { _ => true }
-	
-	// val asd3 = pairTest2.tryMap[Int, IndexedSeq[Int]] { a: Int => Success(a) }
-	// val asd2 = pairTest.findForAll { Some(_) }
-	
-	// val asd2: IndexedSeq[Int] = Pair(1, 2).findForAll[Int] { Some(_) }
+	assert(Vector().groupConsecutiveWith { (_, _) => true }.isEmpty)
+	assert(Vector(1).groupConsecutiveWith { (_, _) => true }.only.contains(Single(1)))
 	
 	println("Success!")
 }

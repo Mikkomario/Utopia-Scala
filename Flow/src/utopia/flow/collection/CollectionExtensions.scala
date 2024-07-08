@@ -867,7 +867,10 @@ object CollectionExtensions
 		  * @return The items in this collection that best match the specified conditions
 		  */
 		def bestMatch(matchers: IterableOnce[iter.A => Boolean])(implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
-			matchers.iterator.foldLeft(coll) { _bestMatch(_, _) }
+			matchers.iterator.foldLeft(coll) { case (coll, matcher) =>
+				println(s"Preparing to match $coll next")
+				_bestMatch(coll, matcher)
+			}
 		def bestMatch(firstMatcher: iter.A => Boolean, secondMatcher: iter.A => Boolean, more: (iter.A => Boolean)*)
 		             (implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
 			bestMatch(Pair(firstMatcher, secondMatcher) ++ more)
@@ -881,6 +884,7 @@ object CollectionExtensions
 			_bestMatch(coll, matcher)
 		
 		private def _bestMatch(coll: Repr, matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
+			val ops = iter(coll)
 			// Case: 1 or 0 items => Result will always be the best match
 			if (ops.sizeCompare(2) < 0)
 				coll
