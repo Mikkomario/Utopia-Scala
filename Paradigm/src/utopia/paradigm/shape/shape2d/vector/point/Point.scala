@@ -25,7 +25,7 @@ object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
 	/**
 	  * (0,0) location
 	  */
-    val origin = empty
+    lazy val origin = zero
 	
     
 	// IMPLEMENTED  ---------------------------
