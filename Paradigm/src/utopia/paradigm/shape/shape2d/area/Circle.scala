@@ -140,47 +140,29 @@ object Circle extends FromModelFactory[Circle]
 	private def _enclosing(points: Seq[DoubleVector], perimeterPoints: Seq[DoubleVector], processed: Int): Circle =
 	{
 		// Returns once all points have been processed or when 3 perimeter points have been identified
-		if (points.hasSize(processed) || perimeterPoints.size == 3) {
-			println("All points have been processed, or 3 perimeter points acquired => Encloses 3 or less points")
-			println(s"Perimeter: ${ perimeterPoints.mkString(", ") }")
+		if (points.hasSize(processed) || perimeterPoints.size == 3)
 			enclosing3OrLess(perimeterPoints)
-		}
 		else {
-			println(s"\n${ points.size - processed } points remain to be processed. Current perimeter = ${ perimeterPoints.size } points")
-			
 			// Creates a circle without a specific point and checks whether it will be consequently left outside
 			// (Uses recursion to get the circle)
 			val testedCircle = _enclosing(points, perimeterPoints, processed + 1)
 			val testedPoint = points(processed)
 			
-			println(s"Tests whether $testedPoint fits within $testedCircle")
-			
 			// Case: The tested point is contained within the circle => No modification needed
-			if (testedCircle.contains(testedPoint)) {
-				println("Yes => Proceed")
+			if (testedCircle.contains(testedPoint))
 				testedCircle
-			} // Case: The tested point is outside the circle => It shall be considered a perimeter point
-			else {
-				println(s"No => Adds new perimeter point (now ${ perimeterPoints.size }) and moves to the next point (${ processed + 2 }/${ points.size })")
+			// Case: The tested point is outside the circle => It shall be considered a perimeter point
+			else
 				_enclosing(points, perimeterPoints :+ testedPoint, processed + 1)
-			}
 		}
 	}
 	
 	// Assumes that the size of 'points' is 3 or less
 	private def enclosing3OrLess(points: Seq[DoubleVector]): Circle = points.size match {
-		case 0 =>
-			println("Enclosing 0 points => Returns zero Circle")
-			zero
-		case 1 =>
-			println(s"Enclosing 1 point (${ points.head }) => Returns 0 radius circle")
-			Circle(points.head.toPoint, 0.0)
-		case 2 =>
-			println("Enclosing 2 points")
-			enclosing(points.head, points(1))
-		case _ =>
-			println("Enclosing 3 points")
-			_enclosing3(points)
+		case 0 => zero
+		case 1 => Circle(points.head.toPoint, 0.0)
+		case 2 => enclosing(points.head, points(1))
+		case _ => _enclosing3(points)
 	}
 	
 	// Assumes that 'points' contains exactly 3 items
