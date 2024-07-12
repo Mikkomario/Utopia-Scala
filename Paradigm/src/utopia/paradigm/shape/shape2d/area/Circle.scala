@@ -94,36 +94,49 @@ object Circle extends FromModelFactory[Circle]
 	def enclosingCircles(circles: Iterable[Circle], errorMargin: Double = 1e-6) = {
 		if (circles.isEmpty)
 			zero
-		else if (circles.hasSize(1))
-			circles.head
 		else {
-			// Places a circle over the weighed centroid of the proposed circles and iterates
-			// in order to adjust the radius and the origin
-			// Initial radius is the radius of the largest circle
-			Iterator
-				.iterate(Circle(weighedCentroidOf(circles),
-					circles.view.map { _.radius }.max) -> false) { case (proposed, _) =>
-					// Adjusts the proposed circle for each circle value
-					circles
-						.foldLeft(proposed -> true) { case ((proposed, wasValid), circle) =>
-							val relativeOrigin = circle.origin - proposed.origin
-							val maxDistanceFromOrigin = relativeOrigin.length + circle.radius
-							
-							// Case: Circle is not enclosed => Adjusts the enclosing circle and tries again
-							if (maxDistanceFromOrigin > proposed.radius) {
-								val adjustment = relativeOrigin.withLength((maxDistanceFromOrigin - proposed.radius) / 2)
-								val adjustedOrigin = proposed.origin + adjustment
-								val adjusted = Circle(adjustedOrigin,
-									(circle.origin - adjustedOrigin).length + circle.radius)
-								
-								adjusted -> (wasValid && (adjustment.length < errorMargin))
-							}
-							// Case: Circle is enclosed => Continues
-							else
-								proposed -> wasValid
-						}
+			// Processes zero radius circles separately
+			val (points, circlesWithRadius) = circles.divideWith { c =>
+				if (c.radius == 0) Left(c.origin) else Right(c)
+			}
+			// Case: None of the specified points have a radius => Encloses them as points instead
+			if (circlesWithRadius.isEmpty)
+				enclosing(points)
+			else {
+				val circlesToEnclose = {
+					if (points.nonEmpty)
+						circlesWithRadius :+ enclosing(points)
+					else
+						circlesWithRadius
 				}
-				.find { _._2 }.get._1
+				// Places a circle over the weighed centroid of the proposed circles and iterates
+				// in order to adjust the radius and the origin
+				// Initial radius is the radius of the largest circle
+				Iterator
+					.iterate(Circle(weighedCentroidOf(circlesToEnclose),
+						circlesToEnclose.view.map { _.radius }.max) -> false) { case (proposed, _) =>
+						// Adjusts the proposed circle for each circle value
+						circlesToEnclose
+							.foldLeft(proposed -> true) { case ((proposed, wasValid), circle) =>
+								val relativeOrigin = circle.origin - proposed.origin
+								val maxDistanceFromOrigin = relativeOrigin.length + circle.radius
+								
+								// Case: Circle is not enclosed => Adjusts the enclosing circle and tries again
+								if (maxDistanceFromOrigin > proposed.radius) {
+									val adjustment = relativeOrigin.withLength((maxDistanceFromOrigin - proposed.radius) / 2)
+									val adjustedOrigin = proposed.origin + adjustment
+									val adjusted = Circle(adjustedOrigin,
+										(circle.origin - adjustedOrigin).length + circle.radius)
+									
+									adjusted -> (wasValid && (adjustment.length < errorMargin))
+								}
+								// Case: Circle is enclosed => Continues
+								else
+									proposed -> wasValid
+							}
+					}
+					.find { _._2 }.get._1
+			}
 		}
 	}
 	
@@ -134,8 +147,17 @@ object Circle extends FromModelFactory[Circle]
 	  * @return Weighed central position of these circles
 	  */
 	@throws[UnsupportedOperationException]("If 'circles' is empty")
-	def weighedCentroidOf(circles: Iterable[Circle]) =
-		circles.view.map { c => c.origin * c.radius }.reduce { _ + _ } / circles.view.map { _.radius }.sum
+	def weighedCentroidOf(circles: Iterable[Circle]) = {
+		val validCircles = circles.filter { _.radius > 0 }
+		if (validCircles.isEmpty) {
+			if (circles.isEmpty)
+				throw new IllegalArgumentException("Can't determine the centroid of 0 circles")
+			else
+				Point.average(circles.map { _.origin })
+		}
+		else
+			validCircles.view.map { c => c.origin * c.radius }.reduce { _ + _ } / validCircles.view.map { _.radius }.sum
+	}
 	
 	private def _enclosing(points: Seq[DoubleVector], perimeterPoints: Seq[DoubleVector], processed: Int): Circle =
 	{

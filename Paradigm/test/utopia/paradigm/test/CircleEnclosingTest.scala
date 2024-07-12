@@ -24,11 +24,15 @@ object CircleEnclosingTest extends App
 	)
 	
 	val circle = Circle.enclosing(points)
-	println(circle)
-	
-	/*
-	points.foreach { p => assert(circle.contains(p), s"$p in $circle with distance of ${
-		p.distanceFrom(circle.origin) } (${ p.distanceFrom(circle.origin) - circle.radius } too much)") }
-	*/
 	assert(circle == Circle(Point(72.70773634020574, -29.20098735689566), 0.5409070221272845))
+	
+	val circles = Vector(
+		Circle(Point(2.2511032090371677, -39.77201557248378), 0.0),
+		Circle(Point(0.42326767965418294, -40.87306457256923), 0.0)
+	)
+	
+	val enclosing2 = Circle.enclosingCircles(circles)
+	
+	println(Circle.weighedCentroidOf(circles))
+	println(enclosing2)
 }
