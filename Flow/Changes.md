@@ -95,6 +95,7 @@
   - Added `.appendAllIfDistinct(...)`
   - Added `.groupConsecutiveWith(...)`
 - **String** (**StringExtensions**)
+  - Added `.isMultiLine`
   - Added `.containsAllCharsFrom(IterableOnce)` and `.containsCharsInOrder(IterableOnce)`
   - Added `.replaceAllExcept(Regex, String)`
   - Added `.forNonEmpty(...)`

@@ -23,6 +23,19 @@ object StringExtensions
 	implicit class ExtendedString(val s: String) extends AnyVal
 	{
 		/**
+		  * @return Whether this string contains multiple lines
+		  */
+		def isMultiLine = {
+			val iter = s.linesIterator
+			if (iter.hasNext) {
+				iter.next()
+				iter.hasNext
+			}
+			else
+				false
+		}
+		
+		/**
 		  * @return A copy of this string with all control characters (\t, \n, \r and so forth) removed
 		  */
 		def stripControlCharacters = s.filter { _ >= space }
