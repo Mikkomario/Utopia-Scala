@@ -16,6 +16,8 @@ case class Query(prompt: String, responseSchema: ObjectSchema = ObjectSchema.emp
                  numberOfExpectedResponses: UncertainInt = 1,
                  context: String = "", systemMessage: String = "", contextual: Boolean = false)
 {
+	def expectsJsonResponse = responseSchema.nonEmpty || numberOfExpectedResponses != CertainNumber(1)
+	
 	def toPrompt = {
 		val builder = new StringBuilder()
 		builder ++= "\"\"\""

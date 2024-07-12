@@ -134,6 +134,8 @@ sealed trait Response extends RequestResult
 	def headers: Headers
 }
 
+// TODO: We need support for streamed responses, also. See: https://github.com/typelevel/jawn
+// TODO: Might as well add support for arrays and basic values in general
 object Response
 {
 	// OTHER    -------------------------------
