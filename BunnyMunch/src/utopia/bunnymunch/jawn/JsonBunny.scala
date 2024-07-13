@@ -11,12 +11,11 @@ import java.nio.file.Path
 import scala.io.Codec
 
 /**
-  * Used for parsing json (uses jawn internally)<br>
-  * See: https://github.com/typelevel/jawn
+  * Used for parsing json (uses jawn internally).
+  * See: [[https://github.com/typelevel/jawn]]
   * @author Mikko Hilpinen
-  * @since 12.5.2020, v
+  * @since 12.5.2020, v1.0
   */
-// TODO: Add support for asynchronous parsing using Parser.async
 object JsonBunny extends JsonParser
 {
 	// ATTRIBUTES	----------------------------
@@ -28,12 +27,18 @@ object JsonBunny extends JsonParser
 	private implicit val facade: ValueFacade.type = ValueFacade
 	
 	
+	// COMPUTED --------------------------------
+	
+	/**
+	  * @return An interface for processing json data asynchronously
+	  */
+	def async = AsyncJsonBunny
+	
+	
 	// IMPLEMENTED	----------------------------
 	
 	override def apply(json: String) = munch(json)
-	
 	override def apply(file: File) = munchFile(file)
-	
 	override def apply(inputStream: InputStream) = munchStream(inputStream)
 	
 	
@@ -50,19 +55,16 @@ object JsonBunny extends JsonParser
 	  * @return Parsed value from json. Failure if parsing failed.
 	  */
 	def munch(json: String) = Parser.parseFromString(json)
-	
 	/**
 	  * @param inputStream Json stream to parse (will be buffered to string)
 	  * @return Parsed json value. Failure if stream read or parse failed.
 	  */
 	def munchStream(inputStream: InputStream) = StringFrom.stream(inputStream).flatMap(munch)
-	
 	/**
 	  * @param file A file
 	  * @return Json value read from that file
 	  */
 	def munchFile(file: File) = Parser.parseFromFile(file)
-	
 	/**
 	  * @param path File path
 	  * @return Json value read from that path

@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
-import utopia.flow.util.UncertainNumber.{UncertainInt, zeroOrMore}
+import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.FlagLike
@@ -16,6 +16,11 @@ import scala.concurrent.ExecutionContext
 
 object TwoThreadBuffer
 {
+	/**
+	  * Interface for pushing data into a buffer.
+	  * Operations typically block while the buffer is full.
+	  * @tparam A Type of items pushed to the buffer.
+	  */
 	sealed trait Output[A] extends AutoCloseable
 	{
 		// ABSTRACT ----------------------
@@ -38,23 +43,23 @@ object TwoThreadBuffer
 		def closed_=(isClosed: UncertainBoolean): Unit
 		
 		/**
-		 * Declares that this input will not close until otherwise declared.
+		 * Declares that this output will not close until otherwise declared.
 		 * This allows the output to return true on 'hasNext' without yet having read values.
-		 * @param allowReopen Whether this declaration should be applied even after this input has closed.
-		 *                    Default = false = ignore this declaration if this input has closed.
+		 * @param allowReopen Whether this declaration should be applied even after this output has closed.
+		 *                    Default = false = ignore this declaration if this output has closed.
 		 */
 		def declareNotClosing(allowReopen: Boolean = false): Unit
 		/**
-		 * Declares that this input might close without receiving any more values (which is the initial input state).
+		 * Declares that this output might close without receiving any more values (which is the initial output state).
 		 * This declaration may be cancelled by calling [[declareNotClosing()]].
 		 * @param allowReopen Whether this declaration (of uncertainty) should override a possible closed state,
-		 *                    i.e. to possibly declare this input as reopened.
-		 *                    Default = false = input will remain closed, if closed before
+		 *                    i.e. to possibly declare this output as reopened.
+		 *                    Default = false = output will remain closed, if closed before
 		 */
 		def declarePossiblyClosing(allowReopen: Boolean = false): Unit
 		
 		/**
-		 * Specifies the number of items that will be read before this input closes.
+		 * Specifies the number of items that will be read before this output closes.
 		 * May involve uncertainty.
 		 * @param remainingInputSize The number of items that will be read before this input closes.
 		 *                           May be uncertain.
@@ -89,6 +94,11 @@ object TwoThreadBuffer
 		def +=(item: A) = push(item)
 	}
 	
+	/**
+	  * An interface for pushing data into a buffer.
+	  * Will not block, but instead may reject the proposed items.
+	  * @tparam A Type of items added to the buffer.
+	  */
 	sealed trait ImmediateOutput[A]
 	{
 		// ABSTRACT ---------------------
@@ -139,6 +149,11 @@ object TwoThreadBuffer
 		def +=(item: A) = push(item)
 	}
 	
+	/**
+	  * An interface for reading buffered data.
+	  * Operations typically block while the buffer is empty.
+	  * @tparam A Type of read data.
+	  */
 	sealed trait Input[+A] extends Iterator[A]
 	{
 		// ABSTRACT ------------------------
@@ -191,6 +206,11 @@ object TwoThreadBuffer
 		}
 	}
 	
+	/**
+	  * An interface for reading buffered data without blocking.
+	  * Will not yield data while the buffer is empty. I.e. only returns immediately accessible values.
+	  * @tparam A Type of read items.
+	  */
 	sealed trait ImmediateInput[+A] extends Iterator[A]
 	{
 		/**
@@ -200,6 +220,28 @@ object TwoThreadBuffer
 		 * @return The next immediately available items (up to 'n' items). May be empty.
 		 */
 		def collectNext(n: Int): IndexedSeq[A]
+	}
+	
+	/**
+	  * An input interface to use / present in situations where there is no data to read.
+	  */
+	object EmptyInput extends Input[Nothing]
+	{
+		override def immediately = EmptyImmediateInput
+		override def sizeEstimate = CertainNumber(0)
+		override def hasNext: Boolean = false
+		
+		override def next(): Nothing = throw new IllegalStateException("next() called on empty input")
+	}
+	/**
+	  * An immediate input interface to use / present in situations where there is no data to read.
+	  */
+	object EmptyImmediateInput extends ImmediateInput[Nothing]
+	{
+		override def hasNext: Boolean = false
+		
+		override def next(): Nothing = throw new IllegalStateException("next() called on empty input")
+		override def collectNext(n: Int): IndexedSeq[Nothing] = Empty
 	}
 }
 

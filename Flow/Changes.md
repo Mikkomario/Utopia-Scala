@@ -131,6 +131,7 @@
 - **XmlElement**`.toString` now yields XML instead of JSON.
 - **Iterator**`.pollable` now tests if the iterator is already pollable
 - **Regex** now extends **MayBeEmpty**
+- Added **EmptyInput** interface to **TwoThreadBuffer**
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**

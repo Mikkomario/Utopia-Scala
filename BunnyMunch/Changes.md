@@ -1,5 +1,11 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.5 (in development)
+Adding asynchronous operations
+### New features
+- Added **AsyncJsonBunny**, which provides an interface for parsing and processing json values asynchronously either 
+  from an input stream or from a file.
+
 ## v1.0.4 - 22.01.2024
 Scala version updated.
 ### Other changes
