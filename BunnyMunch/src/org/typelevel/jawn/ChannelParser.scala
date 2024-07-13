@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2012 Typelevel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package org.typelevel.jawn
 
 import java.lang.Integer.{bitCount, highestOneBit}
@@ -18,37 +39,32 @@ object ChannelParser {
       fis.read(bytes)
       fis.close()
       new StringParser[J](new String(bytes, "UTF-8"))
-    } else {
+    } else
       new ChannelParser[J](new FileInputStream(f).getChannel, bufferSize)
-    }
 
   def fromChannel[J](ch: ReadableByteChannel, bufferSize: Int = DefaultBufferSize): ChannelParser[J] =
     new ChannelParser[J](ch, bufferSize)
 
   /**
-   * Given a desired buffer size, find the closest positive
-   * power-of-two larger than that size.
+   * Given a desired buffer size, find the closest positive power-of-two larger than that size.
    *
-   * This method throws an exception if the given values are negative
-   * or too large to have a valid power of two.
+   * This method throws an exception if the given values are negative or too large to have a valid power of two.
    */
   def computeBufferSize(x: Int): Int =
-    if (x < 0) {
+    if (x < 0)
       throw new IllegalArgumentException(s"negative bufferSize ($x)")
-    } else if (x > 0x40000000) {
+    else if (x > 0x40000000)
       throw new IllegalArgumentException(s"bufferSize too large ($x)")
-    } else if (bitCount(x) == 1) {
+    else if (bitCount(x) == 1)
       x
-    } else {
+    else
       highestOneBit(x) << 1
-    }
 }
 
 /**
  * Basic file parser.
  *
- * Given a file name this parser opens it, chunks the data, and parses
- * it.
+ * Given a file name this parser opens it, chunks the data, and parses it.
  */
 final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends SyncParser[J] with ByteBasedParser[J] {
 
@@ -66,25 +82,24 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
 
   private[this] var _line = 0
   private[this] var pos = 0
-  protected[this] def newline(i: Int): Unit = { _line += 1; pos = i + 1 }
-  protected[this] def line(): Int = _line
-  protected[this] def column(i: Int): Int = i - pos
+  final protected[this] def newline(i: Int): Unit = { _line += 1; pos = i + 1 }
+  final protected[this] def line(): Int = _line
+  final protected[this] def column(i: Int): Int = i - pos
 
-  protected[this] def close(): Unit = ch.close()
+  final protected[this] def close(): Unit = ch.close()
 
   /**
    * Swap the curr and next arrays/buffers/counts.
    *
-   * We'll call this in response to certain reset() calls. Specifically, when
-   * the index provided to reset is no longer in the 'curr' buffer, we want to
-   * clear that data and swap the buffers.
+   * We'll call this in response to certain reset() calls. Specifically, when the index provided to reset is no longer
+   * in the 'curr' buffer, we want to clear that data and swap the buffers.
    */
-  protected[this] def swap(): Unit = {
+  final protected[this] def swap(): Unit = {
     val tmp = curr; curr = next; next = tmp
     val ntmp = ncurr; ncurr = nnext; nnext = ntmp
   }
 
-  protected[this] def grow(): Unit = {
+  final protected[this] def grow(): Unit = {
     val cc = new Array[Byte](Allsize)
     System.arraycopy(curr, 0, cc, 0, Bufsize)
     System.arraycopy(next, 0, cc, Bufsize, Bufsize)
@@ -100,28 +115,25 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
   }
 
   /**
-   * If the cursor 'i' is past the 'curr' buffer, we want to clear the
-   * current byte buffer, do a swap, load some more data, and
-   * continue.
+   * If the cursor 'i' is past the 'curr' buffer, we want to clear the current byte buffer, do a swap, load some more
+   * data, and continue.
    */
-  protected[this] def reset(i: Int): Int =
+  final protected[this] def reset(i: Int): Int =
     if (i >= Bufsize) {
       swap()
       nnext = ch.read(ByteBuffer.wrap(next))
       pos -= Bufsize
       i - Bufsize
-    } else {
+    } else
       i
-    }
 
-  protected[this] def checkpoint(state: Int, i: Int, context: FContext[J], stack: List[FContext[J]]): Unit =
+  final protected[this] def checkpoint(state: Int, i: Int, context: FContext[J], stack: List[FContext[J]]): Unit =
     ()
 
   /**
-   * This is a specialized accessor for the case where our underlying
-   * data are bytes not chars.
+   * This is a specialized accessor for the case where our underlying data are bytes not chars.
    */
-  protected[this] def byte(i: Int): Byte =
+  final protected[this] def byte(i: Int): Byte =
     if (i < Bufsize) curr(i)
     else if (i < Allsize) next(i & Mask)
     else {
@@ -129,11 +141,10 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
     }
 
   /**
-   * Reads a byte as a single Char. The byte must be valid ASCII (this
-   * method is used to parse JSON values like numbers, constants, or
-   * delimiters, which are known to be within ASCII).
+   * Reads a byte as a single Char. The byte must be valid ASCII (this method is used to parse JSON values like numbers,
+   * constants, or delimiters, which are known to be within ASCII).
    */
-  protected[this] def at(i: Int): Char =
+  final protected[this] def at(i: Int): Char =
     if (i < Bufsize) curr(i).toChar
     else if (i < Allsize) next(i & Mask).toChar
     else {
@@ -143,20 +154,19 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
   /**
    * Access a byte range as a string.
    *
-   * Since the underlying data are UTF-8 encoded, i and k must occur
-   * on unicode boundaries. Also, the resulting String is not
-   * guaranteed to have length (k - i).
+   * Since the underlying data are UTF-8 encoded, i and k must occur on unicode boundaries. Also, the resulting String
+   * is not guaranteed to have length (k - i).
    */
-  protected[this] def at(i: Int, k: Int): CharSequence = {
+  final protected[this] def at(i: Int, k: Int): CharSequence = {
     val len = k - i
     if (k > Allsize) {
       grow()
       at(i, k)
-    } else if (k <= Bufsize) {
+    } else if (k <= Bufsize)
       new String(curr, i, len, utf8)
-    } else if (i >= Bufsize) {
+    else if (i >= Bufsize)
       new String(next, i - Bufsize, len, utf8)
-    } else {
+    else {
       val arr = new Array[Byte](len)
       val mid = Bufsize - i
       System.arraycopy(curr, i, arr, 0, mid)
@@ -165,7 +175,7 @@ final class ChannelParser[J](ch: ReadableByteChannel, bufferSize: Int) extends S
     }
   }
 
-  protected[this] def atEof(i: Int): Boolean =
+  final protected[this] def atEof(i: Int): Boolean =
     if (i < Bufsize) i >= ncurr
     else i >= (nnext + Bufsize)
 }

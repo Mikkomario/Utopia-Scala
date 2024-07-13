@@ -5,6 +5,8 @@ Adding asynchronous operations
 ### New features
 - Added **AsyncJsonBunny**, which provides an interface for parsing and processing json values asynchronously either 
   from an input stream or from a file.
+### Other changes
+- Updated the underlying [jawn](https://github.com/typelevel/jawn) library to v1.6.0
 
 ## v1.0.4 - 22.01.2024
 Scala version updated.

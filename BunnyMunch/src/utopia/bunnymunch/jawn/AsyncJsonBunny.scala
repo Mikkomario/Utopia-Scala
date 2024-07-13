@@ -42,16 +42,18 @@ object AsyncJsonBunny
 	  *
 	  * @param path Path to the json file to read / parse
 	  * @param bufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flatten Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                Default = false.
 	  * @param process A function called whenever new values are read and parsed.
 	  * @param exc Implicit execution context
 	  * @tparam U Arbitrary function result type
 	  * @return A future which resolves into a success or a failure once all data has been read and processed.
 	  *         Contains a failure if file-reading failed, if json parsing failed or if 'process' threw an exception.
 	  */
-	def processArrayFile[U](path: Path, bufferSize: Int = defaultBufferSize)
+	def processArrayFile[U](path: Path, bufferSize: Int = defaultBufferSize, flatten: Boolean = false)
 	                       (process: scala.collection.Seq[Value] => U)
 	                       (implicit exc: ExecutionContext) =
-		processFile(path, UnwrapArray, bufferSize)(process)
+		processFile(path, UnwrapArray, bufferSize, flatten)(process)
 	/**
 	  * Processes the contents of a json file asynchronously,
 	  * calling the specified 'process' function whenever data is read.
@@ -68,13 +70,16 @@ object AsyncJsonBunny
 	  *             Use [[UnwrapArray]] when asynchronously reading a json array.
 	  *             Use [[ValueStream]] when reading 0-n json values, separated by whitespace.
 	  * @param bufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flattenJsonArrays Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                          Only applicable when 'mode' = UnwrapArray.
+	  *                          Default = false.
 	  * @param process A function called whenever new values are read and parsed.
 	  * @param exc Implicit execution context
 	  * @tparam U Arbitrary function result type
 	  * @return A future which resolves into a success or a failure once all data has been read and processed.
 	  *         Contains a failure if file-reading failed, if json parsing failed or if 'process' threw an exception.
 	  */
-	def processFile[U](path: Path, mode: Mode, bufferSize: Int = defaultBufferSize)
+	def processFile[U](path: Path, mode: Mode, bufferSize: Int = defaultBufferSize, flattenJsonArrays: Boolean = false)
 	                  (process: scala.collection.Seq[Value] => U)
 	                  (implicit exc: ExecutionContext) =
 	{
@@ -82,7 +87,7 @@ object AsyncJsonBunny
 		Try { new FileInputStream(path.toFile) } match {
 			// Case: File successfully opened => Starts reading and processing its contents
 			case Success(fileStream) =>
-				val resultFuture = this.process(fileStream, mode, bufferSize)(process)
+				val resultFuture = this.process(fileStream, mode, bufferSize, flattenJsonArrays)(process)
 				// Closes the file only once the processing has completed
 				resultFuture.onComplete { _ => Try { fileStream.close() } }
 				resultFuture
@@ -126,16 +131,18 @@ object AsyncJsonBunny
 	  *
 	  * @param stream Stream from which json values will be read
 	  * @param bufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flatten Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                Default = false.
 	  * @param process A function called whenever new values are read and parsed.
 	  * @param exc Implicit execution context
 	  * @tparam U Arbitrary function result type
 	  * @return A future which resolves into a success or a failure once all streamed data has been processed.
 	  *         Contains a failure if stream-reading failed, if json parsing failed or if 'process' threw an exception.
 	  */
-	def processStreamedArray[U](stream: InputStream, bufferSize: Int = defaultBufferSize)
+	def processStreamedArray[U](stream: InputStream, bufferSize: Int = defaultBufferSize, flatten: Boolean = false)
 	                           (process: scala.collection.Seq[Value] => U)
 	                           (implicit exc: ExecutionContext) =
-		this.process(stream, UnwrapArray, bufferSize)(process)
+		this.process(stream, UnwrapArray, bufferSize, flatten)(process)
 	/**
 	  * Processes the json contents of an input stream asynchronously,
 	  * calling the specified 'process' function whenever new data becomes available.
@@ -150,16 +157,23 @@ object AsyncJsonBunny
 	  *             Use [[UnwrapArray]] when asynchronously reading a json array.
 	  *             Use [[ValueStream]] when reading 0-n json values, separated by whitespace.
 	  * @param bufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flattenJsonArrays Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                          Only applicable when 'mode' = UnwrapArray.
+	  *                          Default = false.
 	  * @param process A function called whenever new values are read and parsed.
 	  * @param exc Implicit execution context
 	  * @tparam U Arbitrary function result type
 	  * @return A future which resolves into a success or a failure once all streamed data has been processed.
 	  *         Contains a failure if stream-reading failed, if json parsing failed or if 'process' threw an exception.
 	  */
-	def process[U](stream: InputStream, mode: Mode, bufferSize: Int = defaultBufferSize)
+	def process[U](stream: InputStream, mode: Mode, bufferSize: Int = defaultBufferSize,
+	               flattenJsonArrays: Boolean = false)
 	              (process: scala.collection.Seq[Value] => U)
 	              (implicit exc: ExecutionContext) =
-		Future { Try { processStream(stream, AsyncParser(mode), bufferSize)(process) }.flatten }
+		Future {
+			Try { processStream(stream, AsyncParser(mode, multiValue = flattenJsonArrays), bufferSize)(process) }
+				.flatten
+		}
 	
 	/**
 	  * Parses the contents of a json file by utilizing an asynchronous buffer.
@@ -176,6 +190,8 @@ object AsyncJsonBunny
 	  *                        A higher value may use more memory, but may result in faster processing.
 	  *
 	  * @param byteBufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flatten Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                Default = false.
 	  * @param exc Implicit execution context.
 	  * @return Returns 2 values:
 	  *             1. An interface for reading buffered json values
@@ -187,9 +203,10 @@ object AsyncJsonBunny
 	  *                 reading the collected data may be necessary for the returned future to complete
 	  *                 and the file to be closed.
 	  */
-	def bufferArrayFile(path: Path, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize)
+	def bufferArrayFile(path: Path, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize,
+	                    flatten: Boolean = false)
 	                   (implicit exc: ExecutionContext) =
-		bufferFile(path, UnwrapArray, valueBufferSize, byteBufferSize)
+		bufferFile(path, UnwrapArray, valueBufferSize, byteBufferSize, flatten)
 	/**
 	  * Parses the contents of a json file by utilizing an asynchronous buffer.
 	  * The buffer will be filled automatically as soon as data is read from the file,
@@ -207,6 +224,9 @@ object AsyncJsonBunny
 	  *                        A higher value may use more memory, but may result in faster processing.
 	  *
 	  * @param byteBufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flattenJsonArrays Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                          Only applicable when 'mode' = UnwrapArray.
+	  *                          Default = false.
 	  * @param exc Implicit execution context.
 	  * @return Returns 2 values:
 	  *             1. An interface for reading buffered json values
@@ -218,14 +238,16 @@ object AsyncJsonBunny
 	  *                 reading the collected data may be necessary for the returned future to complete
 	  *                 and the file to be closed.
 	  */
-	def bufferFile(path: Path, mode: Mode, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize)
+	def bufferFile(path: Path, mode: Mode, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize,
+	               flattenJsonArrays: Boolean = false)
 	              (implicit exc: ExecutionContext) =
 	{
 		// Opens the targeted file (may fail)
 		Try { new FileInputStream(path.toFile) } match {
 			// Case: Successfully opened the file => Processes its contents asynchronously using a buffer
 			case Success(fileStream) =>
-				val (buffer, parseFuture) = this.buffer(fileStream, mode, valueBufferSize, byteBufferSize)
+				val (buffer, parseFuture) = this.buffer(fileStream, mode, valueBufferSize, byteBufferSize,
+					flattenJsonArrays)
 				// Keeps the file open until buffering has completed.
 				// Once all data has been read, closes the file (ignores failures)
 				parseFuture.onComplete { _ => Try { fileStream.close() } }
@@ -281,6 +303,8 @@ object AsyncJsonBunny
 	  *                        A higher value may use more memory, but may result in faster processing.
 	  *
 	  * @param byteBufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flatten Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                Default = false.
 	  * @param exc Implicit execution context.
 	  * @return Returns 2 values:
 	  *             1. An interface for reading buffered json values
@@ -293,9 +317,10 @@ object AsyncJsonBunny
 	  *
 	  *                 It is advisable not to close the 'stream' until this future resolves.
 	  */
-	def bufferStreamedArray(stream: InputStream, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize)
+	def bufferStreamedArray(stream: InputStream, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize,
+	                        flatten: Boolean = false)
 	                        (implicit exc: ExecutionContext) =
-		buffer(stream, UnwrapArray, valueBufferSize, byteBufferSize)
+		buffer(stream, UnwrapArray, valueBufferSize, byteBufferSize, flatten)
 	/**
 	  * Processes streamed json data by utilizing an asynchronous buffer.
 	  * The buffer will be filled automatically as soon as data is received, but only 'valueBufferSize' parsed values
@@ -313,6 +338,9 @@ object AsyncJsonBunny
 	  *                        A higher value may use more memory, but may result in faster processing.
 	  *
 	  * @param byteBufferSize Number of bytes read from the stream at once. Default = 1024.
+	  * @param flattenJsonArrays Whether consecutive json value arrays should be merged together (i.e. flattened).
+	  *                          Only applicable when 'mode' = UnwrapArray.
+	  *                          Default = false.
 	  * @param exc Implicit execution context.
 	  * @return Returns 2 values:
 	  *             1. An interface for reading buffered json values
@@ -325,10 +353,11 @@ object AsyncJsonBunny
 	  *
 	  *                 It is advisable not to close the 'stream' until this future resolves.
 	  */
-	def buffer(stream: InputStream, mode: Mode, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize)
+	def buffer(stream: InputStream, mode: Mode, valueBufferSize: Int, byteBufferSize: Int = defaultBufferSize,
+	           flattenJsonArrays: Boolean = false)
 	          (implicit exc: ExecutionContext) =
 	{
-		val parser = AsyncParser[Value](mode)
+		val parser = AsyncParser[Value](mode, multiValue = flattenJsonArrays)
 		// Uses an asynchronous thread to push values into the buffer
 		val buffer = new TwoThreadBuffer[Value](valueBufferSize)
 		val finalFuture = Future {

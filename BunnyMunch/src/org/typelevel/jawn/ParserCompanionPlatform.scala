@@ -21,15 +21,19 @@
 
 package org.typelevel.jawn
 
-import java.nio.ByteBuffer
+import java.io.File
+import java.nio.channels.ReadableByteChannel
 import scala.util.Try
 
-object Syntax extends SyntaxPlatform {
-  implicit def unitFacade: Facade[Unit] = Facade.NullFacade
+private[jawn] trait ParserCompanionPlatform {
 
-  def checkString(s: String): Boolean =
-    Try(new StringParser(s).parse()).isSuccess
+  def parseFromPath[J](path: String)(implicit facade: Facade[J]): Try[J] =
+    Try(ChannelParser.fromFile[J](new File(path)).parse())
 
-  def checkByteBuffer(buf: ByteBuffer): Boolean =
-    Try(new ByteBufferParser(buf).parse()).isSuccess
+  def parseFromFile[J](file: File)(implicit facade: Facade[J]): Try[J] =
+    Try(ChannelParser.fromFile[J](file).parse())
+
+  def parseFromChannel[J](ch: ReadableByteChannel)(implicit facade: Facade[J]): Try[J] =
+    Try(ChannelParser.fromChannel[J](ch).parse())
+
 }

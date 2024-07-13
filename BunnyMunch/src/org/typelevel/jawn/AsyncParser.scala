@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2012 Typelevel
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package org.typelevel.jawn
 
 import scala.annotation.switch
@@ -24,47 +45,54 @@ object AsyncParser {
       allocated = 131072,
       offset = 0,
       done = false,
-      streamMode = mode.value
+      streamMode = mode.value,
+      multiValue = false
+    )
+
+  def apply[J](mode: Mode, multiValue: Boolean): AsyncParser[J] =
+    new AsyncParser(
+      state = mode.start,
+      curr = 0,
+      context = null,
+      stack = Nil,
+      data = new Array[Byte](131072),
+      len = 0,
+      allocated = 131072,
+      offset = 0,
+      done = false,
+      streamMode = mode.value,
+      multiValue = multiValue
     )
 }
 
 /**
- * AsyncParser is able to parse chunks of data (encoded as
- * Option[ByteBuffer] instances) and parse asynchronously. You can
- * use the factory methods in the companion object to instantiate an
- * async parser.
+ * AsyncParser is able to parse chunks of data (encoded as Option[ByteBuffer] instances) and parse asynchronously. You
+ * can use the factory methods in the companion object to instantiate an async parser.
  *
  * The async parser's fields are described below:
  *
- * The (state, curr, stack) triple is used to save and restore parser
- * state between async calls. State also helps encode extra
- * information when streaming or unwrapping an array.
+ * The (state, curr, stack) triple is used to save and restore parser state between async calls. State also helps encode
+ * extra information when streaming or unwrapping an array.
  *
- * The (data, len, allocated) triple is used to manage the underlying
- * data the parser is keeping track of. As new data comes in, data may
- * be expanded if not enough space is available.
+ * The (data, len, allocated) triple is used to manage the underlying data the parser is keeping track of. As new data
+ * comes in, data may be expanded if not enough space is available.
  *
- * The offset parameter is used to drive the outer async parsing. It
- * stores similar information to curr but is kept separate to avoid
- * "corrupting" our snapshot.
+ * The offset parameter is used to drive the outer async parsing. It stores similar information to curr but is kept
+ * separate to avoid "corrupting" our snapshot.
  *
- * The done parameter is used internally to help figure out when the
- * atEof() parser method should return true. This will be set when
- * apply(None) is called.
+ * The done parameter is used internally to help figure out when the atEof() parser method should return true. This will
+ * be set when apply(None) is called.
  *
- * The streamMode parameter controls how the asynchronous parser will
- * be handling multiple values. There are three states:
+ * The streamMode parameter controls how the asynchronous parser will be handling multiple values. There are three
+ * states:
  *
- *    1: An array is being unwrapped. Normal JSON array rules apply
- *       (Note that if the outer value observed is not an array, this
- *       mode will toggle to the -1 mode).
+ * 1: An array is being unwrapped. Normal JSON array rules apply (Note that if the outer value observed is not an array,
+ * this mode will toggle to the -1 mode).
  *
- *    0: A stream of individual JSON elements separated by whitespace
- *       are being parsed. We can return each complete element as we
- *       parse it.
+ * 0: A stream of individual JSON elements separated by whitespace are being parsed. We can return each complete element
+ * as we parse it.
  *
- *   -1: No streaming is occuring. Only a single JSON value is
- *       allowed.
+ * -1: No streaming is occuring. Only a single JSON value is allowed.
  */
 final class AsyncParser[J] protected[jawn] (
   protected[jawn] var state: Int,
@@ -76,19 +104,33 @@ final class AsyncParser[J] protected[jawn] (
   protected[jawn] var allocated: Int,
   protected[jawn] var offset: Int,
   protected[jawn] var done: Boolean,
-  protected[jawn] var streamMode: Int
+  protected[jawn] var streamMode: Int,
+  protected[jawn] val multiValue: Boolean
 ) extends ByteBasedParser[J] {
+
+  protected[jawn] def this(state: Int,
+                           curr: Int,
+                           context: FContext[J],
+                           stack: List[FContext[J]],
+                           data: Array[Byte],
+                           len: Int,
+                           allocated: Int,
+                           offset: Int,
+                           done: Boolean,
+                           streamMode: Int
+  ) =
+    this(state, curr, context, stack, data, len, allocated, offset, done, streamMode, multiValue = false)
 
   private[this] var _line = 0
   protected[this] var pos = 0
-  protected[this] def newline(i: Int): Unit = { _line += 1; pos = i + 1 }
-  protected[this] def line(): Int = _line
-  protected[this] def column(i: Int): Int = i - pos
+  final protected[this] def newline(i: Int): Unit = { _line += 1; pos = i + 1 }
+  final protected[this] def line(): Int = _line
+  final protected[this] def column(i: Int): Int = i - pos
 
-  def copy(): AsyncParser[J] =
-    new AsyncParser(state, curr, context, stack, data.clone, len, allocated, offset, done, streamMode)
+  final def copy(): AsyncParser[J] =
+    new AsyncParser(state, curr, context, stack, data.clone, len, allocated, offset, done, streamMode, multiValue)
 
-  def absorb(buf: ByteBuffer)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] = {
+  final def absorb(buf: ByteBuffer)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] = {
     done = false
     val buflen = buf.limit() - buf.position()
     val need = len + buflen
@@ -98,13 +140,13 @@ final class AsyncParser[J] protected[jawn] (
     churn()
   }
 
-  def absorb(bytes: Array[Byte])(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
+  final def absorb(bytes: Array[Byte])(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
     absorb(ByteBuffer.wrap(bytes))
 
-  def absorb(s: String)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
+  final def absorb(s: String)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
     absorb(ByteBuffer.wrap(s.getBytes(utf8)))
 
-  def finalAbsorb(buf: ByteBuffer)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
+  final def finalAbsorb(buf: ByteBuffer)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
     absorb(buf)(facade) match {
       case Right(xs) =>
         finish()(facade) match {
@@ -114,18 +156,18 @@ final class AsyncParser[J] protected[jawn] (
       case left0 @ Left(_) => left0
     }
 
-  def finalAbsorb(bytes: Array[Byte])(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
+  final def finalAbsorb(bytes: Array[Byte])(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
     finalAbsorb(ByteBuffer.wrap(bytes))
 
-  def finalAbsorb(s: String)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
+  final def finalAbsorb(s: String)(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] =
     finalAbsorb(ByteBuffer.wrap(s.getBytes(utf8)))
 
-  def finish()(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] = {
+  final def finish()(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] = {
     done = true
     churn()
   }
 
-  protected[this] def resizeIfNecessary(need: Int): Unit =
+  final protected[this] def resizeIfNecessary(need: Int): Unit =
     // if we don't have enough free space available we'll need to grow our
     // data array. we never shrink the data array, assuming users will call
     // feed with similarly-sized buffers.
@@ -139,32 +181,26 @@ final class AsyncParser[J] protected[jawn] (
     }
 
   /**
-   * Explanation of the new synthetic states. The parser machinery
-   * uses positive integers for states while parsing json values. We
-   * use these negative states to keep track of the async parser's
-   * status between json values.
+   * Explanation of the new synthetic states. The parser machinery uses positive integers for states while parsing json
+   * values. We use these negative states to keep track of the async parser's status between json values.
    *
-   * ASYNC_PRESTART: We haven't seen any non-whitespace yet. We
-   * could be parsing an array, or not. We are waiting for valid
+   * ASYNC_PRESTART: We haven't seen any non-whitespace yet. We could be parsing an array, or not. We are waiting for
+   * valid JSON.
+   *
+   * ASYNC_START: We've seen an array and have begun unwrapping it. We could see a ] if the array is empty, or valid
    * JSON.
    *
-   * ASYNC_START: We've seen an array and have begun unwrapping
-   * it. We could see a ] if the array is empty, or valid JSON.
+   * ASYNC_END: We've parsed an array and seen the final ]. At this point we should only see whitespace or an EOF.
    *
-   * ASYNC_END: We've parsed an array and seen the final ]. At this
-   * point we should only see whitespace or an EOF.
+   * ASYNC_POSTVAL: We just parsed a value from inside the array. We expect to see whitespace, a comma, or a ].
    *
-   * ASYNC_POSTVAL: We just parsed a value from inside the array. We
-   * expect to see whitespace, a comma, or a ].
-   *
-   * ASYNC_PREVAL: We are in an array and we just saw a comma. We
-   * expect to see whitespace or a JSON value.
+   * ASYNC_PREVAL: We are in an array and we just saw a comma. We expect to see whitespace or a JSON value.
    */
-  @inline private[this] def ASYNC_PRESTART = -5
-  @inline private[this] def ASYNC_START = -4
-  @inline private[this] def ASYNC_END = -3
-  @inline private[this] def ASYNC_POSTVAL = -2
-  @inline private[this] def ASYNC_PREVAL = -1
+  @inline final private[this] def ASYNC_PRESTART = -5
+  @inline final private[this] def ASYNC_START = -4
+  @inline final private[this] def ASYNC_END = -3
+  @inline final private[this] def ASYNC_POSTVAL = -2
+  @inline final private[this] def ASYNC_PREVAL = -1
 
   protected[jawn] def churn()(implicit facade: Facade[J]): Either[ParseException, collection.Seq[J]] = {
 
@@ -173,8 +209,8 @@ final class AsyncParser[J] protected[jawn] (
 
     // we rely on exceptions to tell us when we run out of data
     try {
-      while (true) {
-        if (state < 0) {
+      while (true)
+        if (state < 0)
           (at(offset): @switch) match {
             case '\n' =>
               newline(offset)
@@ -188,81 +224,76 @@ final class AsyncParser[J] protected[jawn] (
                 offset += 1
                 state = ASYNC_START
               } else if (state == ASYNC_END) {
-                die(offset, "expected eof")
-              } else if (state == ASYNC_POSTVAL) {
+                if (multiValue) {
+                  offset += 1
+                  state = ASYNC_START
+                } else die(offset, "expected eof")
+              } else if (state == ASYNC_POSTVAL)
                 die(offset, "expected , or ]")
-              } else {
+              else
                 state = 0
-              }
 
             case ',' =>
               if (state == ASYNC_POSTVAL) {
                 offset += 1
                 state = ASYNC_PREVAL
-              } else if (state == ASYNC_END) {
+              } else if (state == ASYNC_END)
                 die(offset, "expected eof")
-              } else {
+              else
                 die(offset, "expected json value")
-              }
 
             case ']' =>
-              if (state == ASYNC_POSTVAL || state == ASYNC_START) {
+              if (state == ASYNC_POSTVAL || state == ASYNC_START)
                 if (streamMode > 0) {
                   offset += 1
                   state = ASYNC_END
-                } else {
+                } else
                   die(offset, "expected json value or eof")
-                }
-              } else if (state == ASYNC_END) {
+              else if (state == ASYNC_END)
                 die(offset, "expected eof")
-              } else {
+              else
                 die(offset, "expected json value")
-              }
 
             case c =>
-              if (state == ASYNC_END) {
+              if (state == ASYNC_END)
                 die(offset, "expected eof")
-              } else if (state == ASYNC_POSTVAL) {
+              else if (state == ASYNC_POSTVAL)
                 die(offset, "expected ] or ,")
-              } else {
+              else {
                 if (state == ASYNC_PRESTART && streamMode > 0) streamMode = -1
                 state = 0
               }
           }
-
-        } else {
+        else {
           // jump straight back into rparse
           offset = reset(offset)
-          val (value, j) = if (state <= 0) {
-            parse(offset)
-          } else {
-            rparse(state, curr, context, stack)
-          }
-          if (streamMode > 0) {
+          val (value, j) =
+            if (state <= 0)
+              parse(offset)
+            else
+              rparse(state, curr, context, stack)
+          if (streamMode > 0)
             state = ASYNC_POSTVAL
-          } else if (streamMode == 0) {
+          else if (streamMode == 0)
             state = ASYNC_PREVAL
-          } else {
+          else
             state = ASYNC_END
-          }
           curr = j
           offset = j
           context = null
           stack = Nil
           results += value
         }
-      }
       Right(results)
     } catch {
       case e: AsyncException =>
-        if (done) {
+        if (done)
           // if we are done, make sure we ended at a good stopping point
           if (state == ASYNC_PREVAL || state == ASYNC_END) Right(results)
           else Left(ParseException("exhausted input", -1, -1, -1))
-        } else {
+        else
           // we ran out of data, so return what we have so far
           Right(results)
-        }
 
       case e: ParseException =>
         // we hit a parser error, so return that error and results so far
@@ -271,7 +302,7 @@ final class AsyncParser[J] protected[jawn] (
   }
 
   // every 1M we shift our array back to the beginning.
-  protected[this] def reset(i: Int): Int =
+  final protected[this] def reset(i: Int): Int =
     if (offset >= 1048576) {
       val diff = offset
       curr -= diff
@@ -280,20 +311,17 @@ final class AsyncParser[J] protected[jawn] (
       pos -= diff
       System.arraycopy(data, diff, data, 0, len)
       i - diff
-    } else {
+    } else
       i
-    }
 
   /**
-   * We use this to keep track of the last recoverable place we've
-   * seen. If we hit an AsyncException, we can later resume from this
-   * point.
+   * We use this to keep track of the last recoverable place we've seen. If we hit an AsyncException, we can later
+   * resume from this point.
    *
-   * This method is called during every loop of rparse, and the
-   * arguments are the exact arguments we can pass to rparse to
-   * continue where we left off.
+   * This method is called during every loop of rparse, and the arguments are the exact arguments we can pass to rparse
+   * to continue where we left off.
    */
-  protected[this] def checkpoint(
+  final protected[this] def checkpoint(
     state: Int,
     i: Int,
     context: FContext[J],
@@ -306,24 +334,22 @@ final class AsyncParser[J] protected[jawn] (
   }
 
   /**
-   * This is a specialized accessor for the case where our underlying data are
-   * bytes not chars.
+   * This is a specialized accessor for the case where our underlying data are bytes not chars.
    */
-  protected[this] def byte(i: Int): Byte =
+  final protected[this] def byte(i: Int): Byte =
     if (i >= len) throw new AsyncException else data(i)
 
   // we need to signal if we got out-of-bounds
-  protected[this] def at(i: Int): Char =
+  final protected[this] def at(i: Int): Char =
     if (i >= len) throw new AsyncException else data(i).toChar
 
   /**
    * Access a byte range as a string.
    *
-   * Since the underlying data are UTF-8 encoded, i and k must occur on unicode
-   * boundaries. Also, the resulting String is not guaranteed to have length
-   * (k - i).
+   * Since the underlying data are UTF-8 encoded, i and k must occur on unicode boundaries. Also, the resulting String
+   * is not guaranteed to have length (k - i).
    */
-  protected[this] def at(i: Int, k: Int): CharSequence = {
+  final protected[this] def at(i: Int, k: Int): CharSequence = {
     if (k > len) throw new AsyncException
     val size = k - i
     val arr = new Array[Byte](size)
@@ -333,21 +359,20 @@ final class AsyncParser[J] protected[jawn] (
 
   // the basic idea is that we don't signal EOF until done is true, which means
   // the client explicitly send us an EOF.
-  protected[this] def atEof(i: Int): Boolean =
+  final protected[this] def atEof(i: Int): Boolean =
     if (done) i >= len else false
 
   // we don't have to do anything special on close.
-  protected[this] def close(): Unit = ()
+  final protected[this] def close(): Unit = ()
 }
 
 /**
- * This class is used internally by AsyncParser to signal that we've
- * reached the end of the particular input we were given.
+ * This class is used internally by AsyncParser to signal that we've reached the end of the particular input we were
+ * given.
  */
 private[jawn] class AsyncException extends Exception with control.NoStackTrace
 
 /**
- * This is a more prosaic exception which indicates that we've hit a
- * parsing error.
+ * This is a more prosaic exception which indicates that we've hit a parsing error.
  */
 private[jawn] class FailureException extends Exception
