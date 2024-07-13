@@ -1,7 +1,7 @@
 package utopia.access.http
 
-import scala.collection.immutable.Map
-import scala.collection.immutable.HashMap
+import utopia.flow.util.StringExtensions._
+
 import java.net.URLConnection
 
 object ContentType
@@ -12,31 +12,26 @@ object ContentType
      * Parses a string into a content type. Returns None if the content type couldn't be parsed. 
      * Only includes parameters which have a specified value
      */
-    def parse(typeString: String) = 
-    {
-        val categoryAndRest = typeString.split("/", 2)
-        
-        if (categoryAndRest.size < 2)
-        {
+    def parse(typeString: String) = {
+        val (category, afterCategory) = typeString.splitAtFirst("/").toTuple
+        if (afterCategory.isEmpty)
             None
-        }
-        else
-        {
-            val subTypeAndParams = categoryAndRest(1).split(";")
-            
-            val params: Map[String, String] = if (subTypeAndParams.size < 2) HashMap() else 
-                    subTypeAndParams.tail.map { _.split("=", 2) }.filter { _.length == 2 }.map {
-                    arr => (arr(0), arr(1)) }.toMap
-            
-            Some(ContentType(ContentCategory.parse(categoryAndRest(0)), subTypeAndParams(0), params))
+        else {
+            val subTypeAndParams = afterCategory.split(";")
+            val params = {
+                if (subTypeAndParams.length < 2)
+                    Map[String, String]()
+                else
+                    subTypeAndParams.view.tail.map { _.splitAtFirst("=").toTuple }.toMap
+            }
+            Some(apply(ContentCategory.parse(category), subTypeAndParams.head, params))
         }
     }
     
     /**
-     * Quesses a content type from a fileName
+     * Guesses a content type from a fileName
      */
-    def guessFrom(fileName: String) = 
-    {
+    def guessFrom(fileName: String) = {
         val cType = URLConnection.guessContentTypeFromName(fileName)
         if (cType == null) None else parse(cType)
     }
@@ -47,12 +42,14 @@ object ContentType
  * @author Mikko Hilpinen
  * @since 20.8.2017
  */
-case class ContentType(category: ContentCategory, subType: String, parameters: Map[String, String] = HashMap())
+case class ContentType(category: ContentCategory, subType: String, parameters: Map[String, String] = Map())
 {
     // IMPLEMENTED METHODS    --------------
     
-    override def toString = s"$category/$subType${ if (parameters.isEmpty) "" else 
-            parameters.foldLeft("") { case (str, param) => str + s";${ param._1 }=${ param._2 }" } }"
+    override def toString = {
+        val parametersPart = parameters.view.map { case (key, value) => s";$key=$value" }.mkString
+        s"$category/$subType$parametersPart"
+    }
     
     
     // OPERATORS    -----------------------
@@ -60,8 +57,8 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
     /**
      * Creates a new content type with the assigned parameter
      */
-    def +(paramName: String, paramValue: String) = ContentType(category, subType, parameters + 
-            (paramName -> paramValue))
+    def +(paramName: String, paramValue: String) =
+        ContentType(category, subType, parameters + (paramName -> paramValue))
     
     /**
      * Creates a new content type with the assigned parameters

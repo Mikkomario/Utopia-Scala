@@ -34,7 +34,6 @@ trait Response
      * @return Whether this response has a success (2XX) status
      */
     def isSuccess = status.group == StatusGroup.Success
-    
     /**
       * @return Whether this response has a failure (4XX or 5XX) status
       */

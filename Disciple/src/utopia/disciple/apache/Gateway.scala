@@ -17,8 +17,10 @@ import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
+import utopia.disciple.http.response.parser.ResponseParseResult
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
 import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
@@ -219,7 +221,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	
     /**
      * Performs a synchronous request over a HTTP connection, calling the provided function 
-     * when a response is received. <b>Please note that this function blocks during the request</b>
+     * when a response is received.
+      * <b>Please note that this function blocks during the request</b>
      * @param request the request that is sent to the server
      * @param consumeResponse the function that handles the server response (or the lack of it)
 	  * @tparam R Type of consume function result
@@ -263,6 +266,74 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 		            .foldLeft(Failure(error): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) })
         }
     }
+	/*
+	  * Performs a synchronous request over a HTTP(s) connection, calling the specified function
+	  * once (if) a response is received.
+	  *
+	  * Please note that this function blocks during the request.
+	  *
+	  * @param request the request that is sent to the server
+	  * @param consumeResponse the function that handles the server response,
+	  *                        returning a parse result which also indicates when the underlying response
+	  *                        object may be closed.
+	  * @tparam R Type of consume function result
+	  * @return Return value of the 'consumeResponse' function
+	  */
+	/*
+	def makeBlockingRequest2[R](request: Request)(consumeResponse: StreamedResponse => ResponseParseResult[R])
+	                           (implicit exc: ExecutionContext) =
+	{
+		// Intercepts the request, if appropriate
+		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
+		Try {
+			// Makes the base request (uri + params + body)
+			val base = makeRequestBase(req.method, req.requestUri, req.params, req.body)
+			// Adds the headers
+			req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
+			// Sets the timeout
+			val config = {
+				val builder = RequestConfig.custom()
+				(req.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
+					.foreach { case (timeoutType, millis) =>
+						timeoutType match {
+							case ConnectionTimeout => builder.setConnectTimeout(millis, TimeUnit.MILLISECONDS)
+							case ReadTimeout => builder.setResponseTimeout(millis, TimeUnit.MILLISECONDS)
+							case ManagerTimeout => builder.setConnectionRequestTimeout(millis, TimeUnit.MILLISECONDS)
+						}
+					}
+				builder.build()
+			}
+			base.setConfig(config)
+			
+			// Performs the request and consumes any response
+			val rawResponse = client.execute(base)
+			
+			
+			val result = Try {
+				// Intercepts the response before passing it to the consumer function
+				val result = responseInterceptors
+					.foldLeft(Success(wrapResponse(rawResponse)): Try[StreamedResponse]) { (r, i) =>
+						i.intercept(r, req)
+					}
+					.map(consumeResponse)
+				
+				// Schedules the closing of the response once possible
+				result.foreach { _.closeOnCompletion(rawResponse) }
+				result
+			}.flatten
+			
+			// In case an unexpected error occurred, makes sure the response gets closed properly
+			if (result.isFailure)
+				rawResponse.closeQuietly()
+				
+			result
+			
+		}.getOrMap { error =>
+			// Intercepts request failures, also
+			consumeResponse(responseInterceptors
+				.foldLeft(Failure(error): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) })
+		}
+	}*/
     
     /**
      * Performs an asynchronous request over a http(s) connection, calling the provided function

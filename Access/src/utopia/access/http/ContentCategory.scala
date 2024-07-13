@@ -9,45 +9,45 @@ object ContentCategory
         /**
          * A content type for json documents
          */
-        val json = /("json")
+        lazy val json = /("json")
         /**
          * A content type for xml documents
          */
-        val xml = /("xml")
+        lazy val xml = /("xml")
         /**
-         * A content type for pdf (portable doument format)
+         * A content type for pdf (portable document format)
          */
-        val pdf = /("pdf")
+        lazy val pdf = /("pdf")
         /**
          * A content type for zip files
          */
-        val zip = /("zip")
+        lazy val zip = /("zip")
     }
     case object Audio extends ContentCategory("audio")
     {
         /**
          * A content type for midi audio files
          */
-        val midi = /("midi")
+        lazy val midi = /("midi")
         /**
          * A content type for wav audio files
          */
-        val wav = /("wav")
+        lazy val wav = /("wav")
     }
     case object Image extends ContentCategory("image")
     {
         /**
          * A content type for jpeg / jpg images
          */
-        val jpeg = /("jpeg")
+        lazy val jpeg = /("jpeg")
         /**
          * A content type for png images
          */
-        val png = /("png")
+        lazy val png = /("png")
         /**
          * A content type for svg images
          */
-        val svg = /("svg+xml")
+        lazy val svg = /("svg+xml")
     }
     case object Message extends ContentCategory("message")
     case object MultiPart extends ContentCategory("multipart")
@@ -55,34 +55,35 @@ object ContentCategory
         /**
          * A content type for mixed multipart content
          */
-        val mixed = /("mixed")
+        lazy val mixed = /("mixed")
     }
     case object Text extends ContentCategory("text")
     {
         /**
          * A content type for plaintext
          */
-        val plain = /("plain")
+        lazy val plain = /("plain")
         /**
          * A content type for html documents
          */
-        val html = /("html")
+        lazy val html = /("html")
         /**
          * A content type for csv documents
          */
-        val csv = /("csv")
+        lazy val csv = /("csv")
     }
     case object Video extends ContentCategory("video")
     {
         /**
          * A content type for mpeg video files
          */
-        val mpeg = /("mpeg")
+        lazy val mpeg = /("mpeg")
     }
     
     case class Custom(override val name: String) extends ContentCategory(name, true)
     
-    lazy val existingOptions: Vector[ContentCategory] = Vector(Application, Audio, Image, Message, MultiPart, Text, Video)
+    lazy val existingOptions: Vector[ContentCategory] =
+        Vector(Application, Audio, Image, Message, MultiPart, Text, Video)
     
     
     // OTHER METHODS    -------------
@@ -90,17 +91,11 @@ object ContentCategory
     /**
      * Parses a content category string into a content category
      */
-    def parse(categoryString: String) = 
-    {
+    def parse(categoryString: String) =
         if (categoryString.startsWith("X-"))
-        {
             Custom(categoryString.substring(2))
-        }
         else
-        {
             existingOptions.find { _.name.equalsIgnoreCase(categoryString) }.getOrElse(Custom(categoryString))
-        }
-    }
 }
 
 /**
