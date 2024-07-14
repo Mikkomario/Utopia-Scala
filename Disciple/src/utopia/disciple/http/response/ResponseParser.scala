@@ -25,6 +25,11 @@ object ResponseParser
 	// ATTRIBUTES   ------------------
 	
 	/**
+	  * A response parser which doesn't perform any parsing and doesn't yield any result
+	  */
+	lazy val empty = static(())
+	
+	/**
 	  * A response parser for extracting string contents.
 	  * Assumes UTF-8 encoding when no other encoding has been specified
 	  */
@@ -169,6 +174,20 @@ object ResponseParser
 	  */
 	def vector[A](parser: FromModelFactory[A])(implicit jsonParser: JsonParser) =
 		value.map { _.flatMap { _.tryVectorWith { _.tryModel.flatMap(parser.apply) } } }
+	
+	/**
+	  * @param result Result which will be provided for all responses
+	  * @tparam A Type of the result provided
+	  * @return A response parser which provides a placeholder result for all responses
+	  */
+	def static[A](result: A): ResponseParser[A] = new StaticResponseParser[A](result)
+	
+	/**
+	  * @param cause Cause of failure
+	  * @tparam A Type of parse results, had they been successful
+	  * @return A parser which always yields a failure, referring the specified cause
+	  */
+	def failure[A](cause: Throwable) = static(Failure[A](cause))
 		
 	
 	// EXTENSIONS   ------------------
@@ -205,6 +224,12 @@ object ResponseParser
 	{
 		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) =
 			original(status, headers, stream).map { a => f(status, headers, a) }
+	}
+	
+	private class StaticResponseParser[+A](staticResult: A) extends ResponseParser[A]
+	{
+		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) =
+			ResponseParseResult.buffered(staticResult)
 	}
 	
 	private class DivergingResponseParser[A](f: (Status, Headers) => ResponseParser[A]) extends ResponseParser[A]

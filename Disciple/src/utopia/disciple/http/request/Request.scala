@@ -27,8 +27,7 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
 {
     // IMPLEMENTED  --------------------
     
-    override def toString =
-    {
+    override def toString = {
         val result = new StringBuilder
         result ++= s"$method $requestUri"
         val extra = new VectorBuilder[String]

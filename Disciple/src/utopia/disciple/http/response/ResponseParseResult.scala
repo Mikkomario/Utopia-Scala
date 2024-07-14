@@ -5,9 +5,18 @@ import utopia.flow.parse.AutoClose._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+import scala.util.Failure
 
 object ResponseParseResult
 {
+	// ATTRIBUTES   -------------------
+	
+	/**
+	  * An empty, immediately resolved response parse result
+	  */
+	lazy val empty = buffered(())
+	
+	
 	// IMPLICIT -----------------------
 	
 	/**
@@ -37,6 +46,13 @@ object ResponseParseResult
 	  * @return A parse result which completes asynchronously once the specified function returns
 	  */
 	def async[A](f: => A)(implicit exc: ExecutionContext) = future(Future(f))
+	
+	/**
+	  * @param cause Cause of failure
+	  * @tparam A Value type which would have been used had the result been successful
+	  * @return A failed response parse result
+	  */
+	def failed[A](cause: Throwable) = buffered(Failure[A](cause))
 }
 
 /**

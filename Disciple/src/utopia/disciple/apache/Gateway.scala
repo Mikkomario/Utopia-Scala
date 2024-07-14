@@ -224,6 +224,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 			base.setConfig(config)
 			
 			// Performs the request and acquires a response, if possible
+			// TODO: Possibly add logging for response.getContent failures (which are now ignored)
 			val rawResponse = client.execute(base)
 			StreamedResponse(
 				status = statusForCode(rawResponse.getCode),
