@@ -9,6 +9,7 @@ import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.StringBody
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -28,6 +29,7 @@ import scala.util.{Failure, Success, Try}
 // Credentials is either basic credentials (left) or a device key (right)
 class ExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String,
                 credentials: Either[UserCredentials, String], initialSessionKey: String)
+               (implicit override val jsonParser: JsonParser)
 	extends Api
 {
 	// ATTRIBUTES	---------------------------

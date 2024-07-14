@@ -1,7 +1,9 @@
 # Utopia Ambassador - List of Changes
 
-## v2.1.7 (in development)
+## v2.2 (in development)
 Matching changes introduced in Vault v1.19
+### Breaking changes
+- **AcquireTokens** now requires an implicit **JsonParser** construction parameter
 ### Other changes
 - In some instances where **Vector** was required, **Seq** is now used
 

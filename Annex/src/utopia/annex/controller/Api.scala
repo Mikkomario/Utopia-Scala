@@ -8,6 +8,7 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -28,6 +29,11 @@ trait Api
 	  * @return A logging implementation used for recording non-critical errors
 	  */
 	protected implicit def log: Logger
+	
+	/**
+	  * @return Json parsing implementation used when parsing response contents
+	  */
+	protected implicit def jsonParser: JsonParser
 	
 	/**
 	  * @return Gateway to use when making http requests (See Utopia Disciple: utopia.disciple.apache.Gateway)

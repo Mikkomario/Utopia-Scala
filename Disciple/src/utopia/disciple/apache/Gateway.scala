@@ -3,7 +3,7 @@ package utopia.disciple.apache
 import org.apache.hc.client5.http.classic.methods.{HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
-import org.apache.hc.client5.http.impl.classic.{CloseableHttpResponse, HttpClientBuilder, HttpClients}
+import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
 import org.apache.hc.client5.http.socket.{ConnectionSocketFactory, PlainConnectionSocketFactory}
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory
@@ -17,14 +17,13 @@ import utopia.access.http.{Headers, Method, Status}
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
-import utopia.disciple.http.response.parser.ResponseParseResult
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
-import utopia.flow.parse.json.{JsonParser, JsonReader}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -37,25 +36,18 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.{implicitConversions, postfixOps}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object Gateway
 {
 	/**
 	  * Creates a new gateway instance
-	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
-	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
-	  *                    It is highly recommended to set this parameter to something else than the default.
-	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
-	  *                    the Utopia BunnyMunch module.
 	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
 	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
 	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
 	  *                       infinite queuing timeout).
 	  * @param parameterEncoding Encoding option used for query (uri) parameters.
 	  *                          None if no encoding should be used (default).
-	  * @param defaultResponseEncoding Default character encoding used when parsing response data
-	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
@@ -74,33 +66,25 @@ object Gateway
 	  *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 	  * @return A new gateway instance
 	  */
-	def apply(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
-	          maxConnectionsTotal: Int = 10,
+	def apply(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
-	          parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	          parameterEncoding: Option[Codec] = None,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty,
 	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	          disableTrustStoreVerification: Boolean = false) =
-		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			defaultResponseEncoding, requestInterceptors, responseInterceptors, Identity, allowBodyParameters,
+		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			requestInterceptors, responseInterceptors, Identity, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 	
 	/**
 	  * Creates a new gateway instance
-	  * @param jsonParsers Json parsers to use when content encoding matches parser default.
-	  *                    Specify your own parser/parsers to override default functionality (JSONReader).
-	  *                    It is highly recommended to set this parameter to something else than the default.
-	  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
-	  *                    the Utopia BunnyMunch module.
 	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
 	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
 	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
 	  *                       infinite queuing timeout).
 	  * @param parameterEncoding Encoding option used for query (uri) parameters.
 	  *                          None if no encoding should be used (default).
-	  * @param defaultResponseEncoding Default character encoding used when parsing response data
-	  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
@@ -120,17 +104,16 @@ object Gateway
 	  * @param customizeClient A function for customizing the http client when it is first created
 	  * @return A new gateway instance
 	  */
-	def custom(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
-	           maxConnectionsTotal: Int = 10,
+	def custom(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
-	           parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+	           parameterEncoding: Option[Codec] = None,
 	           requestInterceptors: Seq[RequestInterceptor] = Empty,
 	           responseInterceptors: Seq[ResponseInterceptor] = Empty,
 	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
-		new Gateway(jsonParsers, maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			defaultResponseEncoding, requestInterceptors, responseInterceptors, customizeClient, allowBodyParameters,
+		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+			requestInterceptors, responseInterceptors, customizeClient, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 }
 
@@ -139,19 +122,12 @@ object Gateway
   * connection manager & client.
 * @author Mikko Hilpinen
 * @since 22.2.2018
-  * @param jsonParsers Json parsers to use when content encoding matches parser default.
-  *                    Specify your own parser/parsers to override default functionality (JSONReader).
-  *                    It is highly recommended to set this parameter to something else than the default.
-  *                    A recommended option (when the server is using UTF-8 encoding) is to use JsonBunny from
-  *                    the Utopia BunnyMunch module.
   * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
   * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
   * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
   *                       infinite queuing timeout).
   * @param parameterEncoding Encoding option used for query (uri) parameters.
   *                          None if no encoding should be used (default).
-  * @param defaultResponseEncoding Default character encoding used when parsing response data
-  *                                (used when no character encoding is specified in response headers) (default = UTF-8)
   * @param requestInterceptors Interceptors that access and potentially modify all outgoing requests (default = empty)
   * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
   * @param customizeClient A function for customizing the http client when it is first created (default = identity)
@@ -170,10 +146,9 @@ object Gateway
   *                                      If you wish to fix these errors properly instead, please check:
   *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 **/
-class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsPerRoute: Int = 2,
-              maxConnectionsTotal: Int = 10,
+class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
-              parameterEncoding: Option[Codec] = None, defaultResponseEncoding: Codec = Codec.UTF8,
+              parameterEncoding: Option[Codec] = None,
               requestInterceptors: Seq[RequestInterceptor] = Empty,
               responseInterceptors: Seq[ResponseInterceptor] = Empty,
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
@@ -181,12 +156,6 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
               disableTrustStoreVerification: Boolean = false)
 {
     // ATTRIBUTES    -------------------------
-	
-	/**
-	  * Default character encoding used when parsing response data (used when no character encoding is specified in
-	  * response headers)
-	  */
-	private implicit val _defaultResponseEncoding: Codec = defaultResponseEncoding
 	
     private lazy val connectionManager = {
 	    val manager = {
@@ -219,73 +188,22 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
     // TODO: Add support for multipart body:
     // https://stackoverflow.com/questions/2304663/apache-httpclient-making-multipart-form-post
 	
-    /**
-     * Performs a synchronous request over a HTTP connection, calling the provided function 
-     * when a response is received.
-      * <b>Please note that this function blocks during the request</b>
-     * @param request the request that is sent to the server
-     * @param consumeResponse the function that handles the server response (or the lack of it)
-	  * @tparam R Type of consume function result
-	  * @return Consume function result
-     */
-    def makeBlockingRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R) = {
-	    // Intercepts the request, if appropriate
-	    val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
-        Try {
-            // Makes the base request (uri + params + body)
-            val base = makeRequestBase(req.method, req.requestUri, req.params, req.body)
-            // Adds the headers
-	        req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
-			// Sets the timeout
-			val config = {
-				val builder = RequestConfig.custom()
-				(req.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
-					.foreach { case (timeoutType, millis) =>
-						timeoutType match {
-							case ConnectionTimeout => builder.setConnectTimeout(millis, TimeUnit.MILLISECONDS)
-							case ReadTimeout => builder.setResponseTimeout(millis, TimeUnit.MILLISECONDS)
-							case ManagerTimeout => builder.setConnectionRequestTimeout(millis, TimeUnit.MILLISECONDS)
-						}
-					}
-				builder.build()
-			}
-			base.setConfig(config)
-			
-            // Performs the request and consumes any response
-			client.execute(base).consume { rawResponse =>
-				// Intercepts the response, if appropriate
-				val response = responseInterceptors
-					.foldLeft(Success(wrapResponse(rawResponse)): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) }
-				consumeResponse(response)
-			}
-        } match {
-			case Success(result) => result
-            case Failure(error) =>
-	            // Intercepts request failures, also
-	            consumeResponse(responseInterceptors
-		            .foldLeft(Failure(error): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) })
-        }
-    }
-	/*
+	/**
 	  * Performs a synchronous request over a HTTP(s) connection, calling the specified function
 	  * once (if) a response is received.
 	  *
 	  * Please note that this function blocks during the request.
 	  *
 	  * @param request the request that is sent to the server
-	  * @param consumeResponse the function that handles the server response,
-	  *                        returning a parse result which also indicates when the underlying response
-	  *                        object may be closed.
+	  * @param consumeResponse the function that handles the server response
 	  * @tparam R Type of consume function result
-	  * @return Return value of the 'consumeResponse' function
+	  * @return Failure if failed to acquire a response.
+	  *         Otherwise the return value of 'consumeResponse' function.
 	  */
-	/*
-	def makeBlockingRequest2[R](request: Request)(consumeResponse: StreamedResponse => ResponseParseResult[R])
-	                           (implicit exc: ExecutionContext) =
-	{
+	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R) = {
 		// Intercepts the request, if appropriate
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
-		Try {
+		val response = Try {
 			// Makes the base request (uri + params + body)
 			val base = makeRequestBase(req.method, req.requestUri, req.params, req.body)
 			// Adds the headers
@@ -305,56 +223,59 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 			}
 			base.setConfig(config)
 			
-			// Performs the request and consumes any response
+			// Performs the request and acquires a response, if possible
 			val rawResponse = client.execute(base)
-			
-			
-			val result = Try {
-				// Intercepts the response before passing it to the consumer function
-				val result = responseInterceptors
-					.foldLeft(Success(wrapResponse(rawResponse)): Try[StreamedResponse]) { (r, i) =>
-						i.intercept(r, req)
-					}
-					.map(consumeResponse)
-				
-				// Schedules the closing of the response once possible
-				result.foreach { _.closeOnCompletion(rawResponse) }
-				result
-			}.flatten
-			
-			// In case an unexpected error occurred, makes sure the response gets closed properly
-			if (result.isFailure)
-				rawResponse.closeQuietly()
-				
-			result
-			
-		}.getOrMap { error =>
-			// Intercepts request failures, also
-			consumeResponse(responseInterceptors
-				.foldLeft(Failure(error): Try[StreamedResponse]) { (r, i) => i.intercept(r, req) })
+			StreamedResponse(
+				status = statusForCode(rawResponse.getCode),
+				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
+			) { Try { Option(rawResponse.getEntity).map { _.getContent } }.toOption.flatten } {
+				rawResponse.closeQuietly() }
 		}
-	}*/
-    
-    /**
-     * Performs an asynchronous request over a http(s) connection, calling the provided function
-     * when a response is received
-     * @param request the request that is sent to the server
-     * @param consumeResponse the function that handles the server response (or the lack of it)
-	  * @tparam R Consume function result type
-	  * @return Future with eventual consume function results
-     */
-    def makeRequest[R](request: Request)(consumeResponse: Try[StreamedResponse] => R)
-					  (implicit context: ExecutionContext) = Future { makeBlockingRequest(request)(consumeResponse) }
+		
+		// Intercepts the response before passing it to the parser
+		val interceptedResponse = responseInterceptors.foldLeft(response) { (r, i) => i.intercept(r, req) }
+		
+		// Processes the response, if one was successfully acquired
+		interceptedResponse.map(consumeResponse)
+	}
+	/**
+	  * Performs an asynchronous request over a HTTP(s) connection, calling the specified function
+	  * once (if) a response is received.
+	  * @param request the request that is sent to the server
+	  * @param consumeResponse the function that handles the server response
+	  * @param exc Implicit execution context
+	  * @tparam R Type of consume function result
+	  * @return Failure if failed to acquire a response.
+	  *         Otherwise the return value of 'consumeResponse' function.
+	  */
+    def makeRequest[R](request: Request)(consumeResponse: StreamedResponse => R)
+					  (implicit exc: ExecutionContext) =
+	    Future { makeBlockingRequest(request)(consumeResponse) }
+	
+	/**
+	  * Performs an asynchronous request over a HTTP(S) connection.
+	  * Processes and the response contents before returning them.
+	  * @param request Request to send to the server
+	  * @param parser Parser which processes the incoming response, if one is acquired
+	  * @param exc Implicit execution context
+	  * @tparam A Type of response parse results
+	  * @return A future which resolves into either a success or a failure:
+	  *             - Success containing parsed response contents, if a response was successfully received
+	  *             - Failure, if failed to send out the request or to receive a response
+	  */
+	def apply[A](request: Request)(parser: ResponseParser[A])(implicit exc: ExecutionContext) =
+		makeRequest(request) { _.consume(parser).wrapped }
 	
 	/**
 	  * Performs a request and buffers / parses it to the program memory
 	  * @param request the request that is sent to the server
 	  * @param parser the function that parses the response stream contents
-	  * @return A future that holds the request results. Contains a failure if no data was received.
+	  * @return A future that holds the request results.
+	  *         Contains a failure if the request couldn't be sent out or if no response was received.
 	  */
 	def responseFor[A](request: Request)(parser: ResponseParser[A])
 					  (implicit context: ExecutionContext) =
-		makeRequest(request) { result => result.map { _.buffered(parser) } }
+		makeRequest(request) { _.buffered(parser) }
 	
 	/**
 	  * Performs an asynchronous request and parses the response body into a string (empty string on empty
@@ -365,7 +286,7 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @return Future with the buffered response
 	  */
 	def stringResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
-		responseFor(request)(ResponseParser.string)
+		responseFor(request)(ResponseParser.string.getOrElseLog(""))
 	/**
 	  * Performs an asynchronous request and parses the response body into a string
 	  * @param request Request to send
@@ -373,7 +294,7 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @return Future with the buffered response
 	  */
 	def tryStringResponseFor(request: Request)(implicit exc: ExecutionContext) =
-		responseFor(request)(ResponseParser.tryString)
+		responseFor(request)(ResponseParser.string)
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a value (empty value on empty responses and
@@ -383,8 +304,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def valueResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
-		responseFor(request)(ResponseParser.valueWith(jsonParsers))
+	def valueResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.value.getOrElseLog(Value.empty))
 	/**
 	  * Performs an asynchronous request and parses response body into a value.
 	  * Supports json and xml content types. Other content types are read as raw strings.
@@ -392,8 +313,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param exc     Implicit execution context
 	  * @return Future with the buffered response
 	  */
-	def tryValueResponseFor(request: Request)(implicit exc: ExecutionContext) =
-		responseFor(request)(ResponseParser.tryValueWith(jsonParsers))
+	def tryValueResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.value)
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a model (empty model on empty responses and
@@ -403,8 +324,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def modelResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
-		responseFor(request)(ResponseParser.modelWith(jsonParsers))
+	def modelResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.model.map { _.getOrElseLog(Model.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a model.
 	  * Supports json and xml content types.
@@ -412,8 +333,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param exc     Implicit execution context
 	  * @return Future with the buffered response
 	  */
-	def tryModelResponseFor(request: Request)(implicit exc: ExecutionContext) =
-		responseFor(request)(ResponseParser.tryModelWith(jsonParsers))
+	def tryModelResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.model)
 	
 	/**
 	  * Performs an asynchronous request and parses response body into a value vector (empty vector on empty responses and
@@ -424,8 +345,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
-		responseFor(request)(ResponseParser.valuesWith(jsonParsers))
+	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.valueVector.map { _.getOrElseLog(Vector.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a value vector.
 	  * Supports json and xml content types. Other content types are interpreted as strings and
@@ -434,8 +355,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param exc     Implicit execution context
 	  * @return Future with the buffered response
 	  */
-	def tryValueVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
-		responseFor(request)(ResponseParser.tryValuesWith(jsonParsers))
+	def tryValueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.valueVector)
 	/**
 	  * Performs an asynchronous request and parses response body into a model vector (empty vector on empty responses and
 	  * read/parse failures). Supports json and xml content types. Responses with only a single model have their
@@ -445,8 +366,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param logger An implicit logging implementation for handling possible response body parsing failures
 	  * @return Future with the buffered response
 	  */
-	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger) =
-		responseFor(request)(ResponseParser.modelsWith(jsonParsers))
+	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.modelVector.map { _.getOrElseLog(Vector.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a model vector.
 	  * Supports json and xml content types. Responses with only a single model have their
@@ -455,8 +376,8 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	  * @param exc     Implicit execution context
 	  * @return Future with the buffered response
 	  */
-	def tryModelVectorResponseFor(request: Request)(implicit exc: ExecutionContext) =
-		responseFor(request)(ResponseParser.tryModelsWith(jsonParsers))
+	def tryModelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		responseFor(request)(ResponseParser.modelVector)
 	
 	/**
 	  * Performs an asynchronous request and parses response body into an xml element (failure on empty responses and
@@ -531,14 +452,6 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 	    }
 	}
 	
-	private def wrapResponse(response: CloseableHttpResponse) = 
-	{
-	    val status = statusForCode(response.getCode)
-	    val headers = Headers(response.getHeaders.map(h => (h.getName, h.getValue)).toMap)
-		
-	    new StreamedResponse(status, headers)({ Option(response.getEntity).map { _.getContent } })
-	}
-	
 	private def statusForCode(code: Int) = Status.values.find { _.code == code }.getOrElse(new Status("Other", code))
 	
 	
@@ -576,28 +489,27 @@ class Gateway(jsonParsers: Seq[JsonParser] = Single(JsonReader), maxConnectionsP
 		override def getTrailerNames = new util.HashSet[String]()
 		
 		override def getContent() = b.stream.getOrElse(null)
-        
         override def getContentEncoding() = b.contentEncoding.orNull
-		
 		override def getContentLength() = b.contentLength.getOrElse(-1)
 		
 		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
 		// Content-Type: text/html; charset=UTF-8
-		override def getContentType() =
-		{
-			// TODO: Charset should be put to content type parameters and not separately
-			val charsetPart = b.charset match
-			{
-				case Some(charset) => s"; charset=${charset.name()}"
-				case None => ""
+		override def getContentType() = {
+			val contentType = b.contentType
+			// Adds character set, if missing from the content type
+			if (contentType.charset.isDefined)
+				contentType.toString
+			else {
+				val charsetPart = b.charset match {
+					case Some(charset) => s"; charset=${charset.name()}"
+					case None => ""
+				}
+				s"${b.contentType}$charsetPart"
 			}
-			s"${b.contentType}$charsetPart"
 		}
 		
 		override def isChunked() = b.chunked
-		
 		override def isRepeatable() = b.repeatable
-		
 		override def isStreaming() = !b.repeatable
 		
 		override def writeTo(output: OutputStream) = b.writeTo(output).get

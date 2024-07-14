@@ -2,16 +2,16 @@ package utopia.echo.controller
 
 import utopia.access.http.Headers
 import utopia.annex.controller.{Api, QueueSystem, RequestQueue}
-import utopia.annex.model.request.{ApiRequest, GetRequest}
+import utopia.annex.model.request.ApiRequest
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{Body, Request, StringBody}
+import utopia.disciple.http.request.{Body, StringBody}
 import utopia.echo.model.LlmDesignator
 import utopia.echo.model.request.Query
-import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -54,11 +54,12 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit lo
 	{
 		// ATTRIBUTES   -----------------------
 		
-		override protected lazy val gateway = Gateway(Single(JsonBunny))
+		override protected lazy val gateway = Gateway()
 		
 		
 		// IMPLEMENTED  -----------------------
 		
+		override protected implicit def jsonParser: JsonParser = JsonBunny
 		override protected implicit def log: Logger = OllamaClient.this.log
 		
 		override protected def rootPath: String = serverAddress

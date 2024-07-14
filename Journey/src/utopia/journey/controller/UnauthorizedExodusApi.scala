@@ -10,6 +10,7 @@ import utopia.disciple.http.request.StringBody
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.StringExtensions._
 import utopia.journey.model.UserCredentials
@@ -23,6 +24,7 @@ import scala.util.{Failure, Success, Try}
   * @since 21.6.2020, v0.1
   */
 class UnauthorizedExodusApi(override protected val gateway: Gateway = new Gateway(), override val rootPath: String)
+                           (implicit override val jsonParser: JsonParser)
 	extends Api
 {
 	// IMPLEMENTED	-----------------------------

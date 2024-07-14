@@ -72,30 +72,47 @@ object Headers extends FromModelFactory[Headers]
  */
 case class Headers private(fields: Map[String, String]) extends ModelConvertible with MaybeEmpty[Headers]
 {
-    // IMPLEMENTED METHODS / PROPERTIES    ---
+    // ATTRIBUTES   -----------------
+    
+    /**
+      * The methods allowed for the server resource
+      */
+    lazy val allowedMethods = commaSeparatedValues("Allow").flatMap { Method.parse }
+    
+    /**
+      * The content types accepted by the client
+      */
+    lazy val acceptedTypes = commaSeparatedValues("Accept").flatMap { ContentType.parse }
+    /**
+      * The charsets accepted by the client. Each charset is matched with a weight modifier. Higher
+      * weight charsets should be preferred by the server.
+      */
+    lazy val acceptedCharsets = weightedValues("Accept-Charset").flatMap { case (charset, weight) =>
+        Try(Charset.forName(charset)).toOption.map { _ -> weight }
+    }
+    
+    /**
+      * The type of the associated content. None if not defined.
+      */
+    lazy val contentType = semicolonSeparatedValues("Content-Type").headOption.flatMap { ContentType.parse }
+    
+    /**
+      * The Date general-header field represents the date and time at which the message was
+      * originated, having the same semantics as orig-date in RFC 822. The field value is an
+      * HTTP-date, as described in section 3.3.1; it MUST be sent in RFC 1123 [8]-date format.
+      */
+    lazy val date = timeHeader("Date")
+    
+    
+    // IMPLEMENTED    ---------------
     
     override def toModel = Model(fields.toVector.map { case (key, value) => key -> value.toValue })
     
     override def toString = toModel.toString
     
     
-    // COMPUTED PROPERTIES    -----
+    // COMPUTED   ------------------
     
-    /**
-     * The methods allowed for the server resource
-     */
-    def allowedMethods = commaSeparatedValues("Allow").flatMap { Method.parse }
-    
-    /**
-     * The content types accepted by the client
-     */
-    def acceptedTypes = commaSeparatedValues("Accept").flatMap { ContentType.parse }
-    /**
-     * The charsets accepted by the client. Each charset is matched with a weight modifier. Higher 
-     * weight charsets should be preferred by the server.
-     */
-    def acceptedCharsets = weightedValues("Accept-Charset").flatMap {
-        case (charset, weight) => Try(Charset.forName(charset)).toOption.map { _ -> weight } }
     /**
      * The charset preferred by the client. None if no charset is specified.
      */
@@ -115,16 +132,13 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     def preferredLanguage = preferredValue("Accept-Language")
     
     /**
-     * The type of the associated content. None if not defined.
-     */
-    def contentType = semicolonSeparatedValues("Content-Type").headOption.flatMap { ContentType.parse }
-    /**
-     * The character set used in the associated content. None if not defined or unrecognised
-     */
-    def charset = charsetString.flatMap { s => Try { Charset.forName(s) }.toOption }
+      * The character set used in the associated content. None if not defined or unrecognised
+      */
+    def charset = contentType.flatMap { _.charset }
     /**
      * The name of the character set used in the associated content. None if not defined
      */
+    @deprecated("Deprecated for removal. Likely buggy as well. Please use .charset instead.", "v1.5.1")
     def charsetString = semicolonSeparatedValues("Content-Type").getOption(1)
     /**
      * @return Encoding specified in the content type header (in codec format)
@@ -139,13 +153,6 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       * @return Whether content length information has been provided
       */
     def isContentLengthProvided = isDefined("Content-Length")
-    
-    /**
-     * The Date general-header field represents the date and time at which the message was 
-     * originated, having the same semantics as orig-date in RFC 822. The field value is an 
-     * HTTP-date, as described in section 3.3.1; it MUST be sent in RFC 1123 [8]-date format.
-     */
-    def date = timeHeader("Date")
     
     /**
      * @return Whether the date header is defined
@@ -348,7 +355,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * Parses a header field into a time instant
      */
     def timeHeader(headerName: String) = get(headerName).flatMap { dateStr =>
-            Try { Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateStr)) }.toOption }
+        Try { Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateStr)) }.toOption
+    }
     /**
      * Parses an instant into correct format and adds it as a header value. Overwrites a previous 
      * version of that header, if there is one.

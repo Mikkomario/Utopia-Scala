@@ -1,6 +1,8 @@
 # Utopia Annex - List of Changes
 
-## v1.7.1 (in development)
+## v1.8 (in development)
+### Breaking changes
+- **Api** now requires the implementation of `implicit def jsonParser: JsonParser`
 ### Bugfixes
 - Persisted requests are now removed from the request container regardless of whether there was a request handler 
   that was able to process them

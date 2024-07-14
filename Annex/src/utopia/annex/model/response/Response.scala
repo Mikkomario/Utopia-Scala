@@ -120,6 +120,7 @@ object RequestNotSent
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
+// TODO: Consider extending the Response trait from Disciple
 sealed trait Response extends RequestResult
 {
 	// ABSTRACT -------------------------------
@@ -134,8 +135,7 @@ sealed trait Response extends RequestResult
 	def headers: Headers
 }
 
-// TODO: We need support for streamed responses, also. See: https://github.com/typelevel/jawn
-// TODO: Might as well add support for arrays and basic values in general
+// TODO: We need to support a more wide range of response body types (such as asynchronously parsed values) - May be too much asked of this library...
 object Response
 {
 	// OTHER    -------------------------------

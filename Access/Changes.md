@@ -2,6 +2,11 @@
 
 ## v1.5.1 (in development)
 Supports **Flow v2.4**
+### Bugfixes
+- Fixed the parsing of the `charset` property in **Headers**
+### New methods
+- **ContentType**
+  - Added `.charset`
 
 ## v1.5 - 22.01.2024
 This update, while quite small in scale, contains a very important bugfix to the **Headers** class. 

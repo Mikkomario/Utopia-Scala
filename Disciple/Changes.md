@@ -1,6 +1,23 @@
 # Utopia Disciple - List of Changes
 
-## v1.6.4 (in development)
+## v1.7 (in development)
+Refactoring response parsing
+### Breaking changes
+- Completely rewrote & reimagined the **ResponseParser** interface
+- Multiple changes to **Gateway**
+  - The constructors no longer accept json parsers or default encoding
+    - Instead, many of the json-related helper functions now require an implicit **JsonParser** parameter
+  - Changed the function parameter in the `.makeRequest(...)` `.makeBlockingRequest(...)` methods 
+    to not cover situations where a response can't be acquired (in these cases the method is not called anymore)
+- **StreamedResponse** now requires an additional construction parameter for closing related (parent) resources
+### Bugfixes
+- If the character set is already defined in the outgoing content type header,
+  **Gateway** no longer adds a second copy of that parameter
+### New features
+- **ResponseParser**, **StreamedResponse** and **Gateway** now support asynchronous response parsing
+### New methods
+- **Gateway**
+  - Added `.apply(Request)(ResponseParser)`
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used
 

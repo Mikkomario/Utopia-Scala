@@ -28,6 +28,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.parse.json.JsonParser
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
@@ -36,14 +37,14 @@ import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
 /**
-  * A common trait for implementations that take an authentication code and swap if for a
-  * refresh and/or session token
+  * An interface for acquiring authentication tokens
   * @author Mikko Hilpinen
   * @since 18.7.2021, v1.0
   * @param configurations A map-like object for acquiring correct configurations for each targeted service.
   *                       Accepts a service id and returns the applicable configurations.
+  * @param jsonParser Json parser used when parsing response contents
   */
-class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
+class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])(implicit jsonParser: JsonParser)
 {
 	/**
 	  * Acquires session authentications needed to perform the specified task.

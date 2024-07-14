@@ -1,4 +1,4 @@
-package utopia.disciple.http.response.parser
+package utopia.disciple.http.response
 
 import utopia.flow.view.template.Extender
 import utopia.flow.parse.AutoClose._
