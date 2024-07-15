@@ -17,6 +17,11 @@ package object request
 	  */
 	type RequestQueueable = Either[ApiRequestSeed, ApiRequest]
 	
+	/**
+	  * A type that represents an API-request in either prepared or "seed" form
+	  */
+	type RequestQueueable2[A] = Either[ApiRequestSeed2[A], ApiRequest2[A]]
+	
 	@deprecated("This type will be rewritten in a future release. Please use PostSpiritRequest instead", "v1.7")
 	type PostRequest[+S <: Spirit with ModelConvertible] = PostSpiritRequest[S]
 	

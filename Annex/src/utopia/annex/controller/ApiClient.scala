@@ -2,7 +2,8 @@ package utopia.annex.controller
 
 import utopia.access.http.Method.{Get, Post}
 import utopia.access.http.{Headers, Method, Status}
-import utopia.annex.model.request.ApiRequest
+import utopia.annex.controller.ApiClient.PreparedRequest
+import utopia.annex.model.request.ApiRequest2
 import utopia.annex.model.response.RequestNotSent2.RequestSendingFailed2
 import utopia.annex.model.response.{RequestResult2, Response2}
 import utopia.annex.util.ResponseParseExtensions._
@@ -15,9 +16,66 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
+
+object ApiClient
+{
+	/**
+	  * Represents a request that has been prepared and may be sent.
+	  * Provides an interface for receiving the response in various alternative forms.
+	  * @param wrapped Wrapped request
+	  */
+	class PreparedRequest(api: ApiClient, wrapped: Request)(implicit exc: ExecutionContext)
+	{
+		/**
+		  * Sends out this request and receives the response as one containing a [[Value]]
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getValue = send(api.valueResponseParser)
+		/**
+		  * Sends out this request and receives the response as one containing a vector of [[Value]]s.
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getValues =
+			send(api.valueResponseParser.mapSuccess { _.getVector })
+		
+		/**
+		  * Sends out this request and receives the response as one containing a single parsed item.
+		  * Parse failures are logged and converted into failure responses.
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getOne[A](parser: FromModelFactory[A]) =
+			send(api.parserFrom(parser))
+		/**
+		  * Sends out this request and receives the response as one containing a a vector of parsed items.
+		  * Parse failures are logged and converted into failure responses.
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getMany[A](parser: FromModelFactory[A]) =
+			send(api.multiParserFrom(parser))
+		
+		/**
+		  * Sends this request to the server and acquires a response
+		  * @param parser Parser used for processing the response
+		  * @return Future which resolves into the eventual request send result
+		  */
+		def send[A](parser: ResponseParser[RequestResult2[A]]) = {
+			// Sends the request and handles possible request sending failures
+			api.gateway.responseFor(wrapped)(parser).map {
+				case Success(response) => response.body
+				case Failure(error) => RequestSendingFailed2(error)
+			}
+		}
+		
+		/**
+		  * Sends out this request, not expecting the response to contain a response body
+		  * @return Future which eventually resolves into the acquired response or a request failure
+		  */
+		def send(): Future[RequestResult2[Unit]] = send(PreparingResponseParser.wrap(ResponseParser.empty) { _ => "" })
+	}
+}
 
 /**
   * An interface used for sending requests to a server
@@ -110,15 +168,18 @@ trait ApiClient
 		prepareRequest(method, path, body, headers = headers, timeout = timeout)
 	
 	/**
+	  * Sends out a request
 	  * @param request Request to send out
-	  * @return Prepared request
+	  * @return Future which resolves into the eventual request send result
 	  */
-	def apply(request: ApiRequest): PreparedRequest = prepareRequest(request.method, request.path, request.body)
+	def send[A](request: ApiRequest2[A]): Future[RequestResult2[A]] =
+		request.send(prepareRequest(request.method, request.path, request.body))
 	/**
+	  * Prepares a request for sending
 	  * @param request Request to send out (will be modified)
 	  * @return Prepared request
 	  */
-	def apply(request: Request) = new PreparedRequest(request.copy(
+	def apply(request: Request) = new PreparedRequest(this, request.copy(
 		requestUri = uri(request.requestUri), headers = modifyOutgoingHeaders(request.headers)))
 	
 	/**
@@ -206,62 +267,5 @@ trait ApiClient
 		// Body may or may not be specified
 		apply(Request(path, method, params, headers,
 			if (body.isEmpty) None else Some(makeRequestBody(body)), fullTimeout))
-	}
-	
-	
-	// NESTED   ----------------------------
-	
-	/**
-	  * Represents a request that has been prepared and may be sent.
-	  * Provides an interface for receiving the response in various alternative forms.
-	  * @param wrapped Wrapped request
-	  */
-	class PreparedRequest(wrapped: Request)
-	{
-		/**
-		  * Sends out this request and receives the response as one containing a [[Value]]
-		  * @return Future which eventually resolves into a parsed response or a request failure
-		  */
-		def getValue = send(valueResponseParser)
-		/**
-		  * Sends out this request and receives the response as one containing a vector of [[Value]]s.
-		  * @return Future which eventually resolves into a parsed response or a request failure
-		  */
-		def getValues =
-			send(valueResponseParser.mapSuccess { _.getVector })
-		
-		/**
-		  * Sends out this request and receives the response as one containing a single parsed item.
-		  * Parse failures are logged and converted into failure responses.
-		  * @return Future which eventually resolves into a parsed response or a request failure
-		  */
-		def getOne[A](parser: FromModelFactory[A]) =
-			send(parserFrom(parser))
-		/**
-		  * Sends out this request and receives the response as one containing a a vector of parsed items.
-		  * Parse failures are logged and converted into failure responses.
-		  * @return Future which eventually resolves into a parsed response or a request failure
-		  */
-		def getMany[A](parser: FromModelFactory[A]) =
-			send(multiParserFrom(parser))
-		
-		/**
-		  * Sends this request to the server and acquires a response
-		  * @param parser Parser used for processing the response
-		  * @return Future which resolves into the eventual request send result
-		  */
-		def send[A](parser: ResponseParser[RequestResult2[A]]) = {
-			// Sends the request and handles possible request sending failures
-			gateway.responseFor(wrapped)(parser).map {
-				case Success(response) => response.body
-				case Failure(error) => RequestSendingFailed2(error)
-			}
-		}
-		
-		/**
-		  * Sends out this request, not expecting the response to contain a response body
-		  * @return Future which eventually resolves into the acquired response or a request failure
-		  */
-		def send(): Future[RequestResult2[Unit]] = send(PreparingResponseParser.wrap(ResponseParser.empty) { _ => "" })
 	}
 }

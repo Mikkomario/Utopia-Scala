@@ -5,13 +5,14 @@ import utopia.flow.async.process.ProcessState.{BasicProcessState, Completed, Not
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{Success, Try}
 
 object ActionQueue
 {
@@ -19,7 +20,19 @@ object ActionQueue
 	
 	object QueuedAction
 	{
+		// IMPLICIT --------------------
+		
 		implicit def autoAccessFuture[A](a: QueuedAction[A]): Future[A] = a.future
+		
+		
+		// OTHER    --------------------
+		
+		/**
+		  * @param result Acquired action result
+		  * @tparam A type of the action result
+		  * @return An action which has already been completed
+		  */
+		def completed[A](result: A): QueuedAction[A] = new CompletedAction[A](result)
 	}
 	/**
 	  * Common trait for actions that have been queued in an ActionQueue.
@@ -69,6 +82,18 @@ object ActionQueue
 		  */
 		def waitUntilStarted(timeout: Duration = Duration.Inf) =
 			startFuture.waitFor(timeout).map { _ => this }
+	}
+	
+	private class CompletedAction[+A](result: A) extends QueuedAction[A]
+	{
+		override def future: Future[A] = Future.successful(result)
+		override def startFuture: Future[Unit] = Future.successful(())
+		
+		override def state = Completed
+		override def statePointer = Fixed(Completed)
+		
+		override def waitFor(timeout: Duration) = Success(result)
+		override def waitUntilStarted(timeout: Duration) = Success(this)
 	}
 	
 	private abstract class InteractiveAction[+A] extends QueuedAction[A] with Runnable
