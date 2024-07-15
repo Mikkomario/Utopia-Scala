@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
 import utopia.annex.model.manifest.{HasSchrodingerState, Manifestation, SchrodingerState}
-import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
+import utopia.annex.model.response.{RequestFailure, RequestFailure2, RequestResult, RequestResult2, Response, Response2, ResponseBody}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.generic.factory.FromModelFactory
@@ -17,6 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
+// TODO: Replace the old method versions with the new ones
 object Schrodinger
 {
 	/**
@@ -72,6 +73,16 @@ object Schrodinger
 			case Left(error) => Failure(error)
 		} { (placeHolder, parsed) => testEmptyState(placeHolder, parsed, emptyIsDead)(localize) }
 	}
+	private[schrodinger] def getPointer2[L <: HasIsEmpty, R <: HasIsEmpty](local: L, placeHolder: R,
+	                                                                      resultFuture: Future[RequestResult2[R]],
+	                                                                      emptyIsDead: Boolean = false)
+	                                                                      (localize: R => L)
+	                                                                     (implicit exc: ExecutionContext) =
+	{
+		makePointer2[L, R, Try[R]](local, Success(placeHolder), resultFuture,
+			Flux(!emptyIsDead || !local.isEmpty))(Identity){
+			(placeHolder, parsed) => testEmptyState(placeHolder, parsed, emptyIsDead)(localize) }
+	}
 	private[schrodinger] def remoteGetPointer[M <: HasIsEmpty](placeHolder: M, resultFuture: Future[RequestResult],
 	                                                           emptyIsDead: Boolean = false,
 	                                                           expectFailure: Boolean = false)
@@ -82,6 +93,15 @@ object Schrodinger
 			case Right(body) => parse(body)
 			case Left(error) => Failure(error)
 		} { (placeHolder, result) => testEmptyState(placeHolder, result, emptyIsDead)(Identity) }
+	}
+	private[schrodinger] def remoteGetPointer2[M <: HasIsEmpty](placeHolder: M,
+	                                                            resultFuture: Future[RequestResult2[M]],
+	                                                            emptyIsDead: Boolean = false,
+	                                                            expectFailure: Boolean = false)
+	                                                           (implicit exc: ExecutionContext) =
+	{
+		makePointer2[M, M, Try[M]](placeHolder, Success(placeHolder), resultFuture, Flux(!expectFailure))(Identity){
+			(placeHolder, result) => testEmptyState(placeHolder, result, emptyIsDead)(Identity) }
 	}
 	private[schrodinger] def pullPointer[A](initialManifest: Try[A], placeHolderResult: Try[A],
 	                                        resultFuture: Future[RequestResult], parser: FromModelFactory[A],
@@ -94,6 +114,16 @@ object Schrodinger
 		} { (placeHolder, parsed) =>
 			val manifest = parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed }
 			(manifest, parsed, Final(parsed.isSuccess))
+		}
+	}
+	private[schrodinger] def pullPointer2[A](initialManifest: Try[A], placeHolderResult: Try[A],
+	                                        resultFuture: Future[RequestResult2[Try[A]]], flux: Flux = Flux)
+	                                       (implicit exc: ExecutionContext) =
+	{
+		makePointer2[Try[A], Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) { _.flatten } {
+			(placeHolder, parsed) =>
+				val manifest = parsed.orElse { if (placeHolder.isSuccess) placeHolder else parsed }
+				(manifest, parsed, Final(parsed.isSuccess))
 		}
 	}
 	private[schrodinger] def makePointer[M, R](initialManifest: M, placeHolderResult: R,
@@ -115,6 +145,27 @@ object Schrodinger
 					}
 				case Failure(error) => process(Left(error))
 			}
+			// Updates the pointer
+			pointer.update { case (placeHolder, _, _) => merge(placeHolder, parsed) }
+		}
+		pointer
+	}
+	// TODO: It seems like the process function is (almost?) always Identity
+	private[schrodinger] def makePointer2[M, B, R](initialManifest: M, placeHolderResult: R,
+	                                               resultFuture: Future[RequestResult2[B]], flux: Flux = Flux)
+	                                              (process: Try[B] => R)
+	                                              (merge: (M, R) => (M, R, Final))
+	                                              (implicit exc: ExecutionContext) =
+	{
+		// Stores the state in a Volatile pointer
+		val pointer = Volatile[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
+		// Updates the state with future result once it arrives
+		resultFuture.onComplete { result =>
+			// Acquires the response body, if successful
+			val parsed = process(result.flatMap {
+				case Response2.Success(body, _, _) => Success(body)
+				case f: RequestFailure2 => f.toFailure[B]
+			})
 			// Updates the pointer
 			pointer.update { case (placeHolder, _, _) => merge(placeHolder, parsed) }
 		}

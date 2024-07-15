@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
-import utopia.annex.model.response.RequestResult
+import utopia.annex.model.response.{RequestResult, RequestResult2}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -61,6 +61,20 @@ object DeleteSchrodinger
 		} { (_, result) =>
 			(if (result.isSuccess) None else Some(ghost), result, Final(result.isSuccess))
 		})
+	/**
+	  * Creates a schrödinger that represents an ongoing attempt to delete a remote instance.
+	  * Presents the targeted instance as the manifest, but only if deletion fails.
+	  * @param ghost The local representation of the remote instance that's being deleted.
+	  *              Call-by-name, only called if the request fails and the instance needs to be brought back.
+	  * @param resultFuture A future that resolves into server's response, if successful
+	  * @param exc Implicit execution context
+	  * @tparam A Type of instance being deleted
+	  * @return A new schrödinger
+	  */
+	def apply2[A](ghost: => A, resultFuture: Future[RequestResult2[Any]])(implicit exc: ExecutionContext) =
+		wrap(Schrodinger.makePointer2[Option[A], Any, Try[Unit]](None, successValue, resultFuture,
+			PositiveFlux) { _.map { _ => () } } {
+			(_, result) => (if (result.isSuccess) None else Some(ghost), result, Final(result.isSuccess)) })
 }
 
 /**

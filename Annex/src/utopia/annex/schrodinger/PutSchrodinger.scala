@@ -2,8 +2,9 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
-import utopia.annex.model.response.RequestResult
+import utopia.annex.model.response.{RequestResult, RequestResult2}
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -57,6 +58,21 @@ object PutSchrodinger
 			case Right(body) => body.parsedSingle(parser)
 			case Left(error) => Failure(error)
 		} { (_, result) => (result.getOrElse(original), result, Final(result.isSuccess)) })
+	/**
+	  * Creates a new schrödinger that represents an attempt to modify a remote instance.
+	  * Presents simulated results, based on a modified local instance, until actual results arrive.
+	  * If the request fails, reverts the manifest back to the original item.
+	  * @param original The item in its original form (call-by-name)
+	  * @param modifiedLocal The modified local item (simulating the resulting item)
+	  * @param resultFuture A future that resolves into server response, if successful
+	  * @param exc Implicit execution context
+	  * @tparam A Type of instance being modified
+	  * @return A new schrödinger
+	  */
+	def apply2[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult2[A]])
+	            (implicit exc: ExecutionContext) =
+		wrap(Schrodinger.makePointer2[A, A, Try[A]](modifiedLocal, Success(modifiedLocal), resultFuture,
+			PositiveFlux)(Identity){ (_, result) => (result.getOrElse(original), result, Final(result.isSuccess)) })
 }
 
 /**
