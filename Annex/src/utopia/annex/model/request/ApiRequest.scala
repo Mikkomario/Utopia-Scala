@@ -4,19 +4,10 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.flow.generic.model.immutable.Value
 
+@deprecated("Will be replaced with a new version", "v1.8")
 object ApiRequest
 {
 	// OTHER    -------------------------
-	
-	/**
-	  * Creates a GET request
-	  * @param path Targeted path on the server (after the server root path)
-	  * @param deprecationCondition Condition which yields true if this request gets deprecated
-	  *                             and should be retracted (if not sent) (call-by-name).
-	  *                             Default = always false.
-	  * @return A new GET API request
-	  */
-	def get(path: String, deprecationCondition: => Boolean = false) = GetRequest(path, deprecationCondition)
 	
 	/**
 	  * Creates a new POST, PUT or PATCH request (i.e. a request with a body)
@@ -47,6 +38,7 @@ object ApiRequest
   * @author Mikko Hilpinen
   * @since 16.6.2020, v1
   */
+@deprecated("Will be replaced with a new version", "v1.8")
 trait ApiRequest extends Retractable
 {
 	// ABSTRACT ----------------------------

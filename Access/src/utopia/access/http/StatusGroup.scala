@@ -1,16 +1,27 @@
 package utopia.access.http
 
+/**
+  * StatusGroups describe a larger type of html statuses which includes multiple more specific
+  * statuses.
+  * @author Mikko Hilpinen
+  * @since 20.8.2017
+  */
+sealed trait StatusGroup
+
 object StatusGroup
 {
     // OTHER    -----------------------
     
     /**
-     * Finds the best suited status group for the provided status code
-     * @param statusCode The status code [100, 600[
-     */
-    def forCode(statusCode: Int) = 
-    {
-        if (statusCode < 200)
+      * Finds the best suited status group for the provided status code
+      * @param statusCode A status code
+      *                   Values 100-599 refer to standard status code groups.
+      *                   Other values will yield [[Custom]].
+      */
+    def forCode(statusCode: Int): StatusGroup = {
+        if (statusCode < 100 || statusCode >= 600)
+            Custom
+        else if (statusCode < 200)
             Information
         else if (statusCode < 300)
             Success
@@ -75,12 +86,10 @@ object StatusGroup
       * any included entity to the user. These response codes are applicable to any request method.
       */
     case object ServerError extends StatusGroup
+    
+    /**
+      * Status group applied when no other status group applies.
+      * This would be for codes smaller than 100 and larger than 599
+      */
+    case object Custom extends StatusGroup
 }
-
-/**
- * StatusGroups describe a larger type of html statuses which includes multiple more specific 
- * statuses.
- * @author Mikko Hilpinen
- * @since 20.8.2017
- */
-sealed trait StatusGroup

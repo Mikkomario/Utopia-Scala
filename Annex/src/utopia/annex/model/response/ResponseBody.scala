@@ -13,6 +13,7 @@ import scala.util.{Failure, Try}
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
+@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[ResponseBody]
 {
 	// ABSTRACT	--------------------------
@@ -71,6 +72,7 @@ sealed abstract class ResponseBody(private val body: Value) extends MaybeEmpty[R
 	}
 }
 
+@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 object ResponseBody
 {
 	// OTHER	--------------------------
@@ -88,6 +90,7 @@ object ResponseBody
 	  * Non-empty response content
 	  * @param body Response value
 	  */
+	@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 	case class Content private(body: Value) extends ResponseBody(body)
 	{
 		// COMPUTED -----------------------------
@@ -116,6 +119,7 @@ object ResponseBody
 	/**
 	  * Empty response content
 	  */
+	@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 	case object Empty extends ResponseBody(Value.empty)
 	{
 		override def vector[A](implicit parser: FromModelFactory[A]) =

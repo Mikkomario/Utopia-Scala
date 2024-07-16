@@ -287,21 +287,21 @@ case class Value(content: Option[Any], dataType: DataType)
     def getPair = pairOr()
     def getModel = modelOr()
     
-    def tryString = getTry(string)("String")
-    def tryInt = getTry(int)("Int")
-    def tryDouble = getTry(double)("Double")
-    def tryFloat = getTry(float)("Float")
-    def tryLong = getTry(long)("Long")
-    def tryBoolean = getTry(boolean)("Boolean")
-    def tryInstant = getTry(instant)("Instant")
-    def tryLocalDate = getTry(localDate)("LocalDate")
-    def tryLocalTime = getTry(localTime)("LocalTime")
-    def tryLocalDateTime = getTry(localDateTime)("LocalDateTime")
-    def tryDuration = getTry(duration)("Duration")
-    def tryDays = getTry(days)("Days")
-    def tryVector = getTry(vector)("Vector[Value]")
-    def tryPair = getTry(pair)("Pair")
-    def tryModel = getTry(model)("Model")
+    def tryString = getTry(StringType) { _.getString }
+    def tryInt = tryGetNonEmpty(int)("Int")
+    def tryDouble = tryGetNonEmpty(double)("Double")
+    def tryFloat = tryGetNonEmpty(float)("Float")
+    def tryLong = tryGetNonEmpty(long)("Long")
+    def tryBoolean = tryGetNonEmpty(boolean)("Boolean")
+    def tryInstant = tryGetNonEmpty(instant)("Instant")
+    def tryLocalDate = tryGetNonEmpty(localDate)("LocalDate")
+    def tryLocalTime = tryGetNonEmpty(localTime)("LocalTime")
+    def tryLocalDateTime = tryGetNonEmpty(localDateTime)("LocalDateTime")
+    def tryDuration = tryGetNonEmpty(duration)("Duration")
+    def tryDays = tryGetNonEmpty(days)("Days")
+    def tryVector = getTry(VectorType) { _.getVector }
+    def tryPair = tryGetNonEmpty(pair)("Pair")
+    def tryModel = getTry(ModelType) { _.getModel }
     
     def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMap(f) }
     def tryPairWith[A](f: Value => Try[A]) =
@@ -309,6 +309,9 @@ case class Value(content: Option[Any], dataType: DataType)
     def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =
         tryPair.flatMap { p => first(p.first).flatMap { f => second(p.second).map { f -> _ } } }
     
-    private def getTry[A](value: Option[A])(dataType: => String) =
+    private def getTry[A](targetType: DataType)(extract: Value => A) =
+        castTo(targetType).toTry { new DataTypeException(s"Can't cast $description to $targetType") }.map(extract)
+    
+    private def tryGetNonEmpty[A](value: Option[A])(dataType: => String) =
         value.toTry { new DataTypeException(s"Can't cast $description to $dataType") }
 }

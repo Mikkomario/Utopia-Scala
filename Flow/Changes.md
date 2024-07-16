@@ -22,6 +22,7 @@
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
 - Renamed `.filterWithPaths(...)` in TreeLike to `.pathsToRootsWhere(...)` because the term "filter" is misleading
 ### Bugfixes
+- `.tryVector` and `.tryString` in **Value** now return a success for empty values (used to fail before)
 - **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
   The new implementation works the same way, regardless of compared collection type 
   (although it now requires **Seq** to be used)

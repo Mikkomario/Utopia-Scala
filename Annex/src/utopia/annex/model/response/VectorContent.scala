@@ -9,6 +9,7 @@ import utopia.flow.collection.CollectionExtensions._
   * @author Mikko
   * @since 14.6.2020, v1
   */
+@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 case class VectorContent[+A](models: Seq[Model])(implicit parser: FromModelFactory[A])
 {
 	/**

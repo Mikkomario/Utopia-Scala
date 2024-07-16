@@ -16,6 +16,7 @@ import scala.util.{Failure, Try}
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
+@deprecated("Will be replaced with a new version", "v1.8")
 sealed trait RequestResult
 {
 	/**
@@ -49,6 +50,7 @@ sealed trait RequestResult
 	def manyParsedFromSuccess[A](parser: FromModelFactory[A]): Try[Seq[A]]
 }
 
+@deprecated("Will be replaced with a new version", "v1.8")
 sealed trait RequestFailure extends RequestResult
 {
 	// ABSTRACT --------------------------
@@ -81,6 +83,7 @@ sealed trait RequestFailure extends RequestResult
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
+@deprecated("Will be replaced with a new version", "v1.8")
 sealed trait RequestNotSent extends RequestFailure
 {
 	/**
@@ -95,6 +98,7 @@ object RequestNotSent
 	/**
 	  * Status generated when request gets deprecated before it is successfully sent
 	  */
+	@deprecated("Will be replaced with a new version", "v1.8")
 	case object RequestWasDeprecated extends RequestNotSent
 	{
 		override def cause = new RequestFailedException("Request was deprecated")
@@ -106,6 +110,7 @@ object RequestNotSent
 	  * Status used when request can't be sent due to some error in the request or the request system
 	  * @param cause Associated error
 	  */
+	@deprecated("Will be replaced with a new version", "v1.8")
 	case class RequestSendingFailed(cause: Throwable) extends RequestNotSent
 	{
 		@deprecated("Please use .cause instead", "v1.6")
@@ -120,7 +125,7 @@ object RequestNotSent
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-// TODO: Consider extending the Response trait from Disciple
+@deprecated("Will be replaced with a new version", "v1.8")
 sealed trait Response extends RequestResult
 {
 	// ABSTRACT -------------------------------
@@ -135,7 +140,7 @@ sealed trait Response extends RequestResult
 	def headers: Headers
 }
 
-// TODO: We need to support a more wide range of response body types (such as asynchronously parsed values) - May be too much asked of this library...
+@deprecated("Will be replaced with a new version", "v1.8")
 object Response
 {
 	// OTHER    -------------------------------
@@ -163,6 +168,7 @@ object Response
 	  * @param status Status returned by the server
 	  * @param body Response body
 	  */
+	@deprecated("Will be replaced with a new version", "v1.8")
 	case class Success(status: Status, body: ResponseBody, headers: Headers) extends Response
 	{
 		override def isSuccess = true
@@ -180,6 +186,7 @@ object Response
 	  * @param message Error description or other message within the response body. May be empty.
 	  * @param headers Headers sent along with the response
 	  */
+	@deprecated("Will be replaced with a new version", "v1.8")
 	case class Failure(status: Status, message: String = "", headers: Headers)
 		extends Response with RequestFailure
 	{

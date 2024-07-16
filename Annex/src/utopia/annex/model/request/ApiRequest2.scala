@@ -7,7 +7,77 @@ import utopia.flow.generic.model.immutable.Value
 
 import scala.concurrent.Future
 
-// TODO: Add the utility functions from the older version
+// TODO: Create better factory functions?
+object ApiRequest2
+{
+	// TYPES    ---------------------------
+	
+	/**
+	  * A function for finalizing the request-sending process.
+	  * Accepts a prepared request and yields a future with a correctly processed / parsed request result.
+	  *
+	  * Typically these functions apply response-parsing using the helper functions in [[PreparedRequest]].
+	  */
+	type Send[+A] = PreparedRequest => Future[RequestResult2[A]]
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Creates a new API request
+	  * @param method Method used in this request
+	  * @param path Path to the targeted server-side resource
+	  * @param body Response body to apply. Default = empty.
+	  * @param deprecationCondition A function which yields true when/if this request should be retracted,
+	  *                             if not yet sent.
+	  *                             Default = always false.
+	  * @param send A function which accepts a prepared request and finalizes the sending process,
+	  *             applying correct response-parsing, etc.
+	  * @tparam A Type of parsed response values
+	  * @return A new API request
+	  */
+	def apply[A](method: Method, path: String, body: Value = Value.empty, deprecationCondition: => Boolean = false)
+	            (send: Send[A]): ApiRequest2[A] =
+		new _ApiRequest[A](method, path, body, deprecationCondition)(send)
+	
+	/**
+	  * Creates a new GET request
+	  * @param path Path to the targeted server-side resource
+	  * @param deprecationCondition A function which yields true when/if this request should be retracted,
+	  *                             if not yet sent.
+	  *                             Default = always false.
+	  * @param send A function which accepts a prepared request and finalizes the sending process,
+	  *             applying correct response-parsing, etc.
+	  * @tparam A Type of parsed response values
+	  * @return A new GET request
+	  */
+	def get[A](path: String, deprecationCondition: => Boolean = false)(send: Send[A]) =
+		GetRequest(path, deprecationCondition)(send)
+	
+	/**
+	  * Creates a new GET request, which doesn't parse / post-process responses.
+	  * @param path Path to the targeted server-side resource
+	  * @param deprecationCondition A function which yields true when/if this request should be retracted,
+	  *                             if not yet sent.
+	  *                             Default = always false.
+	  * @return A new GET request for retrieving responses in Value format
+	  */
+	def getValue(path: String, deprecationCondition: => Boolean = false) =
+		GetRequest.value(path, deprecationCondition)
+	
+	
+	// NESTED   ---------------------------
+	
+	private class _ApiRequest[A](override val method: Method, override val path: String, override val body: Value,
+	                             testDeprecation: => Boolean)
+	                            (f: Send[A])
+		extends ApiRequest2[A]
+	{
+		override def deprecated: Boolean = testDeprecation
+		
+		override def send(prepared: PreparedRequest) = f(prepared)
+	}
+}
 
 /**
   * Represents a request that may be sent out using an [[utopia.annex.controller.ApiClient]]

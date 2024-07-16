@@ -8,6 +8,7 @@ import utopia.flow.generic.model.immutable.Value
   * @author Mikko Hilpinen
   * @since 16.6.2020, v1
   */
+@deprecated("Deprecated for removal. No replacement is intended at this time.", "v1.8")
 trait Spirit
 {
 	/**

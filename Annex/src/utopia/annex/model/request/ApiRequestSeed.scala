@@ -18,6 +18,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 21.12.2023, v1.7
   */
+@deprecated("Will be replaced with a new version", "v1.8")
 trait ApiRequestSeed extends Persisting with Retractable
 {
 	/**

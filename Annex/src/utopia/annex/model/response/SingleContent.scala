@@ -8,6 +8,7 @@ import utopia.flow.generic.model.immutable.Model
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
+@deprecated("Deprecated for removal. The new RequestResult structure doesn't utilize this model anymore.", "v1.8")
 case class SingleContent[+A](model: Model)(implicit parser: FromModelFactory[A])
 {
 	/**

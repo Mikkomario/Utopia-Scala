@@ -23,5 +23,5 @@ trait PersistedRequestHandler2
 	  *                     Accepted by 'shouldHandle(Model)'
 	  * @param queue A request queue which may be used to send the request
 	  */
-	def handle(requestModel: Model, queue: RequestQueue2): Unit
+	def handle(requestModel: Model, queue: PersistingRequestQueue2): Unit
 }
