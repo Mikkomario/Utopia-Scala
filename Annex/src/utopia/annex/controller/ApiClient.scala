@@ -38,16 +38,26 @@ object ApiClient
 		  * Sends out this request and receives the response as one containing a vector of [[Value]]s.
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
-		def getValues =
-			send(api.valueResponseParser.mapSuccess { _.getVector })
+		def getValues = send(api.valueResponseParser.mapSuccess { _.getVector })
+		
+		/**
+		  * Sends out this request and receives the response as one containing a [[Model]] (parsed from a [[Value]])
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getModel = parseValue { _.tryModel }
+		/**
+		  * Sends out this request and receives the response as one containing a vector of [[Model]]s
+		  * (parsed from a [[Value]]).
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getModels = parseValue { _.tryVectorWith { _.tryModel } }
 		
 		/**
 		  * Sends out this request and receives the response as one containing a single parsed item.
 		  * Parse failures are logged and converted into failure responses.
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
-		def getOne[A](parser: FromModelFactory[A]) =
-			send(api.parserFrom(parser))
+		def getOne[A](parser: FromModelFactory[A]) = send(api.parserFrom(parser))
 		/**
 		  * Sends out this request and receives the response as one containing a a vector of parsed items.
 		  * Parse failures are logged and converted into failure responses.
@@ -55,6 +65,39 @@ object ApiClient
 		  */
 		def getMany[A](parser: FromModelFactory[A]) =
 			send(api.multiParserFrom(parser))
+		
+		/**
+		  * Sends out this request and receives a mapped response
+		  * @param f A function which maps the successful response from type [[Value]] to the final type
+		  * @tparam A Type of the final mapping result
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapValue[A](f: Value => A) = send(api.valueResponseParser.mapSuccess(f))
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Parsing failures are converted to failure responses.
+		  * @param parse A function which maps the successful response from type [[Value]] to the final type.
+		  *              May yield a failure, in which case the response is converted into a failure response.
+		  * @tparam A Type of the final mapping result, when successful
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def parseValue[A](parse: Value => Try[A]) = send(api.tryMapValueParser(parse))
+		
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Parsing failures are converted to failure responses.
+		  * @param parser The parser used for pre-processing the response contents
+		  * @param parse A function which maps the successful response from the pre-processed value to the final type.
+		  *              May yield a failure, in which case the response is converted into a failure response.
+		  * @param extractErrorMessage A function which extracts an error message from the pre-processed value.
+		  *                            Only called for failure responses (where status is 400-599).
+		  * @tparam A Type of the preliminary parsing result
+		  * @tparam B Type of the final mapping result, when successful
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def tryParseSuccess[A, B](parser: ResponseParser[A])(parse: A => Try[B])(extractErrorMessage: A => String) =
+			send(PreparingResponseParser.tryMap(parser, api.responseParseFailureStatus) {
+				parse(_) }(extractErrorMessage))
 		
 		/**
 		  * Sends this request to the server and acquires a response
@@ -214,7 +257,7 @@ trait ApiClient
 	  *         Parse failures are converted into failed responses.
 	  */
 	def parserFrom[A](fromModelParser: FromModelFactory[A]) =
-		tryMapParser { _.tryModel.flatMap(fromModelParser.apply) }
+		tryMapValueParser { _.tryModel.flatMap(fromModelParser.apply) }
 	/**
 	  * Converts a from model factory into a response parser which handles model arrays.
 	  * Utilizes the default response-to-value parser of this client.
@@ -227,7 +270,7 @@ trait ApiClient
 	  *         Parse failures are converted into failed responses.
 	  */
 	def multiParserFrom[A](fromModelParser: FromModelFactory[A]) =
-		tryMapParser { _.tryVectorWith { _.tryModel.flatMap(fromModelParser.apply) } }
+		tryMapValueParser { _.tryVectorWith { _.tryModel.flatMap(fromModelParser.apply) } }
 	
 	/**
 	  * Converts the default response-to-value parser of this interface into a further processing parser.
@@ -238,9 +281,22 @@ trait ApiClient
 	  * @return A new parser which first processes the response into a value
 	  *         and then post-processes it using the specified parsing function.
 	  */
-	def tryMapParser[A](parse: Value => Try[A]) = {
+	def tryMapValueParser[A](parse: Value => Try[A]) =
+		tryMapParser(valueResponseParser)(parse)
+	/**
+	  * Converts the default response-to-value parser of this interface into a further processing parser.
+	  * Converts parsing failures to failed responses, also logging them.
+	  * @param parser The original parser to convert
+	  * @param parse A function which accepts a parsed value from the original and yields either the parsed item or
+	  *              a failure, if parsing fails.
+	  * @tparam A Type of original response values
+	  * @tparam B Type of successful parsing results
+	  * @return A new parser which first processes the response into a value
+	  *         and then post-processes it using the specified parsing function.
+	  */
+	def tryMapParser[A, B](parser: ResponseParser[Response[A]])(parse: A => Try[B]) = {
 		// Further modifies the acquire responses
-		valueResponseParser.map[Response[A]] {
+		parser.map[Response[B]] {
 			// Case: Successful response => Attempts to parse it
 			case Response.Success(value, status, headers) =>
 				parse(value) match {

@@ -23,7 +23,7 @@ object ResponseParseExtensions
 		  * @return Copy of this parser which converts the result into a success or a failure response based on
 		  *         the response status
 		  */
-		def toResponseWith(extractErrorMessage: A => String) =
+		def toResponse(extractErrorMessage: A => String) =
 			PreparingResponseParser.wrap(p)(extractErrorMessage)
 		
 		/**
@@ -35,7 +35,7 @@ object ResponseParseExtensions
 		  * @return Copy of this parser which converts the result into a success or a failure response based on
 		  *         the response status
 		  */
-		def mapToResponseWith[B](f: ResponseParseResult[A] => B)(extractErrorMessage: A => String) =
+		def mapToResponse[B](f: ResponseParseResult[A] => B)(extractErrorMessage: A => String) =
 			PreparingResponseParser.map(p)(f)(extractErrorMessage)
 		
 		/**
@@ -51,9 +51,28 @@ object ResponseParseExtensions
 		  * @return Copy of this parser which converts the result into a success or a failure response based on
 		  *         the response status and possibly the specified mapping function
 		  */
-		def tryMapToResponseWith[B](f: ResponseParseResult[A] => Either[(Status, String), B])
-		                           (extractErrorMessage: A => String) =
-			PreparingResponseParser.tryMap(p)(f)(extractErrorMessage)
+		def mapToResponseOrFail[B](f: ResponseParseResult[A] => Either[(Status, String), B])
+		                          (extractErrorMessage: A => String) =
+			PreparingResponseParser.mapOrFail(p)(f)(extractErrorMessage)
+		/**
+		  * Converts this parser to an Annex-compatible response parser.
+		  * Performs a final mapping, in case the response is a success.
+		  * This final mapping may still convert the response into a failure response.
+		  * @param parseFailureStatus Status assigned for failure responses resulting from parsing failures
+		  *                           (call-by-name)
+		  * @param f A mapping function called for successful responses, finalizing their body value.
+		  *          Returns a failure if the response should be converted into a failure response.
+		  * @param extractErrorMessage A function which extracts an error message from the response body value.
+		  *                            Only called for failure responses (4XX-5XX)
+		  * @return Copy of this parser which converts the result into a success or a failure response based on
+		  *         the response status and possibly the specified mapping function
+		  */
+		def tryMapToResponse[B](parseFailureStatus: => Status)(f: ResponseParseResult[A] => Try[B])
+		                       (extractErrorMessage: A => String): PreparingResponseParser[A, B] =
+			mapToResponseOrFail { f(_) match {
+				case Success(r) => Right(r)
+				case Failure(error) => Left(parseFailureStatus -> error.getMessage)
+			} }(extractErrorMessage)
 	}
 	
 	implicit class TryResponseParser[A](val p: ResponseParser[Try[A]]) extends AnyVal
@@ -63,12 +82,13 @@ object ResponseParseExtensions
 		  * Converts response body parse failures to failed responses.
 		  * @param parseFailureStatus Status to assign for response-parsing failures
 		  * @param extractErrorMessage A function which extracts an error message from the response body value.
-		  *                            Only called for failure responses (4XX-5XX)
+		  *                            Only called for failure responses (4XX-5XX) which contain a successful value.
 		  * @return Copy of this parser which converts the result into a success or a failure response based on
 		  *         the response status and the response body parsing success or failure
 		  */
-		def unwrapToResponseWith(parseFailureStatus: Status)(extractErrorMessage: A => String) =
-			p.tryMapToResponseWith[A] { _.wrapped match {
+		def unwrapToResponse(parseFailureStatus: => Status)(extractErrorMessage: A => String) =
+			p.mapToResponseOrFail[A] { r =>
+				r.wrapped match {
 					case Success(body) => Right(body)
 					case Failure(error) => Left(parseFailureStatus -> error.getMessage)
 				}

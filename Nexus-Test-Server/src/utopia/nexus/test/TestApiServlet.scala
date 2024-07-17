@@ -8,7 +8,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Version
-import utopia.flow.util.logging.{FileLogger, Logger}
+import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.nexus.http.{Path, Request, Response, ServerSettings}
 import utopia.nexus.rest.{PostContext, RequestHandler, Resource}
 import utopia.nexus.result.UseRawXmlOrJson
@@ -39,8 +39,8 @@ class TestApiServlet extends LogicWrappingServlet
 	// ATTRIBUTES   ---------------------------
 	
 	implicit val codec: Codec = Codec.UTF8
+	implicit val exc: ExecutionContext = new ThreadPool("Test-API", 1, 20, 30.seconds)(SysErrLogger)
 	implicit val log: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
-	implicit val exc: ExecutionContext = new ThreadPool("Test-API", 1, 20, 30.seconds)
 	implicit val jsonParser: JsonParser = JsonBunny
 	implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	

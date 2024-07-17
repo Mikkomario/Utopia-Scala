@@ -10,7 +10,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.Now
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.util.StringExtensions._
 
 import java.nio.charset.{Charset, StandardCharsets}
@@ -328,7 +328,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * targeted header.
      */
     def withHeader(headerName: String, values: Seq[String], separator: String = ","): Headers = 
-            withHeader(headerName, values.reduce { (a, b) => s"$a$separator$b" })
+        withHeader(headerName, values.mkString(separator))
     /**
      * Returns a copy of these headers with a new header. Overwrites any previous values on the 
      * targeted header.
@@ -375,8 +375,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * @param values Header values, each with their own weight
      * @return A copy of these headers with added weighted headers
      */
-    def withWeightedHeader(headerName: String, values: Map[String, Double]) = withHeader(headerName,
-        values.map{ case (v, w) => s"$v;q=$w" }.toSeq)
+    def withWeightedHeader(headerName: String, values: Map[String, Double]) =
+        withHeader(headerName, values.map{ case (v, w) => s"$v;q=$w" }.toSeq)
     
     /**
      * Checks whether a method is allowed for the server side resource
@@ -385,7 +385,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     /**
      * Overwrites the list of methods allowed to be used on the targeted resource
      */
-    def withAllowedMethods(methods: Seq[Method]) = withHeader("Allow", methods.map { _.toString })
+    def withAllowedMethods(methods: Seq[Method]) = withHeader("Allow", methods.mkString(","))
     /**
      * Adds a new method to the methods allowed for the targeted resource
      */
@@ -416,13 +416,19 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * @param options Available language options
      * @return The most preferred language from the specified options. None if none of them is accepted.
      */
-    def getAcceptedLanguage(options: Seq[String]) = acceptedLanguages.view.filterKeys { lang =>
-        options.exists { _ ~== lang } }.maxByOption { _._2 }.map { _._1 }
+    def getAcceptedLanguage(options: Seq[String]) =
+        acceptedLanguages.view.filterKeys { lang => options.exists { _ ~== lang } }.maxByOption { _._2 }.map { _._1 }
     
     /**
      * Overwrites the set of accepted content types
      */
-    def withAcceptedTypes(types: Seq[ContentType]) = withHeader("Accept", types.map { _.toString })
+    def withAcceptedTypes(types: Seq[ContentType]) = withHeader("Accept", types.mkString(","))
+    /**
+      * @param f A mapping function for modifying the accepted types
+      * @return Copy of these headers with modified accepted types
+      */
+    def mapAcceptedTypes(f: Mutate[Seq[ContentType]]) = withAcceptedTypes(f(acceptedTypes))
+    
     /**
       * @param contentType The only acceptable content type
       * @return A copy of these headers that only accepts that content type
@@ -436,17 +442,18 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     /**
      * Overwrites the set of accepted charsets
      */
-    def withAcceptedCharsets(charsets: Map[Charset, Double]) = withWeightedHeader("Accept-Charset",
-        charsets.map { case (charset, wt) => charset.name() -> wt })
+    def withAcceptedCharsets(charsets: Map[Charset, Double]) =
+        withWeightedHeader("Accept-Charset", charsets.map { case (charset, wt) => charset.name() -> wt })
     /**
      * Overwrites the set of accepted charsets
      */
-    def withAcceptedCharsets(charsets: Seq[Charset]) = withHeader("Accept-Charset", charsets.map(_.name()))
+    def withAcceptedCharsets(charsets: Seq[Charset]) =
+        withHeader("Accept-Charset", charsets.map { _.name }.mkString(","))
     /**
      * Adds a new charset to the list of accepted charsets
      */
-    def withCharsetAccepted(charset: Charset, weight: Double = 1) = withHeaderAdded("Accept-Charset",
-            s"${charset.name()};q=$weight")
+    def withCharsetAccepted(charset: Charset, weight: Double = 1) =
+        withHeaderAdded("Accept-Charset", s"${charset.name()};q=$weight")
     
     /**
      * @param languages Accepted languages with their "weights"
@@ -463,8 +470,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
      * @param weight Priority of specified language (default = 1.0)
      * @return A copy of these headers with specified accepted language added
      */
-    def withLanguageAccepted(language: String, weight: Double = 1) = withHeaderAdded("Accept-Language",
-        s"$language;q=$weight")
+    def withLanguageAccepted(language: String, weight: Double = 1) =
+        withHeaderAdded("Accept-Language", s"$language;q=$weight")
     
     /**
      * Creates a new headers with the content type (and character set) specified
@@ -513,8 +520,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
       * @param password Password
       * @return A copy of these headers with basic authentication header included
       */
-    def withBasicAuthorization(userName: String, password: String) =
-    {
+    def withBasicAuthorization(userName: String, password: String) = {
         // Encodes the username + password with base64
         val encoded = Base64.getEncoder.encodeToString(s"$userName:$password".getBytes(Codec.UTF8.charSet))
         withAuthorization(s"Basic $encoded")

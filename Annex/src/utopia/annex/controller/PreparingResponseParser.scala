@@ -7,6 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
 
 import java.io.InputStream
+import scala.util.{Failure, Success, Try}
 
 object PreparingResponseParser
 {
@@ -73,8 +74,8 @@ object PreparingResponseParser
 	  * @return A response parser which categorizes the responses based on their status and applies either
 	  *         the specified mapping function, or extracts an error message using the specified extraction function.
 	  */
-	def tryMap[M, A](primary: ResponseParser[M])(mapSuccess: ResponseParseResult[M] => Either[(Status, String), A])
-	                (extractFailureMessage: M => String) =
+	def mapOrFail[M, A](primary: ResponseParser[M])(mapSuccess: ResponseParseResult[M] => Either[(Status, String), A])
+	                   (extractFailureMessage: M => String) =
 		apply(primary) { (body, status, headers) =>
 			if (status.isFailure)
 				Response.Failure(status, extractFailureMessage(body), headers)
@@ -84,6 +85,32 @@ object PreparingResponseParser
 					case Left((newStatus, failureMessage)) => Response.Failure(newStatus, failureMessage, headers)
 				}
 		}
+	/**
+	  * Creates a new response parser which either maps the results of another parser, if successful,
+	  * or extracts an error message from the results of another parser,
+	  * if the response was a failure response (4XX-5XX).
+	  *
+	  * The success case may be converted into a failure by the specified mapping function.
+	  *
+	  * @param primary Response parser which pre-processes the response body
+	  * @param parseFailureStatus Status assigned in case a successful response is converted to a failure response
+	  *                           because of a parsing failure.
+	  * @param mapSuccess A mapping function called for successful responses.
+	  *                   May yield a failure, which converts the response into a failure response.
+	  * @param extractFailureMessage A function called for failure responses (4XX-5XX),
+	  *                              which extracts an error message from the response body
+	  * @tparam M Type of the preliminary parse results
+	  * @tparam A Type of the final mapping results
+	  * @return A response parser which categorizes the responses based on their status and applies either
+	  *         the specified mapping function, or extracts an error message using the specified extraction function.
+	  */
+	def tryMap[M, A](primary: ResponseParser[M], parseFailureStatus: => Status)
+	                (mapSuccess: ResponseParseResult[M] => Try[A])
+	                (extractFailureMessage: M => String): PreparingResponseParser[M, A] =
+		mapOrFail[M, A](primary) { mapSuccess(_) match {
+			case Success(v) => Right(v)
+			case Failure(error) => Left(parseFailureStatus -> error.getMessage)
+		} }(extractFailureMessage)
 	
 	/**
 	  * Converts StreamedResponses to Annex Responses by simply wrapping another response parser
