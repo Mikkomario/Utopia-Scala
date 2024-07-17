@@ -96,8 +96,7 @@ abstract class AuthorizedContext extends PostContext
 	  * @return Languages that were requested in the Accept-Language header (or the X-Accept-Language-Ids -header).
 	  *         The languages are listed from most to least preferred. May be empty.
 	  */
-	def requestedLanguages(implicit connection: Connection) =
-	{
+	def requestedLanguages(implicit connection: Connection) = {
 		val acceptedLanguageIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
 		if (acceptedLanguageIds.nonEmpty) {
 			val languageById = DbLanguages(acceptedLanguageIds.toSet).pull.map { l => l.id -> l }.toMap
@@ -125,8 +124,7 @@ abstract class AuthorizedContext extends PostContext
 	  * @return Ids of the requested languages in order from most to least preferred.
 	  *         Empty if no headers were specified.
 	  */
-	def requestedLanguageIds(implicit connection: Connection): LanguageIds =
-	{
+	def requestedLanguageIds(implicit connection: Connection): LanguageIds = {
 		// Checks whether X-Accepted-Language-Ids is provided
 		val acceptedIds = request.headers.commaSeparatedValues(acceptLanguageIdsHeaderName).flatMap { _.int }
 		if (acceptedIds.nonEmpty)
@@ -158,8 +156,7 @@ abstract class AuthorizedContext extends PostContext
 	  * @return Ids of the requested languages in order from most to least preferred. Empty only if the user doesn't
 	  *         exist or has no linked languages
 	  */
-	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds =
-	{
+	def languageIds(userId: => Int)(implicit connection: Connection): LanguageIds = {
 		val requested = requestedLanguageIds
 		if (requested.nonEmpty)
 			requested

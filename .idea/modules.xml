@@ -22,6 +22,7 @@
       <module fileurl="file://$PROJECT_DIR$/Manuscript/Manuscript.iml" filepath="$PROJECT_DIR$/Manuscript/Manuscript.iml" />
       <module fileurl="file://$PROJECT_DIR$/Metropolis/Metropolis.iml" filepath="$PROJECT_DIR$/Metropolis/Metropolis.iml" />
       <module fileurl="file://$PROJECT_DIR$/Nexus/Nexus.iml" filepath="$PROJECT_DIR$/Nexus/Nexus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Nexus-Test-Server/Nexus-Test-Server.iml" filepath="$PROJECT_DIR$/Nexus-Test-Server/Nexus-Test-Server.iml" />
       <module fileurl="file://$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" filepath="$PROJECT_DIR$/NexusForTomcat/NexusForTomcat.iml" />
       <module fileurl="file://$PROJECT_DIR$/Paradigm/Paradigm.iml" filepath="$PROJECT_DIR$/Paradigm/Paradigm.iml" />
       <module fileurl="file://$PROJECT_DIR$/Reach/Reach.iml" filepath="$PROJECT_DIR$/Reach/Reach.iml" />

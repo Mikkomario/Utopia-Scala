@@ -49,8 +49,7 @@ class Request(val method: Method, val targetUrl: String, val path: Option[Path] 
     
     // IMPLEMENTED  ----------------------------
     
-    override def toString =
-    {
+    override def toString = {
         val sb = new StringBuilder
         sb ++= s"$method $targetUrl"
         path.foreach { p => sb ++= s" ($p)" }

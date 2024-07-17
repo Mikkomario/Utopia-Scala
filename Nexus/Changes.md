@@ -2,6 +2,11 @@
 
 ## v1.9.3 (in development)
 Supports **Flow v2.4**
+### Deprecations
+- Deprecated `.withModifiedHeaders(...)` in **Response** in favor of the new `.mapHeaders(...)`
+### New methods
+- **Response**
+  - Added `.withStatus(Status)` and `.mapStatus(...)`
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used
 

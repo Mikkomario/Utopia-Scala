@@ -7,6 +7,8 @@ Supports **Flow v2.4**
 ### New methods
 - **ContentType**
   - Added `.charset` and `.withCharset(Charset)`
+- **Headers**
+  - Added `.contains(String)`
 ### Other changes
 - Added **StatusGroup.Custom** in order to cover status codes outside the normal (100-599) code range
 

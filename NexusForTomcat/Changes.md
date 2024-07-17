@@ -1,5 +1,10 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.2.7 (in development)
+### New methods
+- **LogicWrappingServlet** (object)
+  - Added a new constructor
+
 ## v1.2.6 - 22.01.2024
 Supports **Flow v2.3**
 ### Other changes

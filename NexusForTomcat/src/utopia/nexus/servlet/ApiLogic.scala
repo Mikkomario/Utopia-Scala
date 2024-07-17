@@ -1,6 +1,7 @@
 package utopia.nexus.servlet
 import utopia.access.http.Status
 import utopia.access.http.StatusGroup.ServerError
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
@@ -23,13 +24,12 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
   * @param settings Implicit server settings
   * @param logger Implicit logging implementation
   */
-class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[Request => Request] = Vector(),
-               postProcessors: Seq[Response => Response] = Vector())
+class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[Request => Request] = Empty,
+               postProcessors: Seq[Response => Response] = Empty)
               (implicit override val jsonParser: JsonParser, override val settings: ServerSettings, logger: Logger)
 	extends ServletLogic
 {
 	// INITIAL CODE ------------------------
-	
 	
 	Status.setup()
 	

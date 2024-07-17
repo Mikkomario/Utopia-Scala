@@ -233,6 +233,12 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     // OPERATORS    ---------------
     
     /**
+      * @param headerName A header
+      * @return Whether these headers contain the specified header
+      */
+    def contains(headerName: String) = fields.contains(headerName.toLowerCase)
+    
+    /**
      * Finds the value associated with the specified header name. The value may contain multiple 
      * parts, depending from the header format. Returns None if the header has no value.
      */
@@ -392,16 +398,14 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
     /**
      * Finds the first accepted type from the provided options
      */
-    def getAcceptedType(options: Seq[ContentType]) = 
-    {
+    def getAcceptedType(options: Seq[ContentType]) = {
         val accepted = acceptedTypes
         options.find(accepted.contains)
     }
     /**
      * Finds the most preferred accepted charset from the provided options
      */
-    def getAcceptedCharset(options: Seq[Charset]) = 
-    {
+    def getAcceptedCharset(options: Seq[Charset]) = {
         val accepted = acceptedCharsets.view.filterKeys(options.contains)
         if (accepted.isEmpty)
             None

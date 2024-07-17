@@ -9,6 +9,22 @@ import utopia.nexus.http.ServerSettings
 
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 
+object LogicWrappingServlet
+{
+	// OTHER    -----------------------------
+	
+	/**
+	  * @param logic Logic to wrap
+	  * @return A servlet using the specified logic
+	  */
+	def apply(logic: ServletLogic): LogicWrappingServlet = new _LogicWrappingServlet(logic)
+	
+	
+	// NESTED   -----------------------------
+	
+	private class _LogicWrappingServlet(override val logic: ServletLogic) extends LogicWrappingServlet
+}
+
 /**
   * This servlet implementation wraps a logic component, handling standard conversions individually
   * @author Mikko Hilpinen
@@ -26,8 +42,7 @@ abstract class LogicWrappingServlet extends HttpServlet
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def service(req: HttpServletRequest, resp: HttpServletResponse) =
-	{
+	override def service(req: HttpServletRequest, resp: HttpServletResponse) = {
 		// Default implementation doesn't support PATCH, so skips some validations from parent if possible
 		if (Method.values.exists { _.name ~== req.getMethod })
 			handleRequest(req, resp)

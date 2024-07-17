@@ -1,5 +1,6 @@
 package utopia.exodus.test.rest.servlet
 
+import utopia.access.http.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.util.CitadelContext
 import utopia.exodus.model.enumeration.ExodusScope._
@@ -38,8 +39,6 @@ class ApiServlet extends LogicWrappingServlet
 {
 	// ATTRIBUTES   ----------------------------
 	
-	
-	
 	private implicit val logger: Logger = SysErrLogger
 	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server")
 	private implicit val connectionPool: ConnectionPool = new ConnectionPool()
@@ -64,6 +63,8 @@ class ApiServlet extends LogicWrappingServlet
 	
 	// INITIAL CODE	----------------------------
 	
+	Status.setup()
+	
 	ExodusContext.setup(exc, connectionPool,
 		dbSettings("db_name", "db").stringOr("exodus_db")) {
 		Set(ReadGeneralData, ReadPersonalData, PersonalActions, ReadOrganizationData, OrganizationActions,
@@ -73,8 +74,7 @@ class ApiServlet extends LogicWrappingServlet
 	Connection.modifySettings { _.copy(driver = Some("org.mariadb.jdbc.Driver"), charsetName = "utf8",
 		charsetCollationName = "utf8_general_ci") }
 	
-	dbSettingsRead match
-	{
+	dbSettingsRead match {
 		case Success(settings) => Connection.modifySettings { _.copy(password = settings("password").getString) }
 		case Failure(error) =>
 			logger("Database settings read failed (error below). Continues with no password and database name 'exodus-test'")

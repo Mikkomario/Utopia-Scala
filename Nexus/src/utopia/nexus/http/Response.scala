@@ -15,6 +15,7 @@ import utopia.access.http.Headers
 import utopia.access.http.ContentType
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.util.Mutate
 
 object Response
 {
@@ -73,17 +74,16 @@ object Response
      * @param message the optional message sent along with the response
      * @param charset the character set used for encoding the message content. Default = UTF-8
      */
-    def plainText(message: String, status: Status = OK, charset: Charset = StandardCharsets.UTF_8) = 
-    {
+    def plainText(message: String, status: Status = OK, charset: Charset = StandardCharsets.UTF_8) = {
         val headers = Headers.withContentType(Text/"plain", Some(charset)).withCurrentDate
         new Response(status, headers, Empty, Some({ _.write(message.getBytes(charset)) }))
     }
     
     /**
      * Creates an empty response with current date header
-     * @param status the status for the response
+     * @param status the status for the response (default = 204 = No Content)
      */
-    def empty(status: Status = OK) = new Response(status, Headers.withCurrentDate)
+    def empty(status: Status = NoContent) = new Response(status, Headers.withCurrentDate)
 }
 
 /**
@@ -109,8 +109,25 @@ class Response(val status: Status = OK, val headers: Headers = Headers.empty,
     // OTHER METHODS    ----------------
     
     /**
+      * @param status New status to assign to this response
+      * @return Copy of this response with the specified status
+      */
+    def withStatus(status: Status) = new Response(status, headers, setCookies, writeBody)
+    /**
+      * @param f A mapping function applied to this response's status
+      * @return Copy of this response with modified status
+      */
+    def mapStatus(f: Mutate[Status]) = withStatus(f(status))
+    
+    /**
+      * @param f A mapping function applied to the headers of this response
+      * @return Copy of this response with modified headers
+      */
+    def mapHeaders(f: Mutate[Headers]) = new Response(status, f(headers), setCookies, writeBody)
+    /**
      * Creates a new response with modified headers. The headers are modified in the provided 
      * function
      */
-    def withModifiedHeaders(modify: Headers => Headers) = new Response(status, modify(headers), setCookies, writeBody)
+    @deprecated("Renamed to .mapHeaders(...)", "v1.9.3")
+    def withModifiedHeaders(modify: Headers => Headers) = mapHeaders(modify)
 }

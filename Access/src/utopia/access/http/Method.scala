@@ -31,7 +31,7 @@ object Method
     /**
      * The existing method values
      */
-    lazy val values = Vector(Get, Post, Put, Delete, Patch)
+    lazy val values = Vector[Method](Get, Post, Put, Delete, Patch)
     
     
     // OTHER METHODS    ---------
@@ -39,8 +39,7 @@ object Method
     /**
      * Parses a string into a method, if it matches one (case-insensitive)
      */
-    def parse(methodString: String): Option[Method] = 
-    {
+    def parse(methodString: String): Option[Method] = {
         val trimmedName = methodString.toUpperCase().trim()
         values.find { _.name == trimmedName }
     }    
