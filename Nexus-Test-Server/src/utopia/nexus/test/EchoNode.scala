@@ -16,9 +16,13 @@ import utopia.nexus.result.Result
   */
 class EchoNode(implicit apiVersion: Version) extends LeafResource[PostContext]
 {
+	// ATTRIBUTES   -----------------------
+	
+	override val name: String = "echo"
+	
+	
 	// IMPLEMENTED  -----------------------
 	
-	override def name: String = "echo"
 	override def allowedMethods = Method.values
 	
 	override def toResponse(remainingPath: Option[Path])(implicit context: PostContext): Response = {

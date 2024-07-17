@@ -44,9 +44,10 @@ class TestApiServlet extends LogicWrappingServlet
 	implicit val jsonParser: JsonParser = JsonBunny
 	implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	
+	private val slowNode = new SlowNode()
 	private val resources = Map(
-		versionedResources(1) { implicit v => Single(new EchoNode()) },
-		versionedResources(2) { implicit v => Pair(new EchoNode(), MethodNotAllowedNode) }
+		versionedResources(1) { implicit v => Pair(new EchoNode(), slowNode) },
+		versionedResources(2) { implicit v => Vector(new EchoNode(), slowNode, MethodNotAllowedNode) }
 	)
 	private val resultParser = UseRawXmlOrJson()
 	private val requestHandler = RequestHandler(resources, Some(Path("test", "api"))) { req =>
