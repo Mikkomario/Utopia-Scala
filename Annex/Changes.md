@@ -2,12 +2,82 @@
 
 ## v1.8 (in development)
 ### Breaking changes
-- **Api** now requires the implementation of `implicit def jsonParser: JsonParser`
+- Multiple changes to **RequestResult** and **Response.Success**
+  - In general, responses are now expected to be parsed by the time they are returned by other interfaces, 
+    such as **ApiClient** or **RequestQueue**
+    - The parsing is completed either in:
+      - An **ApiRequest** implementation
+      - When calling **ApiClient** directly
+    - As a consequence, these classes now utilize a generic type parameter, 
+      which indicates the type of parsed response body value
+      - Unfortunately this makes `unapply` in **Response.Success** function quite poorly, which may require refactoring
+  - The three parameters in **Response.Success** now appear in order: `value` (renamed), `status`, `headers`
+    - Previously: `status`, `body`, `headers`
+- Replaced **Api** with **ApiClient**
+  - **Api** is still available, but deprecated
+  - `.get(...)` and `.post(...)` functions in **Api** now yield **PreparedRequest** instead of a **Future**
+  - **Api** now requires the implementation of `implicit def jsonParser: JsonParser`
+- Multiple changes to **ApiRequest**:
+  - **ApiRequest** now accepts a type parameter
+  - **ApiRequest**s are now required to implement a `send(PreparedRequest)` function, 
+    which handles response-parsing.
+    - This also applies to `ApiRequest.get(...)`
+  - Removed `ApiRequest.post(...)`
+    - Similar functionality may be achieved by calling `ApiRequest.apply(...) `
+      or by using the new **PersistingApiRequest** companion object.
+- **DeleteRequest** no longer extends **Persisting**, nor does it implement `deprecated` nor `persistingModelPointer`
+- Rewrote parts of **PersistedRequestHandler**
+  - The `handle(...)` function is now expected to parse, create and perform the request, also
+  - Removed the `factory` property
+- **RequestQueue** no longer specifies implementation for `.push(...)`
+  - A new version which includes implementation and largely matches the previous **RequestQueue** trait, 
+    is **SystemRequestQueue**
+- Multiple changes to **ContainerUpdateLoop**:
+  - **ContainerUpdateLoop** now accepts 2 generic type parameters instead of one
+  - `makeRequest(...)` is now expected to handle response parsing, also
+  - `merge(...)` Now receives the parsed value
+  - `merge(...)` is now called even when the response is empty, but still not if the server returns 304 / Not Modified
+- Deleted a few previously deprecated **Schrodinger** classes
+### Deprecations
+- Multiple deprecations in **RequestResult** classes
+  - Deprecated `.toEmptyTry` in favor of `.toTry`, which includes the response body on success
+  - Deprecated `.singleParsedFromSuccess(...)` and `.manyParsedFromSuccess(...)` 
+    in favor of `.tryParseSingle(...)` and `.tryParseMany(...)`
+  - Deprecated `.body` in **Success**
+    - The same is now accessible as `.value`
+- Deprecated the **ResponseBody** trait + classes
+- Deprecated **Spirit** and **PostSpiritRequest**, since these seem somewhat redundant with the current 
+  **ApiRequest** implementation
+- Deprecated `DeleteRequest.apply(...)`
+  - The intended replacement is to use `PersistingApiRequest.apply(...)`
 ### Bugfixes
 - Persisted requests are now removed from the request container regardless of whether there was a request handler 
   that was able to process them
+### New features
+- Added **PreparingResponseParser** trait + object + **ResponseParseExtensions** in order to make creating 
+  Annex-compatible **ResponseParser**s easier.
+- Added **PersistingApiRequest** trait, where the focus is mostly on its companion object, which offers multiple 
+  functions for constructing **ApiRequest**s which persist between sessions.
+### New methods
+- **ApiRequest** (object)
+  - Added `.apply(...)` and `.getValue(...)` for creating new requests
+  - Added `.persisting` which provides access to constructors for persisting API-request
+- **GetRequest** (object)
+  - Added `.value(...)` which matches the previous `.apply(...)` implementation
+- **PersistingRequestQueue**
+  - Added `.withoutPersisting: RequestQueue`
+- **RequestQueue**
+  - Added `.tryPush(Try)` and `.tryPushSeed(Try)`
+- **RequestResult**
+  - Added `.map(...)` and `.tryMap(...)`
+  - Added multiple functions which only apply to **RequestResult**s with content type **Value**:
+    - Added `.parsingOneWith(...)`, `.parsingManyWith(...)` and `.parsingOptionWith(...)`
+    - Added `.tryParseOne(FromModelFactory)`, `.tryParseMany(FromModelFactory)` and `.tryParseOption(FromModelFactory)`
 ### Other changes
 - In many instances where **Vector** was required, **Seq** is now used
+- **PersistingRequestQueue** now persists the previously persisted requests again upon sending them 
+  (still removing them once sending completes). 
+  - This is to handle situations where not all requests can be processed before the session terminates again.
 
 ## v1.7 - 22.01.2024
 This update focuses on persisting request handling (i.e. offline support across use-sessions). 

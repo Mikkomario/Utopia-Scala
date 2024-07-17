@@ -3,9 +3,9 @@ package utopia.annex.controller
 import utopia.access.http.Method.{Get, Post}
 import utopia.access.http.{Headers, Method, Status}
 import utopia.annex.controller.ApiClient.PreparedRequest
-import utopia.annex.model.request.ApiRequest2
-import utopia.annex.model.response.RequestNotSent2.RequestSendingFailed2
-import utopia.annex.model.response.{RequestResult2, Response2}
+import utopia.annex.model.request.ApiRequest
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
@@ -61,19 +61,20 @@ object ApiClient
 		  * @param parser Parser used for processing the response
 		  * @return Future which resolves into the eventual request send result
 		  */
-		def send[A](parser: ResponseParser[RequestResult2[A]]) = {
+		def send[A](parser: ResponseParser[RequestResult[A]]) = {
 			// Sends the request and handles possible request sending failures
 			api.gateway.responseFor(wrapped)(parser).map {
 				case Success(response) => response.body
-				case Failure(error) => RequestSendingFailed2(error)
+				case Failure(error) => RequestSendingFailed(error)
 			}
 		}
 		
 		/**
-		  * Sends out this request, not expecting the response to contain a response body
+		  * Sends out this request, not expecting the response to contain a response body.
+		  * Handles failure message -extraction using instructions defined in the [[ApiClient]].
 		  * @return Future which eventually resolves into the acquired response or a request failure
 		  */
-		def send(): Future[RequestResult2[Unit]] = send(PreparingResponseParser.wrap(ResponseParser.empty) { _ => "" })
+		def send(): Future[RequestResult[Unit]] = send(api.emptyResponseParser)
 	}
 }
 
@@ -117,7 +118,12 @@ trait ApiClient
 	/**
 	  * @return A response parser used for converting response contents into generic values
 	  */
-	def valueResponseParser: ResponseParser[Response2[Value]]
+	def valueResponseParser: ResponseParser[Response[Value]]
+	/**
+	  * @return A response parser used when the responses are not expected to contain important content.
+	  *         Should, however, implement error handling in case of failed responses.
+	  */
+	def emptyResponseParser: ResponseParser[Response[Unit]]
 	
 	/**
 	  * This function is called to modify all outgoing headers.
@@ -172,7 +178,7 @@ trait ApiClient
 	  * @param request Request to send out
 	  * @return Future which resolves into the eventual request send result
 	  */
-	def send[A](request: ApiRequest2[A]): Future[RequestResult2[A]] =
+	def send[A](request: ApiRequest[A]): Future[RequestResult[A]] =
 		request.send(prepareRequest(request.method, request.path, request.body))
 	/**
 	  * Prepares a request for sending
@@ -220,12 +226,12 @@ trait ApiClient
 	  */
 	def tryMapParser[A](parse: Value => Try[A]) = {
 		// Further modifies the acquire responses
-		valueResponseParser.map[Response2[A]] {
+		valueResponseParser.map[Response[A]] {
 			// Case: Successful response => Attempts to parse it
-			case Response2.Success(value, status, headers) =>
+			case Response.Success(value, status, headers) =>
 				parse(value) match {
 					// Case: Parsing succeeded => Wraps the parse results
-					case Success(parsed) => Response2.Success(parsed, status, headers)
+					case Success(parsed) => Response.Success(parsed, status, headers)
 					
 					// Case: Parsing failed => Converts into a failure response instead
 					case Failure(error) =>
@@ -236,11 +242,11 @@ trait ApiClient
 						}
 						log(error,
 							s"Failed to parse the response contents into the desired data type; Status = $status$contentTypeStr")
-						Response2.Failure(responseParseFailureStatus, error.getMessage, headers)
+						Response.Failure(responseParseFailureStatus, error.getMessage, headers)
 				}
 			
 			// Case: Failure response => Won't attempt parsing
-			case failure: Response2.Failure => failure
+			case failure: Response.Failure => failure
 		}
 	}
 	

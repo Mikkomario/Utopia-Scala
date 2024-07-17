@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux}
 import utopia.annex.model.manifest.{HasSchrodingerState, Manifestation, SchrodingerState}
-import utopia.annex.model.response.{RequestFailure2, RequestResult2, Response2}
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.Identity
@@ -60,7 +60,7 @@ object Schrodinger
 	def failure[M, R](manifest: M, result: R) = resolved(manifest, result, Dead)
 	
 	private[schrodinger] def getPointer[L <: HasIsEmpty, R <: HasIsEmpty](local: L, placeHolder: R,
-	                                                                      resultFuture: Future[RequestResult2[R]],
+	                                                                      resultFuture: Future[RequestResult[R]],
 	                                                                      emptyIsDead: Boolean = false)
 	                                                                     (localize: R => L)
 	                                                                     (implicit exc: ExecutionContext) =
@@ -70,7 +70,7 @@ object Schrodinger
 			(placeHolder, parsed) => testEmptyState(placeHolder, parsed, emptyIsDead)(localize) }
 	}
 	private[schrodinger] def remoteGetPointer[M <: HasIsEmpty](placeHolder: M,
-	                                                           resultFuture: Future[RequestResult2[M]],
+	                                                           resultFuture: Future[RequestResult[M]],
 	                                                           emptyIsDead: Boolean = false,
 	                                                           expectFailure: Boolean = false)
 	                                                          (implicit exc: ExecutionContext) =
@@ -79,7 +79,7 @@ object Schrodinger
 			(placeHolder, result) => testEmptyState(placeHolder, result, emptyIsDead)(Identity) }
 	}
 	private[schrodinger] def pullPointer[A](initialManifest: Try[A], placeHolderResult: Try[A],
-	                                        resultFuture: Future[RequestResult2[Try[A]]], flux: Flux = Flux)
+	                                        resultFuture: Future[RequestResult[Try[A]]], flux: Flux = Flux)
 	                                       (implicit exc: ExecutionContext) =
 	{
 		makePointer[Try[A], Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) { _.flatten } {
@@ -90,7 +90,7 @@ object Schrodinger
 	}
 	// TODO: It seems like the process function is (almost?) always Identity
 	private[schrodinger] def makePointer[M, B, R](initialManifest: M, placeHolderResult: R,
-	                                              resultFuture: Future[RequestResult2[B]], flux: Flux = Flux)
+	                                              resultFuture: Future[RequestResult[B]], flux: Flux = Flux)
 	                                             (process: Try[B] => R)
 	                                             (merge: (M, R) => (M, R, Final))
 	                                             (implicit exc: ExecutionContext) =
@@ -101,8 +101,8 @@ object Schrodinger
 		resultFuture.onComplete { result =>
 			// Acquires the response body, if successful
 			val parsed = process(result.flatMap {
-				case Response2.Success(body, _, _) => Success(body)
-				case f: RequestFailure2 => f.toFailure[B]
+				case Response.Success(body, _, _) => Success(body)
+				case f: RequestFailure => f.toFailure[B]
 			})
 			// Updates the pointer
 			pointer.update { case (placeHolder, _, _) => merge(placeHolder, parsed) }

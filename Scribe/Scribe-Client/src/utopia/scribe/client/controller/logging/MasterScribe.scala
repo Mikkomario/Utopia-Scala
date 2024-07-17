@@ -2,22 +2,20 @@ package utopia.scribe.client.controller.logging
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
-import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
-import utopia.annex.model.request.{ApiRequest, Persisting, RequestQueueable}
+import utopia.annex.controller.{ApiClient, PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
+import utopia.annex.model.request.{ApiRequest, Persisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.{Loop, PostponingProcess}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
@@ -38,7 +36,6 @@ import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 object MasterScribe
 {
@@ -137,12 +134,8 @@ object MasterScribe
 		
 		private lazy val requestQueue: RequestQueue = requestStoreLocation match {
 			case Some(path) =>
-				val (queue, errors) = PersistingRequestQueue(queueSystem, path, Single(RequestHandler),
+				val queue = PersistingRequestQueue(queueSystem, path, Single(RequestHandler),
 					saveLogic = OnlyOnTrigger)
-				// Logs possible request parsing errors
-				errors.headOption.foreach {
-					backupLogger(_, s"Failed to restore ${ errors.size } persisted request for sending issue data")
-				}
 				// Sends and persists the requests on JVM shutdown
 				CloseHook.registerAsyncAction {
 					// Persists the request before and after its completion
@@ -256,7 +249,7 @@ object MasterScribe
 		
 		// OTHER    ----------------------------
 		
-		private def handlePostResult(issues: Iterable[(ClientIssue, Instant)], result: RequestResult) = {
+		private def handlePostResult(issues: Iterable[(ClientIssue, Instant)], result: RequestResult[Unit]) = {
 			result match {
 				// Case: Request was deprecated => Only logs locally (WET WET)
 				case RequestWasDeprecated =>
@@ -276,43 +269,35 @@ object MasterScribe
 		
 		private object RequestHandler extends PersistedRequestHandler
 		{
-			override lazy val factory = PostIssuesRequest.mapParseResult { Right(_) }
+			// IMPLEMENTED  -------------------------
+			
+			override def handle(requestModel: Model, queue: PersistingRequestQueue): Unit = {
+				// Parses the issues from the request model
+				// Logs possible parsing errors, whether critical or non-critical
+				parseIssuesFrom(requestModel).logToOption.filter { _.nonEmpty }.foreach { issues =>
+					// Sends the issues to the server, logs possible failures
+					queue.push(new PostIssuesRequest(issues)).foreach { handlePostResult(issues, _) }
+				}
+			}
 			
 			override def shouldHandle(requestModel: Model): Boolean = requestModel.contains("issues")
-			override def handle(requestModel: Model, request: RequestQueueable, result: RequestResult): Unit = {
-				val postRequest = request.toOption.flatMap {
-					case r: PostIssuesRequest => Some(r)
-					case _ => None
-				}
-				val issues = postRequest match {
-					case Some(postRequest) => postRequest.remainingIssues
-					case None => PostIssuesRequest.parseIssuesFrom(requestModel).success.getOrElse(Empty)
-				}
-				handlePostResult(issues, result)
-			}
+			
+			
+			// OTHER    -----------------------------
+			
+			private def parseIssuesFrom(model: AnyModel) =
+				model("issues").getVector
+					// Attempts to parse the issues
+					.map { v =>
+						val issueModel = v.getModel
+						ClientIssue(issueModel).map { _ -> issueModel("lastUpdated").getInstant }
+					}
+					// Logs non-critical errors using the backup logger
+					.toTryCatch
 		}
 		
-		private object PostIssuesRequest extends FromModelFactory[PostIssuesRequest]
-		{
-			// IMPLEMENTED  ---------------------
-			
-			override def apply(model: ModelLike[Property]): Try[PostIssuesRequest] =
-				parseIssuesFrom(model).logToTry.map { new PostIssuesRequest(_) }
-			
-			
-			// OTHER    ------------------------
-			
-			def parseIssuesFrom(model: AnyModel) = model("issues").getVector
-				// Attempts to parse the issues
-				.map { v =>
-					val issueModel = v.getModel
-					ClientIssue(issueModel).map { _ -> issueModel("lastUpdated").getInstant }
-				}
-				// Logs non-critical errors using the backup logger
-				.toTryCatch
-		}
 		private class PostIssuesRequest(initialIssues: IndexedSeq[(ClientIssue, Instant)])
-			extends ApiRequest with Persisting
+			extends ApiRequest[Unit] with Persisting
 		{
 			// ATTRIBUTES   --------------------
 			
@@ -334,11 +319,6 @@ object MasterScribe
 			}
 			
 			
-			// COMPUTED ------------------------
-			
-			def remainingIssues = remainingIssuesPointer.value
-			
-			
 			// IMPLEMENTED  --------------------
 			
 			override def path: String = loggingEndpointPath
@@ -350,6 +330,8 @@ object MasterScribe
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated
 			override def deprecated: Boolean = deprecateOldIssues().isEmpty
+			
+			override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Unit]] = prepared.send()
 			
 			
 			// OTHER    ------------------------

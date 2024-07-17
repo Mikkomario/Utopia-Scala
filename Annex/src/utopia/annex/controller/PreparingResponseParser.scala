@@ -1,8 +1,10 @@
 package utopia.annex.controller
 
 import utopia.access.http.{Headers, Status}
-import utopia.annex.model.response.Response2
+import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.Identity
 
 import java.io.InputStream
 
@@ -25,7 +27,7 @@ object PreparingResponseParser
 	  * @return A new response parser which post-processes the specified parser's results
 	  */
 	def apply[M, A](primary: ResponseParser[M])
-	               (f: (ResponseParseResult[M], Status, Headers) => Response2[A]): PreparingResponseParser[M, A] =
+	               (f: (ResponseParseResult[M], Status, Headers) => Response[A]): PreparingResponseParser[M, A] =
 		new _PreparingResponseParser[M, A](primary, f)
 	
 	/**
@@ -46,9 +48,9 @@ object PreparingResponseParser
 	             (mapSuccess: ResponseParseResult[M] => A)(extractFailureMessage: M => String) =
 		apply(primary) { (body, status, headers) =>
 			if (status.isFailure)
-				Response2.Failure(status, extractFailureMessage(body), headers)
+				Response.Failure(status, extractFailureMessage(body), headers)
 			else
-				Response2.Success(mapSuccess(body), status, headers)
+				Response.Success(mapSuccess(body), status, headers)
 		}
 	
 	/**
@@ -75,11 +77,11 @@ object PreparingResponseParser
 	                (extractFailureMessage: M => String) =
 		apply(primary) { (body, status, headers) =>
 			if (status.isFailure)
-				Response2.Failure(status, extractFailureMessage(body), headers)
+				Response.Failure(status, extractFailureMessage(body), headers)
 			else
 				mapSuccess(body) match {
-					case Right(success) => Response2.Success(success, status, headers)
-					case Left((newStatus, failureMessage)) => Response2.Failure(newStatus, failureMessage, headers)
+					case Right(success) => Response.Success(success, status, headers)
+					case Left((newStatus, failureMessage)) => Response.Failure(newStatus, failureMessage, headers)
 				}
 		}
 	
@@ -95,11 +97,40 @@ object PreparingResponseParser
 	def wrap[A](parser: ResponseParser[A])(extractFailureMessage: A => String) =
 		map(parser) { _.wrapped }(extractFailureMessage)
 	
+	/**
+	  * Creates a response parser which is only interested in error handling.
+	  * Bodies of successful responses are ignored.
+	  * @param failureParser A parser used for converting failure response bodies into the intermediate data type
+	  * @param extractFailureMessage A function for extracting an error message from the intermediate data type
+	  * @tparam A Type of the intermediate state for failure responses
+	  * @return A response parser which ignores successes, but converts failures with a two-step-process
+	  */
+	def onlyMapFailures[A](failureParser: ResponseParser[A])(extractFailureMessage: A => String) =
+		map[Either[A, Unit], Unit](
+			ResponseParser.static[Either[A, Unit]](Right(()))
+				.handleFailuresUsing(failureParser.map { Left(_) })) {
+			_ => () } {
+			_.leftOption match {
+				case Some(a) => extractFailureMessage(a)
+				case None => ""
+			}
+		}
+	
+	/**
+	  * Creates a response parser which is only interested in error handling.
+	  * Bodies of successful responses are ignored.
+	  * @param errorMessageParser A response parser applied to failure responses only.
+	  *                           Extracts the failure message.
+	  * @return A response parser which ignores successes, but parses error messages from failures
+	  */
+	def onlyRecordFailures(errorMessageParser: ResponseParser[String]) =
+		map[String, Unit](ResponseParser.static("").handleFailuresUsing(errorMessageParser)) { _ => () }(Identity)
+	
 	
 	// NESTED   --------------------------
 	
 	private class _PreparingResponseParser[M, +A](override val primaryParser: ResponseParser[M],
-	                                              f: (ResponseParseResult[M], Status, Headers) => Response2[A])
+	                                              f: (ResponseParseResult[M], Status, Headers) => Response[A])
 		extends PreparingResponseParser[M, A]
 	{
 		override protected def finalize(prepared: ResponseParseResult[M], status: Status, headers: Headers) =
@@ -113,7 +144,7 @@ object PreparingResponseParser
   * @author Mikko Hilpinen
   * @since 14.07.2024, v1.8
   */
-trait PreparingResponseParser[M, +A] extends ResponseParser[Response2[A]]
+trait PreparingResponseParser[M, +A] extends ResponseParser[Response[A]]
 {
 	// ABSTRACT ------------------------------
 	
@@ -130,7 +161,7 @@ trait PreparingResponseParser[M, +A] extends ResponseParser[Response2[A]]
 	  * @param headers Response headers
 	  * @return Either a success or a failure response
 	  */
-	protected def finalize(prepared: ResponseParseResult[M], status: Status, headers: Headers): Response2[A]
+	protected def finalize(prepared: ResponseParseResult[M], status: Status, headers: Headers): Response[A]
 	
 	
 	// IMPLEMENTED  --------------------------

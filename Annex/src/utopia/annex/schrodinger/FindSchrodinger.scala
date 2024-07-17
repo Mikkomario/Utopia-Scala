@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Final}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
@@ -81,7 +81,7 @@ object FindSchrodinger
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult2[Option[R]]], emptyIsDead: Boolean = false)
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Option[R]]], emptyIsDead: Boolean = false)
 	               (localize: R => L)(implicit exc: ExecutionContext) =
 		wrap(Schrodinger.getPointer[Option[L], Option[R]](local, None, resultFuture, emptyIsDead) { _.map(localize) })
 	
@@ -101,13 +101,13 @@ object FindSchrodinger
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def findAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult2[Value]],
+	def findAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]],
 	                       parser: FromModelFactory[R], emptyIsDead: Boolean = false)
 	                      (localize: R => L)(implicit exc: ExecutionContext) =
 		apply[L, R](local, resultFuture.map { _.parsingOptionWith(parser) }, emptyIsDead)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .findAndParse(...) instead", "v1.8")
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[R])
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
 	               (localize: R => L)(implicit exc: ExecutionContext): FindSchrodinger[L, R] =
 		findAndParse(local, resultFuture, parser)(localize)
 	
@@ -125,7 +125,7 @@ object FindSchrodinger
 	  * @tparam A Type of search results, when found
 	  * @return A new schrödinger, either based on local results (final) or remote search (flux)
 	  */
-	def findAny[A](local: Option[A], emptyIsDead: Boolean = false)(makeRequest: => Future[RequestResult2[Option[A]]])
+	def findAny[A](local: Option[A], emptyIsDead: Boolean = false)(makeRequest: => Future[RequestResult[Option[A]]])
 	              (implicit exc: ExecutionContext) =
 	{
 		// Case: Local results found => Skips the remote search
@@ -152,12 +152,12 @@ object FindSchrodinger
 	  * @return A new schrödinger, either based on local results (final) or remote search (flux)
 	  */
 	def findAndParseAny[A](local: Option[A], parser: FromModelFactory[A], emptyIsDead: Boolean = false)
-	                      (makeRequest: => Future[RequestResult2[Value]])
+	                      (makeRequest: => Future[RequestResult[Value]])
 	                      (implicit exc: ExecutionContext) =
 		findAny[A](local, emptyIsDead) { makeRequest.map { _.parsingOptionWith(parser) } }
 	
 	@deprecated("Deprecated for removal. Please use .findAndParseAny(...) instead", "v1.8")
-	def findAny[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult2[Value]])
+	def findAny[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
 	              (implicit exc: ExecutionContext): FindSchrodinger[A, A] =
 		findAndParseAny(local, parser)(makeRequest)
 	
@@ -172,7 +172,7 @@ object FindSchrodinger
 	  * @tparam A Type of found item
 	  * @return A new schrödinger that will contain None until server results arrive
 	  */
-	def findRemote[A](resultFuture: Future[RequestResult2[Option[A]]], emptyIsDead: Boolean = false,
+	def findRemote[A](resultFuture: Future[RequestResult[Option[A]]], emptyIsDead: Boolean = false,
 	                  expectFailure: Boolean = false)
 	                 (implicit exc: ExecutionContext) =
 		wrap(Schrodinger.remoteGetPointer[Option[A]](None, resultFuture, emptyIsDead, expectFailure))
@@ -189,13 +189,13 @@ object FindSchrodinger
 	  * @tparam A Type of found item
 	  * @return A new schrödinger that will contain None until server results arrive
 	  */
-	def findAndParseRemote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A],
+	def findAndParseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                          emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	                         (implicit exc: ExecutionContext) =
 		findRemote[A](resultFuture.map { _.parsingOptionWith(parser) }, emptyIsDead, expectFailure)
 	
 	@deprecated("Deprecated for removal. Please use .findAndParseRemote(...) instead", "v1.8")
-	def findRemote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def findRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	                 (implicit exc: ExecutionContext): FindSchrodinger[A, A] =
 		findAndParseRemote(resultFuture, parser)
 }

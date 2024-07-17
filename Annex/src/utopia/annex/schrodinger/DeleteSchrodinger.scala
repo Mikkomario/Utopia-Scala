@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -54,7 +54,7 @@ object DeleteSchrodinger
 	  * @tparam A Type of instance being deleted
 	  * @return A new schrödinger
 	  */
-	def apply[A](ghost: => A, resultFuture: Future[RequestResult2[Any]])(implicit exc: ExecutionContext) =
+	def apply[A](ghost: => A, resultFuture: Future[RequestResult[Any]])(implicit exc: ExecutionContext) =
 		wrap(Schrodinger.makePointer[Option[A], Any, Try[Unit]](None, successValue, resultFuture,
 			PositiveFlux) { _.map { _ => () } } {
 			(_, result) => (if (result.isSuccess) None else Some(ghost), result, Final(result.isSuccess)) })

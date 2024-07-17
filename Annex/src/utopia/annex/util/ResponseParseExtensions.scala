@@ -2,7 +2,7 @@ package utopia.annex.util
 
 import utopia.access.http.Status
 import utopia.annex.controller.PreparingResponseParser
-import utopia.annex.model.response.Response2
+import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 
 import scala.util.{Failure, Success, Try}
@@ -78,7 +78,7 @@ object ResponseParseExtensions
 			}
 	}
 	
-	implicit class AnnexResponseParser[+A](val p: ResponseParser[Response2[A]]) extends AnyVal
+	implicit class AnnexResponseParser[+A](val p: ResponseParser[Response[A]]) extends AnyVal
 	{
 		/**
 		  * @param f A mapping function to apply to successful response contents

@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
@@ -87,7 +87,7 @@ object PullManySchrodinger
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult2[Seq[R]]], emptyIsDead: Boolean = false)
+	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult[Seq[R]]], emptyIsDead: Boolean = false)
 	               (localize: R => L)(implicit exc: ExecutionContext) =
 		wrap(Schrodinger.getPointer(local, Empty: Seq[R], resultFuture, emptyIsDead) { _.map(localize) })
 	
@@ -107,12 +107,12 @@ object PullManySchrodinger
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
-	def pullAndParse[L, R](local: Seq[L], resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[R],
+	def pullAndParse[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
 	                       emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext) =
 		apply(local, resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
-	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[R])
+	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
 	               (localize: R => L)(implicit exc: ExecutionContext): PullManySchrodinger[L, R] =
 		pullAndParse(local, resultFuture, parser)(localize)
 	
@@ -127,7 +127,7 @@ object PullManySchrodinger
 	  * @tparam A Type of items parsed
 	  * @return A new schrödinger that will contain an empty vector until server results arrive
 	  */
-	def remote[A](resultFuture: Future[RequestResult2[Seq[A]]],
+	def remote[A](resultFuture: Future[RequestResult[Seq[A]]],
 	              emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	             (implicit exc: ExecutionContext) =
 		wrap(Schrodinger.remoteGetPointer[Seq[A]](Empty, resultFuture, emptyIsDead, expectFailure))
@@ -144,13 +144,13 @@ object PullManySchrodinger
 	  * @tparam A Type of items parsed
 	  * @return A new schrödinger that will contain an empty vector until server results arrive
 	  */
-	def parseRemote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A],
+	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                   emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	                  (implicit exc: ExecutionContext) =
 		remote[A](resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead, expectFailure)
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
-	def remote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	             (implicit exc: ExecutionContext): PullManySchrodinger[A, A] =
 		parseRemote(resultFuture, parser)
 }

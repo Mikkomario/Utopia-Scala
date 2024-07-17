@@ -2,7 +2,7 @@ package utopia.annex.controller
 
 import utopia.access.http.Status
 import utopia.access.http.Status.NotModified
-import utopia.annex.model.response.{RequestFailure, RequestResult, Response, ResponseBody}
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
@@ -20,10 +20,12 @@ import scala.util.{Failure, Success}
 
 /**
   * A looping background process used for requesting up-to-date container data
+  * @tparam A Type of contents stored in the container
+  * @tparam R Type of parsed results acquired from the server
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc: ExecutionContext, logger: Logger)
+abstract class ContainerUpdateLoop[A, R](container: FileContainer[A])(implicit exc: ExecutionContext, logger: Logger)
 	extends LoopingProcess
 {
 	// ABSTRACT	--------------------------
@@ -44,14 +46,14 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 	  * @param timeThreshold Update time threshold to use. None if all data should be included
 	  * @return Eventual request results
 	  */
-	protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult]
+	protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult[R]]
 	
 	/**
 	  * @param oldData Old container content
-	  * @param readData Content read from a server response
+	  * @param readData Content read from a server response (may be empty)
 	  * @return Content that should be stored in the container + scheduled duration until the next check
 	  */
-	protected def merge(oldData: A, readData: ResponseBody): (A, FiniteDuration)
+	protected def merge(oldData: A, readData: R): (A, FiniteDuration)
 	
 	/**
 	  * @return Normal interval between updates
@@ -71,13 +73,13 @@ abstract class ContainerUpdateLoop[A](container: FileContainer[A])(implicit exc:
 		val waitModifier = makeRequest(lastRequestTime).waitFor() match {
 			case Success(result) =>
 				result match {
-					case Response.Success(status, body, headers) =>
+					case success: Response.Success[R] =>
 						// Updates last update time locally
 						// Reads the update time from the response headers, if available
-						requestTimeContainer.current = Some(headers.date.getOrElse(newRequestTime))
+						requestTimeContainer.current = Some(success.headers.date.getOrElse(newRequestTime))
 						// If there was new data, updates container
-						if (status != NotModified && body.nonEmpty)
-							Right(container.pointer.mutate { old => merge(old, body).swap })
+						if (success.status != NotModified)
+							Right(container.pointer.mutate { old => merge(old, success.value).swap })
 						else
 							Left(1)
 					case Response.Failure(status, message, _) =>

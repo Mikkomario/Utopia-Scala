@@ -15,11 +15,11 @@ import scala.util.Try
   * Request seeds are always persisting, because non-persisting use-case is better handled with simple Future chaining.
   * This trait facilitates the much more complex use-case where request chains need to be persisted.
   *
+  * @tparam A type of the parsed request response body
   * @author Mikko Hilpinen
   * @since 21.12.2023, v1.7
   */
-@deprecated("Will be replaced with a new version", "v1.8")
-trait ApiRequestSeed extends Persisting with Retractable
+trait ApiRequestSeed[+A] extends Persisting with Retractable
 {
 	/**
 	  * Converts this seed into an API-request, if possible.
@@ -27,5 +27,5 @@ trait ApiRequestSeed extends Persisting with Retractable
 	  * @return A future that resolves into an API-request to send, or a failure,
 	  *         in which case the sending is cancelled.
 	  */
-	def toRequest: Future[Try[ApiRequest]]
+	def toRequest: Future[Try[ApiRequest[A]]]
 }

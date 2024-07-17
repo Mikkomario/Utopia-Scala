@@ -3,8 +3,7 @@ package utopia.annex.test
 import utopia.access.http.Status.NoContent
 import utopia.access.http.{Headers, Status}
 import utopia.annex.controller.ContainerUpdateLoop
-import utopia.annex.model.response.ResponseBody.Empty
-import utopia.annex.model.response.{RequestResult, Response, ResponseBody}
+import utopia.annex.model.response.Response
 import utopia.flow.async.process.ProcessState.Stopped
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.casting.ValueConversions._
@@ -64,7 +63,7 @@ object ContainerUpdateTimeManipulationTest extends App
 	
 	// NESTED   --------------------
 	
-	private object TestLoop extends ContainerUpdateLoop(
+	private object TestLoop extends ContainerUpdateLoop[Value, Value](
 		new ValueFileContainer(dataDir/"test-container.json", SaveTiming.OnlyOnTrigger))
 	{
 		// ATTRIBUTES   ------------
@@ -78,17 +77,17 @@ object ContainerUpdateTimeManipulationTest extends App
 		
 		// IMPLEMENTED  -----------
 		
-		override protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult] = {
+		override protected def makeRequest(timeThreshold: Option[Instant]) = {
 			Future {
 				counter.update { _ + 1 }
-				Response.Success(NoContent, Empty, Headers.empty)
+				Response.Success(Value.empty, NoContent, Headers.empty)
 			}
 		}
 		
 		override protected def handleFailureResponse(status: Status, message: String): Unit =
 			throw new IllegalStateException("Failures not allowed")
 		
-		override protected def merge(oldData: Value, readData: ResponseBody): (Value, FiniteDuration) =
-			readData.value -> standardUpdateInterval
+		override protected def merge(oldData: Value, readData: Value): (Value, FiniteDuration) =
+			readData -> standardUpdateInterval
 	}
 }

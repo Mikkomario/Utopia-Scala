@@ -5,6 +5,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}
 
+@deprecated("Replaced with a rewritten Schrodinger class at utopia.annex.schrodinger", "v1.4")
 object CompletedSchrodinger
 {
 	/**

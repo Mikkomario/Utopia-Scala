@@ -1,16 +1,16 @@
 package utopia.annex.test
 
-import utopia.access.http.{Headers, Status}
 import utopia.access.http.Status.OK
+import utopia.access.http.{Headers, Status}
 import utopia.annex.controller.ContainerUpdateLoop
-import utopia.annex.model.response.{RequestResult, Response, ResponseBody}
+import utopia.annex.model.response.Response
 import utopia.flow.async.process.Wait
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
-import utopia.flow.parse.file.container.{FileContainer, SaveTiming, ValueConvertibleOptionFileContainer, ValueFileContainer}
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
+import utopia.flow.parse.file.container.{FileContainer, SaveTiming, ValueConvertibleOptionFileContainer, ValueFileContainer}
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.time.TimeExtensions._
 
@@ -51,7 +51,7 @@ object ContainerUpdateIntervalTest extends App
 	
 	// NESTED   --------------------
 	
-	private object TestLoop extends ContainerUpdateLoop(
+	private object TestLoop extends ContainerUpdateLoop[Value, Value](
 		new ValueFileContainer(dataDir/"test-container.json", SaveTiming.OnlyOnTrigger))
 	{
 		// ATTRIBUTES   ------------
@@ -70,21 +70,21 @@ object ContainerUpdateIntervalTest extends App
 		
 		// IMPLEMENTED  -----------
 		
-		override protected def makeRequest(timeThreshold: Option[Instant]): Future[RequestResult] = {
+		override protected def makeRequest(timeThreshold: Option[Instant]) = {
 			println(s"since = $timeThreshold, expecting $lastTime")
 			assert(timeThreshold.contains(lastTime))
 			Future {
 				Wait(2.seconds)
 				val time = timeIterator.next()
 				lastTime = time
-				Response.Success(OK, ResponseBody(time), Headers.withDate(time))
+				Response.Success(time: Value, OK, Headers.withDate(time))
 			}
 		}
 		
 		override protected def handleFailureResponse(status: Status, message: String): Unit =
 			throw new IllegalStateException("Failures not allowed")
 		
-		override protected def merge(oldData: Value, readData: ResponseBody): (Value, FiniteDuration) =
-			readData.value -> standardUpdateInterval
+		override protected def merge(oldData: Value, readData: Value): (Value, FiniteDuration) =
+			readData -> standardUpdateInterval
 	}
 }

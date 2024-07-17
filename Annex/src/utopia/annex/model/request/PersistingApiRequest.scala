@@ -2,10 +2,10 @@ package utopia.annex.model.request
 
 import utopia.access.http.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
-import utopia.annex.controller.{PersistedRequestHandler2, PersistingRequestQueue2}
-import utopia.annex.model.request.ApiRequest2.Send
-import utopia.annex.model.response.RequestNotSent2.RequestSendingFailed2
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue}
+import utopia.annex.model.request.ApiRequest.Send
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -30,7 +30,7 @@ object PersistingApiRequest
 	/**
 	  * Creates an interface for generating persisting API requests of a specific type +
 	  * another interface for handling them after they have been read from their persisted state at the beginning
-	  * of a session (i.e. to be used with [[PersistingRequestQueue2]]).
+	  * of a session (i.e. to be used with [[PersistingRequestQueue]]).
 	  * @param identifier Identifier assigned to all persisted models
 	  * @param method Method used within these requests
 	  * @param identifierPropName Name of the persisted property which is used for storing the identifier value.
@@ -44,16 +44,16 @@ object PersistingApiRequest
 	  * @return Returns 2 interfaces:
 	  *             1. An interface for creating new requests
 	  *             1. An interface for handling previously persisted requests.
-	  *             This should be added to a [[PersistingRequestQueue2]].
+	  *                This should be added to a [[PersistingRequestQueue]].
 	  */
 	def apply[A](identifier: String, method: Method, identifierPropName: String = "type")
 	            (send: Send[A])
-	            (handleResultOfPersisted: RequestResult2[A] => Unit)
+	            (handleResultOfPersisted: RequestResult[A] => Unit)
 	            (implicit exc: ExecutionContext) =
 	{
 		val identifierProp = Constant(identifierPropName, identifier)
 		val factory = new PersistingApiRequestFactory[A](identifierProp, method)(send)
-		val handler: PersistedRequestHandler2 =
+		val handler: PersistedRequestHandler =
 			new PersistingApiRequestHandler[A](identifierProp)(send)(handleResultOfPersisted)
 		
 		factory -> handler
@@ -85,9 +85,9 @@ object PersistingApiRequest
 	
 	private class PersistingApiRequestHandler[A](persistingIdentifier: Constant)
 	                                            (sendFunction: Send[A])
-	                                            (handleResult: RequestResult2[A] => Unit)
+	                                            (handleResult: RequestResult[A] => Unit)
 	                                            (implicit exc: ExecutionContext)
-		extends PersistedRequestHandler2
+		extends PersistedRequestHandler
 	{
 		// ATTRIBUTES   ----------------------------
 		
@@ -99,24 +99,24 @@ object PersistingApiRequest
 		override def shouldHandle(requestModel: Model): Boolean =
 			requestModel(persistingIdentifier.name) ~== persistingIdentifier.value
 		
-		override def handle(requestModel: Model, queue: PersistingRequestQueue2): Unit = {
+		override def handle(requestModel: Model, queue: PersistingRequestQueue): Unit = {
 			parser(requestModel) match {
 				case Success(request) => queue.push(request).foreach(handleResult)
-				case Failure(error) => handleResult(RequestSendingFailed2(error))
+				case Failure(error) => handleResult(RequestSendingFailed(error))
 			}
 		}
 	}
 	
-	private class PersistingApiRequestFromModel[A](sendFunction: Send[A]) extends FromModelFactory[ApiRequest2[A]]
+	private class PersistingApiRequestFromModel[A](sendFunction: Send[A]) extends FromModelFactory[ApiRequest[A]]
 	{
-		override def apply(model: ModelLike[Property]): Try[ApiRequest2[A]] = schema.validate(model).flatMap { model =>
+		override def apply(model: ModelLike[Property]): Try[ApiRequest[A]] = schema.validate(model).flatMap { model =>
 			Method.parse(model("method").getString)
 				.toTry {
 					new IllegalArgumentException(s"Unsupported method ${ model("method") } in persisted request model")
 				}
 				// NB: These parsed models won't be persisted anymore
 				.map { method =>
-					ApiRequest2(method, model("path").getString, model("body"))(sendFunction)
+					ApiRequest(method, model("path").getString, model("body"))(sendFunction)
 				}
 		}
 	}
@@ -140,7 +140,7 @@ object PersistingApiRequest
 		
 		override def deprecated: Boolean = deprecationFlag.value
 		
-		override def send(prepared: PreparedRequest): Future[RequestResult2[A]] = sendFunction(prepared)
+		override def send(prepared: PreparedRequest): Future[RequestResult[A]] = sendFunction(prepared)
 	}
 }
 
@@ -149,4 +149,4 @@ object PersistingApiRequest
   * @author Mikko Hilpinen
   * @since 16.07.2024, v1.8
   */
-trait PersistingApiRequest[+A] extends ApiRequest2[A] with Persisting
+trait PersistingApiRequest[+A] extends ApiRequest[A] with Persisting

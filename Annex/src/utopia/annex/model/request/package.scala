@@ -2,7 +2,6 @@ package utopia.annex.model
 
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.model.template.ModelConvertible
 
 /**
   * @author Mikko Hilpinen
@@ -15,17 +14,12 @@ package object request
 	/**
 	  * A type that represents an API-request in either prepared or "seed" form
 	  */
-	type RequestQueueable = Either[ApiRequestSeed, ApiRequest]
-	
-	/**
-	  * A type that represents an API-request in either prepared or "seed" form
-	  */
-	type RequestQueueable2[A] = Either[ApiRequestSeed2[A], ApiRequest2[A]]
+	type RequestQueueable[+A] = Either[ApiRequestSeed[A], ApiRequest[A]]
 	
 	
 	// IMPLICIT ----------------------
 	
-	implicit class RichRequestQueueable(val q: RequestQueueable) extends AnyVal with Retractable
+	implicit class RichRequestQueueable[+A](val q: RequestQueueable[A]) extends AnyVal with Retractable
 	{
 		// COMPUTED ------------------
 		

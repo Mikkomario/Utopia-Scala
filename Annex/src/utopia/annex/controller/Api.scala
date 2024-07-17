@@ -1,19 +1,14 @@
 package utopia.annex.controller
 
-import utopia.access.http.Method.{Get, Post}
 import utopia.access.http.{Headers, Method}
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestResult, Response}
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{Body, Request, Timeout}
+import utopia.disciple.http.request.Request
+import utopia.disciple.http.response.ResponseParser
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
 
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 /**
@@ -21,93 +16,46 @@ import scala.util.{Failure, Success}
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-trait Api
+@deprecated("Deprecated for removal. Please use ApiClient instead", "v1.8")
+trait Api extends ApiClient
 {
 	// ABSTRACT	-------------------------
-	
-	/**
-	  * @return A logging implementation used for recording non-critical errors
-	  */
-	protected implicit def log: Logger
-	
-	/**
-	  * @return Json parsing implementation used when parsing response contents
-	  */
-	protected implicit def jsonParser: JsonParser
-	
-	/**
-	  * @return Gateway to use when making http requests (See Utopia Disciple: utopia.disciple.apache.Gateway)
-	  */
-	protected def gateway: Gateway
-	
-	/**
-	  * @return Domain address + the initial path common to all requests
-	  */
-	protected def rootPath: String
 	
 	/**
 	  * @return Headers used by default
 	  */
 	protected def headers: Headers
 	
-	/**
-	  * @param bodyContent Request body content (non-empty)
-	  * @return A request body wrapping the specified content
-	  */
-	protected def makeRequestBody(bodyContent: Value): Body
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def valueResponseParser: ResponseParser[Response[Value]] =
+		PreparingResponseParser.wrap(ResponseParser.value.getOrElseLog(Value.empty))(errorMessageFromValue)
+	
+	override def emptyResponseParser: ResponseParser[Response[Unit]] =
+		PreparingResponseParser.onlyRecordFailures(ResponseParser.value.map {
+			case Success(v) => errorMessageFromValue(v)
+			case Failure(error) =>
+				log(error, "Response-parsing failed")
+				"Failed to parse the response body"
+		})
+	
+	override protected def modifyOutgoingHeaders(original: Headers): Headers = original ++ headers
 	
 	
 	// OTHER	-------------------------
 	
-	private def uri(path: String) =
-		if (path.startsWith("/") || rootPath.endsWith("/")) s"$rootPath$path" else s"$rootPath/$path"
-	
-	/**
-	  * Reads data from server
-	  * @param path Targeted path (after base uri)
-	  * @param timeout Connection timeout duration (default = maximum timeout)
-	  * @param params Included parameters (optional)
-	  * @param headersMod A modifier function for passed headers (optional)
-	  * @param context Execution context
-	  * @return Response from server (asynchronous)
-	  */
-	def get(path: String, timeout: Duration = Duration.Inf, params: Model = Model.empty,
-			   headersMod: Headers => Headers = h => h)(implicit context: ExecutionContext) =
-		makeRequest(Get, path, timeout, params = params, modHeaders = headersMod)
-	
-	/**
-	  * Posts data to server side
-	  * @param path Targeted path (after base uri)
-	  * @param body Sent json body (default = empty)
-	  * @param timeout Connection timeout duration (default = maximum timeout)
-	  * @param method Request method used (default = Post)
-	  * @param headersMod A modifier function for passed headers (optional)
-	  * @param context Execution context
-	  * @return Response from server (asynchronous)
-	  */
-	def post(path: String, body: Value = Value.empty, timeout: Duration = Duration.Inf, method: Method = Post,
-			 headersMod: Headers => Headers = h => h)(implicit context: ExecutionContext) =
-		makeRequest(method, path, timeout, body, modHeaders = headersMod)
-	
 	/**
 	  * @param request Request to send
-	  * @param exc Implicit execution context
 	  * @return Response from server (asynchronous)
 	  */
-	def sendRequest(request: ApiRequest)(implicit exc: ExecutionContext): Future[RequestResult] =
-		makeRequest(request.method, request.path, body = request.body)
-	
+	def sendRequest(request: ApiRequest[Value]): Future[RequestResult[Value]] = send(request)
 	/**
 	  * Performs a request from server side
 	  * @param request A request
-	  * @param exc Execution context (implicit)
 	  * @return Response from server (asynchronous)
 	  */
-	def sendRequest(request: Request)(implicit exc: ExecutionContext) =
-		gateway.valueResponseFor(request).map {
-			case Success(response) => Response.from(response)
-			case Failure(error) => RequestSendingFailed(error)
-		}
+	def sendRequest(request: Request) = apply(request).getValue
 	
 	/**
 	  * Sends a request to the server and wraps the response
@@ -117,21 +65,13 @@ trait Api
 	  * @param body Request body (default = empty)
 	  * @param params Request parameters (default = empty)
 	  * @param modHeaders A function for modifying the request headers (default = no modification)
-	  * @param context Implicit execution context
 	  * @return Asynchronous server result
 	  */
 	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
 							  body: Value = Value.empty, params: Model = Model.empty,
-							  modHeaders: Headers => Headers = h => h)(implicit context: ExecutionContext) =
-	{
-		// Timeout is generated from the specified single duration
-		val fullTimeout = timeout.finite match {
-			case Some(time) => Timeout(time, time * 3, time * 6)
-			case None => Timeout.empty
-		}
-		// Body may or may not be specified
-		val request = Request(uri(path), method, params, modHeaders(headers),
-			if (body.isEmpty) None else Some(makeRequestBody(body)), fullTimeout)
-		sendRequest(request)
-	}
+							  modHeaders: Headers => Headers = h => h) =
+		prepareRequest(method, path, body, params, headers, timeout).getValue
+	
+	private def errorMessageFromValue(body: Value) =
+		body("error", "description", "message").stringOr(body.getString)
 }

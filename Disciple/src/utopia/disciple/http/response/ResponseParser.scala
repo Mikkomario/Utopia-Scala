@@ -44,6 +44,14 @@ object ResponseParser
 	// COMPUTED ----------------------
 	
 	/**
+	  * @param log Implicit logging implementation to use for recording parsing failures
+	  * @return A response parser for extracting string contents.
+	  *         Assumes UTF-8 encoding when no other encoding has been specified.
+	  *         Logs parsing failures and replaces them with an empty string.
+	  */
+	def stringOrLog(implicit log: Logger) = string.getOrElseLog("")
+	
+	/**
 	  * @param jsonParser Implicit json parser to use
 	  * @return A response parser which parses response contents into values.
 	  *         Expects json responses, but also functions with XML and text-based responses.
@@ -200,7 +208,12 @@ object ResponseParser
 		  * @param log Implicit logging implementation to use
 		  * @return Copy of this parser which logs and substitutes the default value in case of a parse failure
 		  */
-		def getOrElseLog(default: => A)(implicit log: Logger) = p.map { _.getOrElseLog(default) }
+		def getOrElseLog(default: => A)(implicit log: Logger) = p.map { result =>
+			result.getOrMap { error =>
+				log(error, "Response-parsing failed")
+				default
+			}
+		}
 	}
 	
 	

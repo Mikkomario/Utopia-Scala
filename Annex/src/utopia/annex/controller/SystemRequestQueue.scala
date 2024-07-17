@@ -1,7 +1,7 @@
 package utopia.annex.controller
 
-import utopia.annex.model.request.RequestQueueable2
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.request.RequestQueueable
+import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
 
@@ -17,13 +17,13 @@ object SystemRequestQueue
 	  * @param exc Implicit execution context
 	  * @return A new request queue
 	  */
-	def apply(master: QueueSystem2, width: Int = 1)(implicit exc: ExecutionContext): SystemRequestQueue =
+	def apply(master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext): SystemRequestQueue =
 		new SimpleRequestQueue(master, width)
 	
 	
 	// NESTED	--------------------------
 	
-	private class SimpleRequestQueue(override val master: QueueSystem2, width: Int = 1)(implicit exc: ExecutionContext)
+	private class SimpleRequestQueue(override val master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext)
 		extends SystemRequestQueue
 	{
 		override protected val queue = new ActionQueue(width)
@@ -32,11 +32,11 @@ object SystemRequestQueue
 
 /**
   * A queue used for sending requests back to back.
-  * Delegates the requests to a [[QueueSystem2]]
+  * Delegates the requests to a [[QueueSystem]]
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-trait SystemRequestQueue extends RequestQueue2
+trait SystemRequestQueue extends RequestQueue
 {
 	// ABSTRACT	-------------------------
 	
@@ -47,7 +47,7 @@ trait SystemRequestQueue extends RequestQueue2
 	/**
 	  * @return The system that handles the queued requests
 	  */
-	protected def master: QueueSystem2
+	protected def master: QueueSystem
 	
 	
 	// IMPLEMENTED	-------------------------
@@ -60,6 +60,6 @@ trait SystemRequestQueue extends RequestQueue2
 	  *                     Right: A prepared request
 	  * @return Asynchronous final request result
 	  */
-	def push[A](request: RequestQueueable2[A]): QueuedAction[RequestResult2[A]] =
+	def push[A](request: RequestQueueable[A]): QueuedAction[RequestResult[A]] =
 		queue.push { master.pushBlocking(request) }
 }

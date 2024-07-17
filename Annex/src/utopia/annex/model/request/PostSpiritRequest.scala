@@ -5,7 +5,7 @@ import utopia.access.http.Method.Post
 import utopia.annex.controller.ApiClient
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.Spirit
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -33,7 +33,7 @@ object PostSpiritRequest
 	  * @return A new request for posting spirit data
 	  */
 	def apply[S <: Spirit with ModelConvertible, A](spirit: S, method: Method = Post)
-	                                               (send: PreparedRequest => Future[RequestResult2[A]]): PostSpiritRequest[S, A] =
+	                                               (send: PreparedRequest => Future[RequestResult[A]]): PostSpiritRequest[S, A] =
 		new SimplePostSpiritRequest[S, A](spirit, method)(send)
 	
 	/**
@@ -42,14 +42,14 @@ object PostSpiritRequest
 	  * @return A factory for parsing persisted post requests
 	  */
 	def factory[S <: Spirit with ModelConvertible, A](spiritFactory: FromModelFactory[S])
-	                                                 (send: PreparedRequest => Future[RequestResult2[A]]): FromModelFactory[PostSpiritRequest[S, A]] =
+	                                                 (send: PreparedRequest => Future[RequestResult[A]]): FromModelFactory[PostSpiritRequest[S, A]] =
 		PostRequestFactory(spiritFactory)(send)
 	
 	
 	// NESTED	-------------------------
 	
 	private case class PostRequestFactory[+S <: Spirit with ModelConvertible, +A](spiritFactory: FromModelFactory[S])
-	                                                                             (sendFunction: PreparedRequest => Future[RequestResult2[A]])
+	                                                                             (sendFunction: PreparedRequest => Future[RequestResult[A]])
 		extends FromModelFactory[PostSpiritRequest[S, A]]
 	{
 		override def apply(model: ModelLike[Property]) =
@@ -62,10 +62,10 @@ object PostSpiritRequest
 	
 	private class SimplePostSpiritRequest[+S <: Spirit with ModelConvertible, +A](override val spirit: S,
 	                                                                              override val method: Method = Post)
-	                                                                             (f: PreparedRequest => Future[RequestResult2[A]])
+	                                                                             (f: PreparedRequest => Future[RequestResult[A]])
 		extends PostSpiritRequest[S, A]
 	{
-		override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult2[A]] = f(prepared)
+		override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[A]] = f(prepared)
 	}
 }
 
@@ -75,7 +75,7 @@ object PostSpiritRequest
   * @since 16.6.2020, v1
   */
 @deprecated("Deprecated for removal. No replacement is intended at this time.", "v1.8")
-trait PostSpiritRequest[+S <: Spirit with ModelConvertible, +A] extends ApiRequest2[A] with Persisting
+trait PostSpiritRequest[+S <: Spirit with ModelConvertible, +A] extends ApiRequest[A] with Persisting
 {
 	// ABSTRACT ---------------------------
 	

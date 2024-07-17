@@ -28,11 +28,11 @@ import scala.util.{Failure, Success, Try}
   *                             The result will always be limited to the 'maxOfflineDelay'.
   *                             Default = double the wait period between attempts.
   */
-class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.seconds,
-				  minOfflineDelay: FiniteDuration = 5.seconds,
-				  maxOfflineDelay: FiniteDuration = 2.minutes,
-				  increaseOfflineDelay: FiniteDuration => FiniteDuration = _ * 2)
-				 (implicit exc: ExecutionContext)
+class QueueSystem(api: ApiClient, offlineModeWaitThreshold: FiniteDuration = 30.seconds,
+                  minOfflineDelay: FiniteDuration = 5.seconds,
+                  maxOfflineDelay: FiniteDuration = 2.minutes,
+                  increaseOfflineDelay: FiniteDuration => FiniteDuration = _ * 2)
+                 (implicit exc: ExecutionContext)
 {
 	// ATTRIBUTES   ------------------------------
 	
@@ -89,7 +89,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  * @param request Request to send to the api.
 	  * @return Asynchronous final send result
 	  */
-	def push(request: ApiRequest): Future[RequestResult] = {
+	def push[A](request: ApiRequest[A]): Future[RequestResult[A]] = {
 		// Case: Online => Processes requests in parallel
 		if (isOnline)
 			Future { sendBlocking(request, offlineMode = false, skipWait = true) }
@@ -105,7 +105,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  * @param requestSeed A request seed that will be converted into a request and sent to the API.
 	  * @return Asynchronous final send result
 	  */
-	def push(requestSeed: ApiRequestSeed): Future[RequestResult] = push(Left(requestSeed))
+	def push[A](requestSeed: ApiRequestSeed[A]): Future[RequestResult[A]] = push(Left(requestSeed))
 	/**
 	  * Pushes a new request to this queue system.
 	  * The request may be executed immediately, or delayed in case this system is currently in offline mode.
@@ -116,7 +116,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *                Left: A request seed that will be converted into a request upon sending.
 	  * @return Asynchronous final send result
 	  */
-	def push(request: RequestQueueable): Future[RequestResult] = {
+	def push[A](request: RequestQueueable[A]): Future[RequestResult[A]] = {
 		// In online mode, performs the requests side by side (i.e. parallel)
 		if (isOnline)
 			Future { sendBlocking(request).rightOrMap(handleDelayedRequestBlocking) }
@@ -150,7 +150,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *
 	  * @return Final send result, once acquired
 	  */
-	def pushBlocking(request: ApiRequest): RequestResult = {
+	def pushBlocking[A](request: ApiRequest[A]): RequestResult[A] = {
 		// Case: Online => Processes the requests in parallel
 		if (isOnline)
 			sendBlocking(request, offlineMode = false, skipWait = true)
@@ -172,7 +172,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *
 	  * @return Final send result, once acquired
 	  */
-	def pushBlocking(requestSeed: ApiRequestSeed): RequestResult = pushBlocking(Left(requestSeed))
+	def pushBlocking[A](requestSeed: ApiRequestSeed[A]): RequestResult[A] = pushBlocking(Left(requestSeed))
 	/**
 	  * Pushes a new request to this queue system.
 	  * The request may be executed immediately, or delayed in case this system is currently in offline mode.
@@ -188,7 +188,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	  *
 	  * @return Final send result, once acquired
 	  */
-	def pushBlocking(request: RequestQueueable): RequestResult = {
+	def pushBlocking[A](request: RequestQueueable[A]): RequestResult[A] = {
 		// In online mode, performs the requests side by side
 		if (isOnline)
 			sendBlocking(request).rightOrMap(handleDelayedRequestBlocking)
@@ -200,9 +200,10 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 			}
 	}
 	@deprecated("Renamed to pushBlocking(ApiRequest)", "v1.7")
-	def pushSynchronous(request: ApiRequest): RequestResult = pushBlocking(request)
+	def pushSynchronous[A](request: ApiRequest[A]): RequestResult[A] = pushBlocking(request)
 	
-	private def handleDelayedRequestBlocking(requestFuture: Future[Try[ApiRequest]]) = {
+	private def handleDelayedRequestBlocking[A](requestFuture: Future[Try[ApiRequest[A]]]) =
+	{
 		requestFuture.waitForResult()
 			.flatMap { request =>
 				// Case: Request-conversion succeeded => Queues the request with high priority
@@ -217,10 +218,10 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 	// Returns either:
 	//      Left: Future that may resolve into an API-request to send (delayed seed germination in sequential -use-case)
 	//      Right: Request result (blocks) (parallel & offline request -use-cases)
-	private def sendBlocking(request: RequestQueueable,
-	                         offlineMode: Boolean = false): Either[Future[Try[ApiRequest]], RequestResult] =
+	private def sendBlocking[A](request: RequestQueueable[A],
+	                            offlineMode: Boolean = false): Either[Future[Try[ApiRequest[A]]], RequestResult[A]] =
 	{
-		afterPossibleWait[Either[Future[Try[ApiRequest]], RequestResult]](request.either,
+		afterPossibleWait[Either[Future[Try[ApiRequest[A]]], RequestResult[A]]](request.either,
 			waitEnabled = offlineMode) { Right(_) } {
 			request match {
 				case Left(seed) =>
@@ -251,9 +252,10 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 			}
 		}
 	}
-	private def sendBlocking(request: ApiRequest, offlineMode: Boolean, skipWait: Boolean): RequestResult = {
-		afterPossibleWait[RequestResult](request, waitEnabled = offlineMode && !skipWait)(Identity) {
-			val resultFuture = api.sendRequest(request)
+	private def sendBlocking[A](request: ApiRequest[A], offlineMode: Boolean, skipWait: Boolean): RequestResult[A] =
+	{
+		afterPossibleWait[RequestResult[A]](request, waitEnabled = offlineMode && !skipWait)(Identity) {
+			val resultFuture = api.send(request)
 			// Waits for a limited time first, in order to activate offline mode early enough
 			// (request is not cancelled, however, and wait continues)
 			val result = resultFuture.waitFor(offlineModeWaitThreshold) match {
@@ -276,7 +278,7 @@ class QueueSystem(api: Api, offlineModeWaitThreshold: FiniteDuration = 30.second
 				case Right(result) =>
 					result match {
 						// Case: Response acquired => Returns (unless 503)
-						case response: Response if response.status != ServiceUnavailable =>
+						case response: Response[A] if response.status != ServiceUnavailable =>
 							goOnline()
 							response
 						case _ =>

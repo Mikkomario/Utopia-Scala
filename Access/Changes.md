@@ -7,6 +7,8 @@ Supports **Flow v2.4**
 ### New methods
 - **ContentType**
   - Added `.charset`
+### Other changes
+- Added **StatusGroup.Custom** in order to cover status codes outside the normal (100-599) code range
 
 ## v1.5 - 22.01.2024
 This update, while quite small in scale, contains a very important bugfix to the **Headers** class. 

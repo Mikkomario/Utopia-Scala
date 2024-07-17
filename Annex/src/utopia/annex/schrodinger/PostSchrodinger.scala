@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
@@ -64,7 +64,7 @@ object PostSchrodinger
 	  * @tparam A Type of created instance
 	  * @return A new schrödinger
 	  */
-	def apply[S, A](spirit: S, resultFuture: Future[RequestResult2[A]])(spiritualize: A => S)
+	def apply[S, A](spirit: S, resultFuture: Future[RequestResult[A]])(spiritualize: A => S)
 	               (implicit exc: ExecutionContext) =
 		wrap(Schrodinger.makePointer[S, A, Try[A]](spirit, pendingFailure, resultFuture, PositiveFlux)(Identity){
 			(spirit, result) =>
@@ -89,12 +89,12 @@ object PostSchrodinger
 	  * @tparam A Type of created instance
 	  * @return A new schrödinger
 	  */
-	def postAndParse[S, A](spirit: S, resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def postAndParse[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	                      (spiritualize: A => S)(implicit exc: ExecutionContext) =
 		apply[S, A](spirit, resultFuture.map { _.parsingOneWith(parser) })(spiritualize)
 	
 	@deprecated("Please use .postAndParse(...) instead", "v1.8")
-	def apply[S, A](spirit: S, resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def apply[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	               (spiritualize: A => S)(implicit exc: ExecutionContext): PostSchrodinger[S, A] =
 		postAndParse(spirit, resultFuture, parser)(spiritualize)
 }

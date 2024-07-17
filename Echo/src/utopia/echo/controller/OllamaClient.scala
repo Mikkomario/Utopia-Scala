@@ -1,18 +1,17 @@
 package utopia.echo.controller
 
-import utopia.access.http.Headers
-import utopia.annex.controller.{Api, QueueSystem, RequestQueue}
-import utopia.annex.model.request.ApiRequest
+import utopia.access.http.{Headers, Status}
+import utopia.annex.controller.ApiClient
+import utopia.annex.model.response.Response
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, StringBody}
+import utopia.disciple.http.response.ResponseParser
 import utopia.echo.model.LlmDesignator
 import utopia.echo.model.request.Query
-import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -26,9 +25,9 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit lo
 {
 	// ATTRIBUTES   ------------------------
 	
-	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
+	// private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
 	
-	private val queues = Cache { _: LlmDesignator => RequestQueue(queueSystem) }
+	// private val queues = Cache { _: LlmDesignator => RequestQueue(queueSystem) }
 	
 	
 	// OTHER    ----------------------------
@@ -41,16 +40,16 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit lo
 			"format" -> (if (query.expectsJsonResponse) "json" else Value.empty),
 			"system" -> query.toSystem, "context" -> conversationContext,
 			"stream" -> stream)
-		val request = ApiRequest.post("generate", requestBody.withoutEmptyValues)
+		// val request = ApiRequest.post("generate", requestBody.withoutEmptyValues)
 		
-		val resultFuture = queues(llm).push(request).future
-		
+		// val resultFuture = queues(llm).push(request).future
+		???
 	}
 	
 	
 	// NESTED   ----------------------------
 	
-	private object OllamaApiClient extends Api
+	private object OllamaApiClient extends ApiClient
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -63,8 +62,17 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit lo
 		override protected implicit def log: Logger = OllamaClient.this.log
 		
 		override protected def rootPath: String = serverAddress
-		override protected def headers: Headers = Headers.empty
 		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
+		
+		override protected implicit def exc: ExecutionContext = ???
+		
+		override protected def responseParseFailureStatus: Status = ???
+		
+		override def valueResponseParser: ResponseParser[Response[Value]] = ???
+		
+		override def emptyResponseParser: ResponseParser[Response[Unit]] = ???
+		
+		override protected def modifyOutgoingHeaders(original: Headers): Headers = ???
 	}
 }

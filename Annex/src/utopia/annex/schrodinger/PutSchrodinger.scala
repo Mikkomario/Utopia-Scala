@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
@@ -52,7 +52,7 @@ object PutSchrodinger
 	  * @tparam A Type of instance being modified
 	  * @return A new schrödinger
 	  */
-	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult2[A]])
+	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[A]])
 	            (implicit exc: ExecutionContext) =
 		wrap(Schrodinger.makePointer[A, A, Try[A]](modifiedLocal, Success(modifiedLocal), resultFuture,
 			PositiveFlux)(Identity){ (_, result) => (result.getOrElse(original), result, Final(result.isSuccess)) })
@@ -69,13 +69,13 @@ object PutSchrodinger
 	  * @tparam A Type of instance being modified
 	  * @return A new schrödinger
 	  */
-	def putAndParse[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult2[Value]],
+	def putAndParse[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],
 	                   parser: FromModelFactory[A])
 	                  (implicit exc: ExecutionContext) =
 		apply(original, modifiedLocal, resultFuture.map { _.parsingOneWith(parser) })
 	
 	@deprecated("Deprecated for removal. Please use .putAndParse(...) instead", "v1.8")
-	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult2[Value]],
+	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],
 	             parser: FromModelFactory[A])
 	            (implicit exc: ExecutionContext): PutSchrodinger[A] =
 		putAndParse(original, modifiedLocal, resultFuture, parser)

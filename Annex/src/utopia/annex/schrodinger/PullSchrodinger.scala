@@ -2,7 +2,7 @@ package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, Flux, PositiveFlux}
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
@@ -71,7 +71,7 @@ object PullSchrodinger
 	  *         Dead if no item could be read from the server response
 	  *         (whether the request itself was successful or not)
 	  */
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult2[R]])
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[R]])
 	                (localize: R => L)(implicit exc: ExecutionContext) =
 		_apply(local.toTry { new NoSuchElementException("No local data") }, pendingResultFailure, resultFuture,
 			Flux(local.isDefined))(localize)
@@ -92,12 +92,12 @@ object PullSchrodinger
 	  *         Dead if no item could be read from the server response
 	  *         (whether the request itself was successful or not)
 	  */
-	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[R])
+	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
 	                      (localize: R => L)(implicit exc: ExecutionContext) =
 		apply(local, resultFuture.map { _.parsingOneWith(parser) })(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[R])
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
 	               (localize: R => L)(implicit exc: ExecutionContext): PullSchrodinger[L, R] =
 		pullAndParse(local, resultFuture, parser)(localize)
 	
@@ -113,7 +113,7 @@ object PullSchrodinger
 	  * @tparam A Type of pull results, when acquired
 	  * @return A new schrödinger, either based on local data (final) or remote pull (flux)
 	  */
-	def any[A](local: Option[A])(makeRequest: => Future[RequestResult2[A]])
+	def any[A](local: Option[A])(makeRequest: => Future[RequestResult[A]])
 	           (implicit exc: ExecutionContext) =
 	{
 		local match {
@@ -137,12 +137,12 @@ object PullSchrodinger
 	  * @tparam A Type of pull results, when acquired
 	  * @return A new schrödinger, either based on local data (final) or remote pull (flux)
 	  */
-	def parseAny[A](local: Option[A], parser: => FromModelFactory[A])(makeRequest: => Future[RequestResult2[Value]])
+	def parseAny[A](local: Option[A], parser: => FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
 	               (implicit exc: ExecutionContext) =
 		any(local) { makeRequest.map { _.parsingOneWith(parser) } }
 	
 	@deprecated("Deprecated for removal. Please use .parseAny(...) instead", "v1.8")
-	def any[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult2[Value]])
+	def any[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
 	          (implicit exc: ExecutionContext): PullSchrodinger[A, A] =
 		parseAny(local, parser)(makeRequest)
 	
@@ -157,7 +157,7 @@ object PullSchrodinger
 	  *         Once the results arrive, contains parsing results
 	  *         (failure if request or parsing failed, or if no items were found, success otherwise)
 	  */
-	def remote[A](resultFuture: Future[RequestResult2[A]])(implicit exc: ExecutionContext) =
+	def remote[A](resultFuture: Future[RequestResult[A]])(implicit exc: ExecutionContext) =
 		_apply(pendingResultFailure, pendingResultFailure, resultFuture, PositiveFlux)(Identity)
 	
 	/**
@@ -172,17 +172,17 @@ object PullSchrodinger
 	  *         Once the results arrive, contains parsing results
 	  *         (failure if request or parsing failed, or if no items were found, success otherwise)
 	  */
-	def parseRemote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	                  (implicit exc: ExecutionContext) =
 		remote(resultFuture.map { _.parsingOneWith(parser) })
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
-	def remote[A](resultFuture: Future[RequestResult2[Value]], parser: FromModelFactory[A])
+	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	             (implicit exc: ExecutionContext): PullSchrodinger[A, A] =
 		parseRemote(resultFuture, parser)
 	
 	private def _apply[L, R](initialManifest: Try[L], placeHolderResult: Try[R],
-	                          resultFuture: Future[RequestResult2[R]], flux: Flux = Flux)
+	                         resultFuture: Future[RequestResult[R]], flux: Flux = Flux)
 	                         (localize: R => L)
 	                         (implicit exc: ExecutionContext) =
 	{

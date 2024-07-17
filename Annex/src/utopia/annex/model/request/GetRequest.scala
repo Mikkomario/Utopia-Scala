@@ -2,7 +2,7 @@ package utopia.annex.model.request
 
 import utopia.access.http.Method.Get
 import utopia.annex.controller.ApiClient.PreparedRequest
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.model.immutable.Value
 
 import scala.concurrent.Future
@@ -20,7 +20,7 @@ object GetRequest
 	  * @return A new request targeting specified path
 	  */
 	def apply[A](path: String, deprecationCondition: => Boolean = false)
-	            (send: PreparedRequest => Future[RequestResult2[A]]): GetRequest[A] =
+	            (send: PreparedRequest => Future[RequestResult[A]]): GetRequest[A] =
 		new SimpleGetRequest(path, deprecationCondition)(send)
 	
 	/**
@@ -40,16 +40,16 @@ object GetRequest
 	{
 		override def deprecated: Boolean = deprecation
 		
-		override def send(prepared: PreparedRequest): Future[RequestResult2[Value]] = prepared.getValue
+		override def send(prepared: PreparedRequest): Future[RequestResult[Value]] = prepared.getValue
 	}
 	
 	private class SimpleGetRequest[+A](override val path: String, deprecationCondition: => Boolean)
-	                                 (f: PreparedRequest => Future[RequestResult2[A]])
+	                                 (f: PreparedRequest => Future[RequestResult[A]])
 		extends GetRequest[A]
 	{
 		override def deprecated = deprecationCondition
 		
-		override def send(prepared: PreparedRequest): Future[RequestResult2[A]] = f(prepared)
+		override def send(prepared: PreparedRequest): Future[RequestResult[A]] = f(prepared)
 	}
 }
 
@@ -58,7 +58,7 @@ object GetRequest
   * @author Mikko Hilpinen
   * @since 16.6.2020, v1
   */
-trait GetRequest[+A] extends ApiRequest2[A]
+trait GetRequest[+A] extends ApiRequest[A]
 {
 	// IMPLEMENTED  -----------------------
 	

@@ -2,7 +2,7 @@ package utopia.annex.model.request
 
 import utopia.access.http.Method.Delete
 import utopia.annex.controller.ApiClient
-import utopia.annex.model.response.RequestResult2
+import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -45,7 +45,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	
 	// NESTED	---------------------------
 	
-	private case class SimpleDeleteRequest(path: String) extends DeleteRequest
+	private case class SimpleDeleteRequest(path: String) extends DeleteRequest with Persisting
 	{
 		override def deprecated = false
 		
@@ -59,10 +59,10 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
   * @author Mikko Hilpinen
   * @since 17.6.2020, v1
   */
-trait DeleteRequest extends PersistingApiRequest[Unit]
+trait DeleteRequest extends ApiRequest[Unit]
 {
 	override def method = Delete
 	override def body = Value.empty
 	
-	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult2[Unit]] = prepared.send()
+	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Unit]] = prepared.send()
 }

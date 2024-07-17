@@ -17,7 +17,7 @@ import scala.util.{Failure, Try}
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed trait RequestResult2[+A]
+sealed trait RequestResult[+A]
 {
 	// ABSTRACT --------------------------
 	
@@ -43,7 +43,7 @@ sealed trait RequestResult2[+A]
 	  * @return Copy of this response with mapped contents.
 	  *         If this response is a failure. Returns this response.
 	  */
-	def map[B](f: A => B): RequestResult2[B]
+	def map[B](f: A => B): RequestResult[B]
 	/**
 	  * If this is a successful response, applies the specified mapping function.
 	  * If mapping fails (i.e. yields Left), converts this response into a failure response instead.
@@ -53,7 +53,7 @@ sealed trait RequestResult2[+A]
 	  * @tparam B Type of successful map result
 	  * @return Mapped copy of this response
 	  */
-	def tryMap[B](f: A => Either[(Status, String), B]): RequestResult2[B]
+	def tryMap[B](f: A => Either[(Status, String), B]): RequestResult[B]
 	
 	
 	// COMPUTED --------------------------
@@ -72,7 +72,7 @@ sealed trait RequestResult2[+A]
 	  * @tparam B Type of successful map result
 	  * @return Mapped copy of this response
 	  */
-	def tryMap[B](parseFailureStatus: => Status)(f: A => Try[B]): RequestResult2[B] = tryMap { value =>
+	def tryMap[B](parseFailureStatus: => Status)(f: A => Try[B]): RequestResult[B] = tryMap { value =>
 		f(value) match {
 			case scala.util.Success(parsed) => Right(parsed)
 			case scala.util.Failure(error) => Left(parseFailureStatus -> error.getMessage)
@@ -80,10 +80,10 @@ sealed trait RequestResult2[+A]
 	}
 }
 
-object RequestResult2
+object RequestResult
 {
 	// Adds additional functions for RequestResults of type Value, which is the only data type supported before v1.8
-	implicit class RequestValueResult(val r: RequestResult2[Value]) extends AnyVal
+	implicit class RequestValueResult(val r: RequestResult[Value]) extends AnyVal
 	{
 		/**
 		  * Applies a from-model-parser to this result, transforming response contents, if this is a success.
@@ -183,7 +183,7 @@ object RequestResult2
 	}
 }
 
-sealed trait RequestFailure2 extends RequestResult2[Nothing]
+sealed trait RequestFailure extends RequestResult[Nothing]
 {
 	// ABSTRACT --------------------------
 	
@@ -216,7 +216,7 @@ sealed trait RequestFailure2 extends RequestResult2[Nothing]
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed trait RequestNotSent2 extends RequestFailure2
+sealed trait RequestNotSent extends RequestFailure
 {
 	/**
 	  * @return A throwable error based on this state
@@ -225,12 +225,12 @@ sealed trait RequestNotSent2 extends RequestFailure2
 	def toException: Throwable = cause
 }
 
-object RequestNotSent2
+object RequestNotSent
 {
 	/**
 	  * Status generated when request gets deprecated before it is successfully sent
 	  */
-	case object RequestWasDeprecated2 extends RequestNotSent2
+	case object RequestWasDeprecated extends RequestNotSent
 	{
 		override def cause = new RequestFailedException("Request was deprecated")
 		
@@ -241,7 +241,7 @@ object RequestNotSent2
 	  * Status used when request can't be sent due to some error in the request or the request system
 	  * @param cause Associated error
 	  */
-	case class RequestSendingFailed2(cause: Throwable) extends RequestNotSent2
+	case class RequestSendingFailed(cause: Throwable) extends RequestNotSent
 	{
 		@deprecated("Please use .cause instead", "v1.6")
 		def error = cause
@@ -256,17 +256,17 @@ object RequestNotSent2
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed trait Response2[+A] extends RequestResult2[A] with utopia.disciple.http.response.Response
+sealed trait Response[+A] extends RequestResult[A] with utopia.disciple.http.response.Response
 {
 	// IMPLEMENTED  ---------------------------
 	
 	override def isFailure = !isSuccess
 	
-	override def map[B](f: A => B): Response2[B]
-	override def tryMap[B](f: A => Either[(Status, String), B]): Response2[B]
+	override def map[B](f: A => B): Response[B]
+	override def tryMap[B](f: A => Either[(Status, String), B]): Response[B]
 }
 
-object Response2
+object Response
 {
 	// NESTED   -------------------------------
 	
@@ -276,7 +276,7 @@ object Response2
 	  * @param status Status returned by the server
 	  * @param headers Response headers
 	  */
-	case class Success[+A](value: A, status: Status = OK, headers: Headers = Headers.empty) extends Response2[A]
+	case class Success[+A](value: A, status: Status = OK, headers: Headers = Headers.empty) extends Response[A]
 	{
 		// IMPLEMENTED  ---------------------
 		
@@ -286,7 +286,7 @@ object Response2
 		override def toString = s"$status: $value"
 		
 		override def map[B](f: A => B) = copy(value = f(value))
-		override def tryMap[B](f: A => Either[(Status, String), B]): Response2[B] = f(value) match {
+		override def tryMap[B](f: A => Either[(Status, String), B]): Response[B] = f(value) match {
 			case Right(newValue) => copy(value = newValue)
 			case Left((status, message)) => Failure(status, message, headers)
 		}
@@ -301,7 +301,7 @@ object Response2
 	  * @param headers Headers sent along with this response
 	  */
 	case class Failure(status: Status, message: String = "", headers: Headers = Headers.empty)
-		extends Response2[Nothing] with RequestFailure2
+		extends Response[Nothing] with RequestFailure
 	{
 		// COMPUTED --------------------------
 		
