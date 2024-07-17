@@ -6,7 +6,7 @@ Supports **Flow v2.4**
 - Fixed the parsing of the `charset` property in **Headers**
 ### New methods
 - **ContentType**
-  - Added `.charset`
+  - Added `.charset` and `.withCharset(Charset)`
 ### Other changes
 - Added **StatusGroup.Custom** in order to cover status codes outside the normal (100-599) code range
 

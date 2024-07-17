@@ -62,7 +62,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 trait DeleteRequest extends ApiRequest[Unit]
 {
 	override def method = Delete
-	override def body = Value.empty
+	override def body = Left(Value.empty)
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Unit]] = prepared.send()
 }

@@ -423,31 +423,26 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	}
 	
 	// Adds parameter values in JSON format to request uri, returns combined uri
-	private def makeUriWithParams(baseUri: String, params: Model) =
-	{
+	private def makeUriWithParams(baseUri: String, params: Model) = {
 	    val builder = new URIBuilder(baseUri)
 		// May encode parameter values
 	    params.properties.foreach { a => builder.addParameter(a.name, paramValue(a.value)) }
 	    builder.build()
 	}
 	
-	private def paramValue(originalValue: Value) =
-	{
+	private def paramValue(originalValue: Value) = {
 		// Uses JSON if possible
 		val valueString = if (allowJsonInUriParameters) originalValue.toJson else originalValue.getString
-		parameterEncoding match
-		{
+		parameterEncoding match {
 			case Some(codec) => URLEncoder.encode(valueString, codec.charSet.name())
 			case None => valueString
 		}
 	}
 	
-	private def makeParametersEntity(params: Model) =
-	{
+	private def makeParametersEntity(params: Model) = {
 	    if (params.isEmpty)
 	        None
-	    else
-	    {
+	    else {
 	        val paramsList = params.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
@@ -482,7 +477,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 			// Consumes and closes the input stream
 			b.stream.foreach { input =>
 				val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
-				Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => }
+				Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => () }
 				input.close()
 			}
 		}
@@ -495,19 +490,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 		
 		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
 		// Content-Type: text/html; charset=UTF-8
-		override def getContentType() = {
-			val contentType = b.contentType
-			// Adds character set, if missing from the content type
-			if (contentType.charset.isDefined)
-				contentType.toString
-			else {
-				val charsetPart = b.charset match {
-					case Some(charset) => s"; charset=${charset.name()}"
-					case None => ""
-				}
-				s"${b.contentType}$charsetPart"
-			}
-		}
+		override def getContentType() = b.contentType.toString
 		
 		override def isChunked() = b.chunked
 		override def isRepeatable() = b.repeatable

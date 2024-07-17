@@ -70,7 +70,7 @@ trait Api extends ApiClient
 	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
 							  body: Value = Value.empty, params: Model = Model.empty,
 							  modHeaders: Headers => Headers = h => h) =
-		prepareRequest(method, path, body, params, headers, timeout).getValue
+		prepareRequest(method, path, Left(body), params, headers, timeout).getValue
 	
 	private def errorMessageFromValue(body: Value) =
 		body("error", "description", "message").stringOr(body.getString)

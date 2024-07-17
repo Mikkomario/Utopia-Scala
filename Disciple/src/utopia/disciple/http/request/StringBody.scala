@@ -2,13 +2,12 @@ package utopia.disciple.http.request
 
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.net.URLEncodedUtils
-
-import java.io.ByteArrayInputStream
-import java.nio.charset.{Charset, StandardCharsets}
 import utopia.access.http.ContentCategory._
 import utopia.access.http.ContentType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.jdk.CollectionConverters._
 import scala.util.Success
 
@@ -33,8 +32,7 @@ object StringBody
 	  * @param charset Charset to use (default = http client default = ISO-8859-1)
 	  * @return A string body wrapping the content as a url-encoded form
 	  */
-	def urlEncodedForm(content: ModelLike[Property], charset: Charset = StandardCharsets.ISO_8859_1) =
-	{
+	def urlEncodedForm(content: ModelLike[Property], charset: Charset = StandardCharsets.ISO_8859_1) = {
 		// Produces the url-encoded string
 		val parameters = content.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body
@@ -53,13 +51,12 @@ object StringBody
 * @author Mikko Hilpinen
 * @since 1.5.2018
 **/
-class StringBody(s: String, cset: Charset, val contentType: ContentType) extends Body
+class StringBody(s: String, charset: Charset, cType: ContentType) extends Body
 {
-    val charset = Some(cset)
+    private val bytes = s.getBytes(charset)
+	override val contentType: ContentType = cType.withCharset(charset)
 	
-    private val bytes = s.getBytes(cset)
-	
-    def contentLength = Some(bytes.length)
+	def contentLength = Some(bytes.length)
     
     def repeatable = true
 	def chunked = false

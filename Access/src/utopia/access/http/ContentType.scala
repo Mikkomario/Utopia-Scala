@@ -72,11 +72,15 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
     /**
      * Creates a new content type with the assigned parameter
      */
-    def +(paramName: String, paramValue: String) =
-        ContentType(category, subType, parameters + (paramName -> paramValue))
-    
+    def +(param: (String, String)) = copy(parameters = parameters + param)
     /**
      * Creates a new content type with the assigned parameters
      */
-    def ++(parameters: Map[String, String]) = ContentType(category, subType, this.parameters ++ parameters)
+    def ++(parameters: IterableOnce[(String, String)]) = copy(parameters = this.parameters ++ parameters)
+    
+    /**
+      * @param charset Character set to assign
+      * @return Copy of this content type with the specified character set
+      */
+    def withCharset(charset: Charset) = this + ("charset" -> charset.name())
 }

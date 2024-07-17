@@ -63,5 +63,5 @@ trait GetRequest[+A] extends ApiRequest[A]
 	// IMPLEMENTED  -----------------------
 	
 	override def method = Get
-	override def body = Value.empty
+	override def body = Left(Value.empty)
 }

@@ -169,9 +169,23 @@ trait ApiClient
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @return Prepared POST request
 	  */
-	def post(path: String, body: Value = Value.empty, method: Method = Post, headers: Headers = Headers.empty,
-	         timeout: Duration = Duration.Inf) =
+	def post(path: String, body: Either[Value, Body] = Left(Value.empty), method: Method = Post,
+	         headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
 		prepareRequest(method, path, body, headers = headers, timeout = timeout)
+	/**
+	  * Prepares a POST request (or a similar request, such as PUT).
+	  * Note: The request must still be sent before it can impact the server or retrieve data.
+	  * @param path Path to the targeted resource on the server (server root path will be prepended to this)
+	  * @param body Body to assign to the outgoing request (default = empty)
+	  * @param method The method used (default = POST)
+	  * @param headers Headers to send out with the request
+	  *                (standard modifications will be applied, also) (default = empty)
+	  * @param timeout Connection timeout duration (default = maximum timeout)
+	  * @return Prepared POST request
+	  */
+	def postValue(path: String, body: Value = Value.empty, method: Method = Post, headers: Headers = Headers.empty,
+	              timeout: Duration = Duration.Inf) =
+		post(path, Left(body), method, headers, timeout)
 	
 	/**
 	  * Sends out a request
@@ -262,8 +276,9 @@ trait ApiClient
 	  *
 	  * @return Asynchronous server result
 	  */
-	protected def prepareRequest(method: Method, path: String, body: Value = Value.empty, params: Model = Model.empty,
-	                             headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
+	protected def prepareRequest(method: Method, path: String, body: Either[Value, Body] = Left(Value.empty),
+	                             params: Model = Model.empty, headers: Headers = Headers.empty,
+	                             timeout: Duration = Duration.Inf) =
 	{
 		// Timeout is generated from the specified single duration
 		val fullTimeout = timeout.finite match {
@@ -271,7 +286,10 @@ trait ApiClient
 			case None => Timeout.empty
 		}
 		// Body may or may not be specified
-		apply(Request(path, method, params, headers,
-			if (body.isEmpty) None else Some(makeRequestBody(body)), fullTimeout))
+		val preparedBody = body match {
+			case Left(value) => value.notEmpty.map(makeRequestBody)
+			case Right(body) => Some(body)
+		}
+		apply(Request(path, method, params, headers, preparedBody, fullTimeout))
 	}
 }

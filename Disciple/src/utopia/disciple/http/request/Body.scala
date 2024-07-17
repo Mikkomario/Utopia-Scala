@@ -1,11 +1,9 @@
 package utopia.disciple.http.request
 
-import java.io.{InputStream, OutputStream}
-import java.nio.charset.Charset
-
 import utopia.access.http.ContentType
 import utopia.flow.parse.AutoClose._
 
+import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}
 import scala.util.Try
 
 /**
@@ -27,17 +25,13 @@ trait Body
 	def chunked: Boolean
 	
 	/**
-	 * The length of the body content in bytes, if appliable
+	 * The length of the body content in bytes, if applicable
 	 */
 	def contentLength: Option[Long]
 	/**
 	 * The content type of this body
 	 */
 	def contentType: ContentType
-	/**
-	 * The character set used in this body, if applicable
-	 */
-	def charset: Option[Charset]
 	/**
 	 * The content encoding used, if applicable
 	 */
@@ -52,18 +46,30 @@ trait Body
 	// OTHER METHODS    ---------------------
 	
 	/**
-	 * Writes the contents of this body's stream into an output stream. Best performance is
-	 * achieved if both streams are buffered.
+	 * Writes the contents of this body's stream into an output stream. Applies buffering.
 	 */
-	def writeTo(output: OutputStream) =
-	{
+	def writeTo(output: OutputStream) = {
 	    // See: https://stackoverflow.com/questions/6927873/
 	    // how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
-	    stream.flatMap { _.tryConsume { input =>
-	        Iterator
-            .continually (input.read)
-            .takeWhile { _ != -1 }
-            .foreach (output.write)
-		} }
+	    stream.flatMap {
+		    _.tryConsume { input =>
+			    // Checks whether buffering is applied within the streams, or whether it should be applied separately
+			    // Case: The streams already apply buffering => Processes byte-by-byte
+			    if (input.isInstanceOf[BufferedInputStream] && output.isInstanceOf[BufferedOutputStream]) {
+				    Iterator
+					    .continually { input.read() }
+					    .takeWhile { _ != -1 }
+					    .foreach(output.write)
+			    }
+			    // Case: Both streams don't apply buffering => Processes using a separate buffer
+			    else {
+				    val buffer = new Array[Byte](1024)
+				    Iterator
+					    .continually { input.read(buffer) }
+					    .takeWhile { _ != -1 }
+					    .foreach { _ => output.write(buffer) }
+			    }
+			}
+	    }
 	}
 }

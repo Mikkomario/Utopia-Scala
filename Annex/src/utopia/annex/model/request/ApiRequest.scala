@@ -3,6 +3,7 @@ package utopia.annex.model.request
 import utopia.access.http.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
+import utopia.disciple.http.request.Body
 import utopia.flow.generic.model.immutable.Value
 
 import scala.concurrent.Future
@@ -75,11 +76,12 @@ object ApiRequest
 	
 	// NESTED   ---------------------------
 	
-	private class _ApiRequest[A](override val method: Method, override val path: String, override val body: Value,
+	private class _ApiRequest[A](override val method: Method, override val path: String, bod: Value,
 	                             testDeprecation: => Boolean)
 	                            (f: Send[A])
 		extends ApiRequest[A]
 	{
+		override def body: Either[Value, Body] = Left(bod)
 		override def deprecated: Boolean = testDeprecation
 		
 		override def send(prepared: PreparedRequest) = f(prepared)
@@ -105,9 +107,10 @@ trait ApiRequest[+A] extends Retractable
 	  */
 	def path: String
 	/**
-	  * @return Request body value. Empty value if no body should be sent
+	  * @return Request body or body value.
+	  *         Empty value if no body should be sent.
 	  */
-	def body: Value
+	def body: Either[Value, Body]
 	
 	/**
 	  * Finalizes a sending process (for this request), determining how the response body is handled

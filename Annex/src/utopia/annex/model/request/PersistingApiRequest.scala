@@ -6,6 +6,7 @@ import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue}
 import utopia.annex.model.request.ApiRequest.Send
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
+import utopia.disciple.http.request.Body
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -122,7 +123,7 @@ object PersistingApiRequest
 	}
 	
 	private class _PersistingApiRequest[+A](persistingIdentifier: Constant, override val method: Method,
-	                                        override val path: String, override val body: Value,
+	                                        override val path: String, bodyValue: Value,
 	                                        deprecationFlag: FlagLike)
 	                                       (sendFunction: Send[A])
 		extends PersistingApiRequest[A]
@@ -130,13 +131,15 @@ object PersistingApiRequest
 		// ATTRIBUTES   ----------------------
 		
 		private lazy val persistingModel: Model =
-			persistingIdentifier +: Model.from("method" -> method.toString, "path" -> path, "body" -> body)
+			persistingIdentifier +: Model.from("method" -> method.toString, "path" -> path, "body" -> bodyValue)
 		
 		override lazy val persistingModelPointer: Changing[Option[Model]] =
 			deprecationFlag.map { deprecated => if (deprecated) None else Some(persistingModel) }
 		
 		
 		// IMPLEMENTED  ----------------------
+		
+		override def body: Either[Value, Body] = Left(bodyValue)
 		
 		override def deprecated: Boolean = deprecationFlag.value
 		

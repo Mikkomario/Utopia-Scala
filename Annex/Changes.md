@@ -22,6 +22,8 @@
   - **ApiRequest**s are now required to implement a `send(PreparedRequest)` function, 
     which handles response-parsing.
     - This also applies to `ApiRequest.get(...)`
+  - The `body` property is now of type **Either** in order to support both **Value**-sending and custom **Body** sending
+    - In order to match the previous functionality, you must wrap the return values with `Left(...)`
   - Removed `ApiRequest.post(...)`
     - Similar functionality may be achieved by calling `ApiRequest.apply(...) `
       or by using the new **PersistingApiRequest** companion object.

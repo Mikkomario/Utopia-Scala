@@ -89,7 +89,7 @@ trait PostSpiritRequest[+S <: Spirit with ModelConvertible, +A] extends ApiReque
 	
 	def method: Method = Post
 	override def path = spirit.postPath
-	override def body = spirit.postBody
+	override def body = Left(spirit.postBody)
 	
 	override def deprecated = false
 	

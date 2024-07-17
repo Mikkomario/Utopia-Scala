@@ -10,6 +10,8 @@ Refactoring response parsing
   - Changed the function parameter in the `.makeRequest(...)` `.makeBlockingRequest(...)` methods 
     to not cover situations where a response can't be acquired (in these cases the method is not called anymore)
 - **StreamedResponse** now requires an additional construction parameter for closing related (parent) resources
+- **Body** trait no longer requires the implementation of `charset` property. 
+  Character set should now be applied directly to the `contentType` property.
 ### Bugfixes
 - If the character set is already defined in the outgoing content type header,
   **Gateway** no longer adds a second copy of that parameter
@@ -20,6 +22,8 @@ Refactoring response parsing
   - Added `.apply(Request)(ResponseParser)`
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used
+- Refactored `.writeTo(OutputStream)` in **Body** to check whether the streams are buffered 
+  and to apply buffering if necessary
 
 ## v1.6.3 - 22.01.2024
 Supports **Flow v2.3**

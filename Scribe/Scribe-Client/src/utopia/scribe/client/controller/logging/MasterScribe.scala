@@ -14,7 +14,7 @@ import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
@@ -325,7 +325,7 @@ object MasterScribe
 			override def method: Method = Post
 			
 			// Updates the store durations of all the issues
-			override def body: Value = updateStoreDurations().map { _._1 }.toVector
+			override def body = Left(updateStoreDurations().map { _._1 }.toVector)
 			
 			// Removes the deprecated issues
 			// Considers this request deprecated once all issues have deprecated
