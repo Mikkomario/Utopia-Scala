@@ -204,8 +204,7 @@ object Status
       * Request-URI. The response MUST include an Allow header containing a list of valid methods for
       * the requested resource.
       */
-    case object MethodNotAllowed extends Status("Method Not Allowed", 405,
-        isTemporary = false, doNotRepeat = true)
+    case object MethodNotAllowed extends Status("Method Not Allowed", 405, isTemporary = false, doNotRepeat = true)
     
     /**
       * The server encountered an unexpected condition which prevented it from fulfilling the request.
@@ -217,8 +216,7 @@ object Status
       * appropriate response when the server does not recognize the request method and is not
       * capable of supporting it for any resource.
       */
-    case object NotImplemented extends Status("Not Implemented", 501, isTemporary = false,
-        doNotRepeat = true)
+    case object NotImplemented extends Status("Not Implemented", 501, isTemporary = false, doNotRepeat = true)
     
     /**
       * The server is currently unable to handle the request due to a temporary overloading or

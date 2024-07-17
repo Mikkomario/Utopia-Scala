@@ -71,6 +71,6 @@ class TestApiServlet extends LogicWrappingServlet
 	private def versionedResources(versionNumber: Int)(makeResources: Version => Seq[Resource[PostContext]]) = {
 		val version = Version(versionNumber)
 		val resources = makeResources(version)
-		version.toString -> resources
+		s"v$versionNumber" -> resources
 	}
 }

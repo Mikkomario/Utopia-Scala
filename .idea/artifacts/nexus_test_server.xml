@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact name="nexus-test-server">
+    <output-path>$PROJECT_DIR$/out/artifacts/nexus_test_server</output-path>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="Access" />
+          <element id="module-output" name="BunnyMunch" />
+          <element id="module-output" name="Flow" />
+          <element id="module-output" name="Nexus" />
+          <element id="module-output" name="Nexus-Test-Server" />
+          <element id="module-output" name="NexusForTomcat" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="application" name="scala-sdk-2.13.12" />
+        </element>
+        <element id="file-copy" path="$PROJECT_DIR$/Nexus-Test-Server/data/web.xml" />
+      </element>
+    </root>
+  </artifact>
+</component>
