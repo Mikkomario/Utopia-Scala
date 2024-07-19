@@ -7,23 +7,35 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.http.request.Body
 import utopia.echo.model.request.Query
-import utopia.echo.model.{LlmDesignator, Reply}
+import utopia.echo.model.LlmDesignator
+import utopia.echo.model.response.Reply
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.view.template.eventful.Changing
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A request for the Ollama API to generate a response to a prompt
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-class GenerateRequest(query: Query, conversationContext: String = "", stream: Boolean = false,
+class GenerateRequest(query: Query, conversationContext: Value = Value.empty, stream: Boolean = false,
                       testDeprecation: => Boolean = false)
-                     (implicit llm: LlmDesignator)
+                     (implicit llm: LlmDesignator, exc: ExecutionContext)
 	extends ApiRequest[Changing[Reply]]
 {
+	// ATTRIBUTES   ----------------------
+	
+	private lazy val responseParser = {
+		val base = {
+			if (stream) {
+			
+			}
+		}
+	}
+	
+	
 	// IMPLEMENTED  ----------------------
 	
 	override def method: Method = Post

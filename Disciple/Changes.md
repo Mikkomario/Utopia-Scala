@@ -12,9 +12,6 @@ Refactoring response parsing
 - **StreamedResponse** now requires an additional construction parameter for closing related (parent) resources
 - **Body** trait no longer requires the implementation of `charset` property. 
   Character set should now be applied directly to the `contentType` property.
-### Bugfixes
-- If the character set is already defined in the outgoing content type header,
-  **Gateway** no longer adds a second copy of that parameter
 ### New features
 - **ResponseParser**, **StreamedResponse** and **Gateway** now support asynchronous response parsing
 ### New methods
