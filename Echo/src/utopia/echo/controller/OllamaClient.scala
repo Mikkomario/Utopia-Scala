@@ -1,8 +1,10 @@
 package utopia.echo.controller
 
+import utopia.access.http.Status.InternalServerError
 import utopia.access.http.{Headers, Status}
-import utopia.annex.controller.ApiClient
+import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
+import utopia.annex.util.ResponseParseExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, StringBody}
@@ -15,13 +17,15 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 /**
   * A client-side interface for interacting with an Ollama API
   * @author Mikko Hilpinen
   * @since 11.07.2024, v0.1
   */
-class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit log: Logger, exc: ExecutionContext)
+class OllamaClient(serverAddress: String = "http://localhost:11434")
+                  (implicit log: Logger, exc: ExecutionContext)
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -55,24 +59,24 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")(implicit lo
 		
 		override protected lazy val gateway = Gateway()
 		
+		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
+			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { _.getString }
+		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
+			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
+		
 		
 		// IMPLEMENTED  -----------------------
 		
 		override protected implicit def jsonParser: JsonParser = JsonBunny
 		override protected implicit def log: Logger = OllamaClient.this.log
+		override protected implicit def exc: ExecutionContext = OllamaClient.this.exc
 		
 		override protected def rootPath: String = serverAddress
 		
+		// TODO: replace with a custom status
+		override protected def responseParseFailureStatus: Status = InternalServerError
+		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
-		
-		override protected implicit def exc: ExecutionContext = ???
-		
-		override protected def responseParseFailureStatus: Status = ???
-		
-		override def valueResponseParser: ResponseParser[Response[Value]] = ???
-		
-		override def emptyResponseParser: ResponseParser[Response[Unit]] = ???
-		
-		override protected def modifyOutgoingHeaders(original: Headers): Headers = ???
+		override protected def modifyOutgoingHeaders(original: Headers): Headers = original
 	}
 }

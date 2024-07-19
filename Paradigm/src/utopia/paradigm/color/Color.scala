@@ -2,9 +2,8 @@ package utopia.paradigm.color
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
-import utopia.flow.view.mutable.Pointer
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.enumeration.RgbChannel

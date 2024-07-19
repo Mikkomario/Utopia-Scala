@@ -1,10 +1,9 @@
 package utopia.flow.test.collection
 
 import utopia.flow.collection.CollectionExtensions.{iterableOperations, _}
+import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.ordering.SomeBeforeNone
-
-import scala.util.Success
 
 /**
  * A test for Flow collections / collection extensions
@@ -36,13 +35,18 @@ object CollectionTest extends App
 	assert(result2 == Vector("Car"), result2)
 	assert(result3 == words)
 	
+	val numbers = Vector(1, 2, 3, 4, 5)
+	val range = NumericSpan(2, 4)
+	
+	//noinspection ConvertibleToMethodValue
+	assert(numbers.bestMatch { range.contains(_) } == Vector(2, 3, 4))
+	
 	assert(words.mapFirstWhere { _.startsWith("C") } { _.toUpperCase } == Vector("Apina", "Banaani", "CAR", "David"))
 	
 	val splitResult = words.splitToSegments(2)
 	assert(splitResult.size == 2)
 	assert(splitResult.forall { _.size == 2 })
 	
-	val numbers = Vector(1, 2, 3, 4, 5)
 	assert(numbers.takeRightWhile { _ > 3 } == Vector(4, 5))
 	assert(numbers.existsCount(3) { _ < 4 })
 	assert(!numbers.existsCount(2) { _ > 4 })

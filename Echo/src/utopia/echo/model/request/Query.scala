@@ -25,7 +25,7 @@ case class Query(prompt: String, responseSchema: ObjectSchema = ObjectSchema.emp
 		// Specifies the question's context, if appropriate
 		// If a custom system message is applied, includes the context there rather than here
 		if (systemMessage.isEmpty && context.nonEmpty)
-			builder ++= s"CONTEXT: $context\n\nQUESTION: "
+			builder ++= s"Context: $context\n\nPrompt: "
 		builder ++= prompt
 		
 		// Case: Expecting a string response (or a json array with multiple strings)

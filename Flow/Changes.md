@@ -81,6 +81,8 @@
 - **Iterator** (**CollectionExtensions**)
   - Added `.notEmpty`
   - Added `.consecutivelyDistinct`
+- **Lockable** (object)
+  - Added `.view(Changing)` which constructs a **LockableBridge**
 - **PairOps**
   - Added `.findForBoth(...)` which functions like `.findForAll(...)` in **CollectionExtensions**, 
     but preserves **Pair** type.
