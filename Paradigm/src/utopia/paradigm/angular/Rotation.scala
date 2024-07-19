@@ -81,7 +81,7 @@ object Rotation extends RotationFactory[Rotation]
 	  * @return An average between the rotations
 	  */
 	def average(rotations: Iterable[Rotation]) =
-		if (rotations.isEmpty) zero else radians(rotations.map { _.radians }.sum / rotations.size)
+		if (rotations.isEmpty) zero else radians(rotations.view.map { _.radians }.sum / rotations.size)
 	
 	/**
 	  * Converts a radian amount to a rotation

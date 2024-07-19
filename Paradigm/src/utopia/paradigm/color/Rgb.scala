@@ -142,7 +142,7 @@ object Rgb extends SureFromModelFactory[Rgb]
 			case Some(Left(only)) => only
 			case Some(Right(colors)) =>
 				val count = colors.size
-				apply(colors.map { _.ratios }
+				apply(colors.view.map { _.ratios }
 					.foldLeft(Map[RgbChannel, Double]()) { (combined, color) => combined.mergeWith(color) { _ + _ } }
 					.view.mapValues { _ / count }.toMap)
 		}
@@ -157,11 +157,11 @@ object Rgb extends SureFromModelFactory[Rgb]
 			case None => black
 			case Some(Left(only)) => only._1
 			case Some(Right(colors)) =>
-				val totalWeight = colors.map { _._2 }.sum
+				val totalWeight = colors.view.map { _._2 }.sum
 				if (totalWeight == 0.0)
 					black
 				else
-					apply(colors.map { case (color, weight) => color.ratios.view.mapValues { _ * weight }.toMap }
+					apply(colors.view.map { case (color, weight) => color.ratios.view.mapValues { _ * weight }.toMap }
 						.foldLeft(Map[RgbChannel, Double]()) { (combined, color) => combined.mergeWith(color) { _ + _ } }
 						.view.mapValues { _ / totalWeight }.toMap)
 		}

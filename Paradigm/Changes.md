@@ -9,6 +9,7 @@
   where the first rotation was negative
 - Fixed (removed) **Parallelogramic**`.bounds` implementation
 - Fixed some issues with **Polygonic**`.convexParts`
+- Fixed a bug where `Color.average(Iterable)` would fail when input was of type **Set**
 ### New features
 - Added **ProjectionPath** trait extended by **Line**
   - This trait facilitates acquiring projected / matching points on a path 

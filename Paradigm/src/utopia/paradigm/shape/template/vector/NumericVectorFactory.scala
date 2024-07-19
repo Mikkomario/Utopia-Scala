@@ -98,10 +98,10 @@ trait NumericVectorFactory[D, +V] extends DimensionsWrapperFactory[D, V]
 		if (items.size == 1)
 			from(items.head._1)
 		else if (items.nonEmpty) {
-			val sum = items.map { case (v, weight) =>
-				v.mapEachDimension { scale(_, weight) } }.reduce { _.mergeWith(_)(n.plus)
-			}
-			val divider = items.map { _._2 }.sum
+			val sum = items.view
+				.map { case (v, weight) => v.mapEachDimension { scale(_, weight) } }
+				.reduce { _.mergeWith(_)(n.plus) }
+			val divider = items.view.map { _._2 }.sum
 			from(sum.mapEachDimension { div(_, divider) })
 		}
 		else
