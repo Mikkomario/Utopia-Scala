@@ -1,6 +1,31 @@
 package utopia.echo.model.response
 
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
+
+object ResponseStatistics
+{
+	// ATTRIBUTES   ------------------------
+	
+	/**
+	  * An empty set of statistics
+	  */
+	val empty = apply(Value.empty, GenerationDurations.zero, 0, 0)
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Parses a response json object returned by the Ollama API into a set of statistics.
+	  * Should only be called for the final response models, where "done" is set to true.
+	  * @param responseModel A json model returned by the Ollama API
+	  * @return Parsed statistics from the specified model
+	  */
+	def fromOllamaResponse(responseModel: Model) = ResponseStatistics(
+		responseModel("context"),
+		GenerationDurations.fromOllamaResponse(responseModel),
+		responseModel("prompt_eval_count").getInt,
+		responseModel("eval_count").getInt)
+}
 
 /**
   * Contains statistical information about an LLM response.

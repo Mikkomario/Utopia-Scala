@@ -77,6 +77,8 @@ object ResponseParseExtensions
 	
 	implicit class TryResponseParser[A](val p: ResponseParser[Try[A]]) extends AnyVal
 	{
+		// TODO: Add mapAndUnwrapToResponse (or something better named)
+		
 		/**
 		  * Converts this parser to an Annex-compatible response parser.
 		  * Converts response body parse failures to failed responses.

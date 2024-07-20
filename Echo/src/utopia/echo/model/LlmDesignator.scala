@@ -4,6 +4,16 @@ import scala.language.implicitConversions
 
 object LlmDesignator
 {
+	// ATTRIBUTES   -----------------
+	
+	/**
+	  * An empty LLM designator
+	  */
+	val empty = apply("")
+	
+	
+	// IMPLICIT ---------------------
+	
 	implicit def designateWithName(name: String): LlmDesignator = apply(name)
 }
 

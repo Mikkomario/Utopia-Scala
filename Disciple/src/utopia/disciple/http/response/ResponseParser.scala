@@ -125,6 +125,19 @@ object ResponseParser
 		apply { (status, headers, stream) => ResponseParseResult.async(f(status, headers, stream)) }
 	
 	/**
+	  * Creates a new response parser that delegates successes to one parser and failures to another.
+	  * Wraps the parse result into either Left (failure) or Right (success).
+	  * @param successParser Parser used for processing successful responses
+	  * @param failureParser Parser used for processing failure responses
+	  * @tparam S Type of successful parse results
+	  * @tparam F Type of failed parse results
+	  * @return A response parser that parses the responses using either of these two parsers
+	  */
+	def eitherSuccessOrFailure[S, F](successParser: ResponseParser[S],
+	                                 failureParser: ResponseParser[F]): ResponseParser[Either[F, S]] =
+		new EitherSuccessOrFailureResponseParser(successParser, failureParser)
+	
+	/**
 	  * Creates a response parser which delegates the parsing to one or more other response parsers
 	  * @param f A function which accepts:
 	  *             1. Response status
@@ -249,6 +262,19 @@ object ResponseParser
 	{
 		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) =
 			f(status, headers)(status, headers, stream)
+	}
+	
+	private class EitherSuccessOrFailureResponseParser[S, F](successParser: ResponseParser[S],
+	                                                         failureParser: ResponseParser[F])
+		extends ResponseParser[Either[F, S]]
+	{
+		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) =
+		{
+			if (status.isFailure)
+				failureParser(status, headers, stream).map { Left(_) }
+			else
+				successParser(status, headers, stream).map { Right(_) }
+		}
 	}
 	
 	private class DelegateEmptyResponseParser[A](defaultParser: ResponseParser[A],
@@ -497,6 +523,36 @@ trait ResponseParser[+A]
 	  */
 	def handleFailuresWith[B >: A](f: (Status, Headers, Option[InputStream]) => B) =
 		handleFailuresUsing(ResponseParser.blocking(f))
+	
+	/**
+	  * @param failureParser A parser used for processing failure responses
+	  * @tparam F Type of parse results on failures
+	  * @return A response parser which uses this parser for successes and the specified parser for failures.
+	  *         Returns the values as Either where Left is failure and Right is success.
+	  */
+	def toRight[F](failureParser: ResponseParser[F]) =
+		ResponseParser.eitherSuccessOrFailure(this, failureParser)
+	/**
+	  * @param f A parser function used for processing failure responses.
+	  *          Accepts 3 values:
+	  *             1. Response status
+	  *             1. Response headers
+	  *             1. Response body as a stream, if the response had a body
+	  * @tparam F Type of parse results on failures
+	  * @return A response parser which uses this parser for successes and the specified parser for failures.
+	  *         Returns the values as Either where Left is failure and Right is success.
+	  */
+	def toRightWith[F](f: (Status, Headers, Option[InputStream]) => F) =
+		toRight(ResponseParser.blocking(f))
+	
+	/**
+	  * @param successParser A parser used for processing successful responses
+	  * @tparam S Type of parse results on successes
+	  * @return A response parser which uses this parser for failures and the specified parser for successes.
+	  *         Returns the values as Either where Left is failure and Right is success.
+	  */
+	def toLeft[S](successParser: ResponseParser[S]) =
+		ResponseParser.eitherSuccessOrFailure(successParser, this)
 	
 	/**
 	  * Creates a copy of this parser, which may delegate parsing to another parser instead,

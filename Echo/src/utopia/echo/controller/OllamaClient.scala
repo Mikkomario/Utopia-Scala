@@ -73,8 +73,7 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")
 		
 		override protected def rootPath: String = serverAddress
 		
-		// TODO: replace with a custom status
-		override protected def responseParseFailureStatus: Status = InternalServerError
+		override protected def responseParseFailureStatus: Status = EchoContext.parseFailureStatus
 		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
 		override protected def modifyOutgoingHeaders(original: Headers): Headers = original
