@@ -14,7 +14,7 @@ object ObjectSchema
 /**
   * Describes a json object an LLM model should produce
   * @author Mikko Hilpinen
-  * @since 11.07.2024, v0.1
+  * @since 11.07.2024, v1.0
   */
 case class ObjectSchema(properties: Seq[PropertySchema]) extends MaybeEmpty[ObjectSchema]
 {

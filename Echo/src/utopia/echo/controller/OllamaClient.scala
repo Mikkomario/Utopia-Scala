@@ -1,54 +1,40 @@
 package utopia.echo.controller
 
-import utopia.access.http.Status.InternalServerError
 import utopia.access.http.{Headers, Status}
-import utopia.annex.controller.{ApiClient, PreparingResponseParser}
-import utopia.annex.model.response.Response
+import utopia.annex.controller.{ApiClient, PreparingResponseParser, QueueSystem, RequestQueue}
+import utopia.annex.model.request.RequestQueueable
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, StringBody}
 import utopia.disciple.http.response.ResponseParser
-import utopia.echo.model.LlmDesignator
-import utopia.echo.model.request.Query
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.async.context.ActionQueue
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
 
 /**
   * A client-side interface for interacting with an Ollama API
   * @author Mikko Hilpinen
-  * @since 11.07.2024, v0.1
+  * @since 11.07.2024, v1.0
   */
 class OllamaClient(serverAddress: String = "http://localhost:11434")
                   (implicit log: Logger, exc: ExecutionContext)
+	extends RequestQueue
 {
 	// ATTRIBUTES   ------------------------
 	
-	// private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
+	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
+	private lazy val queue = RequestQueue(queueSystem)
 	
-	// private val queues = Cache { _: LlmDesignator => RequestQueue(queueSystem) }
 	
+	// IMPLEMENTED  ------------------------
 	
-	// OTHER    ----------------------------
-	
-	def generate(query: Query, conversationContext: String = "", stream: Boolean = false)
-	            (implicit llm: LlmDesignator) =
-	{
-		val requestBody = Model.from(
-			"model" -> llm.name, "prompt" -> query.toPrompt,
-			"format" -> (if (query.expectsJsonResponse) "json" else Value.empty),
-			"system" -> query.toSystem, "context" -> conversationContext,
-			"stream" -> stream)
-		// val request = ApiRequest.post("generate", requestBody.withoutEmptyValues)
-		
-		// val resultFuture = queues(llm).push(request).future
-		???
-	}
+	override def push[A](request: RequestQueueable[A]): ActionQueue.QueuedAction[RequestResult[A]] = queue.push(request)
 	
 	
 	// NESTED   ----------------------------

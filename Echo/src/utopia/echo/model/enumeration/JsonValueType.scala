@@ -4,7 +4,7 @@ package utopia.echo.model.enumeration
   * An enumeration which represents the standard json value types understood and produced by LLM interfaces
   * in the context of generating json.
   * @author Mikko Hilpinen
-  * @since 11.07.2024, v0.1
+  * @since 11.07.2024, v1.0
   */
 sealed trait JsonValueType
 {

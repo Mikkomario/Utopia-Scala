@@ -77,8 +77,6 @@ object ResponseParseExtensions
 	
 	implicit class TryResponseParser[A](val p: ResponseParser[Try[A]]) extends AnyVal
 	{
-		// TODO: Add mapAndUnwrapToResponse (or something better named)
-		
 		/**
 		  * Converts this parser to an Annex-compatible response parser.
 		  * Converts response body parse failures to failed responses.
@@ -92,6 +90,28 @@ object ResponseParseExtensions
 			p.mapToResponseOrFail[A] { r =>
 				r.wrapped match {
 					case Success(body) => Right(body)
+					case Failure(error) => Left(parseFailureStatus -> error.getMessage)
+				}
+			} {
+				case Success(body) => extractErrorMessage(body)
+				case Failure(error) => error.getMessage
+			}
+		
+		/**
+		  * Flat-maps and converts this parser to an Annex-compatible response parser.
+		  * Converts response body parse failures and mapping failures to failed responses.
+		  * @param parseFailureStatus Status to assign for response-parsing failures
+		  * @param f A mapping function applied to successfully parsed values.
+		  *          Yields either a mapped value or a failure.
+		  * @param extractErrorMessage A function which extracts an error message from the unmapped response body value.
+		  *                            Only called for failure responses (4XX-5XX) which contain a successful value.
+		  * @return Copy of this parser which converts the result into a success or a failure response based on
+		  *         the response status and the response body parsing success or failure
+		  */
+		def tryFlatMapToResponse[B](parseFailureStatus: => Status)(f: A => Try[B])(extractErrorMessage: A => String) =
+			p.mapToResponseOrFail { r =>
+				r.wrapped.flatMap(f) match {
+					case Success(parsed) => Right(parsed)
 					case Failure(error) => Left(parseFailureStatus -> error.getMessage)
 				}
 			} {

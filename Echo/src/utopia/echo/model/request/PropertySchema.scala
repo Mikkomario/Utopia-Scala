@@ -7,7 +7,7 @@ import utopia.flow.collection.immutable.Pair
 /**
   * Specifies to the LLM, what kind of property should be included in a response json object
   * @author Mikko Hilpinen
-  * @since 11.07.2024, v0.1
+  * @since 11.07.2024, v1.0
   */
 case class PropertySchema(name: String, expectation: String = "", dataType: JsonValueType = AnyType,
                           required: Boolean = false)

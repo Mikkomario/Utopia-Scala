@@ -13,6 +13,9 @@ trait HasSchrodingerState
 {
 	// ABSTRACT ------------------------
 	
+	/**
+	  * @return The current state of this item
+	  */
 	def state: SchrodingerState
 	
 	

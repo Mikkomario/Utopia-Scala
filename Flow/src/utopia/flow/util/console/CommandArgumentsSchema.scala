@@ -22,9 +22,6 @@ case class CommandArgumentsSchema(arguments: Seq[ArgumentSchema]) extends MaybeE
 	
 	override def self = this
 	
-	/**
-	 * @return Whether this schema is empty
-	 */
 	override def isEmpty = arguments.isEmpty
 	
 	

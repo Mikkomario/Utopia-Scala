@@ -20,6 +20,6 @@ object LlmDesignator
 /**
   * An interface for choosing a LLM using its name
   * @author Mikko Hilpinen
-  * @since 11.07.2024, v0.1
+  * @since 11.07.2024, v1.0
   */
 case class LlmDesignator(name: String)

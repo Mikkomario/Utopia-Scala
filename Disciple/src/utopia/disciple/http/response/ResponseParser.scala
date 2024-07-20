@@ -6,7 +6,7 @@ import utopia.access.http.{ContentCategory, ContentType, Headers, Status, Status
 import utopia.disciple.http.response.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
@@ -59,11 +59,29 @@ object ResponseParser
 	def value(implicit jsonParser: JsonParser) = jsonUsing(jsonParser)
 	/**
 	  * @param jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into values.
+	  *         Expects json responses, but also functions with XML and text-based responses.
+	  *         Logs parsing failures and replaces them with empty values.
+	  */
+	def valueOrLog(implicit jsonParser: JsonParser, log: Logger) =
+		value.getOrElseLog(Value.empty)
+	/**
+	  * @param jsonParser Implicit json parser to use
 	  * @return A response parser which parses response contents into 0-n values.
 	  *         Expects json responses, but also functions with XML and text-based responses.
 	  */
 	def valueVector(implicit jsonParser: JsonParser) =
 		value.map { _.flatMap { _.tryVector } }
+	/**
+	  * @param jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into 0-n values.
+	  *         Expects json responses, but also functions with XML and text-based responses.
+	  *         Logs parsing failures and replaces them with empty values.
+	  */
+	def valueVectorOrLog(implicit jsonParser: JsonParser, log: Logger) =
+		valueVector.getOrElseLog(Vector.empty)
 	
 	/**
 	  * @param jsonParser Implicit json parser to use
@@ -73,10 +91,27 @@ object ResponseParser
 	def model(implicit jsonParser: JsonParser) = value.map { _.flatMap { _.tryModel } }
 	/**
 	  * @param jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into models.
+	  *         Expects json responses, but also functions with XML responses.
+	  *         Logs parsing failures and replaces them with empty values.
+	  */
+	def modelOrLog(implicit jsonParser: JsonParser, log: Logger) =
+		model.getOrElseLog(Model.empty)
+	/**
+	  * @param jsonParser Implicit json parser to use
 	  * @return A response parser which parses response contents into 0-n models.
 	  */
 	def modelVector(implicit jsonParser: JsonParser) =
 		value.map { _.flatMap { _.tryVectorWith { _.tryModel } } }
+	/**
+	  * @param jsonParser jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into 0-n models.
+	  *         Logs failures.
+	  */
+	def modelVectorOrLog(implicit jsonParser: JsonParser, log: Logger) =
+		mapValueVectorOrLog { _.tryModel }
 	
 	
 	// OTHER    ----------------------
@@ -195,6 +230,47 @@ object ResponseParser
 	  */
 	def vector[A](parser: FromModelFactory[A])(implicit jsonParser: JsonParser) =
 		value.map { _.flatMap { _.tryVectorWith { _.tryModel.flatMap(parser.apply) } } }
+	/**
+	  * Creates a response parser which converts read data to 0-n models per response (presumably from json)
+	  * and parses those models using the specified parser.
+	  * Logs parsing failures.
+	  * @param parser A parser which converts models into other data types
+	  * @param jsonParser jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into 0-n parsed items.
+	  *         Logs failures.
+	  */
+	def vectorOrLog[A](parser: FromModelFactory[A])(implicit jsonParser: JsonParser, log: Logger) =
+		mapValueVectorOrLog { _.tryModel.flatMap(parser.apply) }
+	
+	/**
+	  * Converts the response body into a vector of values and finalizes the parsing by performing a mapping function.
+	  * Logs parse failures. If parsing fails on an individual value, ignores that value.
+	  * If parsing fails for the whole vector, replaces it with an empty vector instead.
+	  * @param f A function which accepts a parsed value and converts it to the desired data type.
+	  *          Yields a failure on parsing failures.
+	  * @param jsonParser jsonParser Implicit json parser to use
+	  * @param log Implicit logging implementation for recording parsing failures
+	  * @return A response parser which parses response contents into 0-n parsed items.
+	  *         Logs failures.
+	  */
+	def mapValueVectorOrLog[A](f: Value => Try[A])(implicit jsonParser: JsonParser, log: Logger) =
+		value.map { value =>
+			value.flatMap { _.tryVector } match {
+				case Success(values) =>
+					// Only logs parse failures and only returns successful parse results
+					val (parseFailures, parsed) = values.map(f).divided
+					parseFailures.headOption.foreach { log(_,
+						s"Failed to parse ${ parseFailures.size }/${
+							values.size } of the read values into the correct data type") }
+					parsed
+				
+				// Case: The response body couldn't be even read into a value vector => Logs and returns an empty vector
+				case Failure(error) =>
+					log(error, "Failed to parse the response contents into a value vector")
+					Vector.empty
+			}
+		}
 	
 	/**
 	  * @param result Result which will be provided for all responses
@@ -227,6 +303,20 @@ object ResponseParser
 				default
 			}
 		}
+		
+		/**
+		  * @param f A mapping function applied to response parse results, if successful
+		  * @tparam B Type of mapped response parse results
+		  * @return Copy of this parser which also applies the specified mapping function on successes
+		  */
+		def mapSuccess[B](f: A => B) = p.map { _.map(f) }
+		/**
+		  * @param f A mapping function applied to response parse results, if successful.
+		  *          May yield a failure.
+		  * @tparam B Type of mapped response parse results, when successful
+		  * @return Copy of this parser which also applies the specified mapping function on successes
+		  */
+		def flatMap[B](f: A => Try[B]) = p.map { _.flatMap(f) }
 	}
 	
 	

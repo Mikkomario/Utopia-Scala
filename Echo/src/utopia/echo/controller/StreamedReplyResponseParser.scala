@@ -67,6 +67,10 @@ class StreamedReplyResponseParser(implicit exc: ExecutionContext)
 				
 				// Processes the final read result once reading completes
 				resultFuture.foreachResult { result =>
+					// Locks the pointers - There shall not be any updates afterwards
+					textPointer.lock()
+					lastUpdatedPointer.lock()
+					
 					// Handles the potential failure (unless reading was completed successfully already)
 					if (!statisticsPromise.isCompleted) {
 						result match {
@@ -77,9 +81,6 @@ class StreamedReplyResponseParser(implicit exc: ExecutionContext)
 							case Failure(error) => statisticsPromise.trySuccess(Failure(error))
 						}
 					}
-					// Locks the pointers - There shall not be any updates afterwards
-					textPointer.lock()
-					lastUpdatedPointer.lock()
 				}
 				
 				// Returns the acquired reply (building)
