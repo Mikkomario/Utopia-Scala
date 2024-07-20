@@ -32,8 +32,7 @@ object AutoClose
 		/**
 		  * Consumes this entity, then closes. May throw if the provided function throws
 		  */
-		def consume[B](f: T => B): B =
-		{
+		def consume[B](f: T => B): B = {
 			try {
 				f(c)
 			}

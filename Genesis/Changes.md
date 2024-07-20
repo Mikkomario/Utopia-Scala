@@ -34,6 +34,11 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Added a new pointer-based **Animator** implementation, as well as support for animation events
 - Added **DrawLevel** from the **Firmament** module
 - Added **PaintManager** and **Priority** from the **Reach** module
+- Added conversions between images and Base 64 encoded strings
+### New methods
+- **Image**
+  - Added `.encodeToBase64(...)` and `.toBase64EncodedString`. 
+    Also added `.fromBase64EncodedString(String)` to the companion object.
 ### Other
 - This module is no longer dependent from the **Inception** module
 - Multiple new features and changes lack in-depth testing - Exercise discretion

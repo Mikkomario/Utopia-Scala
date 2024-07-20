@@ -26,8 +26,9 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
-import java.io.FileNotFoundException
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException, InputStream}
 import java.nio.file.{Files, Path}
+import java.util.Base64
 import javax.imageio.ImageIO
 import scala.util.{Failure, Success, Try}
 
@@ -78,15 +79,13 @@ object Image
 	  */
 	def readFrom(path: Path, readClass: Option[Class[_]] = None) = {
 		// Checks that file exists (not available with class read method)
-		if (readClass.isDefined || Files.exists(path))
-		{
+		if (readClass.isDefined || Files.exists(path)) {
 			// ImageIO and class may return null. Image is read through class, if one is provided
 			val readResult = Try { readClass.map { c => Option(c.getResourceAsStream(s"/${ path.toString }"))
 				.flatMap { _.consume { stream => Option(ImageIO.read(stream)) } } }
 				.getOrElse { Option(ImageIO.read(path.toFile)) } }
 			
-			readResult.flatMap
-			{
+			readResult.flatMap {
 				case Some(result) => Success(apply(result))
 				case None => Failure(new NoImageReaderAvailableException(s"Cannot read image from file: ${ path.toString }"))
 			}
@@ -127,6 +126,24 @@ object Image
 				apply(buffer)
 		}
 	}
+	
+	/**
+	  * Parses an image from its Base 64 encoded format.
+	  * @param imageString A Base 64 encoded string which represents an image
+	  * @return Parsed image. Failure if parsing failed.
+	  */
+	def fromBase64EncodedString(imageString: String) = Try {
+		val imageBytes = Base64.getDecoder.decode(imageString)
+		new ByteArrayInputStream(imageBytes).consume { stream => apply(ImageIO.read(stream)) }
+	}
+	
+	/**
+	  * Reads an image from an input stream.
+	  * NB: Doesn't close the specified stream.
+	  * @param stream A stream to read into an image
+	  * @return An image read from the specified stream. Failure if image-reading failed.
+	  */
+	def fromStream(stream: InputStream) = Try { apply(ImageIO.read(stream)) }
 	
 	/**
 	  * Creates a new image by drawing
@@ -287,6 +304,13 @@ case class Image private(override protected val source: Option[BufferedImage], o
 		}
 	}
 	
+	/**
+	  * @return A Base 64 encoded string based on this image's contents.
+	  *         A failure if image-writing failed.
+	  *         Contains an empty string if this image was empty.
+	  */
+	def toBase64String = encodeToBase64()
+	
 	
 	// IMPLEMENTED	----------------
 	
@@ -323,7 +347,32 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	}
 	
 	
-	// OPERATORS	----------------
+	// OTHER	----------------
+	
+	/**
+	  * Converts this image into a Base 64 encoded string
+	  * @param initialBufferSize Initial size of the internal buffer used
+	  * @param imageFormatName Informal name of the resulting image format. Default = "png".
+	  * @return A Base 64 encoded string based on this image's contents.
+	  *         A failure if image-writing failed.
+	  *         Contains an empty string if this image was empty.
+	  */
+	def encodeToBase64(initialBufferSize: Int = 1024, imageFormatName: String = "png") = {
+		source match {
+			case Some(image) =>
+				// Opens an output stream for writing this image into it
+				new ByteArrayOutputStream(initialBufferSize).tryConsume { outputStream =>
+					// Writes this image into the stream
+					ImageIO.write(image, imageFormatName, outputStream)
+					
+					// Reads the stream as a Base 64 encoded string
+					Base64.getEncoder.encodeToString(outputStream.toByteArray)
+				}
+				
+			// Case: Empty image => Yields an empty string
+			case None => Success("")
+		}
+	}
 	
 	/**
 	  * Scales this image
@@ -344,9 +393,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	  *         of this image's origin (if specified)
 	 */
 	def +(other: Image) = withOverlay(other)
-	
-	
-	// OTHER	--------------------
 	
 	/**
 	  * Creates a copy of this image with adjusted alpha value (transparency)
