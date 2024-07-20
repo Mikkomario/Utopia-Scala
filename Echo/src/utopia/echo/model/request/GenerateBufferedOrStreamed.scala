@@ -1,24 +1,20 @@
-package utopia.echo.controller
+package utopia.echo.model.request
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
 import utopia.annex.controller.ApiClient
-import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.http.request.Body
 import utopia.disciple.http.response.ResponseParser
+import utopia.echo.controller.{EchoContext, StreamedReplyResponseParser}
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.request.Query
 import utopia.echo.model.response.{BufferedReply, StreamedOrBufferedReply}
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * A request for the Ollama API to generate a response to a prompt
+  * A request for the Ollama API to generate a response to a prompt.
+  * The response may be received in either streamed or buffered format.
   * @param query The query to send to the LLM
   * @param conversationContext 'context' property returned by the last LLM response,
   *                            if conversation context should be kept.
@@ -27,13 +23,20 @@ import scala.concurrent.{ExecutionContext, Future}
   *               - If false (default) the response will be received only once generation completes,
   *               and will contain all the information at once.
   *               - If true, the response text will be received word by word
+  * @param testDeprecation A function which yields true if this request gets deprecated and should be retracted
+  *                        (if not yet sent out).
+  *                        Default = always false.
+  * @param llm Name of the targeted LLM
+  * @param exc Implicit execution context utilized in streamed response-processing
+  * @param jsonParser Implicit json parser used in response-parsing
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-class GenerateRequest(query: Query, conversationContext: Value = Value.empty, stream: Boolean = false,
-                      testDeprecation: => Boolean = false)
-                     (implicit llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser)
-	extends ApiRequest[StreamedOrBufferedReply]
+class GenerateBufferedOrStreamed(override val query: Query, override val conversationContext: Value = Value.empty,
+                                 override val stream: Boolean = false, testDeprecation: => Boolean = false)
+                                (implicit override val llm: LlmDesignator, exc: ExecutionContext,
+                                        jsonParser: JsonParser)
+	extends Generate[StreamedOrBufferedReply]
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -50,15 +53,6 @@ class GenerateRequest(query: Query, conversationContext: Value = Value.empty, st
 	
 	
 	// IMPLEMENTED  ----------------------
-	
-	override def method: Method = Post
-	override def path: String = "generate"
-	
-	override def body: Either[Value, Body] = Left(Model.from(
-		"model" -> llm.name, "prompt" -> query.toPrompt,
-		"format" -> (if (query.expectsJsonResponse) "json" else Value.empty),
-		"system" -> query.toSystem, "context" -> conversationContext,
-		"stream" -> stream))
 	
 	override def deprecated: Boolean = testDeprecation
 	

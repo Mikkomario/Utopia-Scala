@@ -1,5 +1,6 @@
 package utopia.echo.model.response
 
+import utopia.echo.model.request.GenerateBufferedOrStreamed
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 object ResponseStatistics
@@ -32,7 +33,7 @@ object ResponseStatistics
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   * @param context A value which represents the conversation context so far.
-  *                May be passed to the next outbound [[utopia.echo.controller.GenerateRequest]].
+  *                May be passed to the next outbound [[GenerateBufferedOrStreamed]].
   * @param duration Information about the duration it took to generate the response
   * @param promptTokenCount Amount of tokens used in the prompt
   * @param responseTokenCount Amount of tokens used in the response

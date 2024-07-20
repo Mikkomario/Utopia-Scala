@@ -29,6 +29,8 @@ object ApiClient
 	  */
 	class PreparedRequest(api: ApiClient, wrapped: Request)(implicit exc: ExecutionContext)
 	{
+		// COMPUTED -----------------------
+		
 		/**
 		  * Sends out this request and receives the response as one containing a [[Value]]
 		  * @return Future which eventually resolves into a parsed response or a request failure
@@ -52,6 +54,9 @@ object ApiClient
 		  */
 		def getModels = parseValue { _.tryVectorWith { _.tryModel } }
 		
+		
+		// OTHER    ---------------------------
+		
 		/**
 		  * Sends out this request and receives the response as one containing a single parsed item.
 		  * Parse failures are logged and converted into failure responses.
@@ -74,6 +79,15 @@ object ApiClient
 		  */
 		def mapValue[A](f: Value => A) = send(api.valueResponseParser.mapSuccess(f))
 		/**
+		  * Sends out this request and receives a mapped response.
+		  * Expects the response to contain 0-n values which will then be mapped.
+		  * @param f A function which maps a value from a successful response to the final type
+		  * @tparam A Type of mapping results
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapValues[A](f: Value => A) =
+			send(api.valueResponseParser.mapSuccess { _.getVector.map(f) })
+		/**
 		  * Sends out this request and receives a parsed response.
 		  * Parsing failures are converted to failure responses.
 		  * @param parse A function which maps the successful response from type [[Value]] to the final type.
@@ -82,6 +96,37 @@ object ApiClient
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
 		def parseValue[A](parse: Value => Try[A]) = send(api.tryMapValueParser(parse))
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Expects the response to contain 0-n values, which will then be parsed.
+		  * Parsing failures are converted to failure responses.
+		  * @param parse A function which maps individual values from a successful response.
+		  *              May yield a failure, in which case the response is converted into a failure response.
+		  * @tparam A Type of the final mapping result, when successful
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def parseValues[A](parse: Value => Try[A]) =
+			parseValue { _.tryVectorWith(parse) }
+		
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Converts the response body into a model and then applies the specified mapping function.
+		  * @param f A function which maps the successful response from a [[Model]] to the final type
+		  * @tparam A Type of the final mapping result
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapModel[A](f: Model => A) = parseValue { _.tryModel.map(f) }
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Expects the response to contain 0-n json objects.
+		  * Converts the response body into 0-n models
+		  * and then applies the specified mapping function for each one of them.
+		  * @param f A function which maps the successful response from a [[Model]] to the final type
+		  * @tparam A Type of the final mapping result
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapModels[A](f: Model => A) =
+			parseValue { _.tryVectorWith { _.tryModel.map(f) } }
 		
 		/**
 		  * Sends out this request and receives a parsed response.

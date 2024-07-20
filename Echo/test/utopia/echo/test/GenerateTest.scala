@@ -4,9 +4,9 @@ import utopia.access.http.Status
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.AccessLogger
-import utopia.echo.controller.{GenerateRequest, OllamaClient}
+import utopia.echo.controller.OllamaClient
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.request.Query
+import utopia.echo.model.request.{GenerateBufferedOrStreamed, Query}
 import utopia.echo.model.response.StreamedOrBufferedReply
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.Single
@@ -33,7 +33,7 @@ object GenerateTest extends App
 	private val prompt1 = "Define the word \"echo\""
 	
 	println(s"Sending out: $prompt1")
-	client.push(new GenerateRequest(Query(prompt1), stream = true)).waitFor().get match {
+	client.push(new GenerateBufferedOrStreamed(Query(prompt1), stream = true)).waitFor().get match {
 		case Response.Success(reply: StreamedOrBufferedReply, status, headers) =>
 			println(s"Received response with status $status and headers $headers")
 			println(s"Reply: ")
