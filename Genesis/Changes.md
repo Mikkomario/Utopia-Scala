@@ -24,6 +24,7 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - Replaced **Camera** with **Repositioner**
 - Replaced **Animator** with a new implementation
 - **Animator**'s handling states can't be mutated anymore
+- In **Image**'s `.writeToFile(Path)` function, empty images are no longer written, but yield false instead.
 - In some instances where **Vector** was used, **Seq** is now used
 ### Deprecations
 - Deprecated **Animator** and **AnimatorWithTransform** for removal
@@ -39,6 +40,7 @@ Remember MutableImage changes (once added) and the new drawSubImage -feature
 - **Image**
   - Added `.encodeToBase64(...)` and `.toBase64EncodedString`. 
     Also added `.fromBase64EncodedString(String)` to the companion object.
+  - Added `.writeToStream(OutputStream, String)`
 ### Other
 - This module is no longer dependent from the **Inception** module
 - Multiple new features and changes lack in-depth testing - Exercise discretion

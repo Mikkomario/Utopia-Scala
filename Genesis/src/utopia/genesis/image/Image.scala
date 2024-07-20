@@ -26,7 +26,7 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 import java.awt.image.{BufferedImage, BufferedImageOp}
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException, IOException, InputStream, OutputStream}
 import java.nio.file.{Files, Path}
 import java.util.Base64
 import javax.imageio.ImageIO
@@ -348,31 +348,6 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	
 	
 	// OTHER	----------------
-	
-	/**
-	  * Converts this image into a Base 64 encoded string
-	  * @param initialBufferSize Initial size of the internal buffer used
-	  * @param imageFormatName Informal name of the resulting image format. Default = "png".
-	  * @return A Base 64 encoded string based on this image's contents.
-	  *         A failure if image-writing failed.
-	  *         Contains an empty string if this image was empty.
-	  */
-	def encodeToBase64(initialBufferSize: Int = 1024, imageFormatName: String = "png") = {
-		source match {
-			case Some(image) =>
-				// Opens an output stream for writing this image into it
-				new ByteArrayOutputStream(initialBufferSize).tryConsume { outputStream =>
-					// Writes this image into the stream
-					ImageIO.write(image, imageFormatName, outputStream)
-					
-					// Reads the stream as a Base 64 encoded string
-					Base64.getEncoder.encodeToString(outputStream.toByteArray)
-				}
-				
-			// Case: Empty image => Yields an empty string
-			case None => Success("")
-		}
-	}
 	
 	/**
 	  * Scales this image
@@ -932,16 +907,58 @@ case class Image private(override protected val source: Option[BufferedImage], o
 	}
 	
 	/**
-	 * Writes this image to a file
-	 * @param filePath Path where the file is written
-	 * @return Success or failure
-	 */
-	def writeToFile(filePath: Path) = filePath.createParentDirectories().flatMap { _ =>
-		Try[Unit] {
-			source match {
-				case Some(source) => ImageIO.write(source, filePath.fileType, filePath.toFile)
-				case None => if (!filePath.exists) Files.createFile(filePath)
-			}
+	  * Converts this image into a Base 64 encoded string
+	  * @param initialBufferSize Initial size of the internal buffer used
+	  * @param imageFormatName Informal name of the resulting image format. Default = "png".
+	  * @return A Base 64 encoded string based on this image's contents.
+	  *         A failure if image-writing failed.
+	  *         Contains an empty string if this image was empty.
+	  */
+	def encodeToBase64(initialBufferSize: Int = 1024, imageFormatName: String = "png") = {
+		source match {
+			case Some(image) =>
+				// Opens an output stream for writing this image into it
+				new ByteArrayOutputStream(initialBufferSize).tryConsume { outputStream =>
+					// Writes this image into the stream
+					ImageIO.write(image, imageFormatName, outputStream)
+					
+					// Reads the stream as a Base 64 encoded string
+					Base64.getEncoder.encodeToString(outputStream.toByteArray)
+				}
+			
+			// Case: Empty image => Yields an empty string
+			case None => Success("")
 		}
+	}
+	
+	/**
+	 * Writes this image to a file
+	 * @param filePath Path where the file will be written
+	 * @return Success or failure. Contains false if this image was empty and therefore not written.
+	 */
+	def writeToFile(filePath: Path) = filePath.createParentDirectories().flatMap { path =>
+		_write { ImageIO.write(_, path.fileType, path.toFile) }
+	}
+	
+	/**
+	  * Writes this image into an output stream.
+	  * Note: This doesn't close the specified stream, naturally.
+	  * @param stream Stream to write this image to
+	  * @param imageFormatName Name of the informal image format assigned. Default = "png".
+	  * @return Success or failure. Contains false if this image was empty and therefore not written.
+	  */
+	def writeToStream(stream: OutputStream, imageFormatName: String = "png") =
+		_write { ImageIO.write(_, imageFormatName, stream) }
+	
+	// Handles the empty image use-case as well as write function result-handling
+	private def _write(write: BufferedImage => Boolean) = source match {
+		case Some(source) =>
+			Try { write(source) }.flatMap { writerFound =>
+				if (writerFound)
+					Success(true)
+				else
+					Failure(new IOException("No suitable writer found for writing this image"))
+			}
+		case None => Success(false)
 	}
 }
