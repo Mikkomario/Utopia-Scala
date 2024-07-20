@@ -14,29 +14,24 @@ import scala.concurrent.{ExecutionContext, Future}
   * A request for the Ollama API to generate a response to a specific query.
   * Processes the reply in a streamed fashion, updating the response text as it arrives.
   * Not suitable for JSON-based requests.
-  * @param prompt The primary prompt to present to the LLM
+  * @param prompt The prompt to present to the LLM
   * @param conversationContext 'context' property returned by the last LLM response,
   *                            if conversation context should be kept.
   *                            Default = empty = new conversation.
-  * @param additionalContext Contextual information to include in the prompt or the system message.
-  *                          Default = empty = no additional context is given.
-  * @param systemMessage A message that will override the LLM's system message from its Modelfile.
-  *                      Default = empty = use system message in the model's Modelfile.
   * @param llm Name of the targeted LLM
   * @param exc Implicit execution context utilized in streamed response-processing
   * @param jsonParser Implicit json parser used in response-parsing
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-class GenerateStreamed(prompt: String, override val conversationContext: Value = Value.empty,
-                       additionalContext: String = "", systemMessage: String = "", testDeprecation: => Boolean = false)
+class GenerateStreamed(prompt: Prompt, override val conversationContext: Value = Value.empty,
+                       testDeprecation: => Boolean = false)
                       (implicit override val llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser)
 	extends Generate[StreamedReply]
 {
 	// ATTRIBUTES   -----------------------------
 	
-	override lazy val query: Query = Query(prompt, context = additionalContext, systemMessage = systemMessage)
-	
+	override lazy val query: Query = Query(prompt)
 	private lazy val responseParser = new StreamedReplyResponseParser().toResponse
 	
 	

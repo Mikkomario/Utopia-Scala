@@ -80,17 +80,12 @@ object Generate
 		def buffered(query: Query) = new GenerateBuffered(query, context, testDeprecation)
 		/**
 		  * @param prompt Prompt to present for the LLM
-		  * @param context Additional contextual information to specify in the prompt or in the system message.
-		  *                Default = empty.
-		  * @param systemMessage A message that will override the LLM's system message from its Modelfile.
-		  *                      Default = empty = use system message in the model's Modelfile.
 		  * @param exc Implicit execution context utilized in streamed response-processing
 		  * @param jsonParser Implicit json parser used in response-parsing
 		  * @return A request for sending out the specified query and for receiving the response in a streamed format.
 		  */
-		def streamed(prompt: String, context: String = "", systemMessage: String = "")
-		            (implicit exc: ExecutionContext, jsonParser: JsonParser) =
-			new GenerateStreamed(prompt, this.context, context, systemMessage, testDeprecation)
+		def streamed(prompt: Prompt)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+			new GenerateStreamed(prompt, context, testDeprecation)
 		/**
 		  * @param query Query to send out to the LLM
 		  * @param stream Whether to receive the response as a stream.
@@ -151,5 +146,7 @@ trait Generate[R] extends ApiRequest[R]
 		"model" -> llm.name, "prompt" -> query.toPrompt,
 		"format" -> (if (query.expectsJsonResponse) "json" else Value.empty),
 		"system" -> query.toSystem, "context" -> conversationContext,
-		"stream" -> stream))
+		"stream" -> stream,
+		"images" -> query.encodedImages)
+		.withoutEmptyValues)
 }

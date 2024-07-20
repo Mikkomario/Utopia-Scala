@@ -2,13 +2,14 @@ package utopia.echo.model.request
 
 import utopia.flow.operator.equality.ComparisonOperator.{DirectionalComparison, Equality}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainNumber.{AnyNumber, CertainNumber, NumberComparison, UncertainInt, UncertainNumberRange}
+import utopia.flow.util.StringExtensions._
 
 import scala.annotation.tailrec
 
 /**
   * Represents some type of query made to the Ollama (or other LLM API) generate or chat end-point.
+  * Contains information about the prompt, as well as instructions for the LLM on how to respond.
   * @param prompt The primary prompt (text)
   * @param responseSchema Instructions on how json responses should be built
   *                       (default = empty = no instructions given or no json format expected)
@@ -16,10 +17,6 @@ import scala.annotation.tailrec
   *                                  Default = 1.
   *                                  If set to something other than 1, the LLM is requested to return
   *                                  a json value (or object) array.
-  * @param context Contextual information to include in the prompt or the system message.
-  *                Default = empty = no additional context is given.
-  * @param systemMessage A message that will override the LLM's system message from its Modelfile.
-  *                      Default = empty = use system message in the model's Modelfile.
   * @param requestJson Whether to specifically request the LLM to reply in JSON
   *                    (and to consequently expect json formatting).
   *                    Default = false.
@@ -28,9 +25,8 @@ import scala.annotation.tailrec
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-case class Query(private val prompt: String, responseSchema: ObjectSchema = ObjectSchema.empty,
-                 numberOfExpectedResponses: UncertainInt = 1, context: String = "", systemMessage: String = "",
-                 requestJson: Boolean = false)
+case class Query(private val prompt: Prompt, responseSchema: ObjectSchema = ObjectSchema.empty,
+                 numberOfExpectedResponses: UncertainInt = 1, requestJson: Boolean = false)
 {
 	// COMPUTED ----------------------------
 	
@@ -41,17 +37,21 @@ case class Query(private val prompt: String, responseSchema: ObjectSchema = Obje
 		requestJson || responseSchema.nonEmpty || numberOfExpectedResponses != CertainNumber(1)
 	
 	/**
+	  * @return Images to send along with this query. As Base 64 encoded strings.
+	  */
+	def encodedImages = prompt.encodedImages
+	
+	/**
 	  * @return Prompt that should be sent out to the LLM
 	  */
 	def toPrompt = {
 		val builder = new StringBuilder()
-		builder ++= "\"\"\""
 		
 		// Specifies the question's context, if appropriate
 		// If a custom system message is applied, includes the context there rather than here
-		if (systemMessage.isEmpty && context.nonEmpty)
-			builder ++= s"Context: $context\n\nPrompt: "
-		builder ++= prompt
+		if (prompt.systemMessage.isEmpty && prompt.context.nonEmpty)
+			builder ++= s"Context: ${prompt.context}\n\nPrompt: "
+		builder ++= prompt.text
 		
 		// Case: Expecting a string response (or a json array with multiple strings)
 		if (responseSchema.isEmpty)
@@ -77,17 +77,21 @@ case class Query(private val prompt: String, responseSchema: ObjectSchema = Obje
 			}
 		}
 		
-		builder ++= "\"\"\""
-		builder.result()
+		// Queries with multiple lines are wrapped in triple quotes
+		val query = builder.result()
+		if (query.isMultiLine)
+			s"\"\"\"$query\"\"\""
+		else
+			query
 	}
 	
 	/**
 	  * @return System message that should override the message defined in the LLM's Modelfile.
 	  *         Empty if system message should not be overwritten.
 	  */
-	def toSystem = systemMessage.mapIfNotEmpty { system =>
-		if (context.nonEmpty)
-			s"\"\"\"$system\n\n$context\"\"\""
+	def toSystem = prompt.systemMessage.mapIfNotEmpty { system =>
+		if (prompt.context.nonEmpty)
+			s"\"\"\"$system\n\n${prompt.context}\"\"\""
 		else if (system.isMultiLine)
 			s"\"\"\"$system\"\"\""
 		else
