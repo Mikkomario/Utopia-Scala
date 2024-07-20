@@ -7,9 +7,11 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
+import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.{Body, StringBody}
 import utopia.disciple.http.response.ResponseParser
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
@@ -22,7 +24,9 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-class OllamaClient(serverAddress: String = "http://localhost:11434")
+class OllamaClient(serverAddress: String = "http://localhost:11434/api",
+                   requestInterceptors: Seq[RequestInterceptor] = Empty,
+                   responseInterceptors: Seq[ResponseInterceptor] = Empty)
                   (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {
@@ -43,7 +47,8 @@ class OllamaClient(serverAddress: String = "http://localhost:11434")
 	{
 		// ATTRIBUTES   -----------------------
 		
-		override protected lazy val gateway = Gateway()
+		override protected lazy val gateway = Gateway(
+			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors)
 		
 		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
 			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { _.getString }

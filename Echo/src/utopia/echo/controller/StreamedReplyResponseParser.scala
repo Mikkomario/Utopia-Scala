@@ -2,19 +2,20 @@ package utopia.echo.controller
 
 import utopia.access.http.{Headers, Status}
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.bunnymunch.jawn.AsyncJsonBunny
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 import utopia.echo.model.response.{ResponseStatistics, StreamedReply}
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.string.IterateLines
 import utopia.flow.time.Now
-import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.LockablePointer
 
 import java.io.InputStream
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Codec
+import scala.util.{Success, Try}
 
 /**
   * A response parser which parses LLM replies from a streamed json response.
@@ -23,10 +24,12 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-class StreamedReplyResponseParser(implicit exc: ExecutionContext)
+class StreamedReplyResponseParser(implicit exc: ExecutionContext, jsonParser: JsonParser)
 	extends ResponseParser[StreamedReply]
 {
 	// ATTRIBUTES   -------------------------
+	
+	private implicit val codec: Codec = Codec.UTF8
 	
 	/**
 	  * Copy of this parser which processes the replies into full responses,
@@ -47,46 +50,42 @@ class StreamedReplyResponseParser(implicit exc: ExecutionContext)
 				// TODO: May need Volatile features here
 				val textPointer = new LockablePointer[String]("")
 				val lastUpdatedPointer = new LockablePointer[Instant](Now)
-				// Will be completed with Failure on read/parse failure
-				val statisticsPromise = Promise[Try[ResponseStatistics]]()
 				
-				// Starts reading json data from the stream
-				val resultFuture = AsyncJsonBunny.processStreamedValues(stream) { values =>
-					val models = values.map { _.getModel }
-					// Updates the text pointer based on "response" values
-					models.map { _("response").getString }.mkString.ifNotEmpty.foreach { newText =>
-						textPointer.update { _ + newText }
-					}
-					// Checks for other statistics (from the final response)
-					models.lastOption.foreach { model =>
-						if (model("done").getBoolean)
-							statisticsPromise.success(Success(ResponseStatistics.fromOllamaResponse(model)))
-						lastUpdatedPointer.value = model("created_at").getInstant
-					}
-				}
-				
-				// Processes the final read result once reading completes
-				resultFuture.foreachResult { result =>
+				// Starts reading the stream asynchronously
+				val statisticsFuture = Future {
+					// Reads one line at a time. Expects each line to contain a json object.
+					val result = IterateLines
+						.fromStream(stream) { linesIter =>
+							// Stores the latest read line / model for the final result -parsing
+							var lastResult: Try[Model] = Success(Model.empty)
+							// Parses each line to a model
+							linesIter.map { line => jsonParser(line).flatMap { _.tryModel } }.foreach { parseResult =>
+								lastResult = parseResult
+								// From successful parsings, acquires the response text and the last update time value
+								parseResult.foreach { responseModel =>
+									responseModel("response").string.foreach { newText =>
+										// Appends the read text to the text pointer
+										textPointer.update { _ + newText }
+									}
+									lastUpdatedPointer.value = responseModel("created_at").getInstant
+								}
+							}
+							// Converts the last read model into response statistics, if possible
+							lastResult.map(ResponseStatistics.fromOllamaResponse)
+						}
+						.flatten
+					
 					// Locks the pointers - There shall not be any updates afterwards
 					textPointer.lock()
 					lastUpdatedPointer.lock()
 					
-					// Handles the potential failure (unless reading was completed successfully already)
-					if (!statisticsPromise.isCompleted) {
-						result match {
-							// Case: No final statistics -object was received, marks it as a failure
-							case Success(_) =>
-								statisticsPromise.trySuccess(Failure(new NoSuchElementException(
-									"No final response was ever received")))
-							case Failure(error) => statisticsPromise.trySuccess(Failure(error))
-						}
-					}
+					result
 				}
 				
 				// Returns the acquired reply (building)
 				ResponseParseResult(
-					StreamedReply(textPointer.readOnly, lastUpdatedPointer.readOnly, statisticsPromise.future),
-					resultFuture)
+					StreamedReply(textPointer.readOnly, lastUpdatedPointer.readOnly, statisticsFuture),
+					statisticsFuture)
 				
 			// Case: Empty response => Returns an empty reply
 			case None => ResponseParseResult.buffered(StreamedReply.empty)

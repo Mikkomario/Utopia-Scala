@@ -39,3 +39,7 @@ object GenerationDurations
   * @param evaluation Duration spent evaluating the prompt
   */
 case class GenerationDurations(total: FiniteDuration, load: FiniteDuration, evaluation: FiniteDuration)
+{
+	override def toString =
+		s"loaded ${ load.description }, evaluated ${ evaluation.description }, total ${ total.description }"
+}
