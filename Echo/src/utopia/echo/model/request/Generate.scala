@@ -107,10 +107,11 @@ object Generate
   * Common trait for requests to the Ollama API generate endpoint.
   * These requests are used for sending a prompt and acquiring a reply.
   * This trait doesn't define whether the response is read in a streamed or in a buffered format.
+  * @tparam R Type of response acquired for this request
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait Generate[R] extends ApiRequest[R]
+trait Generate[+R] extends ApiRequest[R]
 {
 	// ABSTRACT --------------------------
 	

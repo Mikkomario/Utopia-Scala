@@ -23,7 +23,16 @@ object Prompt
   * @since 20.07.2024, v1.0
   */
 case class Prompt(text: String, context: String = "", systemMessage: String = "", encodedImages: Seq[String] = Empty)
+	extends CanAttachImages[Prompt]
 {
+	// IMPLEMENTED  -----------------------
+	
+	override def attachImages(base64EncodedImages: Seq[String]): Prompt =
+		copy(encodedImages = encodedImages ++ base64EncodedImages)
+	
+	
+	// OTHER    ---------------------------
+	
 	/**
 	  * @param context New context to assign
 	  * @return Copy of this prompt with the specified context
@@ -35,16 +44,4 @@ case class Prompt(text: String, context: String = "", systemMessage: String = ""
 	  * @return Copy of this prompt with the specified system message
 	  */
 	def withSystemMessage(systemMessage: String) = copy(systemMessage = systemMessage)
-	
-	/**
-	  * @param base64EncodedImages Images to include in this prompt (will overwrite existing images).
-	  *                            Specify all images as Base 64 encoded strings.
-	  * @return Copy of this prompt with the specified images
-	  */
-	def withImages(base64EncodedImages: Seq[String]) = copy(encodedImages = base64EncodedImages)
-	/**
-	  * @param base64EncodedImage Image to include in this prompt. In Base 64 encoded string format.
-	  * @return Copy of this prompt with the specified image included
-	  */
-	def withImageAdded(base64EncodedImage: String) = withImages(encodedImages :+ base64EncodedImage)
 }
