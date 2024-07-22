@@ -1,6 +1,6 @@
 package utopia.echo.model.response
 
-import utopia.echo.model.request.GenerateBufferedOrStreamed
+import utopia.echo.model.request.generate.GenerateBufferedOrStreamed
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 object ResponseStatistics

@@ -1,5 +1,6 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
+import utopia.echo.model.request.CanAttachImages
 import utopia.flow.collection.immutable.Empty
 
 import scala.language.implicitConversions

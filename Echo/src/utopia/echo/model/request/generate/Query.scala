@@ -1,4 +1,4 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.flow.operator.equality.ComparisonOperator.{DirectionalComparison, Equality}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}

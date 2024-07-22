@@ -1,10 +1,11 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.http.request.Body
 import utopia.echo.model.LlmDesignator
+import utopia.echo.model.request.RetractableRequestFactory
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
@@ -45,12 +46,9 @@ object Generate
 	  */
 	case class GenerateRequestFactory(context: Value = Value.empty, deprecationCondition: Option[View[Boolean]] = None)
 	                            (implicit llm: LlmDesignator)
+		extends RetractableRequestFactory[GenerateRequestFactory]
 	{
-		/**
-		  * @param context New conversation context to apply
-		  * @return Copy of this factory which uses the specified context instead of the current context
-		  */
-		def withContext(context: Value) = copy(context = context)
+		// IMPLEMENTED  ----------------------
 		
 		/**
 		  * @param condition A view which contains true if the request should be retracted,
@@ -58,20 +56,17 @@ object Generate
 		  * @return Copy of this factory which uses the specified deprecation condition
 		  *         instead of the currently specified condition.
 		  */
-		def withDeprecationCondition(condition: View[Boolean]) =
+		override def withDeprecationCondition(condition: View[Boolean]) =
 			copy(deprecationCondition = Some(condition))
+		
+		
+		// OTHER    --------------------------
+		
 		/**
-		  * @param condition An (additional) deprecation condition to apply.
-		  *                  Specified as a call-by-name value which yields true if the request should be retracted
-		  *                  (unless it has already been sent).
-		  * @return Copy of this factory which applies the specified deprecation condition.
-		  *         If this factory already specified a deprecation condition,
-		  *         either of these conditions may be met for the retraction to occur.
+		  * @param context New conversation context to apply
+		  * @return Copy of this factory which uses the specified context instead of the current context
 		  */
-		def deprecatingIf(condition: => Boolean) = deprecationCondition match {
-			case Some(existingCondition) => withDeprecationCondition(View { existingCondition.value || condition })
-			case None => withDeprecationCondition(View(condition))
-		}
+		def withContext(context: Value) = copy(context = context)
 		
 		/**
 		  * @param query Query to send out to the LLM

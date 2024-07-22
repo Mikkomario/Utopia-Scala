@@ -1,9 +1,9 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.response.BufferedReply
+import utopia.echo.model.response.generate.BufferedReply
 import utopia.flow.generic.model.immutable.Value
 
 import scala.concurrent.Future

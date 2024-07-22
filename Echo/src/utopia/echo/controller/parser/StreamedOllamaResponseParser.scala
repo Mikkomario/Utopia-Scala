@@ -1,15 +1,17 @@
-package utopia.echo.controller
+package utopia.echo.controller.parser
 
 import utopia.access.http.{Headers, Status}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
-import utopia.echo.model.response.{ResponseStatistics, StreamedReply}
+import utopia.echo.controller.EchoContext
+import utopia.echo.model.response.{OllamaResponse, ResponseStatistics}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.eventful.LockablePointer
+import utopia.flow.view.template.eventful.Changing
 
 import java.io.InputStream
 import java.time.Instant
@@ -19,25 +21,58 @@ import scala.util.{Success, Try}
 
 /**
   * A response parser which parses LLM replies from a streamed json response.
-  * Expects the stream to contain a sequence of models separated from each other by whitespace.
-  * @param exc Implicit execution context
+  * Expects the stream to contain newline-delimited json where each line represents a json object.
+  * @tparam A Type of the (streamed) responses parsed
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-class StreamedReplyResponseParser(implicit exc: ExecutionContext, jsonParser: JsonParser)
-	extends ResponseParser[StreamedReply]
+trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends ResponseParser[A]
 {
-	// ATTRIBUTES   -------------------------
+	// ABSTRACT ---------------------------
 	
-	private implicit val codec: Codec = Codec.UTF8
+	/**
+	  * @return Implicit execution context used in asynchronous parsing
+	  */
+	protected implicit def exc: ExecutionContext
+	/**
+	  * @return Json parser used
+	  */
+	protected implicit def jsonParser: JsonParser
+	
+	/**
+	  * @return Response returned when no response body is read
+	  */
+	protected def emptyResponse: A
+	
+	/**
+	  * @param response Response model to read
+	  * @return Incremented text from the specified response
+	  */
+	protected def textFromResponse(response: Model): String
+	
+	/**
+	  * @param textPointer Pointer that will contain all response text (built incrementally)
+	  * @param lastUpdatedPointer Pointer that contains the origin time of the latest response update
+	  * @param statisticsFuture Future that eventually resolves into statistics concerning this response,
+	  *                         or to a failure if response or json processing fails.
+	  * @return Completed streamed response instance
+	  */
+	protected def responseFrom(textPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
+	                           statisticsFuture: Future[Try[ResponseStatistics]]): A
+	
+	
+	// COMPUTED   -------------------------
+	
+	private implicit def codec: Codec = Codec.UTF8
 	
 	/**
 	  * Copy of this parser which processes the replies into full responses,
 	  * handling failures & failure responses, also.
 	  */
-	lazy val toResponse = toRight(ResponseParser.string.map { _.getOrMap { _.getMessage } })
-		.mapToResponseOrFail { _.wrapped.mapLeft { EchoContext.parseFailureStatus -> _ } } {
-			_.leftOrMap { _.textPointer.value } }
+	def toResponse =
+		toRight(ResponseParser.string.map { _.getOrMap { _.getMessage } })
+			.mapToResponseOrFail { _.wrapped.mapLeft { EchoContext.parseFailureStatus -> _ } } {
+				_.leftOrMap { _.textPointer.value } }
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -63,10 +98,9 @@ class StreamedReplyResponseParser(implicit exc: ExecutionContext, jsonParser: Js
 								lastResult = parseResult
 								// From successful parsings, acquires the response text and the last update time value
 								parseResult.foreach { responseModel =>
-									responseModel("response").string.foreach { newText =>
-										// Appends the read text to the text pointer
-										textPointer.update { _ + newText }
-									}
+									val newText = textFromResponse(responseModel)
+									// Appends the read text to the text pointer
+									textPointer.update { _ + newText }
 									lastUpdatedPointer.value = responseModel("created_at").getInstant
 								}
 							}
@@ -83,12 +117,11 @@ class StreamedReplyResponseParser(implicit exc: ExecutionContext, jsonParser: Js
 				}
 				
 				// Returns the acquired reply (building)
-				ResponseParseResult(
-					StreamedReply(textPointer.readOnly, lastUpdatedPointer.readOnly, statisticsFuture),
+				ResponseParseResult(responseFrom(textPointer.readOnly, lastUpdatedPointer.readOnly, statisticsFuture),
 					statisticsFuture)
 				
 			// Case: Empty response => Returns an empty reply
-			case None => ResponseParseResult.buffered(StreamedReply.empty)
+			case None => ResponseParseResult.buffered(emptyResponse)
 		}
 	}
 }

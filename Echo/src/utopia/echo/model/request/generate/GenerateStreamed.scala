@@ -1,10 +1,10 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.controller.StreamedReplyResponseParser
+import utopia.echo.controller.parser.StreamedReplyResponseParser
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.response.StreamedReply
+import utopia.echo.model.response.generate.StreamedReply
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 

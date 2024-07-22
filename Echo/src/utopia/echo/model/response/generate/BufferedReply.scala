@@ -1,6 +1,7 @@
-package utopia.echo.model.response
+package utopia.echo.model.response.generate
 
 import utopia.annex.model.manifest.SchrodingerState.Alive
+import utopia.echo.model.response.ResponseStatistics
 import utopia.flow.async.TryFuture
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now

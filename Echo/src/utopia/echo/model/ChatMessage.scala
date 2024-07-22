@@ -39,19 +39,19 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 /**
   * Represents a message sent or received via the Ollama chat interface
   * @param text Text within this message
-  * @param sender Role of the entity that sent this message (default = user)
+  * @param senderRole Role of the entity that sent this message (default = user)
   * @param encodedImages Base 64 encoded images attached to this message.
   *                     Empty if no image is attached (default).
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-case class ChatMessage(text: String, sender: ChatRole = User, encodedImages: Seq[String] = Empty)
+case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages: Seq[String] = Empty)
 	extends ModelConvertible with CanAttachImages[ChatMessage]
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def toModel: Model =
-		Model.from("role" -> sender.name, "content" -> text, "images" -> encodedImages).withoutEmptyValues
+		Model.from("role" -> senderRole.name, "content" -> text, "images" -> encodedImages).withoutEmptyValues
 	
 	override def attachImages(base64EncodedImages: Seq[String]): ChatMessage =
 		copy(encodedImages = encodedImages ++ base64EncodedImages)
@@ -63,5 +63,5 @@ case class ChatMessage(text: String, sender: ChatRole = User, encodedImages: Seq
 	  * @param message Reply message
 	  * @return A message from the recipient of this message, with the specified text
 	  */
-	def replyWith(message: String) = ChatMessage(message, sender.opposite)
+	def replyWith(message: String) = ChatMessage(message, senderRole.opposite)
 }

@@ -6,8 +6,8 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.AccessLogger
 import utopia.echo.controller.OllamaClient
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.request.{GenerateBufferedOrStreamed, Prompt, Query}
-import utopia.echo.model.response.StreamedOrBufferedReply
+import utopia.echo.model.request.generate.{GenerateBufferedOrStreamed, Prompt, Query}
+import utopia.echo.model.response.generate.StreamedOrBufferedReply
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.parse.json.JsonParser

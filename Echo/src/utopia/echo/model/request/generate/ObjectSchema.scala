@@ -1,4 +1,4 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.MaybeEmpty

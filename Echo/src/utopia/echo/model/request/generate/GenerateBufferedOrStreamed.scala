@@ -1,12 +1,13 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.http.response.ResponseParser
-import utopia.echo.controller.{EchoContext, StreamedReplyResponseParser}
+import utopia.echo.controller.EchoContext
+import utopia.echo.controller.parser.StreamedReplyResponseParser
 import utopia.echo.model.LlmDesignator
-import utopia.echo.model.response.{BufferedReply, StreamedOrBufferedReply}
+import utopia.echo.model.response.generate.{BufferedReply, StreamedOrBufferedReply}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 

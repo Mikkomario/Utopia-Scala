@@ -1,4 +1,4 @@
-package utopia.echo.model.request
+package utopia.echo.model.request.generate
 
 import utopia.echo.model.enumeration.JsonValueType
 import utopia.echo.model.enumeration.JsonValueType.AnyType

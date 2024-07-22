@@ -1,7 +1,8 @@
-package utopia.echo.model.response
+package utopia.echo.model.response.generate
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
+import utopia.echo.model.response.ResponseStatistics
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
 import utopia.flow.view.immutable.eventful.Fixed
