@@ -9,6 +9,7 @@ import utopia.flow.collection.template.GraphNode.{AnyNode, GraphSearchProcess, P
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.Extender
 
 import scala.collection.mutable
 import scala.math.Ordered.orderingToOrdered
@@ -675,7 +676,7 @@ object GraphNode
  * @since 10.4.2019
  */
 trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E, GNode]]
-	extends View[N]
+	extends View[N] with Extender[N]
 {
     // TYPES    --------------------
 	
@@ -695,7 +696,7 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	def self: GNode
     
     
-    // COMPUTED PROPERTIES    -------
+    // COMPUTED    ----------------
 	
 	/**
 	  * The nodes accessible from this node
@@ -858,6 +859,8 @@ trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E
 	
 	
 	// IMPLEMENTED  ----------------------
+	
+	override def wrapped: N = value
 	
 	override def toString = s"Node($value)"
 

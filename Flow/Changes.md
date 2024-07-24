@@ -135,6 +135,7 @@
 - **Iterator**`.pollable` now tests if the iterator is already pollable
 - **Regex** now extends **MayBeEmpty**
 - Added **EmptyInput** interface to **TwoThreadBuffer**
+- **GraphNode** and **GraphEdge** now extend **Extender**, providing implicit access to their wrapped values
 - Minor optimization to **FlagLike** -wrapping
 - Minor optimization to **AlwaysTrue** and **AlwaysFalse** merge functions
 - Minor optimization to certain -while functions in **Changing**

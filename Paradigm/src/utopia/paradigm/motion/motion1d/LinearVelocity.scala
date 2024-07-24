@@ -157,6 +157,12 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	def withDirection(direction: Angle) = Velocity2D(Vector2D.lenDir(amount, direction), duration)
 	
 	/**
+	  * @param travelDistance Targeted distance of travel
+	  * @return How long does it take with this velocity to travel that distance
+	  */
+	def durationOf(travelDistance: Double) = duration * (travelDistance / amount)
+	
+	/**
 	  * @param acceleration Acceleration applied
 	  * @return The duration it takes to stop when specified acceleration is applied consistently.
 	  *         May be infinite.
