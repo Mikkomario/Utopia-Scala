@@ -443,9 +443,9 @@ object FileExtensions
 		  * Seeks the lowest common parent with another path
 		  * @param other Another path
 		  * @return
-		  * 1: The (root) path common to both of these paths, None if there is no common path<br>
-		  * 2: This path, relative to the common root path<br>
-		  * 3: The other path, relative to the common root path
+		  *     1. The (root) path common to both of these paths, None if there is no common path
+		  *     1. This path, relative to the common root path
+		  *     1. The other path, relative to the common root path
 		  */
 		def commonParentWith(other: Path): (Option[Path], Path, Path) = {
 			val (common, relative, otherRelative) = commonParentWith(Single(other))
@@ -455,9 +455,9 @@ object FileExtensions
 		  * Seeks the lowest common parent with another path
 		  * @param others Other paths
 		  * @return
-		  * 1: The (root) path common to all of these paths, None if there is no common path<br>
-		  * 2: This path, relative to the common root path<br>
-		  * 3: The other paths, relative to the common root path
+		  *     1. The (root) path common to all of these paths, None if there is no common path
+		  *     1. This path, relative to the common root path
+		  *     1. The other paths, relative to the common root path
 		  */
 		def commonParentWith(others: Seq[Path]) = {
 			val allParents = (p +: others).map { _.parentsIterator.toVector.reverse }

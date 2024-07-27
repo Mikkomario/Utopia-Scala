@@ -1,6 +1,9 @@
 package utopia.flow.util.logging
 
 import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
+import utopia.flow.util.StringExtensions._
+
+import scala.collection.immutable.VectorBuilder
 
 /**
  * "Logs" errors and other entries by queueing them for later processing.
@@ -67,6 +70,46 @@ class LogQueue extends Logger
 	 * @return All queued (and now logged) entries
 	 */
 	def popAndLogAll()(implicit log: Logger) = popAndLogAllUsing(log)
+	
+	/**
+	 * @param log Logging implementation used for handling recorded messages
+	 * @return All collected throwables
+	 */
+	def popErrorsAndLogMessagesUsing(log: Logger) = {
+		val res = popAll()
+		val errorsBuilder = new VectorBuilder[Throwable]()
+		res.foreach { case (error, message) =>
+			error.foreach { errorsBuilder += _ }
+			message.ifNotEmpty.foreach { log(_) }
+		}
+		errorsBuilder.result()
+	}
+	/**
+	 * @param log Implicit logging implementation used for handling recorded messages
+	 * @return All collected throwables
+	 */
+	def popErrorsLogMessages(implicit log: Logger) = popErrorsAndLogMessagesUsing(log)
+	
+	/**
+	 * @param log Logging implementation used for handling recorded throwables
+	 * @return All messages which were not associated with a throwable
+	 */
+	def popMessagesAndLogErrorsUsing(log: Logger) = {
+		val res = popAll()
+		val messagesBuilder = new VectorBuilder[String]()
+		res.foreach { case (error, message) =>
+			error match {
+				case Some(error) => log(error, message)
+				case None => message.ifNotEmpty.foreach { messagesBuilder += _ }
+			}
+		}
+		messagesBuilder.result()
+	}
+	/**
+	 * @param log Implicit logging implementation used for handling recorded throwables
+	 * @return All messages which were not associated with a throwable
+	 */
+	def popMessagesLogErrors(implicit log: Logger) = popMessagesAndLogErrorsUsing(log)
 	
 	/**
 	 * Removes any queued log entries

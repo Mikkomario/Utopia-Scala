@@ -32,6 +32,7 @@
 - Added a more advanced (and optimized) interface for **Graph**-searches
 - Added new interactive utility functions to **StdIn** via **ConsoleExtensions** 
 - Added **CopyOnDemand** pointer type that copies a **View** value whenever requested
+- Added **LogQueue** for capturing log entries
 - Added the (rewritten) **Filter** class from the **Inception** module
 - Added **Empty** object, an optimized empty **IndexedSeq** implementation
 - Added **Single** class, an optimized **IndexedSeq** implementation for individual items
@@ -47,6 +48,8 @@
     I.e. you may track when the wrapped action is actually started / running.
 - Added **StringUtils** object for converting data into a console-displayable table
 ### New methods
+- **ArgumentSchema**
+  - Added `.isFlag`
 - **Changing**
   - Added `.viewWhile(FlagLike)`
   - Added `.onceFixedAt(...)`

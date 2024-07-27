@@ -2,6 +2,7 @@ package utopia.flow.util.console
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.BooleanType
 
 object ArgumentSchema
 {
@@ -30,12 +31,16 @@ case class ArgumentSchema(name: String, alias: String = "", defaultValue: Value 
 	extends ArgumentMatchable
 {
 	/**
+	 * @return Whether this argument represents a boolean flag (based on its default value)
+	 */
+	def isFlag = defaultValue.dataType == BooleanType
+	
+	/**
 	 * @return Whether this schema has a defined default value
 	 */
 	def hasDefault = defaultValue.isDefined
 	
-	override def toString =
-	{
+	override def toString = {
 		val defaultPart = if (hasDefault) s" default=${defaultValue.toJson}" else ""
 		val descriptionPart = if (hasHelp) s" // $help" else ""
 		s"<$nameAndAlias>" + defaultPart + descriptionPart
