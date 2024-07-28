@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
  * An access point used for targeting individual text statement links
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 case class DbSingleTextStatementLink(factory: TextStatementLinkDbFactory, id: Int)
 	extends UniqueTextStatementLinkAccess with SingleIntIdModelAccess[TextStatementLink]

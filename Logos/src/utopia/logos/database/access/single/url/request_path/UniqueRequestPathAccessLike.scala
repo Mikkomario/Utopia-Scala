@@ -13,7 +13,7 @@ import java.time.Instant
 /**
   * A common trait for access points which target individual request paths or similar items at a time
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueRequestPathAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed

@@ -29,7 +29,7 @@ object UniqueTextStatementLinkAccess
  * Common trait for access points that return individual text statement links (in the default model form) at a time
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 trait UniqueTextStatementLinkAccess
 	extends UniqueTextStatementLinkAccessLike[TextStatementLink, UniqueTextStatementLinkAccess]

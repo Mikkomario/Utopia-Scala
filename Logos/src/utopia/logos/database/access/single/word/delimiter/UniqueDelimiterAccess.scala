@@ -38,7 +38,7 @@ object UniqueDelimiterAccess
 /**
   * A common trait for access points that return individual and distinct delimiters.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueDelimiterAccess 
 	extends SingleRowModelAccess[Delimiter] with FilterableView[UniqueDelimiterAccess] 

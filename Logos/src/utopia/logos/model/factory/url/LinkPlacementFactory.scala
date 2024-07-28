@@ -3,7 +3,7 @@ package utopia.logos.model.factory.url
 /**
   * Common trait for link placement-related factories which allow construction with individual properties
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait LinkPlacementFactory[+A]
 {

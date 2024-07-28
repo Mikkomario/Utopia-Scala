@@ -33,7 +33,7 @@ object LinkData extends FromModelFactoryWithSchema[LinkData]
   * @param queryParameters Specified request parameters in model format
   * @param created Time when this link was added to the database
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class LinkData(requestPathId: Int, queryParameters: Model = Model.empty, created: Instant = Now) 
 	extends LinkFactory[LinkData] with ModelConvertible

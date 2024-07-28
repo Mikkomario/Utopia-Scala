@@ -13,7 +13,7 @@ import java.time.Instant
 /**
   * A common trait for access points which target multiple words or similar instances at a time
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {

@@ -8,7 +8,7 @@ import utopia.logos.model.stored.url.{Domain, RequestPath}
 /**
   * Includes textual domain information in a request path
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class DetailedRequestPath(requestPath: RequestPath, domain: Domain) extends Extender[RequestPathData]
 {

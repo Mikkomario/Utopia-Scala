@@ -37,7 +37,7 @@ object UniqueWordPlacementAccess
 /**
   * A common trait for access points that return individual and distinct word placements.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueWordPlacementAccess 
 	extends SingleRowModelAccess[WordPlacement] with FilterableView[UniqueWordPlacementAccess] 

@@ -5,7 +5,7 @@ import utopia.logos.model.template.{Placed, StatementLinkFactory}
 /**
  * Common trait for data models that link a statement to its correct position in a text.
  * @author Mikko Hilpinen
- * @since 14/03/2024, v1.0
+ * @since 14/03/2024, v0.2
  */
 trait TextStatementLinkDataLike[+Repr] extends Placed with StatementLinkFactory[Repr]
 {

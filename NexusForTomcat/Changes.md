@@ -1,6 +1,7 @@
 # Utopia Nexus for Tomcat - List of changes
 
 ## v1.2.7 (in development)
+A very minor update
 ### New methods
 - **LogicWrappingServlet** (object)
   - Added a new constructor

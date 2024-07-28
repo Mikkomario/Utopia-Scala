@@ -34,7 +34,7 @@ object UniqueStatedWordAccess
 /**
   * A common trait for access points that return distinct stated words
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueStatedWordAccess 
 	extends UniqueWordAccessLike[StatedWord] with SingleRowModelAccess[StatedWord] 

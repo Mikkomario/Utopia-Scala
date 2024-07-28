@@ -27,6 +27,10 @@ For REST API interface details, please refer to [API Documentation]
 Please insert the associated database structure in this project and in **Utopia Citadel** 
 into your database in order to use this project.
 
+You can find the database-related files from:
+- [Citadel/data](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel/data)
+- [Exodus/data](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus/data)
+
 Before using Exodus, you must call `ExodusContext.setup(...)` method.
 - This removes the need to call `CitadelContext.setup(...)` separately
 

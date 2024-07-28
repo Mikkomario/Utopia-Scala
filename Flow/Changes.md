@@ -1,6 +1,31 @@
 # Utopia Flow - List of Changes
 
 ## v2.4 (in development)
+This is a pretty large update, mostly due to its delayed release.
+This update focuses on the following areas: 
+- Short **Seq** collections, namely: **Empty**, **Single** & **Pair**
+  - Added simple collection classes to handle cases where there are 0-1 items
+  - Made a lot of improvements / optimizations on the functionality of **Pair**
+  - Added **LazyPair**, as well as some new **scala.collection.View** implementations
+- **Graph** search algorithms
+  - This update introduces a completely new interface for performing searches within **Graph**s. 
+    - These allow for a much wider range of use-cases and optimizations
+  - The search algorithm itself was also improved somewhat
+- **Model** validation
+  - Rewrote large parts of the **Model** validation logic & interface. 
+  - The current version supports lazy initialization.
+- **Pointer**s / the **Changing** interface
+  - **Pointer** + **Changing** -interface can now be referenced directly with **EventfulPointer**, 
+    rather than having to use the `with` keyword
+  - New pointer types: **CopyOnDemand**
+
+Besides these, there are smaller changes concerning:
+- Collection utilities, namely: **ZipBuilder**, **ConsecutivelyDistinctIterator** and a number of new collection methods
+- **StdIn** / console: More interaction templates via **ConsoleExtensions** + **StringUtils** for producing ASCII tables
+- **EqualsBy** functionality
+- **ActionQueue**: Slightly modified interface and logic
+- Logging: New logging implementation: **LogQueue**
+
 ### Breaking changes
 - In most places where **Vector** was used required, **Seq** is now used
 - Removed `.notEmpty` from **StringExtensions** because of ambiguities when combined with **CollectionExtensions**
@@ -20,7 +45,7 @@
 - Deprecated **ModelValidationResult** (now replaced with **Try**)
 - Deprecated all existing graph search functions in favor of new versions with different syntax
 - Deprecated `DataTypeException.apply(...)` in favor of the more typical syntax `new DataTypeException(...)`
-- Renamed `.filterWithPaths(...)` in TreeLike to `.pathsToRootsWhere(...)` because the term "filter" is misleading
+- Renamed `.filterWithPaths(...)` in **TreeLike** to `.pathsToRootsWhere(...)` because the term "filter" is misleading
 ### Bugfixes
 - `.tryVector` and `.tryString` in **Value** now return a success for empty values (used to fail before)
 - **EqualsBy** comparison didn't work in all cases, since it was dependent on **Iterable** `==`, which could vary. 
@@ -133,7 +158,7 @@
   - I.e. mapping results are no longer cached in these cases
 - The `mirrorCondition` in **OptimizedMirror** is now stricter
   - Previously the value would still reflect the updated value when called directly
-  - Also, now `.destiny` correctly changes when mirror condition seals to false
+  - Also, now `.destiny` correctly changes when mirror condition seals to `false`
 - **XmlElement**`.toString` now yields XML instead of JSON.
 - **Iterator**`.pollable` now tests if the iterator is already pollable
 - **Regex** now extends **MayBeEmpty**

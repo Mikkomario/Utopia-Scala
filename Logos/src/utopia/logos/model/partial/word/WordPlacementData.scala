@@ -37,7 +37,7 @@ object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
   * @param orderIndex Index at which the specified word appears within the referenced statement (0-based)
   * @param style Style in which this word is used in this context
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int, style: DisplayStyle = Default) 
 	extends WordPlacementFactory[WordPlacementData] with ModelConvertible with Placed

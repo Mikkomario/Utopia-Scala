@@ -13,7 +13,7 @@ import java.time.Instant
   * @param id id of this domain in the database
   * @param data Wrapped domain data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class Domain(id: Int, data: DomainData) 
 	extends StoredModelConvertible[DomainData] with DomainFactory[Domain] with FromIdFactory[Int, Domain]

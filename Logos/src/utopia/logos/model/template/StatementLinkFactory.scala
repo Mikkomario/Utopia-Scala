@@ -4,7 +4,7 @@ package utopia.logos.model.template
  * Common trait for classes that generate statement link models by assigning properties to them
  *
  * @author Mikko Hilpinen
- * @since 14/03/2024, v1.0
+ * @since 14/03/2024, v0.2
  */
 trait StatementLinkFactory[+A] extends PlacedFactory[A]
 {

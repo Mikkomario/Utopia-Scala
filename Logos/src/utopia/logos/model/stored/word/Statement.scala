@@ -12,7 +12,7 @@ import java.time.Instant
   * @param id id of this statement in the database
   * @param data Wrapped statement data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class Statement(id: Int, data: StatementData) 
 	extends StoredModelConvertible[StatementData] with StatementFactory[Statement] with FromIdFactory[Int, Statement]

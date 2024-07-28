@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
 /**
   * An interface used for setting up database-interactions within this module
   * @author Mikko Hilpinen
-  * @since 11/03/2024, v1.0
+  * @since 11/03/2024, v0.2
   */
 object LogosContext extends VaultContextWrapper
 {

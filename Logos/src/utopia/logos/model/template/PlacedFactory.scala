@@ -3,7 +3,7 @@ package utopia.logos.model.template
 /**
  * Common trait for factory classes that generate instances based on their placing / location
  * @author Mikko Hilpinen
- * @since 14/03/2024, v1.0
+ * @since 14/03/2024, v0.2
  */
 trait PlacedFactory[+A]
 {

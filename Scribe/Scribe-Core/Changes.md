@@ -1,7 +1,7 @@
 # Utopia Scribe Core - list of changes
 
 ## v1.0.2 (in development)
-Supports **Flow v2.4**
+A small update, supporting **Flow v2.4** and adding a few fixes & utilities.
 ### Bugfixes
 - **ClientIssue**`.toModel` didn't previously include the issue occurrence details, 
   meaning that they wouldn't get delivered to the server (fixed)

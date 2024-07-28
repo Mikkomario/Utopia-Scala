@@ -5,7 +5,7 @@ import utopia.vault.model.immutable.Table
 /**
   * Used for accessing the database tables introduced in this project
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 object LogosTables
 {

@@ -1,6 +1,7 @@
 # Utopia Disciple - List of changes
 
 ## v2.1.7 (in development)
+Conforms to changes introduced in **Flow v2.4** and **Vault v1.19**
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used
 

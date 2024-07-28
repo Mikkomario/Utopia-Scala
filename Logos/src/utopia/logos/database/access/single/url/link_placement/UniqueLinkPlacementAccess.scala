@@ -36,7 +36,7 @@ object UniqueLinkPlacementAccess
 /**
   * A common trait for access points that return individual and distinct link placements.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueLinkPlacementAccess 
 	extends SingleRowModelAccess[LinkPlacement] with FilterableView[UniqueLinkPlacementAccess] 

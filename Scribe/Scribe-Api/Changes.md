@@ -1,7 +1,7 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.0.2 (in development)
-Supports **Vault v1.19**
+This update adds support **Vault v1.19**, as well as a few minor changes.
 ### New features
 - The list command in the console app now shows top error message, also
 ### Other changes

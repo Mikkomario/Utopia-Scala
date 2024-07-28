@@ -1,7 +1,7 @@
 # Utopia Access - List of Changes
 
 ## v1.5.1 (in development)
-Supports **Flow v2.4**
+Mostly smaller character-set and content-type -related updates.
 ### Bugfixes
 - Fixed the parsing of the `charset` property in **Headers**
 ### New methods

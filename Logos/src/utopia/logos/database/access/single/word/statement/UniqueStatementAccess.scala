@@ -37,7 +37,7 @@ object UniqueStatementAccess
 /**
   * A common trait for access points that return individual and distinct statements.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueStatementAccess 
 	extends UniqueStatementAccessLike[Statement] with SingleChronoRowModelAccess[Statement, UniqueStatementAccess]

@@ -30,7 +30,7 @@ object UniqueRequestPathAccess
 /**
   * A common trait for access points that return individual and distinct request paths.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueRequestPathAccess 
 	extends UniqueRequestPathAccessLike[RequestPath] with SingleRowModelAccess[RequestPath] 

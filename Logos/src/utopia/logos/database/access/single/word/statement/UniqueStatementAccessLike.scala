@@ -13,7 +13,7 @@ import java.time.Instant
 /**
   * A common trait for access points which target individual statements or similar items at a time
   * @author Mikko Hilpinen
-  * @since 12.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+  * @since 12.10.2023, Emissary Email Client v0.1, added to Logos v0.2 11.3.2024
   */
 trait UniqueStatementAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed

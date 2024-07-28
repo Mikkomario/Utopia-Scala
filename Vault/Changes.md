@@ -1,7 +1,12 @@
 # Utopia Vault - List of Changes
 
 ## v1.19 (in development)
-Supports **Flow v2.4**
+This update focuses on the following areas:
+- New traits for **Storable** implementations and other interfaces
+- Timestamp-based **FromRowFactories**:
+  - Added a new version of the **FromRowFactoryWithTimestamps** trait, plus some timestamp-based access utilities
+- More intelligent joining logic: Automatically omitting unnecessary joins and adding missing joins
+- Select all -statements: Instead of listing all columns, `SELECT *` is utilized more often.
 ### Breaking changes
 - **LatestModelAccess** now extends **FilterableView**
 - `.earliest` in **SingleChronoRowModelAccess** now returns an access point, not the pulled item

@@ -14,18 +14,19 @@ Abstract traits for UI components
 Stacking layout templates
 - Stacking layout system is built to work completely independently of the awt layout system
 - Dynamic size specifications are easy to make by utilizing simple classes like **StackLength**,
-  **StackSize** and **StackInsets**
+  **StackSize**, **StackInsets** and **LengthExtensions**
 
 Localization support
-- All components that display text are built around localization
+- All components that display text are built to support localization
 - **LocalString**, **LocalizedString**, **Localizer** and **DisplayFunction** make handling localization easy
-- Localization is done mostly implicitly behind the scenes
+- Localization is performed mostly implicitly
 - You can skip all localization simply by defining an implicit **NoLocalization** localizer
+- Note: No actual localization implementation exists in this module at this time.
 
 Custom drawing
 - Contains traits for components to support custom drawing over their boundaries, which allows for animation,
   advanced borders, image overlays etc.
-- Custom drawers utilize easy-to-use **Drawer** class from **Genesis**
+- Custom drawers utilize the easy-to-use **Drawer** class from **Genesis**
 
 Custom component templates
 - Contains generic implementations for certain standard layout concepts, 
@@ -40,7 +41,8 @@ New window system
 Context classes for defining standard component behavior
 - **Firmament** provides a number of so-called context classes for defining commonly used values for 
   component constructors
-- This makes standardized layout styles easy to implement and use
+- This makes standardized layout styles easy to implement and use, 
+  as context instances are automatically passed to all child component constructors.
 
 Automatic container content management
 - **ContentDisplayer** and it's subclasses handle displaying of item lists on your behalf
@@ -95,7 +97,7 @@ However, here are some details you should be aware of, whichever approach you ch
   - These come in 3 categories:
     - Immutable - Static drawers which don't change (e.g. drawing a static background color)
     - View - Drawers which reflect pointers (e.g. drawing the image contained within a pointer)
-    - Mutable - Drawers which provide a read-write interface
+    - Mutable - Drawers which provide a read-and-write interface
 - **StackSizeModifier** and **StackLengthModifier**
   - If you want to override component stack size logic, use these classes 
     (requires the component to implement **Constrainable**)
@@ -103,5 +105,5 @@ However, here are some details you should be aware of, whichever approach you ch
 - You will also likely need the following model classes:
   - **Margins** (for **BaseContext**)
   - **StackLayout** (for **Stacks**)
-  - **HotKey** (for buttons)
-  - **RowGroup**, **RowGroups** and **WindowButtonBlueprint** for **Reach** input window creation
+  - **HotKey** (for keyboard support)
+  - **RowGroup**, **RowGroups** and **WindowButtonBlueprint** for **Reach** **InputWindow** creation

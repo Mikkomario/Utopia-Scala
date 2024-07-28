@@ -9,7 +9,7 @@ import utopia.vault.nosql.view.FilterableView
  * Common trait for access points for items which may be placed to specific positions within their context.
  * @tparam Repr Implementing access type
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 trait PlacedAccessLike[+Repr] extends FilterableView[Repr] with PlacedFactory[Repr]
 {

@@ -7,7 +7,7 @@ import utopia.logos.database.storable.word.StatementLinkedModel
 /**
  * Common trait for access points that target items that may be placed within statements
  * @author Mikko Hilpinen
- * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+ * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v0.2 11.3.2024
  */
 trait ManyStatementPlacedAccess[+Sub] extends FilterableView[Sub]
 {

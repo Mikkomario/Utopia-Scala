@@ -1,7 +1,9 @@
 # Utopia Disciple - List of Changes
 
 ## v1.7 (in development)
-Refactoring response parsing
+This update introduces major changes to response parsing and response-processing.  
+The **ResponseParser** interface already needed an update. 
+This update also introduces asynchronous response-parsing support, which required an improved interface.
 ### Breaking changes
 - Completely rewrote & reimagined the **ResponseParser** interface
 - Multiple changes to **Gateway**

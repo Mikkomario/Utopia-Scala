@@ -12,7 +12,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
   * Represents a style chosen for displaying words, such as underlining or bold text. An open enumeration, 
   * meaning that sub-modules may introduce their own values.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait DisplayStyle extends ValueConvertible
 {

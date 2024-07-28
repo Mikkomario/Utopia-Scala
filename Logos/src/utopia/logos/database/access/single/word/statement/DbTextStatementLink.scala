@@ -12,7 +12,7 @@ import utopia.vault.sql.Condition
  * Root access point for individual generic text statement links
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 case class DbTextStatementLink(factory: TextStatementLinkDbFactory)
 	extends SingleRowModelAccess[TextStatementLink] with UnconditionalView with Indexed

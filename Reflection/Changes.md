@@ -1,9 +1,11 @@
 # Utopia Reflection - List of Changes
 
 ## v2.2 (in development)
+This update reflects changes introduced in **Genesis v4.0**. 
+As this module is already in maintenance only -mode, the interface changes were kept at minimum.
 ### Breaking changes
 - Rewrote **AnimationLabel**, so that it's now (transformed) image -based and uses the new **Animator** class in **Genesis**
-  - The default constructor is noticeably different and may break some use-cases
+  - The default constructor is noticeably different and may require changes / adaptation certain use-cases
 ### Other changes
 - This module is no longer dependent from the **Inception** module
 - Pop-up windows now close (if specified to do so) only on mouse-presses, not on mouse-releases

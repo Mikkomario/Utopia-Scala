@@ -14,7 +14,7 @@ import utopia.vault.nosql.view.FilterableView
  * @tparam A Type of read items
  * @tparam Repr Type of the implementing access point
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 trait ManyTextStatementLinksAccessLike[+A, +Repr]
 	extends ManyModelAccess[A] with FilterableView[Repr] with Indexed with PlacedAccessLike[Repr]

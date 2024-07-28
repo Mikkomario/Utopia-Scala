@@ -30,7 +30,7 @@ object WordData extends FromModelFactoryWithSchema[WordData]
   * @param text Text representation of this word
   * @param created Time when this word was added to the database
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class WordData(text: String, created: Instant = Now) extends WordFactory[WordData] with ModelConvertible
 {

@@ -19,7 +19,7 @@ object WordOrLinkText
 /**
  * Represents a word or a link in text format
  * @author Mikko Hilpinen
- * @since 11/03/2024, v1.0
+ * @since 11/03/2024, v0.2
  */
 case class WordOrLinkText(text: String, isLink: Boolean)
 {

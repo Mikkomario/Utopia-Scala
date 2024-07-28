@@ -1,5 +1,5 @@
 # Logos
-Version: **v1.0**  
+Version: **v0.2**  
 Updated: 2024-03-20
 
 ## Table of Contents

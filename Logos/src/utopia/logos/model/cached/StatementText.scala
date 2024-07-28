@@ -81,7 +81,7 @@ object StatementText
 /**
  * Represents a statement in text format (i.e. not id-based but text-based)
  * @author Mikko Hilpinen
- * @since 11/03/2024, v1.0
+ * @since 11/03/2024, v0.2
  */
 case class StatementText(words: Seq[WordOrLinkText], delimiter: String = "")
 {

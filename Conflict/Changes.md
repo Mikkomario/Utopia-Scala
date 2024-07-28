@@ -1,7 +1,12 @@
 # Utopia Conflict - List of Changes
 
 ## v1.5 (in development)
-Refactoring based on Genesis changes
+This update reflects changes introduced in **Genesis v4.0** update. Mainly, 
+the collision handling interface had to be rewritten.
+
+Like with many other **Conflict** updates, this update lacks testing.  
+If you intend to use this version, consider contacting and possibly collaborating 
+in order to ensure that all possible bugs get fixed.
 ### Breaking changes
 - Removed the **DefaultSetup** class
   - No replacement has been added yet

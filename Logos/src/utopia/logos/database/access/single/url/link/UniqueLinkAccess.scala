@@ -30,7 +30,7 @@ object UniqueLinkAccess
 /**
   * A common trait for access points that return individual and distinct links.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueLinkAccess 
 	extends UniqueLinkAccessLike[Link] with SingleRowModelAccess[Link] with FilterableView[UniqueLinkAccess]

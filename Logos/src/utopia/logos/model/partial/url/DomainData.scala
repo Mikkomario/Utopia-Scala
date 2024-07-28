@@ -31,7 +31,7 @@ object DomainData extends FromModelFactoryWithSchema[DomainData]
   * domain name and possible port number.
   * @param created Time when this domain was added to the database
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class DomainData(url: String, created: Instant = Now) 
 	extends DomainFactory[DomainData] with ModelConvertible

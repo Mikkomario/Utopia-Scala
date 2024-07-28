@@ -10,7 +10,7 @@ import utopia.vault.model.immutable.Column
  * Common trait for access points which include both statement and text link information
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 // WET WET (from ManyStatementLinksAccessLike)
 trait ManyLinkedStatementsAccessLike[+A, +Repr] extends ManyStatementsAccessLike[A, Repr] with PlacedAccessLike[Repr]

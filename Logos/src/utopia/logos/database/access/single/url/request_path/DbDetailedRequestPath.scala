@@ -11,7 +11,7 @@ import utopia.vault.sql.Condition
 /**
   * Used for accessing individual detailed request paths
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 object DbDetailedRequestPath 
 	extends SingleRowModelAccess[DetailedRequestPath] with UnconditionalView with Indexed

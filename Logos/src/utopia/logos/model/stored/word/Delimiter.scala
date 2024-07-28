@@ -13,7 +13,7 @@ import java.time.Instant
   * @param id id of this delimiter in the database
   * @param data Wrapped delimiter data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class Delimiter(id: Int, data: DelimiterData) 
 	extends StoredModelConvertible[DelimiterData] with DelimiterFactory[Delimiter] with FromIdFactory[Int, Delimiter]

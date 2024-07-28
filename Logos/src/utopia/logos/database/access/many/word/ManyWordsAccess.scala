@@ -21,7 +21,7 @@ object ManyWordsAccess
 /**
   * A common trait for access points which target multiple words at a time
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with ManyRowModelAccess[Word]
 {

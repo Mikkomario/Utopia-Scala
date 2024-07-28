@@ -1,6 +1,11 @@
 # Utopia Reach - List of Changes
 
 ## v1.3 (in development)
+This update follows changes introduced in **Genesis v4.0**, which mostly affect the component 
+(mouse & keyboard) event handling, as well as image-drawing.
+
+Besides this, larger updates were applied to **ViewTextButton** and the **Focusable** traits.
+
 ### Breaking changes
 - Refactored **ViewTextButton** constructors
   - Removed the non-contextual factory altogether
@@ -18,12 +23,12 @@
 ### Bugfixes
 - Fixed an issue where image + text component insets would not receive the expanding or shrinking -property
 - Previously **DragTo** would always reposition the component, regardless of settings used
-- **RadioButtons** now correctly support **HotKeys**
+- **RadioButtons** now correctly support **HotKey**s
 ### New features
 - Image labels now support transformations
 ### Other changes
 - This module is no longer dependent from the **Inception** module
-- **ReachComponent** is now a trait - however, it is intended to be used like an abstract class, still
+- **ReachComponent** is now a trait - however, it is still intended to be used like an abstract class
 
 ## v1.2 - 22.01.2024
 This update focuses on image-drawing, especially in buttons. 

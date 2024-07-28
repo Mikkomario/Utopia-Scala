@@ -14,7 +14,7 @@ import utopia.vault.nosql.view.FilterableView
  * Common trait for access points that return individual text statement links at a time
  *
  * @author Mikko Hilpinen
- * @since 14/03/2024, v1.0
+ * @since 14/03/2024, v0.2
  */
 trait UniqueTextStatementLinkAccessLike[+A, +Repr]
 	extends StatementLinkFactory[Repr] with SingleRowModelAccess[A] with FilterableView[Repr]

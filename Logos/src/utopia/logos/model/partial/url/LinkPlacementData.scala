@@ -30,7 +30,7 @@ object LinkPlacementData extends FromModelFactoryWithSchema[LinkPlacementData]
   * @param linkId Referenced link
   * @param orderIndex Index where the link appears in the statement (0-based)
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class LinkPlacementData(statementId: Int, linkId: Int, orderIndex: Int) 
 	extends LinkPlacementFactory[LinkPlacementData] with ModelConvertible with Placed

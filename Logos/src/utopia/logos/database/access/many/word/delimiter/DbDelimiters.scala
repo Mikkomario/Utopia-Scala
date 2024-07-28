@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.UnconditionalView
 /**
   * The root access point when targeting multiple delimiters at a time
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 object DbDelimiters extends ManyDelimitersAccess with UnconditionalView
 {

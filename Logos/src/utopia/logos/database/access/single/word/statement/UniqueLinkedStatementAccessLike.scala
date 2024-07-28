@@ -10,7 +10,7 @@ import utopia.vault.nosql.view.FilterableView
  * Common trait for access points which return linked statements
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 trait UniqueLinkedStatementAccessLike[+A, +Repr]
 	extends UniqueStatementAccessLike[A] with FilterableView[Repr] with PlacedFactory[Repr]

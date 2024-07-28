@@ -1,6 +1,7 @@
 # Utopia Trove - List of Changes
 
 ## v1.1.9 (in development)
+This minor update reflects changes in **Flow v2.4**.
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used
 

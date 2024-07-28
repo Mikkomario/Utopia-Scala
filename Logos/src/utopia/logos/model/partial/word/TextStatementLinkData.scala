@@ -23,7 +23,7 @@ object TextStatementLinkData
 /**
  * A data model that links a statement to its correct position in a text where it appears
  * @author Mikko Hilpinen
- * @since 14/03/2024, v1.0
+ * @since 14/03/2024, v0.2
  */
 trait TextStatementLinkData extends TextStatementLinkDataLike[TextStatementLinkData]
 {

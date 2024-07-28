@@ -14,7 +14,7 @@
 ## Main Features
 Includes all server-side features for proper OAuth with 3rd party systems (except account creation). 
 This includes:
-- Full database structure and interface for service-specifications, 
+- Full database structure and interface for service specifications, 
   authentication tokens and authentication attempts
 - Tracks authentication requirements for each task and targets authentication for individual tasks at a time
   - Supports alternative scopes for tasks (i.e, when any of a set of scopes is able to perform some task)
@@ -24,9 +24,9 @@ This includes:
   malicious use of this service
   - The system also registers initiated but never completed authentication attempts. These can be used 
     to improve user interaction in the client.
-- Optionally this system supports authentications that are initiated from the 3rd party platform 
-  (E.g. Zoom register button)
-- Client side may specify custom state and custom redirection urls which are used when redirecting the user 
+- Optionally, this system supports authentications that are initiated from the 3rd party platform 
+  (E.g. Zoom's register button)
+- The client-side may specify custom state and custom redirection urls which are used when redirecting the user 
   back to the (web) client
 
 At this time this module is intended to be used in contexts with a single server API and possibly multiple 
@@ -35,8 +35,8 @@ browser-based web clients. This version doesn't yet support **Journey** or deskt
 This module initially targets Google and Zoom as 3rd party OAuth targets. 
 Other services may require some tweaks in order to be fully supported. However, I made the base of this module 
 with scalability in mind so that other services can be supported when necessary.
-- If you need to use this module with some other OAuth service and need some changes, please contact me. 
-  I'll be glad to help you.
+- If you need to use this module with some other OAuth service and need some changes, 
+  please contact me so that we can collaborate on its implementation.
   
 ## Available Extensions
 - utopia.ambassador.database.**AuthDbExtensions**
@@ -52,8 +52,13 @@ You will find the sql files under these modules from **sql** folders.
 Also, please use the **Citadel-Description-Importer** tool to import descriptions for the initial items. 
 You will find the descriptions to import under **data** folders in **Citadel** and **Exodus**.
 
-Please also follow the instructions in **Exodus** README. Namely: Call `ExodusContext.setup()` and 
-add **ExodusResources** to your **RequestHandler**.
+Links to data folders:
+- [Citadel](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel/data)
+- [Exodus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus/data)
+- [Ambassador](https://github.com/Mikkomario/Utopia-Scala/tree/master/Ambassador/data)
+
+Please also follow the instructions in [Exodus README](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus). 
+Namely, call `ExodusContext.setup()` and add **ExodusResources** to your **RequestHandler**.
 
 From this module, you should call `ExodusTaskExtensions.apply()` and add a **ServicesNode** instance 
 to your **RequestHandler**.
@@ -62,7 +67,9 @@ to your **RequestHandler**.
 - You will also need to construct an **AcquireTokens** instance, 
   for which you need to specify service-specific configurations.
   - Please also be aware that in order to construct an **AcquireTokens** instance, 
-    you need a **Gateway** instance. See **Utopia Disciple** for more details about that.
+    you need a **Gateway** instance. 
+    See [Utopia Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple) 
+    for more details about this interface.
       - You can usually share a single **Gateway** instance between multiple **TokenInterfaceConfiguration** instances. 
         You need to create multiple instances only when the 3rd party services use different query parameter 
         encoding options.
@@ -71,22 +78,22 @@ In your actual database, you need to set up (insert) the contents of the followi
 - **oauth_service**: List your accessed 3rd party services (like Google and/or Zoom) here
 - **oauth_service_settings**: All services should have a single set of settings
 - **scope**: List here the scopes that you need to access in the 3rd party services
-- **task_scope**: List here which scopes are required in which task
+- **task_scope**: List here which scopes are required in each task, where applicable
 - **scope_description** (optional): Optionally, you may describe the scopes that you have defined. 
-  These descriptions will be included in responses towards clients.
+  These descriptions will be included in responses to your client applications.
         
 The authentication process from the client's point of view goes like this:
-1) Test if you have access to the desired feature with GET tasks/{taskId}/access-status
+1) Test if you have access to the desired feature with `GET tasks/{taskId}/access-status`
     - The response will show if you're already authorized and which services you need to access
     - If you're already authorized, skip to part 4
-2) Send a session-key authorized POST request to services/{service id or name}/auth/preparations
-    - The client will receive an authentication token in the response
-3) Direct the user to services/{service id or name}/auth and include the authentication token as 
-   *token* -query parameter
-    - The user will be redirected back to the client once the process completes. You can specify redirection 
+2) Send a session-key authorized POST request to `services/{service id or name}/auth/preparations`
+    - The response will contain an authentication token
+3) Direct the user to `services/{service id or name}/auth` and include the authentication token as 
+   `token` -query parameter
+    - The user will be redirected back to the client once the OAuth process completes. You can specify redirection 
       rules in the preparation phase (2)
-4) Use the feature which required 3rd party authentication
+4) Proceed to access and use the feature for which you requested 3rd party authentication
     
 On the server-side in part 4, you need to acquire a valid access token using a **AcquireTokens** instance.  
 This module doesn't provide a direct interface to the 3rd party systems besides authentication, but 
-you may use **Utopia Disciple** module for the remaining http queries.
+you may use **Utopia Disciple** module for the required http queries.

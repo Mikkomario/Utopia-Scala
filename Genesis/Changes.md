@@ -1,8 +1,25 @@
 # Utopia Genesis - List of Changes
 
 ## v4.0 (in development)
-Handler update
-Remember MutableImage changes (once added) and the new drawSubImage -feature
+This update is a major overhaul (i.e. complete rewriting) of the handling system.  
+Notably, as a part of this update, **Genesis** no longer extends **Inception**, rather replacing it.
+
+The new handling system is quite different from the original, 
+although an attempt has been made to preserve original features in a deprecated form.  
+However, simply because of the package structure and naming updates, refactoring will be necessary when migrating from 
+v3.X to v4.0.
+
+Because of the grand scale of this update, some features are no longer (fully) supported, namely:
+- **Setup** classes
+- **SpriteDrawer**s and the like
+- **Canvas** classes
+- **Camera** classes
+
+This update has undergone limited testing and is likely to contain some bugs, 
+especially visual issues with the new **Drawable** system / implementation. 
+If your project is heavily reliant on the existing **Drawable** features, 
+it may be wise to either collaborate to make the transition easier, or to wait for a more refined version instead.
+
 ### Breaking changes
 - Rewrote all handler & handling -classes, including all event classes
   - **HandlerRelay** is now named **Handlers**

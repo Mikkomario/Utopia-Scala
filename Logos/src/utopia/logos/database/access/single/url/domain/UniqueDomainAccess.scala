@@ -38,7 +38,7 @@ object UniqueDomainAccess
 /**
   * A common trait for access points that return individual and distinct domains.
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 trait UniqueDomainAccess 
 	extends SingleRowModelAccess[Domain] with FilterableView[UniqueDomainAccess] 

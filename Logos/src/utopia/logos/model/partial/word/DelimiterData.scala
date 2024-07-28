@@ -30,7 +30,7 @@ object DelimiterData extends FromModelFactoryWithSchema[DelimiterData]
   * @param text The characters that form this delimiter
   * @param created Time when this delimiter was added to the database
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class DelimiterData(text: String, created: Instant = Now) 
 	extends DelimiterFactory[DelimiterData] with ModelConvertible

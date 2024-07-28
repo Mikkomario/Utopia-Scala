@@ -1,6 +1,12 @@
 # Utopia Firmament - List of Changes
 
 ## v1.3 (in development)
+For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 
+The new features in **Genesis** are utilized, for example in **HotKey** and **ImageDrawer**. 
+
+Besides this, this update introduces a couple quality updates to **StackLength** + **StackInsets**, 
+as well as some basic GUI improvements. 
+
 ### Breaking changes
 - Moved **DrawLevel** to **Genesis**
 - **HotKey** no longer contains property `.characters` and now uses **Key** instead of key index (Int)

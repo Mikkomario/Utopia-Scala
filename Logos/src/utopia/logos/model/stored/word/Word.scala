@@ -12,7 +12,7 @@ import java.time.Instant
   * @param id id of this word in the database
   * @param data Wrapped word data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class Word(id: Int, data: WordData) 
 	extends StoredModelConvertible[WordData] with WordFactory[Word] with FromIdFactory[Int, Word]

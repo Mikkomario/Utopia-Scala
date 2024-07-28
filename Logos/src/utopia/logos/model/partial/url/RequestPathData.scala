@@ -33,7 +33,7 @@ object RequestPathData extends FromModelFactoryWithSchema[RequestPathData]
   * nor the initial forward slash.
   * @param created Time when this request path was added to the database
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class RequestPathData(domainId: Int, path: String = "", created: Instant = Now) 
 	extends RequestPathFactory[RequestPathData] with ModelConvertible

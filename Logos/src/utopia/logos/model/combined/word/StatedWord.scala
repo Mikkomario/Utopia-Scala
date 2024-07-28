@@ -7,7 +7,7 @@ import utopia.logos.model.stored.word.{Word, WordPlacement}
 /**
   * Represents a word used in a specific statement
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class StatedWord(word: Word, useCase: WordPlacement) extends Extender[WordData]
 {

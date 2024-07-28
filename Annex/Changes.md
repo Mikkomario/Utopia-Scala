@@ -1,6 +1,13 @@
 # Utopia Annex - List of Changes
 
 ## v1.8 (in development)
+A major overhaul of basic Annex concepts, namely **Response**s and response-parsing 
+(following the changes in **Disciple** v1.7), **ApiRequest**s, **ApiClient**s (formerly known as **Api**s) and 
+**RequestQueue** systems.
+
+Most importantly, this update supports custom response-parsing within the request-processing itself. 
+Much of the existing interfaces obviously needed an update because of this addition.
+
 ### Breaking changes
 - Multiple changes to **RequestResult** and **Response.Success**
   - In general, responses are now expected to be parsed by the time they are returned by other interfaces, 

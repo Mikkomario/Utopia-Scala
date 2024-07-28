@@ -1,6 +1,14 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.6 (in development)
+This is a smaller update, focusing on:
+- Enclosing **Circle** algorithms
+- **Bounds** and related classes: Utility updates
+- **RelativePoint**: Utility updates & improvements
+- Transformation classes: Minor optimization
+
+This update also includes some relatively important bugfixes, so be sure to pick it up.
+
 ### Breaking changes
 - **LinearTransformable** now requires implementation of `.identity`. Similarly, 
   **AffineTransformable** requires the implementation of `.affineIdentity`.

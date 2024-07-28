@@ -12,7 +12,7 @@ import utopia.vault.sql.Condition
 /**
   * Used for accessing individual words
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 object DbWord extends SingleRowModelAccess[Word] with UnconditionalView with Indexed
 {

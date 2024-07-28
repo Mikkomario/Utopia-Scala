@@ -31,7 +31,7 @@ object UniqueLinkedStatementAccess
  * Common trait for access point that return a single generic linked statement for any query
  *
  * @author Mikko Hilpinen
- * @since 16/03/2024, v1.0
+ * @since 16/03/2024, v0.2
  */
 trait UniqueLinkedStatementAccess
 	extends UniqueLinkedStatementAccessLike[LinkedStatement, UniqueLinkedStatementAccess]

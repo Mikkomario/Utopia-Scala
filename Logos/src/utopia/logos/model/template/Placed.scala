@@ -11,7 +11,7 @@ object Placed
 /**
  * Common trait for items that may be placed within ordered sequences
  * @author Mikko Hilpinen
- * @since 17.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
+ * @since 17.10.2023, Emissary Email Client v0.1, added to Logos v0.2 11.3.2024
  */
 trait Placed
 {

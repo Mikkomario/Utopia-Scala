@@ -32,7 +32,7 @@ object StatementData extends FromModelFactoryWithSchema[StatementData]
   * with any character.
   * @param created Time when this statement was first made
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class StatementData(delimiterId: Option[Int] = None, created: Instant = Now) 
 	extends StatementFactory[StatementData] with ModelConvertible

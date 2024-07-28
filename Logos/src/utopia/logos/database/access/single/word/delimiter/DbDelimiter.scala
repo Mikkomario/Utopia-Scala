@@ -11,7 +11,7 @@ import utopia.vault.sql.Condition
 /**
   * Used for accessing individual delimiters
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 object DbDelimiter extends SingleRowModelAccess[Delimiter] with UnconditionalView with Indexed
 {

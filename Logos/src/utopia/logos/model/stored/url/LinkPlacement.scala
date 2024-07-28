@@ -11,7 +11,7 @@ import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
   * @param id id of this link placement in the database
   * @param data Wrapped link placement data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class LinkPlacement(id: Int, data: LinkPlacementData) 
 	extends StoredModelConvertible[LinkPlacementData] with LinkPlacementFactory[LinkPlacement] 

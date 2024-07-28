@@ -14,7 +14,7 @@ import java.time.Instant
   * @param id id of this link in the database
   * @param data Wrapped link data
   * @author Mikko Hilpinen
-  * @since 20.03.2024, v1.0
+  * @since 20.03.2024, v0.2
   */
 case class Link(id: Int, data: LinkData) 
 	extends StoredModelConvertible[LinkData] with LinkFactory[Link] with FromIdFactory[Int, Link]
