@@ -4,21 +4,22 @@ For details about the Scribe logging system in general, please refer to the **Sc
 
 ## Parent modules
 These Utopia modules must be present in your class path in order to use the Scribe Api module.
-- **Flow**
-- **BunnyMunch**
-- **Scribe Core**
-- **Vault**
-- **Access**
-- **Nexus**
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia BunnyMunch](https://github.com/Mikkomario/Utopia-Scala/tree/master/BunnyMunch)
+- [Scribe Core](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Core)
+- [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)
+- [Utopia Access](https://github.com/Mikkomario/Utopia-Scala/tree/master/Access)
+- [Utopia Nexus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Nexus)
 
 ## Main Features
 
 Interface for storing log entries to your database
 - This module provides the required database structure, as well as classes for interacting with the database
-- Issues recorded using server-side Scribe instances are automatically recorded to the database
+- Issues recorded using server-side **Scribe** instances are automatically recorded to the database
 
 API-node for receiving and storing log entries from clients
-- This node may be attached directly to your RequestHandler instance, or under any of your Resource implementations
+- This node may be attached directly to your **RequestHandler** instance, 
+  or under any of your **Resource** implementations
 - This interface allows you to apply custom authorization measures to make sure only authorized requests are processed
 
 Command line application for reviewing log entries
@@ -58,12 +59,12 @@ or under one of your **Resource** implementations. Use the constructor that best
 
 Optionally, construct a new **Scribe** instance that you use as the root instance for all logging.
 Optionally, create a new **Synagogue** instance and register your root Scribe instance to it, 
-along with the backup Logger implementations that you wish to use.
+along with the backup **Logger** implementations that you wish to use.
 
 Optionally, set up automated log cleaning processes by calling `LogCleaner.apply(LogStoreDurations) `
 within a **TimedTask** or **Loop**. 
 For this, you need to construct a new **LogStoreDurations** instance where you define the deletion and merging intervals 
-for each Issue Severity level.
+for each Issue **Severity** level.
 
 Here's an example code for setting up the log cleaning process.
 ```
@@ -114,7 +115,7 @@ tasks.addDaily(1.oClock) {
 ```
 
 You're now ready to construct new **Scribe** instances and to use the new logging system.  
-Depending on your choice, construct new Scribe instances either:
+Depending on your choice, construct new **Scribe** instances either:
 1. By calling `.in(subContext: String)` from your **Synagogue** instance (recommended)
 2. By calling `.in(subContext: String)` from your **root Scribe** instance
 3. By constructing a new **Scribe** instance directly
@@ -129,9 +130,9 @@ to a directory on the server and by writing the necessary configuration file.
 
 The console application requires these files in order to function correctly:
 - Scribe-Console.jar
-- scala-library-2.13.7.jar
-- scala-reflect-2.13.7.jar
-- mariadb-java-client-1.5.9
+- scala-library-2.13.12.jar (or some other 2.13 version)
+- scala-reflect-2.13.12.jar (or some other 2.13 version)
+- [mariadb-java-client-1.5.9](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault/lib) (or other version)
 - A settings file, which you may freely name and place as long as you fulfill the following requirements:
   - The file is located in the same directory, or in one of the directory's subdirectories
   - The file name includes the word "settings"
@@ -147,7 +148,7 @@ Within the settings file, specify a json object with the following properties:
   - `password: String` - Password used in authentication. Required if the database is password-protected.
   - `name: String` - Name of the used database
 
-You may an 
+You may use an 
 [example file](https://github.com/Mikkomario/Utopia-Scala/blob/development/Scribe/Scribe-Api/console-app/example-settings.json) 
 as a template when writing your settings file.
 

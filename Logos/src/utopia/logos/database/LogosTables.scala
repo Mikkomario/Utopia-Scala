@@ -12,8 +12,7 @@ object LogosTables
 	// COMPUTED	--------------------
 	
 	/**
-	  * 
-		Table that contains delimiters (Represents a character sequence used to separate two statements or parts
+	  * Table that contains delimiters (Represents a character sequence used to separate two statements or parts
 	  *  of a statement)
 	  */
 	def delimiter = apply("delimiter")
@@ -58,11 +57,6 @@ object LogosTables
 	
 	// OTHER	--------------------
 	
-	private def apply(tableName: String): Table = {
-		// TODO: Refer to a tables instance of your choice
-		// If you're using the Citadel module, import utopia.citadel.database.Tables
-		// Tables(tableName)
-		???
-	}
+	private def apply(tableName: String): Table = LogosContext.table(tableName)
 }
 

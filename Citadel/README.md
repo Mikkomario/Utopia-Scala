@@ -1,13 +1,15 @@
 # Utopia Citadel
+**Citadel** provides database interactions related with user management (based on **Metropolis**).
 
 ## Parent Modules
-- Utopia Flow
-- Utopia Vault
-- Utopia Metropolis
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)
+- [Utopia Metropolis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Metropolis)
 
 ## Main Features
 This module provides database structure and database interaction classes for **Metropolis** features, 
-for either server (**Exodus**) or for client-side use-cases (utilizing **Utopia Trove**).
+for either server (**Exodus**) or for client-side use-cases (utilizing 
+[Utopia Trove](https://github.com/Mikkomario/Utopia-Scala/tree/master/Trove)).
 
 ## Implementation Hints
 You will have to import the database structure sql document contents to your database when you use this module. 
@@ -20,7 +22,8 @@ application.
 Before using **Citadel**, you must call `CidadelContext.setup(...)` method.
 
 ### Classes you should be aware of
-- **Tables** - Please use this object when you need to access or refer to tables inside your database
+- [Tables](https://github.com/Mikkomario/Utopia-Scala/blob/master/Citadel/src/utopia/citadel/database/Tables.scala) - 
+  Please use this object when you need to access or refer to tables inside your database
 - Please also check out the 
   [utopia.citadel.database.access package](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel/src/utopia/citadel/database/access) 
   for various database-access interfaces.

@@ -1,8 +1,9 @@
 # Utopia Genesis
+Utopia Genesis provides a foundation for interactive GUI applications, focusing on GUI events and drawing.
 
 ## Parent Modules
-- Utopia Flow
-- Utopia Paradigm
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm)
 
 ## Main Features
 

@@ -8,10 +8,10 @@ The new **Reach** layout module performs all the same standard functions in a cl
 This module still contains more features, such as animation support, however.
 
 ## Parent Modules
-- Utopia Flow
-- Utopia Paradigm
-- Utopia Genesis
-- Utopia Firmament
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm)
+- [Utopia Genesis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Genesis)
+- [Utopia Firmament](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament)
 
 ## Main Features
 New UI component style

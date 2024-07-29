@@ -2,14 +2,14 @@
 *OAuth can be tough to implement - What if someone did it for you?*
 
 ## Parent Modules
-- Utopia Flow
-- Utopia Vault
-- Utopia Access
-- Utopia Disciple
-- Utopia Nexus
-- Utopia Metropolis
-- Utopia Citadel
-- Utopia Exodus
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)
+- [Utopia Access](https://github.com/Mikkomario/Utopia-Scala/tree/master/Access)
+- [Utopia Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple)
+- [Utopia Nexus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Nexus)
+- [Utopia Metropolis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Metropolis)
+- [Utopia Citadel](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel)
+- [Utopia Exodus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus)
 
 ## Main Features
 Includes all server-side features for proper OAuth with 3rd party systems (except account creation). 
@@ -39,9 +39,9 @@ with scalability in mind so that other services can be supported when necessary.
   please contact me so that we can collaborate on its implementation.
   
 ## Available Extensions
-- utopia.ambassador.database.**AuthDbExtensions**
+- [utopia.ambassador.database.AuthDbExtensions](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/data/backup/database/AuthDbExtensions.scala)
   - Adds authentication-related methods to individual user and task access points
-- utopia.ambassador.rest.resource.extensions.**ExodusTaskExtensions**
+- [utopia.ambassador.rest.resource.extensions.ExodusTaskExtensions](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/src/utopia/ambassador/rest/resource/extensions/ExodusTaskExtensions.scala)
   - Adds authentication checking node under individual task nodes
   
 ## Implementation Hints
@@ -49,7 +49,9 @@ API documentation is yet to be written...
 
 When you use this module, please insert the database structure from **Citadel**, **Exodus** and this module. 
 You will find the sql files under these modules from **sql** folders.  
-Also, please use the **Citadel-Description-Importer** tool to import descriptions for the initial items. 
+Also, please use the 
+[Citadel-Description-Importer tool](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel-Description-Importer) 
+to import descriptions for the initial items. 
 You will find the descriptions to import under **data** folders in **Citadel** and **Exodus**.
 
 Links to data folders:
@@ -58,20 +60,27 @@ Links to data folders:
 - [Ambassador](https://github.com/Mikkomario/Utopia-Scala/tree/master/Ambassador/data)
 
 Please also follow the instructions in [Exodus README](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus). 
-Namely, call `ExodusContext.setup()` and add **ExodusResources** to your **RequestHandler**.
+Namely, call `ExodusContext.setup()` and add 
+[ExodusResources](https://github.com/Mikkomario/Utopia-Scala/blob/master/Exodus/src/utopia/exodus/rest/resource/ExodusResources.scala) 
+to your [RequestHandler](https://github.com/Mikkomario/Utopia-Scala/blob/master/Nexus/src/utopia/nexus/rest/RequestHandler.scala).
 
-From this module, you should call `ExodusTaskExtensions.apply()` and add a **ServicesNode** instance 
-to your **RequestHandler**.
-- In order to set up **ServicesNode**, you will need to construct at least one **AuthRedirector** 
+From this module, you should call `ExodusTaskExtensions.apply()` and add a 
+[ServicesNode](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/src/utopia/ambassador/rest/resource/service/ServicesNode.scala) 
+instance to your **RequestHandler**.
+- In order to set up **ServicesNode**, you will need to construct at least one 
+  [AuthRedirector](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/src/utopia/ambassador/controller/template/AuthRedirector.scala) 
   implementation (or Use **DefaultRedirector** (Zoom) and/or **GoogleRedirector**).
-- You will also need to construct an **AcquireTokens** instance, 
-  for which you need to specify service-specific configurations.
+- You will also need to construct an 
+  [AcquireTokens](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/src/utopia/ambassador/controller/implementation/AcquireTokens.scala) 
+  instance, for which you need to specify service-specific configurations.
   - Please also be aware that in order to construct an **AcquireTokens** instance, 
-    you need a **Gateway** instance. 
-    See [Utopia Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple) 
+    you need a [Gateway](https://github.com/Mikkomario/Utopia-Scala/blob/master/Disciple/src/utopia/disciple/apache/Gateway.scala) 
+    instance. See [Utopia Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple) 
     for more details about this interface.
-      - You can usually share a single **Gateway** instance between multiple **TokenInterfaceConfiguration** instances. 
-        You need to create multiple instances only when the 3rd party services use different query parameter 
+      - You can usually share a single **Gateway** instance between multiple 
+      [TokenInterfaceConfiguration](https://github.com/Mikkomario/Utopia-Scala/blob/master/Ambassador/src/utopia/ambassador/model/cached/TokenInterfaceConfiguration.scala) 
+      instances. 
+        - You need to create multiple instances only when the 3rd party services use different query parameter 
         encoding options.
         
 In your actual database, you need to set up (insert) the contents of the following tables:

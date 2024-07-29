@@ -3,13 +3,12 @@ The purpose of this module is to simply enable the use of **Reach** layout syste
 This is intended to be used for existing projects only. New projects should use **Reach** only.
 
 ## Parent Modules
-- Flow
-- Paradigm
-- Inception
-- Genesis
-- Firmament
-- Reflection
-- Reach
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm)
+- [Utopia Genesis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Genesis)
+- [Utopia Firmament](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament)
+- [Utopia Reflection](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reflection)
+- [Utopia Reach](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach)
 
 ## Implementation Hints
 This module currently contains only a single class: **ReflectionReachCanvas**. 

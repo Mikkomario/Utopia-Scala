@@ -1,11 +1,12 @@
 # Utopia Access
-*A foundation for anything http*
+**Access** is the common http module providing tools which are shared between server- and client-side software.
 
 ## Parent Modules
-- Utopia Flow
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
 
 ## Main Features
-**Headers** as an immutable data-structure
+[Headers](https://github.com/Mikkomario/Utopia-Scala/blob/master/Access/src/utopia/access/http/Headers.scala) 
+as an immutable data-structure
 - Instead of having to remember each individual header field name, you can use computed properties for accessing, 
   plus simple methods for modifying the most commonly used headers.
 - Datetime, content type, etc. headers are automatically parsed for you
@@ -24,7 +25,9 @@ Enumerations for common http structures
 ## Implementation Hints
 
 ### You should get familiar with these classes
-- **Method** - It's good to understand the most common http methods and their functions
-- **Status** - If you're developing server-side applications, get to know the most common statuses. On client side,
+- [Method](https://github.com/Mikkomario/Utopia-Scala/blob/master/Access/src/utopia/access/http/Method.scala) - 
+  It's good to understand the most common http methods and their functions
+- [Status](https://github.com/Mikkomario/Utopia-Scala/blob/master/Access/src/utopia/access/http/Status.scala) - 
+  If you're developing server-side applications, get to know the most common statuses. On client side,
   research into statuses your server is probable to use.
 - **Headers** - Useful to know when you need to specify authentication or type of content, for example.

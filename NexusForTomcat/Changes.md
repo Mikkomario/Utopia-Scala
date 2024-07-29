@@ -2,6 +2,8 @@
 
 ## v1.2.7 (in development)
 A very minor update
+### Deprecations
+- Deprecated **EchoServlet**. A more viable example is available under the **Nexus-Test-Server** module.
 ### New methods
 - **LogicWrappingServlet** (object)
   - Added a new constructor

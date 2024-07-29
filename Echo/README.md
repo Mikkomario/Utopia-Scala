@@ -6,11 +6,11 @@ An interface for interactions with **LLM**s (i.e. large language models), especi
 which provides major benefits in terms of privacy, although requiring some computing power from the local device.
 
 ## Parent Modules
-- Utopia Flow
-- Utopia BunnyMunch
-- Utopia Access
-- Utopia Disciple
-- Utopia Access
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia BunnyMunch](https://github.com/Mikkomario/Utopia-Scala/tree/master/BunnyMunch)
+- [Utopia Access](https://github.com/Mikkomario/Utopia-Scala/tree/master/Access)
+- [Utopia Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple)
+- [Utopia Annex](https://github.com/Mikkomario/Utopia-Scala/tree/master/Annex)
 
 ## Main Features
 An **Annex**-compatible interface for requesting a local LLM to generate an answer to a query

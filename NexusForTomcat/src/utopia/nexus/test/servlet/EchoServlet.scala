@@ -26,6 +26,7 @@ import utopia.nexus.http.Body
         maxRequestSize      = 20971520, // 20 MB
 )
 // Used to contain: location            = "D:/Uploads"
+@deprecated("Deprecated for removal", "v1.2.7")
 class EchoServlet extends HttpServlet
 {
     // INITIAL CODE    -----------------------

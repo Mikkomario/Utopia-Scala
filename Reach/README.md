@@ -1,10 +1,11 @@
 # Utopia Reach
+A JVM GUI library with minimum reliance on Swing
 
 ## Parent Modules
-- Utopia Flow
-- Utopia Paradigm
-- Utopia Genesis
-- Utopia Firmament
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm)
+- [Utopia Genesis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Genesis)
+- [Utopia Firmament](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament)
 
 ## Main Features
 Swing-independent component context
@@ -27,6 +28,11 @@ Dynamic custom components
 - Material Design -inspired base components like **TextField** and **Switch**
 
 Template traits and models for building form dialogs
+
+OS drag-and-drop support
+- Allows your components to react to events where the user, for example, 
+  drags and drops a file into your application window
+- See **DragAndDropManager** for more details
 
 ## Implementation Hints
 There are three ways in which you can use this library:
@@ -52,7 +58,7 @@ You will likely use these classes very often:
     building component layouts. Either way, you should be familiar with these classes. 
 - **Mixed** 
   - When building stacks or other containers that contain multiple components, you oftentimes want the 
-    container to contain different kinds of components. In these cases you use Mixed instead.
+    container to contain different kinds of components. In these cases you use **Mixed** instead.
     - I.e. Typically, you would write something like: 
       `stack.build(Label).apply(...) { labelFactory => labelFactory.apply("Hello") }`. 
       With **Mixed** you write instead: `stack.build(Mixed).apply(...) { factories => factories(Label).apply("Hello") }`
@@ -84,6 +90,7 @@ Here are some built-in components and layout containers you may use:
     - These allow the user to select from a list of values
     - SelectionList displays the list within the component while DropDown opens a separate window
   - **DurationField** allows for time and duration input
+  - **DrawableCanvas** allows you to draw **Drawable** items (from **Genesis**) in real time in a GUI context
 - Containers (for building layouts)
   - **Framing** - Places margins/insets around a single component
   - **AlignFrame** - Aligns a component to specific direction
@@ -91,6 +98,8 @@ Here are some built-in components and layout containers you may use:
   - **ScrollView** and **ScrollArea** for 1D and 2D scrolling
   - **Stack** for placing components in a column or in a row
     - Supports all three component principles: immutable, view and mutable
+  - **Collection** for placing components in multiple automatically managed columns or rows
+  - **Layers** for placing components behind or on top of each other
 
 You will likely need these classes and traits when building your custom components and layout containers:
 - **CustomDrawReachComponent** - Your most typical component class when building from ground-up
@@ -114,6 +123,8 @@ For this you will need:
     extend either **FromContextFactory** or **FromGenericContextFactory**
     - This will enable implicit conversions from your companion object into Ccff or Gccff
     - This is assuming you want to use the context classes. If you don't, don't have the factory class extend anything.
+- Note, it may be useful to utilize the **Reach Coder** utility application 
+  in order to get a head start in custom component creation.
 
 When building form windows, you will deal with the following classes:
 - **InteractionWindowFactory** or **InputWindowFactory**
@@ -149,8 +160,8 @@ You should specify at least the following:
 - Implicit default language code (**String**) for localization
   - It is recommended that you use the 2-character ISO-standard language codes
 - Implicit **Localizer** implementation (use **NoLocalization** to skip localization)
-- A mutable **ActorHandler** instance, and an **ActorLoop** to manage that instance
-  - When the program starts, call `.runAsync()` for your **ActorLoop** instance
+- An **ActorHandler** instance, and an **ActionLoop** to manage that instance
+  - When the program starts, call `.runAsync()` for your **ActionLoop** instance
 - Implicit **AnimationContext** and **ScrollingContext** instances, in case you use those
 - A **ColorScheme** instance
   - Use `ColorScheme.default ++` your custom color scheme overrides, 
@@ -167,7 +178,7 @@ You should specify at least the following:
     calling windowContext`.withContentContext(BaseContext)`
 
 Next, define the data pointers you wish to use throughout or outside the component hierarchy.  
-For this, use **PointerWithEvents**, **Flag**, or **ResettableFlag**.
+For this, use **EventfulPointer**, **Flag**, or **ResettableFlag**.
 
 Next, build the component layout. Here's an example:
 ```
@@ -187,7 +198,7 @@ val window = ReachWindow.contentContextual.using(Framing) { (canvas, framingF) =
 When you have a contextual component factory available to you, 
 like the above `ReachWindow.contentContextual`, `framingF`, `stackF`, `factories` or `factories(Label)`, 
 you may modify that context by calling `.mapContext { ... }`.  
-In case of non-generic factories (typically all component factories and none of the container factories), 
+In case of non-generic factories (which is typically all component factories and none of the container factories), 
 you may call contextual functions, such as `.larger` or `.against(Color)` directly on the factory.
 
 You may share data from the lower component hierarchy upwards by passing it as an additional component creation 
@@ -207,12 +218,12 @@ val fieldTextPointer = framing.result
 ```
 
 When you're ready to display the **Window**, call `window.display(centerOnParent = true)`. 
-Remember to call `.runAsync()` for your **ActorLoop** before or directly after you do this.  
+Remember to call `.runAsync()` for your **ActionLoop** before or directly after you do this.  
 Oftentimes you also want to modify the window, for example by calling `.setToExitOnClose()`
 
 ### Building Layouts Bottom-to-Top
 Sometimes you may want to create the component before you define the container it will be placed in.  
-In these cases, you need to use the Open interface. Here's an example:
+In these cases, you need to use the **Open** interface. Here's an example:
 ```
 val openLabel = Open.withContext(textContext).apply(Label) { labelF => 
   labelF.apply("Hello World!")

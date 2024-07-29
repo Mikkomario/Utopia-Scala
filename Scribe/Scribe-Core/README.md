@@ -5,8 +5,8 @@ two use-cases.
 
 ## Parent modules
 You will need to add these **Utopia** modules to your class hierarchy in order to use the **Scribe** modules:
-- **Flow**
-- **BunnyMunch**
+- [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
+- [Utopia BunnyMunch](https://github.com/Mikkomario/Utopia-Scala/tree/master/BunnyMunch)
 
 ## Main Features
 **Scribe** provides an interface for detailed and hierarchical logging entries
@@ -144,10 +144,10 @@ If a detail is common to all entries made using a client-side software instance,
 you may choose to introduce it in your MasterScribe instance instead, but more on that in **Scribe Client**.
 
 #### Error, message and details
-The actual logging entry may consist of any combination of an encountered error (Throwable instance), 
+The actual logging entry may consist of any combination of an encountered error (**Throwable** instance), 
 a custom message and custom details.
 
-Like with Issue Variant details, these details are introduced in Model format.  
+Like with Issue Variant details, these details are introduced in **Model** format.  
 You may choose to use such details as:
 - Exact error message returned in a server response
 - Exact input parameters that were used when the issue occurred
@@ -158,7 +158,7 @@ so you don't have to worry so much about filling your database with unnecessary 
 
 #### Examples
 Here are some code examples of recording various imaginary issues. 
-Every example assumes that a class-specific val scribe: Scribe has been defined and is accessible in that context.
+Every example assumes that a class-specific `val scribe: Scribe` has been defined and is accessible in that context.
 
 Logging a detailed issue variant when the server rejects a request:
 ```
@@ -195,5 +195,5 @@ This way you will have a logging implementation available even in situations whe
 fails or is not available.
 
 ## Other implementation hints
-If you want to use the Scribe logging system with Try and TryCatch instances, please 
+If you want to use the Scribe logging system with **Try** and **TryCatch** instances, please 
 import `utopia.scribe.core.util.logging.TryExtensions._`
