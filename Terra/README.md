@@ -22,17 +22,19 @@ Vector projection capabilities for converting world locations to 2D map location
 ## Main classes
 Here are the main classes to start with:
 - Angular location representation
-  - **LatLong**
-  - **CompassRotation** & **LatLongRotation**
+  - [LatLong](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/model/angular/LatLong.scala)
+  - [CompassRotation](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/model/angular/CompassRotation.scala) & 
+    [LatLongRotation](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/model/angular/LatLongRotation.scala)
 - Spherical Earth -worldview
   - **SpherePoint** & **SphereSurfacePoint**
-  - **SphericalEarth**
+  - [SphericalEarth](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/controller/coordinate/world/SphericalEarth.scala)
 - Circle of Earth -worldview
   - **CirclePoint** (3D) & **CircleSurfacePoint** (2D)
-  - **CircleOfEarth**
+  - [CircleOfEarth](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/controller/coordinate/world/CircleOfEarth.scala)
 - Grid-based worldview
-  - **GridArea**
+  - [GridArea](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/controller/coordinate/world/GridArea.scala)
   - **GridPoint** (3D) and **GridSurfacePoint** (2D)
 - 2D map projection
-  - **MapPoint**
-  - **PointMap2D** & **PointMap3D**
+  - [MapPoint](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/model/map/MapPoint.scala)
+  - [PointMap2D](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/controller/coordinate/map/PointMap2D.scala) & 
+    [PointMap3D](https://github.com/Mikkomario/Utopia-Scala/blob/master/Terra/src/utopia/terra/controller/coordinate/map/PointMap3D.scala)

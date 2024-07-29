@@ -145,7 +145,8 @@ For additional information on each module, visit their README files directly.
 These modules are widely used and offer support tools for all kinds of applications.
 
 #### Utopia Flow
-Flow provides the standard set-of-tools that are used in all the other Utopia modules.
+[Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow) provides the standard set-of-tools that are used 
+in all the other Utopia modules.
 
 **Utopia Flow** makes many things in Scala even easier than they are by default and offers some very useful data 
 structures and data-related features. **Utopia Flow** is a standard building block and the 
@@ -159,12 +160,14 @@ whether they be servers, desktop clients, command-line apps or real-time games.
 #### Utopia BunnyMunch
 A fast and simple json parser.
 
-**Utopia BunnyMunch** is a very simple model, meant to replace the inefficient **JsonReader** implementation from *Flow*. 
+[Utopia BunnyMunch](https://github.com/Mikkomario/Utopia-Scala/tree/master/BunnyMunch) is a very simple model, 
+meant to replace the inefficient **JsonReader** implementation from *Flow*. 
 *BunnyMunch* uses a very fast [Jawn](https://github.com/typelevel/jawn) json parsing library internally, 
 but offers the same **Value**-based interface as Flow's JsonReader.
 
 #### Utopia Paradigm
-Utopia Paradigm is a library focused on vector mathematics and 2D shapes.
+[Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm) is a library focused on vector 
+mathematics and 2D shapes.
 
 **Utopia Paradigm** introduces a number of models that are often used in visual and/or mathematical software,
 such as points, bounds, polygons, matrices, affine transformations, colors and so on.
@@ -178,7 +181,8 @@ all immutable and suitable for a Scala approach to front-end programming.
 These modules facilitate interactions with MySQL-based databases (including MariaDB).
 
 #### Utopia Vault
-Vault is the main Utopia library for interacting with MySQL-based databases.  
+[Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault) is the main Utopia library for interacting 
+with MySQL-based databases.  
 However, what's great with Vault is that you don't need much SQL know-how to use it.
 
 **Vault** offers you a number of abstraction 
@@ -187,7 +191,8 @@ you don't need to write a single line of SQL. But unlike many other noSQL-framew
 you operate directly on SQL when or if you need it.
 
 ##### Utopia Vault Coder
-Vault Coder is a command-line tool for converting your model concepts into a database structure + advanced Scala code.
+[Vault Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Vault-Coder) is a command-line tool 
+for converting your model concepts into a database structure + advanced Scala code.
 
 This **Vault** add-on helps you by generating much of the model and database interaction code you would
 otherwise have to write manually, saving a lot of your time. If you're using **Utopia Vault** or any of the
@@ -196,7 +201,8 @@ Please check the [README](https://github.com/Mikkomario/Utopia-Coder/tree/master
 of this application for more details.
 
 #### Utopia Trove
-Trove is a small library which allows you to host a MariaDB database directly from your application.
+[Trove](https://github.com/Mikkomario/Utopia-Scala/tree/master/Trove) is a small library which allows you to host a 
+MariaDB database directly from your application.
 
 **Utopia Trove** is a rather simple library that offers an easy-to-use interface 
 to [Vorburger's MariaDB4j](https://github.com/vorburger/MariaDB4j) library 
@@ -209,7 +215,8 @@ as well as an easy one-line database setup and shutdown functions.
 These modules provide tools for http clients and http servers
 
 #### Utopia Access
-**Access** is the common http module providing tools which are shared between server- and client-side software.
+[Access](https://github.com/Mikkomario/Utopia-Scala/tree/master/Access) is the common http module providing tools 
+which are shared between server- and client-side software.
 
 Http status codes, content types, headers, etc. are now readily available for you in a very simple format.
 This allows you to use the same models on both ends of your full-stack development and saves you the time from
@@ -219,7 +226,8 @@ studying or writing two separate interfaces.
 to create your own http library implementation, you can.
 
 #### Utopia Nexus
-**Nexus** provides a simple interface for building advanced restful APIs.
+[Nexus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Nexus) provides a simple interface for building 
+advanced restful APIs.
 
 Have you ever wished you had a nice, up-to-standard **Rest-API**, but you found the idea of building one quite
 overwhelming? **Nexus** makes API-setup so easy you'll be surprised; I surprise myself with it all the time.
@@ -230,7 +238,8 @@ Don't want to use REST-architecture? You don't have to! You can still create the
 and the same building blocks, any way you want to.
 
 ##### Utopia Nexus for Tomcat
-**Nexus for Tomcat** is a specific extension of **Nexus**, allowing you to use it on top of the
+[Nexus for Tomcat](https://github.com/Mikkomario/Utopia-Scala/tree/master/NexusForTomcat) is a specific extension 
+of **Nexus**, allowing you to use it on top of the
 [Apache Tomcat](https://tomcat.apache.org/) platform.
 
 **Nexus doesn't force you to use any specific server-implementation or library**, such as Tomcat.
@@ -239,7 +248,7 @@ if you just want to get started quickly. That's why there's **Nexus for Tomcat**
 which lets you quickly set up **Nexus** over a Tomcat instance, and to do it without much effort at all.
 
 #### Utopia Disciple
-**Disciple** is a client-side http library, wrapping
+[Disciple](https://github.com/Mikkomario/Utopia-Scala/tree/master/Disciple) is a client-side http library, wrapping
 [Apache's HttpClient](https://hc.apache.org/httpcomponents-client-4.5.x/index.html).
 
 **Disciple** utilizes models from **Access**, and provides some of its own for client side http request
@@ -251,7 +260,8 @@ In case you wish to use **Disciple** interface with some other http client libra
 the dependency - it's only a single file anyway.
 
 #### Utopia Annex
-**Annex** is an extension of the **Disciple** library, providing more advanced interfaces specifically suited for
+[Annex](https://github.com/Mikkomario/Utopia-Scala/tree/master/Annex) is an extension of the **Disciple** library, 
+providing more advanced interfaces specifically suited for
 use-cases where fast internet access is not guaranteed.
 
 **Utopia Annex** goes two steps further than **Disciple**, by offering you advanced request and response models,
@@ -270,7 +280,8 @@ For individual requests, I would recommend you to stick with **Disciple**, since
 These modules provide tools for interactive visual applications
 
 #### Utopia Genesis
-Utopia Genesis provides a foundation for interactive GUI applications, focusing on GUI events and drawing.
+[Utopia Genesis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Genesis) provides a foundation for interactive 
+GUI applications, focusing on GUI events and drawing.
 
 **Utopia Genesis** has its background in real-time 2D game development, although
 it's by no means limited to such purposes and is most often used as a foundation for standard client-side 
@@ -284,7 +295,8 @@ The problem with **Genesis** is that the standard Swing framework isn't build up
 but that's why I've built **Utopia Reach** and **Utopia Reflection** GUI libraries.
 
 #### Utopia Firmament
-**Firmament** provides a set of generic traits and tools used in both of my component layout / GUI frameworks 
+[Firmament](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament) provides a set of generic traits and 
+tools used in both of my component layout / GUI frameworks 
 (i.e. **Reach** and **Reflection**). Since these are separate modules these days, the common features were 
 gathered into this module.
 
@@ -293,7 +305,8 @@ I would suggest checking **Utopia Reach** and then checking the
 you find it interesting.
 
 #### Utopia Reach
-**Reach** is a GUI library with minimal reliance on AWT and Swing.
+[Reach](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach) is a GUI library with minimal reliance on 
+AWT and Swing.
 
 Over the time I've progressed from **1)** having to use the Swing framework and hating it, 
 to **2)** building my own framework (**Reflection**) around the Swing framework, hating the limitations of Swing 
@@ -319,12 +332,14 @@ top of the existing capabilities. The only requirement is that you can't really 
 nor on the standard OS look-and-feel. If you would rather still use mostly Swing, consider using **Reflection** instead.
 
 ##### Reach Coder
-Reach Coder is a utility application for generating factory classes for your custom Reach components based on 
+[Reach Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Reach-Coder) is a utility application for 
+generating factory classes for your custom Reach components based on 
 json definitions. This application is most suited for customizable components, 
 like those introduced in the **Reach** library.
 
 #### Utopia Reflection
-**Reflection** is a Scala- and Utopia-friendly wrapper to the **Swing** framework.
+[Reflection](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reflection) is a Scala- and Utopia-friendly 
+wrapper to the **Swing** framework.
 
 **Reflection** is a Swing-like GUI framework, where components are wrapped and managed through a 
 well-defined (but open) interface. Swing dependencies are clearly separated from the generic models and traits. 
@@ -341,13 +356,15 @@ I would personally only recommend using **Reflection** on a new project if you s
 mix Utopia with Swing layout.
 
 ##### Utopia Reach in Reflection
-This very small module (one file) enables you to use **Utopia Reach** inside the **Utopia Reflection** framework.
+[Reach-in-Reflection](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach-in-Reflection), a very small module (one file), 
+enables you to use **Utopia Reach** inside the **Utopia Reflection** framework.
 
 Earlier, **Reach** used to be a sub-feature of **Reflection**, but is now an independent module/system. However, 
 in order to support existing projects where **Reach** and **Reflection** intertwine, there's this module.
 
 #### Utopia Conflict
-**Utopia Conflict** is a small collision-handling library built on top of **Paradigm** and **Genesis**.
+[Utopia Conflict](https://github.com/Mikkomario/Utopia-Scala/tree/master/Conflict) is a small collision-handling 
+library built on top of **Paradigm** and **Genesis**.
 
 **Utopia Conflict** lets you include collision checking and collision events in your program. Collision detection
 is a required feature in most 2D games, but it's also one of the toughest to implement from scratch. I've done the
@@ -360,7 +377,7 @@ game or a physics-based software, this will most likely help you a lot in gettin
 These modules provide more advanced interfaces to some standard information technologies.
 
 #### Utopia Courier
-A library for sending and receiving emails.
+[Courier](https://github.com/Mikkomario/Utopia-Scala/tree/master/Courier) is a library for sending and receiving emails.
 
 **Utopia Courier** model is focused on email integration and supports both sending and writing emails.
 This module wraps the JavaMail API, providing a much cleaner and more effective interface.
@@ -372,7 +389,8 @@ This module wraps the JavaMail API, providing a much cleaner and more effective 
 interface, utilizing soft typing from the **Flow** module.
 
 #### Utopia Terra
-**Terra** deals with GPS-location information, providing multiple vector-based projections for this data.
+[Terra](https://github.com/Mikkomario/Utopia-Scala/tree/master/Terra) deals with GPS-location information, 
+providing multiple vector-based projections for this data.
 
 If you find yourself in a situation
 where you need to use latitude-longitude information, Utopia Terra is your friend.
@@ -389,7 +407,8 @@ With **Echo**, you can utilize LLMs more easily and directly from within your ap
 These modules provide more specialized implementations for various common issues in applications.
 
 #### Utopia Scribe
-The Scribe module provides a detailed logging system specifically designed for use-cases where both front and back end 
+The [Scribe](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe) module provides a detailed logging system 
+specifically designed for use-cases where both front and back end 
 are implemented using Scala. Logging entries are delivered from the clients to the server, and are readable using 
 a custom application.
 
@@ -397,16 +416,19 @@ a custom application.
 This module is most suited for more complex projects, where local file logging is not enough.
 
 **Scribe** is divided into three submodules:
-1. **Scribe Core**, which is common to both server- and client-side
-2. **Scribe Api**, which requires database access and is intended for server-side use
-3. **Scribe Client**, which sends logging information to a server using the **Scribe Api** module
+1. [Scribe Core](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Core), 
+  which is common to both server- and client-side
+2. [Scribe Api](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Api), 
+  which requires database access and is intended for server-side use
+3. [Scribe Client](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Client), 
+  which sends logging information to a server using the **Scribe Api** module
 
 #### Models for user management and authentication
 These modules provide tools for somewhat advanced user management
 
 ##### Utopia Metropolis
-**Metropolis** is a module which provides models for user management. 
-This module is extended with **Disciple** and **Exodus**.
+[Metropolis](https://github.com/Mikkomario/Utopia-Scala/tree/master/Metropolis) is a module which provides models for 
+user management. This module is extended with **Disciple** and **Exodus**.
 
 The purpose of these modules is to give you a 
 pre-built user-management and session-based authentication system for your server and optionally client, also. 
@@ -414,7 +436,8 @@ I've noticed that these features need to exist in so many server applications th
 one-time solution to this problem.
 
 ##### Utopia Citadel
-**Citadel** provides database interactions related with user management (based on **Metropolis**).
+[Citadel](https://github.com/Mikkomario/Utopia-Scala/tree/master/Citadel) provides database interactions related 
+with user management (based on **Metropolis**).
 
 **Utopia Citadel** may be used in both server-side and client-side context. On server-side, use **Utopia Exodus**, 
 which extends this module. On client-side, consider using **Utopia Trove** to set up a local database.
@@ -427,7 +450,8 @@ your project, please make sure to check out the
 for more details.
 
 ##### Utopia Exodus
-**Exodus** provides server-side user-management, greatly facilitating authorization, for example.
+[Exodus](https://github.com/Mikkomario/Utopia-Scala/tree/master/Exodus) provides server-side user-management, 
+greatly facilitating authorization, for example.
 
 The main point of **Utopia Exodus** is to handle the cumbersome user management and user authentication, 
 that belong to any valid server-side application - and to do it well.  
@@ -435,7 +459,8 @@ By using **Utopia Exodus**, you can set up the required systems very quickly and
 Your application business logic.
 
 ##### Utopia Ambassador
-**Ambassador** is a module specifically designed for managing the OAuth process.
+[Ambassador](https://github.com/Mikkomario/Utopia-Scala/tree/master/Ambassador) is a module specifically designed 
+for managing the OAuth process.
 
 **Utopia Ambassador** has one main goal: Handle OAuth server-side process properly, so that you don't have to. 
 If you already have a **Utopia Exodus** server, this module is very easy to add on top of it; You 

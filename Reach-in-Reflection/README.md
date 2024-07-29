@@ -11,6 +11,7 @@ This is intended to be used for existing projects only. New projects should use 
 - [Utopia Reach](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach)
 
 ## Implementation Hints
-This module currently contains only a single class: **ReflectionReachCanvas**. 
+This module currently contains only a single class: 
+[ReflectionReachCanvas](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach-in-Reflection/src/utopia/reflection/reach/ReflectionReachCanvas.scala). 
 Use this class to construct your **ReachCanvas** instance so that it may be used in **Reflection** context. 
 In cases where you build a whole window using only **Reach** components, please use **ReachWindow** instead.

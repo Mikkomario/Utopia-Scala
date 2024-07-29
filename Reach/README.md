@@ -25,20 +25,25 @@ Top-to-bottom and bottom-to-top component creation
   adjusted during the creation process
 
 Dynamic custom components
-- Material Design -inspired base components like **TextField** and **Switch**
+- Material Design -inspired base components like 
+  [TextField](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/text/TextField.scala) and 
+  [Switch](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/check/Switch.scala)
 
 Template traits and models for building form dialogs
 
 OS drag-and-drop support
 - Allows your components to react to events where the user, for example, 
   drags and drops a file into your application window
-- See **DragAndDropManager** for more details
+- See [DragAndDropManager](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/dnd/DragAndDropManager.scala) 
+  for more details
 
 ## Implementation Hints
 There are three ways in which you can use this library:
-1. Reach only (recommended) - Start with **ReachWindow** and build the layout downwards from there
+1. Reach only (recommended) - Start with 
+  [ReachWindow](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/ReachWindow.scala) 
+  and build the layout downwards from there
 2. Reach in Reflection (requires a separate module) - Use this approach to migrate from **Reflection** to **Reach**. 
-  See **Reach-in-Reflection** module for details.
+  See [Reach-in-Reflection](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach-in-Reflection) module for details.
 3. Reach inside AWT or Swing (not recommended) - It is possibly to use **Reach** inside an AWT component system, 
   but you will lose many of the auto-layout benefits.
 
@@ -49,32 +54,38 @@ There are usually three types of container and component implementations:
 
 ### Classes to be aware of
 You will likely use these classes very often:
-- **ReachCanvas** - This component holds the whole component hierarchy
+- [ReachCanvas](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/container/ReachCanvas.scala) - 
+  This component holds the whole component hierarchy
 - **ReachWindow** - Use this interface for constructing windows that consist of a single **ReachCanvas** instances
-- **ReachWindowContext** and **ReachContentWindowContext** - Use these context classes when using **ReachWindow**
-- **Open** - For creating components that haven't yet been attached to the component hierarchy
-- **ComponentCreationResult** and **ComponentWrapResult**
+- [ReachWindowContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/context/ReachWindowContext.scala) 
+  and [ReachContentWindowContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/context/ReachContentWindowContext.scala) - 
+  Use these context classes when using **ReachWindow**
+- [Open](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/OpenComponent.scala) - 
+  For creating components that haven't yet been attached to the component hierarchy
+- [ComponentCreationResult](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/ComponentCreationResult.scala) 
+  and [ComponentWrapResult](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/ComponentWrapResult.scala)
   - While these are typically implicitly constructed, you may sometimes need to declare one explicitly when 
     building component layouts. Either way, you should be familiar with these classes. 
-- **Mixed** 
+- [Mixed](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/factory/Mixed.scala) 
   - When building stacks or other containers that contain multiple components, you oftentimes want the 
     container to contain different kinds of components. In these cases you use **Mixed** instead.
     - I.e. Typically, you would write something like: 
       `stack.build(Label).apply(...) { labelFactory => labelFactory.apply("Hello") }`. 
       With **Mixed** you write instead: `stack.build(Mixed).apply(...) { factories => factories(Label).apply("Hello") }`
-- **CursorSet** - When you want to use custom cursors, please specify one of these in **ReachWindowCreationContext**, 
+- [CursorSet](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/cursor/CursorSet.scala) - 
+  When you want to use custom cursors, please specify one of these in **ReachWindowCreationContext**, 
   or directly to the **ReachCanvas** constructor.
 - Please also review the documentation of the **Paradigm** and **Genesis** modules, 
   because you will be using classes from those modules a lot
 
 Here are some built-in components and layout containers you may use:
 - Components (for user-interaction)
-  - Labels
+  - [Labels](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach/src/utopia/reach/component/label)
     - Labels are used for displaying non-interactive text or images to the user
     - There are four main variants: **TextLabel**, **ImageLabel**, **ImageAndTextLabel** and **EmptyLabel**
     - All labels support the immutable and view -approaches, and some support the mutable approach 
     - There are also interactive variants, namely **SelectableTextLabel** and **EditableTextLabel**
-  - Buttons
+  - [Buttons](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach/src/utopia/reach/component/button)
     - Buttons allow the user to perform some predefined action when pressed
     - There are Text, Image and ImageAndText - button variants available, 
       depending on what kind of content you want to display
@@ -82,16 +93,19 @@ Here are some built-in components and layout containers you may use:
   - **TextField**
     - This class allows the user to input various kinds of text or numeric values
     - Supports input validation, maximum input length and much more
-  - **CheckBox** and **Switch**
+  - [CheckBox](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/check/CheckBox.scala) 
+    and **Switch**
     - These allow the user to select boolean values
-  - **RadioButtonGroup**
+  - [RadioButtonGroup](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/RadioButtonGroup.scala)
     - This allows the user to select from a limited number of options
-  - **SelectionList** and **DropDown**
+  - [SelectionList](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/SelectionList.scala) 
+    and [DropDown](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/DropDown.scala)
     - These allow the user to select from a list of values
     - SelectionList displays the list within the component while DropDown opens a separate window
-  - **DurationField** allows for time and duration input
+  - [DurationField](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/text/DurationField.scala) 
+    allows for time and duration input
   - **DrawableCanvas** allows you to draw **Drawable** items (from **Genesis**) in real time in a GUI context
-- Containers (for building layouts)
+- [Containers](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach/src/utopia/reach/container) (for building layouts)
   - **Framing** - Places margins/insets around a single component
   - **AlignFrame** - Aligns a component to specific direction
   - **CachingViewSwapper** - Switches the displayed component based on a pointer value
@@ -102,14 +116,19 @@ Here are some built-in components and layout containers you may use:
   - **Layers** for placing components behind or on top of each other
 
 You will likely need these classes and traits when building your custom components and layout containers:
-- **CustomDrawReachComponent** - Your most typical component class when building from ground-up
-  - Oftentimes, however, you will be using **ReachComponentWrapper** instead, because most components are simply 
+- [CustomDrawReachComponent](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/template/CustomDrawReachComponent.scala) - 
+  Your most typical component class when building from ground-up
+  - Oftentimes, however, you will be using 
+    [ReachComponentWrapper](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/template/ReachComponentWrapper.scala) 
+    instead, because most components are simply 
     combinations of other components (such as labels)
-- **ButtonLike** - Common trait for button implementations (including checkboxes and the like)
-- **Focusable** - When you want your component to be recognized by the focus system
-  - Sometimes you may wish to implement the more specific **FocusableWithPointer**, 
-    **FocusableWrapper** or **FocusableWithPointerWrapper** instead
-- **CursorDefining** - Implement when you want a hover-cursor over your component
+- [ButtonLike](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/template/ButtonLike.scala) - 
+  Common trait for button implementations (including checkboxes and the like)
+- [Focusable](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/template/focus/Focusable.scala) - 
+  When you want your component to be recognized by the focus system
+  - Sometimes you may wish to implement the more specific **FocusableWrapper** instead
+- [CursorDefining](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/template/CursorDefining.scala) - 
+  Implement when you want a hover-cursor over your component
 
 When you've built your custom component, you should also build a set of factories for it.  
 For this you will need:
@@ -123,21 +142,24 @@ For this you will need:
     extend either **FromContextFactory** or **FromGenericContextFactory**
     - This will enable implicit conversions from your companion object into Ccff or Gccff
     - This is assuming you want to use the context classes. If you don't, don't have the factory class extend anything.
-- Note, it may be useful to utilize the **Reach Coder** utility application 
-  in order to get a head start in custom component creation.
+- Note, it may be useful to utilize the [Reach Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Reach-Coder) 
+  utility application in order to get a head start in custom component creation.
 
 When building form windows, you will deal with the following classes:
-- **InteractionWindowFactory** or **InputWindowFactory**
+- [InteractionWindowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InteractionWindowFactory.scala) 
+  or [InputWindowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputWindowFactory.scala)
   - Extend one of these in the class you use for specifying the windows you wish to create
   - **InteractionWindowFactory** is the more generic version, which doesn't require form layout
-- **InputRowBlueprint** - Construct one of these for each form field you specify
-- **DialogButtonBlueprint** (in **Firmament**) - Construct one of these for each dialog button
-- **InputField**
+- [InputRowBlueprint](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputRowBlueprint.scala) - 
+  Construct one of these for each form field you specify
+- [DialogButtonBlueprint](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reflection/src/utopia/reflection/container/swing/window/interaction/DialogButtonBlueprint.scala) 
+  (in **Firmament**) - Construct one of these for each dialog button
+- [InputField](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputField.scala)
   - Your form input components will need to be wrapped into **InputFields**
   - `import utopia.reach.window.InputField._` will offer you a number of methods for constructing these wrappers
   - Alternatively you may use the functions within the **InputField** object itself
   - Oftentimes you should have an implicit conversion available
-- **FocusRequestable**
+- [FocusRequestable](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/focus/FocusRequestable.scala)
   - Sometimes the input components don't support focus out-of-the-box. In these cases, 
     wrap them using the **FocusRequestable** object.
 
@@ -153,7 +175,9 @@ You should set the noddraw property to true (optional)
 `System.setProperty("sun.java2d.noddraw", true.toString)`  
 Always call `ParadigmDataType.setup()` at program startup, before doing anything else.
 
-First, define your commonly used settings. See **ReachTestContext** for an example of this.  
+First, define your commonly used settings. See 
+[ReachTestContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/test/utopia/reach/test/ReachTestContext.scala) 
+for an example of this.  
 You should specify at least the following:
 - Implicit **Logger** implementation (e.g. **SysErrLogger**)
 - Implicit **ExecutionContext** instance (typically **ThreadPool**)

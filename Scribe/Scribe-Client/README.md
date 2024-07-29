@@ -1,6 +1,7 @@
 # Utopia Scribe Client
 This document describes the **client-specific Scribe logging system** functions introduced in this module. 
-For more information concerning the Scribe logging system in general, see **Scribe Core** module instead.
+For more information concerning the Scribe logging system in general, see 
+[Scribe Core module](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Core) instead.
 
 ## Parent modules
 This library requires the following Utopia modules to be added to your class path in order to work:
@@ -22,10 +23,13 @@ Maximum logging limit -support that prevents recursive logging (optional feature
 In order to use the Scribe Client, you first need a functioning **QueueSystem** instance (**Utopia Annex** feature). 
 We will not cover the creation of this instance in this document.
 
-Start by constructing a new **MasterScribe** instance.  
+Start by constructing a new 
+[MasterScribe](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Client/src/utopia/scribe/client/controller/logging/MasterScribe.scala) 
+instance.  
 Here you specify the following settings:
 - Url to the server endpoint that receives the log entries
-  - Typically, this is the path where you've located the **LoggingNode** in the server-side implementation (see **Scribe Api**)
+  - Typically, this is the path where you've located the **LoggingNode** in the server-side implementation 
+    (see [Scribe Api](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Api))
 - Backup logging implementation to record any failures within this interface
 - Duration how long issues should be kept in the client
   - By specifying a longer duration, you may reduce the amount of requests that are performed, 
@@ -41,7 +45,9 @@ Optionally, you may now construct a root Scribe instance.
 Optionally, you may register this root instance into a **Synagogue**, along with any backup Logger implementations 
 you may wish to use.
 
-Finally, proceed to construct new **Scribe** instances by either:
+Finally, proceed to construct new 
+[Scribe](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Client/src/utopia/scribe/client/controller/logging/Scribe.scala) 
+instances by either:
 1. Calling `.in(subContext: String)` from your **Synagogue** instance (recommended)
 2. Calling `.in(subContext: String)` from your **root Scribe** instance
 3. Creating new Scribe instances directly

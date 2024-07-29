@@ -46,13 +46,18 @@ In this section, we will cover how to set up and use this interface.
 You typically start by creating a **root Scribe** instance and by registering 
 it to your shared [Synagogue instance](#the-synagogue-instance) (optional). 
 The **root Scribe** used is specific to whether you're working on 
-server-side or on client-side, and will be introduced in either the **Scribe Api** or **Scribe Client** module.
+server-side or on client-side, and will be introduced in either the 
+[Scribe Api](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Api) or 
+[Scribe Client](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Client) module.
 
 ### Class-specific Scribe instances
-Once you have a common **root Scribe** or **Synagogue** instance, you create **class-specific sub-instances** 
+Once you have a common **root Scribe** or 
+[Synagogue](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Core/src/utopia/scribe/core/controller/logging/Synagogue.scala) 
+instance, you create **class-specific sub-instances** 
 based on that root instance. For each class-specific instance, you specify a **unique context**.
 
-A class-specific **Scribe** instance is typically declared using syntax:
+A class-specific [Scribe](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Core/src/utopia/scribe/core/controller/logging/Scribe.scala) 
+instance is typically declared using syntax:
 `implicit val scribe: Scribe = <synagogue reference>.in("module.function.MyClassName")`
 where `module.function.MyClassName` represents a unique context parameter. 
 
@@ -83,9 +88,11 @@ You're free to save that instance to a local variable in order to copy those det
 Details 4-6 are specified when creating the exact logging entry, and are specific to that entry.
 
 Scribe instances will also need to have implicit access to the current version of your software. 
-Typical way to implement this is to define an implicit **Version** instance somewhere and introduce it via import. 
-This is oftentimes the same place where you might specify an implicit ConnectionPool (Vault) or 
-ExecutionContext instance as well.
+Typical way to implement this is to define an implicit 
+[Version](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/util/Version.scala) instance 
+somewhere and introduce it via import. 
+This is oftentimes the same place where you might specify an implicit **ConnectionPool** (Vault) or 
+**ExecutionContext** instance as well.
 
 Next we will cover the role of these fields in more detail.
 
@@ -98,11 +105,12 @@ Therefore, it is important to specify enough details in the context, so that you
 I personally recommend specifying a unique sub-context on function or method level, where possible.
 
 #### Issue Severity
-The Severity enumeration is an important detail when recording and processing Issue data. 
-If Severity is defined accurately within the code, the person scouring through the logging entries will have 
+The [Severity](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Core/src/utopia/scribe/core/model/enumeration/Severity.scala) 
+enumeration is an important detail when recording and processing **Issue** data. 
+If **Severity** is defined accurately within the code, the person scouring through the logging entries will have 
 much easier time focusing on the most important items.
 
-Available Severity levels are as follows, from least to most important / severe:
+Available **Severity** levels are as follows, from least to most important / severe:
 1. **Debug** - Used for recording situational information that is useful when debugging other issues, 
   but of **no importance by default**
 2. **Info** - Used for recording details that might be of interest, but which **don't indicate any kind of problem**

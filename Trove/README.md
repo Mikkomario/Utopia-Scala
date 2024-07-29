@@ -31,7 +31,10 @@ Your database structure documents should contain the following header comments:
 - `Version:` or `to:`, followed by a version number (E.g. `Version: v1.2.3`)
 - `from:` or `origin:`, followed by a version number
     - This field is present only in change / update documents
-See **ScanSourceFiles** for details
+
+See [ScanSourceFiles](https://github.com/Mikkomario/Utopia-Scala/blob/master/Trove/src/utopia/trove/controller/ScanSourceFiles.scala) 
+for details
 
 ### Classes you should be aware of
-- **LocalDatabase** - For starting and stopping a local database
+- [LocalDatabase](https://github.com/Mikkomario/Utopia-Scala/blob/master/Trove/src/utopia/trove/controller/LocalDatabase.scala) - 
+  For starting and stopping a local database

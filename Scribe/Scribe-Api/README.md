@@ -1,6 +1,7 @@
 # Utopia Scribe Api
 This module provides the tools necessary for setting up a Scribe logging system on your **server**.  
-For details about the Scribe logging system in general, please refer to the **Scribe Core** README file.
+For details about the Scribe logging system in general, please refer to the 
+[Scribe Core README file](https://github.com/Mikkomario/Utopia-Scala/tree/master/Scribe/Scribe-Core).
 
 ## Parent modules
 These Utopia modules must be present in your class path in order to use the Scribe Api module.
@@ -15,7 +16,9 @@ These Utopia modules must be present in your class path in order to use the Scri
 
 Interface for storing log entries to your database
 - This module provides the required database structure, as well as classes for interacting with the database
-- Issues recorded using server-side **Scribe** instances are automatically recorded to the database
+- Issues recorded using server-side 
+  [Scribe](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Api/src/utopia/scribe/api/controller/logging/Scribe.scala) 
+  instances are automatically recorded to the database
 
 API-node for receiving and storing log entries from clients
 - This node may be attached directly to your **RequestHandler** instance, 
@@ -54,7 +57,9 @@ Here you specify:
 - **Backup logging implementation**, which is used for recording errors within the Scribe logging system itself
 - **Maximum log limit** that is used for preventing recursive logging
 
-Next, construct a new **LoggingNode** instance and register it to your **RequestHandler**, 
+Next, construct a new 
+[LoggingNode](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Api/src/utopia/scribe/api/rest/logging/LoggingNode.scala) 
+instance and register it to your **RequestHandler**, 
 or under one of your **Resource** implementations. Use the constructor that best suites your use-case.
 
 Optionally, construct a new **Scribe** instance that you use as the root instance for all logging.
@@ -63,8 +68,9 @@ along with the backup **Logger** implementations that you wish to use.
 
 Optionally, set up automated log cleaning processes by calling `LogCleaner.apply(LogStoreDurations) `
 within a **TimedTask** or **Loop**. 
-For this, you need to construct a new **LogStoreDurations** instance where you define the deletion and merging intervals 
-for each Issue **Severity** level.
+For this, you need to construct a new 
+[LogStoreDurations](https://github.com/Mikkomario/Utopia-Scala/blob/master/Scribe/Scribe-Api/src/utopia/scribe/api/model/cached/logging/LogStoreDurations.scala) 
+instance where you define the deletion and merging intervals for each Issue **Severity** level.
 
 Here's an example code for setting up the log cleaning process.
 ```
