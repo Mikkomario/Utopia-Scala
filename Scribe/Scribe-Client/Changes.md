@@ -1,6 +1,6 @@
 # Utopia Scribe Client - list of changes
 
-## v1.0.2 (in development)
+## v1.0.2 - 28.07.2024
 This update adds support for **Flow v2.4** and **Annex v1.8**
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used

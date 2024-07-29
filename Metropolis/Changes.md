@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.2.3 (in development)
+## v2.2.3 - 28.07.2024
 Supports **Flow v2.4**
 ### Other changes
 - In some instances where **Vector** was used, **Seq** is now used

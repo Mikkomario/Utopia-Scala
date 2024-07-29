@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-logos">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_logos</output-path>
+    <root id="archive" name="utopia-logos.jar">
+      <element id="module-output" name="Logos" />
+      <element id="module-source" name="Logos" />
+    </root>
+  </artifact>
+</component>

@@ -1,5 +1,8 @@
 # Reach in Reflection - List of Changes
 
+## v1.0.2 - 28.07.2024
+Supports changes introduced in the parent modules.
+
 ## v1.0.2 - 22.01.2024
 Scala version update
 ### Other changes

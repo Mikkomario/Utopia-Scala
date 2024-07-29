@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v2.2 (in development)
+## v2.2 - 28.07.2024
 Matching changes introduced in **Vault v1.19**
 ### Breaking changes
 - **AcquireTokens** now requires an implicit **JsonParser** construction parameter

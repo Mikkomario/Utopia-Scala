@@ -1,6 +1,6 @@
 # Utopia Reach - List of Changes
 
-## v1.3 (in development)
+## v1.3 - 28.07.2024
 This update follows changes introduced in **Genesis v4.0**, which mostly affect the component 
 (mouse & keyboard) event handling, as well as image-drawing.
 

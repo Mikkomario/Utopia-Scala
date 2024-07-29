@@ -1,6 +1,6 @@
 # Utopia Access - List of Changes
 
-## v1.5.1 (in development)
+## v1.5.1 - 28.07.2024
 Mostly smaller character-set and content-type -related updates.
 ### Bugfixes
 - Fixed the parsing of the `charset` property in **Headers**

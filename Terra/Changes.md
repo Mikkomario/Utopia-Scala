@@ -1,6 +1,6 @@
 # Utopia Terra - list of changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 28.07.2024
 A minor update adding support for **Flow v2.4**.
 ### Bugfixes
 - 0.0 North is now considered equal to 0.0 South (and same with East & West)

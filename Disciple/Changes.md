@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.7 (in development)
+## v1.7 - 28.07.2024
 This update introduces major changes to response parsing and response-processing.  
 The **ResponseParser** interface already needed an update. 
 This update also introduces asynchronous response-parsing support, which required an improved interface.

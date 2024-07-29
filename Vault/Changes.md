@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.19 (in development)
+## v1.19 - 28.07.2024
 This update focuses on the following areas:
 - New traits for **Storable** implementations and other interfaces
 - Timestamp-based **FromRowFactories**:

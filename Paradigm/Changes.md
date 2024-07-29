@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.6 (in development)
+## v1.6 - 28.07.2024
 This is a smaller update, focusing on:
 - Enclosing **Circle** algorithms
 - **Bounds** and related classes: Utility updates

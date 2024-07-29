@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.3 (in development)
+## v1.3 - 28.07.2024
 For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 
 The new features in **Genesis** are utilized, for example in **HotKey** and **ImageDrawer**. 
 

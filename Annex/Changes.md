@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.8 (in development)
+## v1.8 - 28.07.2024
 A major overhaul of basic Annex concepts, namely **Response**s and response-parsing 
 (following the changes in **Disciple** v1.7), **ApiRequest**s, **ApiClient**s (formerly known as **Api**s) and 
 **RequestQueue** systems.

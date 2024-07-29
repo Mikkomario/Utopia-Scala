@@ -1,6 +1,6 @@
 # Utopia BunnyMunch - List of Changes
 
-## v1.0.5 (in development)
+## v1.0.5 - 28.07.2024
 Added support for asynchronous json-parsing.
 ### New features
 - Added **AsyncJsonBunny**, which provides an interface for parsing and processing json values asynchronously either 

@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.2 (in development)
+## v2.2 - 28.07.2024
 This update reflects changes introduced in **Genesis v4.0**. 
 As this module is already in maintenance only -mode, the interface changes were kept at minimum.
 ### Breaking changes

@@ -1,6 +1,6 @@
 # Utopia Nexus for Tomcat - List of changes
 
-## v1.2.7 (in development)
+## v1.2.7 - 28.07.2024
 A very minor update
 ### Deprecations
 - Deprecated **EchoServlet**. A more viable example is available under the **Nexus-Test-Server** module.

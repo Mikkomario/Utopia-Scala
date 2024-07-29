@@ -1,6 +1,6 @@
 # Utopia Courier - List of Changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 28.07.2024
 A minor update reflecting changes in **Flow v2.4** and introducing a bugfix to email reading.
 ### Bugfixes
 - Email reading would previously fail (at least in some situations) because of a message-indexing failure

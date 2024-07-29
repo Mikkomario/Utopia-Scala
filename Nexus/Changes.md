@@ -1,6 +1,6 @@
 # Utopia Nexus - List of Changes
 
-## v1.9.3 (in development)
+## v1.9.3 - 28.07.2024
 This update only contains some smaller changes to **Response**, as well as support for **Flow v2.4** updates.
 ### Deprecations
 - Deprecated `.withModifiedHeaders(...)` in **Response** in favor of the new `.mapHeaders(...)`
