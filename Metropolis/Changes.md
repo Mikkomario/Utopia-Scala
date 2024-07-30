@@ -1,5 +1,8 @@
 # Utopia Metropolis - List of Changes
 
+## v2.2.4 (in development)
+Built with Scala v2.13.14
+
 ## v2.2.3 - 28.07.2024
 Supports **Flow v2.4**
 ### Other changes

@@ -1,5 +1,8 @@
 # Utopia Firmament - List of Changes
 
+## v1.3.1 (in development)
+Built with Scala v2.13.14
+
 ## v1.3 - 28.07.2024
 For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 
 The new features in **Genesis** are utilized, for example in **HotKey** and **ImageDrawer**. 

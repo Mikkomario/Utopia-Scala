@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.5.1 (in development)
+Built with Scala v2.13.14
+
 ## v1.5 - 28.07.2024
 This update reflects changes introduced in **Genesis v4.0** update. Mainly, 
 the collision handling interface had to be rewritten.

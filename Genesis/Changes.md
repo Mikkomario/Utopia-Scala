@@ -1,5 +1,8 @@
 # Utopia Genesis - List of Changes
 
+## v4.0.1 (in development)
+Built with Scala v2.13.14
+
 ## v4.0 - 28.07.2024
 This update is a major overhaul (i.e. complete rewriting) of the handling system.  
 Notably, as a part of this update, **Genesis** no longer extends **Inception**, rather replacing it.

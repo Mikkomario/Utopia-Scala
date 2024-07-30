@@ -8,10 +8,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
     <orderEntry type="library" name="apache.poi" level="project" />
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Paradigm" />
     <orderEntry type="library" name="apache.poi.ooxml" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
   </component>
 </module>

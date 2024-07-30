@@ -1,5 +1,8 @@
 # Utopia Exodus - List of Changes
 
+## v4.1.7 (in development)
+Built with Scala v2.13.14
+
 ## v4.1.6 - 28.07.2024
 Conforms to changes introduced in **Flow v2.4** and **Vault v1.19**
 ### Other changes

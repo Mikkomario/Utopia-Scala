@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v2.2.1 (in development)
+Built with Scala v2.13.14
+
 ## v2.2 - 28.07.2024
 This update reflects changes introduced in **Genesis v4.0**. 
 As this module is already in maintenance only -mode, the interface changes were kept at minimum.

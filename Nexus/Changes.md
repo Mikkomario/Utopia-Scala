@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v1.9.4 (in development)
+Built with Scala v2.13.14
+
 ## v1.9.3 - 28.07.2024
 This update only contains some smaller changes to **Response**, as well as support for **Flow v2.4** updates.
 ### Deprecations

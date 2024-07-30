@@ -1,5 +1,8 @@
 # Utopia Flow - List of Changes
 
+## v2.4.1 (in development)
+Built with Scala v2.13.14
+
 ## v2.4 - 28.07.2024
 This is a pretty large update, mostly due to its delayed release.
 This update focuses on the following areas: 

@@ -1,5 +1,8 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.2.8 (in development)
+Built with Scala v2.13.14
+
 ## v1.2.7 - 28.07.2024
 A very minor update
 ### Deprecations

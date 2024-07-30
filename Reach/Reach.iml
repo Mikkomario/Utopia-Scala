@@ -13,6 +13,6 @@
     <orderEntry type="module" module-name="Genesis" />
     <orderEntry type="module" module-name="Paradigm" />
     <orderEntry type="module" module-name="Firmament" />
-    <orderEntry type="library" name="scala-sdk-2.13.12" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
   </component>
 </module>

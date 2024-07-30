@@ -1,5 +1,8 @@
 # Utopia Disciple - List of Changes
 
+## v1.7.1 (in development)
+Built with Scala v2.13.14
+
 ## v1.7 - 28.07.2024
 This update introduces major changes to response parsing and response-processing.  
 The **ResponseParser** interface already needed an update. 

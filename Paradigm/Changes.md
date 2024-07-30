@@ -1,5 +1,8 @@
 # Utopia Paradigm - List of Changes
 
+## v1.6.1 (in development)
+Built with Scala v2.13.14
+
 ## v1.6 - 28.07.2024
 This is a smaller update, focusing on:
 - Enclosing **Circle** algorithms

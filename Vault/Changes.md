@@ -1,5 +1,8 @@
 # Utopia Vault - List of Changes
 
+## v1.19.1 (in development)
+Built with Scala v2.13.14
+
 ## v1.19 - 28.07.2024
 This update focuses on the following areas:
 - New traits for **Storable** implementations and other interfaces

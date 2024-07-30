@@ -1,5 +1,8 @@
 # Utopia Terra - list of changes
 
+## v1.1.2 (in development)
+Built with Scala v2.13.14
+
 ## v1.1.1 - 28.07.2024
 A minor update adding support for **Flow v2.4**.
 ### Bugfixes

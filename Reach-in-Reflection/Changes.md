@@ -1,5 +1,8 @@
 # Reach in Reflection - List of Changes
 
+## v1.0.3 (in development)
+Built with Scala v2.13.14
+
 ## v1.0.2 - 28.07.2024
 Supports changes introduced in the parent modules.
 
