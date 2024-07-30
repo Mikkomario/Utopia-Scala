@@ -122,5 +122,14 @@ trait HasEnds[+P]
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def toString = if (isInclusive) s"$start to $end" else s"$start until $end"
+	override def toString = {
+		if (isInclusive) {
+			if (start == end)
+				start.toString
+			else
+				s"$start to $end"
+		}
+		else
+			s"$start until $end"
+	}
 }

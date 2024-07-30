@@ -2,6 +2,10 @@
 
 ## v2.4.1 (in development)
 Built with Scala v2.13.14
+### New features
+- Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
+### Other changes
+- Modified **HasEnds** `toString` implementation
 
 ## v2.4 - 28.07.2024
 This is a pretty large update, mostly due to its delayed release.

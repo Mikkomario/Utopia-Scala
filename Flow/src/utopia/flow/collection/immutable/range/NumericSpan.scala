@@ -133,11 +133,13 @@ trait NumericSpan[N]
 	
 	// IMPLEMENTED  -------------------------
 	
+	override implicit def ordering: Ordering[N] = n
+	
 	override def self = this
 	
 	override def unary_- = withEnds(n.negate(start), n.negate(end))
 	
-	override implicit def ordering: Ordering[N] = n
+	override def toString = if (isUnit) start.toString else s"$start-$end"
 	
 	override def withEnds(start: N, end: N) = NumericSpan(start, end, step)(n)
 	

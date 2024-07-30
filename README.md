@@ -16,7 +16,7 @@ Based on my current experience, only Java, Scala and possibly Kotlin provide a s
 foundation (although I haven't used Kotlin yet). *Utopia* started out as a Java project, 
 but I've found Scala to work better in every area.
 
-This project version is built using Scala v2.13.12
+This project version is built using Scala v2.13.14
 
 ## Core Philosophy
 The main purpose of the Utopia library is two-fold:

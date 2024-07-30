@@ -1,6 +1,6 @@
 package utopia.flow.collection.template.factory
 
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 
 /**
   * Common trait for factory classes / objects that wrap / accept a collection of items
@@ -39,7 +39,7 @@ trait FromCollectionFactory[-A, +C]
 	  * @param item An item to place in this collection
 	  * @return A collection wrapping that single item
 	  */
-	def apply(item: A): C = from(Iterable.single(item))
+	def apply(item: A): C = from(Single(item))
 	/**
 	  * @return A collection wrapping the specified items
 	  */

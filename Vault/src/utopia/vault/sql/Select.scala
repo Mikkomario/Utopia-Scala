@@ -1,7 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.vault.model.immutable.{Column, Table}
 
 /**
@@ -30,7 +30,7 @@ object Select
     /**
      * Creates an sql segment that selects a single column from a table
      */
-    def apply(target: SqlTarget, column: Column): SqlSegment = _apply(target, Iterable.single(column))
+    def apply(target: SqlTarget, column: Column): SqlSegment = _apply(target, Single(column))
     /**
      * Creates an sql segment that selects a number of columns from a table
      */
