@@ -23,7 +23,7 @@ package org.typelevel.jawn
 
 import scala.collection.mutable
 import scala.collection.immutable.TreeMap
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import java.util.HashMap
 
 /**
