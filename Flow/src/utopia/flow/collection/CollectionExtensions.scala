@@ -683,6 +683,38 @@ object CollectionExtensions
 		def anyFailure = tries.iterator.findMap { _.failure }
 	}
 	
+	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]]) extends AnyVal
+	{
+		/**
+		 * @return Success if at least one of the items in this collection was a success,
+		 *         or if this collection is empty.
+		 *         Failure otherwise.
+		 */
+		def toTryCatch: TryCatch[IndexedSeq[A]] = {
+			// Collects all success and failure values, including partial failures
+			val successesBuilder = new VectorBuilder[A]()
+			val failuresBuilder = new VectorBuilder[Throwable]()
+			tries.iterator.foreach {
+				case TryCatch.Success(v, failures) =>
+					successesBuilder += v
+					failuresBuilder ++= failures
+				case TryCatch.Failure(error) => failuresBuilder += error
+			}
+			val failures = failuresBuilder.result()
+			successesBuilder.result().notEmpty match {
+				// Case: There was at least one success => Succeeds
+				case Some(successes) => TryCatch.Success(successes, failures)
+				case None =>
+					failures.headOption match {
+						// Case: No successes => Fails
+						case Some(error) => TryCatch.Failure(error)
+						// Case: Empty collection => Succeeds
+						case None => TryCatch.Success(Empty)
+					}
+			}
+		}
+	}
+	
 	implicit class PairsIterableOnce[A](val pairs: IterableOnce[Pair[A]]) extends AnyVal
 	{
 		/**

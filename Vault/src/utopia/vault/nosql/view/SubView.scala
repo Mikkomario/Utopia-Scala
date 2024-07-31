@@ -25,7 +25,7 @@ trait SubView extends View
 	// COMPUTED -------------------------------
 	
 	/**
-	  * @return (Global) condition used by this access point (always defined)
+	  * @return Condition always applied by this access point
 	  */
 	def condition = parent.mergeCondition(filterCondition)
 	

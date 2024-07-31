@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
-import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{IntSet, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.enumeration.ComparisonOperator
@@ -131,6 +132,26 @@ trait ConditionElement
       * @return A condition that accepts any of the provided value in this condition element
       */
     def in[V](elements: Iterable[V])(implicit transform: V => ConditionElement): Condition = in(elements.map(transform))
+    /**
+      * @param values Targeted / accepted values
+      * @return Condition where this element's value must match one of the specified values
+      */
+    def in(values: IntSet): Condition = {
+        // Converts the input range into individual values (from ranges of length 1 & 2) and longer ranges
+        val (individualValues, ranges) = values.ranges.flatDivideWith { range =>
+            if (range.length <= 2)
+                range.iterator.map { Left(_) }
+            else
+                Single(Right(range))
+        }
+        // Uses BETWEEN condition with the ranges and IN condition with the other values
+        val rangeConditions = ranges.map { range => isBetween(range.start, range.end) }
+        if (individualValues.isEmpty)
+            Condition.or(rangeConditions)
+        else
+            in(individualValues) || rangeConditions
+    }
+    
     /**
       * Creates an in condition that returns true if NONE of the provided element values matches
       * this element's value

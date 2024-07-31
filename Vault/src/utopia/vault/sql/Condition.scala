@@ -172,12 +172,10 @@ case class Condition(segment: SqlSegment)
       */
     def combineWith(other: Condition, operator: BasicCombineOperator): Condition = combineWith(Single(other), operator)
     
-    private def combine(others: Seq[Condition], separator: String) = 
-    {
+    private def combine(others: Seq[Condition], separator: String) = {
         if (others.isEmpty)
             this
-        else 
-        {
+        else {
             val noParentheses = SqlSegment.combine(segment +: others.map { _.segment },
                 { case (first, second) => s"$first $separator $second" })
             Condition(noParentheses.copy(sql = s"(${ noParentheses.sql })"))

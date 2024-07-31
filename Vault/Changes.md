@@ -1,7 +1,21 @@
 # Utopia Vault - List of Changes
 
-## v1.19.1 (in development)
-Built with Scala v2.13.14
+## v1.20 (in development)
+### Breaking changes
+- Multiple changes to **FilterableView**
+  - **FilterableView** now extends **ViewFactory**
+  - `.filter(Condition)` is now implemented instead of abstract
+    - Instead, the subclasses must now specify `.apply(Condition)`
+      - This change requires a lot of refactoring, but **Vault-Coder**'s upgrade command can help you with that
+### New features
+- Added **ViewFactory** trait
+- Added **ViewManyByIntIds** trait
+### New methods
+- **ConditionElement**
+  - Added `.in(IntSet)`
+### Other
+- Built with Scala v2.13.14
+- Removed **LatestModelAccessWrapper**, which was deprecated in the previous release
 
 ## v1.19 - 28.07.2024
 This update focuses on the following areas:

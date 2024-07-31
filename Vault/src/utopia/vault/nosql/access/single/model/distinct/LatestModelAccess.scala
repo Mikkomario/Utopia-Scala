@@ -17,26 +17,6 @@ object LatestModelAccess
 	  */
 	def apply[A](factory: FromTimelineRowFactory[A], condition: Option[Condition] = None) =
 		LatestOrEarliestModelAccess.latest(factory, condition)
-	
-	
-	// NESTED   -----------------------------
-	
-	/**
-	  * A simple factory wrapper that provides access to the latest created model
-	  * @param factory Factory to wrap
-	  * @param accessCondition Global condition to apply (default = None)
-	  * @tparam A Type of accessed items
-	  */
-	@deprecated("Deprecated for removal. Please use LatestOrEarliestModelAccess instead", "v1.19")
-	class LatestModelAccessWrapper[+A](override val factory: FromTimelineRowFactory[A],
-	                                           override val accessCondition: Option[Condition] = None)
-		extends LatestModelAccess[A]
-	{
-		override protected def self = this
-		
-		override def filter(additionalCondition: Condition) =
-			new LatestModelAccessWrapper(factory, Some(mergeCondition(additionalCondition)))
-	}
 }
 
 /**

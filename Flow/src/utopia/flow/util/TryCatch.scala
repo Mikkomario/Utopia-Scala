@@ -2,6 +2,7 @@ package utopia.flow.util
 
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.logging.Logger
+import StringExtensions._
 
 import scala.language.implicitConversions
 import scala.util.Try
@@ -127,6 +128,30 @@ sealed trait TryCatch[+A]
 	 *         possible partial failures as a separate collection
 	 */
 	def separateToTry = toTry -> partialFailures
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	 * Logs full or partial failures in this instance
+	 * @param logger Implicit logging implementation used
+	 */
+	def log(implicit logger: Logger) = logWithMessage("")
+	/**
+	 * Logs full or partial failures in this instance
+	 * @param message Message to include in the log entries (call-by-name)
+	 * @param logger Implicit logging implementation used
+	 */
+	def logWithMessage(message: => String)(implicit logger: Logger) = {
+		failure match {
+			case Some(error) => logger(error, message)
+			case None =>
+				val partial = partialFailures
+				partial.headOption.foreach { error =>
+					logger(error, s"${ partial.size } partial failures${ message.prependIfNotEmpty(": ") }")
+				}
+		}
+	}
 }
 
 object TryCatch

@@ -23,7 +23,7 @@ object LatestOrEarliestModelAccess
 	  */
 	def apply[A](factory: FromTimelineRowFactory[A], direction: OrderDirection,
 	             condition: Option[Condition] = None): LatestOrEarliestModelAccess[A] =
-		new AccessWrapper[A](factory, direction, condition)
+		AccessWrapper[A](factory, direction, condition)
 	
 	/**
 	  * Creates a new earliest model access-point
@@ -47,15 +47,15 @@ object LatestOrEarliestModelAccess
 	
 	// NESTED   -----------------------------
 	
-	private class AccessWrapper[+A](override val factory: FromTimelineRowFactory[A],
-	                                override val orderDirection: OrderDirection,
-	                                override val accessCondition: Option[Condition] = None)
+	private case class AccessWrapper[+A](override val factory: FromTimelineRowFactory[A],
+	                                     override val orderDirection: OrderDirection,
+	                                     override val accessCondition: Option[Condition] = None)
 		extends LatestOrEarliestModelAccess[A]
 	{
 		override protected def self = this
 		
-		override def filter(additionalCondition: Condition) =
-			new AccessWrapper(factory, orderDirection, Some(mergeCondition(additionalCondition)))
+		override def apply(condition: Condition): LatestOrEarliestModelAccess[A] =
+			copy(accessCondition = Some(condition))
 	}
 }
 

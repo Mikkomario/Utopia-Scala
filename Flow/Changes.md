@@ -4,6 +4,11 @@
 Built with Scala v2.13.14
 ### New features
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
+### New methods
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.toTryCatch` for collections that contain instances of **TryCatch**
+- **TryCatch**
+  - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
 - Modified **HasEnds** `toString` implementation
 

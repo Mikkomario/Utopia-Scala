@@ -4,10 +4,11 @@ import utopia.vault.sql.Condition
 
 /**
   * A common trait for access points whose conditions may be enhanced to cover a more precise area
+  * @tparam Sub Type of the (filtered) views constructed
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   */
-trait FilterableView[+Sub] extends View
+trait FilterableView[+Sub] extends View with ViewFactory[Sub]
 {
 	// ABSTRACT	----------------------
 	
@@ -16,12 +17,16 @@ trait FilterableView[+Sub] extends View
 	  */
 	protected def self: Sub
 	
+	
+	// IMPLEMENTED  ------------------
+	
 	/**
 	  * Applies a filter over this access point
 	  * @param additionalCondition An additional search condition applied
-	  * @return A copy of this access point with specified search condition in place
+	  * @return A copy of this access which only includes the sub-set of items which fulfill the specified condition
+	  *         (as well as other conditions possibly defined by this view)
 	  */
-	def filter(additionalCondition: Condition): Sub
+	def filter(additionalCondition: Condition): Sub = apply(mergeCondition(additionalCondition))
 	
 	
 	// OTHER    --------------------
