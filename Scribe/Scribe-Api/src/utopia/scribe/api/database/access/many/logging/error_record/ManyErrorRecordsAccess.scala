@@ -12,6 +12,11 @@ import utopia.vault.sql.Condition
 
 object ManyErrorRecordsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyErrorRecordsAccess = new ManyErrorRecordsSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyErrorRecordsSubView(condition: Condition) extends ManyErrorRecordsAccess
@@ -63,8 +68,7 @@ trait ManyErrorRecordsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyErrorRecordsAccess = 
-		new ManyErrorRecordsAccess.ManyErrorRecordsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyErrorRecordsAccess = ManyErrorRecordsAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -74,7 +78,7 @@ trait ManyErrorRecordsAccess
 	  * @param newCauseId A new cause id to assign
 	  * @return Whether any error record was affected
 	  */
-	def causeIds_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn, 
+	def causeIds_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn,
 		newCauseId)
 	
 	/**

@@ -63,13 +63,13 @@ trait UniqueStackTraceElementRecordAccess
 	
 	/**
 	  * Name of the method where this event was recorded. Empty if unknown.. None if no stack
-	  *  trace element record (or value) was found.
+	  * trace element record (or value) was found.
 	  */
 	def methodName(implicit connection: Connection) = pullColumn(model.methodNameColumn).getString
 	
 	/**
 	  * The code line number where this event was recorded. None if not available.. None if no stack
-	  *  trace element record (or value) was found.
+	  * trace element record (or value) was found.
 	  */
 	def lineNumber(implicit connection: Connection) = pullColumn(model.lineNumberColumn).int
 	
@@ -87,11 +87,11 @@ trait UniqueStackTraceElementRecordAccess
 	  * @param c Implicit DB connection
 	  */
 	def topToBottomIterator(implicit c: Connection) = {
-			OptionsIterator.iterate(pull) 
-			{
-				 stack =>
-						stack.causeId.flatMap { DbStackTraceElementRecord(_).pull }
-			}
+		OptionsIterator.iterate(pull) 
+		{
+			 stack =>
+					stack.causeId.flatMap { DbStackTraceElementRecord(_).pull }
+		}
 	}
 	
 	/**
@@ -106,8 +106,8 @@ trait UniqueStackTraceElementRecordAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueStackTraceElementRecordAccess = 
-		new UniqueStackTraceElementRecordAccess._UniqueStackTraceElementRecordAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueStackTraceElementRecordAccess = 
+		UniqueStackTraceElementRecordAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -117,7 +117,7 @@ trait UniqueStackTraceElementRecordAccess
 	  * @param newCauseId A new cause id to assign
 	  * @return Whether any stack trace element record was affected
 	  */
-	def causeId_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn, 
+	def causeId_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn,
 		newCauseId)
 	
 	/**

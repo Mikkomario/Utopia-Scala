@@ -1,6 +1,6 @@
 package utopia.scribe.api.database.access.single.logging.error_record
 
-import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.api.database.factory.logging.ErrorRecordFactory
@@ -47,37 +47,35 @@ trait UniqueErrorRecordAccess
 	
 	/**
 	  * The name of this exception type. Typically the exception class name.. None if no error record (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def exceptionType(implicit connection: Connection) = pullColumn(model.exceptionTypeColumn).getString
 	
 	/**
 	  * Id of the topmost stack trace element that corresponds to this error record. None if
-	  *  no error record (or value) was found.
+	  * no error record (or value) was found.
 	  */
 	def stackTraceId(implicit connection: Connection) = pullColumn(model.stackTraceIdColumn).int
 	
 	/**
 	  * Id of the underlying error that caused this error/failure. None if this error represents the root problem..
-	  *  None if no error record (or value) was found.
+	  * None if no error record (or value) was found.
 	  */
 	def causeId(implicit connection: Connection) = pullColumn(model.causeIdColumn).int
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
+	  * An iterator that returns this error and all the underlying errors
+	  * @param c Implicit DB connection - Should be kept open during the whole iteration
+	  */
+	def topToBottomIterator(implicit c: Connection) =
+		OptionsIterator.iterate(pull) { error => error.causeId.flatMap { DbErrorRecord(_).pull } }
+	
+	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = ErrorRecordModel
-	
-	/**
-	  * @param c Implicit DB connection - Should be kept open during the whole iteration
-	  * @return An iterator that returns this error and all the underlying errors
-	  */
-	def topToBottomIterator(implicit c: Connection) =
-		OptionsIterator.iterate(pull) { error =>
-			error.causeId.flatMap { DbErrorRecord(_).pull }
-		}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -86,8 +84,7 @@ trait UniqueErrorRecordAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueErrorRecordAccess = 
-		new UniqueErrorRecordAccess._UniqueErrorRecordAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueErrorRecordAccess = UniqueErrorRecordAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -97,8 +94,8 @@ trait UniqueErrorRecordAccess
 	  * @param newCauseId A new cause id to assign
 	  * @return Whether any error record was affected
 	  */
-	def causeId_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn, 
-		newCauseId)
+	def causeId_=(newCauseId: Int)(implicit connection: Connection) =
+		putColumn(model.causeIdColumn, newCauseId)
 	
 	/**
 	  * Updates the exception types of the targeted error records

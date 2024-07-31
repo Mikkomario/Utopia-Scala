@@ -1,6 +1,5 @@
 package utopia.exodus.database.access.many.auth
 
-import java.time.Instant
 import utopia.exodus.database.factory.auth.EmailValidationPurposeFactory
 import utopia.exodus.database.model.auth.EmailValidationPurposeModel
 import utopia.exodus.model.stored.auth.EmailValidationPurpose
@@ -8,16 +7,32 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyEmailValidationPurposesAccess
+import java.time.Instant
+
+object ManyEmailValidationPurposesAccess extends ViewFactory[ManyEmailValidationPurposesAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyEmailValidationPurposesAccess = 
+		new _ManyEmailValidationPurposesAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyEmailValidationPurposesSubView(override val parent: ManyRowModelAccess[EmailValidationPurpose], 
-		override val filterCondition: Condition) 
-		extends ManyEmailValidationPurposesAccess with SubView
+	private class _ManyEmailValidationPurposesAccess(condition: Condition) 
+		extends ManyEmailValidationPurposesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -51,12 +66,12 @@ trait ManyEmailValidationPurposesAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = EmailValidationPurposeFactory
 	
-	override def filter(additionalCondition: Condition): ManyEmailValidationPurposesAccess = 
-		new ManyEmailValidationPurposesAccess.ManyEmailValidationPurposesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyEmailValidationPurposesAccess = 
+		ManyEmailValidationPurposesAccess(condition)
 	
 	
 	// OTHER	--------------------

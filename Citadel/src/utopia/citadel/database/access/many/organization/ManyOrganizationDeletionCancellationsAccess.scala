@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import java.time.Instant
 import utopia.citadel.database.factory.organization.OrganizationDeletionCancellationFactory
 import utopia.citadel.database.model.organization.OrganizationDeletionCancellationModel
 import utopia.flow.generic.casting.ValueConversions._
@@ -8,25 +7,42 @@ import utopia.metropolis.model.stored.organization.OrganizationDeletionCancellat
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyOrganizationDeletionCancellationsAccess
+import java.time.Instant
+
+object ManyOrganizationDeletionCancellationsAccess 
+	extends ViewFactory[ManyOrganizationDeletionCancellationsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyOrganizationDeletionCancellationsAccess = 
+		new _ManyOrganizationDeletionCancellationsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyOrganizationDeletionCancellationsSubView(override val parent: ManyRowModelAccess[OrganizationDeletionCancellation], 
-		override val filterCondition: Condition) 
-		extends ManyOrganizationDeletionCancellationsAccess with SubView
+	private class _ManyOrganizationDeletionCancellationsAccess(condition: Condition) 
+		extends ManyOrganizationDeletionCancellationsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple OrganizationDeletionCancellations at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyOrganizationDeletionCancellationsAccess 
-	extends ManyRowModelAccess[OrganizationDeletionCancellation] with Indexed
+	extends ManyRowModelAccess[OrganizationDeletionCancellation] with Indexed 
 		with FilterableView[ManyOrganizationDeletionCancellationsAccess]
 {
 	// COMPUTED	--------------------
@@ -59,13 +75,12 @@ trait ManyOrganizationDeletionCancellationsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = OrganizationDeletionCancellationFactory
 	
-	override def filter(additionalCondition: Condition): ManyOrganizationDeletionCancellationsAccess = 
-		new ManyOrganizationDeletionCancellationsAccess.ManyOrganizationDeletionCancellationsSubView(this, 
-			additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyOrganizationDeletionCancellationsAccess = 
+		ManyOrganizationDeletionCancellationsAccess(condition)
 	
 	
 	// OTHER	--------------------

@@ -7,21 +7,22 @@ import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 
 /**
- * A common trait for access points that return multiple instances of models that support descriptions
- * @author Mikko Hilpinen
- * @since 13.10.2021, v1.3
- */
+  * A common trait for access points that return multiple instances of models that support descriptions
+  * @author Mikko Hilpinen
+  * @since 13.10.2021, v1.3
+  */
 trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 {
-	// ABSTRACT --------------------------------
+	// ABSTRACT	--------------------
 	
 	/**
-	  * @return An access point that provides access to this model type's descriptions
+	  * An access point that provides access to this model type's descriptions
 	  */
 	protected def manyDescriptionsAccess: LinkedDescriptionsAccess
+	
 	/**
-	 * @return Factory used for creating described compies of this model type
-	 */
+	  * Factory used for creating described compies of this model type
+	  */
 	protected def describedFactory: DescribedFactory[A, D]
 	
 	/**
@@ -31,21 +32,21 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	protected def idOf(item: A): Int
 	
 	
-	// COMPUTED --------------------------------
+	// COMPUTED	--------------------
 	
 	/**
+	  * All accessible items with all available descriptions
 	  * @param connection Implicit DB Connection
-	  * @return All accessible items with all available descriptions
 	  */
 	def fullyDescribed(implicit connection: Connection) = pullDescribed { _.pull.groupBy { _.targetId } }
+	
 	/**
+	  * All accessible items described. Descriptions are chosen from the specified languages. Only one
+	  * description per description role is included.
 	  * @param connection Implicit DB connection
 	  * @param languageIds Ids of the targeted languages, from most to least preferred
-	  * @return All accessible items described. Descriptions are chosen from the specified languages. Only one
-	  *         description per description role is included.
 	  */
-	def described(implicit connection: Connection, languageIds: LanguageIds) =
-	{
+	def described(implicit connection: Connection, languageIds: LanguageIds) = {
 		if (languageIds.isEmpty)
 			fullyDescribed
 		else
@@ -53,14 +54,15 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 	}
 	
 	
-	// OTHER    --------------------------------
+	// OTHER	--------------------
 	
 	/**
 	  * @param languageId Id of the target language
 	  * @param connection Implicit DB Connection
-	  * @return Described versions of all accessible items where the descriptions are in the specified language
+	  * 
+		@return Described versions of all accessible items where the descriptions are in the specified language
 	  */
-	def describedInLanguageWithId(languageId: Int)(implicit connection: Connection) =
+	def describedInLanguageWithId(languageId: Int)(implicit connection: Connection) = 
 		pullDescribed { _.inLanguageWithId(languageId).pull.groupBy { _.targetId } }
 	
 	private def pullDescribed(pullDescriptions: LinkedDescriptionsAccess#DescriptionsOfMany => Map[Int, Iterable[LinkedDescription]])
@@ -71,3 +73,4 @@ trait ManyDescribedAccess[A, +D] extends ManyModelAccess[A] with Indexed
 		items.map { item => describedFactory(item, descriptions.getOrElse(idOf(item), Vector()).toSet) }
 	}
 }
+

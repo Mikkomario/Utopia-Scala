@@ -3,16 +3,18 @@ package utopia.exodus.database.access.many.auth
 import utopia.exodus.database.factory.auth.TokenFactory
 import utopia.exodus.model.stored.auth.Token
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
 object ManyTokensAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyTokensAccess = _Access(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyTokensSubView(override val parent: ManyRowModelAccess[Token], 
-		override val filterCondition: Condition) 
-		extends ManyTokensAccess with SubView
+	private case class _Access(accessCondition: Option[Condition]) extends ManyTokensAccess
 }
 
 /**
@@ -22,10 +24,10 @@ object ManyTokensAccess
   */
 trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] with ManyRowModelAccess[Token]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return A copy of this access point which includes token type information
+	  * A copy of this access point which includes token type information
 	  */
 	def withTypeInfo = {
 		// Doesn't apply non-deprecated condition here in order to avoid applying it twice
@@ -39,11 +41,10 @@ trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] wit
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = TokenFactory
 	
-	override def filter(additionalCondition: Condition): ManyTokensAccess = 
-		new ManyTokensAccess.ManyTokensSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyTokensAccess = ManyTokensAccess(condition)
 }
 

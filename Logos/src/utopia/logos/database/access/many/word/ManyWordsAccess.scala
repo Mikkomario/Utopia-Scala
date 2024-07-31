@@ -4,13 +4,23 @@ import utopia.logos.database.factory.word.WordDbFactory
 import utopia.logos.model.stored.word.Word
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyWordsAccess
+object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyWordsAccess = new _ManyWordsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyWordsSubView(condition: Condition) extends ManyWordsAccess
+	private class _ManyWordsAccess(condition: Condition) extends ManyWordsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -41,7 +51,6 @@ trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with Ma
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyWordsAccess = 
-		new ManyWordsAccess.ManyWordsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyWordsAccess = ManyWordsAccess(condition)
 }
 

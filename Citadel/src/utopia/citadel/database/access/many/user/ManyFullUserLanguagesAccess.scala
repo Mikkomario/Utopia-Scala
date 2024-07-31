@@ -1,17 +1,30 @@
 package utopia.citadel.database.access.many.user
 
-import utopia.citadel.database.access.many.user.ManyFullUserLanguagesAccess.SubAccess
 import utopia.citadel.database.factory.user.FullUserLanguageFactory
 import utopia.metropolis.model.combined.user.FullUserLanguage
-import utopia.vault.nosql.access.many.model.ManyModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyFullUserLanguagesAccess
+object ManyFullUserLanguagesAccess extends ViewFactory[ManyFullUserLanguagesAccess]
 {
-	private class SubAccess(override val parent: ManyModelAccess[FullUserLanguage],
-	                        override val filterCondition: Condition)
-		extends ManyFullUserLanguagesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyFullUserLanguagesAccess = 
+		new _ManyFullUserLanguagesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyFullUserLanguagesAccess(condition: Condition) extends ManyFullUserLanguagesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -19,14 +32,18 @@ object ManyFullUserLanguagesAccess
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
-trait ManyFullUserLanguagesAccess extends ManyUserLanguageLinksAccessLike[FullUserLanguage, ManyFullUserLanguagesAccess]
+trait ManyFullUserLanguagesAccess 
+	extends ManyUserLanguageLinksAccessLike[FullUserLanguage, ManyFullUserLanguagesAccess]
 {
-	// IMPLEMENTED  ----------------------------
-	
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = FullUserLanguageFactory
 	
-	override protected def _filter(condition: Condition): ManyFullUserLanguagesAccess =
-		new SubAccess(this, condition)
+	override protected def self = this
+	
+	
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyFullUserLanguagesAccess = ManyFullUserLanguagesAccess(condition)
 }
+

@@ -68,8 +68,8 @@ trait UniqueDetailedRequestPathAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueDetailedRequestPathAccess = 
-		new UniqueDetailedRequestPathAccess._UniqueDetailedRequestPathAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueDetailedRequestPathAccess = 
+		UniqueDetailedRequestPathAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -87,7 +87,7 @@ trait UniqueDetailedRequestPathAccess
 	  * @param newUrl A new url to assign
 	  * @return Whether any domain was affected
 	  */
-	def domainUrl_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column, 
+	def domainUrl_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column,
 		newUrl)
 }
 

@@ -7,13 +7,23 @@ import utopia.logos.model.combined.word.StatedWord
 import utopia.logos.model.enumeration.DisplayStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyStatedWordsAccess
+object ManyStatedWordsAccess extends ViewFactory[ManyStatedWordsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyStatedWordsAccess = new _ManyStatedWordsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyStatedWordsAccess
+	private class _ManyStatedWordsAccess(condition: Condition) extends ManyStatedWordsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -67,8 +77,7 @@ trait ManyStatedWordsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyStatedWordsAccess = 
-		new ManyStatedWordsAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyStatedWordsAccess = ManyStatedWordsAccess(condition)
 	
 	
 	// OTHER	--------------------

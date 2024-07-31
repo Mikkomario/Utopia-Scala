@@ -3,7 +3,6 @@ package utopia.scribe.api.database.access.many.logging.issue_variant
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.scribe.api.database.access.many.logging.issue.SeverityBasedAccess
 import utopia.scribe.api.database.factory.logging.ContextualIssueVariantFactory
-import utopia.scribe.api.database.model.logging.IssueModel
 import utopia.scribe.core.model.combined.logging.ContextualIssueVariant
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.vault.database.Connection
@@ -14,6 +13,11 @@ import java.time.Instant
 
 object ManyContextualIssueVariantsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyContextualIssueVariantsAccess = new SubAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class SubAccess(condition: Condition) extends ManyContextualIssueVariantsAccess
@@ -31,7 +35,8 @@ object ManyContextualIssueVariantsAccess
   */
 trait ManyContextualIssueVariantsAccess 
 	extends ManyIssueVariantsAccessLike[ContextualIssueVariant, ManyContextualIssueVariantsAccess] 
-		with ManyRowModelAccess[ContextualIssueVariant] with SeverityBasedAccess[ManyContextualIssueVariantsAccess]
+		with ManyRowModelAccess[ContextualIssueVariant] 
+		with SeverityBasedAccess[ManyContextualIssueVariantsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -60,8 +65,8 @@ trait ManyContextualIssueVariantsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyContextualIssueVariantsAccess = 
-		new ManyContextualIssueVariantsAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyContextualIssueVariantsAccess = 
+		ManyContextualIssueVariantsAccess(condition)
 	
 	
 	// OTHER	--------------------

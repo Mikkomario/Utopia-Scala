@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbUserRoleDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.organization.UserRoleFactory
 import utopia.citadel.database.model.organization.UserRoleModel
@@ -10,25 +9,30 @@ import utopia.metropolis.model.combined.organization.DescribedUserRole
 import utopia.metropolis.model.stored.organization.UserRole
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyUserRolesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyUserRolesAccess = SubAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyUserRolesSubView(override val parent: ManyRowModelAccess[UserRole], 
-		override val filterCondition: Condition) 
-		extends ManyUserRolesAccess with SubView
+	private case class SubAccess(accessCondition: Option[Condition]) extends ManyUserRolesAccess
 }
 
 /**
   * A common trait for access points which target multiple UserRoles at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyUserRolesAccess 
-	extends ManyRowModelAccess[UserRole] with ManyDescribedAccess[UserRole, DescribedUserRole]
+	extends ManyRowModelAccess[UserRole] with ManyDescribedAccess[UserRole, DescribedUserRole] 
 		with FilterableView[ManyUserRolesAccess]
 {
 	// COMPUTED	--------------------
@@ -42,14 +46,9 @@ trait ManyUserRolesAccess
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
-	  * Factory used for constructing database the interaction models
-	  */
-	protected def model = UserRoleModel
-	
-	/**
+	  * Detailed copies of these user roles
 	  * @param connection Implicit DB Connection
 	  * @param languageIds Ids of the languages in which role descriptions are read
-	  * @return Detailed copies of these user roles
 	  */
 	def detailed(implicit connection: Connection, languageIds: LanguageIds) = {
 		// Reads described copies first, then attaches task link information
@@ -59,10 +58,13 @@ trait ManyUserRolesAccess
 		roles.map { role => role.withAllowedTaskIds(taskIdsPerRoleId.getOrElse(role.id, Set()).toSet) }
 	}
 	
+	/**
+	  * Factory used for constructing database the interaction models
+	  */
+	protected def model = UserRoleModel
+	
 	
 	// IMPLEMENTED	--------------------
-	
-	override protected def self = this
 	
 	override def factory = UserRoleFactory
 	
@@ -70,8 +72,9 @@ trait ManyUserRolesAccess
 	
 	override protected def manyDescriptionsAccess = DbUserRoleDescriptions
 	
-	override def filter(additionalCondition: Condition): ManyUserRolesAccess = 
-		new ManyUserRolesAccess.ManyUserRolesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyUserRolesAccess = ManyUserRolesAccess(condition)
 	
 	override def idOf(item: UserRole) = item.id
 	

@@ -56,19 +56,25 @@ trait UniqueIssueOccurrenceAccess
 	  * If multiple occurrences are represented, 
 	  * contains data from the latest occurrence.. None if no issue occurrence (or value) was found.
 	  */
-	def errorMessages(implicit connection: Connection) = 
-		pullColumn(model.errorMessagesColumn).notEmpty match {
-			 case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString };
-			 case None => Vector.empty }
+	def errorMessages(implicit connection: Connection) = {
+			pullColumn(model.errorMessagesColumn).notEmpty match 
+			{
+				 case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString };
+				 case None => Vector.empty 
+			}
+	}
 	
 	/**
 	  * Additional details concerning these issue occurrences.
 	  * In case of multiple occurrences, 
 	  * contains only the latest entry for each detail.. None if no issue occurrence (or value) was found.
 	  */
-	def details(implicit connection: Connection) = 
-		pullColumn(model.detailsColumn).notEmpty match {
-			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }
+	def details(implicit connection: Connection) = {
+			pullColumn(model.detailsColumn).notEmpty match 
+			{
+				 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty 
+			}
+	}
 	
 	/**
 	  * 
@@ -90,8 +96,8 @@ trait UniqueIssueOccurrenceAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueIssueOccurrenceAccess = 
-		new UniqueIssueOccurrenceAccess._UniqueIssueOccurrenceAccess(mergeCondition(filterCondition))
+	override
+		 def apply(condition: Condition): UniqueIssueOccurrenceAccess = UniqueIssueOccurrenceAccess(condition)
 	
 	
 	// OTHER	--------------------

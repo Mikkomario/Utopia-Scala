@@ -41,7 +41,6 @@ trait UniqueWordAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueWordAccess = 
-		new UniqueWordAccess._UniqueWordAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueWordAccess = UniqueWordAccess(condition)
 }
 

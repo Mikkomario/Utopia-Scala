@@ -1,16 +1,30 @@
 package utopia.ambassador.database.access.many.scope
 
-import utopia.ambassador.database.access.many.scope.ManyTaskScopesAccess.SubAccess
 import utopia.ambassador.database.factory.scope.TaskScopeFactory
 import utopia.ambassador.model.combined.scope.TaskScope
-import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyTaskScopesAccess
+object ManyTaskScopesAccess extends ViewFactory[ManyTaskScopesAccess]
 {
-	private class SubAccess(override val parent: ManyModelAccess[TaskScope], override val filterCondition: Condition)
-		extends ManyTaskScopesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyTaskScopesAccess = new _ManyTaskScopesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyTaskScopesAccess(condition: Condition) extends ManyTaskScopesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -18,12 +32,15 @@ object ManyTaskScopesAccess
   * @author Mikko Hilpinen
   * @since 27.10.2021, v2.0
   */
-trait ManyTaskScopesAccess
+trait ManyTaskScopesAccess 
 	extends ManyScopesAccessLike[TaskScope, ManyTaskScopesAccess] with ManyRowModelAccess[TaskScope]
 {
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = TaskScopeFactory
 	
-	override protected def _filter(condition: Condition): ManyTaskScopesAccess = new SubAccess(this, condition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyTaskScopesAccess = ManyTaskScopesAccess(condition)
 }
+

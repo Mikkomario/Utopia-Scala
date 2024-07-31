@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.description
 
-import java.time.Instant
 import utopia.citadel.database.factory.description.DescriptionFactory
 import utopia.citadel.database.model.description.DescriptionModel
 import utopia.flow.generic.casting.ValueConversions._
@@ -8,24 +7,29 @@ import utopia.metropolis.model.stored.description.Description
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyDescriptionsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyDescriptionsAccess = _Access(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDescriptionsSubView(override val parent: ManyRowModelAccess[Description], 
-		override val filterCondition: Condition) 
-		extends ManyDescriptionsAccess with SubView
+	private case class _Access(accessCondition: Option[Condition]) extends ManyDescriptionsAccess
 }
 
 /**
   * A common trait for access points which target multiple Descriptions at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyDescriptionsAccess
+trait ManyDescriptionsAccess 
 	extends ManyRowModelAccess[Description] with Indexed with FilterableView[ManyDescriptionsAccess]
 {
 	// COMPUTED	--------------------
@@ -76,12 +80,11 @@ trait ManyDescriptionsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = DescriptionFactory
 	
-	override def filter(additionalCondition: Condition): ManyDescriptionsAccess = 
-		new ManyDescriptionsAccess.ManyDescriptionsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyDescriptionsAccess = ManyDescriptionsAccess(condition)
 	
 	
 	// OTHER	--------------------

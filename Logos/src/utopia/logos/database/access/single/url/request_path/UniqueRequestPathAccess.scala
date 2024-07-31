@@ -42,7 +42,6 @@ trait UniqueRequestPathAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueRequestPathAccess = 
-		new UniqueRequestPathAccess._UniqueRequestPathAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueRequestPathAccess = UniqueRequestPathAccess(condition)
 }
 

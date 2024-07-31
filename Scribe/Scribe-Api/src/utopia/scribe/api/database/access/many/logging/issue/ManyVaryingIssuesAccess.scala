@@ -12,6 +12,11 @@ import java.time.Instant
 
 object ManyVaryingIssuesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyVaryingIssuesAccess = new SubAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class SubAccess(condition: Condition) extends ManyVaryingIssuesAccess
@@ -73,8 +78,7 @@ trait ManyVaryingIssuesAccess extends ManyIssuesAccessLike[VaryingIssue, ManyVar
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyVaryingIssuesAccess = 
-		new ManyVaryingIssuesAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyVaryingIssuesAccess = ManyVaryingIssuesAccess(condition)
 	
 	
 	// OTHER	--------------------

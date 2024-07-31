@@ -7,53 +7,55 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 
 /**
- * Common trait for access points which include both statement and text link information
- *
- * @author Mikko Hilpinen
- * @since 16/03/2024, v0.2
- */
+  * Common trait for access points which include both statement and text link information
+  * @author Mikko Hilpinen
+  * @since 31.07.2024
+  */
 // WET WET (from ManyStatementLinksAccessLike)
-trait ManyLinkedStatementsAccessLike[+A, +Repr] extends ManyStatementsAccessLike[A, Repr] with PlacedAccessLike[Repr]
+trait ManyLinkedStatementsAccessLike[+A, +Repr] 
+	extends ManyStatementsAccessLike[A, Repr] with PlacedAccessLike[Repr]
 {
-	// ABSTRACT -----------------------
+	// ABSTRACT	--------------------
 	
 	/**
-	 * @return Configuration used for interacting with text links
-	 */
+	  * Configuration used for interacting with text links
+	  */
 	protected def linkConfig: StatementLinkDbConfig
 	
 	
-	// COMPUTED -----------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * @param connection Implicit DB connection
-	 * @return Ids of the linked texts
-	 */
-	def textIds(implicit connection: Connection) =
-		pullColumn(linkConfig.textIdColumn).map { _.getInt }
+	  * Ids of the linked texts
+	  * @param connection Implicit DB connection
+	  */
+	def textIds(implicit connection: Connection) = pullColumn(linkConfig.textIdColumn).map { _.getInt }
+	
 	/**
-	 * @param connection Implicit DB connection
-	 * @return Statement order/position indices
-	 */
-	def orderIndices(implicit connection: Connection) =
-		pullColumn(linkConfig.orderIndexColumn).map { _.getInt }
+	  * Statement order/position indices
+	  * @param connection Implicit DB connection
+	  */
+	def orderIndices(implicit connection: Connection) = pullColumn(linkConfig.orderIndexColumn)
+		.map { _.getInt }
 	
 	
-	// IMPLEMENTED  -------------------
+	// IMPLEMENTED	--------------------
 	
 	override protected def orderIndexColumn: Column = linkConfig.orderIndexColumn
 	
 	
-	// OTHER    -----------------------
+	// OTHER	--------------------
 	
 	/**
-	 * @param textId Id of the targeted text
-	 * @return Access to statements within that text
-	 */
+	  * @param textId Id of the targeted text
+	  * @return Access to statements within that text
+	  */
 	def inText(textId: Int) = filter(linkConfig.textIdColumn <=> textId)
+	
 	/**
-	 * @param textIds Ids of the targeted texts
-	 * @return Access to statements within those texts
-	 */
+	  * @param textIds Ids of the targeted texts
+	  * @return Access to statements within those texts
+	  */
 	def inTexts(textIds: Iterable[Int]) = filter(linkConfig.textIdColumn.in(textIds))
 }
+

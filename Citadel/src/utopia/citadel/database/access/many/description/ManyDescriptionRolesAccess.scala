@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.description
 
-import java.time.Instant
 import utopia.citadel.database.factory.description.DescriptionRoleFactory
 import utopia.citadel.database.model.description.DescriptionRoleModel
 import utopia.flow.generic.casting.ValueConversions._
@@ -8,26 +7,31 @@ import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyDescriptionRolesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyDescriptionRolesAccess = SubAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDescriptionRolesSubView(override val parent: ManyRowModelAccess[DescriptionRole], 
-		override val filterCondition: Condition) 
-		extends ManyDescriptionRolesAccess with SubView
+	private case class SubAccess(accessCondition: Option[Condition]) extends ManyDescriptionRolesAccess
 }
 
 /**
   * A common trait for access points which target multiple DescriptionRoles at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyDescriptionRolesAccess 
 	extends ManyRowModelAccess[DescriptionRole] 
-		with ManyDescribedAccess[DescriptionRole, DescribedDescriptionRole]
+		with ManyDescribedAccess[DescriptionRole, DescribedDescriptionRole] 
 		with FilterableView[ManyDescriptionRolesAccess]
 {
 	// COMPUTED	--------------------
@@ -60,16 +64,16 @@ trait ManyDescriptionRolesAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = DescriptionRoleFactory
 	
 	override protected def describedFactory = DescribedDescriptionRole
 	
 	override protected def manyDescriptionsAccess = DbDescriptionRoleDescriptions
 	
-	override def filter(additionalCondition: Condition): ManyDescriptionRolesAccess = 
-		new ManyDescriptionRolesAccess.ManyDescriptionRolesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override
+		 def apply(condition: Condition): ManyDescriptionRolesAccess = ManyDescriptionRolesAccess(condition)
 	
 	override def idOf(item: DescriptionRole) = item.id
 	

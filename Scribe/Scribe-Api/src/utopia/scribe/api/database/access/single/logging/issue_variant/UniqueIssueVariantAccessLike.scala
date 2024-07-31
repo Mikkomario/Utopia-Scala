@@ -28,7 +28,8 @@ trait UniqueIssueVariantAccessLike[+A]
 	def issueId(implicit connection: Connection) = pullColumn(model.issueIdColumn).int
 	
 	/**
-	  * The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
+	  * 
+		The program version in which this issue (variant) occurred. None if no issue variant (or value) was found.
 	  */
 	def version(implicit connection: Connection) = 
 		pullColumn(model.versionColumn).string.flatMap(Version.findFrom)
@@ -81,7 +82,7 @@ trait UniqueIssueVariantAccessLike[+A]
 	  * @param newErrorId A new error id to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def errorId_=(newErrorId: Int)(implicit connection: Connection) = putColumn(model.errorIdColumn, 
+	def errorId_=(newErrorId: Int)(implicit connection: Connection) = putColumn(model.errorIdColumn,
 		newErrorId)
 	
 	/**
@@ -89,7 +90,7 @@ trait UniqueIssueVariantAccessLike[+A]
 	  * @param newIssueId A new issue id to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def issueId_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn, 
+	def issueId_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn,
 		newIssueId)
 	
 	/**

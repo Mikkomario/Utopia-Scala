@@ -1,67 +1,80 @@
 package utopia.ambassador.database.access.many.token
 
-import utopia.ambassador.database.access.many.token.ManyAuthTokensWithScopesAccess.SubAccess
 import utopia.ambassador.database.factory.token.AuthTokenWithScopesFactory
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.model.combined.token.AuthTokenWithScopes
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyAuthTokensWithScopesAccess
+object ManyAuthTokensWithScopesAccess extends ViewFactory[ManyAuthTokensWithScopesAccess]
 {
-	private class SubAccess(override val parent: ManyModelAccess[AuthTokenWithScopes],
-	                        override val filterCondition: Condition)
-		extends ManyAuthTokensWithScopesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthTokensWithScopesAccess = 
+		new _ManyAuthTokensWithScopesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyAuthTokensWithScopesAccess(condition: Condition) extends ManyAuthTokensWithScopesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
-  * Common trait for access points which return multiple authentication tokens at a time and include scope information
+  * Common trait for access points which return multiple authentication tokens at a time and include
+  * scope information
   * @author Mikko Hilpinen
   * @since 27.10.2021, v2.0
   */
-trait ManyAuthTokensWithScopesAccess
+trait ManyAuthTokensWithScopesAccess 
 	extends ManyAuthTokensAccessLike[AuthTokenWithScopes, ManyAuthTokensWithScopesAccess]
 {
-	// COMPUTED ---------------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Model used for interacting with scope data in the DB
-	  */
-	protected def scopeModel = ScopeModel
-	
-	/**
+	  * Scope ids visible from this access point
 	  * @param connection Implicit DB Connection
-	  * @return Scope ids visible from this access point
 	  */
 	def scopeIds(implicit connection: Connection) = pullColumn(scopeModel.index).flatMap { _.int }.toSet
 	
+	/**
+	  * Model used for interacting with scope data in the DB
+	  */
+	protected def scopeModel = ScopeModel
 	
-	// IMPLEMENTED  -----------------------------
 	
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = AuthTokenWithScopesFactory
 	
-	override protected def _filter(condition: Condition): ManyAuthTokensWithScopesAccess =
-		new SubAccess(this, condition)
-		
+	override protected def self = this
 	
-	// OTHER    ----------------------------------
+	override def apply(condition: Condition): ManyAuthTokensWithScopesAccess = 
+		ManyAuthTokensWithScopesAccess(condition)
 	
-	/**
-	  * @param serviceId Id of the targeted service
-	  * @return An access point to tokens that are used with that service
-	  */
-	def forServiceWithId(serviceId: Int) =
-		filter(scopeModel.withServiceId(serviceId).toCondition)
+	
+	// OTHER	--------------------
 	
 	/**
 	  * @param serviceIds Ids of the targeted service
 	  * @return An access point to those of these scopes which are linked to one of those services
 	  */
-	def forAnyOfServices(serviceIds: Iterable[Int]) =
-		filter(scopeModel.serviceIdColumn in serviceIds)
+	def forAnyOfServices(serviceIds: Iterable[Int]) = filter(scopeModel.serviceIdColumn in serviceIds)
+	
+	/**
+	  * @param serviceId Id of the targeted service
+	  * @return An access point to tokens that are used with that service
+	  */
+	def forServiceWithId(serviceId: Int) = filter(scopeModel.withServiceId(serviceId).toCondition)
 }
+

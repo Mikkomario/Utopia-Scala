@@ -31,15 +31,15 @@ object UniqueIssueAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait UniqueIssueAccess extends UniqueIssueAccessLike[Issue] with SingleChronoRowModelAccess[Issue, UniqueIssueAccess]
+trait UniqueIssueAccess 
+	extends UniqueIssueAccessLike[Issue] with SingleChronoRowModelAccess[Issue, UniqueIssueAccess]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this access point where issue variants and occurrences are also included
+	  * Copy of this access point where issue variants and occurrences are also included
 	  */
-	def withInstances =
-		DbIssueInstances.filterDistinct(accessCondition.getOrElse(Condition.alwaysTrue))
+	def withInstances = DbIssueInstances.filterDistinct(accessCondition.getOrElse(Condition.alwaysTrue))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -48,7 +48,6 @@ trait UniqueIssueAccess extends UniqueIssueAccessLike[Issue] with SingleChronoRo
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueIssueAccess = 
-		new UniqueIssueAccess._UniqueIssueAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueIssueAccess = UniqueIssueAccess(condition)
 }
 

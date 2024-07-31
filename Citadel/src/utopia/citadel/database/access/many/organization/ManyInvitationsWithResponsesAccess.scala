@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.access.many.organization.ManyInvitationsWithResponsesAccess.SubAccess
 import utopia.citadel.database.access.many.user.DbManyUserSettings
 import utopia.citadel.database.factory.organization.InvitationWithResponseFactory
 import utopia.citadel.database.model.organization.InvitationResponseModel
@@ -8,15 +7,30 @@ import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.organization.{DetailedInvitation, InvitationWithResponse}
 import utopia.metropolis.model.stored.user.UserSettings
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyInvitationsWithResponsesAccess
+object ManyInvitationsWithResponsesAccess extends ViewFactory[ManyInvitationsWithResponsesAccess]
 {
-	private class SubAccess(override val parent: ManyModelAccess[InvitationWithResponse],
-	                        override val filterCondition: Condition)
-		extends ManyInvitationsWithResponsesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyInvitationsWithResponsesAccess = 
+		new _ManyInvitationsWithResponsesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyInvitationsWithResponsesAccess(condition: Condition) 
+		extends ManyInvitationsWithResponsesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -24,59 +38,59 @@ object ManyInvitationsWithResponsesAccess
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
-trait ManyInvitationsWithResponsesAccess
+trait ManyInvitationsWithResponsesAccess 
 	extends ManyInvitationsAccessLike[InvitationWithResponse, ManyInvitationsWithResponsesAccess]
 {
-	// COMPUTED ---------------------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Model used for interacting with invitation responses
-	  */
-	protected def responseModel = InvitationResponseModel
-	
-	/**
-	  * @return An access point to blocked invitations
+	  * An access point to blocked invitations
 	  */
 	def blocked = filter(responseModel.blocked.toCondition)
+	
 	/**
-	  * @return An access point to invitations which are open but without response
+	  * An access point to invitations which are open but without response
 	  */
 	def notAnswered = filter(factory.notLinkedCondition)
 	
 	/**
+	  * Whether there exists an accessible response that blocks future invitations
 	  * @param connection Implicit DB Connection
-	  * @return Whether there exists an accessible response that blocks future invitations
 	  */
 	def containsBlocked(implicit connection: Connection) = exists(responseModel.blocked.toCondition)
 	
 	/**
+	  * Detailed copies of accessible invitations
 	  * @param connection Implicit DB connection
 	  * @param languageIds Language ids to use when reading organization descriptions
-	  * @return Detailed copies of accessible invitations
 	  */
-	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
+	def detailed(implicit connection: Connection, languageIds: LanguageIds) = 
 		detailedInLanguages(Some(languageIds))
 	
+	/**
+	  * Model used for interacting with invitation responses
+	  */
+	protected def responseModel = InvitationResponseModel
 	
-	// IMPLEMENTED  -----------------------------------
 	
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = InvitationWithResponseFactory
 	
-	override protected def _filter(condition: Condition): ManyInvitationsWithResponsesAccess =
-		new SubAccess(this, condition)
-		
+	override protected def self = this
 	
-	// OTHER    ----------------------------------------
+	override def apply(condition: Condition): ManyInvitationsWithResponsesAccess = 
+		ManyInvitationsWithResponsesAccess(condition)
+	
+	
+	// OTHER	--------------------
 	
 	/**
-	  * @param connection Implicit DB connection
 	  * @param languageIds Language ids to use when reading organization descriptions
+	  * @param connection Implicit DB connection
 	  * @return Detailed copies of accessible invitations
 	  */
-	def detailedInLanguages(languageIds: Option[LanguageIds])(implicit connection: Connection) =
-	{
+	def detailedInLanguages(languageIds: Option[LanguageIds])(implicit connection: Connection) = {
 		// Reads invitation data, then attaches organization and user data
 		val invitations = pull
 		if (invitations.isEmpty)
@@ -103,3 +117,4 @@ trait ManyInvitationsWithResponsesAccess
 		}
 	}
 }
+

@@ -1,33 +1,52 @@
 package utopia.citadel.database.access.many.user
 
-import utopia.citadel.database.access.many.user.ManyUserLanguageLinksWithFamiliaritiesAccess.SubAccess
 import utopia.citadel.database.factory.user.UserLanguageLinkWithFamiliarityFactory
 import utopia.metropolis.model.combined.user.UserLanguageLinkWithFamiliarity
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyUserLanguageLinksWithFamiliaritiesAccess
+object ManyUserLanguageLinksWithFamiliaritiesAccess 
+	extends ViewFactory[ManyUserLanguageLinksWithFamiliaritiesAccess]
 {
-	private class SubAccess(override val parent: ManyRowModelAccess[UserLanguageLinkWithFamiliarity],
-	                        override val filterCondition: Condition)
-		extends ManyUserLanguageLinksWithFamiliaritiesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess = 
+		new _ManyUserLanguageLinksWithFamiliaritiesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyUserLanguageLinksWithFamiliaritiesAccess(condition: Condition) 
+		extends ManyUserLanguageLinksWithFamiliaritiesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
-  * A common trait for access points which retrieve multiple user language links at a time and include language
+  * 
+	A common trait for access points which retrieve multiple user language links at a time and include language
   * familiarity information
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
-trait ManyUserLanguageLinksWithFamiliaritiesAccess
-	extends ManyUserLanguageLinksAccessLike[UserLanguageLinkWithFamiliarity,
+trait ManyUserLanguageLinksWithFamiliaritiesAccess 
+	extends ManyUserLanguageLinksAccessLike[UserLanguageLinkWithFamiliarity, 
 		ManyUserLanguageLinksWithFamiliaritiesAccess]
 {
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = UserLanguageLinkWithFamiliarityFactory
 	
-	override protected def _filter(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess =
-		new SubAccess(this, condition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess = 
+		ManyUserLanguageLinksWithFamiliaritiesAccess(condition)
 }
+

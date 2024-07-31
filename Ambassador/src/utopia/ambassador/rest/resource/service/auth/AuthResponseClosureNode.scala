@@ -58,8 +58,7 @@ class AuthResponseClosureNode(target: ServiceTarget, tokenAcquirer: AcquireToken
 													Result.Failure(Unauthorized, "This case is already closed")
 												else
 												// Reads the service settings next
-													DbAuthService(serviceId).settings.pull match
-													{
+													DbAuthService(serviceId).settings.pull match {
 														// Case: All data available => closes the case
 														case Some(settings) =>
 															closeAuthCase(settings, authCase, session, userId)

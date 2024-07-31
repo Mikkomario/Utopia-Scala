@@ -3,10 +3,10 @@ package utopia.ambassador.database.access.single.service
 import utopia.ambassador.database.factory.service.AuthServiceSettingsFactory
 import utopia.ambassador.database.model.service.AuthServiceSettingsModel
 import utopia.ambassador.model.stored.service.AuthServiceSettings
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.access.single.model.distinct.LatestModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{SubView, UnconditionalView}
+import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 
 /**
@@ -42,27 +42,9 @@ object DbAuthServiceSettings
 	  * @param serviceId Id of the targeted service
 	  * @return An access point to that service's settings
 	  */
-	def forServiceWithId(serviceId: Int) = new DbSettingsForAuthService(serviceId)
+	def forServiceWithId(serviceId: Int) =
+		distinct(model.serviceIdColumn <=> serviceId)
 	
-	
-	// NESTED   --------------------
-	
-	class DbSettingsForAuthService(serviceId: Int, additionalCondition: Option[Condition] = None)
-		extends UniqueAuthServiceSettingsAccess with LatestModelAccess[AuthServiceSettings] with SubView
-	{
-		override protected def self = this
-		
-		override protected def parent = DbAuthServiceSettings
-		override def filterCondition =
-			this.model.withServiceId(serviceId).toCondition && additionalCondition
-		
-		override def filter(additionalCondition: Condition) = {
-			val newCondition = this.additionalCondition match {
-				case Some(prev) => prev && additionalCondition
-				case None => additionalCondition
-			}
-			new DbSettingsForAuthService(serviceId, Some(newCondition))
-		}
-	}
+	private def distinct(condition: Condition) = UniqueAuthServiceSettingsAccess(condition)
 }
 

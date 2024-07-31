@@ -12,6 +12,19 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.sql.Condition
+
+object UniqueAuthServiceSettingsAccess
+{
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): UniqueAuthServiceSettingsAccess = _Access(Some(condition))
+	
+	
+	// NESTED   --------------------
+	
+	private case class _Access(accessCondition: Option[Condition]) extends UniqueAuthServiceSettingsAccess
+}
 
 /**
   * A common trait for access points that return individual and distinct AuthServiceSettings.

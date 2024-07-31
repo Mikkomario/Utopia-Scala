@@ -7,13 +7,23 @@ import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.stored.url.Link
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyLinksAccess
+object ManyLinksAccess extends ViewFactory[ManyLinksAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyLinksAccess = new _ManyLinksAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyLinksSubView(condition: Condition) extends ManyLinksAccess
+	private class _ManyLinksAccess(condition: Condition) extends ManyLinksAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -34,9 +44,13 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 	  * Pulls the accessible links as a map
 	  * @param connection Implicit DB donnection
 	  */
-	def toMap(implicit connection: Connection) = 
-		pullColumnMultiMap(model.requestPathId.column, model.queryParameters.column)
-			.map { case (pathIdVal, paramVals) => pathIdVal.getInt -> paramVals.map { _.getModel } }
+	def toMap(implicit connection: Connection) = {
+		pullColumnMultiMap(model.requestPathId.column, model.queryParameters.column).map 
+		{
+			 case (pathIdVal, 
+					paramVals) => pathIdVal.getInt -> paramVals.map { _.getModel } 
+		}
+	}
 	
 	/**
 	  * All accessible links, including request path and domain information
@@ -62,7 +76,6 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyLinksAccess = 
-		new ManyLinksAccess.ManyLinksSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyLinksAccess = ManyLinksAccess(condition)
 }
 

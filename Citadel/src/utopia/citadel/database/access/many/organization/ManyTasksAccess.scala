@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbTaskDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.organization.TaskFactory
 import utopia.citadel.database.model.organization.TaskModel
@@ -9,25 +8,31 @@ import utopia.metropolis.model.combined.organization.DescribedTask
 import utopia.metropolis.model.stored.organization.Task
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyTasksAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyTasksAccess = _Access(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyTasksSubView(override val parent: ManyRowModelAccess[Task], 
-		override val filterCondition: Condition) 
-		extends ManyTasksAccess with SubView
+	private case class _Access(accessCondition: Option[Condition]) extends ManyTasksAccess
 }
 
 /**
   * A common trait for access points which target multiple Tasks at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyTasksAccess
-	extends ManyRowModelAccess[Task] with ManyDescribedAccess[Task, DescribedTask] with FilterableView[ManyTasksAccess]
+trait ManyTasksAccess 
+	extends ManyRowModelAccess[Task] with ManyDescribedAccess[Task, DescribedTask] 
+		with FilterableView[ManyTasksAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -47,16 +52,15 @@ trait ManyTasksAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = TaskFactory
 	
 	override protected def describedFactory = DescribedTask
 	
 	override protected def manyDescriptionsAccess = DbTaskDescriptions
 	
-	override def filter(additionalCondition: Condition): ManyTasksAccess = 
-		new ManyTasksAccess.ManyTasksSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyTasksAccess = ManyTasksAccess(condition)
 	
 	override def idOf(item: Task) = item.id
 	

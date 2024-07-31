@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import java.time.Instant
 import utopia.citadel.database.factory.organization.InvitationResponseFactory
 import utopia.citadel.database.model.organization.InvitationResponseModel
 import utopia.flow.generic.casting.ValueConversions._
@@ -8,25 +7,41 @@ import utopia.metropolis.model.stored.organization.InvitationResponse
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyInvitationResponsesAccess
+import java.time.Instant
+
+object ManyInvitationResponsesAccess extends ViewFactory[ManyInvitationResponsesAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyInvitationResponsesAccess = 
+		new _ManyInvitationResponsesAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyInvitationResponsesSubView(override val parent: ManyRowModelAccess[InvitationResponse], 
-		override val filterCondition: Condition) 
-		extends ManyInvitationResponsesAccess with SubView
+	private class _ManyInvitationResponsesAccess(condition: Condition) extends ManyInvitationResponsesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple InvitationResponses at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyInvitationResponsesAccess extends ManyRowModelAccess[InvitationResponse] with Indexed
-	with FilterableView[ManyInvitationResponsesAccess]
+trait ManyInvitationResponsesAccess 
+	extends ManyRowModelAccess[InvitationResponse] with Indexed 
+		with FilterableView[ManyInvitationResponsesAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -76,12 +91,12 @@ trait ManyInvitationResponsesAccess extends ManyRowModelAccess[InvitationRespons
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = InvitationResponseFactory
 	
-	override def filter(additionalCondition: Condition): ManyInvitationResponsesAccess = 
-		new ManyInvitationResponsesAccess.ManyInvitationResponsesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyInvitationResponsesAccess = 
+		ManyInvitationResponsesAccess(condition)
 	
 	
 	// OTHER	--------------------

@@ -1,6 +1,5 @@
 package utopia.exodus.database.access.many.auth
 
-import java.time.Instant
 import utopia.exodus.database.factory.auth.TokenScopeLinkFactory
 import utopia.exodus.database.model.auth.TokenScopeLinkModel
 import utopia.exodus.model.stored.auth.TokenScopeLink
@@ -8,16 +7,31 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyTokenScopeLinksAccess
+import java.time.Instant
+
+object ManyTokenScopeLinksAccess extends ViewFactory[ManyTokenScopeLinksAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyTokenScopeLinksAccess = 
+		new _ManyTokenScopeLinksAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyTokenScopeLinksSubView(override val parent: ManyRowModelAccess[TokenScopeLink], 
-		override val filterCondition: Condition) 
-		extends ManyTokenScopeLinksAccess with SubView
+	private class _ManyTokenScopeLinksAccess(condition: Condition) extends ManyTokenScopeLinksAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -67,12 +81,11 @@ trait ManyTokenScopeLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = TokenScopeLinkFactory
 	
-	override def filter(additionalCondition: Condition): ManyTokenScopeLinksAccess = 
-		new ManyTokenScopeLinksAccess.ManyTokenScopeLinksSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyTokenScopeLinksAccess = ManyTokenScopeLinksAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -106,7 +119,7 @@ trait ManyTokenScopeLinksAccess
 	  * @param newScopeId A new scope id to assign
 	  * @return Whether any token scope link was affected
 	  */
-	def scopesIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn, 
+	def scopesIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn,
 		newScopeId)
 	
 	/**
@@ -114,7 +127,7 @@ trait ManyTokenScopeLinksAccess
 	  * @param newTokenId A new token id to assign
 	  * @return Whether any token scope link was affected
 	  */
-	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
+	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn,
 		newTokenId)
 	
 	/**

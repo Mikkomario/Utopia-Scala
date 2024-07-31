@@ -8,25 +8,29 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 object ManyAuthTokenScopeLinksAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyAuthTokenScopeLinksAccess = _Access(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAuthTokenScopeLinksSubView(override val parent: ManyRowModelAccess[AuthTokenScopeLink], 
-		override val filterCondition: Condition) 
-		extends ManyAuthTokenScopeLinksAccess with SubView
+	private case class _Access(accessCondition: Option[Condition]) extends ManyAuthTokenScopeLinksAccess
 }
 
 /**
   * A common trait for access points which target multiple AuthTokenScopeLinks at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthTokenScopeLinksAccess
-	extends ManyRowModelAccess[AuthTokenScopeLink] with Indexed with FilterableView[ManyAuthTokenScopeLinksAccess]
+trait ManyAuthTokenScopeLinksAccess 
+	extends ManyRowModelAccess[AuthTokenScopeLink] with Indexed 
+		with FilterableView[ManyAuthTokenScopeLinksAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -35,6 +39,7 @@ trait ManyAuthTokenScopeLinksAccess
 	  */
 	def tokenIds(implicit connection: Connection) = pullColumn(model.tokenIdColumn)
 		.flatMap { value => value.int }
+	
 	/**
 	  * scopeIds of the accessible AuthTokenScopeLinks
 	  */
@@ -44,51 +49,54 @@ trait ManyAuthTokenScopeLinksAccess
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
+	  * A copy of this access point which includes scope data
+	  */
+	def withScopes = {
+		accessCondition match
+		{
+			case Some(c) => DbAuthTokenScopes.filter(c)
+			case None => DbAuthTokenScopes
+		}
+	}
+	
+	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = AuthTokenScopeLinkModel
 	
-	/**
-	  * @return A copy of this access point which includes scope data
-	  */
-	def withScopes = accessCondition match
-	{
-		case Some(c) => DbAuthTokenScopes.filter(c)
-		case None => DbAuthTokenScopes
-	}
-	
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = AuthTokenScopeLinkFactory
 	
-	override def filter(additionalCondition: Condition): ManyAuthTokenScopeLinksAccess = 
-		new ManyAuthTokenScopeLinksAccess.ManyAuthTokenScopeLinksSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyAuthTokenScopeLinksAccess = 
+		ManyAuthTokenScopeLinksAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param tokenId Id of the targeted authentication token
-	  * @return An access point to that token's scope links
-	  */
-	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
 	
 	/**
 	  * Updates the scopeId of the targeted AuthTokenScopeLink instance(s)
 	  * @param newScopeId A new scopeId to assign
 	  * @return Whether any AuthTokenScopeLink instance was affected
 	  */
-	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn, 
+	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn,
 		newScopeId)
+	
 	/**
 	  * Updates the tokenId of the targeted AuthTokenScopeLink instance(s)
 	  * @param newTokenId A new tokenId to assign
 	  * @return Whether any AuthTokenScopeLink instance was affected
 	  */
-	def tokenIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
+	def tokenIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn,
 		newTokenId)
+	
+	/**
+	  * @param tokenId Id of the targeted authentication token
+	  * @return An access point to that token's scope links
+	  */
+	def withTokenId(tokenId: Int) = filter(model.withTokenId(tokenId).toCondition)
 }
 

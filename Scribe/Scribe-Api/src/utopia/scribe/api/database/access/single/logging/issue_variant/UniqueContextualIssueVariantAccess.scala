@@ -48,7 +48,7 @@ trait UniqueContextualIssueVariantAccess
 	/**
 	  * 
 		Program context where this issue occurred or was logged. Should be unique.. None if no issue (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def issueContext(implicit connection: Connection) = pullColumn(issueModel.contextColumn).getString
 	
@@ -75,8 +75,8 @@ trait UniqueContextualIssueVariantAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueContextualIssueVariantAccess = 
-		new UniqueContextualIssueVariantAccess._UniqueContextualIssueVariantAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueContextualIssueVariantAccess = 
+		UniqueContextualIssueVariantAccess(condition)
 	
 	
 	// OTHER	--------------------

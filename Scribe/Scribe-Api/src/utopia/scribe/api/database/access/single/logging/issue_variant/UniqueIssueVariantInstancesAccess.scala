@@ -52,7 +52,7 @@ trait UniqueIssueVariantInstancesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueIssueVariantInstancesAccess = 
-		new UniqueIssueVariantInstancesAccess._UniqueIssueVariantInstancesAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueIssueVariantInstancesAccess = 
+		UniqueIssueVariantInstancesAccess(condition)
 }
 

@@ -70,8 +70,7 @@ trait UniqueDelimiterAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueDelimiterAccess = 
-		new UniqueDelimiterAccess._UniqueDelimiterAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueDelimiterAccess = UniqueDelimiterAccess(condition)
 	
 	
 	// OTHER	--------------------

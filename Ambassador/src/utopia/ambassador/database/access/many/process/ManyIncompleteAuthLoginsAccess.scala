@@ -1,6 +1,5 @@
 package utopia.ambassador.database.access.many.process
 
-import java.time.Instant
 import utopia.ambassador.database.factory.process.IncompleteAuthLoginFactory
 import utopia.ambassador.database.model.process.IncompleteAuthLoginModel
 import utopia.ambassador.model.stored.process.IncompleteAuthLogin
@@ -8,25 +7,41 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyIncompleteAuthLoginsAccess
+import java.time.Instant
+
+object ManyIncompleteAuthLoginsAccess extends ViewFactory[ManyIncompleteAuthLoginsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyIncompleteAuthLoginsAccess = 
+		new _ManyIncompleteAuthLoginsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyIncompleteAuthLoginsSubView(override val parent: ManyRowModelAccess[IncompleteAuthLogin], 
-		override val filterCondition: Condition) 
-		extends ManyIncompleteAuthLoginsAccess with SubView
+	private class _ManyIncompleteAuthLoginsAccess(condition: Condition) extends ManyIncompleteAuthLoginsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple IncompleteAuthLogins at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyIncompleteAuthLoginsAccess
-	extends ManyRowModelAccess[IncompleteAuthLogin] with Indexed with FilterableView[ManyIncompleteAuthLoginsAccess]
+trait ManyIncompleteAuthLoginsAccess 
+	extends ManyRowModelAccess[IncompleteAuthLogin] with Indexed 
+		with FilterableView[ManyIncompleteAuthLoginsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -64,12 +79,12 @@ trait ManyIncompleteAuthLoginsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = IncompleteAuthLoginFactory
 	
-	override def filter(additionalCondition: Condition): ManyIncompleteAuthLoginsAccess = 
-		new ManyIncompleteAuthLoginsAccess.ManyIncompleteAuthLoginsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyIncompleteAuthLoginsAccess = 
+		ManyIncompleteAuthLoginsAccess(condition)
 	
 	
 	// OTHER	--------------------

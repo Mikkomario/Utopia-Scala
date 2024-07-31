@@ -1,7 +1,5 @@
 package utopia.ambassador.database.access.many.service
 
-import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
 import utopia.ambassador.database.factory.service.AuthServiceSettingsFactory
 import utopia.ambassador.database.model.service.AuthServiceSettingsModel
 import utopia.ambassador.model.stored.service.AuthServiceSettings
@@ -9,27 +7,44 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
+import scala.concurrent.duration.FiniteDuration
+
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-object ManyAuthServiceSettingsAccess
+object ManyAuthServiceSettingsAccess extends ViewFactory[ManyAuthServiceSettingsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthServiceSettingsAccess = 
+		new _ManyAuthServiceSettingsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAuthServiceSettingsSubView(override val parent: ManyRowModelAccess[AuthServiceSettings], 
-		override val filterCondition: Condition) 
-		extends ManyAuthServiceSettingsAccess with SubView
+	private class _ManyAuthServiceSettingsAccess(condition: Condition) extends ManyAuthServiceSettingsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple AuthServiceSettings at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthServiceSettingsAccess
-	extends ManyRowModelAccess[AuthServiceSettings] with Indexed with FilterableView[ManyAuthServiceSettingsAccess]
+trait ManyAuthServiceSettingsAccess 
+	extends ManyRowModelAccess[AuthServiceSettings] with Indexed 
+		with FilterableView[ManyAuthServiceSettingsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -84,30 +99,50 @@ trait ManyAuthServiceSettingsAccess
 	/**
 	  * preparationTokenDurations of the accessible AuthServiceSettings
 	  */
-	def preparationTokenDurations(implicit connection: Connection) = 
-		pullColumn(model.preparationTokenDurationColumn).flatMap { value => value.long.map { FiniteDuration(_, 
-			TimeUnit.MINUTES) } }
+	def preparationTokenDurations(implicit connection: Connection) = {
+		pullColumn(model.preparationTokenDurationColumn).flatMap { value => value.long.map 
+		{
+			 FiniteDuration(_, 
+					TimeUnit.MINUTES) 
+		}
+			}
+	}
 	
 	/**
 	  * redirectTokenDurations of the accessible AuthServiceSettings
 	  */
-	def redirectTokenDurations(implicit connection: Connection) = 
-		pullColumn(model.redirectTokenDurationColumn).flatMap { value => value.long.map { FiniteDuration(_, 
-			TimeUnit.MINUTES) } }
+	def redirectTokenDurations(implicit connection: Connection) = {
+		pullColumn(model.redirectTokenDurationColumn).flatMap { value => value.long.map 
+		{
+			 FiniteDuration(_, 
+					TimeUnit.MINUTES) 
+		}
+			}
+	}
 	
 	/**
 	  * incompleteAuthTokenDurations of the accessible AuthServiceSettings
 	  */
-	def incompleteAuthTokenDurations(implicit connection: Connection) = 
-		pullColumn(model.incompleteAuthTokenDurationColumn).flatMap { value => value.long.map { FiniteDuration(_, 
-			TimeUnit.MINUTES) } }
+	def incompleteAuthTokenDurations(implicit connection: Connection) = {
+		pullColumn(model.incompleteAuthTokenDurationColumn).flatMap { value => value.long.map 
+		{
+			 FiniteDuration(_, 
+					TimeUnit.MINUTES) 
+		}
+			}
+	}
 	
 	/**
 	  * DefaultSessionDurations of the accessible AuthServiceSettings
 	  */
-	def defaultSessionDurations(implicit connection: Connection) =
-		pullColumn(model.defaultSessionDurationColumn).flatMap { value => value.long.map { FiniteDuration(_,
-			TimeUnit.MINUTES) } }
+	def defaultSessionDurations(implicit connection: Connection) = {
+		pullColumn(model.defaultSessionDurationColumn).flatMap { value => value.long.map 
+		{
+			 FiniteDuration(_,
+					TimeUnit.MINUTES) 
+		}
+			}
+	}
 	
 	/**
 	  * creationTimes of the accessible AuthServiceSettings
@@ -125,23 +160,15 @@ trait ManyAuthServiceSettingsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = AuthServiceSettingsFactory
 	
-	override def filter(additionalCondition: Condition): ManyAuthServiceSettingsAccess = 
-		new ManyAuthServiceSettingsAccess.ManyAuthServiceSettingsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyAuthServiceSettingsAccess = 
+		ManyAuthServiceSettingsAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * Updates the DefaultSessionDuration of the targeted AuthServiceSettings instance(s)
-	  * @param newDefaultSessionDuration A new DefaultSessionDuration to assign
-	  * @return Whether any AuthServiceSettings instance was affected
-	  */
-	def defaultSessionDurations_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) =
-		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
 	
 	/**
 	  * Updates the authenticationUrl of the targeted AuthServiceSettings instance(s)
@@ -182,6 +209,14 @@ trait ManyAuthServiceSettingsAccess
 	  */
 	def defaultCompletionRedirectUrls_=(newDefaultCompletionRedirectUrl: String)(implicit connection: Connection) = 
 		putColumn(model.defaultCompletionRedirectUrlColumn, newDefaultCompletionRedirectUrl)
+	
+	/**
+	  * Updates the DefaultSessionDuration of the targeted AuthServiceSettings instance(s)
+	  * @param newDefaultSessionDuration A new DefaultSessionDuration to assign
+	  * @return Whether any AuthServiceSettings instance was affected
+	  */
+	def defaultSessionDurations_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) = 
+		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
 	
 	/**
 	  * Updates the incompleteAuthRedirectUrl of the targeted AuthServiceSettings instance(s)

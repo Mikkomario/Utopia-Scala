@@ -84,8 +84,8 @@ trait DescriptionLinksAccess
 	
 	override protected def self = this
 	
-	override def filter(additionalCondition: Condition): DescriptionLinksAccess =
-		DescriptionLinksAccess(factory, linkModel, Some(mergeCondition(additionalCondition)))
+	override def apply(condition: Condition): DescriptionLinksAccess =
+		DescriptionLinksAccess(factory, linkModel, Some(condition))
 	
 	
 	// OTHER    ------------------------------------

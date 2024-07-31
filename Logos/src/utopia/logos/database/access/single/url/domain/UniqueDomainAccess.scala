@@ -71,8 +71,7 @@ trait UniqueDomainAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueDomainAccess = 
-		new UniqueDomainAccess._UniqueDomainAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueDomainAccess = UniqueDomainAccess(condition)
 	
 	
 	// OTHER	--------------------

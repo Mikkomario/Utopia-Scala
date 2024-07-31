@@ -23,16 +23,19 @@ trait UniqueLinkAccessLike[+A]
 	
 	/**
 	  * Id of the targeted internet address, 
-		including the specific sub-path. None if no link (or value) was found.
+	  * including the specific sub-path. None if no link (or value) was found.
 	  */
 	def requestPathId(implicit connection: Connection) = pullColumn(model.requestPathId.column).int
 	
 	/**
 	  * Specified request parameters in model format. None if no link (or value) was found.
 	  */
-	def queryParameters(implicit connection: Connection) = pullColumn(model.queryParameters.column).notEmpty match {
-		case Some(v) => LogosContext.jsonParser.valueOf(v.getString).getModel
-		case None => Model.empty
+	def queryParameters(implicit connection: Connection) = {
+		pullColumn(model.queryParameters.column).notEmpty match 
+		{
+			case Some(v) => LogosContext.jsonParser.valueOf(v.getString).getModel
+			case None => Model.empty
+		}
 	}
 	
 	/**

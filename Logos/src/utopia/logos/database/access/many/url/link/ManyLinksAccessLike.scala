@@ -29,13 +29,16 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	/**
 	  * query parameterses of the accessible links
 	  */
-	def queryParameters(implicit connection: Connection) =
-		pullColumn(model.queryParameters.column).map { v =>
-			v.notEmpty match {
-				case Some(v) => LogosContext.jsonParser.valueOf(v.getString).getModel
-				case None => Model.empty
-			}
+	def queryParameters(implicit connection: Connection) = {
+		pullColumn(model.queryParameters.column).map 
+		{
+			 v =>
+					v.notEmpty match {
+						case Some(v) => LogosContext.jsonParser.valueOf(v.getString).getModel
+						case None => Model.empty
+					}
 		}
+	}
 	
 	/**
 	  * creation times of the accessible links
@@ -66,7 +69,7 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	  * @param newQueryParameters A new query parameters to assign
 	  * @return Whether any link was affected
 	  */
-	def queryParameters_=(newQueryParameters: Model)(implicit connection: Connection) =
+	def queryParameters_=(newQueryParameters: Model)(implicit connection: Connection) = 
 		putColumn(model.queryParameters.column, newQueryParameters.notEmpty.map { _.toJson })
 	
 	/**

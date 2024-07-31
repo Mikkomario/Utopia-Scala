@@ -1,6 +1,5 @@
 package utopia.exodus.database.access.many.auth
 
-import java.time.Instant
 import utopia.exodus.database.model.auth.TokenModel
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
@@ -9,6 +8,8 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
+
+import java.time.Instant
 
 /**
   * A common trait for access points which target multiple tokens or similar instances at a time
@@ -73,42 +74,17 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	def ids(implicit connection: Connection) = pullColumn(index).flatMap { id => id.int }
 	
 	/**
+	  * A copy of this access point which only targets temporary tokens
+	  */
+	def temporary = filter(model.expiresColumn.isNotNull)
+	
+	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = TokenModel
 	
-	/**
-	  * @return A copy of this access point which only targets temporary tokens
-	  */
-	def temporary = filter(model.expiresColumn.isNotNull)
-	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param userId Targeted user id
-	  * @return An access point to tokens which are owned by that user
-	  */
-	def ownedByUserWithId(userId: Int) = filter(model.withOwnerId(userId).toCondition)
-	
-	/**
-	  * @param parentTokenId Id of the linked parent token id
-	  * @return An access point to tokens that have been created using that token
-	  */
-	def createdUsingTokenWithId(parentTokenId: Int) = filter(model.withParentTokenId(parentTokenId).toCondition)
-	
-	/**
-	  * @param parentTokenIds A collection of token ids
-	  * @return An access point to tokens which were created using one of the specified tokens
-	  */
-	def createdUsingAnyOfTokens(parentTokenIds: Iterable[Int]) =
-		filter(model.parentTokenIdColumn in parentTokenIds)
-	
-	/**
-	  * @param tokenId Id of the token that should NOT be targeted
-	  * @return A copy of this access point where that token has been excluded
-	  */
-	def excludingTokenWithId(tokenId: Int) = filter(index <> tokenId)
 	
 	/**
 	  * Updates the are single use only of the targeted tokens
@@ -117,6 +93,20 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def areSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
 		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
+	
+	/**
+	  * @param parentTokenIds A collection of token ids
+	  * @return An access point to tokens which were created using one of the specified tokens
+	  */
+	def createdUsingAnyOfTokens(parentTokenIds: Iterable[Int]) = 
+		filter(model.parentTokenIdColumn in parentTokenIds)
+	
+	/**
+	  * @param parentTokenId Id of the linked parent token id
+	  * @return An access point to tokens that have been created using that token
+	  */
+	def createdUsingTokenWithId(parentTokenId: Int) = filter(model
+		.withParentTokenId(parentTokenId).toCondition)
 	
 	/**
 	  * Updates the creation times of the targeted tokens
@@ -139,6 +129,12 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def deprecationTimes_=(newDeprecatedAfter: Instant)(implicit connection: Connection) = 
 		putColumn(model.deprecatedAfterColumn, newDeprecatedAfter)
+	
+	/**
+	  * @param tokenId Id of the token that should NOT be targeted
+	  * @return A copy of this access point where that token has been excluded
+	  */
+	def excludingTokenWithId(tokenId: Int) = filter(index <> tokenId)
 	
 	/**
 	  * Updates the expiration times of the targeted tokens
@@ -164,11 +160,17 @@ trait ManyTokensAccessLike[+A, +Repr <: ManyModelAccess[A]]
 		putColumn(model.modelStylePreferenceColumn, newModelStylePreference.id)
 	
 	/**
+	  * @param userId Targeted user id
+	  * @return An access point to tokens which are owned by that user
+	  */
+	def ownedByUserWithId(userId: Int) = filter(model.withOwnerId(userId).toCondition)
+	
+	/**
 	  * Updates the owner ids of the targeted tokens
 	  * @param newOwnerId A new owner id to assign
 	  * @return Whether any token was affected
 	  */
-	def ownerIds_=(newOwnerId: Int)(implicit connection: Connection) = putColumn(model.ownerIdColumn, 
+	def ownerIds_=(newOwnerId: Int)(implicit connection: Connection) = putColumn(model.ownerIdColumn,
 		newOwnerId)
 	
 	/**

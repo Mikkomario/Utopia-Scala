@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.description
 
-import utopia.citadel.database.access.many.description.LinkedDescriptionsAccessLike.LinkedDescriptionsSubView
 import utopia.citadel.database.factory.description.LinkedDescriptionFactory
 import utopia.citadel.database.model.description.{DescriptionLinkModelFactory, DescriptionModel}
 import utopia.flow.generic.casting.ValueConversions._
@@ -11,7 +10,7 @@ import utopia.metropolis.model.enumeration.DescriptionRoleIdWrapper
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.ComparisonOperator.LargerOrEqual
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
@@ -20,14 +19,10 @@ object LinkedDescriptionsAccessLike
 {
 	// NESTED   --------------------------------
 	
-	private class LinkedDescriptionsSubView(override val parent: LinkedDescriptionsAccessLike,
-	                                        override val filterCondition: Condition)
-		extends LinkedDescriptionsAccessLike with SubView
-	{
-		override def factory = parent.factory
-		
-		override def linkModel = parent.linkModel
-	}
+	private case class _LinkedDescriptionsAccess(factory: LinkedDescriptionFactory,
+	                                             linkModel: DescriptionLinkModelFactory,
+	                                             accessCondition: Option[Condition])
+		extends LinkedDescriptionsAccessLike
 }
 
 /**
@@ -70,8 +65,8 @@ trait LinkedDescriptionsAccessLike
 	
 	override protected def self = this
 	
-	override def filter(additionalCondition: Condition): LinkedDescriptionsAccessLike =
-		new LinkedDescriptionsSubView(this, additionalCondition)
+	override def apply(condition: Condition): LinkedDescriptionsAccessLike =
+		LinkedDescriptionsAccessLike._LinkedDescriptionsAccess(factory, linkModel, Some(condition))
 	
 	
 	// OTHER	------------------------

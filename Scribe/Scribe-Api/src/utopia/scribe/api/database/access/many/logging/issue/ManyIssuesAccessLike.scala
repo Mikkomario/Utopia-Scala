@@ -15,7 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-trait ManyIssuesAccessLike[+A, +Repr]
+trait ManyIssuesAccessLike[+A, +Repr] 
 	extends ManyModelAccess[A] with Indexed with FilterableView[Repr] with SeverityBasedAccess[Repr]
 {
 	// COMPUTED	--------------------
@@ -48,29 +48,6 @@ trait ManyIssuesAccessLike[+A, +Repr]
 	// OTHER	--------------------
 	
 	/**
-	  * @param context Targeted issue context
-	  * @param includeSubContexts Whether contexts appearing under the specified context should also be included
-	  *                           (default = false)
-	  * @return Access to issues with that context
-	  */
-	def inContext(context: String, includeSubContexts: Boolean = false) = {
-		val condition = {
-			if (includeSubContexts)
-				model.contextColumn.startsWith(context)
-			else
-				model.withContext(context).toCondition
-		}
-		filter(condition)
-	}
-	
-	/**
-	  * @param contextPart Context or part of a context to search for
-	  * @return Access to issues that include the specified string in their context
-	  */
-	def includingContext(contextPart: String) =
-		if (contextPart.isEmpty) self else filter(model.contextColumn.contains(contextPart))
-	
-	/**
 	  * @param threshold A time threshold
 	  * @return Access to issues that appeared since the specified time threshold
 	  */
@@ -91,6 +68,30 @@ trait ManyIssuesAccessLike[+A, +Repr]
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param context Targeted issue context
+	  * 
+		@param includeSubContexts Whether contexts appearing under the specified context should also be included
+	  * (default = false)
+	  * @return Access to issues with that context
+	  */
+	def inContext(context: String, includeSubContexts: Boolean = false) = {
+		val condition = {
+			if (includeSubContexts)
+				model.contextColumn.startsWith(context)
+			else
+				model.withContext(context).toCondition
+		}
+		filter(condition)
+	}
+	
+	/**
+	  * @param contextPart Context or part of a context to search for
+	  * @return Access to issues that include the specified string in their context
+	  */
+	def includingContext(contextPart: String) = 
+		if (contextPart.isEmpty) self else filter(model.contextColumn.contains(contextPart))
 	
 	/**
 	  * Updates the severities of the targeted issues

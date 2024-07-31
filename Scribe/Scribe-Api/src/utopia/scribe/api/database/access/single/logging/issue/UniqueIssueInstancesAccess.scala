@@ -7,29 +7,31 @@ import utopia.vault.sql.Condition
 
 object UniqueIssueInstancesAccess
 {
-	// OTHER    --------------------------
+	// OTHER	--------------------
 	
 	/**
 	  * @param condition A search condition that returns a distinct issue
 	  * @return Access to the issue that fulfills the specified condition
 	  */
-	def apply(condition: Condition): UniqueIssueInstancesAccess = new _UniqueIssueInstancesAccess(Some(condition))
+	def apply(condition: Condition): UniqueIssueInstancesAccess =
+		 new _UniqueIssueInstancesAccess(Some(condition))
 	
 	
-	// NESTED   --------------------------
+	// NESTED	--------------------
 	
-	private class _UniqueIssueInstancesAccess(override val accessCondition: Option[Condition])
+	private class _UniqueIssueInstancesAccess(override val accessCondition: Option[Condition]) 
 		extends UniqueIssueInstancesAccess
 }
 
 /**
   * Common trait for access point that target the instances (occurrences) of a single distinct issue.
   * @author Mikko Hilpinen
-  * @since 3.8.2023, v1.0
+  * @since 03.08.2023, v1.0
   */
 trait UniqueIssueInstancesAccess extends UniqueIssueAccessLike[IssueInstances]
 {
-	// IMPLEMENTED  ----------------------
+	// IMPLEMENTED	--------------------
 	
 	override def factory: FromResultFactory[IssueInstances] = IssueInstancesFactory
 }
+

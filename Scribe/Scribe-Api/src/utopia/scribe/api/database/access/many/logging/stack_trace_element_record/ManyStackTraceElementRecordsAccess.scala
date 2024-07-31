@@ -12,6 +12,12 @@ import utopia.vault.sql.Condition
 
 object ManyStackTraceElementRecordsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyStackTraceElementRecordsAccess = 
+		new ManyStackTraceElementRecordsSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyStackTraceElementRecordsSubView(condition: Condition) 
@@ -74,9 +80,8 @@ trait ManyStackTraceElementRecordsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyStackTraceElementRecordsAccess = 
-		new ManyStackTraceElementRecordsAccess
-			.ManyStackTraceElementRecordsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyStackTraceElementRecordsAccess = 
+		ManyStackTraceElementRecordsAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -86,7 +91,7 @@ trait ManyStackTraceElementRecordsAccess
 	  * @param newCauseId A new cause id to assign
 	  * @return Whether any stack trace element record was affected
 	  */
-	def causeIds_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn, 
+	def causeIds_=(newCauseId: Int)(implicit connection: Connection) = putColumn(model.causeIdColumn,
 		newCauseId)
 	
 	/**

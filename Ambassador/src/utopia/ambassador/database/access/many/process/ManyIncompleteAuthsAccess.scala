@@ -1,6 +1,5 @@
 package utopia.ambassador.database.access.many.process
 
-import java.time.Instant
 import utopia.ambassador.database.factory.process.IncompleteAuthFactory
 import utopia.ambassador.database.model.process.IncompleteAuthModel
 import utopia.ambassador.model.stored.process.IncompleteAuth
@@ -8,25 +7,40 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyIncompleteAuthsAccess
+import java.time.Instant
+
+object ManyIncompleteAuthsAccess extends ViewFactory[ManyIncompleteAuthsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyIncompleteAuthsAccess = 
+		new _ManyIncompleteAuthsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyIncompleteAuthsSubView(override val parent: ManyRowModelAccess[IncompleteAuth], 
-		override val filterCondition: Condition) 
-		extends ManyIncompleteAuthsAccess with SubView
+	private class _ManyIncompleteAuthsAccess(condition: Condition) extends ManyIncompleteAuthsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple IncompleteAuths at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with Indexed
-	with FilterableView[ManyIncompleteAuthsAccess]
+trait ManyIncompleteAuthsAccess 
+	extends ManyRowModelAccess[IncompleteAuth] with Indexed with FilterableView[ManyIncompleteAuthsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -70,12 +84,11 @@ trait ManyIncompleteAuthsAccess extends ManyRowModelAccess[IncompleteAuth] with 
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = IncompleteAuthFactory
 	
-	override def filter(additionalCondition: Condition): ManyIncompleteAuthsAccess = 
-		new ManyIncompleteAuthsAccess.ManyIncompleteAuthsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyIncompleteAuthsAccess = ManyIncompleteAuthsAccess(condition)
 	
 	
 	// OTHER	--------------------

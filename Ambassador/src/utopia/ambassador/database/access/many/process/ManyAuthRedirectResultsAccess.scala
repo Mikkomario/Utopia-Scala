@@ -1,6 +1,5 @@
 package utopia.ambassador.database.access.many.process
 
-import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthRedirectResultFactory
 import utopia.ambassador.database.model.process.AuthRedirectResultModel
 import utopia.ambassador.model.stored.process.AuthRedirectResult
@@ -8,25 +7,41 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyAuthRedirectResultsAccess
+import java.time.Instant
+
+object ManyAuthRedirectResultsAccess extends ViewFactory[ManyAuthRedirectResultsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthRedirectResultsAccess = 
+		new _ManyAuthRedirectResultsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAuthRedirectResultsSubView(override val parent: ManyRowModelAccess[AuthRedirectResult], 
-		override val filterCondition: Condition) 
-		extends ManyAuthRedirectResultsAccess with SubView
+	private class _ManyAuthRedirectResultsAccess(condition: Condition) extends ManyAuthRedirectResultsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple AuthRedirectResults at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthRedirectResultsAccess
-	extends ManyRowModelAccess[AuthRedirectResult] with Indexed with FilterableView[ManyAuthRedirectResultsAccess]
+trait ManyAuthRedirectResultsAccess 
+	extends ManyRowModelAccess[AuthRedirectResult] with Indexed 
+		with FilterableView[ManyAuthRedirectResultsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -64,12 +79,12 @@ trait ManyAuthRedirectResultsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = AuthRedirectResultFactory
 	
-	override def filter(additionalCondition: Condition): ManyAuthRedirectResultsAccess = 
-		new ManyAuthRedirectResultsAccess.ManyAuthRedirectResultsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyAuthRedirectResultsAccess = 
+		ManyAuthRedirectResultsAccess(condition)
 	
 	
 	// OTHER	--------------------

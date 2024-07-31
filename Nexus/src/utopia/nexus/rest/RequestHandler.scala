@@ -77,7 +77,7 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
                                         Result.Failure(MethodNotAllowed,
                                             s"${request.method} is not allowed on this resource. Allowed methods: [${
                                                 allowed.mkString(", ")}]").toResponse
-                                            .withModifiedHeaders { _.withCurrentDate.withAllowedMethods(allowed.toSeq) }
+                                            .mapHeaders { _.withCurrentDate.withAllowedMethods(allowed.toSeq) }
                                 case Left(error) => error.toResult.toResponse
                             }
                         }.getOrMap { error =>

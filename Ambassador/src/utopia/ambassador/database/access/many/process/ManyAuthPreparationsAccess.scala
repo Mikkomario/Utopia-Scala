@@ -1,6 +1,5 @@
 package utopia.ambassador.database.access.many.process
 
-import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthPreparationFactory
 import utopia.ambassador.database.model.process.AuthPreparationModel
 import utopia.ambassador.model.stored.process.AuthPreparation
@@ -8,24 +7,39 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyAuthPreparationsAccess
+import java.time.Instant
+
+object ManyAuthPreparationsAccess extends ViewFactory[ManyAuthPreparationsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthPreparationsAccess = 
+		new _ManyAuthPreparationsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAuthPreparationsSubView(override val parent: ManyRowModelAccess[AuthPreparation], 
-		override val filterCondition: Condition) 
-		extends ManyAuthPreparationsAccess with SubView
+	private class _ManyAuthPreparationsAccess(condition: Condition) extends ManyAuthPreparationsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple AuthPreparations at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthPreparationsAccess
+trait ManyAuthPreparationsAccess 
 	extends ManyRowModelAccess[AuthPreparation] with Indexed with FilterableView[ManyAuthPreparationsAccess]
 {
 	// COMPUTED	--------------------
@@ -64,15 +78,14 @@ trait ManyAuthPreparationsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = AuthPreparationFactory
 	
-	override def filter(additionalCondition: Condition): ManyAuthPreparationsAccess = 
-		new ManyAuthPreparationsAccess.ManyAuthPreparationsSubView(this, additionalCondition)
+	override protected def self = this
 	
 	
 	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyAuthPreparationsAccess = ManyAuthPreparationsAccess(condition)
 	
 	/**
 	  * Updates the created of the targeted AuthPreparation instance(s)

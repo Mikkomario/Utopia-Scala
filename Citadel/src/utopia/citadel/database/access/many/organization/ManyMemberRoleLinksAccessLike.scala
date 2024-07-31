@@ -7,23 +7,17 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
-import utopia.vault.sql.Condition
 
 import java.time.Instant
 
 /**
   * A common trait for access points which target multiple MemberRoles or similar instances at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
+trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]] 
 	extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
-	// ABSTRACT --------------------
-	
-	protected def _filter(additionalCondition: Condition): Repr
-	
-	
 	// COMPUTED	--------------------
 	
 	/**
@@ -31,16 +25,19 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def membershipIds(implicit connection: Connection) = 
 		pullColumn(model.membershipIdColumn).flatMap { value => value.int }
+	
 	/**
 	  * roleIds of the accessible MemberRoles
 	  */
 	def roleIds(implicit connection: Connection) = pullColumn(model.roleIdColumn)
 		.flatMap { value => value.int }
+	
 	/**
 	  * creatorIds of the accessible MemberRoles
 	  */
 	def creatorIds(implicit connection: Connection) = 
 		pullColumn(model.creatorIdColumn).flatMap { value => value.int }
+	
 	/**
 	  * creationTimes of the accessible MemberRoles
 	  */
@@ -61,43 +58,14 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	protected def model = MemberRoleLinkModel
 	
 	
-	// IMPLEMENTED  ----------------
-	
-	override def filter(additionalCondition: Condition) = _filter(additionalCondition)
-	
-	
 	// OTHER	--------------------
-	
-	/**
-	  * Deprecates all accessible member roles
-	  * @param connection Implicit DB Connection
-	  * @return Whether any role links were affected
-	  */
-	def deprecate()(implicit connection: Connection) = deprecationTimes = Now
-	
-	/**
-	  * @param membershipId A membership id
-	  * @return An access point to membership-role-links concerning that membership
-	  */
-	def withMembershipId(membershipId: Int) =
-		filter(model.withMembershipId(membershipId).toCondition)
-	/**
-	  * @param userRoleId A user role id
-	  * @return An access point to membership-role-links with that role
-	  */
-	def withRoleId(userRoleId: Int) = filter(model.withRoleId(userRoleId).toCondition)
-	/**
-	  * @param userRoleIds Ids of the targeted user roles
-	  * @return An access point to membership-role-links to those roles
-	  */
-	def withAnyOfRoles(userRoleIds: Iterable[Int]) = filter(model.roleIdColumn in userRoleIds)
 	
 	/**
 	  * @param userRoleId Id of the searched user role
 	  * @param connection Implicit DB Connection
 	  * @return Whether this access point includes connections to that user role
 	  */
-	def containsRoleWithId(userRoleId: Int)(implicit connection: Connection) =
+	def containsRoleWithId(userRoleId: Int)(implicit connection: Connection) = 
 		exists(model.withRoleId(userRoleId).toCondition)
 	
 	/**
@@ -107,6 +75,7 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
 	/**
 	  * Updates the creatorId of the targeted MemberRole instance(s)
 	  * @param newCreatorId A new creatorId to assign
@@ -114,6 +83,14 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def creatorIds_=(newCreatorId: Int)(implicit connection: Connection) = 
 		putColumn(model.creatorIdColumn, newCreatorId)
+	
+	/**
+	  * Deprecates all accessible member roles
+	  * @param connection Implicit DB Connection
+	  * @return Whether any role links were affected
+	  */
+	def deprecate()(implicit connection: Connection) = deprecationTimes = Now
+	
 	/**
 	  * Updates the deprecatedAfter of the targeted MemberRole instance(s)
 	  * @param newDeprecatedAfter A new deprecatedAfter to assign
@@ -121,6 +98,7 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def deprecationTimes_=(newDeprecatedAfter: Instant)(implicit connection: Connection) = 
 		putColumn(model.deprecatedAfterColumn, newDeprecatedAfter)
+	
 	/**
 	  * Updates the membershipId of the targeted MemberRole instance(s)
 	  * @param newMembershipId A new membershipId to assign
@@ -128,11 +106,30 @@ trait ManyMemberRoleLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def membershipIds_=(newMembershipId: Int)(implicit connection: Connection) = 
 		putColumn(model.membershipIdColumn, newMembershipId)
+	
 	/**
 	  * Updates the roleId of the targeted MemberRole instance(s)
 	  * @param newRoleId A new roleId to assign
 	  * @return Whether any MemberRole instance was affected
 	  */
 	def roleIds_=(newRoleId: Int)(implicit connection: Connection) = putColumn(model.roleIdColumn, newRoleId)
+	
+	/**
+	  * @param userRoleIds Ids of the targeted user roles
+	  * @return An access point to membership-role-links to those roles
+	  */
+	def withAnyOfRoles(userRoleIds: Iterable[Int]) = filter(model.roleIdColumn in userRoleIds)
+	
+	/**
+	  * @param membershipId A membership id
+	  * @return An access point to membership-role-links concerning that membership
+	  */
+	def withMembershipId(membershipId: Int) = filter(model.withMembershipId(membershipId).toCondition)
+	
+	/**
+	  * @param userRoleId A user role id
+	  * @return An access point to membership-role-links with that role
+	  */
+	def withRoleId(userRoleId: Int) = filter(model.withRoleId(userRoleId).toCondition)
 }
 

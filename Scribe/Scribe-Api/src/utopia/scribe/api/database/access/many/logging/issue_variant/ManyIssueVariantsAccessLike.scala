@@ -63,14 +63,6 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	// OTHER	--------------------
 	
 	/**
-	  * @param issueId Id of the targeted issue
-	  * @param version Targeted version
-	  * @return Access to that issue's variants that occurred in the specified version
-	  */
-	def matching(issueId: Int, version: Version) =
-		filter(model.withIssueId(issueId).withVersion(version).toCondition)
-	
-	/**
 	  * @param errorId Id of an error, or None if targeting variants that are not associated with any error
 	  * @return Access to issue variants caused by the specified error (or not caused by any error)
 	  */
@@ -81,14 +73,6 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 		}
 		filter(condition)
 	}
-	
-	/**
-	  * @param threshold  A time threshold
-	  * @param connection Implicit DB Connection
-	  * @return Issue variants that have not occurred at all since the specified time threshold
-	  */
-	def findNotOccurredSince(threshold: Instant)(implicit connection: Connection) =
-		findNotLinkedTo(occurrenceModel.table, Some(occurrenceModel.latestColumn > threshold))
 	
 	/**
 	  * Updates the creation times of the targeted issue variants
@@ -111,16 +95,32 @@ trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Ind
 	  * @param newErrorId A new error id to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def errorIds_=(newErrorId: Int)(implicit connection: Connection) = putColumn(model.errorIdColumn, 
+	def errorIds_=(newErrorId: Int)(implicit connection: Connection) = putColumn(model.errorIdColumn,
 		newErrorId)
+	
+	/**
+	  * @param threshold  A time threshold
+	  * @param connection Implicit DB Connection
+	  * @return Issue variants that have not occurred at all since the specified time threshold
+	  */
+	def findNotOccurredSince(threshold: Instant)(implicit connection: Connection) = 
+		findNotLinkedTo(occurrenceModel.table, Some(occurrenceModel.latestColumn > threshold))
 	
 	/**
 	  * Updates the issue ids of the targeted issue variants
 	  * @param newIssueId A new issue id to assign
 	  * @return Whether any issue variant was affected
 	  */
-	def issueIds_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn, 
+	def issueIds_=(newIssueId: Int)(implicit connection: Connection) = putColumn(model.issueIdColumn,
 		newIssueId)
+	
+	/**
+	  * @param issueId Id of the targeted issue
+	  * @param version Targeted version
+	  * @return Access to that issue's variants that occurred in the specified version
+	  */
+	def matching(issueId: Int, version: Version) = 
+		filter(model.withIssueId(issueId).withVersion(version).toCondition)
 	
 	/**
 	  * Updates the versions of the targeted issue variants

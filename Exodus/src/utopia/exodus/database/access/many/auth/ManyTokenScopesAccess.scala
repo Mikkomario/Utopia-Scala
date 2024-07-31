@@ -1,43 +1,54 @@
 package utopia.exodus.database.access.many.auth
 
-import utopia.exodus.database.access.many.auth.ManyTokenScopesAccess.ManyTokenScopesSubView
 import utopia.exodus.database.factory.auth.TokenScopeFactory
 import utopia.exodus.database.model.auth.TokenScopeLinkModel
 import utopia.exodus.model.combined.auth.TokenScope
-import utopia.vault.nosql.access.many.model.ManyModelAccess
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyTokenScopesAccess
+object ManyTokenScopesAccess extends ViewFactory[ManyTokenScopesAccess]
 {
-	private class ManyTokenScopesSubView(override val parent: ManyModelAccess[TokenScope],
-	                                     override val filterCondition: Condition)
-		extends ManyTokenScopesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyTokenScopesAccess = new _ManyTokenScopesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyTokenScopesAccess(condition: Condition) extends ManyTokenScopesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * Used for accessing multiple token scopes at a time
   * @author Mikko Hilpinen
-  * @since 19.2.2022, v4.0
+  * @since 19.02.2022, v4.0
   */
 trait ManyTokenScopesAccess extends ManyScopesAccessLike[TokenScope, ManyTokenScopesAccess]
 {
-	// COMPUTED -----------------------------
+	// COMPUTED	--------------------
 	
 	protected def linkModel = TokenScopeLinkModel
 	
 	
-	// IMPLEMENTED  -------------------------
-	
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = TokenScopeFactory
 	
-	override def filter(additionalCondition: Condition): ManyTokenScopesAccess =
-		new ManyTokenScopesSubView(this, additionalCondition)
-		
+	override protected def self = this
 	
-	// OTHER    -----------------------------
+	override def apply(condition: Condition): ManyTokenScopesAccess = ManyTokenScopesAccess(condition)
+	
+	
+	// OTHER	--------------------
 	
 	/**
 	  * @param tokenId Id of the linked token
@@ -45,3 +56,4 @@ trait ManyTokenScopesAccess extends ManyScopesAccessLike[TokenScope, ManyTokenSc
 	  */
 	def withTokenId(tokenId: Int) = filter(linkModel.withTokenId(tokenId).toCondition)
 }
+

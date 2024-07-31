@@ -7,43 +7,45 @@ import utopia.vault.sql.Condition
 
 object UniqueTextStatementLinkAccess
 {
-	// OTHER    ---------------------------
+	// OTHER	--------------------
 	
 	/**
-	 * @param factory A factory used for parsing link data from DB row models
-	 * @param accessCondition Filter condition applied to all queries.
-	 *                        Should yield unique rows.
-	 * @return A new access point that utilizes the specified access condition.
-	 */
+	  * @param factory A factory used for parsing link data from DB row models
+	  * @param accessCondition Filter condition applied to all queries.
+	  * Should yield unique rows.
+	  * @return A new access point that utilizes the specified access condition.
+	  */
 	def apply(factory: TextStatementLinkDbFactory, accessCondition: Condition): UniqueTextStatementLinkAccess =
 		SubAccess(factory, Some(accessCondition))
 	
 	
-	// NESTED   ---------------------------
+	// NESTED	--------------------
 	
-	private case class SubAccess(factory: TextStatementLinkDbFactory, accessCondition: Option[Condition])
+	private case class SubAccess(factory: TextStatementLinkDbFactory, accessCondition: Option[Condition]) 
 		extends UniqueTextStatementLinkAccess
 }
 
 /**
- * Common trait for access points that return individual text statement links (in the default model form) at a time
- *
- * @author Mikko Hilpinen
- * @since 16/03/2024, v0.2
- */
-trait UniqueTextStatementLinkAccess
+  * Common trait for access points that return individual text statement links (in the default model form)
+  * at a time
+  * @author Mikko Hilpinen
+  * @since 31.07.2024
+  */
+trait UniqueTextStatementLinkAccess 
 	extends UniqueTextStatementLinkAccessLike[TextStatementLink, UniqueTextStatementLinkAccess]
 {
-	// ABSTRACT ---------------------------
+	// ABSTRACT	--------------------
 	
 	override def factory: TextStatementLinkDbFactory
 	
 	
-	// IMPLEMENTED  -----------------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def self: UniqueTextStatementLinkAccess = this
 	override protected def config: StatementLinkDbConfig = factory.config
 	
-	override def filter(additionalCondition: Condition): UniqueTextStatementLinkAccess =
-		UniqueTextStatementLinkAccess(factory, mergeCondition(additionalCondition))
+	override protected def self: UniqueTextStatementLinkAccess = this
+	
+	override def apply(condition: Condition): UniqueTextStatementLinkAccess = 
+		UniqueTextStatementLinkAccess(factory, condition)
 }
+

@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.language
 
-import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbLanguageFamiliarityDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.language.LanguageFamiliarityFactory
 import utopia.citadel.database.model.language.LanguageFamiliarityModel
@@ -9,26 +8,31 @@ import utopia.metropolis.model.combined.language.DescribedLanguageFamiliarity
 import utopia.metropolis.model.stored.language.LanguageFamiliarity
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyLanguageFamiliaritiesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyLanguageFamiliaritiesAccess = SubAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyLanguageFamiliaritiesSubView(override val parent: ManyRowModelAccess[LanguageFamiliarity], 
-		override val filterCondition: Condition) 
-		extends ManyLanguageFamiliaritiesAccess with SubView
+	private case class SubAccess(accessCondition: Option[Condition]) extends ManyLanguageFamiliaritiesAccess
 }
 
 /**
   * A common trait for access points which target multiple LanguageFamiliarities at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyLanguageFamiliaritiesAccess 
 	extends ManyRowModelAccess[LanguageFamiliarity] 
-		with ManyDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity]
+		with ManyDescribedAccess[LanguageFamiliarity, DescribedLanguageFamiliarity] 
 		with FilterableView[ManyLanguageFamiliaritiesAccess]
 {
 	// COMPUTED	--------------------
@@ -55,16 +59,16 @@ trait ManyLanguageFamiliaritiesAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = LanguageFamiliarityFactory
 	
 	override protected def describedFactory = DescribedLanguageFamiliarity
 	
 	override protected def manyDescriptionsAccess = DbLanguageFamiliarityDescriptions
 	
-	override def filter(additionalCondition: Condition): ManyLanguageFamiliaritiesAccess = 
-		new ManyLanguageFamiliaritiesAccess.ManyLanguageFamiliaritiesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyLanguageFamiliaritiesAccess = 
+		ManyLanguageFamiliaritiesAccess(condition)
 	
 	override def idOf(item: LanguageFamiliarity) = item.id
 	

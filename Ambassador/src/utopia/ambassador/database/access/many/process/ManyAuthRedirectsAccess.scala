@@ -1,6 +1,5 @@
 package utopia.ambassador.database.access.many.process
 
-import java.time.Instant
 import utopia.ambassador.database.factory.process.AuthRedirectFactory
 import utopia.ambassador.database.model.process.AuthRedirectModel
 import utopia.ambassador.model.stored.process.AuthRedirect
@@ -8,24 +7,39 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyAuthRedirectsAccess
+import java.time.Instant
+
+object ManyAuthRedirectsAccess extends ViewFactory[ManyAuthRedirectsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthRedirectsAccess = 
+		 new _ManyAuthRedirectsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAuthRedirectsSubView(override val parent: ManyRowModelAccess[AuthRedirect], 
-		override val filterCondition: Condition) 
-		extends ManyAuthRedirectsAccess with SubView
+	private class _ManyAuthRedirectsAccess(condition: Condition) extends ManyAuthRedirectsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple AuthRedirects at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthRedirectsAccess
+trait ManyAuthRedirectsAccess 
 	extends ManyRowModelAccess[AuthRedirect] with Indexed with FilterableView[ManyAuthRedirectsAccess]
 {
 	// COMPUTED	--------------------
@@ -64,12 +78,11 @@ trait ManyAuthRedirectsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = AuthRedirectFactory
 	
-	override def filter(additionalCondition: Condition): ManyAuthRedirectsAccess = 
-		new ManyAuthRedirectsAccess.ManyAuthRedirectsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyAuthRedirectsAccess = ManyAuthRedirectsAccess(condition)
 	
 	
 	// OTHER	--------------------

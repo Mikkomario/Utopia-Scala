@@ -75,8 +75,7 @@ trait UniqueLinkPlacementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueLinkPlacementAccess = 
-		new UniqueLinkPlacementAccess._UniqueLinkPlacementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueLinkPlacementAccess = UniqueLinkPlacementAccess(condition)
 	
 	
 	// OTHER	--------------------

@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.user
 
-import java.time.Instant
 import utopia.citadel.database.factory.user.UserFactory
 import utopia.citadel.database.model.user.UserModel
 import utopia.flow.generic.casting.ValueConversions._
@@ -8,22 +7,31 @@ import utopia.metropolis.model.stored.user.User
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+
+import java.time.Instant
 
 object ManyUsersAccess
 {
+	// OTHER	--------------------
+	
+	/**
+	  * @param condition Search condition to apply
+	  * @return Access to users which fulfill this search condition
+	  */
+	def apply(condition: Condition): ManyUsersAccess = _ManyUsersAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyUsersSubView(override val parent: ManyRowModelAccess[User], 
-		override val filterCondition: Condition) 
-		extends ManyUsersAccess with SubView
+	private case class _ManyUsersAccess(accessCondition: Option[Condition]) extends ManyUsersAccess
 }
 
 /**
   * A common trait for access points which target multiple Users at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed with FilterableView[ManyUsersAccess]
 {
@@ -45,12 +53,11 @@ trait ManyUsersAccess extends ManyRowModelAccess[User] with Indexed with Filtera
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = UserFactory
 	
-	override def filter(additionalCondition: Condition): ManyUsersAccess = 
-		new ManyUsersAccess.ManyUsersSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyUsersAccess = ManyUsersAccess(condition)
 	
 	
 	// OTHER	--------------------

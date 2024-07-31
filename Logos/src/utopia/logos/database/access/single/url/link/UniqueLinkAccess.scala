@@ -41,7 +41,6 @@ trait UniqueLinkAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueLinkAccess = 
-		new UniqueLinkAccess._UniqueLinkAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueLinkAccess = UniqueLinkAccess(condition)
 }
 

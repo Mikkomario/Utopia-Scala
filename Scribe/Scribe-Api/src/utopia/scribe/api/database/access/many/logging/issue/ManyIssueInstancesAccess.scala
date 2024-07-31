@@ -1,6 +1,5 @@
 package utopia.scribe.api.database.access.many.logging.issue
 
-import utopia.scribe.api.database.access.many.logging.issue.ManyIssueInstancesAccess.ManyIssueInstancesSubView
 import utopia.scribe.api.database.access.many.logging.issue_occurrence.OccurrenceTimeBasedAccess
 import utopia.scribe.api.database.factory.logging.IssueInstancesFactory
 import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
@@ -11,6 +10,13 @@ import utopia.vault.sql.Condition
 
 object ManyIssueInstancesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyIssueInstancesAccess = new ManyIssueInstancesSubView(condition)
+	
+	
+	// NESTED	--------------------
+	
 	private class ManyIssueInstancesSubView(condition: Condition) extends ManyIssueInstancesAccess
 	{
 		// IMPLEMENTED	--------------------
@@ -22,28 +28,27 @@ object ManyIssueInstancesAccess
 /**
   * Common trait for access point that retrieve issues, as well as their variant and occurrence data
   * @author Mikko Hilpinen
-  * @since 25.5.2023, v0.1
+  * @since 25.05.2023, v0.1
   */
-trait ManyIssueInstancesAccess
-	extends ManyIssuesAccessLike[IssueInstances, ManyIssueInstancesAccess]
+trait ManyIssueInstancesAccess 
+	extends ManyIssuesAccessLike[IssueInstances, ManyIssueInstancesAccess] 
 		with OccurrenceTimeBasedAccess[ManyIssueInstancesAccess]
 {
-	// COMPUTED ----------------------------
+	// COMPUTED	--------------------
 	
 	protected def occurrenceModel = IssueOccurrenceModel
 	
 	
-	// IMPLEMENTED  ------------------------
-	
-	override protected def self: ManyIssueInstancesAccess = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory: FromResultFactory[IssueInstances] = IssueInstancesFactory
 	
-	override def filter(additionalCondition: Condition): ManyIssueInstancesAccess =
-		new ManyIssueInstancesSubView(mergeCondition(additionalCondition))
-		
+	override protected def self: ManyIssueInstancesAccess = this
 	
-	// OTHER    --------------------------
+	override def apply(condition: Condition): ManyIssueInstancesAccess = ManyIssueInstancesAccess(condition)
+	
+	
+	// OTHER	--------------------
 	
 	/**
 	  * Deletes all accessible instance occurrences from the database
@@ -51,3 +56,4 @@ trait ManyIssueInstancesAccess
 	  */
 	def deleteOccurrences()(implicit connection: Connection) = delete(occurrenceModel.table)
 }
+

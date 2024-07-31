@@ -7,13 +7,23 @@ import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyRequestPathsAccess
+object ManyRequestPathsAccess extends ViewFactory[ManyRequestPathsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyRequestPathsAccess = new _ManyRequestPathsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyRequestPathsSubView(condition: Condition) extends ManyRequestPathsAccess
+	private class _ManyRequestPathsAccess(condition: Condition) extends ManyRequestPathsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -60,7 +70,6 @@ trait ManyRequestPathsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyRequestPathsAccess = 
-		new ManyRequestPathsAccess.ManyRequestPathsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyRequestPathsAccess = ManyRequestPathsAccess(condition)
 }
 

@@ -1,8 +1,5 @@
 package utopia.exodus.database.access.many.auth
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.database.model.auth.TokenTypeModel
 import utopia.exodus.model.stored.auth.TokenType
@@ -10,16 +7,33 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyTokenTypesAccess
+import scala.concurrent.duration.FiniteDuration
+
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+
+object ManyTokenTypesAccess extends ViewFactory[ManyTokenTypesAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyTokenTypesAccess = new _ManyTokenTypesAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyTokenTypesSubView(override val parent: ManyRowModelAccess[TokenType], 
-		override val filterCondition: Condition) 
-		extends ManyTokenTypesAccess with SubView
+	private class _ManyTokenTypesAccess(condition: Condition) extends ManyTokenTypesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -70,12 +84,11 @@ trait ManyTokenTypesAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = TokenTypeFactory
 	
-	override def filter(additionalCondition: Condition): ManyTokenTypesAccess = 
-		new ManyTokenTypesAccess.ManyTokenTypesSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyTokenTypesAccess = ManyTokenTypesAccess(condition)
 	
 	
 	// OTHER	--------------------

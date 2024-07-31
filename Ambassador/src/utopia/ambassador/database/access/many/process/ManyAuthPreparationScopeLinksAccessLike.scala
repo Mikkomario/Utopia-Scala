@@ -6,21 +6,16 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
-import utopia.vault.sql.Condition
 
 /**
-  * A common trait for access points which target multiple AuthPreparationScopeLinks or similar instances at a time
+  * A common trait for access points which target multiple AuthPreparationScopeLinks or similar instances
+  *  at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-26
+  * @since 26.10.2021
   */
-trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
+trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]] 
 	extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
-	// ABSTRACT --------------------
-	
-	protected def _filter(condition: Condition): Repr
-	
-	
 	// COMPUTED	--------------------
 	
 	/**
@@ -28,6 +23,7 @@ trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def preparationIds(implicit connection: Connection) = 
 		pullColumn(model.preparationIdColumn).flatMap { value => value.int }
+	
 	/**
 	  * scopeIds of the accessible AuthPreparationScopeLinks
 	  */
@@ -42,19 +38,7 @@ trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	protected def model = AuthPreparationScopeLinkModel
 	
 	
-	// IMPLEMENTED	--------------------
-	
-	override def filter(additionalCondition: Condition) = _filter(additionalCondition)
-	
-	
 	// OTHER	--------------------
-	
-	/**
-	  * @param preparationId Id of the targeted authentication preparation
-	  * @return An access point to scope links attached to that preparation
-	  */
-	def withPreparationId(preparationId: Int) =
-		filter(model.withPreparationId(preparationId).toCondition)
 	
 	/**
 	  * Updates the preparationId of the targeted AuthPreparationScopeLink instance(s)
@@ -63,12 +47,19 @@ trait ManyAuthPreparationScopeLinksAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  */
 	def preparationIds_=(newPreparationId: Int)(implicit connection: Connection) = 
 		putColumn(model.preparationIdColumn, newPreparationId)
+	
 	/**
 	  * Updates the scopeId of the targeted AuthPreparationScopeLink instance(s)
 	  * @param newScopeId A new scopeId to assign
 	  * @return Whether any AuthPreparationScopeLink instance was affected
 	  */
-	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn, 
+	def scopeIds_=(newScopeId: Int)(implicit connection: Connection) = putColumn(model.scopeIdColumn,
 		newScopeId)
+	
+	/**
+	  * @param preparationId Id of the targeted authentication preparation
+	  * @return An access point to scope links attached to that preparation
+	  */
+	def withPreparationId(preparationId: Int) = filter(model.withPreparationId(preparationId).toCondition)
 }
 

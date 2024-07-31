@@ -9,14 +9,23 @@ import utopia.logos.model.stored.word.Statement
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.ChronoRowFactoryView
+import utopia.vault.nosql.view.{ChronoRowFactoryView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyStatementsAccess
+object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyStatementsAccess = new _ManyStatementsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyStatementsSubView(condition: Condition) extends ManyStatementsAccess
+	private class _ManyStatementsAccess(condition: Condition) extends ManyStatementsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -30,7 +39,7 @@ object ManyStatementsAccess
   * @since 20.03.2024, v0.2
   */
 trait ManyStatementsAccess 
-	extends ManyStatementsAccessLike[Statement, ManyStatementsAccess] with ManyRowModelAccess[Statement]
+	extends ManyStatementsAccessLike[Statement, ManyStatementsAccess] with ManyRowModelAccess[Statement] 
 		with ChronoRowFactoryView[Statement, ManyStatementsAccess]
 {
 	// COMPUTED	--------------------
@@ -45,6 +54,7 @@ trait ManyStatementsAccess
 	  * Model used for interacting with statement-word links
 	  */
 	protected def wordLinkModel = WordPlacementModel
+	
 	/**
 	  * Model used for interacting with statement-link links
 	  */
@@ -57,41 +67,10 @@ trait ManyStatementsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyStatementsAccess = 
-		new ManyStatementsAccess.ManyStatementsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyStatementsAccess = ManyStatementsAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param wordId     Id of the searched word
-	  * @param connection Implicit DB Connection
-	  * @return Accessible statements that mention the specified word at the specified location
-	  */
-	def findWithWordAtIndex(wordId: Int, index: Int)(implicit connection: Connection) =
-		findWithReferenceAtIndex(wordLinkModel, wordLinkModel.wordId.column, wordId, index)
-	/**
-	  * @param linkId     Id of the searched link
-	  * @param connection Implicit DB Connection
-	  * @return Accessible statements that mention the specified word at the specified location
-	  */
-	def findWithLinkAtIndex(linkId: Int, index: Int)(implicit connection: Connection) =
-		findWithReferenceAtIndex(linkLinkModel, linkLinkModel.linkId.column, linkId, index)
-	/**
-	  * @param wordOrLinkId     Id of the searched word or link
-	  * @param isLink Whether the searched item is a link and not a word.
-	  *               Default = false.
-	  * @param connection Implicit DB Connection
-	  * @return Accessible statements that start with the specified word
-	  */
-	def findStartingWith(wordOrLinkId: Int, isLink: Boolean = false)
-	                    (implicit connection: Connection) =
-	{
-		if (isLink)
-			findWithLinkAtIndex(wordOrLinkId, 0)
-		else
-			findWithWordAtIndex(wordOrLinkId, 0)
-	}
 	
 	/**
 	  * @param length Targeted length (> 0)
@@ -103,14 +82,45 @@ trait ManyStatementsAccess
 		forNotLinkedTo(wordLinkModel.table,
 			lengthLimit.map { wordLinkModel.withOrderIndex(_).toCondition }) { (wordCondition, wordJoin) =>
 			forNotLinkedTo(linkLinkModel.table,
-				lengthLimit.map { linkLinkModel.withOrderIndex(_).toCondition }) { (linkCondition, linkJoin) =>
+				lengthLimit.map { linkLinkModel.withOrderIndex(_).toCondition }) { (linkCondition, 
+					linkJoin) =>
 				find(wordCondition && linkCondition, joins = Pair(wordJoin, linkJoin))
 			} { find(wordCondition, joins = Single(wordJoin)) }
 		} { findNotLinkedTo(linkLinkModel.table) }
 	}
 	
-	private def findWithReferenceAtIndex(model: StatementLinkedModel, refColumn: Column, refId: Int, index: Int)
-	                                    (implicit connection: Connection) =
+	/**
+	  * @param wordOrLinkId     Id of the searched word or link
+	  * @param isLink Whether the searched item is a link and not a word.
+	  * Default = false.
+	  * @param connection Implicit DB Connection
+	  * @return Accessible statements that start with the specified word
+	  */
+	def findStartingWith(wordOrLinkId: Int, isLink: Boolean = false)(implicit connection: Connection) = {
+		if (isLink)
+			findWithLinkAtIndex(wordOrLinkId, 0)
+		else
+			findWithWordAtIndex(wordOrLinkId, 0)
+	}
+	
+	/**
+	  * @param linkId     Id of the searched link
+	  * @param connection Implicit DB Connection
+	  * @return Accessible statements that mention the specified word at the specified location
+	  */
+	def findWithLinkAtIndex(linkId: Int, index: Int)(implicit connection: Connection) = 
+		findWithReferenceAtIndex(linkLinkModel, linkLinkModel.linkId.column, linkId, index)
+	
+	/**
+	  * @param wordId     Id of the searched word
+	  * @param connection Implicit DB Connection
+	  * @return Accessible statements that mention the specified word at the specified location
+	  */
+	def findWithWordAtIndex(wordId: Int, index: Int)(implicit connection: Connection) = 
+		findWithReferenceAtIndex(wordLinkModel, wordLinkModel.wordId.column, wordId, index)
+	
+	private def findWithReferenceAtIndex(model: StatementLinkedModel, refColumn: Column, refId: Int, 
+		index: Int)(implicit connection: Connection) = 
 		find((refColumn <=> refId) && (model.orderIndexColumn <=> index), joins = Single(model.table))
 }
 

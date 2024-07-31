@@ -2,18 +2,18 @@ package utopia.logos.database.access.single.word.statement
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.logos.database.storable.word.StatementModel
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.logos.database.storable.word.StatementModel
 
 import java.time.Instant
 
 /**
   * A common trait for access points which target individual statements or similar items at a time
   * @author Mikko Hilpinen
-  * @since 12.10.2023, Emissary Email Client v0.1, added to Logos v0.2 11.3.2024
+  * @since 31.07.2024
   */
 trait UniqueStatementAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed

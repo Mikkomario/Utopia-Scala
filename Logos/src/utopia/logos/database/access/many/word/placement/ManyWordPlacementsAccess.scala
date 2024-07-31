@@ -9,13 +9,24 @@ import utopia.logos.model.stored.word.WordPlacement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyWordPlacementsAccess
+object ManyWordPlacementsAccess extends ViewFactory[ManyWordPlacementsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyWordPlacementsAccess = 
+		 new _ManyWordPlacementsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyWordPlacementsSubView(condition: Condition) extends ManyWordPlacementsAccess
+	private class _ManyWordPlacementsAccess(condition: Condition) extends ManyWordPlacementsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -29,7 +40,8 @@ object ManyWordPlacementsAccess
   * @since 20.03.2024, v0.2
   */
 trait ManyWordPlacementsAccess 
-	extends ManyRowModelAccess[WordPlacement] with Indexed with ManyStatementPlacedAccess[ManyWordPlacementsAccess]
+	extends ManyRowModelAccess[WordPlacement] with Indexed 
+		with ManyStatementPlacedAccess[ManyWordPlacementsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -70,8 +82,7 @@ trait ManyWordPlacementsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyWordPlacementsAccess = 
-		new ManyWordPlacementsAccess.ManyWordPlacementsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyWordPlacementsAccess = ManyWordPlacementsAccess(condition)
 	
 	
 	// OTHER	--------------------

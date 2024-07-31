@@ -1,22 +1,33 @@
 package utopia.exodus.database.access.many.auth
 
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
-import utopia.exodus.database.model.auth.EmailValidationAttemptModel
 import utopia.exodus.model.stored.auth.EmailValidationAttempt
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyEmailValidationAttemptsAccess
+object ManyEmailValidationAttemptsAccess extends ViewFactory[ManyEmailValidationAttemptsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyEmailValidationAttemptsAccess = 
+		new _ManyEmailValidationAttemptsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyEmailValidationAttemptsSubView(override val parent: ManyRowModelAccess[EmailValidationAttempt], 
-		override val filterCondition: Condition) 
-		extends ManyEmailValidationAttemptsAccess with SubView
+	private class _ManyEmailValidationAttemptsAccess(condition: Condition) 
+		extends ManyEmailValidationAttemptsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -30,11 +41,11 @@ trait ManyEmailValidationAttemptsAccess
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = EmailValidationAttemptFactory
 	
-	override def filter(additionalCondition: Condition): ManyEmailValidationAttemptsAccess = 
-		new ManyEmailValidationAttemptsAccess.ManyEmailValidationAttemptsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyEmailValidationAttemptsAccess = 
+		ManyEmailValidationAttemptsAccess(condition)
 }
 

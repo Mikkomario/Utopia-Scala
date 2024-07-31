@@ -6,52 +6,58 @@ import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.combined.user.DetailedUserLanguage
 import utopia.metropolis.model.stored.user.UserLanguageLink
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
 object ManyUserLanguageLinksAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyUserLanguageLinksAccess = _Access(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyUserLanguageLinksSubView(override val parent: ManyRowModelAccess[UserLanguageLink],
-	                                           override val filterCondition: Condition)
-		extends ManyUserLanguageLinksAccess with SubView
+	private case class _Access(accessCondition: Option[Condition]) extends ManyUserLanguageLinksAccess
 }
 
 /**
   * A common trait for access points which target multiple UserLanguages at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyUserLanguageLinksAccess
+trait ManyUserLanguageLinksAccess 
 	extends ManyUserLanguageLinksAccessLike[UserLanguageLink, ManyUserLanguageLinksAccess]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return A version of this access point which includes language familiarity data
+	  * A version of this access point which includes language familiarity data
 	  */
-	def withFamiliarities = accessCondition match
-	{
-		case Some(condition) => DbUserLanguageLinksWithFamiliarities.filter(condition)
-		case None => DbUserLanguageLinksWithFamiliarities
+	def withFamiliarities = {
+		accessCondition match
+		{
+			case Some(condition) => DbUserLanguageLinksWithFamiliarities.filter(condition)
+			case None => DbUserLanguageLinksWithFamiliarities
+		}
 	}
+	
 	/**
-	  * @return A version of this access point which includes language and language familiarity data
+	  * A version of this access point which includes language and language familiarity data
 	  */
-	def full = accessCondition match
-	{
-		case Some(condition) => DbFullUserLanguages.filter(condition)
-		case None => DbFullUserLanguages
+	def full = {
+		accessCondition match
+		{
+			case Some(condition) => DbFullUserLanguages.filter(condition)
+			case None => DbFullUserLanguages
+		}
 	}
+	
 	/**
+	  * Detailed copies of available language links (include described language and familiarity data)
 	  * @param connection Implicit DB Connection
 	  * @param languageIds Ids of the languages in which descriptions are read
-	  * @return Detailed copies of available language links (include described language and familiarity data)
 	  */
-	def detailed(implicit connection: Connection, languageIds: LanguageIds) =
-	{
+	def detailed(implicit connection: Connection, languageIds: LanguageIds) = {
 		// Reads the links and the described language & familiarity data
 		val links = pull
 		val languages = DbLanguages(links.map { _.languageId }.toSet).described
@@ -68,11 +74,11 @@ trait ManyUserLanguageLinksAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = UserLanguageLinkFactory
 	
-	override def _filter(additionalCondition: Condition): ManyUserLanguageLinksAccess =
-		new ManyUserLanguageLinksAccess.ManyUserLanguageLinksSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override
+		 def apply(condition: Condition): ManyUserLanguageLinksAccess = ManyUserLanguageLinksAccess(condition)
 }
 

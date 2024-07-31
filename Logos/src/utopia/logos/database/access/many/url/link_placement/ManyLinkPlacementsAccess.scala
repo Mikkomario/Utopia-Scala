@@ -8,14 +8,24 @@ import utopia.logos.model.stored.url.LinkPlacement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyLinkPlacementsAccess
+object ManyLinkPlacementsAccess extends ViewFactory[ManyLinkPlacementsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyLinkPlacementsAccess = 
+		 new _ManyLinkPlacementsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyLinkPlacementsSubView(condition: Condition) extends ManyLinkPlacementsAccess
+	private class _ManyLinkPlacementsAccess(condition: Condition) extends ManyLinkPlacementsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -29,7 +39,8 @@ object ManyLinkPlacementsAccess
   * @since 16.10.2023, v0.1
   */
 trait ManyLinkPlacementsAccess 
-	extends ManyRowModelAccess[LinkPlacement] with Indexed with ManyStatementPlacedAccess[ManyLinkPlacementsAccess]
+	extends ManyRowModelAccess[LinkPlacement] with Indexed 
+		with ManyStatementPlacedAccess[ManyLinkPlacementsAccess]
 {
 	// COMPUTED	--------------------
 	
@@ -64,8 +75,7 @@ trait ManyLinkPlacementsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyLinkPlacementsAccess = 
-		new ManyLinkPlacementsAccess.ManyLinkPlacementsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyLinkPlacementsAccess = ManyLinkPlacementsAccess(condition)
 	
 	
 	// OTHER	--------------------

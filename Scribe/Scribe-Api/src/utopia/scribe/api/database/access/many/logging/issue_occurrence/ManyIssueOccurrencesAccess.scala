@@ -15,6 +15,11 @@ import utopia.vault.sql.Condition
 
 object ManyIssueOccurrencesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyIssueOccurrencesAccess = new ManyIssueOccurrencesSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyIssueOccurrencesSubView(condition: Condition) extends ManyIssueOccurrencesAccess
@@ -31,7 +36,7 @@ object ManyIssueOccurrencesAccess
   * @since 22.05.2023, v0.1
   */
 trait ManyIssueOccurrencesAccess 
-	extends ManyRowModelAccess[IssueOccurrence] with FilterableView[ManyIssueOccurrencesAccess] with Indexed
+	extends ManyRowModelAccess[IssueOccurrence] with FilterableView[ManyIssueOccurrencesAccess] with Indexed 
 		with OccurrenceTimeBasedAccess[ManyIssueOccurrencesAccess]
 {
 	// COMPUTED	--------------------
@@ -50,9 +55,13 @@ trait ManyIssueOccurrencesAccess
 	/**
 	  * details of the accessible issue occurrences
 	  */
-	def details(implicit connection: Connection) = 
-		pullColumn(model.detailsColumn).map { v => v.notEmpty match {
-			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty } }
+	def details(implicit connection: Connection) = {
+		pullColumn(model.detailsColumn).map { v => v.notEmpty match 
+		{
+			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty 
+		}
+			}
+	}
 	
 	/**
 	  * counts of the accessible issue occurrences
@@ -73,17 +82,10 @@ trait ManyIssueOccurrencesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyIssueOccurrencesAccess = 
-		new ManyIssueOccurrencesAccess.ManyIssueOccurrencesSubView(mergeCondition(filterCondition))
-	
 	
 	// OTHER	--------------------
 	
-	/**
-	  * @param variantIds Ids of the targeted issue variants
-	  * @return Access to the occurrences of those variants
-	  */
-	def ofVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
+	def apply(condition: Condition): ManyIssueOccurrencesAccess = ManyIssueOccurrencesAccess(condition)
 	
 	/**
 	  * Updates the case ids of the targeted issue occurrences
@@ -115,5 +117,11 @@ trait ManyIssueOccurrencesAccess
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
 		putColumn(model.errorMessagesColumn, 
 			NotEmpty(newErrorMessages) match { case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value; case None => Value.empty })
+	
+	/**
+	  * @param variantIds Ids of the targeted issue variants
+	  * @return Access to the occurrences of those variants
+	  */
+	def ofVariants(variantIds: Iterable[Int]) = filter(model.caseIdColumn.in(variantIds))
 }
 

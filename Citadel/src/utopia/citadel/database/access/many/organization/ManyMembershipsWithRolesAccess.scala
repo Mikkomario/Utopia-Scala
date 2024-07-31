@@ -1,23 +1,29 @@
 package utopia.citadel.database.access.many.organization
 
-import utopia.citadel.database.access.many.organization.ManyMembershipsWithRolesAccess.SubAcccess
 import utopia.citadel.database.access.many.user.DbUsers
 import utopia.citadel.database.factory.organization.MembershipWithRolesFactory
 import utopia.citadel.database.model.organization.MemberRoleLinkModel
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.metropolis.model.combined.organization.{DetailedMembership, MembershipWithRoles}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.many.model.ManyModelAccess
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
 import java.time.Instant
 
 object ManyMembershipsWithRolesAccess
 {
-	private class SubAcccess(override val parent: ManyModelAccess[MembershipWithRoles],
-	                                     override val filterCondition: Condition)
-		extends ManyMembershipsWithRolesAccess with SubView
+	// OTHER    --------------------
+	
+	/**
+	  * @param condition Search condition to apply
+	  * @return Access to memberships that fulfill the specified search condition
+	  */
+	def apply(condition: Condition): ManyMembershipsWithRolesAccess = _Access(Some(condition))
+	
+	
+	// NESTED	--------------------
+	
+	private case class _Access(accessCondition: Option[Condition]) extends ManyMembershipsWithRolesAccess
 }
 
 /**
@@ -25,22 +31,16 @@ object ManyMembershipsWithRolesAccess
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
-trait ManyMembershipsWithRolesAccess
+trait ManyMembershipsWithRolesAccess 
 	extends ManyMembershipsAccessLike[MembershipWithRoles, ManyMembershipsWithRolesAccess]
 {
-	// COMPUTED -------------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Model used for interacting with member role links
-	  */
-	protected def roleLinkModel = MemberRoleLinkModel
-	
-	/**
+	  * Detailed copies of these memberships, including the roles, allowed tasks and user settings
 	  * @param connection Implicit DB connection
-	  * @return Detailed copies of these memberships, including the roles, allowed tasks and user settings
 	  */
-	def detailed(implicit connection: Connection) =
-	{
+	def detailed(implicit connection: Connection) = {
 		// Reads membership data
 		val membershipData = pull
 		// Reads rights data
@@ -53,33 +53,40 @@ trait ManyMembershipsWithRolesAccess
 		membershipData.flatMap { membership =>
 			settings.find { _.userId == membership.userId }.map { settings =>
 				val rolesWithTasks = membership.roleLinks.map { roleLink =>
-					roleLink.withAccessToTasksWithIds(taskIdsForRoleId.getOrElse(roleLink.roleId, Vector()).toSet) }
+					roleLink.withAccessToTasksWithIds(taskIdsForRoleId.getOrElse(roleLink.roleId, 
+						Vector()).toSet) }
 				DetailedMembership(membership.membership, rolesWithTasks, settings)
 			}
 		}
 	}
 	
+	/**
+	  * Model used for interacting with member role links
+	  */
+	protected def roleLinkModel = MemberRoleLinkModel
 	
-	// IMPLEMENTED  --------------------------
 	
-	override protected def self = this
+	// IMPLEMENTED	--------------------
 	
 	override def factory = MembershipWithRolesFactory
 	
-	override protected def _filter(condition: Condition): ManyMembershipsWithRolesAccess =
-		new SubAcccess(this, condition)
+	override protected def self = this
 	
-	override def isModifiedSince(threshold: Instant)(implicit connection: Connection) =
-		exists(model.startedColumn > threshold || model.deprecationColumn > threshold ||
-			roleLinkModel.createdColumn > threshold || roleLinkModel.deprecatedAfterColumn > threshold)
+	override def apply(condition: Condition): ManyMembershipsWithRolesAccess = 
+		ManyMembershipsWithRolesAccess(condition)
+	
+	override def isModifiedSince(threshold: Instant)(implicit connection: Connection) = 
+		exists(model.startedColumn > threshold || model.deprecationColumn >
+			 threshold ||roleLinkModel.createdColumn >
+			 threshold || roleLinkModel.deprecatedAfterColumn > threshold)
 	
 	
-	// OTHER    ------------------------------
+	// OTHER	--------------------
 	
 	/**
 	  * @param userRoleId A user role id
 	  * @return An access point to memberships + member roles that refer to the specified user role
 	  */
-	def limitedToRoleWithId(userRoleId: Int) =
-		filter(roleLinkModel.withRoleId(userRoleId).toCondition)
+	def limitedToRoleWithId(userRoleId: Int) = filter(roleLinkModel.withRoleId(userRoleId).toCondition)
 }
+

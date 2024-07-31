@@ -8,6 +8,11 @@ import utopia.vault.sql.Condition
 
 object ManyIssueVariantsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyIssueVariantsAccess = new ManyIssueVariantsSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyIssueVariantsSubView(condition: Condition) extends ManyIssueVariantsAccess
@@ -25,13 +30,12 @@ object ManyIssueVariantsAccess
   */
 trait ManyIssueVariantsAccess 
 	extends ManyIssueVariantsAccessLike[IssueVariant, ManyIssueVariantsAccess] 
-		with ManyRowModelAccess[IssueVariant] 
-		with ChronoRowFactoryView[IssueVariant, ManyIssueVariantsAccess]
+		with ManyRowModelAccess[IssueVariant] with ChronoRowFactoryView[IssueVariant, ManyIssueVariantsAccess]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this access point, which includes issue information
+	  * Copy of this access point, which includes issue information
 	  */
 	def contextual = DbContextualIssueVariants.filter(accessCondition)
 	
@@ -42,7 +46,6 @@ trait ManyIssueVariantsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyIssueVariantsAccess = 
-		new ManyIssueVariantsAccess.ManyIssueVariantsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyIssueVariantsAccess = ManyIssueVariantsAccess(condition)
 }
 

@@ -1,17 +1,10 @@
 package utopia.logos.database.access.single.word.statement
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.factory.word.StatementDbFactory
-import utopia.logos.database.storable.word.StatementModel
 import utopia.logos.model.stored.word.Statement
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
-import utopia.vault.nosql.access.template.model.DistinctModelAccess
-import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Condition
-
-import java.time.Instant
 
 object UniqueStatementAccess
 {
@@ -40,7 +33,8 @@ object UniqueStatementAccess
   * @since 20.03.2024, v0.2
   */
 trait UniqueStatementAccess 
-	extends UniqueStatementAccessLike[Statement] with SingleChronoRowModelAccess[Statement, UniqueStatementAccess]
+	extends UniqueStatementAccessLike[Statement] 
+		with SingleChronoRowModelAccess[Statement, UniqueStatementAccess]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -48,7 +42,6 @@ trait UniqueStatementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueStatementAccess = 
-		new UniqueStatementAccess._UniqueStatementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueStatementAccess = UniqueStatementAccess(condition)
 }
 

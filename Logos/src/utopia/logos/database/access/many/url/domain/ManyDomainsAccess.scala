@@ -7,16 +7,25 @@ import utopia.logos.model.stored.url.Domain
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
 import java.time.Instant
 
-object ManyDomainsAccess
+object ManyDomainsAccess extends ViewFactory[ManyDomainsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyDomainsAccess = new _ManyDomainsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDomainsSubView(condition: Condition) extends ManyDomainsAccess
+	private class _ManyDomainsAccess(condition: Condition) extends ManyDomainsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -51,9 +60,13 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	  * All urls are in lower case.
 	  * @param connection Implicit DB connection
 	  */
-	def toMap(implicit connection: Connection) = 
-		pullColumnMap(model.url.column, index)
-			.map { case (urlVal, idVal) => urlVal.getString.toLowerCase -> idVal.getInt }
+	def toMap(implicit connection: Connection) = {
+		pullColumnMap(model.url.column, index).map 
+		{
+			 case (urlVal, 
+					idVal) => urlVal.getString.toLowerCase -> idVal.getInt 
+		}
+	}
 	
 	/**
 	  * Factory used for constructing database the interaction models
@@ -67,8 +80,7 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyDomainsAccess = 
-		new ManyDomainsAccess.ManyDomainsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyDomainsAccess = ManyDomainsAccess(condition)
 	
 	
 	// OTHER	--------------------

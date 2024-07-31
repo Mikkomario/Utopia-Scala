@@ -3,33 +3,34 @@ package utopia.citadel.database.access.many.organization
 import utopia.citadel.database.factory.organization.MembershipFactory
 import utopia.metropolis.model.stored.organization.Membership
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.SubView
 import utopia.vault.sql.Condition
 
 object ManyMembershipsAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyMembershipsAccess = SubAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyMembershipsSubView(override val parent: ManyRowModelAccess[Membership], 
-		override val filterCondition: Condition) 
-		extends ManyMembershipsAccess with SubView
+	private case class SubAccess(accessCondition: Option[Condition]) extends ManyMembershipsAccess
 }
 
 /**
   * A common trait for access points which target multiple Memberships at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
-trait ManyMembershipsAccess
+trait ManyMembershipsAccess 
 	extends ManyMembershipsAccessLike[Membership, ManyMembershipsAccess] with ManyRowModelAccess[Membership]
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = MembershipFactory
 	
-	override def _filter(additionalCondition: Condition): ManyMembershipsAccess =
-		new ManyMembershipsAccess.ManyMembershipsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyMembershipsAccess = ManyMembershipsAccess(condition)
 }
 

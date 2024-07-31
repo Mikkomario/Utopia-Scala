@@ -22,8 +22,9 @@ trait UniqueIssueAccessLike[+A]
 	// COMPUTED	--------------------
 	
 	/**
-	  * Program context where this issue occurred or was logged. Should be unique.. None if no issue (or value)
-	  *  was found.
+	  * 
+		Program context where this issue occurred or was logged. Should be unique.. None if no issue (or value)
+	  * was found.
 	  */
 	def context(implicit connection: Connection) = pullColumn(model.contextColumn).getString
 	

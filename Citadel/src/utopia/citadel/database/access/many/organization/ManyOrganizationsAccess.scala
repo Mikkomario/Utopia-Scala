@@ -1,6 +1,5 @@
 package utopia.citadel.database.access.many.organization
 
-import java.time.Instant
 import utopia.citadel.database.access.many.description.{DbOrganizationDescriptions, ManyDescribedAccess}
 import utopia.citadel.database.factory.organization.OrganizationFactory
 import utopia.citadel.database.model.organization.OrganizationModel
@@ -9,25 +8,40 @@ import utopia.metropolis.model.combined.organization.DescribedOrganization
 import utopia.metropolis.model.stored.organization.Organization
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.{FilterableView, SubView}
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-object ManyOrganizationsAccess
+import java.time.Instant
+
+object ManyOrganizationsAccess extends ViewFactory[ManyOrganizationsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyOrganizationsAccess = 
+		 new _ManyOrganizationsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyOrganizationsSubView(override val parent: ManyRowModelAccess[Organization], 
-		override val filterCondition: Condition) 
-		extends ManyOrganizationsAccess with SubView
+	private class _ManyOrganizationsAccess(condition: Condition) extends ManyOrganizationsAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
   * A common trait for access points which target multiple Organizations at a time
   * @author Mikko Hilpinen
-  * @since 2021-10-23
+  * @since 23.10.2021
   */
 trait ManyOrganizationsAccess 
-	extends ManyRowModelAccess[Organization] with ManyDescribedAccess[Organization, DescribedOrganization]
+	extends ManyRowModelAccess[Organization] with ManyDescribedAccess[Organization, DescribedOrganization] 
 		with FilterableView[ManyOrganizationsAccess]
 {
 	// COMPUTED	--------------------
@@ -54,16 +68,15 @@ trait ManyOrganizationsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
-	
 	override def factory = OrganizationFactory
 	
 	override protected def describedFactory = DescribedOrganization
 	
 	override protected def manyDescriptionsAccess = DbOrganizationDescriptions
 	
-	override def filter(additionalCondition: Condition): ManyOrganizationsAccess = 
-		new ManyOrganizationsAccess.ManyOrganizationsSubView(this, additionalCondition)
+	override protected def self = this
+	
+	override def apply(condition: Condition): ManyOrganizationsAccess = ManyOrganizationsAccess(condition)
 	
 	override def idOf(item: Organization) = item.id
 	

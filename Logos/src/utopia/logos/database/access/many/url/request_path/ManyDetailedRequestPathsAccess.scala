@@ -6,15 +6,26 @@ import utopia.logos.database.storable.url.DomainModel
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
 import java.time.Instant
 
-object ManyDetailedRequestPathsAccess
+object ManyDetailedRequestPathsAccess extends ViewFactory[ManyDetailedRequestPathsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyDetailedRequestPathsAccess = 
+		new _ManyDetailedRequestPathsAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyDetailedRequestPathsAccess
+	private class _ManyDetailedRequestPathsAccess(condition: Condition) extends ManyDetailedRequestPathsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -56,8 +67,8 @@ trait ManyDetailedRequestPathsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyDetailedRequestPathsAccess = 
-		new ManyDetailedRequestPathsAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyDetailedRequestPathsAccess = 
+		ManyDetailedRequestPathsAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -75,7 +86,7 @@ trait ManyDetailedRequestPathsAccess
 	  * @param newUrl A new url to assign
 	  * @return Whether any domain was affected
 	  */
-	def domainUrls_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column, 
+	def domainUrls_=(newUrl: String)(implicit connection: Connection) = putColumn(domainModel.url.column,
 		newUrl)
 }
 

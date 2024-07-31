@@ -1,17 +1,32 @@
 package utopia.ambassador.database.access.many.scope
 
-import utopia.ambassador.database.access.many.scope.ManyAuthPreparationScopesAccess.SubAccess
 import utopia.ambassador.database.factory.scope.AuthPreparationScopeFactory
 import utopia.ambassador.model.combined.scope.AuthPreparationScope
-import utopia.vault.nosql.access.many.model.{ManyModelAccess, ManyRowModelAccess}
-import utopia.vault.nosql.view.SubView
+import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
-object ManyAuthPreparationScopesAccess
+object ManyAuthPreparationScopesAccess extends ViewFactory[ManyAuthPreparationScopesAccess]
 {
-	private class SubAccess(override val parent: ManyModelAccess[AuthPreparationScope],
-	                        override val filterCondition: Condition)
-		extends ManyAuthPreparationScopesAccess with SubView
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAuthPreparationScopesAccess = 
+		new _ManyAuthPreparationScopesAccess(condition)
+	
+	
+	// NESTED	--------------------
+	
+	private class _ManyAuthPreparationScopesAccess(condition: Condition)
+		 extends ManyAuthPreparationScopesAccess
+	{
+		// IMPLEMENTED	--------------------
+		
+		override def accessCondition = Some(condition)
+	}
 }
 
 /**
@@ -19,15 +34,17 @@ object ManyAuthPreparationScopesAccess
   * @author Mikko Hilpinen
   * @since 26.10.2021, v2.0
   */
-trait ManyAuthPreparationScopesAccess
-	extends ManyScopesAccessLike[AuthPreparationScope, ManyAuthPreparationScopesAccess]
+trait ManyAuthPreparationScopesAccess 
+	extends ManyScopesAccessLike[AuthPreparationScope, ManyAuthPreparationScopesAccess] 
 		with ManyRowModelAccess[AuthPreparationScope]
 {
-	// IMPLEMENTED  ----------------------------
+	// IMPLEMENTED	--------------------
+	
+	override def factory = AuthPreparationScopeFactory
 	
 	override protected def self = this
 	
-	override protected def _filter(condition: Condition): ManyAuthPreparationScopesAccess =
-		new SubAccess(this, condition)
-	override def factory = AuthPreparationScopeFactory
+	override def apply(condition: Condition): ManyAuthPreparationScopesAccess = 
+		ManyAuthPreparationScopesAccess(condition)
 }
+

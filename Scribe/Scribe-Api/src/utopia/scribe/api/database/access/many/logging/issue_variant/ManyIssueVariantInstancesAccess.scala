@@ -10,6 +10,11 @@ import utopia.vault.sql.Condition
 
 object ManyIssueVariantInstancesAccess
 {
+	// OTHER	--------------------
+	
+	def apply(condition: Condition): ManyIssueVariantInstancesAccess = new SubAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class SubAccess(condition: Condition) extends ManyIssueVariantInstancesAccess
@@ -55,8 +60,8 @@ trait ManyIssueVariantInstancesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyIssueVariantInstancesAccess = 
-		new ManyIssueVariantInstancesAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyIssueVariantInstancesAccess = 
+		ManyIssueVariantInstancesAccess(condition)
 	
 	
 	// OTHER	--------------------

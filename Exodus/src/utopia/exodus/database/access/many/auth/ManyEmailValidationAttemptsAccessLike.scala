@@ -9,7 +9,7 @@ import utopia.vault.nosql.view.FilterableView
 
 /**
   * A common trait for access points which target multiple email validation attempts or similar instances
-  *  at a time
+  * at a time
   * @author Mikko Hilpinen
   * @since 21.02.2022, v4.0
   */
@@ -65,7 +65,7 @@ trait ManyEmailValidationAttemptsAccessLike[+A, +Repr <: ManyModelAccess[A]]
 	  * @param newTokenId A new token id to assign
 	  * @return Whether any email validation attempt was affected
 	  */
-	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn, 
+	def tokensIds_=(newTokenId: Int)(implicit connection: Connection) = putColumn(model.tokenIdColumn,
 		newTokenId)
 }
 

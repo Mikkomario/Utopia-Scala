@@ -7,16 +7,25 @@ import utopia.logos.model.stored.word.Delimiter
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
 import java.time.Instant
 
-object ManyDelimitersAccess
+object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyDelimitersAccess = new _ManyDelimitersAccess(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDelimitersSubView(condition: Condition) extends ManyDelimitersAccess
+	private class _ManyDelimitersAccess(condition: Condition) extends ManyDelimitersAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -66,8 +75,7 @@ trait ManyDelimitersAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyDelimitersAccess = 
-		new ManyDelimitersAccess.ManyDelimitersSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyDelimitersAccess = ManyDelimitersAccess(condition)
 	
 	
 	// OTHER	--------------------
