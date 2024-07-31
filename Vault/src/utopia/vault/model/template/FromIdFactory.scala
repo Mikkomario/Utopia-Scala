@@ -5,7 +5,7 @@ package utopia.vault.model.template
  * @tparam Id Type of accepted ids
  * @tparam A Type of constructed items
  * @author Mikko Hilpinen
- * @since 15/03/2024, v1.18.1
+ * @since 15/03/2024, v1.19
  */
 trait FromIdFactory[-Id, +A]
 {

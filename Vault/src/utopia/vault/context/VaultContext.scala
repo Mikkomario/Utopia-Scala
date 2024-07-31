@@ -29,7 +29,7 @@ object VaultContext
 /**
   * Common trait for interfaces that specify the commonly used values in a project that uses Vault
   * @author Mikko Hilpinen
-  * @since 11/03/2024, v1.18.1
+  * @since 11/03/2024, v1.19
   */
 trait VaultContext
 {

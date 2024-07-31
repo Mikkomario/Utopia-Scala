@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext
 /**
   * Common trait for items that implement the [[VaultContext]] trait by wrapping another context instance
   * @author Mikko Hilpinen
-  * @since 11/03/2024, v1.18.1
+  * @since 11/03/2024, v1.19
   */
 trait VaultContextWrapper extends VaultContext
 {

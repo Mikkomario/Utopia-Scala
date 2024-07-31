@@ -25,7 +25,7 @@ object DbPropertyDeclaration
   * A model that provides access to a specific database model property name,
   * also facilitating column access
   * @author Mikko Hilpinen
-  * @since 16/03/2024, v1.18.1
+  * @since 16/03/2024, v1.19
   * @constructor Creates a new declaration by specifying both the db property name, as well as the accessed column
   * @param name Name of this database-based property
   * @param column Column being interacted with
