@@ -1,7 +1,18 @@
 # Utopia Annex - List of Changes
 
 ## v1.8.1 (in development)
-Built with Scala v2.13.14
+### New features
+- Added **RequestResultExtensions** that adds a couple of new methods for **Futures** that contain **RequestResults**
+### New methods
+- **ApiClient.PreparedRequest**
+  - Added multiple new functions for parsing optional values 
+    (i.e. parse variants that replace empty responses with None but parse non-empty responses)
+- **RequestQueue**
+  - Added `.tryPushEither(RequestQueueable)`
+### Other changes
+- Built with Scala v2.13.14
+- **ApiClient**`.multiParserFrom(FromModelFactory)` and **PreparedRequest**`.getMany(FromModelFactory) `
+  can now handle partial failures by logging them (optional feature)
 
 ## v1.8 - 28.07.2024
 A major overhaul of basic Annex concepts, namely **Response**s and response-parsing 

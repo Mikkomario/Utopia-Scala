@@ -1,7 +1,9 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.0.3 (in development)
-Built with Scala v2.13.14
+### Other changes
+- Built with Scala v2.13.14
+- Supports Vault v1.20
 
 ## v1.0.2 - 28.07.2024
 This update adds support **Vault v1.19**, as well as a few minor changes.

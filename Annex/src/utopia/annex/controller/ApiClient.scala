@@ -10,6 +10,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.ResponseParser
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
@@ -53,6 +54,12 @@ object ApiClient
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
 		def getModels = parseValue { _.tryVectorWith { _.tryModel } }
+		/**
+		  * Sends out this request and receives the response as one containing a [[Model]] (parsed from a [[Value]]).
+		  * Empty values are replaced with None.
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def getModelOption = parseValueIfNotEmpty { _.tryModel }
 		
 		
 		// OTHER    ---------------------------
@@ -60,16 +67,32 @@ object ApiClient
 		/**
 		  * Sends out this request and receives the response as one containing a single parsed item.
 		  * Parse failures are logged and converted into failure responses.
+		  * @param parser A parser which converts read model into the desired data type
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
 		def getOne[A](parser: FromModelFactory[A]) = send(api.parserFrom(parser))
 		/**
 		  * Sends out this request and receives the response as one containing a a vector of parsed items.
 		  * Parse failures are logged and converted into failure responses.
+		  * @param parser A parser which converts read models into the desired data type
+		  * @param allowPartialFailures Whether the resulting Response should be a Success,
+		  *                             even if some of the parse-operations fail.
+		  *                             If all parse-operations fail, the response will always be a failure.
+		  *                             Default = false = all parse-operations must succeed in order for
+		  *                             the Response to be a Success.
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
-		def getMany[A](parser: FromModelFactory[A]) =
-			send(api.multiParserFrom(parser))
+		def getMany[A](parser: FromModelFactory[A], allowPartialFailures: Boolean = false) =
+			send(api.multiParserFrom(parser, allowPartialFailures))
+		/**
+		  * Sends out this request and receives the response as one containing a single parsed item.
+		  * Parse failures are logged and converted into failure responses.
+		  * Empty responses are not parsed, but yield None instead.
+		  * @param parser A parser which converts read model into the desired data type
+		  * @return Future which eventually resolves into a parsed response, an empty response, or a request failure
+		  */
+		def getOption[A](parser: FromModelFactory[A]) =
+			parseValueIfNotEmpty { _.tryModel.flatMap { parser(_) } }
 		
 		/**
 		  * Sends out this request and receives a mapped response
@@ -87,6 +110,17 @@ object ApiClient
 		  */
 		def mapValues[A](f: Value => A) =
 			send(api.valueResponseParser.mapSuccess { _.getVector.map(f) })
+		/**
+		  * Sends out this request and receives a mapped response.
+		  * Empty responses are not mapped, but yield None instead.
+		  * @param f A function which maps the successful response from type [[Value]] to the final type.
+		  *          Only called on non-empty values.
+		  * @tparam A Type of the final mapping result
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapValueIfNotEmpty[A](f: Value => A) =
+			send(api.valueResponseParser.mapSuccess { _.notEmpty.map(f) })
+			
 		/**
 		  * Sends out this request and receives a parsed response.
 		  * Parsing failures are converted to failure responses.
@@ -107,6 +141,18 @@ object ApiClient
 		  */
 		def parseValues[A](parse: Value => Try[A]) =
 			parseValue { _.tryVectorWith(parse) }
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Parsing failures are converted to failure responses.
+		  * Empty responses are not parsed, but yield None instead.
+		  * @param parse A function which maps the successful response from type [[Value]] to the final type.
+		  *              May yield a failure, in which case the response is converted into a failure response.
+		  *              Will only be called for non-empty values.
+		  * @tparam A Type of the final mapping result, when successful
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def parseValueIfNotEmpty[A](parse: Value => Try[A]) =
+			parseValue { value => if (value.isEmpty) Success(None) else parse(value).map { Some(_) } }
 		
 		/**
 		  * Sends out this request and receives a parsed response.
@@ -127,6 +173,18 @@ object ApiClient
 		  */
 		def mapModels[A](f: Model => A) =
 			parseValue { _.tryVectorWith { _.tryModel.map(f) } }
+		/**
+		  * Sends out this request and receives a parsed response.
+		  * Converts the response body into a model, unless the body is empty,
+		  * and then applies the specified mapping function.
+		  * Empty responses yield None.
+		  * @param f A function which maps the successful response from a [[Model]] to the final type.
+		  *          Will only be called for non-empty models.
+		  * @tparam A Type of the final mapping result
+		  * @return Future which eventually resolves into a parsed response or a request failure
+		  */
+		def mapModelIfPresent[A](f: Model => A) =
+			parseValueIfNotEmpty { _.tryModel.map(f) }
 		
 		/**
 		  * Sends out this request and receives a parsed response.
@@ -310,12 +368,30 @@ trait ApiClient
 	  * Parse failures are converted into failure responses, also logging them.
 	  *
 	  * @param fromModelParser A parser which converts read models into the desired data type
+	  * @param allowPartialFailures Whether the resulting Response should be a Success,
+	  *                             even if some of the parse-operations fail.
+	  *                             If all parse-operations fail, the response will always be a failure.
+	  *                             Default = false = all parse-operations must succeed in order for
+	  *                             the Response to be a Success.
 	  * @tparam A Type of the successful parsing results
 	  * @return A response parser which yields responses with 0-n fully parsed items each.
 	  *         Parse failures are converted into failed responses.
 	  */
-	def multiParserFrom[A](fromModelParser: FromModelFactory[A]) =
-		tryMapValueParser { _.tryVectorWith { _.tryModel.flatMap(fromModelParser.apply) } }
+	def multiParserFrom[A](fromModelParser: FromModelFactory[A],
+	                       allowPartialFailures: Boolean = false) =
+	{
+		// Case: Partial failures allowed => Only logs errors, unless all parsing operations fail
+		if (allowPartialFailures)
+			tryMapValueParser { value =>
+				value.tryVector.flatMap { values =>
+					values.map { _.tryModel.flatMap(fromModelParser.apply) }
+						.toTryCatch.logToTryWithMessage("Failed to parse some, but not all, of the response values")
+				}
+			}
+		// Case: Partial failures not allowed => Fails if any parsing operation fails
+		else
+			tryMapValueParser { _.tryVectorWith { _.tryModel.flatMap(fromModelParser.apply) } }
+	}
 	
 	/**
 	  * Converts the default response-to-value parser of this interface into a further processing parser.

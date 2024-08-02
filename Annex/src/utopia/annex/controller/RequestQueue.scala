@@ -75,7 +75,7 @@ trait RequestQueue
 	  * @return An action which resolves to the eventual request send result.
 	  *         If 'request' was a failure, returns an immediate failure instead.
 	  */
-	def tryPush[A](request: Try[ApiRequest[A]]) = _tryPush(request.map { Right(_) })
+	def tryPush[A](request: Try[ApiRequest[A]]) = tryPushEither(request.map { Right(_) })
 	/**
 	  * Pushes a new request to this queue in seed form, provided that one was successfully acquired
 	  * @param requestSeed Request seed to push to this queue.
@@ -86,9 +86,16 @@ trait RequestQueue
 	  *         If 'request' was a failure, returns an immediate failure instead.
 	  */
 	def tryPushSeed[A](requestSeed: Try[ApiRequestSeed[A]]) =
-		_tryPush(requestSeed.map { Left(_) })
-	
-	private def _tryPush[A](request: Try[RequestQueueable[A]]) = request match {
+		tryPushEither(requestSeed.map { Left(_) })
+	/**
+	  * Pushes a new request to this queue, if one was successfully acquired
+	  * @param request Request to push to this queue. Either as a request seed (Left) or a request (Right).
+	  *                Failure if request-acquisition failed.
+	  * @tparam A Type of the parsed response contents
+	  * @return An action which resolves to the eventual request send result.
+	  *         If 'request' was a failure, returns an immediate failure instead.
+	  */
+	def tryPushEither[A](request: Try[RequestQueueable[A]]) = request match {
 		case Success(request) => push(request)
 		case Failure(error) => QueuedAction.completed(RequestSendingFailed(error))
 	}
