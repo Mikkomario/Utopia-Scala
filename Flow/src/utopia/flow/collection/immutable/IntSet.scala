@@ -15,9 +15,30 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def from(items: IterableOnce[Int]): IntSet = {
+	override def from(items: IterableOnce[Int]): IntSet = items match {
+		case s: IntSet => s
+		case s: Seq[Int] => if (s.isEmpty) apply(Empty) else fromPreparedIterator(s.sorted.iterator)
+		case i =>
+			val s = Seq.from(i)
+			if (s.isEmpty) apply(Empty) else fromPreparedIterator(s.sorted.iterator)
+	}
+	
+	override def apply(item: Int): IntSet = apply(Single(NumericSpan.singleValue(item)))
+	
+	
+	// OTHER    ---------------------------
+	
+	private def fromOrdered(orderedInput: IterableOnce[Int]) = {
+		val iterator = orderedInput.iterator
+		if (iterator.hasNext)
+			fromPreparedIterator(iterator)
+		else
+			apply(Empty)
+	}
+	
+	// Assumes that the input is sorted and non-empty
+	private def fromPreparedIterator(sortedInput: Iterator[Int]): IntSet = {
 		val builder = OptimizedIndexedSeq.newBuilder[IntSpan]
-		val sortedInput = Seq.from(items).sorted.iterator
 		
 		var currentStart = sortedInput.next()
 		var currentEnd = currentStart
@@ -36,8 +57,6 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 		
 		apply(builder.result())
 	}
-	
-	override def apply(item: Int): IntSet = apply(Single(NumericSpan.singleValue(item)))
 }
 
 /**
@@ -98,6 +117,57 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 			i.compareTo(otherSize)
 	}
 	
+	override def filter(pred: Int => Boolean) = IntSet.fromOrdered(iterator.filter(pred))
+	override def filterNot(pred: Int => Boolean) = IntSet.fromOrdered(iterator.filterNot(pred))
+	
+	override def take(n: Int) = {
+		val builder = OptimizedIndexedSeq.newBuilder[IntSpan]
+		var remaining = n
+		val input = ranges.iterator
+		
+		while (remaining > 0 && input.hasNext) {
+			val nextRange = input.next()
+			if (nextRange.length >= remaining) {
+				builder += nextRange
+				remaining -= nextRange.length
+			}
+			else {
+				builder += nextRange.withLength(remaining)
+				remaining = 0
+			}
+		}
+		
+		IntSet(builder.result())
+	}
+	
+	override def takeRight(n: Int) = if (n >= size) this else drop(size - n)
+	override def takeWhile(p: Int => Boolean) = IntSet.fromOrdered(iterator.takeWhile(p))
+	
+	override def drop(n: Int) = {
+		if (n <= 0)
+			this
+		else {
+			var partial: Option[IntSpan] = None
+			var remaining = n
+			val input = ranges.iterator
+			
+			while (remaining > 0 && input.hasNext) {
+				val nextRange = input.next()
+				if (nextRange.length >= remaining)
+					remaining -= nextRange.length
+				else {
+					partial = Some(nextRange.mapStart { _ + remaining })
+					remaining = 0
+				}
+			}
+			
+			IntSet(partial.emptyOrSingle ++ input)
+		}
+	}
+	
+	override def dropRight(n: Int) = if (n >= size) IntSet.empty else take(size - n)
+	override def dropWhile(p: Int => Boolean) = IntSet.fromOrdered(iterator.dropWhile(p))
+	
 	
 	// OTHER    ------------------------
 	
@@ -106,14 +176,16 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 	  * @return Whether this set contains that integer
 	  */
 	def contains(i: Int) = {
-		ranges.findMap { range =>
-			if (range.start > i)
-				Some(false)
-			else if (range.end < i)
-				None
-			else
-				Some(true)
-		}
+		ranges
+			.findMap { range =>
+				if (range.start > i)
+					Some(false)
+				else if (range.end < i)
+					None
+				else
+					Some(true)
+			}
+			.getOrElse(false)
 	}
 	
 	/**
