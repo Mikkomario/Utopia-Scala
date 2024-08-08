@@ -899,10 +899,7 @@ object CollectionExtensions
 		  * @return The items in this collection that best match the specified conditions
 		  */
 		def bestMatch(matchers: IterableOnce[iter.A => Boolean])(implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
-			matchers.iterator.foldLeft(coll) { case (coll, matcher) =>
-				println(s"Preparing to match $coll next")
-				_bestMatch(coll, matcher)
-			}
+			matchers.iterator.foldLeft(coll) { case (coll, matcher) => _bestMatch(coll, matcher) }
 		def bestMatch(firstMatcher: iter.A => Boolean, secondMatcher: iter.A => Boolean, more: (iter.A => Boolean)*)
 		             (implicit bf: BuildFrom[Repr, iter.A, Repr]): Repr =
 			bestMatch(Pair(firstMatcher, secondMatcher) ++ more)

@@ -2,6 +2,8 @@
 
 ## v2.4.1 (in development)
 Built with Scala v2.13.14
+### Bugfixes
+- Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### New features
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 ### New methods
