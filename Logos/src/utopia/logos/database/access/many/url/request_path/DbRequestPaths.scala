@@ -1,7 +1,7 @@
 package utopia.logos.database.access.many.url.request_path
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.RequestPath
@@ -38,7 +38,7 @@ object DbRequestPaths extends ManyRequestPathsAccess with UnconditionalView
 				// .view.mapValues { _.map { p => p.path.toLowerCase -> p.id }.toMap }.toMap
 			// Inserts missing paths (case-insensitive)
 			val inserted = model.insert(paths.flatMap { case (domainId, paths) =>
-				val existing = existingPerDomain.getOrElse(domainId, Vector.empty)
+				val existing = existingPerDomain.getOrElse(domainId, Empty)
 				paths.distinctBy { _.toLowerCase }
 					.filterNot { p => existing.exists { _.path ~== p } }
 					.map { p => RequestPathData(domainId, p) }

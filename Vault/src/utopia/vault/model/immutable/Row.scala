@@ -49,18 +49,17 @@ case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
     /**
       * @return The first value found from this row. Should only be used when just a single value is requested
       */
-    def value = columnData.values.find { _.hasNonEmptyValues }.flatMap {
-        _.nonEmptyProperties.headOption.map { _.value } } orElse
-        otherData.nonEmptyProperties.headOption.map { _.value } getOrElse Value.empty
+    def value = columnData.values.find { _.hasNonEmptyValues }
+        .flatMap { _.nonEmptyProperties.headOption.map { _.value } } orElse
+        otherData.nonEmptyProperties.headOption.map { _.value } getOrElse
+        Value.empty
     
     
     // IMPLEMENTED  ---------------------------
     
-    override def toString =
-    {
+    override def toString = {
         val tableString = columnData.toVector.map { case (table, data) => s"${table.name}: $data" }.mkString(", ")
-        if (containsOtherData)
-        {
+        if (containsOtherData) {
             if (tableString.nonEmpty)
                 s"[$tableString, other: $otherData]"
             else
@@ -89,8 +88,10 @@ case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
       * @param column Target column
       * @return The value for the specified column
       */
-    def apply(column: Column) = columnData.find { _._1.contains(column) }.map { _._2(column.name) }
-        .getOrElse(Value.emptyWithType(column.dataType))
+    def apply(column: Column) = columnData.find { _._1.contains(column) } match {
+        case Some((_, model)) => model(column.name)
+        case None => Value.emptyWithType(column.dataType)
+    }
     
     
     // OTHER METHODS    ----------------------

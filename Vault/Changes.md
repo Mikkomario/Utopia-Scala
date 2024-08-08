@@ -7,15 +7,25 @@
   - `.filter(Condition)` is now implemented instead of abstract
     - Instead, the subclasses must now specify `.apply(Condition)`
       - This change requires a lot of refactoring, but **Vault-Coder**'s upgrade command can help you with that
+### Deprecations
+- Deprecated **SelectDistinct** in favor of `Select.distinct(...)`
+- Deprecated `.pullAttribute(String)` in favor of `.pullProperty(String)` in **DistinctReadModelAccess**
 ### New features
 - Added **ViewFactory** trait
 - Added **ViewManyByIntIds** trait
 ### New methods
+- **ManyModelAccess**
+  - Added `.pullDistinct(Column)` and `.findDistinct(Column, Condition)`
 - **ConditionElement**
   - Added `.in(IntSet)`
 ### Other
 - Built with Scala v2.13.14
+- Select statements which target a single table only, 
+  don't include the name of the targeted table before every column anymore.
+- Optimized the row-reading process by adding a check for repeated row entries. 
+  - Should reduce memory-usage in one-to-many joined queries. 
 - Removed **LatestModelAccessWrapper**, which was deprecated in the previous release
+- Internal refactoring within **ManyModelAccess**
 
 ## v1.19 - 28.07.2024
 This update focuses on the following areas:

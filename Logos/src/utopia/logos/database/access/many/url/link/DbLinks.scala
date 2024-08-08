@@ -166,7 +166,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			} }
 		}
 		else
-			Pair.twice(Vector.empty)
+			Pair.twice(Empty)
 	}
 	
 	private def ensureModelMaxLength(model: Model) = {

@@ -3,7 +3,7 @@ package utopia.flow.collection
 import utopia.flow.collection.immutable.Pair.PairIsIterable
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, IntSet, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -378,6 +378,11 @@ object CollectionExtensions
 		// COMPUTED -----------------------------
 		
 		/**
+		  * @return Empty, Single, Pair or Vector, containing this collection's contents
+		  */
+		def toOptimizedSeq = OptimizedIndexedSeq.from(i)
+		
+		/**
 		  * @return Iterator of this collection. None if this collection is empty.
 		  */
 		def nonEmptyIterator = {
@@ -599,6 +604,14 @@ object CollectionExtensions
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
 		  */
 		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
+	}
+	
+	implicit class IntsIterableOnce(val i: IterableOnce[Int]) extends AnyVal
+	{
+		/**
+		  * @return An IntSet instance containing the distinct integers in this collection
+		  */
+		def toIntSet = IntSet.from(i)
 	}
 	
 	implicit class RichIterableOnceTuples[A, B](val i: IterableOnce[(A, B)]) extends AnyVal

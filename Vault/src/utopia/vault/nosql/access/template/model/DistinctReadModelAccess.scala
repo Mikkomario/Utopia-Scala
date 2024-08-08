@@ -38,11 +38,12 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	def pullColumn(column: Column, joins: Joinable*)(implicit connection: Connection) =
 		readColumn(column, joins = joins)
 	/**
-	 * Reads all accessible values of a column / attribute
-	 * @param attributeName Name of the targeted attribute
-	 * @param connection DB Connection (implicit)
-	 * @return All accessible values of that column / attribute. May contain empty values.
-	 */
-	// TODO: Rename to pullProperty
-	def pullAttribute(attributeName: String)(implicit connection: Connection) = pullColumn(table(attributeName))
+	  * Reads all accessible values of a column / property
+	  * @param propName Name of the targeted database property
+	  * @param connection DB Connection (implicit)
+	  * @return All accessible values of that column / property. May contain empty values.
+	  */
+	def pullProperty(propName: String)(implicit connection: Connection) = pullColumn(table(propName))
+	@deprecated("Renamed to pullProperty", "v1.20")
+	def pullAttribute(attributeName: String)(implicit connection: Connection) = pullProperty(attributeName)
 }

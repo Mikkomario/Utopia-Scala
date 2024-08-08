@@ -1,7 +1,7 @@
 package utopia.vault.database
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable.DataType.AnyType
 
 /**
  * This class uses multiple sql value generators and generates values that way
@@ -22,18 +22,11 @@ class SqlValueGeneratorManager(initialGenerators: Iterable[SqlValueGenerator])
      * @return A value generated based on the sql data. Returns an empty value in case one couldn't
      * be generated or if the provided object was null
      */
-    def apply(value: Any, sqlType: Int) = 
-    {
+    def apply(value: Any, sqlType: Int) =
         if (value == null)
-        {
-            new Value(None, AnyType)
-        }
-        else 
-        {
-            generators.view.map { _(value, sqlType) }.find {
-                _.isDefined }.flatten.getOrElse(new Value(None, AnyType))
-        }
-    }
+            Value.empty
+        else
+            generators.view.findMap { _(value, sqlType) }.getOrElse { Value.empty }
     
     
     // OTHER METHODS    -----------------

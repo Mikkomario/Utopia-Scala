@@ -19,14 +19,11 @@ object BasicSqlValueGenerator extends SqlValueGenerator
 {
     // IMPLEMENTED METHODS    ---------------
     
-    override def apply(value: Any, sqlType: Int) = 
-    {
+    override def apply(value: Any, sqlType: Int) = {
         // Type mappings looked up from:
         // https://www.service-architecture.com/articles/database/mapping_sql_and_java_data_types.html
-        sqlType match 
-        {
-            case Types.TIMESTAMP | Types.TIMESTAMP_WITH_TIMEZONE => 
-                Some(value.asInstanceOf[Timestamp].toInstant())
+        sqlType match {
+            case Types.TIMESTAMP | Types.TIMESTAMP_WITH_TIMEZONE => Some(value.asInstanceOf[Timestamp].toInstant())
             case Types.DATE => Some(value.asInstanceOf[Date].toLocalDate())
             case Types.TIME => Some(value.asInstanceOf[Time].toLocalTime())
             case Types.INTEGER | Types.SMALLINT | Types.TINYINT => wrap(value, IntType)
@@ -36,7 +33,6 @@ object BasicSqlValueGenerator extends SqlValueGenerator
             case Types.BIGINT => wrap(value, LongType)
             case Types.REAL => wrap(value, FloatType)
             case Types.NUMERIC | Types.DECIMAL => Some(value.asInstanceOf[java.math.BigDecimal].doubleValue())
-            
             case _ => None
         }
     }

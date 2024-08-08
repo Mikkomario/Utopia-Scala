@@ -72,7 +72,7 @@ object ScribeConsoleApp extends App
 	
 	// More issues and more occurrences are mutually exclusive
 	private val moreIssuesOrOccurrencesPointer =
-		EventfulPointer[(Either[Seq[IssueOccurrenceData], Seq[IssueInstances]], Int)](Left(Vector.empty) -> 0)
+		EventfulPointer[(Either[Seq[IssueOccurrenceData], Seq[IssueInstances]], Int)](Left(Empty) -> 0)
 	
 	private val hasMoreVariantsPointer = queuedVariantsPointer
 		.map { case (variants, nextIndex) => nextIndex < variants.size }

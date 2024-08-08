@@ -7,6 +7,7 @@ import utopia.vault.model.immutable.{Column, Table}
   * @author Mikko Hilpinen
   * @since 14.7.2019, v0.1+
   */
+@deprecated("Please use Select.distinct(...) instead", "v1.20")
 object SelectDistinct
 {
 	/**

@@ -636,7 +636,7 @@ class EmailReader[A](settings: ReadSettings,
 							refs.toVector
 								.flatMap { _.split(' ').filter { _.nonEmpty } }
 								.map(normalizeHeaderValue).filter { _.nonEmpty }
-						case None => Vector.empty
+						case None => Empty
 					}
 					
 					// Creates a builder, if necessary

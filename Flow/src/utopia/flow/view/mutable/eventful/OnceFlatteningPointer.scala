@@ -144,7 +144,7 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 					}
 				
 				// Discards the listeners from this instance afterwards
-				queuedListeners = Pair.twice(Vector.empty)
+				queuedListeners = Pair.twice(Empty)
 			}
 			
 			// Moves the stop listeners over as well

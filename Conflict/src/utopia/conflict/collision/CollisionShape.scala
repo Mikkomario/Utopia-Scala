@@ -2,6 +2,7 @@ package utopia.conflict.collision
 
 import utopia.paradigm.shape.shape2d._
 import utopia.conflict.collision.Extensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -15,7 +16,7 @@ object CollisionShape
     /**
       * An empty collision shape
       */
-    val empty = CollisionShape(Vector.empty, Vector.empty, 1)
+    val empty = CollisionShape(Empty, Empty, 1)
     
     
     // OTHER    ------------------------

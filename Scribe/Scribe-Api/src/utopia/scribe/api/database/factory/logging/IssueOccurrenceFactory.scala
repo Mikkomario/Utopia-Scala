@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.factory.logging
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Model
 import utopia.scribe.api.database.ScribeTables
@@ -23,7 +24,7 @@ object IssueOccurrenceFactory extends FromValidatedRowModelFactory[IssueOccurren
 	
 	override protected def fromValidatedModel(valid: Model) = 
 		IssueOccurrence(valid("id").getInt, IssueOccurrenceData(valid("caseId").getInt, 
-			valid("errorMessages").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString }; case None => Vector.empty }, 
+			valid("errorMessages").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString }; case None => Empty },
 			valid("details").notEmpty match { case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }, 
 			valid("count").getInt, Span(valid("firstOccurrence").getInstant, 
 			valid("lastOccurrence").getInstant)))

@@ -8,7 +8,9 @@ Built with Scala v2.13.14
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 ### New methods
 - **IterableOnce** (**CollectionExtensions**)
+  - Added `.toOptimizedSeq`
   - Added `.toTryCatch` for collections that contain instances of **TryCatch**
+  - Added `.toIntSet` for collections of **Ints**
 - **TryCatch**
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes

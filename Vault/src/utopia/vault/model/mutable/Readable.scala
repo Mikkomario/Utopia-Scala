@@ -49,12 +49,20 @@ trait Readable extends Storable
 	def pull()(implicit connection: Connection): Boolean = pull(Select.all(table))
 	
 	/**
+	  * Updates this object's individual property based on the current database state.
+	  * @param propName Name of the property to update
+	  * @param connection Implicit DB connection
+	  * @return Whether any data was read
+	  */
+	def pull(propName: String)(implicit connection: Connection): Boolean = pull(Select(table, propName))
+	/**
 	 * Updates this object based on the current database state. Only updates certain
 	 * properties. Requires an index
 	 * @return Whether any data was read
 	 */
-	def pull(firstPropName: String, morePropNames: String*)(implicit connection: Connection): Boolean =
-	    pull(Select(table, firstPropName, morePropNames: _*))
+	def pull(firstPropName: String, secondPropName: String, morePropNames: String*)
+	        (implicit connection: Connection): Boolean =
+	    pull(Select(table, firstPropName, secondPropName, morePropNames: _*))
 	
 	/**
 	 * Updates data in this object, then updates the database as well. Only works when this object

@@ -24,6 +24,7 @@ object Result
   * @param generatedKeys Primary keys of newly generated rows (on insert)
   * @param updatedRowCount Number of updated rows (on update)
  */
+// TODO: In generatedKeys, it might be good to allow the use of IntSet
 case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, updatedRowCount: Int = 0)
     extends MaybeEmpty[Result]
 {

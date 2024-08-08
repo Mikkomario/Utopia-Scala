@@ -171,10 +171,10 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 {
 	// ATTRIBUTES   --------------------------
 	
-	private var _repaintListeners = Vector.empty[RepaintListener]
+	private var _repaintListeners: Seq[RepaintListener] = Empty
 	
 	private val groupedItemsPointer = itemsPointer.readOnly
-		.map { _.groupBy { _.drawOrder.level }.withDefaultValue(Vector.empty) }
+		.map { _.groupBy { _.drawOrder.level }.withDefaultValue(Empty) }
 	
 	// Layers from top to bottom
 	private val layers = DrawLevel.values.reverse.map { new Layer(_) }
@@ -403,7 +403,7 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 			}
 		}
 		
-		itemsPointer.addContinuousListenerAndSimulateEvent(Vector.empty) { e =>
+		itemsPointer.addContinuousListenerAndSimulateEvent(Empty) { e =>
 			val (changes, _) = e.values.separateMatching
 			// Case: Items removed => Stops listening on them
 			changes.first.foreach { a =>

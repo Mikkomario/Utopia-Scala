@@ -1,6 +1,7 @@
 package utopia.genesis.test.interactive
 
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.filter.{AcceptAll, Filter}
@@ -120,7 +121,7 @@ object MouseTest3 extends App
 			Circle(b.center, b.size.minDimension / 2.0)
 		}
 		
-		private var _repaintListeners = Vector.empty[RepaintListener]
+		private var _repaintListeners: Seq[RepaintListener] = Empty
 		
 		
 		// COMPUTED -------------------

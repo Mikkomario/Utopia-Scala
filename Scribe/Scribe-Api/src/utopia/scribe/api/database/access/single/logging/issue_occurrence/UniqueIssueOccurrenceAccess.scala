@@ -1,6 +1,7 @@
 package utopia.scribe.api.database.access.single.logging.issue_occurrence
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.NotEmpty
@@ -50,35 +51,26 @@ trait UniqueIssueOccurrenceAccess
 	  * Id of the issue variant that occurred. None if no issue occurrence (or value) was found.
 	  */
 	def caseId(implicit connection: Connection) = pullColumn(model.caseIdColumn).int
-	
 	/**
 	  * Error messages listed in the stack trace. 
 	  * If multiple occurrences are represented, 
 	  * contains data from the latest occurrence.. None if no issue occurrence (or value) was found.
 	  */
-	def errorMessages(implicit connection: Connection) = {
-			pullColumn(model.errorMessagesColumn).notEmpty match 
-			{
-				 case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString };
-				 case None => Vector.empty 
-			}
+	def errorMessages(implicit connection: Connection) = pullColumn(model.errorMessagesColumn).notEmpty match {
+		 case Some(v) => JsonBunny.sureMunch(v.getString).getVector.map { v => v.getString };
+		 case None => Empty
 	}
-	
 	/**
 	  * Additional details concerning these issue occurrences.
 	  * In case of multiple occurrences, 
 	  * contains only the latest entry for each detail.. None if no issue occurrence (or value) was found.
 	  */
-	def details(implicit connection: Connection) = {
-			pullColumn(model.detailsColumn).notEmpty match 
-			{
-				 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty 
-			}
+	def details(implicit connection: Connection) = pullColumn(model.detailsColumn).notEmpty match {
+		case Some(v) => JsonBunny.sureMunch(v.getString).getModel
+		case None => Model.empty
 	}
-	
 	/**
-	  * 
-		Number of issue occurrences represented by this entry. None if no issue occurrence (or value) was found.
+	  * Number of issue occurrences represented by this entry. None if no issue occurrence (or value) was found.
 	  */
 	def count(implicit connection: Connection) = pullColumn(model.countColumn).int
 	
@@ -93,11 +85,9 @@ trait UniqueIssueOccurrenceAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = IssueOccurrenceFactory
-	
 	override protected def self = this
 	
-	override
-		 def apply(condition: Condition): UniqueIssueOccurrenceAccess = UniqueIssueOccurrenceAccess(condition)
+	override def apply(condition: Condition): UniqueIssueOccurrenceAccess = UniqueIssueOccurrenceAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -108,14 +98,12 @@ trait UniqueIssueOccurrenceAccess
 	  * @return Whether any issue occurrence was affected
 	  */
 	def caseId_=(newCaseId: Int)(implicit connection: Connection) = putColumn(model.caseIdColumn, newCaseId)
-	
 	/**
 	  * Updates the counts of the targeted issue occurrences
 	  * @param newCount A new count to assign
 	  * @return Whether any issue occurrence was affected
 	  */
 	def count_=(newCount: Int)(implicit connection: Connection) = putColumn(model.countColumn, newCount)
-	
 	/**
 	  * Updates the details of the targeted issue occurrences
 	  * @param newDetails A new details to assign
@@ -123,14 +111,15 @@ trait UniqueIssueOccurrenceAccess
 	  */
 	def details_=(newDetails: Model)(implicit connection: Connection) = 
 		putColumn(model.detailsColumn, newDetails.notEmpty.map { _.toJson })
-	
 	/**
 	  * Updates the error messages of the targeted issue occurrences
 	  * @param newErrorMessages A new error messages to assign
 	  * @return Whether any issue occurrence was affected
 	  */
 	def errorMessages_=(newErrorMessages: Vector[String])(implicit connection: Connection) = 
-		putColumn(model.errorMessagesColumn, 
-			NotEmpty(newErrorMessages) match { case Some(v) => ((v.map[Value] { v => v }: Value).toJson): Value; case None => Value.empty })
+		putColumn(model.errorMessagesColumn, NotEmpty(newErrorMessages) match {
+			case Some(v) => (v.map[Value] { v => v }: Value).toJson: Value
+			case None => Value.empty
+		})
 }
 

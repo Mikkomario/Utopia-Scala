@@ -8,7 +8,7 @@ import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, Where}
+import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, SqlSegment, SqlTarget, Where}
 
 /**
  * Used for accessing multiple models at a time from DB
@@ -44,13 +44,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	override protected def readColumn(column: Column, additionalCondition: Option[Condition] = None,
 	                                  order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	                                  joinType: JoinType = Inner)(implicit connection: Connection) =
-	{
-		// Forms the query first
-		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
-			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering)
-		// Applies the query and parses results
-		connection(statement).rowValues
-	}
+		_read(additionalCondition, order, joins, joinType) { Select(_, column) }.rowValues
 	
 	
 	// OTHER    -------------------------------
@@ -71,6 +65,26 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	 */
 	def orderedIterator(order: OrderBy)(implicit connection: Connection) =
 		factory.iterator(accessCondition, Some(order))
+	
+	/**
+	  * Reads values of an individual column. Only yields distinct values.
+	  * @param column Read column
+	  * @param joins Applied joins
+	  * @param connection Implicit DB connection
+	  * @return Distinct accessible values of the targeted column
+	  */
+	def pullDistinct(column: Column, joins: Joinable*)(implicit connection: Connection) =
+		readDistinct(column, None, joins)
+	/**
+	  * Searches for distinct values of an individual column.
+	  * @param column Read column
+	  * @param condition Search condition to apply
+	  * @param joins Applied joins
+	  * @param connection Implicit DB connection
+	  * @return Distinct accessible values of the targeted column
+	  */
+	def findDistinct(column: Column, condition: Condition, joins: Joinable*)(implicit connection: Connection) =
+		readDistinct(column, Some(condition), joins)
 	
 	/**
 	  * Pulls a column-to-column map based on the accessible items
@@ -119,20 +133,32 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	                      (implicit con: Connection) =
 		readColumnMultiMap(keyColumn, valueColumn, Some(condition), joins)
 	
+	private def readDistinct(column: Column, condition: Option[Condition], joins: Iterable[Joinable])
+	                        (implicit connection: Connection) =
+		_read(condition, joins = joins) { Select.distinct(_, column) }.rowValues
+		
 	private def readColumnMap(keyColumn: Column, valueColumn: Column, condition: Option[Condition],
 	                          joins: Iterable[Joinable])
 	                 (implicit con: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _ join _ }, Pair(keyColumn, valueColumn)) +
-			mergeCondition(condition).map { Where(_) }
-		con(statement).rows.map { row => row(keyColumn) -> row(valueColumn) }.toMap
+		_read(condition, joins = joins) { Select(_, Pair(keyColumn, valueColumn)) }
+			.rows.view.map { row => row(keyColumn) -> row(valueColumn) }.toMap
 	}
 	private def readColumnMultiMap(keyColumn: Column, valueColumn: Column, condition: Option[Condition],
 	                               joins: Iterable[Joinable])
 	                              (implicit con: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _ join _ }, Pair(keyColumn, valueColumn)) +
-			mergeCondition(condition).map { Where(_) }
-		con(statement).rows.groupMap { _(keyColumn) } { _(valueColumn) }
+		_read(condition, joins = joins) { Select(_, Pair(keyColumn, valueColumn)) }
+			.rows.groupMap { _(keyColumn) } { _(valueColumn) }
+	}
+	
+	private def _read(additionalCondition: Option[Condition] = None, order: Option[OrderBy] = None,
+	                     joins: Iterable[Joinable] = Empty, joinType: JoinType = Inner)
+	                    (selectStatement: SqlTarget => SqlSegment)
+	                    (implicit connection: Connection) =
+	{
+		// Applies the joins, additional condition & ordering
+		connection(selectStatement(joins.foldLeft(target) { _.join(_, joinType) }) +
+			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering))
 	}
 }

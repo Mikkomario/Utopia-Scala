@@ -2,6 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueConverterManager
@@ -10,8 +11,9 @@ import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.Pointer
 import utopia.vault.database.Connection.settings
-import utopia.vault.model.immutable.{Result, Row, Table}
+import utopia.vault.model.immutable.{Column, Result, Row, Table}
 import utopia.vault.sql.SqlSegment
 
 import java.nio.file.Path
@@ -416,8 +418,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                 val c = possiblyTargetedConnection(requireTargetedDb)
                 var currentStatementBuilder = new StringBuilder()
                 lines.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
-                    splitToStatements(line) match
-                    {
+                    splitToStatements(line) match {
                         // Appends current statement until its end is found
                         case Right(partialStatement) =>
                             currentStatementBuilder ++= partialStatement
@@ -488,8 +489,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                             Result(rows, updatedRowCount = updateCount max 0)
                         }
                     }
-            } match
-            {
+            } match {
                 case Success(result) => result
                 case Failure(error) => throw new DBException(
                     s"DB query failed.\nSql: $sql\nValues:[${values.mkString(", ")}]", error)
@@ -515,8 +515,8 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
                 statement.executeQuery().consume { results =>
                     val meta = results.getMetaData
                     
-                    val columnIndices = Vector.range(1, meta.getColumnCount + 1).map { index =>
-                        (meta.getColumnName(index), index) }
+                    val columnIndices = (1 to meta.getColumnCount)
+                        .map { index => (meta.getColumnName(index), index) }
                     
                     // Parses data out of the result
                     val buffer = Vector.newBuilder[Map[String, String]]
@@ -557,14 +557,17 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     private def _executeWith(connection: java.sql.Connection, sql: String) =
         connection.createStatement().consume { _.executeUpdate(sql) }
     
+    // Returns either:
+    //      Left: 1) Statement or the end of a statement, 2) Complete statements and 3) Partial ending statement, if applicable
+    //      Right: Statement (possibly partial)
     private def splitToStatements(statementString: String) = {
         if (statementString.contains(';')) {
-            val parts = statementString.split(";").view.map { _.trim }.filterNot { _.isEmpty }.toVector
-            if (parts.size > 1) {
+            val parts = statementString.split(";").view.map { _.trim }.filterNot { _.isEmpty }.toOptimizedSeq
+            if (parts.hasSize > 1) {
                 if (statementString.trim.endsWith(";"))
                     Left((parts.head, parts.tail, None))
                 else
-                    Left((parts.head, parts.drop(1).dropRight(1), Some(parts.last)))
+                    Left((parts.head, parts.slice(1, parts.size - 1), Some(parts.last)))
             }
             else
                 Left((parts.head, Empty, None))
@@ -586,64 +589,111 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
     
     private def stringFromResult(result: ResultSet, index: Int) = Option(result.getString(index))
     
-    private def rowsFromResult(resultSet: ResultSet, tables: Iterable[Table]) = 
-    {
+    private def rowsFromResult(resultSet: ResultSet, tables: Iterable[Table]) = {
         val meta = resultSet.getMetaData
         
-        // Sorts the column indices for targeted tables
-        val indicesForTables = Vector.range(1, meta.getColumnCount + 1).groupBy { 
-                index => tables.find { _.name == meta.getTableName(index) } }
+        // Groups the column indices by targeted tables
+        val indicesForTables = (1 to meta.getColumnCount)
+            .groupBy { index => tables.find { _.name == meta.getTableName(index) } }
         // Maps each index to a column in a targeted table, flattening the map as well
-        // Resulting map: Table -> (Column, sqlType, index)
+        // Resulting map: Table -> (Option[(Column, sqlType, index)] -> [(Column, sqlType, index)])
+        //      Where the first column is primary column (None if no primary column exists)
         val columnIndices = indicesForTables.flatMap { case (tableOption, indices) => 
-                tableOption.map { table => (table, indices.flatMap { 
-                index => table.findColumnWithColumnName( meta.getColumnName(index) ).map {
-                (_, meta.getColumnType(index), index) } }) }
+            tableOption.map { table =>
+                val columns = indices.flatMap { index =>
+                    table.findColumnWithColumnName(meta.getColumnName(index))
+                        .map { (_, meta.getColumnType(index), index) }
+                }
+                val (primaryColumn, otherColumns) = columns.findAndPop { _._1.isPrimary }
+                table -> (primaryColumn, otherColumns)
+            }
         }
         // [(name, sqlType, index)]
         val nonColumnIndices = indicesForTables.getOrElse(None, Empty)
             .map { index => (meta.getColumnName(index), meta.getColumnType(index), index) }
         val hasContentOutsideTables = nonColumnIndices.nonEmpty
+        val isMultiTableQuery = tables.hasSize > 1
+        
+        // Contains the last read primary key -> model pair for each targeted table
+        // Used for skipping model-parsing in case the primary key stays the same
+        // (which is often the case when dealing with one-to-many joins)
+        lazy val lastModelsMap = columnIndices.map { case (table, _) =>
+            table -> Pointer[(Value, Model)](Value.empty -> Model.empty)
+        }
+        
+        def valueFrom(index: Int, dataType: Int) = Connection.sqlValueGenerator(resultSet.getObject(index), dataType)
+        
+        // Here, colData is same as an entry in columnIndices
+        def constantFrom(colData: (Column, Int, Int)) = Constant(colData._1.name, valueFrom(colData._3, colData._2))
         
         // Parses the rows from the resultSet
-        val rowBuffer = Vector.newBuilder[Row]
-        while (resultSet.next())
-        {
-            // Reads the object data from each row, parses them into constants and creates a model 
-            // The models are mapped to each table separately
-            // Also includes data outside the tables if present
-            val otherData =
-            {
-                if (hasContentOutsideTables)
-                    Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
-                       Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+        OptionsIterator
+            .continually {
+                if (resultSet.next()) {
+                    // Reads the object data from each row, parses them into constants and creates a model
+                    // The models are mapped to each table separately
+                    // Also includes data outside the tables if present
+                    val tableModels = columnIndices.map { case (table, (primaryColumnData, otherColumnData)) =>
+                        primaryColumnData match {
+                            // Case: This table has a primary column
+                            case Some((primaryColumn, primaryColType, primaryColIndex)) =>
+                                val model = {
+                                    // Case: Multi-table query => Checks whether this row is similar to the previous
+                                    //                            (in terms of this table's columns)
+                                    if (isMultiTableQuery) {
+                                        val primaryKey = valueFrom(primaryColIndex, primaryColType)
+                                        lastModelsMap(table).mutate { previous =>
+                                            // Case: The primary key of previous row matches the one on this row
+                                            //       => Skips model-parsing and uses the previously acquired model
+                                            if (primaryKey == previous._1)
+                                                previous._2 -> previous
+                                            // Case: This row's primary key is different => Parses this row as a new model
+                                            else {
+                                                val model = Model.withConstants(Constant(primaryColumn.name, primaryKey) +:
+                                                    otherColumnData.map(constantFrom))
+                                                model -> (primaryKey -> model)
+                                            }
+                                        }
+                                    }
+                                    // Case: Single table query => Won't check for repeating rows
+                                    else
+                                        Model.withConstants(
+                                            ((primaryColumn, primaryColType, primaryColIndex) +: otherColumnData)
+                                                .map(constantFrom))
+                                }
+                                table -> model
+                                
+                            // Case: Primary key not used in this table => Parses the row into a model normally
+                            case None => table -> Model.withConstants(otherColumnData.map(constantFrom))
+                        }
+                    }
+                    val otherData = {
+                        if (hasContentOutsideTables)
+                            Model.withConstants(nonColumnIndices.map { case (name, sqlType, index) =>
+                                Constant(name, Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
+                        else
+                            Model.empty
+                    }
+                    Some(Row(tableModels, otherData))
+                }
                 else
-                    Model.empty
+                    None
             }
-            // NB: view.force is added in order to create a concrete map
-            rowBuffer += Row(columnIndices.view.mapValues { data =>
-                Model.withConstants(data.map { case (column, sqlType, index) => Constant(column.name,
-                Connection.sqlValueGenerator(resultSet.getObject(index), sqlType)) })
-            }.toMap, otherData)
-        }
-        
-        rowBuffer.result()
+            .toOptimizedSeq
     }
     
-    private def generatedKeysFromResult(statement: Statement, tables: IterableOnce[Table]) =
-    {
-        // Retrieves keys as ints if all of the tables (that use indexing) use int as key type
-        val useInt = tables.iterator.forall { _.primaryColumn.forall { _.dataType == IntType } }
+    private def generatedKeysFromResult(statement: Statement, tables: Iterable[Table]) = {
+        // Retrieves keys as integers, if all of the tables (that use indexing) use int as key type
+        val useInt = tables.forall { _.primaryColumn.forall { _.dataType == IntType } }
         val results = statement.getGeneratedKeys
-        val keyBuffer = Vector.newBuilder[Value]
         
-        while (results.next())
-        {
-            val key: Value = if (useInt) results.getInt(1) else results.getLong(1)
-            if (key.isDefined)
-                keyBuffer += key
-        }
-        
-        keyBuffer.result()
+        OptionsIterator
+            .continually {
+                if (results.next())
+                    Some[Value](if (useInt) results.getInt(1) else results.getLong(1))
+                else
+                    None
+            }
+            .toOptimizedSeq
     }
 }

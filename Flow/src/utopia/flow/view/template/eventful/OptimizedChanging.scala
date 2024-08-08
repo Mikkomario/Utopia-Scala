@@ -60,6 +60,6 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 	  */
 	def clearListeners() = {
 		if (hasListeners)
-			listenersPointer.value = Pair.twice(Vector.empty)
+			listenersPointer.value = Pair.twice(Empty)
 	}
 }
