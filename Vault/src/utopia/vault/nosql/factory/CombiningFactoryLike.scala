@@ -1,5 +1,6 @@
 package utopia.vault.nosql.factory
 
+import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 
 /**
@@ -19,6 +20,8 @@ trait CombiningFactoryLike[+Combined, +Parent, +Child] extends LinkedFactoryLike
 	
 	// IMPLEMENTED  -------------------------
 	
+	override def table = parentFactory.table
+	
 	override def defaultOrdering = parentFactory.defaultOrdering match {
 		case Some(primary) =>
 			childFactory.defaultOrdering match {
@@ -28,5 +31,5 @@ trait CombiningFactoryLike[+Combined, +Parent, +Child] extends LinkedFactoryLike
 		case None => childFactory.defaultOrdering
 	}
 	
-	override def table = parentFactory.table
+	override def selectTarget: SelectTarget = parentFactory.selectTarget + childFactory.selectTarget
 }

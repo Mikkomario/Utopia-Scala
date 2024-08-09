@@ -4,6 +4,8 @@
 ### Other changes
 - Built with Scala v2.13.14
 - Supports Vault v1.20
+- Refactored **MemberRoleWithRightsFactory**. It is possible that this refactoring resolves and/or causes some errors. 
+  This update has not been tested.
 
 ## v2.1.7 - 28.07.2024
 Conforms to changes introduced in **Flow v2.4** and **Vault v1.19**

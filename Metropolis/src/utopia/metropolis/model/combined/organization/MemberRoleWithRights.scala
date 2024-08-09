@@ -20,6 +20,7 @@ object MemberRoleWithRights extends FromModelFactory[MemberRoleWithRights]
   * @author Mikko Hilpinen
   * @since 24.10.2021, v2.0
   */
+// TODO: This naming is quite confusing
 case class MemberRoleWithRights(roleLink: MemberRoleLink, taskIds: Set[Int])
 	extends Extender[MemberRoleLinkData] with ModelConvertible
 {

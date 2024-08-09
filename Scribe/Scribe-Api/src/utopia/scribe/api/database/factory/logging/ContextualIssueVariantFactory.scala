@@ -2,7 +2,9 @@ package utopia.scribe.api.database.factory.logging
 
 import utopia.scribe.core.model.combined.logging.ContextualIssueVariant
 import utopia.scribe.core.model.stored.logging.{Issue, IssueVariant}
-import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
+import utopia.vault.model.enumeration.SelectTarget
+import utopia.vault.model.immutable.DbPropertyDeclaration
+import utopia.vault.nosql.factory.row.{FromRowFactoryWithTimestamps, FromTimelineRowFactory}
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
 
 /**
@@ -12,15 +14,14 @@ import utopia.vault.nosql.factory.row.linked.CombiningFactory
   */
 object ContextualIssueVariantFactory 
 	extends CombiningFactory[ContextualIssueVariant, IssueVariant, Issue] 
-		with FromRowFactoryWithTimestamps[ContextualIssueVariant]
+		with FromTimelineRowFactory[ContextualIssueVariant]
 {
 	// IMPLEMENTED	--------------------
 	
+	override def parentFactory = IssueVariantFactory
 	override def childFactory = IssueFactory
 	
-	override def creationTimePropertyName = IssueVariantFactory.creationTimePropertyName
-	
-	override def parentFactory = IssueVariantFactory
+	override def timestamp: DbPropertyDeclaration = parentFactory.timestamp
 	
 	override def apply(variant: IssueVariant, issue: Issue) = ContextualIssueVariant(variant, issue)
 }

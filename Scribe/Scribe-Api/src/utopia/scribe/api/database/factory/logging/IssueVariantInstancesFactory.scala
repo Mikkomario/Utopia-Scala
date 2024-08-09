@@ -14,11 +14,10 @@ object IssueVariantInstancesFactory
 {
 	// IMPLEMENTED	--------------------
 	
+	override def parentFactory = IssueVariantFactory
 	override def childFactory = IssueOccurrenceFactory
 	
 	override def isAlwaysLinked = true
-	
-	override def parentFactory = IssueVariantFactory
 	
 	override def apply(variant: IssueVariant, occurrences: Seq[IssueOccurrence]) =
 		IssueVariantInstances(variant, occurrences)

@@ -7,10 +7,16 @@
   - `.filter(Condition)` is now implemented instead of abstract
     - Instead, the subclasses must now specify `.apply(Condition)`
       - This change requires a lot of refactoring, but **Vault-Coder**'s upgrade command can help you with that
+- **FromResultFactory** now requires the implementation of `selectTarget: SelectTarget`
+  - **FromRowModelFactory** and **CombiningFactoryLike** already implement this, 
+    so this addition only affects custom factories not utilizing these traits or their sub-traits. 
 ### Deprecations
 - Deprecated **SelectDistinct** in favor of `Select.distinct(...)`
 - Deprecated `.pullAttribute(String)` in favor of `.pullProperty(String)` in **DistinctReadModelAccess**
 ### New features
+- Added support for custom selection targets in **FromResultFactories**
+  - For example, it is now possible to optimize the queries by selecting only specific columns
+  - Previous implementation would always select all columns from all targeted tables
 - Added **ViewFactory** trait
 - Added **ViewManyByIntIds** trait
 ### New methods

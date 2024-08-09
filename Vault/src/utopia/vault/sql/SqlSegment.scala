@@ -65,7 +65,7 @@ object SqlSegment
   * @param generatesKeys Whether this statement will generate new keys (= rows with auto-increment index) to the database
  */
 case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Option[String] = None,
-                      targetTables: Set[Table] = HashSet(), events: Option[Result => Seq[TableUpdateEvent]] = None,
+                      targetTables: Set[Table] = Set(), events: Option[Result => Seq[TableUpdateEvent]] = None,
                       isSelect: Boolean = false, generatesKeys: Boolean = false)
 {
     // COMPUTED PROPERTIES    -----------

@@ -3,7 +3,7 @@ package utopia.vault.nosql.factory.row
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
-import utopia.vault.model.enumeration.ComparisonOperator
+import utopia.vault.model.enumeration.{ComparisonOperator, SelectTarget}
 import utopia.vault.model.enumeration.ComparisonOperator.{Larger, LargerOrEqual, Smaller, SmallerOrEqual}
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Row, Table}
 import utopia.vault.model.template.Joinable
@@ -38,6 +38,8 @@ object FromTimelineRowFactory
 		override def table: Table = factory.table
 		override def joinedTables: Seq[Table] = factory.joinedTables
 		override def joinType: JoinType = factory.joinType
+		
+		override def selectTarget: SelectTarget = factory.selectTarget
 		
 		override def apply(row: Row): Try[A] = factory(row)
 	}

@@ -4,6 +4,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
+import utopia.vault.model.enumeration.SelectTarget
+import utopia.vault.model.enumeration.SelectTarget.All
 import utopia.vault.model.immutable.{Row, Storable, Table}
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType
@@ -32,8 +34,7 @@ object FromRowModelFactory
 }
 
 /**
- * These factory instances are used for converting database-originated model data into a
- * storable instance.
+ * These factory instances are used for converting database-originated model data into a Storable instance.
  * @author Mikko Hilpinen
  * @since 18.6.2017
  */
@@ -41,9 +42,10 @@ trait FromRowModelFactory[+A] extends FromRowFactory[A] with FromModelFactory[A]
 {
     // IMPLEMENTED  ----------------------------
     
+    override def joinedTables = Empty
     override def joinType = JoinType.Inner
     
-    override val joinedTables = Empty
+    override def selectTarget: SelectTarget = table
     
     override def apply(row: Row) = apply(row(table))
 }

@@ -3,6 +3,8 @@ package utopia.vault.nosql.factory
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.SelectTarget
+import utopia.vault.model.enumeration.SelectTarget.{All, Tables}
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.model.template.{HasTable, Joinable}
 import utopia.vault.sql.JoinType.Inner
@@ -18,11 +20,6 @@ trait FromResultFactory[+A] extends HasTable
 	// ABSTRACT	---------------
 	
 	/**
-	  * @return Default ordering to apply by this factory (used when no Order By is specified explicitly)
-	  */
-	def defaultOrdering: Option[OrderBy]
-	
-	/**
 	  * @return The tables that are joined for complete results
 	  */
 	def joinedTables: Seq[Table]
@@ -30,6 +27,16 @@ trait FromResultFactory[+A] extends HasTable
 	  * @return Joining style used
 	  */
 	def joinType: JoinType
+	
+	/**
+	  * @return Default ordering to apply by this factory (used when no Order By is specified explicitly)
+	  */
+	def defaultOrdering: Option[OrderBy]
+	
+	/**
+	  * @return Selected columns, etc.
+	  */
+	def selectTarget: SelectTarget
 	
 	/**
 	  * Parses a result into one or multiple (or zero) objects
@@ -61,7 +68,12 @@ trait FromResultFactory[+A] extends HasTable
 	  * @return All accessible items
 	  */
 	def all(implicit connection: Connection) =
-		apply(connection(Select.all(target) + defaultOrdering))
+		apply(connection(select + defaultOrdering))
+	
+	/**
+	  * @return The select statement applied by default
+	  */
+	protected def select = selectTarget.toSelect(target)
 	
 	
 	// OTHER	---------------
@@ -77,8 +89,7 @@ trait FromResultFactory[+A] extends HasTable
 	 */
 	def iterator(condition: Option[Condition] = None, order: Option[OrderBy] = None,
 	             rowsPerQuery: Int = Connection.settings.maximumAmountOfRowsCached)(implicit connection: Connection) =
-		connection.iterator(
-			Select.all(target) + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
+		connection.iterator(select + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
 			.flatMap(apply)
 	
 	/**
@@ -94,15 +105,7 @@ trait FromResultFactory[+A] extends HasTable
 	def findMany(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	             joinType: JoinType = Inner)
 	            (implicit connection: Connection) =
-	{
-		val select = {
-			if (joins.isEmpty)
-				Select.all(target)
-			else
-				Select.tables(joins.foldLeft(target) { _.join(_, joinType) }, tables)
-		}
-		apply(connection(select + Where(where) + order.orElse(defaultOrdering)))
-	}
+		apply(connection(expandedSelect(joins, joinType) + Where(where) + order.orElse(defaultOrdering)))
 	
 	/**
 	  * Finds possibly multiple instances from the database. Performs a single join, but doesn't select the columns
@@ -126,8 +129,7 @@ trait FromResultFactory[+A] extends HasTable
 	  * @return All items with specified row ids
 	  */
 	def withIds(ids: Iterable[Value], order: Option[OrderBy] = None)(implicit connection: Connection) =
-		table.primaryColumn match
-		{
+		table.primaryColumn match {
 			case Some(idColumn) => findMany(idColumn.in(ids), order)
 			case None => Empty
 		}
@@ -139,7 +141,7 @@ trait FromResultFactory[+A] extends HasTable
 	  * @see #getMany(Condition)
 	  */
 	def getAll(order: Option[OrderBy] = None)(implicit connection: Connection) =
-		apply(connection(Select.all(target) + order.orElse(defaultOrdering)))
+		apply(connection(select + order.orElse(defaultOrdering)))
 	
 	/**
 	  * Checks whether an object exists for the specified query
@@ -176,4 +178,18 @@ trait FromResultFactory[+A] extends HasTable
 	def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	         joinType: JoinType = Inner)(implicit connection: Connection) =
 		findMany(where, order, joins, joinType).headOption
+	
+	/**
+	  * Creates a select statement with custom joins
+	  * @param joins Applied joins
+	  * @return A select statement including the specified joins
+	  */
+	protected def expandedSelect(joins: Seq[Joinable], joinType: JoinType) = {
+		if (joins.isEmpty)
+			select
+		else {
+			val appliedTarget = if (selectTarget == All) Tables(tables) else selectTarget
+			appliedTarget.toSelect(joins.foldLeft(target) { _.join(_, joinType) })
+		}
+	}
 }

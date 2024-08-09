@@ -3,6 +3,7 @@ package utopia.scribe.api.database.factory.logging
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.scribe.core.model.combined.logging.IssueInstances
+import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.JoinType
@@ -16,6 +17,11 @@ import utopia.vault.util.ErrorHandling
   */
 object IssueInstancesFactory extends FromResultFactory[IssueInstances]
 {
+	// ATTRIBUTES   ------------------------
+	
+	override lazy val selectTarget: SelectTarget = parentFactory.selectTarget + childFactory.selectTarget
+	
+	
 	// COMPUTED ----------------------------
 	
 	private def parentFactory = IssueFactory

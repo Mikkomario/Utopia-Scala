@@ -1,6 +1,7 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.metropolis.model.combined.organization.MemberRoleWithRights
+import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.template.Deprecatable
@@ -16,33 +17,35 @@ import scala.util.{Failure, Success}
   */
 object MemberRoleWithRightsFactory extends FromResultFactory[MemberRoleWithRights] with Deprecatable
 {
+	// ATTRIBUTES   -----------------------------
+	
+	override lazy val selectTarget: SelectTarget = linkFactory.selectTarget + rightLinkFactory.selectTarget
+	
+	
 	// COMPUTED ---------------------------------
 	
 	private def linkFactory = MemberRoleLinkFactory
-	private def rightsFactory = UserRoleWithRightsFactory
 	private def rightLinkFactory = UserRoleRightFactory
 	
 	
 	// IMPLEMENTED  -----------------------------
 	
 	override def table = linkFactory.table
-	override def joinedTables = rightsFactory.tables
+	override def joinedTables = rightLinkFactory.tables
 	override def joinType = JoinType.Left
 	
-	override def defaultOrdering = rightsFactory.defaultOrdering
+	override def defaultOrdering = None
 	
 	override def nonDeprecatedCondition = linkFactory.nonDeprecatedCondition
 	
-	override def apply(result: Result) =
-	{
+	override def apply(result: Result) = {
 		// Starts by grouping the rows based on the member role id
 		result.split(table).flatMap { result =>
 			linkFactory(result.rows.head).map { memberRole =>
 				// Next parses role right links for each sub-result
 				val taskLinks = rightLinkFactory(result)
 				MemberRoleWithRights(memberRole, taskLinks.map { _.taskId }.toSet)
-			} match
-			{
+			} match {
 				case Success(memberRole) => Some(memberRole)
 				case Failure(exception) =>
 					ErrorHandling.modelParsePrinciple.handle(exception)
