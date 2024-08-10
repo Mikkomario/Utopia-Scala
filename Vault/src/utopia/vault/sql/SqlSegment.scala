@@ -1,11 +1,8 @@
 package utopia.vault.sql
 
-
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
-
-import scala.collection.immutable.HashSet
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.{Result, Table, TableUpdateEvent}
 
@@ -19,16 +16,14 @@ object SqlSegment
     /**
      * Combines a number of sql segments together, forming a single longer sql segment
      * @param segments the segments that are combined
-     * @param sqlReduce the reduce function used for appending the sql strings together. By default 
-     * just adds a whitespace between the strings
+     * @param sqlReduce the reduce function used for appending the sql strings together.
+      *                  By default just adds a whitespace between the strings
      */
-    def combine(segments: Seq[SqlSegment], sqlReduce: (String, String) => String = { (a, b) => s"$a $b" }) =
-    {
+    def combine(segments: Seq[SqlSegment])(sqlReduce: Pair[String] => String = { _.mkString(" ") }) = {
         if (segments.isEmpty)
             SqlSegment.empty
-        else
-        {
-            val sql = segments.view.map { _.sql }.reduceLeft(sqlReduce)
+        else {
+            val sql = segments.view.map { _.sql }.reduceLeft { (l, r) => sqlReduce(Pair(l, r)) }
             val databaseName = segments.view.flatMap { _.databaseName }.headOption
             val eventFunctions = segments.flatMap { _.events }
             val eventsFunction = {

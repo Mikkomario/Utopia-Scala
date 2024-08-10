@@ -11,8 +11,7 @@ import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, Select, Where}
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   */
-trait SingleColumnAccess[+V]
-	extends ColumnAccess[Option[V], Option[V]] with SingleAccess[V]
+trait SingleColumnAccess[+V] extends ColumnAccess[Option[V], Option[V]] with SingleAccess[V]
 {
 	// COMPUTED	-------------------------------
 	
@@ -34,8 +33,12 @@ trait SingleColumnAccess[+V]
 	                            joinType: JoinType)
 	                           (implicit connection: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
-			condition.map { Where(_) } + order + Limit(1)
-		parseValue(connection(statement).firstValue)
+		if (condition.exists { _.isAlwaysFalse })
+			None
+		else {
+			val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
+				condition.map { Where(_) } + order + Limit(1)
+			parseValue(connection(statement).firstValue)
+		}
 	}
 }

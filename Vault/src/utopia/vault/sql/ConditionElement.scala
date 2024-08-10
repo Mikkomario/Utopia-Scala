@@ -119,7 +119,7 @@ trait ConditionElement
         else if (elements.size == 1)
             this <=> elements.head
         else {
-            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq, { (a, b) => s"$a, $b" })
+            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq) { _.mkString(", ") }
             val inSegment = rangeSegment.copy(sql = s"(${ rangeSegment.sql })")
     
             Condition(toSqlSegment + "IN" + inSegment)
@@ -163,7 +163,7 @@ trait ConditionElement
         else if (elements.size == 1)
             this <> elements.head
         else {
-            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq, { (a, b) => s"$a, $b" })
+            val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq) { _.mkString(", ") }
             val inSegment = rangeSegment.copy(sql = s"(${ rangeSegment.sql })")
             
             Condition(toSqlSegment + "NOT IN" + inSegment)

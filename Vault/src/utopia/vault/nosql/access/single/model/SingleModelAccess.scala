@@ -33,9 +33,13 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	                            joinType: JoinType)
 	                           (implicit connection: Connection) =
 	{
-		val appliedOrdering = order.orElse(defaultOrdering)
-		condition match {
-			case Some(condition) => factory.find(condition, appliedOrdering, joins, joinType)
+		lazy val appliedOrdering = order.orElse(defaultOrdering)
+		condition.filterNot { _.isAlwaysTrue } match {
+			case Some(condition) =>
+				if (condition.isAlwaysFalse)
+					None
+				else
+					factory.find(condition, appliedOrdering, joins, joinType)
 			case None =>
 				factory match {
 					case rowFactory: FromRowFactory[A] =>
@@ -53,11 +57,16 @@ trait SingleModelAccess[+A] extends SingleAccess[A] with ModelAccess[A, Option[A
 	                                  joinType: JoinType = Inner)
 	                                 (implicit connection: Connection) =
 	{
-		// Forms the query first
-		val statement = Select(joins.foldLeft(factory.target) { _.join(_, joinType) }, column) +
-			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering) + Limit(1)
-		// Applies the query and parses results
-		connection(statement).firstValue
+		val condition = mergeCondition(additionalCondition)
+		if (condition.exists { _.isAlwaysFalse })
+			Value.empty
+		else {
+			// Forms the query first
+			val statement = Select(joins.foldLeft(factory.target) { _.join(_, joinType) }, column) +
+				condition.map { Where(_) } + order.orElse(defaultOrdering) + Limit(1)
+			// Applies the query and parses results
+			connection(statement).firstValue
+		}
 	}
 	
 	

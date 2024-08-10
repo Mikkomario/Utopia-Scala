@@ -10,6 +10,8 @@
 - **FromResultFactory** now requires the implementation of `selectTarget: SelectTarget`
   - **FromRowModelFactory** and **CombiningFactoryLike** already implement this, 
     so this addition only affects custom factories not utilizing these traits or their sub-traits. 
+- `SqlSegment.combine(...)` now accepts two parameter lists instead of one
+  - Also changed the type of the function input from **Tuple** to **Pair**
 ### Deprecations
 - Deprecated **SelectDistinct** in favor of `Select.distinct(...)`
 - Deprecated `.pullAttribute(String)` in favor of `.pullProperty(String)` in **DistinctReadModelAccess**
@@ -26,6 +28,8 @@
   - Added `.in(IntSet)`
 ### Other
 - Built with Scala v2.13.14
+- When accessing data, when the applied condition is always false, skips the query altogether
+  - This happens, for example, when using the in-condition with an empty set
 - Select statements which target a single table only, 
   don't include the name of the targeted table before every column anymore.
 - Optimized the row-reading process by adding a check for repeated row entries. 

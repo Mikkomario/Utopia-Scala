@@ -3,7 +3,7 @@ package utopia.vault.nosql.access.many.model
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Column
+import utopia.vault.model.immutable.{Column, Result}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
@@ -34,9 +34,15 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	override protected def read(condition: Option[Condition], order: Option[OrderBy], joins: Seq[Joinable],
 	                            joinType: JoinType)(implicit connection: Connection) =
 	{
-		val appliedOrdering = order.orElse(defaultOrdering)
-		condition match {
-			case Some(condition) => factory.findMany(condition, appliedOrdering, joins, joinType)
+		lazy val appliedOrdering = order.orElse(defaultOrdering)
+		condition.filterNot { _.isAlwaysTrue } match {
+			case Some(condition) =>
+				// If the condition is impossible to fulfill, skips this query altogether
+				if (condition.isAlwaysFalse)
+					Empty
+				else
+					factory.findMany(condition, appliedOrdering, joins, joinType)
+			
 			case None => factory.getAll(appliedOrdering)
 		}
 	}
@@ -153,12 +159,16 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	}
 	
 	private def _read(additionalCondition: Option[Condition] = None, order: Option[OrderBy] = None,
-	                     joins: Iterable[Joinable] = Empty, joinType: JoinType = Inner)
-	                    (selectStatement: SqlTarget => SqlSegment)
-	                    (implicit connection: Connection) =
+	                  joins: Iterable[Joinable] = Empty, joinType: JoinType = Inner)
+	                 (selectStatement: SqlTarget => SqlSegment)
+	                 (implicit connection: Connection) =
 	{
-		// Applies the joins, additional condition & ordering
-		connection(selectStatement(joins.foldLeft(target) { _.join(_, joinType) }) +
-			mergeCondition(additionalCondition).map { Where(_) } + order.orElse(defaultOrdering))
+		val condition = mergeCondition(additionalCondition).filterNot { _.isAlwaysTrue }
+		if (condition.exists { _.isAlwaysFalse })
+			Result.empty
+		else
+			// Applies the joins, additional condition & ordering
+			connection(selectStatement(joins.foldLeft(target) { _.join(_, joinType) }) +
+				condition.map { Where(_) } + order.orElse(defaultOrdering))
 	}
 }

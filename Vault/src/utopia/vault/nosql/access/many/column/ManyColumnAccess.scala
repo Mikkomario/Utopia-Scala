@@ -1,5 +1,6 @@
 package utopia.vault.nosql.access.many.column
 
+import utopia.flow.collection.immutable.Empty
 import utopia.vault.database.Connection
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.ManyAccess
@@ -30,9 +31,13 @@ trait ManyColumnAccess[+V] extends ColumnAccess[V, Seq[V]] with ManyAccess[V]
 	override protected def read(condition: Option[Condition], order: Option[OrderBy],
 	                            joins: Seq[Joinable], joinType: JoinType)(implicit connection: Connection) =
 	{
-		val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
-			condition.map { Where(_) } + order
-		connection(statement).rowValues.map(parseValue).distinct
+		if (condition.exists { _.isAlwaysFalse })
+			Empty
+		else {
+			val statement = Select(joins.foldLeft(target) { _.join(_, joinType) }, column) +
+				condition.map { Where(_) } + order
+			connection(statement).rowValues.map(parseValue).distinct
+		}
 	}
 }
 
