@@ -2,7 +2,7 @@ package utopia.reach.component.template
 
 import utopia.firmament.component.stack.CachingStackable
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.genesis.handling.event.mouse.{MouseButtonStateHandler, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateHandler, MouseDragHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -24,8 +24,10 @@ trait ReachComponent extends ReachComponentLike with CachingStackable
 	override lazy val mouseButtonHandler = MouseButtonStateHandler()
 	override lazy val mouseMoveHandler = MouseMoveHandler()
 	override lazy val mouseWheelHandler = MouseWheelHandler()
+	override lazy val mouseDragHandler: MouseDragHandler = MouseDragHandler()
 	
-	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
+	override lazy val handlers: Handlers =
+		Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler, mouseDragHandler)
 	
 	
 	// IMPLEMENTED	-----------------------

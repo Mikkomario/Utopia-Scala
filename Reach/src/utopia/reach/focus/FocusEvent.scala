@@ -10,17 +10,19 @@ package utopia.reach.focus
   * @since 21.10.2020, v0.1
   */
 sealed trait FocusEvent
-
-/**
-  * A common trait for events where focus state is actually changed
-  */
-sealed trait FocusChangeEvent extends FocusEvent
 {
+	// ABSTRACT ------------------------
+	
 	/**
 	  * @return Whether the described component now has focus
 	  */
 	def hasFocus: Boolean
 }
+
+/**
+  * A common trait for events where focus state is actually changed
+  */
+sealed trait FocusChangeEvent extends FocusEvent
 
 object FocusEvent
 {
@@ -28,6 +30,9 @@ object FocusEvent
 	  * An event generated when an object is about to enter into focus
 	  */
 	case object FocusEntering extends FocusEvent
+	{
+		override def hasFocus: Boolean = false
+	}
 	
 	/**
 	  * An event generated when an object has gained focus
@@ -41,6 +46,9 @@ object FocusEvent
 	  * An event generated when an object is about to lose focus
 	  */
 	case object FocusLeaving extends FocusEvent
+	{
+		override def hasFocus: Boolean = true
+	}
 	
 	/**
 	  * An event generated when an object has lost focus

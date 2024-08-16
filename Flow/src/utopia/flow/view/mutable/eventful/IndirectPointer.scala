@@ -17,7 +17,7 @@ object IndirectPointer
 	def apply[A](view: Changing[A])(mutate: A => Unit): IndirectPointer[A] = new _IndirectPointer[A](view, mutate)
 	
 	/**
-	  * Creates a n indirect pointer that provides mutability to a map-result pointer
+	  * Creates an indirect pointer that provides mutability to a map-result pointer
 	  * @param origin The original pointer (mutable)
 	  * @param mapped The map result pointer (immutable)
 	  * @param reverseMap A function that reverses the effects of the original mapping

@@ -13,17 +13,17 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, IndirectPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
-import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.animation.{Animator, AnimatorInstruction}
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
-import utopia.genesis.handling.event.keyboard.{KeyDownEvent, KeyDownListener, KeyStateEvent, KeyStateListener}
+import utopia.genesis.handling.event.keyboard.{KeyDownEvent, KeyDownListener, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseDragEvent, MouseDragListener, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.Color
@@ -34,27 +34,34 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.selection.Slider.SliderColors
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{CustomDrawReachComponent, HasGuiState}
 import utopia.reach.focus.FocusListener
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.Duration
+
+object Slider
+{
+	// NESTED   --------------------------
+	
+	case class SliderColors(leftBar: Color, rightBar: Color, knob: Color)
+}
 
 /**
   * A component used for choosing from a linear range of possible values
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.3.1
   */
-class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler,
-                override val valuePointer: EventfulPointer[A],
-                stackWidth: StackLength, optimalKnobDiameter: Double, barSideColors: Pair[Color],
-                knobColorFunction: Either[Color, Either[Double => Color, A => Color]],
+class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: A,
+                stackWidth: StackLength, optimalKnobDiameter: Double,
+                colorFunction: Either[SliderColors, Either[Double => SliderColors, A => SliderColors]],
                 stickingPoints: Seq[Double] = Empty, progressWithArrow: Double = 0.2,
                 progressVelocityWithArrow: LinearVelocity = LinearVelocity(1.0, 1.seconds),
-                hoverRadius: Double = 0.0, hoverColor: Color = Color.white, leftToRightBarHeightRatio: Double = 1.0,
-                animationDuration: FiniteDuration = 0.2.seconds, maxJumpWithoutAnimationDistance: Double = 2.0,
-                enabledFlag: FlagLike = AlwaysTrue, override val focusListeners: Seq[FocusListener] = Empty,
-                additionalDrawers: IterableOnce[CustomDrawer] = Empty)
+                hoverRadius: Double = 0.0, hoverColor: Color = Color.white, leftToRightBarHeightRatio: Double = 1.5,
+                animationDuration: Duration = 0.2.seconds, maxJumpWithoutAnimationDistance: Double = 2.0,
+                enabledFlag: FlagLike = AlwaysTrue, additionalFocusListeners: Seq[FocusListener] = Empty,
+                additionalDrawers: Seq[CustomDrawer] = Empty)
                (progressToSelection: Double => A)(selectionToProgress: A => Double)
 	extends CustomDrawReachComponent with InteractionWithPointer[A] with HasGuiState with FocusableWithState
 {
@@ -105,10 +112,14 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	// Contains maximum amount of progress that may be jumped without an animation
 	private lazy val maxJumpProgressPointer = sizePointer.map { size => maxJumpWithoutAnimationDistance / size.width }
 	
-	private val rawProgressPointer = EventfulPointer(selectionToProgress(value))
+	private val rawProgressPointer = EventfulPointer(selectionToProgress(initialValue))
 	// This version of the progress pointer applies "sticking", if appropriate
 	private val progressPointer =
 		if (stickingPoints.isEmpty) rawProgressPointer else rawProgressPointer.strongMap(stick)
+	
+	override val valuePointer = IndirectPointer(progressPointer.map(progressToSelection)) { value =>
+		rawProgressPointer.value = selectionToProgress(value)
+	}
 	
 	// Used for directing the animator to visualize progress changes
 	private val animatorInstructionPointer = progressPointer.incrementalMap(AnimatorInstruction.fixed) { (_, event) =>
@@ -135,19 +146,26 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 			Circle(Point(centerX, centerY), radius)
 		}
 	
-	private val knobBaseColorPointer = knobColorFunction match {
-		case Left(staticColor) => Fixed(staticColor)
+	private val baseColorsPointer = colorFunction match {
+		case Left(staticColors) => Fixed(staticColors)
 		case Right(colorFunction) =>
 			colorFunction match {
-				case Left(progressToColor) => progressAnimator.map(progressToColor)
-				case Right(valueToColor) => valuePointer.mapWhile(linkedFlag)(valueToColor)
+				case Left(progressToColors) => progressAnimator.map(progressToColors)
+				case Right(valueToColors) => valuePointer.mapWhile(linkedFlag)(valueToColors)
 			}
 	}
-	private val knobColorPointer = knobBaseColorPointer.mergeWith(statePointer) { (baseColor, state) =>
-		val highlighted = baseColor.highlightedBy(state.intensity max 0.0)
+	private val knobColorPointer = baseColorsPointer.mergeWith(statePointer) { (baseColors, state) =>
+		val intensity = if (hoverRadius <= 0) state.intensity else state.intensity / 2.0
+		val highlighted = baseColors.knob.highlightedBy(intensity max 0.0)
 		if (state.enabled) highlighted else highlighted.grayscale
 	}
-		
+	
+	override val focusListeners: Seq[FocusListener] =
+		FocusListener.managingFocusPointer(_focusPointer) +: additionalFocusListeners
+	override val customDrawers: Seq[CustomDrawer] = Drawer +: additionalDrawers
+	
+	private val repaintListener = ChangeListener.onAnyChange { repaint(High) }
+	
 	
 	// INITIAL CODE --------------------------
 	
@@ -157,10 +175,28 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	activatedFlag.addListener(updateStateListener)
 	enabledFlag.addListenerWhile(linkedFlag)(updateStateListener)
 	
-	// TODO: Set up stuff when linked (including state update)
-	// TODO: Include drag event setup (needs refactoring in Reach component classes)
+	// Sets up mouse listening
+	handlers ++= Pair(MainMouseListener, DragListener)
 	
-	// TODO: Set up focus listening
+	addHierarchyListener { attached =>
+		// Case: Attached
+		if (attached) {
+			enableFocusHandling()
+			// Sets up keyboard listening
+			KeyboardEvents ++= Pair(PressedTracker, ArrowKeyProgressUpdater)
+			// Updates state (in case enabled changed during detachment)
+			statePointer.update()
+		}
+		// Case: Detached => Removes keyboard listeners
+		else {
+			KeyboardEvents --= Pair(PressedTracker, ArrowKeyProgressUpdater)
+			disableFocusHandling()
+		}
+	}
+	
+	// Repaints when status changes
+	statePointer.addListener(repaintListener)
+	progressAnimator.addListener(repaintListener)
 	
 	
 	// COMPUTED ------------------------------
@@ -185,8 +221,6 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	// IMPLEMENTED  --------------------------
 	
 	override def state = statePointer.value
-	
-	override def customDrawers: Seq[CustomDrawer] = ???
 	
 	override def allowsFocusEnter: Boolean = true
 	override def allowsFocusLeave: Boolean = true
@@ -264,15 +298,17 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 			val d = drawer.antialiasing
 			
 			// Draws the right side line first
-			val rightLineHeight = (optimalKnobDiameter / 5.0 / leftToRightBarHeightRatio) min (bounds.height * 0.8)
-			DrawSettings.onlyFill(if (enabled) barSideColors.second else barSideColors.second.grayscale)
+			val rightLineHeight = (optimalKnobDiameter / 4.0 / leftToRightBarHeightRatio) min (bounds.height * 0.8)
+			val leftBarColor = baseColorsPointer.value.leftBar
+			DrawSettings.onlyFill(if (enabled) leftBarColor else leftBarColor.grayscale)
 				.use { implicit ds =>
 					d.draw(Bounds(Point(thresholdX, lineY - rightLineHeight / 2.0),
 						Size(lineWidth - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))
 				}
 			// Next draws the left line
-			val leftLineHeight = (optimalKnobDiameter / 5.0 * leftToRightBarHeightRatio) min (bounds.height * 0.8)
-			DrawSettings.onlyFill(if (enabled) barSideColors.first else barSideColors.first.grayscale)
+			val leftLineHeight = (optimalKnobDiameter / 4.0 * leftToRightBarHeightRatio) min (bounds.height * 0.8)
+			val rightBarColor = baseColorsPointer.value.rightBar
+			DrawSettings.onlyFill(if (enabled) rightBarColor else rightBarColor.grayscale)
 				.use { implicit ds =>
 					d.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
 				}

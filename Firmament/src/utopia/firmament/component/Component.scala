@@ -18,12 +18,6 @@ trait Component extends HasMutableBounds
     // ABSTRACT    ------------------------
     
     /**
-      * @param font font for which the metrics are calculated
-      * @return The font metrics object for this component
-      */
-    def fontMetricsWith(font: Font): FontMetricsWrapper
-    
-    /**
       * @return A handler used for distributing mouse button events within this component
       */
     def mouseButtonHandler: MouseButtonStateHandler
@@ -46,6 +40,12 @@ trait Component extends HasMutableBounds
       * @return The components under this component
       */
     def children: Seq[Component] = Empty
+    
+    /**
+      * @param font font for which the metrics are calculated
+      * @return The font metrics object for this component
+      */
+    def fontMetricsWith(font: Font): FontMetricsWrapper
     
     
     // COMPUTED    ---------------------------

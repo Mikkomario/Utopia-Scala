@@ -1,5 +1,6 @@
 package utopia.reach.focus
 
+import utopia.flow.view.mutable.Pointer
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
 
 import scala.language.implicitConversions
@@ -20,6 +21,13 @@ object FocusListener
 	  * @return A focus listener
 	  */
 	def apply[U](f: FocusEvent => U): FocusListener = new FunctionalFocusListener(f)
+	
+	/**
+	  * @param focusPointer A focus pointer to manage / update
+	  * @return A listener that updates the value of the specified focus pointer
+	  */
+	def managingFocusPointer(focusPointer: Pointer[Boolean]): FocusListener =
+		new UpdatePointerFocusListener(focusPointer)
 	
 	/**
 	  * @param f A function called when the listened item gains focus
@@ -68,6 +76,14 @@ object FocusListener
 	private class FunctionalFocusListener[U](f: FocusEvent => U) extends FocusListener
 	{
 		override def onFocusEvent(event: FocusEvent) = f(event)
+	}
+	
+	private class UpdatePointerFocusListener(focusPointer: Pointer[Boolean]) extends FocusListener
+	{
+		override def onFocusEvent(event: FocusEvent): Unit = event match {
+			case e: FocusChangeEvent => focusPointer.value = e.hasFocus
+			case _ => ()
+		}
 	}
 }
 

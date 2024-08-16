@@ -6,6 +6,7 @@ import utopia.genesis.handling.event.keyboard.{Key, KeyLocation, KeyboardState}
 import utopia.genesis.handling.event.mouse.MouseButtonStateEvent.MouseButtonFilteringFactory
 import utopia.genesis.handling.event.mouse.MouseMoveEvent.MouseMoveFilteringFactory
 import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import scala.concurrent.duration.FiniteDuration
@@ -176,4 +177,13 @@ case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent, o
 		copy(lastMove = lastMove.withPositions(positions))
 	override def mapPosition(f: RelativePoint => RelativePoint) =
 		copy(dragOrigin = f(dragOrigin), lastMove = lastMove.mapPosition(f))
+		
+	
+	// OTHER    --------------------------------
+	
+	/**
+	  * @param area An area
+	  * @return Whether the current, the last or the original position of this drag falls into the specified area
+	  */
+	def concernsArea(area: Area2D) = area.contains(dragOrigin) || positions.exists { area.contains(_) }
 }

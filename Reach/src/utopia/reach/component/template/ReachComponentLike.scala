@@ -10,6 +10,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{Drawer, Priority}
+import utopia.genesis.handling.event.mouse.{MouseDragEvent, MouseDragHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment
@@ -47,7 +48,10 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  */
 	def boundsPointer: Changing[Bounds]
 	
-	override def children: Seq[ReachComponentLike] = Empty
+	/**
+	  * @return Handler used for delivering mouse drag -events to this component hierarchy
+	  */
+	def mouseDragHandler: MouseDragHandler
 	
 	/**
 	  * @return Whether this component is partially or fully transparent
@@ -125,10 +129,10 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	// IMPLEMENTED	---------------------
 	
 	override def bounds = boundsPointer.value
-	
 	override def position = positionPointer.value
-	
 	override def size = sizePointer.value
+	
+	override def children: Seq[ReachComponentLike] = Empty
 	
 	override def fontMetricsWith(font: Font) = parentHierarchy.fontMetricsWith(font)
 	
@@ -279,8 +283,28 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	  *                 status changes. The function accepts the new attachment status (true if attached, false if not)
 	  * @tparam U Arbitrary result type
 	  */
-	def addHierarchyListener[U](listener: Boolean => U) = parentHierarchy.linkPointer
-		.addContinuousListenerAndSimulateEvent(false) { e => listener(e.newValue) }
+	def addHierarchyListener[U](listener: Boolean => U) =
+		parentHierarchy.linkPointer.addContinuousListenerAndSimulateEvent(false) { e => listener(e.newValue) }
+	
+	/**
+	  * Distributes a mouse drag event to this component hierarchy
+	  * @param event Event to distribute. Should be relative to this component's parent's position.
+	  */
+	def distributeMouseDragEvent(event: MouseDragEvent): Unit = {
+		// Informs local listeners
+		mouseDragHandler.onMouseDrag(event)
+		
+		// Informs the child components, if applicable.
+		// The event is transformed into a coordinate system relative to this component.
+		// Events not affecting this component's area are not forwarded.
+		if (children.nonEmpty) {
+			val myBounds = bounds
+			if (event.concernsArea(myBounds)) {
+				val translated = event.relativeTo(myBounds.position)
+				children.foreach { _.distributeMouseDragEvent(translated) }
+			}
+		}
+	}
 	
 	/**
 	  * Creates a new window next to this component

@@ -287,6 +287,7 @@ object ReachCanvas
   * @param exc Implicit execution context
   * @param log Implicit logging implementation for some error cases
   */
+// TODO: Set up drag handling
 class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: FlagLike,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
@@ -336,11 +337,13 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		case Left(v) => Left(View { v.value + position })
 	}
 	
-	override lazy val mouseButtonHandler = MouseButtonStateHandler()
-	override lazy val mouseMoveHandler = MouseMoveHandler()
-	override lazy val mouseWheelHandler = MouseWheelHandler()
+	override val mouseButtonHandler = MouseButtonStateHandler()
+	override val mouseMoveHandler = MouseMoveHandler()
+	override val mouseWheelHandler = MouseWheelHandler()
+	private val mouseDragHandler = MouseDragHandler()
 	
-	override lazy val handlers: Handlers = Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler)
+	override val handlers: Handlers =
+		Handlers(mouseButtonHandler, mouseMoveHandler, mouseWheelHandler, mouseDragHandler)
 	
 	
 	// INITIAL CODE	---------------------------
@@ -384,6 +387,10 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	
 	// Listens to mouse events for cursor-swapping
 	cursorSwapper.foreach(addMouseMoveListener)
+	
+	// Sets up mouse drag event -generation
+	handlers += new DragTracker(
+		MouseDragListener { event => currentContent.foreach { _.distributeMouseDragEvent(event) } })
 	
 	
 	// COMPUTED -------------------------------
