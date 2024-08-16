@@ -26,7 +26,7 @@
     "focus": "utopia.reach.focus"
   },
   "references": {
-    "duration": "scala.concurrent.Duration",
+    "duration": "scala.concurrent.duration.Duration",
     "times": "flow/time.TimeExtensions._",
     "pair": "coll/immutable.Pair",
     "regex": "strings/Regex",
@@ -39,7 +39,7 @@
     "align": "pEnum/Alignment",
     "axis": "pEnum/Axis2D",
     "size": "shapes/vector.size.Size",
-    "sizeC": "pEnum/SizeCategory",
+    "sizeC": "fEnum/SizeCategory",
     "velocity": "paradigm/motion.motion1d.LinearVelocity",
     "prio": "graphics/Priority",
     "fps": "genesis/util/Fps",
@@ -1005,7 +1005,8 @@
           "only_contextual": true,
           "props": [
             {
-              "name": "color",
+              "name": "colorRole",
+              "param": "color",
               "type": "cRole",
               "default": {
                 "code": "ColorRole.Secondary",
@@ -1032,8 +1033,8 @@
               "doc": "The ratio between the left side bar's height and the right side bar's height. If 1.0, both sides are the same height."
             },
             {
-              "name": "enabledPointer",
-              "param": "p",
+              "name": "enabledFlag",
+              "param": "flag",
               "type": "p[Boolean]",
               "default": {
                 "code": "AlwaysTrue",

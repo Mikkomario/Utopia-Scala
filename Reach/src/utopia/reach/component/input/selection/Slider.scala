@@ -1,6 +1,9 @@
 package utopia.reach.component.input.selection
 
+import Slider.SliderColors
 import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.context.ColorContext
+import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState
@@ -12,9 +15,10 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, IndirectPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
@@ -26,26 +30,410 @@ import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyDownEvent, KeyDownListener, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseDragEvent, MouseDragListener, MouseMoveEvent, MouseMoveListener}
 import utopia.paradigm.animation.Animation
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
+import utopia.firmament.model.enumeration.SizeCategory
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.transform.Adjustment
+import utopia.reach.component.factory.contextual.ColorContextualFactory
+import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.input.selection.Slider.SliderColors
 import utopia.reach.component.template.focus.FocusableWithState
-import utopia.reach.component.template.{CustomDrawReachComponent, HasGuiState}
+import utopia.reach.component.template.{CustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
 import utopia.reach.focus.FocusListener
 
 import scala.concurrent.duration.Duration
 
-object Slider
+/**
+  * Common trait for slider factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 16.08.2024, v1.3.1
+  */
+trait SliderSettingsLike[+Repr] extends FocusListenableFactory[Repr] with CustomDrawableFactory[Repr]
 {
-	// NESTED   --------------------------
+	// ABSTRACT	--------------------
 	
+	/**
+	  * The primary color of this slider
+	  */
+	def colorRole: ColorRole
+	/**
+	  * General height of this slider
+	  */
+	def height: SizeCategory
+	/**
+	  * The ratio between the left side bar's height and the right side bar's height. If 1.0,
+	  * both sides are the same height.
+	  */
+	def leftToRightBarHeightRatio: Double
+	/**
+	  * A pointer that determines whether this slider is interactive or not
+	  */
+	def enabledFlag: Changing[Boolean]
+	/**
+	  * The amount of time it takes for an individual transition animation to complete
+	  */
+	def animationDuration: Duration
+	/**
+	  * Maximum distance the knob may "jump" without an animated transition
+	  */
+	def maxJumpWithoutAnimation: Double
+	/**
+	  * Amount of progress [0,1] added to this slider when the left or the right arrow key is tapped
+	  */
+	def progressPerArrowPress: Double
+	/**
+	  * The rate at which progress is added to this slider while an arrow key is held down
+	  */
+	def progressWhileArrowDown: LinearVelocity
+	/**
+	  * A custom function which converts a progress value [0,1] to slider colors
+	  */
+	def colorFunction: Option[Double => SliderColors]
+	
+	/**
+	  * The amount of time it takes for an individual transition animation to complete
+	  * @param duration New animation duration to use.
+	  * The amount of time it takes for an individual transition animation to complete
+	  * @return Copy of this factory with the specified animation duration
+	  */
+	def withAnimationDuration(duration: Duration): Repr
+	/**
+	  * The primary color of this slider
+	  * @param color New color to use.
+	  * The primary color of this slider
+	  * @return Copy of this factory with the specified color
+	  */
+	def withColorRole(color: ColorRole): Repr
+	/**
+	  * A custom function which converts a progress value [0,1] to slider colors
+	  * @param f New color function to use.
+	  * A custom function which converts a progress value [0,1] to slider colors
+	  * @return Copy of this factory with the specified color function
+	  */
+	def withColorFunction(f: Option[Double => SliderColors]): Repr
+	/**
+	  * A pointer that determines whether this slider is interactive or not
+	  * @param p New enabled pointer to use.
+	  * A pointer that determines whether this slider is interactive or not
+	  * @return Copy of this factory with the specified enabled pointer
+	  */
+	def withEnabledFlag(p: Changing[Boolean]): Repr
+	/**
+	  * General height of this slider
+	  * @param height New height to use.
+	  * General height of this slider
+	  * @return Copy of this factory with the specified height
+	  */
+	def withHeight(height: SizeCategory): Repr
+	/**
+	  * The ratio between the left side bar's height and the right side bar's height. If 1.0,
+	  * both sides are the same height.
+	  * @param ratio New left to right bar height ratio to use.
+	  * The ratio between the left side bar's height and the right side bar's height. If 1.0,
+	  * both sides are the same height.
+	  * @return Copy of this factory with the specified left to right bar height ratio
+	  */
+	def withLeftToRightBarHeightRatio(ratio: Double): Repr
+	/**
+	  * Maximum distance the knob may "jump" without an animated transition
+	  * @param maxJump New max jump without animation to use.
+	  * Maximum distance the knob may "jump" without an animated transition
+	  * @return Copy of this factory with the specified max jump without animation
+	  */
+	def withMaxJumpWithoutAnimation(maxJump: Double): Repr
+	/**
+	  * Amount of progress [0,1] added to this slider when the left or the right arrow key is tapped
+	  * @param progress New progress per arrow press to use.
+	  * Amount of progress [0,1] added to this slider when the left or the right arrow key is tapped
+	  * @return Copy of this factory with the specified progress per arrow press
+	  */
+	def withProgressPerArrowPress(progress: Double): Repr
+	/**
+	  * The rate at which progress is added to this slider while an arrow key is held down
+	  * @param progressVelocity New progress while arrow down to use.
+	  * The rate at which progress is added to this slider while an arrow key is held down
+	  * @return Copy of this factory with the specified progress while arrow down
+	  */
+	def withProgressWhileArrowDown(progressVelocity: LinearVelocity): Repr
+	
+	
+	// COMPUTED --------------------
+	
+	def higher = mapHeight { _.more }
+	def lower = mapHeight { _.less }
+	
+	def withSlowerAnimations(implicit adj: Adjustment) = mapAnimationDuration { _ * adj(1) }
+	def withFasterAnimations(implicit adj: Adjustment) = mapAnimationDuration { _ * adj(-1) }
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * A custom function which converts a progress value [0,1] to slider colors
+	  * @param f New color function to use.
+	  *          A custom function which converts a progress value [0,1] to slider colors
+	  * @return Copy of this factory with the specified color function
+	  */
+	def withColorFunction(f: Double => SliderColors): Repr = withColorFunction(Some(f))
+	
+	def mapAnimationDuration(f: Mutate[Duration]) = withAnimationDuration(f(animationDuration))
+	def mapEnabledFlag(f: Mutate[Changing[Boolean]]) = withEnabledFlag(f(enabledFlag))
+	def mapHeight(f: Mutate[SizeCategory]) = withHeight(f(height))
+	def mapProgressPerArrowPress(f: Mutate[Double]) = withProgressPerArrowPress(f(progressPerArrowPress))
+}
+
+object SliderSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+
+/**
+  * Combined settings used when constructing sliders
+  * @param focusListeners Focus listeners to assign to created components
+  * @param customDrawers Custom drawers to assign to created components
+  * @param colorRole The primary color of this slider
+  * @param height General height of this slider
+  * @param leftToRightBarHeightRatio The ratio between the left side bar's height and the right side bar's height.
+  *                                  If 1.0, both sides are the same height.
+  * @param enabledFlag A pointer that determines whether this slider is interactive or not
+  * @param animationDuration The amount of time it takes for an individual transition animation to complete
+  * @param maxJumpWithoutAnimation Maximum distance the knob may "jump" without an animated transition
+  * @param progressPerArrowPress Amount of progress [0,1] added to this slider when the left or the right arrow key is tapped
+  * @param progressWhileArrowDown The rate at which progress is added to this slider while an arrow key is held down
+  * @param colorFunction A custom function which converts a progress value [0,1] to slider colors
+  * @author Mikko Hilpinen
+  * @since 16.08.2024, v1.3.1
+  */
+case class SliderSettings(focusListeners: Seq[FocusListener] = Empty,
+                          customDrawers: Seq[CustomDrawer] = Empty, colorRole: ColorRole = ColorRole.Secondary,
+                          height: SizeCategory = SizeCategory.Medium, leftToRightBarHeightRatio: Double = 1.5,
+                          enabledFlag: Changing[Boolean] = AlwaysTrue, animationDuration: Duration = 0.2.seconds,
+                          maxJumpWithoutAnimation: Double = 2.0, progressPerArrowPress: Double = 0.2,
+                          progressWhileArrowDown: LinearVelocity = LinearVelocity(1.0, 1.0.seconds),
+                          colorFunction: Option[Double => SliderColors] = None)
+	extends SliderSettingsLike[SliderSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withAnimationDuration(duration: Duration) = copy(animationDuration = duration)
+	override def withColorRole(color: ColorRole) = copy(colorRole = color)
+	override def withColorFunction(f: Option[Double => SliderColors]) = copy(colorFunction = f)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withEnabledFlag(p: Changing[Boolean]) = copy(enabledFlag = p)
+	override def withFocusListeners(listeners: Seq[FocusListener]) = copy(focusListeners = listeners)
+	override def withHeight(height: SizeCategory) = copy(height = height)
+	override def withLeftToRightBarHeightRatio(ratio: Double) = copy(leftToRightBarHeightRatio = ratio)
+	override def withMaxJumpWithoutAnimation(maxJump: Double) = copy(maxJumpWithoutAnimation = maxJump)
+	override def withProgressPerArrowPress(progress: Double) = copy(progressPerArrowPress = progress)
+	override def withProgressWhileArrowDown(progressVelocity: LinearVelocity) =
+		copy(progressWhileArrowDown = progressVelocity)
+}
+
+/**
+  * Common trait for factories that wrap a slider settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 16.08.2024, v1.3.1
+  */
+trait SliderSettingsWrapper[+Repr] extends SliderSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: SliderSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: SliderSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def animationDuration = settings.animationDuration
+	override def colorRole = settings.colorRole
+	override def colorFunction = settings.colorFunction
+	override def customDrawers = settings.customDrawers
+	override def enabledFlag = settings.enabledFlag
+	override def focusListeners = settings.focusListeners
+	override def height = settings.height
+	override def leftToRightBarHeightRatio = settings.leftToRightBarHeightRatio
+	override def maxJumpWithoutAnimation = settings.maxJumpWithoutAnimation
+	override def progressPerArrowPress = settings.progressPerArrowPress
+	override def progressWhileArrowDown = settings.progressWhileArrowDown
+	
+	override def withAnimationDuration(duration: Duration) = mapSettings { _.withAnimationDuration(duration) }
+	override def withColorRole(color: ColorRole) = mapSettings { _.withColorRole(color) }
+	override def withColorFunction(f: Option[Double => SliderColors]) = mapSettings { _.withColorFunction(f) }
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = mapSettings { _.withCustomDrawers(drawers) }
+	override def withEnabledFlag(p: Changing[Boolean]) = mapSettings { _.withEnabledFlag(p) }
+	override def withFocusListeners(listeners: Seq[FocusListener]) =
+		mapSettings { _.withFocusListeners(listeners) }
+	override def withHeight(height: SizeCategory) = mapSettings { _.withHeight(height) }
+	override def withLeftToRightBarHeightRatio(ratio: Double) =
+		mapSettings { _.withLeftToRightBarHeightRatio(ratio) }
+	override def withMaxJumpWithoutAnimation(maxJump: Double) =
+		mapSettings { _.withMaxJumpWithoutAnimation(maxJump) }
+	override def withProgressPerArrowPress(progress: Double) =
+		mapSettings { _.withProgressPerArrowPress(progress) }
+	override def withProgressWhileArrowDown(progressVelocity: LinearVelocity) =
+		mapSettings { _.withProgressWhileArrowDown(progressVelocity) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: SliderSettings => SliderSettings) = withSettings(f(settings))
+}
+
+/**
+  * Factory class used for constructing sliders using contextual component creation information
+  * @author Mikko Hilpinen
+  * @since 16.08.2024, v1.3.1
+  */
+case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+                                   settings: SliderSettings = SliderSettings.default,
+                                   customColors: Option[SliderColors] = None)
+	extends SliderSettingsWrapper[ContextualSliderFactory]
+		with ColorContextualFactory[ContextualSliderFactory] with PartOfComponentHierarchy
+{
+	// COMPUTED ------------------------
+	
+	private def defaultColors = SliderColors(context.color(settings.colorRole))
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def self = this
+	
+	override def withContext(context: ColorContext) = copy(context = context)
+	override def withSettings(settings: SliderSettings) = copy(settings = settings)
+	
+	
+	// OTHER    ------------------------
+	
+	def withCustomColor(colors: SliderColors) = copy(customColors = Some(colors))
+	def withCustomColor(color: Color): ContextualSliderFactory = withCustomColor(SliderColors(color))
+	
+	def mapColor(f: Color => Color) =
+		withCustomColor(customColors.getOrElse(defaultColors).map(f))
+	
+	/**
+	  * Prepares a new slider factory for specific type of content
+	  * @param progressToSelection Function for converting progress [0,1] to a value selection
+	  * @param selectionToProgress Function for converting selected value to progress [0,1]
+	  * @tparam A Type of selected values
+	  * @return A new slider factory using the specified functions
+	  */
+	def apply[A](progressToSelection: Double => A)(selectionToProgress: A => Double) =
+		new Prepared[A](progressToSelection, selectionToProgress)
+	
+	/**
+	  * Prepares a slider that allows selection from the specified value options
+	  * @param options The options that may be selected from
+	  * @tparam A Type of the available options
+	  * @return A slider factory for selecting from the specified options
+	  */
+	def from[A](options: Seq[A]) = new Prepared[A](
+		p => options((p * (options.size - 1)).round.toInt),
+		a => options.findIndexOf(a).getOrElse(0) / (options.size - 1),
+		options.indices.map { _.toDouble / (options.size - 1) })
+	/**
+	  * Prepares a slider that allows selection from variable value options
+	  * @param optionsPointer Pointer that contains the selectable options
+	  * @tparam A Type of the available options
+	  * @return A slider factory for selecting from the specified options
+	  */
+	def fromOptionsPointer[A](optionsPointer: Changing[Seq[A]]) = {
+		val progressToValuePointer = optionsPointer
+			.map { options => p: Double => options((p * (options.size - 1)).round.toInt) }
+		val valueToProgressPointer = optionsPointer
+			.map { options => a: A => options.findIndexOf(a).getOrElse(0) / (options.size - 1) }
+		new Prepared[A](p => progressToValuePointer.value(p), a => valueToProgressPointer.value(a),
+			finalizeFunction = Some(s => optionsPointer.addListenerWhile(s.linkedFlag) { _ => s.repaint() }))
+	}
+	
+	
+	// NESTED   ------------------------
+	
+	class Prepared[A](progressToSelection: Double => A, selectionToProgress: A => Double,
+	                  stickingPoints: Seq[Double] = Empty,
+	                  customColorFunction: Option[A => SliderColors] = None,
+	                  finalizeFunction: Option[Slider[A] => Unit] = None)
+	{
+		// OTHER    --------------------
+		
+		def withItemColorFunction(f: A => SliderColors) =
+			new Prepared(progressToSelection, selectionToProgress, stickingPoints, Some(f))
+		
+		/**
+		  * Creates a new slider
+		  * @param width Stack width of this slider
+		  * @param initialValue Initially selected value
+		  * @return A new slider
+		  */
+		def apply(width: StackLength, initialValue: A) = {
+			val knobRadius = context.margins(height)
+			val colorFunction = customColorFunction match {
+				case Some(itemToColor) => Right(Right(itemToColor))
+				case None =>
+					settings.colorFunction match {
+						case Some(progressToColor) => Right(Left(progressToColor))
+						case None => Left(customColors.getOrElse(defaultColors))
+					}
+			}
+			val hoverRadius = knobRadius * 0.75
+			new Slider[A](parentHierarchy, initialValue, width, knobRadius * 2, colorFunction, stickingPoints,
+				progressPerArrowPress, progressWhileArrowDown, hoverRadius, context.color(settings.colorRole),
+				leftToRightBarHeightRatio, animationDuration, maxJumpWithoutAnimation, enabledFlag,
+				focusListeners, customDrawers)(progressToSelection)(selectionToProgress)
+		}
+	}
+}
+
+/**
+  * Used for defining slider creation settings outside of the component building process
+  * @author Mikko Hilpinen
+  * @since 16.08.2024, v1.3.1
+  */
+case class SliderSetup(settings: SliderSettings = SliderSettings.default)
+	extends SliderSettingsWrapper[SliderSetup]
+		with FromContextComponentFactoryFactory[ColorContext, ContextualSliderFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+		ContextualSliderFactory(hierarchy, context, settings)
+	
+	override def withSettings(settings: SliderSettings) = copy(settings = settings)
+}
+
+object Slider extends SliderSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: SliderSettings) = withSettings(settings)
+	
+	
+	// NESTED	--------------------
+	
+	object SliderColors
+	{
+		def apply(primaryColor: Color): SliderColors = apply(primaryColor, primaryColor.timesAlpha(0.5), primaryColor)
+	}
 	case class SliderColors(leftBar: Color, rightBar: Color, knob: Color)
+	{
+		def map(f: Color => Color) = SliderColors(f(leftBar), f(rightBar), f(knob))
+	}
 }
 
 /**
