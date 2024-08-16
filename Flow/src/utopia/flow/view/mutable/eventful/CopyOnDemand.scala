@@ -13,6 +13,13 @@ object CopyOnDemand
 	// OTHER    -------------------------------
 	
 	/**
+	  * @param f A function for producing the viewed value
+	  * @tparam A Type of viewed values
+	  * @return A pointer that updates its cached value on demand (i.e. whenever update() is called)
+	  */
+	def apply[A](f: => A): CopyOnDemand[A] = new ViewOnDemand[A](View(f))
+	
+	/**
 	  * Creates a new pointer for viewing the specified source view
 	  * @param source A value view
 	  * @tparam A Type of the viewed values

@@ -2,6 +2,11 @@
 
 ## v1.3.1 (in development)
 Built with Scala v2.13.14
+### New features
+- Added **HasGuiState** trait
+### New methods
+- **GuiElementStatus**
+  - Added multiple new utility getters & setters
 
 ## v1.3 - 28.07.2024
 For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 

@@ -6,6 +6,84 @@ import utopia.paradigm.motion.motion1d.LinearVelocity
 
 import scala.concurrent.duration.Duration
 
+object TimedAnimation
+{
+	// OTHER	-----------------------
+	
+	/**
+	  * Wraps another animation and gives it a duration
+	  * @param animation Animation
+	  * @param duration Duration for the animation
+	  * @tparam A Type of animation result
+	  * @return Provided animation with a duration
+	  */
+	def wrap[A](animation: Animation[A], duration: Duration): TimedAnimation[A] =
+		new TimedAnimationWrapper[A](animation, duration)
+	
+	/**
+	  * @param value Value always yielded by this animation
+	  * @param duration Duration of this animation
+	  * @tparam A Type of wrapped value
+	  * @return An animation that always yields the specified value
+	  */
+	def fixed[A](value: A, duration: Duration = Duration.Inf): TimedAnimation[A] = Fixed(value, duration)
+	
+	
+	// NESTED	-----------------------
+	
+	private case class Fixed[+A](value: A, duration: Duration) extends TimedAnimation[A]
+	{
+		override def withReverseAppended = this
+		override def reversed = this
+		
+		override def apply(progress: Double): A = value
+		override def apply(passedTime: Duration) = value
+		override def repeating(passedTime: Duration) = value
+		
+		override def map[B](f: A => B) = Fixed(f(value), duration)
+		
+		override def curved(curvature: AnimationLike[Double, Any]) = this
+		override def repeated(times: Int) = this
+	}
+	
+	private class CurvedAnimation[+A](wrapped: TimedAnimation[A], curve: AnimationLike[Double, Any])
+		extends TimedAnimation[A]
+	{
+		override def duration = wrapped.duration
+		
+		override def apply(progress: Double) = wrapped(curve(progress))
+	}
+	
+	private class TimedAnimationWrapper[+A](wrapped: Animation[A], override val duration: Duration)
+		extends TimedAnimation[A]
+	{
+		override def apply(progress: Double) = wrapped(progress)
+	}
+	
+	private class MapAnimation[A, +B](original: TimedAnimation[A])(f: A => B) extends TimedAnimation[B]
+	{
+		override def duration = original.duration
+		
+		override def apply(progress: Double) = f(original(progress))
+	}
+	
+	private class RepeatingAnimation[+A](original: TimedAnimation[A], repeats: Int) extends TimedAnimation[A]
+	{
+		override def duration = original.duration * repeats
+		
+		override def apply(progress: Double) = original((progress * repeats) % 1)
+	}
+	
+	private class ReverseAnimation[A](original: TimedAnimation[A]) extends TimedAnimation[A]
+	{
+		override def duration = original.duration
+		
+		override def apply(progress: Double) = original(1 - progress)
+		
+		override def reversed = original
+	}
+}
+
 /**
   * A common trait for animations that have a time element
   * @author Mikko Hilpinen
@@ -70,58 +148,4 @@ trait TimedAnimation[+A] extends AnimationLike[A, TimedAnimation]
 	  * @return An animation that first plays this one and then the other
 	  */
 	def appendedWith[B >: A](another: TimedAnimation[B]) = TimedCombinedAnimation(this, another)
-}
-
-object TimedAnimation
-{
-	// OTHER	-----------------------
-	
-	/**
-	  * Wraps another animation and gives it a duration
-	  * @param animation Animation
-	  * @param duration Duration for the animation
-	  * @tparam A Type of animation result
-	  * @return Provided animation with a duration
-	  */
-	def wrap[A](animation: Animation[A], duration: Duration): TimedAnimation[A] =
-		new TimedAnimationWrapper[A](animation, duration)
-	
-	
-	// NESTED	-----------------------
-	
-	private class CurvedAnimation[+A](wrapped: TimedAnimation[A], curve: AnimationLike[Double, Any])
-		extends TimedAnimation[A]
-	{
-		override def duration = wrapped.duration
-		
-		override def apply(progress: Double) = wrapped(curve(progress))
-	}
-	
-	private class TimedAnimationWrapper[+A](wrapped: Animation[A], override val duration: Duration) extends TimedAnimation[A]
-	{
-		override def apply(progress: Double) = wrapped(progress)
-	}
-	
-	private class MapAnimation[A, +B](original: TimedAnimation[A])(f: A => B) extends TimedAnimation[B]
-	{
-		override def duration = original.duration
-		
-		override def apply(progress: Double) = f(original(progress))
-	}
-	
-	private class RepeatingAnimation[+A](original: TimedAnimation[A], repeats: Int) extends TimedAnimation[A]
-	{
-		override def duration = original.duration * repeats
-		
-		override def apply(progress: Double) = original((progress * repeats) % 1)
-	}
-	
-	private class ReverseAnimation[A](original: TimedAnimation[A]) extends TimedAnimation[A]
-	{
-		override def duration = original.duration
-		
-		override def apply(progress: Double) = original(1 - progress)
-		
-		override def reversed = original
-	}
 }

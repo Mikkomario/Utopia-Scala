@@ -26,7 +26,7 @@ object KeyDownEvent
 	
 	// NESTED   -----------------------
 	
-	trait KeyDownFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyDownEvent, A]
+	trait KeyDownFilteringFactory[+A] extends Any with SpecificKeyFilteringFactory[KeyDownEvent, A]
 	{
 		/**
 		  * @param durationThreshold A time threshold after which key-down events should be ignored.
@@ -64,6 +64,15 @@ object KeyDownEvent
 		  * @return A filter that uses the specified function
 		  */
 		def apply(f: KeyDownEvent => Boolean) = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   -------------------------
+	
+	implicit class RichKeyDownEventFilter(val f: KeyDownEventFilter)
+		extends AnyVal with KeyDownFilteringFactory[KeyDownEventFilter]
+	{
+		override protected def withFilter(filter: Filter[KeyDownEvent]): KeyDownEventFilter = f && filter
 	}
 }
 

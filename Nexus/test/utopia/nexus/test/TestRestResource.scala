@@ -99,7 +99,7 @@ class TestRestResource(val name: String, initialValues: ModelLike[Constant] = Mo
     {
         implicit val settings: ServerSettings = context.settings
         children :+= new TestRestResource(path.lastElement, parameters)
-        Response.empty(Created).withModifiedHeaders(_.withLocation(path.toServerUrl))
+        Response.empty(Created).mapHeaders(_.withLocation(path.toServerUrl))
     }
     
     private def handleDelete(targetName: String) = 

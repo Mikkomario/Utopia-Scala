@@ -1,9 +1,102 @@
 package utopia.paradigm.animation
 
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.paradigm.animation.Animation.{MapAnimation, MergeAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.paradigm.animation.transform.{AnimatedTransform, AnimationWithTransform, TimedAnimationWithTranform, TimedTransform}
 
 import scala.concurrent.duration.Duration
+
+object Animation
+{
+	// ATTRIBUTES   -----------------------
+	
+	/**
+	  * An animation that progresses linearly from 0 to 1
+	  */
+	lazy val zeroToOne: Animation[Double] = IdentityAnimation
+	/**
+	  * An animation that progresses linearly from 1 to 0
+	  */
+	lazy val oneToZero: Animation[Double] = apply { 1 - _ }
+	
+	
+	// OTHER	---------------------------
+	
+	/**
+	  * @param f An animation function. Takes animation progress (usually between 0 and 1) and returns animation state
+	  * @tparam A Type of animation result
+	  * @return A new animation
+	  */
+	def apply[A](f: Double => A): Animation[A] = new FunctionAnimation[A](f)
+	
+	/**
+	  * @param state A static state this animation will always have
+	  * @tparam A Type of animation result
+	  * @return An animation that always returns the same result
+	  */
+	def fixed[A](state: A) = new FixedAnimation[A](state)
+	
+	/**
+	  * @param from Start value
+	  * @param to End value
+	  * @return An animation that progresses from the start value to the end value
+	  */
+	def progress(from: Double, to: Double): Animation[Double] = ProgressAnimation(from, to)
+	/**
+	  * @param range Progressed range of values
+	  * @return An animation that progresses from the range start value to the range end value
+	  */
+	def progress(range: HasInclusiveEnds[Double]): Animation[Double] = progress(range.start, range.end)
+	
+	
+	// NESTED	---------------------------
+	
+	private object IdentityAnimation extends Animation[Double]
+	{
+		override def apply(progress: Double): Double = progress
+	}
+	
+	private class MapAnimation[A, +B](original: Animation[A])(f: A => B) extends Animation[B]
+	{
+		override def apply(progress: Double) = f(original(progress))
+	}
+	
+	private class MergeAnimation[O1, O2, R](original1: AnimationLike[O1, Any], original2: AnimationLike[O2, Any])
+	                                       (merge: (O1, O2) => R)
+		extends Animation[R]
+	{
+		override def apply(progress: Double) = merge(original1(progress), original2(progress))
+	}
+	
+	private class RepeatingAnimation[+A](original: Animation[A], repeats: Int) extends Animation[A]
+	{
+		override def apply(progress: Double) = original((progress * repeats) % 1)
+	}
+	
+	private class FunctionAnimation[+A](f: Double => A) extends Animation[A]
+	{
+		override def apply(progress: Double) = f(progress)
+	}
+	
+	private class ReverseAnimation[+A](original: Animation[A]) extends Animation[A]
+	{
+		override def apply(progress: Double) = original(1 - progress)
+		
+		override def reversed = original
+	}
+	
+	private case class ProgressAnimation(from: Double, to: Double) extends Animation[Double]
+	{
+		// ATTRIBUTES   ------------------
+		
+		private val length = to - from
+		
+		
+		// IMPLEMENTED  ------------------
+		
+		override def apply(progress: Double): Double = from + progress * length
+	}
+}
 
 /**
   * Animations are items that have different states based on (time) progress
@@ -17,7 +110,7 @@ trait Animation[+A] extends AnimationLike[A, Animation]
 	/**
 	  * @return An animation that first plays this animation, and then the reverse version of this animation
 	  */
-	def withReverseAppended = appendWith(reversed)
+	def withReverseAppended: Animation[A] = appendWith(reversed)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -94,55 +187,4 @@ trait Animation[+A] extends AnimationLike[A, Animation]
 	  */
 	def appendWith[B >: A](another: AnimationLike[B, Any], switchAt: Double = 0.5) =
 		CombinedAnimation(this, another, switchAt)
-}
-
-object Animation
-{
-	// OTHER	---------------------------
-	
-	/**
-	  * @param f An animation function. Takes animation progress (usually between 0 and 1) and returns animation state
-	  * @tparam A Type of animation result
-	  * @return A new animation
-	  */
-	def apply[A](f: Double => A): Animation[A] = new FunctionAnimation[A](f)
-	
-	/**
-	  * @param state A static state this animation will always have
-	  * @tparam A Type of animation result
-	  * @return An animation that always returns the same result
-	  */
-	def fixed[A](state: A) = new FixedAnimation[A](state)
-	
-	
-	// NESTED	---------------------------
-	
-	private class MapAnimation[A, +B](original: Animation[A])(f: A => B) extends Animation[B]
-	{
-		override def apply(progress: Double) = f(original(progress))
-	}
-	
-	private class MergeAnimation[O1, O2, R](original1: AnimationLike[O1, Any], original2: AnimationLike[O2, Any])
-	                                       (merge: (O1, O2) => R)
-		extends Animation[R]
-	{
-		override def apply(progress: Double) = merge(original1(progress), original2(progress))
-	}
-	
-	private class RepeatingAnimation[+A](original: Animation[A], repeats: Int) extends Animation[A]
-	{
-		override def apply(progress: Double) = original((progress * repeats) % 1)
-	}
-	
-	private class FunctionAnimation[+A](f: Double => A) extends Animation[A]
-	{
-		override def apply(progress: Double) = f(progress)
-	}
-	
-	private class ReverseAnimation[+A](original: Animation[A]) extends Animation[A]
-	{
-		override def apply(progress: Double) = original(1 - progress)
-		
-		override def reversed = original
-	}
 }

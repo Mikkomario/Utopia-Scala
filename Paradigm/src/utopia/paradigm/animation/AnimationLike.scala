@@ -10,7 +10,7 @@ object AnimationLike
 	/**
 	  * A generic animation type used when the specific type of the animation doesn't matter
 	  */
-	type AnyAnimation[X] = AnimationLike[X, Any]
+	type AnyAnimation[+X] = AnimationLike[X, Any]
 }
 
 /**

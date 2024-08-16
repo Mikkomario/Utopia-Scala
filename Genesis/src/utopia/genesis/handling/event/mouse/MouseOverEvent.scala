@@ -28,7 +28,7 @@ object MouseOverEvent
 	
 	// NESTED   ------------------------
 	
-	trait MouseOverFilteringFactory[+A] extends MouseFilteringFactory[MouseOverEvent, A]
+	trait MouseOverFilteringFactory[+A] extends Any with MouseFilteringFactory[MouseOverEvent, A]
 	{
 		/**
 		  * @return An item that only accepts unconsumed events
@@ -64,6 +64,15 @@ object MouseOverEvent
 		  * @return A filter that uses the specified function
 		  */
 		def apply(f: MouseOverEvent => Boolean) = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   ---------------------------
+	
+	implicit class RichMouseOverEventFilter(val f: MouseOverEventFilter)
+		extends AnyVal with MouseOverFilteringFactory[MouseOverEventFilter]
+	{
+		override protected def withFilter(filter: Filter[MouseOverEvent]): MouseOverEventFilter = f && filter
 	}
 }
 

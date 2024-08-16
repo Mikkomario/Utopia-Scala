@@ -31,7 +31,8 @@ object MouseDragEvent
 	// NESTED   --------------------------
 	
 	trait MouseDragFilteringFactory[+A]
-		extends MouseMoveFilteringFactory[MouseDragEvent, A] with MouseButtonFilteringFactory[MouseDragEvent, A]
+		extends Any with MouseMoveFilteringFactory[MouseDragEvent, A]
+			with MouseButtonFilteringFactory[MouseDragEvent, A]
 	{
 		// COMPUTED ----------------------
 		
@@ -115,6 +116,15 @@ object MouseDragEvent
 		  * @return A filter that uses the specified function
 		  */
 		def apply(f: MouseDragEvent => Boolean): MouseDragEventFilter = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   ------------------------
+	
+	implicit class RichMouseDragEventFilter(val f: MouseDragEventFilter)
+		extends AnyVal with MouseDragFilteringFactory[MouseDragEventFilter]
+	{
+		override protected def withFilter(filter: Filter[MouseDragEvent]): MouseDragEventFilter = f && filter
 	}
 }
 

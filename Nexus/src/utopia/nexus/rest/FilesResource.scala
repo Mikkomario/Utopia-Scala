@@ -92,7 +92,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
                 
                 val location = if (resultUrls.size == 1) resultUrls.head._2 else myPath.toServerUrl(context.settings)
                 
-                Response.fromModel(Model.fromMap(resultUrls.toMap)).withModifiedHeaders(_.withLocation(location))
+                Response.fromModel(Model.fromMap(resultUrls.toMap)).mapHeaders(_.withLocation(location))
             }
         }
     }

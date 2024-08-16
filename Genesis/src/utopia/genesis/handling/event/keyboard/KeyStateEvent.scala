@@ -119,7 +119,7 @@ object KeyStateEvent
       * Common trait for factory-like classes that support key-state-event -based filtering
       * @tparam A Type of generated items
       */
-    trait KeyStateFilteringFactory[+A] extends SpecificKeyFilteringFactory[KeyStateEvent, A]
+    trait KeyStateFilteringFactory[+A] extends Any with SpecificKeyFilteringFactory[KeyStateEvent, A]
     {
         // COMPUTED   ---------------------
         
@@ -166,6 +166,15 @@ object KeyStateEvent
           *         and only while a control key is being held down
           */
         def controlChar(char: Char) = whileControlDown && pressed && this.char(char)
+    }
+    
+    
+    // EXTENSIONS   -------------------------
+    
+    implicit class RichKeyStateEventFilter(val f: KeyStateEventFilter)
+        extends AnyVal with KeyStateFilteringFactory[KeyStateEventFilter]
+    {
+        override protected def withFilter(filter: Filter[KeyStateEvent]): KeyStateEventFilter = f && filter
     }
 }
 

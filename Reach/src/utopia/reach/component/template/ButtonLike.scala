@@ -1,6 +1,6 @@
 package utopia.reach.component.template
 
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, Hover}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
@@ -12,6 +12,7 @@ import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseMoveEvent, MouseMoveListener}
 import utopia.reach.component.template.focus.FocusableWithState
+import utopia.reach.cursor.CursorType
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 
@@ -28,7 +29,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 24.10.2020, v0.1
   */
-trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorDefining
+trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorDefining with HasGuiState
 {
 	// ABSTRACT	------------------------------
 	
@@ -50,19 +51,6 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	// COMPUTED	------------------------------
 	
 	/**
-	  * @return This button's current state
-	  */
-	def state = statePointer.value
-	
-	/**
-	  * @return Whether this button is currently enabled
-	  */
-	def enabled = state isNot Disabled
-	/**
-	  * @return Whether The mouse is currently over this button
-	  */
-	def isMouseOver = state is Hover
-	/**
 	  * @return Whether this button is currently being pressed down
 	  */
 	def isPressed = state is Activated
@@ -70,7 +58,12 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	
 	// IMPLEMENTED	--------------------------
 	
-	override def cursorType = if (enabled) Interactive else Default
+	/**
+	  * @return This button's current state
+	  */
+	override def state = statePointer.value
+	
+	override def cursorType: CursorType = if (enabled) Interactive else Default
 	
 	override def cursorBounds = boundsInsideTop
 	

@@ -134,7 +134,7 @@ object ListenableResettableLazy
   * @author Mikko Hilpinen
   * @since 16.5.2021, v1.9.2
   */
-trait ListenableResettableLazy[A] extends ResettableLazy[A] with ListenableLazy[A] with ResetListenable[A]
+trait ListenableResettableLazy[+A] extends ResettableLazy[A] with ListenableLazy[A] with ResetListenable[A]
 {
 	// ABSTRACT ----------------------------------
 	

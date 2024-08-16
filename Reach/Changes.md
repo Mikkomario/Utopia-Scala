@@ -2,6 +2,12 @@
 
 ## v1.3.1 (in development)
 Built with Scala v2.13.14
+Working on slider
+### New features
+- Added **HasGuiState** trait
+### New methods
+- **PartOfComponentHierarchy**
+  - Added `.linkedFlag`
 
 ## v1.3 - 28.07.2024
 This update follows changes introduced in **Genesis v4.0**, which mostly affect the component 

@@ -30,7 +30,7 @@ object KeyEvent
 	  * @tparam E Type of filtered event
 	  * @tparam A Type of generated items
 	  */
-	trait KeyFilteringFactory[+E <: KeyEvent, +A]
+	trait KeyFilteringFactory[+E <: KeyEvent, +A] extends Any
 	{
 		// ABSTRACT -------------------------
 		
@@ -149,6 +149,15 @@ object KeyEvent
 		 * @return A filter that uses the specified function
 		 */
 		def apply(f: KeyEvent => Boolean) = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   --------------------
+	
+	implicit class RichKeyEventFilter[E <: KeyEvent](val f: Filter[E])
+		extends AnyVal with KeyFilteringFactory[E, Filter[E]]
+	{
+		override protected def withFilter(filter: Filter[E]): Filter[E] = f && filter
 	}
 }
 

@@ -2,6 +2,11 @@
 
 ## v4.0.1 (in development)
 Built with Scala v2.13.14
+### New methods
+- **AnimatorInstructor** (object)
+  - Added `.fixed(...)` constructor
+### Other changes
+- Event filters are now possible to chain due to new implicit extensions in each event companion object
 
 ## v4.0 - 28.07.2024
 This update is a major overhaul (i.e. complete rewriting) of the handling system.  

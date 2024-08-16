@@ -28,7 +28,7 @@ object MouseWheelEvent
 	
 	// NESTED   ---------------------
 	
-	trait MouseWheelFilteringFactory[+A] extends MouseFilteringFactory[MouseWheelEvent, A]
+	trait MouseWheelFilteringFactory[+A] extends Any with MouseFilteringFactory[MouseWheelEvent, A]
 	{
 		// COMPUTED ------------------
 		
@@ -71,6 +71,15 @@ object MouseWheelEvent
 		  * @return A filter that uses the specified function
 		  */
 		def other(f: MouseWheelEvent => Boolean): MouseWheelEventFilter = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   -------------------
+	
+	implicit class RichMouseWheelEventFilter(val f: MouseWheelEventFilter)
+		extends AnyVal with MouseWheelFilteringFactory[MouseWheelEventFilter]
+	{
+		override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelEventFilter = f && filter
 	}
 }
 

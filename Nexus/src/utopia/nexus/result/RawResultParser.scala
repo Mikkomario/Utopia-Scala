@@ -36,6 +36,6 @@ trait RawResultParser extends ResultParser
             else
                 parseDataResponse(result.data, result.status, request)
         }
-        response.withModifiedHeaders(_ ++ result.headers)
+        response.mapHeaders(_ ++ result.headers)
     }
 }

@@ -15,7 +15,7 @@ object SpecificKeyEvent
 	
 	// NESTED   ------------------------
 	
-	trait SpecificKeyFilteringFactory[+E <: SpecificKeyEvent, +A] extends KeyFilteringFactory[E, A]
+	trait SpecificKeyFilteringFactory[+E <: SpecificKeyEvent, +A] extends Any with KeyFilteringFactory[E, A]
 	{
 		// OTHER    -----------------------
 		
@@ -35,6 +35,15 @@ object SpecificKeyEvent
 	object SpecificKeyEventFilter extends SpecificKeyFilteringFactory[SpecificKeyEvent, Filter[SpecificKeyEvent]]
 	{
 		override protected def withFilter(filter: Filter[SpecificKeyEvent]): Filter[SpecificKeyEvent] = filter
+	}
+	
+	
+	// EXTENSIONS   -----------------------
+	
+	implicit class RIchSpecificKeyEventFilter[E <: SpecificKeyEvent](val f: Filter[E])
+		extends AnyVal with SpecificKeyFilteringFactory[E, Filter[E]]
+	{
+		override protected def withFilter(filter: Filter[E]): Filter[E] = f && filter
 	}
 }
 

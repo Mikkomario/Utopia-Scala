@@ -53,7 +53,7 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[+O1, +O2, Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection)
+class LazyMergeMirror[+O1, +O2, +Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	-------------------------------

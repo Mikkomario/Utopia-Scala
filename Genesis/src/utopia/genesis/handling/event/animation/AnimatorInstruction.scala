@@ -10,10 +10,22 @@ import scala.math.Ordering.Double.TotalOrdering
 
 object AnimatorInstruction
 {
+	// ATTRIBUTES   -----------------------
+	
 	/**
 	  * The default animation clip, which corresponds with an animation's standard input range 0 to 1.
 	  */
 	val defaultClip = NumericSpan(0.0, 1.0)
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param value Value to present
+	  * @tparam A Type of the presented value
+	  * @return An instruction to present a fixed (i.e. non-animated) value
+	  */
+	def fixed[A](value: A) = apply(TimedAnimation.fixed(value), NumericSpan.singleValue(1.0))
 }
 
 /**
@@ -51,7 +63,7 @@ case class AnimatorInstruction[+A](animation: TimedAnimation[A], clip: NumericSp
 	/**
 	  * @return True if the animation should not be animated
 	  */
-	def isStatic = clip.ends.isSymmetric
+	def isStatic = clip.ends.isSymmetric || !animation.duration.isFinite
 	/**
 	  * @return True if the animation should be animated
 	  */

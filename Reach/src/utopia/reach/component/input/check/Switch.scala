@@ -188,7 +188,8 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
   * @since 21.06.2023, v1.1
   */
 case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
-                                   settings: SwitchSettings = SwitchSettings.default, colorRole: ColorRole = ColorRole.Secondary)
+                                   settings: SwitchSettings = SwitchSettings.default,
+                                   colorRole: ColorRole = ColorRole.Secondary)
 	extends SwitchFactoryLike[ContextualSwitchFactory] with ColorContextualFactory[ContextualSwitchFactory]
 {
 	// IMPLEMENTED	---------------------------------

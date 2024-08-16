@@ -1,8 +1,8 @@
 package utopia.nexus.servlet
+
 import utopia.access.http.Status
 import utopia.access.http.StatusGroup.ServerError
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
@@ -50,7 +50,7 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[Request => R
 		}
 		// Adds a date-header, if not present. Also post-processes the response
 		postProcessors.foldLeft(
-			response.withModifiedHeaders { h => if (h.hasDate) h else h.withDate(requestTime) }) { (res, p) => p(res) }
+			response.mapHeaders { h => if (h.hasDate) h else h.withDate(requestTime) }) { (res, p) => p(res) }
 	}
 	
 	override def processConversionFailure(request: HttpServletRequest, response: HttpServletResponse) =

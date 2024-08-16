@@ -2,6 +2,13 @@
 
 ## v1.6.1 (in development)
 Built with Scala v2.13.14
+### New methods
+- **Animation** (object)
+  - Added a couple of utility constructors
+- **TimedAnimation** (object)
+  - Added `.fixed(...)` constructor
+### Other changes
+- **AnyAnimation** is now covariant
 
 ## v1.6 - 28.07.2024
 This is a smaller update, focusing on:

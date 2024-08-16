@@ -1,6 +1,7 @@
 package utopia.firmament.model
 
 import utopia.firmament.model.enumeration.GuiElementState
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
 import utopia.flow.operator.MaybeEmpty
 import utopia.paradigm.color.Color
 
@@ -59,6 +60,15 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	// COMPUTED -----------------------
 	
 	/**
+	  * @return Whether this element is currently enabled / may be interacted with
+	  */
+	def enabled = isNot(Disabled)
+	/**
+	  * @return Whether this element is currently disabled / may not be interacted with
+	  */
+	def disabled = is(Disabled)
+	
+	/**
 	  * @return The states included in this status, including the implied states
 	  */
 	def implicitStates = states ++ states.flatMap { _.impliedStates }
@@ -72,7 +82,6 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	// IMPLEMENTED  -------------------
 	
 	override def self: GuiElementStatus = this
-	
 	override def isEmpty: Boolean = states.isEmpty
 	
 	override def toString = {
@@ -113,15 +122,31 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	}
 	
 	/**
+	  * @param enabled Whether this element is enabled
+	  * @return Enabled copy of this status
+	  */
+	def withEnabled(enabled: Boolean) = if (enabled) this - Disabled else this + Disabled
+	/**
+	  * @param focused Whether this element has focus at this time
+	  * @return Copy of this element with the specified focused-state
+	  */
+	def withFocused(focused: Boolean) = if (focused) this + Focused else this - Focused
+	/**
+	  * @param activated Whether this element is activated at this time
+	  * @return Copy of this element with the specified activation state
+	  */
+	def withActivated(activated: Boolean) = if (activated) this + Activated else this - Activated
+	
+	/**
 	  * @param state A state to assign
 	  * @return A copy of this status with that state included
 	  */
-	def +(state: GuiElementState) = copy(states + state)
+	def +(state: GuiElementState) = if (is(state)) this else copy(states + state)
 	/**
 	  * @param state A state to subtract
 	  * @return A copy of this status with that state subtracted
 	  */
-	def -(state: GuiElementState) = copy(states - state)
+	def -(state: GuiElementState) = if (is(state)) copy(states - state) else this
 	/**
 	  * @param state Targeted state and whether to add it (true) or to subtract it (false)
 	  * @return A copy of this status with the modified state

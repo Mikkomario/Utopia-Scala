@@ -67,7 +67,7 @@ object MouseMoveEvent
 	
 	// NESTED   ------------------------------
 	
-	trait MouseMoveFilteringFactory[+E <: MouseMoveEventLike[_], +A] extends MouseFilteringFactory[E, A]
+	trait MouseMoveFilteringFactory[+E <: MouseMoveEventLike[_], +A] extends Any with MouseFilteringFactory[E, A]
 	{
 		// COMPUTED ------------------
 		
@@ -181,6 +181,15 @@ object MouseMoveEvent
 		  * @return A filter that utilizes that function
 		  */
 		def apply(f: MouseMoveEventLike[_] => Boolean): MouseMoveEventFilter = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   -------------------------
+	
+	implicit class RichMouseMoveEventFilter[E <: MouseMoveEventLike[_]](val f: Filter[E])
+		extends AnyVal with MouseMoveFilteringFactory[E, Filter[E]]
+	{
+		override protected def withFilter(filter: Filter[E]): Filter[E] = f && filter
 	}
 }
 

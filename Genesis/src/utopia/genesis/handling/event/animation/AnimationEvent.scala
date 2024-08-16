@@ -85,7 +85,7 @@ object AnimationEvent
 	
 	// NESTED   ---------------------------
 	
-	trait AnimationFilteringFactory[+A]
+	trait AnimationFilteringFactory[+A] extends Any
 	{
 		// ABSTRACT ----------------------
 		
@@ -159,5 +159,14 @@ object AnimationEvent
 		  * @return A filter that utilizes that function
 		  */
 		def apply(f: AnimationEvent => Boolean): AnimationEventFilter = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   --------------------------
+	
+	implicit class RichAnimationEventFilter(val f: AnimationEventFilter)
+		extends AnyVal with AnimationFilteringFactory[AnimationEventFilter]
+	{
+		override protected def withFilter(filter: AnimationEventFilter): AnimationEventFilter = f && filter
 	}
 }

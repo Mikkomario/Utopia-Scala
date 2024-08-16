@@ -965,6 +965,17 @@ trait Changing[+A] extends Any with View[A]
 	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R): ListenableLazy[R] =
 		divergeMerge[B, ListenableLazy[R]](other) { LazyMergeMirror(this, other)(f) } { v2 => lazyMap { f(_, v2) } } {
 			LazyMirror(other) { f(value, _) } }
+	/**
+	  * @param second A second changing item
+	  * @param third A third changing item
+	  * @param merge Merge function for the values of these items
+	  * @tparam B Type of the second item values
+	  * @tparam C Type of the third item values
+	  * @tparam R Type of merge results
+	  * @return A lazy view into the merge results from these pointers
+	  */
+	def lazyMergeWith[B, C, R](second: Changing[B], third: Changing[C])(merge: (A, B, C) => R) =
+		LazyTripleMergeMirror.of(this, second, third)(merge)
 	
 	/**
 	  * Maps this changing item with a function that yields changing items.

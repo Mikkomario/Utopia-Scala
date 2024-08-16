@@ -23,7 +23,7 @@ object KeyTypedEvent
 	
 	// NESTED   --------------------------
 	
-	trait KeyTypedFilteringFactory[+A] extends KeyFilteringFactory[KeyTypedEvent, A]
+	trait KeyTypedFilteringFactory[+A] extends Any with KeyFilteringFactory[KeyTypedEvent, A]
 	{
 		/**
 		  * @param char Targeted character
@@ -56,6 +56,15 @@ object KeyTypedEvent
 		  * @return A filter that uses the specified function
 		  */
 		def apply(f: KeyTypedEvent => Boolean) = Filter(f)
+	}
+	
+	
+	// EXTENSIONS   ----------------------
+	
+	implicit class RichKeyTypedEventFilter(val f: KeyTypedEventFilter)
+		extends AnyVal with KeyTypedFilteringFactory[KeyTypedEventFilter]
+	{
+		override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedEventFilter = f && filter
 	}
 }
 

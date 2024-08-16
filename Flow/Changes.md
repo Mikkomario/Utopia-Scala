@@ -6,7 +6,12 @@ Built with Scala v2.13.14
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### New features
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
+- Added **LazyTripleMergeMirror** for more complex lazy pointer-merging
 ### New methods
+- **Changing**
+  - Added a new variant of `.lazyMergeWith(...)`
+- **CopyOnDemand** (object)
+  - Added a new function-based constructor
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.toOptimizedSeq`
   - Added `.toTryCatch` for collections that contain instances of **TryCatch**
@@ -15,6 +20,8 @@ Built with Scala v2.13.14
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
 - Modified **HasEnds** `toString` implementation
+- **ListenableResettableLazy** is now covariant
+- The result type parameter in **LazyMergeMirror** is now covariant
 
 ## v2.4 - 28.07.2024
 This is a pretty large update, mostly due to its delayed release.

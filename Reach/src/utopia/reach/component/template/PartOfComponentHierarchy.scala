@@ -25,4 +25,9 @@ trait PartOfComponentHierarchy
 	  * @return The Reach Canvas -element to which this component belongs
 	  */
 	implicit def canvas: ReachCanvas = parentHierarchy.top
+	
+	/**
+	  * @return A flag that contains true while this component is linked to the main component hierarchy
+	  */
+	def linkedFlag = parentHierarchy.linkPointer
 }
