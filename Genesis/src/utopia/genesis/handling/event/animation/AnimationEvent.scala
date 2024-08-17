@@ -58,6 +58,8 @@ object AnimationEvent
 	{
 		override def progress: Double = from
 		override def continues: Boolean = true
+		
+		override def toString = s"Animation started from $from"
 	}
 	
 	/**
@@ -68,6 +70,8 @@ object AnimationEvent
 	case class Paused(progress: Double) extends AnimationEvent
 	{
 		override def continues: Boolean = false
+		
+		override def toString = "Animation paused"
 	}
 	
 	/**
@@ -80,6 +84,8 @@ object AnimationEvent
 		
 		override def progress: Double = 1.0
 		override def continues: Boolean = loops
+		
+		override def toString = if (loops) "Animation loops" else "Animation completed"
 	}
 	
 	

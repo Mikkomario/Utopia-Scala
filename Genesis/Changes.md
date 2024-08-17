@@ -1,11 +1,19 @@
 # Utopia Genesis - List of Changes
 
 ## v4.0.1 (in development)
-Built with Scala v2.13.14
+### Breaking changes
+- **KeyDownEventGenerator** no longer extends **Actor** nor **KeyStateListener**. 
+  Instead of adding the generator to these handlers, one should call `.start(...)`.
+### Bugfixes
+- Debugged **KeyDownEventGenerator**
+- Debugged **Animator**
+### Deprecations
+- Deprecated `KeyDownEventGenerator.apply(...)` in favor of `.start(...)` (rename)
 ### New methods
 - **AnimatorInstructor** (object)
   - Added `.fixed(...)` constructor
 ### Other changes
+- Built with Scala v2.13.14
 - Event filters are now possible to chain due to new implicit extensions in each event companion object
 
 ## v4.0 - 28.07.2024

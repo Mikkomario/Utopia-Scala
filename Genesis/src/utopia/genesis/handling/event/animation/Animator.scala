@@ -100,12 +100,12 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	instructionPointer.addContinuousListener { event =>
 		// Case: Played animation changes or the targeted animation range changes => Reacts
 		val animationChanged = event.values.isAsymmetricBy { _.animation }
-		if (animationChanged|| event.values.isAsymmetricBy { _.clip }) {
+		if (animationChanged || event.values.isAsymmetricBy { _.clip }) {
 			val newInstruction = event.newValue
 			newInstruction.fixedState match {
 				// Case: Fixed to a frame => Sets the progress accordingly. May also fire events.
 				case Some(fixed) =>
-					if (!event.oldValue.fixedState.contains(fixed)) {
+					if (animationChanged || !event.oldValue.fixedState.contains(fixed)) {
 						if (currentProgress == fixed)
 							animatedPointer.update()
 						else
@@ -137,7 +137,10 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 					// Case: Progress needs to be altered => Updates progress, which also updates the animation
 					else
 						progressPointer.value = newInstruction.start
-						
+					
+					// Resets the finished-state
+					_finishedFlag.foreach { _.leftOption.foreach { _.reset() } }
+					
 					// Fires animation started events, if appropriate
 					if ((animationChanged || oldProgress != currentProgress) && handler.mayBeHandled)
 						handler.onAnimationEvent(Started())

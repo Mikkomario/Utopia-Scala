@@ -111,8 +111,7 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 			
 			// Sets up the key down -events
 			val generator = new KeyDownEventGenerator(keyDownHandler)
-			actorHandler += generator
-			keyStateHandler += generator
+			generator.start(actorHandler, keyStateHandler)
 			
 			// Also starts key typed -event generation
 			beforeMultiTypeDelay.finite.foreach { delay =>

@@ -33,6 +33,8 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.firmament.model.enumeration.SizeCategory
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -362,6 +364,15 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
 			finalizeFunction = Some(s => optionsPointer.addListenerWhile(s.linkedFlag) { _ => s.repaint() }))
 	}
 	
+	/**
+	  * @param range Selectable range of numbers
+	  * @return A slider factory for constructing numeric sliders
+	  */
+	def forDoubles(range: HasInclusiveEnds[Double]) = {
+		val len = range.end - range.start
+		apply[Double] { _ * len + range.start } { v => (v - range.start) / len }
+	}
+	
 	
 	// NESTED   ------------------------
 	
@@ -392,10 +403,11 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
 					}
 			}
 			val hoverRadius = knobRadius * 0.75
-			new Slider[A](parentHierarchy, initialValue, width, knobRadius * 2, colorFunction, stickingPoints,
-				progressPerArrowPress, progressWhileArrowDown, hoverRadius, context.color(settings.colorRole),
-				leftToRightBarHeightRatio, animationDuration, maxJumpWithoutAnimation, enabledFlag,
-				focusListeners, customDrawers)(progressToSelection)(selectionToProgress)
+			new Slider[A](parentHierarchy, context.actorHandler, initialValue, width, knobRadius * 2,
+				colorFunction, stickingPoints, progressPerArrowPress, progressWhileArrowDown, hoverRadius,
+				context.color(settings.colorRole), leftToRightBarHeightRatio, animationDuration,
+				maxJumpWithoutAnimation, enabledFlag, focusListeners,
+				customDrawers)(progressToSelection)(selectionToProgress)
 		}
 	}
 }
@@ -441,7 +453,7 @@ object Slider extends SliderSetup()
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.3.1
   */
-class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: A,
+class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, initialValue: A,
                 stackWidth: StackLength, optimalKnobDiameter: Double,
                 colorFunction: Either[SliderColors, Either[Double => SliderColors, A => SliderColors]],
                 stickingPoints: Seq[Double] = Empty, progressWithArrow: Double = 0.2,
@@ -459,7 +471,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 	
 	override val calculatedStackSize: StackSize = {
 		val knob = StackLength(optimalKnobDiameter * 0.5, optimalKnobDiameter, optimalKnobDiameter * 2)
-		val knobPlusHover = knob + StackLength.downscaling(hoverRadius)
+		val knobPlusHover = knob + StackLength.downscaling(hoverRadius * 2)
 		val width = stackWidth max (knob * 3) max knobPlusHover
 		
 		width x knobPlusHover
@@ -519,16 +531,16 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 			AnimatorInstruction(
 				Animation.progress(event.oldValue, event.newValue).projectileCurved.over(animationDuration))
 	}
-	private val progressAnimator = new Animator(animatorInstructionPointer, activeFlag = parentHierarchy.linkPointer)
+	private val progressAnimator = new Animator(animatorInstructionPointer, activeFlag = linkedFlag)
 	
 	// Contains maximum radius for knob & hover effect
 	private val maxRadiusPointer = sizePointer.strongMap { _.minDimension / 2.0 }
 	private val knobRadiusPointer = maxRadiusPointer.strongMap { (optimalKnobDiameter / 2.0) min _ }
 	private val knobAreaPointer = progressPointer
 		.lazyMergeWith(boundsPointer, knobRadiusPointer) { (progress, bounds, radius) =>
-			val lineWidth = bounds.width - radius * 2
+			val lineWidth = bounds.width - (radius + hoverRadius) * 2
 			val leftSideWidth = lineWidth * progress
-			val centerX = bounds.leftX + radius + leftSideWidth
+			val centerX = bounds.leftX + radius + hoverRadius + leftSideWidth
 			val centerY = bounds.topY + bounds.height / 2.0
 			
 			Circle(Point(centerX, centerY), radius)
@@ -543,7 +555,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 			}
 	}
 	private val knobColorPointer = baseColorsPointer.mergeWith(statePointer) { (baseColors, state) =>
-		val intensity = if (hoverRadius <= 0) state.intensity else state.intensity / 2.0
+		val intensity = if (hoverRadius <= 0) state.intensity else state.intensity / 4.0
 		val highlighted = baseColors.knob.highlightedBy(intensity max 0.0)
 		if (state.enabled) highlighted else highlighted.grayscale
 	}
@@ -574,9 +586,11 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 			KeyboardEvents ++= Pair(PressedTracker, ArrowKeyProgressUpdater)
 			// Updates state (in case enabled changed during detachment)
 			statePointer.update()
+			actorHandler += progressAnimator
 		}
 		// Case: Detached => Removes keyboard listeners
 		else {
+			actorHandler -= progressAnimator
 			KeyboardEvents --= Pair(PressedTracker, ArrowKeyProgressUpdater)
 			disableFocusHandling()
 		}
@@ -620,12 +634,12 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 	
 	// Converts an X-coordinate (relative to this component's parent's left side) to a progress value
 	private def xToProgress(x: Double) = {
-		val minX = this.x + knobRadius
+		val minX = this.x + knobRadius + hoverRadius
 		
 		if (x <= minX)
 			0.0
 		else {
-			val maxX = this.rightX - knobRadius
+			val maxX = this.rightX - knobRadius - hoverRadius
 			if (x >= maxX)
 				1.0
 			else {
@@ -676,8 +690,8 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
 			val maxRadius = maxRadiusPointer.value
 			val knobRadius = Slider.this.knobRadius
-			val lineStartX = bounds.leftX + knobRadius
-			val lineWidth = bounds.width - knobRadius * 2
+			val lineStartX = bounds.leftX + knobRadius + hoverRadius
+			val lineWidth = bounds.width - (knobRadius + hoverRadius) * 2
 			val lineY = bounds.topY + bounds.height / 2.0
 			val leftSideWidth = lineWidth * visualProgress
 			val thresholdX = lineStartX + leftSideWidth
@@ -687,18 +701,19 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 			
 			// Draws the right side line first
 			val rightLineHeight = (optimalKnobDiameter / 4.0 / leftToRightBarHeightRatio) min (bounds.height * 0.8)
-			val leftBarColor = baseColorsPointer.value.leftBar
-			DrawSettings.onlyFill(if (enabled) leftBarColor else leftBarColor.grayscale)
+			val rightBarColor = baseColorsPointer.value.rightBar
+			DrawSettings.onlyFill(if (enabled) rightBarColor else rightBarColor.grayscale)
 				.use { implicit ds =>
 					d.draw(Bounds(Point(thresholdX, lineY - rightLineHeight / 2.0),
 						Size(lineWidth - leftSideWidth, rightLineHeight)).toRoundedRectangle(1.0))
 				}
 			// Next draws the left line
 			val leftLineHeight = (optimalKnobDiameter / 4.0 * leftToRightBarHeightRatio) min (bounds.height * 0.8)
-			val rightBarColor = baseColorsPointer.value.rightBar
-			DrawSettings.onlyFill(if (enabled) rightBarColor else rightBarColor.grayscale)
+			val leftBarColor = baseColorsPointer.value.leftBar
+			DrawSettings.onlyFill(if (enabled) leftBarColor else leftBarColor.grayscale)
 				.use { implicit ds =>
-					d.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight)))
+					d.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight))
+						.toRoundedRectangle(1.0))
 				}
 			
 			// Next draws the hover effect, if appropriate
@@ -806,10 +821,9 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, initialValue: 
 		override def handleCondition: FlagLike = keyDownFlag
 		override def keyDownEventFilter: KeyDownEventFilter = AcceptAll
 		
-		override def whileKeyDown(event: KeyDownEvent): Unit = {
+		override def whileKeyDown(event: KeyDownEvent): Unit =
 			keyDownPointer.value.foreach { case (_, direction) =>
 				rawProgressPointer.update { _ + direction * progressVelocityWithArrow.over(event.duration) }
 			}
-		}
 	}
 }

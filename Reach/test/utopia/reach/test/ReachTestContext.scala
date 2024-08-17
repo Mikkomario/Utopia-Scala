@@ -65,6 +65,7 @@ object ReachTestContext
 	// INIITAL CODE -----------------------
 	
 	KeyboardEvents.specifyExecutionContext(exc)
+	KeyboardEvents.setupKeyDownEvents(actorHandler)
 	
 	
 	// OTHER    --------------------------

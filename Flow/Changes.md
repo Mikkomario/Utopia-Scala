@@ -1,7 +1,6 @@
 # Utopia Flow - List of Changes
 
 ## v2.4.1 (in development)
-Built with Scala v2.13.14
 ### Bugfixes
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### New features
@@ -19,6 +18,7 @@ Built with Scala v2.13.14
 - **TryCatch**
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
+- Built with Scala v2.13.14
 - Modified **HasEnds** `toString` implementation
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
