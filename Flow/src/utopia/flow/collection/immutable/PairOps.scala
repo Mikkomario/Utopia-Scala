@@ -49,7 +49,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  * @tparam B Type of compared values
 	  * @return This pair ordered with the specified ordering, so that the smaller item appears before the larger item
 	  */
-	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(first, second)) -this else self
+	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(first, second)) self else -this
 	
 	
 	// IMPLEMENTED  ----------------------

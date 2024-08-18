@@ -1,10 +1,20 @@
 # Utopia Reach - List of Changes
 
-## v1.3.1 (in development)
+## v1.4 (in development)
+### Breaking changes
+- **ReachComponentLike** now requires an abstract property `mouseDragHandler: MouseDragHandler`
+  - This doesn't affect most use-cases, because **ReachComponent** and **ReachComponentWrapper** both implement this
+- **ComponentHierarchy** now requires an abstract property `coordinateTransform: Option[CoordinateTransform]`
+  - In the vast majority of the use-cases, this is set to `None`
 ### New features
+- Components now support mouse drag events
 - Added a **Slider** component
+- Added **Rotated** container which rotates the wrapped component 90 degrees clockwise or counter-clockwise
+- **ComponentHierarchy** now supports coordinate transformations
 - Added **HasGuiState** trait
 ### New methods
+- **OpenComponent**
+  - Added new variant of `.attachTo(...)`, which supports hierarchy-replacing
 - **PartOfComponentHierarchy**
   - Added `.linkedFlag`
 ### Other changes

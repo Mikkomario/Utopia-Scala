@@ -1,5 +1,6 @@
 package utopia.reach.component.hierarchy
 
+import utopia.firmament.model.CoordinateTransform
 import utopia.reach.component.template.ReachComponentLike
 
 /**
@@ -22,4 +23,6 @@ class StaticHierarchyBlock(parentComponent: ReachComponentLike) extends Componen
 	override def isThisLevelLinked = true
 	
 	override def linkPointer = parentHierarchy.linkPointer
+	
+	override def coordinateTransform: Option[CoordinateTransform] = None
 }

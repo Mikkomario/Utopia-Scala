@@ -13,6 +13,14 @@ import scala.collection.{AbstractIndexedSeqView, IndexedSeqView, mutable}
 class PairView[+A](firstView: => A, secondView: => A)
 	extends AbstractIndexedSeqView[A] with PairOps[A, collection.View, collection.View[A], PairView, PairView[A]]
 {
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return A pair containing the viewed values
+	  */
+	def toPair = Pair(firstView, secondView)
+	
+	
 	// IMPLEMENTED  ------------------------
 	
 	override def first: A = firstView
@@ -22,6 +30,9 @@ class PairView[+A](firstView: => A, secondView: => A)
 	override def unary_- : PairView[A] = new PairView[A](second, first)
 	
 	override protected def _empty = EmptyView
+	
+	override def toSeq = toPair
+	override def toIndexedSeq = toPair
 	
 	override protected def only(side: End): IndexedSeqView[A] = new SingleView[A](apply(side))
 	override protected def newPair[B](first: => B, second: => B): PairView[B] = new PairView[B](first, second)

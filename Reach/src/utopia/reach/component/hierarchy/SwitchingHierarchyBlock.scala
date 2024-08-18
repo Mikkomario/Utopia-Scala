@@ -1,5 +1,6 @@
 package utopia.reach.component.hierarchy
 
+import utopia.firmament.model.CoordinateTransform
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.reach.component.template.ReachComponentLike
 
@@ -23,4 +24,6 @@ class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer
 	// IMPLEMENTED	---------------------------
 	
 	override def isThisLevelLinked = switchPointer.value
+	
+	override def coordinateTransform: Option[CoordinateTransform] = None
 }

@@ -7,6 +7,9 @@ Built with Scala v2.13.14
 ### New methods
 - **GuiElementStatus**
   - Added multiple new utility getters & setters
+### Other changes
+- **Component** now contains a protected `relativizeMouseEventForChildren(...)` function.
+  - Overriding this function affects how mouse events are distributed downwards.
 
 ## v1.3 - 28.07.2024
 For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 

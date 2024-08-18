@@ -3,7 +3,8 @@ package utopia.paradigm.shape.shape2d
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.enumeration.RotationDirection.{Clockwise, Counterclockwise}
+import utopia.paradigm.enumeration.{Axis2D, RotationDirection}
 import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -115,12 +116,22 @@ object Matrix2D extends DimensionsWrapperFactory[Vector2D, Matrix2D]
 	  * @return A rotation transformation matrix that rotates items by the specified amount
 	  */
 	// See: https://en.wikipedia.org/wiki/Rotation_matrix
+	// NB: In Wikipedia, the positive direction is counterclockwise. Here it is clockwise.
+	//     However, this version seems to work...
 	def rotation(amount: DirectionalRotation) = {
 		val cos = amount.cosine
 		val sin = amount.sine
 		apply(
 			cos, -sin,
 			sin, cos)
+	}
+	/**
+	  * @param direction Applied rotation direction
+	  * @return A matrix that rotates the items 90 degrees towards the specified direction
+	  */
+	def quarterRotationTowards(direction: RotationDirection) = direction match {
+		case Clockwise => quarterRotationClockwise
+		case Counterclockwise => quarterRotationCounterClockwise
 	}
 	
 	/**

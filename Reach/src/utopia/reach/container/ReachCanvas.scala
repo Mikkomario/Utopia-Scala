@@ -3,6 +3,7 @@ package utopia.reach.container
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.stack.Stackable
+import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
@@ -543,6 +544,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		override def linkPointer = attachmentPointer
 		override def isThisLevelLinked = isLinked
 		override def top = ReachCanvas.this
+		override def coordinateTransform: Option[CoordinateTransform] = None
 	}
 	
 	private object CustomDrawPanel extends JPanel(null)

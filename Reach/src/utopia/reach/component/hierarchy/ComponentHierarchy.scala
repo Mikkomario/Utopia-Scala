@@ -1,13 +1,15 @@
 package utopia.reach.component.hierarchy
 
+import utopia.firmament.model.CoordinateTransform
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{FontMetricsWrapper, Priority}
 import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -50,6 +52,12 @@ trait ComponentHierarchy
 	  */
 	def isThisLevelLinked: Boolean
 	
+	/**
+	  * @return Coordinate transform converting parent coordinates to relative, local coordinates.
+	  *         None if no coordinate transform is necessary.
+	  */
+	def coordinateTransform: Option[CoordinateTransform]
+	
 	
 	// COMPUTED	--------------------------
 	
@@ -86,17 +94,14 @@ trait ComponentHierarchy
 	def parentWindow = top.parentWindow
 	
 	/**
-	  * @return A modifier used when calculating the position of the bottom component (outside this hierarchy)
+	  * @return A modifier used when calculating the position of the bottom component (outside of this hierarchy)
 	  *         relative to hierarchy top
 	  */
-	def positionToTopModifier: Vector2D = parent match {
-		case Left(_) => Vector2D.zero
-		case Right((block, component)) => block.positionToTopModifier + component.position
-	}
+	def positionToTopModifier: Vector2D = transform(defaultPositionToTopModifier)
 	/**
 	  * @return A modifier used for calculating the absolute position of the bottom component (not on this hierarchy)
 	  */
-	def absolutePositionModifier = positionToTopModifier + top.absolutePosition
+	def absolutePositionModifier = transform(defaultPositionToTopModifier + top.absolutePosition)
 	
 	/**
 	  * @return A linear component sequence based on this component hierarchy. The higher hierarchy components are
@@ -104,6 +109,11 @@ trait ComponentHierarchy
 	  *         doesn't have parents before the canvas, returns an empty vector.
 	  */
 	def toVector: Vector[ReachComponentLike] = parentsIterator.toVector.reverse
+	
+	private def defaultPositionToTopModifier = parent match {
+		case Left(_) => Vector2D.zero
+		case Right((block, component)) => block.positionToTopModifier + component.position
+	}
 	
 	
 	// OTHER	--------------------------
@@ -141,10 +151,13 @@ trait ComponentHierarchy
 	  */
 	def positionInComponentModifier(component: ReachComponentLike): Option[Vector2D] = parent match {
 		case Right((parentHierarchy, parentComponent)) =>
-			if (parentComponent == component)
-				Some(Vector2D.zero)
-			else
-				parentHierarchy.positionInComponentModifier(component).map { _ + parentComponent.position }
+			val default = {
+				if (parentComponent == component)
+					Some(Vector2D.zero)
+				else
+					parentHierarchy.positionInComponentModifier(component).map { _ + parentComponent.position }
+			}
+			default.map(transform)
 		case Left(_) => None
 	}
 	
@@ -198,8 +211,10 @@ trait ComponentHierarchy
 	  *                 (default = Normal)
 	  */
 	def repaint(area: => Bounds, priority: Priority = Normal) = {
-		if (isLinked)
-			top.repaint(area + positionToTopModifier, priority)
+		if (isLinked) {
+			val areaInTop = inverseTransform(area) + defaultPositionToTopModifier
+			top.repaint(areaInTop, priority)
+		}
 	}
 	/**
 	  * Repaints the bottom component
@@ -219,7 +234,7 @@ trait ComponentHierarchy
 	  */
 	def shiftArea(area: => Bounds, translation: => Vector2D) = {
 		if (isLinked)
-			top.shiftArea(area + positionToTopModifier, translation)
+			top.shiftArea(inverseTransform(area) + defaultPositionToTopModifier, translation)
 	}
 	
 	/**
@@ -228,4 +243,15 @@ trait ComponentHierarchy
 	  */
 	// TODO: Refactor this once component class hierarchy has been updated
 	def fontMetricsWith(font: Font): FontMetricsWrapper = top.component.getFontMetrics(font.toAwt)
+	
+	// Transforms a coordinate from parent space to the relative space under this hierarchy
+	private def transform[V <: DoubleVectorLike[V]](coordinate: V) = coordinateTransform match {
+		case Some(transform) => transform(coordinate)
+		case None => coordinate
+	}
+	// Transforms a relative area to the parent's coordinate space
+	private def inverseTransform(area: Bounds) = coordinateTransform.map { _.invert(area) } match {
+		case Some(transformed) => transformed.bounds
+		case None => area
+	}
 }

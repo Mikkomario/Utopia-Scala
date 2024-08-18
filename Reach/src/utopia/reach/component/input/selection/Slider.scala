@@ -24,7 +24,7 @@ import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.animation.{Animator, AnimatorInstruction}
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
+import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyDownEvent, KeyDownListener, KeyStateEvent, KeyStateListener, KeyboardEvents}
@@ -33,7 +33,7 @@ import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.Circle
@@ -54,7 +54,7 @@ import scala.concurrent.duration.Duration
   * Common trait for slider factories and settings
   * @tparam Repr Implementing factory/settings type
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 trait SliderSettingsLike[+Repr] extends FocusListenableFactory[Repr] with CustomDrawableFactory[Repr]
 {
@@ -212,7 +212,7 @@ object SliderSettings
   * @param progressWhileArrowDown The rate at which progress is added to this slider while an arrow key is held down
   * @param colorFunction A custom function which converts a progress value [0,1] to slider colors
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 case class SliderSettings(focusListeners: Seq[FocusListener] = Empty,
                           customDrawers: Seq[CustomDrawer] = Empty, colorRole: ColorRole = ColorRole.Secondary,
@@ -243,7 +243,7 @@ case class SliderSettings(focusListeners: Seq[FocusListener] = Empty,
   * Common trait for factories that wrap a slider settings instance
   * @tparam Repr Implementing factory/settings type
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 trait SliderSettingsWrapper[+Repr] extends SliderSettingsLike[Repr]
 {
@@ -300,7 +300,7 @@ trait SliderSettingsWrapper[+Repr] extends SliderSettingsLike[Repr]
 /**
   * Factory class used for constructing sliders using contextual component creation information
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
                                    settings: SliderSettings = SliderSettings.default,
@@ -415,7 +415,7 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
 /**
   * Used for defining slider creation settings outside of the component building process
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 case class SliderSetup(settings: SliderSettings = SliderSettings.default)
 	extends SliderSettingsWrapper[SliderSetup]
@@ -451,7 +451,7 @@ object Slider extends SliderSetup()
 /**
   * A component used for choosing from a linear range of possible values
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, initialValue: A,
                 stackWidth: StackLength, optimalKnobDiameter: Double,
@@ -533,17 +533,12 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	}
 	private val progressAnimator = new Animator(animatorInstructionPointer, activeFlag = linkedFlag)
 	
-	// Contains maximum radius for knob & hover effect
-	private val maxRadiusPointer = sizePointer.strongMap { _.minDimension / 2.0 }
-	private val knobRadiusPointer = maxRadiusPointer.strongMap { (optimalKnobDiameter / 2.0) min _ }
+	// Contains: 1) Slider X range, 2) Slider Y, 3) knob radius, 4) Max radius
+	private val measurementsPointer = boundsPointer.strongMap(sliderMeasurementsIn)
 	private val knobAreaPointer = progressPointer
-		.lazyMergeWith(boundsPointer, knobRadiusPointer) { (progress, bounds, radius) =>
-			val lineWidth = bounds.width - (radius + hoverRadius) * 2
-			val leftSideWidth = lineWidth * progress
-			val centerX = bounds.leftX + radius + hoverRadius + leftSideWidth
-			val centerY = bounds.topY + bounds.height / 2.0
-			
-			Circle(Point(centerX, centerY), radius)
+		.lazyMergeWith(measurementsPointer) { case (progress, (xRange, y, radius, _)) =>
+			val x = xRange.start + progress * xRange.length
+			Circle(Point(x, y), radius)
 		}
 	
 	private val baseColorsPointer = colorFunction match {
@@ -597,8 +592,25 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	}
 	
 	// Repaints when status changes
-	statePointer.addListener(repaintListener)
-	progressAnimator.addListener(repaintListener)
+	statePointer.addAnyChangeListener {
+		repaintArea(knobArea
+			.mapOrigin { _ - position }
+			.mapRadius { r => (r + hoverRadius) min measurementsPointer.value._4 }
+			.bounds,
+			High)
+	}
+	
+	progressAnimator.addListener { event =>
+		val (xRange, y, knobRadius, maxRadius) = measurementsPointer.value
+		val totalRadius = (knobRadius + hoverRadius) min maxRadius
+		val progressXRange = event.values.minMax.map { p => xRange.start + p * xRange.length }
+		
+		val affectedArea = Bounds(
+			x = NumericSpan(progressXRange.first - totalRadius, progressXRange.second + totalRadius),
+			y = NumericSpan(y - totalRadius, y + totalRadius))
+		
+		repaintArea(affectedArea - position, High)
+	}
 	
 	
 	// COMPUTED ------------------------------
@@ -616,7 +628,6 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 			progress = stickingPoints((newIndex max 0) min (stickingPoints.size - 1))
 	}
 	
-	private def knobRadius = knobRadiusPointer.value
 	private def knobArea = knobAreaPointer.value
 	
 	
@@ -634,19 +645,29 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	
 	// Converts an X-coordinate (relative to this component's parent's left side) to a progress value
 	private def xToProgress(x: Double) = {
-		val minX = this.x + knobRadius + hoverRadius
-		
-		if (x <= minX)
+		val xRange = measurementsPointer.value._1
+		if (x <= xRange.start)
 			0.0
-		else {
-			val maxX = this.rightX - knobRadius - hoverRadius
-			if (x >= maxX)
-				1.0
-			else {
-				val rangeLength = maxX - minX
-				(x - minX) / rangeLength
-			}
-		}
+		else if (x >= xRange.end)
+			1.0
+		else
+			(x - xRange.start) / xRange.length
+	}
+	
+	// Returns 4 measurements:
+	//      1) Slider X range
+	//      2) Slider Y
+	//      3) Knob radius
+	//      4) Maximum radius of knob + hover effect
+	private def sliderMeasurementsIn(bounds: Bounds) = {
+		val maxRadius = bounds.size.minDimension / 2.0
+		val minHoverRadius = hoverRadius min 2.0
+		val knobRadius = (optimalKnobDiameter / 2.0) min (maxRadius - minHoverRadius)
+		val minX = bounds.leftX + knobRadius + hoverRadius
+		val maxX = bounds.rightX - knobRadius - hoverRadius
+		val y = bounds.centerY
+		
+		(NumericSpan(minX, maxX), y, knobRadius, maxRadius)
 	}
 	
 	// "Sticks" the specified progress to the closest "sticking point", if applicable
@@ -688,13 +709,10 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 		override def drawLevel: DrawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
-			val maxRadius = maxRadiusPointer.value
-			val knobRadius = Slider.this.knobRadius
-			val lineStartX = bounds.leftX + knobRadius + hoverRadius
-			val lineWidth = bounds.width - (knobRadius + hoverRadius) * 2
-			val lineY = bounds.topY + bounds.height / 2.0
+			val (xRange, lineY, knobRadius, maxRadius) = sliderMeasurementsIn(bounds)
+			val lineWidth = xRange.length
 			val leftSideWidth = lineWidth * visualProgress
-			val thresholdX = lineStartX + leftSideWidth
+			val thresholdX = xRange.start + leftSideWidth
 			
 			// Uses anti-aliasing when drawing
 			val d = drawer.antialiasing
@@ -712,7 +730,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 			val leftBarColor = baseColorsPointer.value.leftBar
 			DrawSettings.onlyFill(if (enabled) leftBarColor else leftBarColor.grayscale)
 				.use { implicit ds =>
-					d.draw(Bounds(Point(lineStartX, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight))
+					d.draw(Bounds(Point(xRange.start, lineY - leftLineHeight / 2.0), Size(leftSideWidth, leftLineHeight))
 						.toRoundedRectangle(1.0))
 				}
 			
@@ -737,7 +755,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 		
 		// Is interested in left mouse button presses inside this component's area
 		override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
-			MouseButtonStateEvent.filter.leftPressed.over(bounds)
+			MouseButtonStateEvent.filter.left.over(bounds)
 		
 		
 		// IMPLEMENTED  ------------------------
@@ -746,14 +764,21 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
-			// Case: Knob clicked => Enters dragging mode
-			if (knobArea.contains(event.position)) {
-				draggingFlag.set()
-				Consume("Slider drag started")
+			if (event.pressed) {
+				// Case: Knob clicked => Enters dragging mode
+				if (knobArea.contains(event.position)) {
+					draggingFlag.set()
+					Consume("Slider drag started")
+				}
+				// Case: Area outside the knob clicked => Adjusts progress to match the clicked value
+				else
+					progress = xToProgress(event.position.x)
 			}
-			// Case: Area outside the knob clicked => Adjusts progress to match the clicked value
-			else
-				progress = xToProgress(event.position.x)
+			// Case: Mouse button released => Makes sure the drag doesn't continue
+			else {
+				draggingFlag.reset()
+				Preserve
+			}
 		}
 		
 		// Updates hover state on mouse move

@@ -250,6 +250,7 @@ object DrawableCanvas extends DrawableCanvasSetup()
   * @author Mikko Hilpinen
   * @since 09/02/2024, v1.3
   */
+// TODO: Add support for mouse drag events
 class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaPointer: Changing[Bounds],
                      scalingLogic: ScalePreservingShape = Fit, fpsLimits: Map[Priority, Fps] = Map(),
                      minSize: Size = Size.zero)

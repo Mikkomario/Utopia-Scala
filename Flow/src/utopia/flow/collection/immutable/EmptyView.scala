@@ -18,5 +18,8 @@ trait IsEmptyView
 {
 	override protected def self = this
 	
+	override def toSeq = Empty
+	override def toIndexedSeq = Empty
+	
 	override protected def wrapSingle[B](value: => B): SingleView[B] = new SingleView[B](value)
 }

@@ -38,6 +38,7 @@ object TransformationTest extends App
 	assert(translation(position) == Vector2D(20, 10))
 	assert(scaling(position) == Vector2D(20, 10))
 	assert(rotation(position) == Vector2D(-10, 10))
+	assert(Matrix2D.quarterRotationClockwise(position) == Vector2D(-10,10), Matrix2D.quarterRotationClockwise(position))
 	
 	// Tests inverse transformation on a vector
 	

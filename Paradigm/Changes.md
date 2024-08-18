@@ -5,9 +5,12 @@ Built with Scala v2.13.14
 ### New methods
 - **Animation** (object)
   - Added a couple of utility constructors
+- **Matrix2D** (object)
+  - Added `.quarterRotationTowards(RotationDirection)`
 - **TimedAnimation** (object)
   - Added `.fixed(...)` constructor
 ### Other changes
+- **BoundsFactoryLike**`.between(...)` now accepts **HasDoubleDimensions** instead of just **P**
 - **AnyAnimation** is now covariant
 
 ## v1.6 - 28.07.2024

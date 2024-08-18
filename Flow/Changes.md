@@ -2,6 +2,7 @@
 
 ## v2.4.1 (in development)
 ### Bugfixes
+- **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### New features
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
@@ -20,6 +21,7 @@
 ### Other changes
 - Built with Scala v2.13.14
 - Modified **HasEnds** `toString` implementation
+- Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
 

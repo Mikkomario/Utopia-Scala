@@ -298,9 +298,8 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 		// The event is transformed into a coordinate system relative to this component.
 		// Events not affecting this component's area are not forwarded.
 		if (children.nonEmpty) {
-			val myBounds = bounds
-			if (event.concernsArea(myBounds)) {
-				val translated = event.relativeTo(myBounds.position)
+			if (event.concernsArea(bounds)) {
+				val translated = relativizeMouseEventForChildren(event)
 				children.foreach { _.distributeMouseDragEvent(translated) }
 			}
 		}

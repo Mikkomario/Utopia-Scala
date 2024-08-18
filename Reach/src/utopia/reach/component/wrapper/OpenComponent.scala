@@ -434,12 +434,23 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @param switchPointer A pointer to the changing attachment status (default = always attached)
 	  * @tparam P Type of parent container
 	  * @throws IllegalStateException if this component was already attached to a parent container
-	  * @return A result with the wrapping parent container, the wrapped component and component creation result
+	  * @return A result with the wrapping parent container, the wrapped component and a component creation result
 	  */
-	@throws[IllegalStateException]
+	@throws[IllegalStateException]("If this component was already attached to a parent container")
 	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
 	{
 		hierarchy.complete(parent, switchPointer)
+		creation.in(parent)
+	}
+	/**
+	  * Attaches this component to a custom component hierarchy
+	  * @param parent Parent container
+	  * @param hierarchy Component hierarchy block that will replace the seed used by this open component
+	  * @tparam P Type of the parent container
+	  * @return A result wrapping the parent container, the wrapped component and a component creation result
+	  */
+	def attachTo[P](parent: P, hierarchy: ComponentHierarchy) = {
+		this.hierarchy.replaceWith(hierarchy)
 		creation.in(parent)
 	}
 	

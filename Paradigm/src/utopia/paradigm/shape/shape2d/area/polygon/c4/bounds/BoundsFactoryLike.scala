@@ -65,13 +65,13 @@ trait BoundsFactoryLike[D, P <: HasDimensions[D], S <: HasDimensions[D], +B]
      * Creates a rectangle that contains the area between the two coordinates.
       * The order of the coordinates does not matter.
      */
-    def between(p1: P, p2: P) =
+    def between(p1: HasDimensions[D], p2: HasDimensions[D]) =
         from(p1.dimensions.zipIteratorWith(p2.dimensions).map { case (s, e) => NumericSpan(s, e) })
     /**
      * @param points Two points
      * @return A set of bounds that just contains the two specified points
      */
-    def between(points: Pair[P]): B = between(points.first, points.second)
+    def between(points: Pair[HasDimensions[D]]): B = between(points.first, points.second)
     
     /**
       * Creates a set of bounds centered around a specific point

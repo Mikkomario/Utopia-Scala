@@ -1,5 +1,6 @@
 package utopia.reach.component.hierarchy
 
+import utopia.firmament.model.CoordinateTransform
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
@@ -38,6 +39,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		case Some(r) => r.isThisLevelLinked
 		case None => LinkManager.isThisLevelLinked
 	}
+	
+	override def coordinateTransform: Option[CoordinateTransform] = replacement.flatMap { _.coordinateTransform }
 	
 	override def complete(parent: ReachComponentLike): Unit = complete(parent, AlwaysTrue)
 	
@@ -88,6 +91,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			LinkManager.onLinkedToCanvas(switchConditionPointer)
 	}
 	/**
+	  * Completes this hierarchy by replacing this block with another.
+	  * Useful when you want to apply custom functionality.
 	  * @param other Another hierarchy block that will effectively replace this one
 	  * @throws IllegalStateException If already completed or replaced before
 	  */

@@ -95,12 +95,12 @@ trait Component extends HasMutableBounds
         // Informs own listeners first
         mouseMoveHandler.onMouseMove(event)
         
-        // If has children, informs them. Event position is modified and only events within this component's area
-        // are relayed forward
+        // If this component has children, informs them.
+        // Event position is modified and only events within this component's area are relayed forward
         if (children.nonEmpty) {
             val myBounds = bounds
             if (event.positions.exists { p => myBounds.contains(p.relative) }) {
-                val translated = event.relativeTo(myBounds.position)
+                val translated = relativizeMouseEventForChildren(event)
                 // Only visible children are informed of events
                 children.foreach { _.distributeMouseMoveEvent(translated) }
             }
@@ -185,6 +185,17 @@ trait Component extends HasMutableBounds
         this
     }
     
+    /**
+      * Converts a mouse event from this component's coordinate space
+      * (where (0,0) is relative to this component's parent's position)
+      * to the coordinate space used by the child components
+      * (where (0,0) is at this component's top left corner (from their perspective))
+      * @param event Event to transform
+      * @tparam E Type of the transformed event
+      * @return Transformed event
+      */
+    protected def relativizeMouseEventForChildren[E](event: MouseEvent[E]): E = event.relativeTo(position)
+    
     private def forMeAndChildren[U](operation: Component => U): Unit = {
         operation(this)
         children.foreach(operation)
@@ -194,10 +205,9 @@ trait Component extends HasMutableBounds
                                                                                      (childAccept: (Component, E) => ConsumeChoice): (E, ConsumeChoice) =
     {
         if (children.nonEmpty) {
-            val myBounds = bounds
-            if (myBounds.contains(event.position)) {
+            if (bounds.contains(event.position)) {
                 // Translates the event to the children's coordinate system
-                val translatedEvent = event.relativeTo(myBounds.position)
+                val translatedEvent = relativizeMouseEventForChildren(event)
                 val (eventAfter, choice) = translatedEvent.distribute(children)(childAccept)
                 // Translates the event back to this component's coordinates before returning it
                 eventAfter.withPosition(event.position) -> choice

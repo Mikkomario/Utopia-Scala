@@ -154,6 +154,12 @@ case class LinearTransformation(scaling: Vector2D = Vector2D.identity,
     // OTHER    -----------------
     
     /**
+      * @param translation Translation to add to this transformation
+      * @return An affine transformation based on this one, including the specified translation
+      */
+    def withTranslation(translation: HasDoubleDimensions) = AffineTransformation(Vector2D.from(translation), this)
+    
+    /**
      * Transforms a vector into this transformed coordinate system
      * @param vector a (relative) vector that will be transformed to this coordinate system
      */

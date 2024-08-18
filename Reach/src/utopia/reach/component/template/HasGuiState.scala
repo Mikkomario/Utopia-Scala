@@ -7,7 +7,7 @@ import utopia.reach.focus.FocusTracking
 /**
   * Common trait for components that can define their GUI element state
   * @author Mikko Hilpinen
-  * @since 16.08.2024, v1.3.1
+  * @since 16.08.2024, v1.4
   */
 trait HasGuiState extends FocusTracking
 {
