@@ -44,6 +44,7 @@ object PolygonTest extends App
     assert(polygon.convexParts.contains(polygon))
     
     assert(polygon.center == Point(1.5, 1.5))
+    // NB: This assertion may have changed since .circleInside logic was altered in v1.6.1
     assert(polygon.circleAround == polygon.circleInside)
     assert(polygon.circleAround.contains(Point.origin))
     

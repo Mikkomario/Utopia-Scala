@@ -108,7 +108,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def circleAround = {
 		val origin = center
-		val radius = corners.map { c => (c - origin).length }.max
+		val radius = corners.view.map { c => (c - origin).length }.max
 		Circle(origin, radius)
 	}
 	/**
@@ -116,7 +116,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def circleInside = {
 		val origin = center
-		val radius = corners.map { vertex => (vertex - origin).length }.min
+		val radius = sides.view.map { side => (side.center - origin).length }.min
 		Circle(origin, radius)
 	}
 	

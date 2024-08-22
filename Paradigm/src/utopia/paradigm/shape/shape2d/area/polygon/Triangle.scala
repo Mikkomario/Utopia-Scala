@@ -58,17 +58,6 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
 	override def convexParts = Single(this)
 	override def collisionAxes = edges.map { _.normal2D }
 	
-	override def circleAround = {
-		val c = center
-		val radius = corners.view.map { corner => (corner - c).length }.max
-		Circle(c, radius)
-	}
-	override def circleInside = {
-		val c = center
-		val radius = sides.view.map { side => (side.center - c).length }.sum
-		Circle(c, radius)
-	}
-	
 	override def transformedWith(transformation: Matrix3D) = mapCorners { _ * transformation }
 	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
 	

@@ -3,6 +3,7 @@
 ## v1.6.1 (in development)
 ### Bugfixes
 - **Polygonic**`.center` now properly calculates the polygon centroid (previous version used average)
+- Similarly, **Polygonic**`.circleWithin` now actually places the circle completely within the polygon 
 - Bugfix to **Parallelogramic**`.area`, which previously only calculated correct values in case of rectangles 
 ### New methods
 - **Animation** (object)
