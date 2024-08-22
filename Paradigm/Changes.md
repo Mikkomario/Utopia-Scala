@@ -1,17 +1,23 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.6.1 (in development)
-Built with Scala v2.13.14
+### Bugfixes
+- **Polygonic**`.center` now properly calculates the polygon centroid (previous version used average)
+- Bugfix to **Parallelogramic**`.area`, which previously only calculated correct values in case of rectangles 
 ### New methods
 - **Animation** (object)
   - Added a couple of utility constructors
 - **Matrix2D** (object)
   - Added `.quarterRotationTowards(RotationDirection)`
+- **Polygonic**
+  - Added `.toTriangles`
 - **TimedAnimation** (object)
   - Added `.fixed(...)` constructor
 ### Other changes
+- Built with Scala v2.13.14
 - **BoundsFactoryLike**`.between(...)` now accepts **HasDoubleDimensions** instead of just **P**
 - **AnyAnimation** is now covariant
+- Added some optimizations to more specific polygon classes
 
 ## v1.6 - 28.07.2024
 This is a smaller update, focusing on:

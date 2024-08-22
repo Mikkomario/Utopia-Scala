@@ -204,6 +204,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
     override def rightEdge = along(Y).vector.in2D
     
     override def center = super[Bounded].center
+    override def area = size.area
     
     override def collisionAxes = Bounds.collisionAxes
     

@@ -79,7 +79,7 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	def yDirection = Angle.radians(calculateDirection(n.toDouble(x), n.toDouble(z)))
 	
 	/**
-	  * A 2D normal for this vector
+	  * A 2D normal for this vector, which is the same as this vector rotated 90 degrees and scaled to length 1.
 	  */
 	def normal2D = {
 		val scaling = 1.0 / length

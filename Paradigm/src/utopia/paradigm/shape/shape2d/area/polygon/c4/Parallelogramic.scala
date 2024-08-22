@@ -1,13 +1,12 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
-import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
+import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.area.polygon.{Polygonic, Triangle}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable
 
@@ -77,15 +76,16 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	  */
 	def leftSide = Line(bottomLeftCorner, topLeftCorner)
 	
-	/**
-	  * @return The area of this shape
-	  */
-	def area = topEdge.length * rightEdge.length
-	
 	
 	// IMPLEMENTED	--------------
 	
 	override def identity = this
+	
+	override def area = {
+		// A = ab*sin(o), where a and b are side lengths and o is the angle between two sides
+		// Fore reference, see: // https://www.math.net/area-of-a-parallelogram
+		topEdge.length * rightEdge.length * (topEdge.direction - rightEdge.direction).sine.abs
+	}
 	
 	override def corners = LazyVector.fromFunctions(
 		() => topLeftCorner,
@@ -100,6 +100,12 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	override def center = topLeftCorner + (topEdge / 2) + (rightEdge / 2)
 	override def maxEdgeLength = topEdge.length max rightEdge.length
 	override def minEdgeLength = topEdge.length min rightEdge.length
+	
+	override def isConvex = true
+	override def convexParts = Single(this)
+	
+	override def toTriangles =
+		Pair(Triangle(topLeftCorner, topEdge, leftEdge), Triangle(bottomRightCorner, rightEdge, bottomEdge))
 	
 	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
 	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }

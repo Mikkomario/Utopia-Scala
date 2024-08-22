@@ -83,6 +83,13 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	}
 	
 	/**
+	  * @return The total surface area of this polygon
+	  */
+	// Calculates polygon area by splitting it to triangles and summing the area of those
+	// NB: Relies on an override in Triangle
+	def area: Double = toTriangles.view.map { _.area }.sum
+	
+	/**
 	  * @return The collision axes that should be considered when testing this instance
 	  */
 	def collisionAxes: Seq[Vector2D] = edges.distinctWith { _ isParallelWith _ }.map { _.normal2D }
@@ -111,6 +118,26 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 		val origin = center
 		val radius = corners.map { vertex => (vertex - origin).length }.min
 		Circle(origin, radius)
+	}
+	
+	/**
+	  * @return This polygon as a collection of triangles.
+	  *         Empty if this polygon contained 2 or fewer corners.
+	  */
+	// First must convert this polygon into its convex parts
+	def toTriangles = convexParts.flatMap { polygon =>
+		val corners = polygon.corners
+		// Case: Polygon with less than 3 corners => Can't form a single triangle
+		if (corners.hasSize < 3)
+			Empty
+		// Case: Already a triangle
+		else if (corners.hasSize(3))
+			Single(Triangle.withCorners(corners.head, corners(1), corners(2)))
+		// Case: 4 or more corners => Splits into triangles by connecting other vertices to a single "anchor" vertex
+		else {
+			val anchor = corners.head
+			corners.tail.paired.map { others => Triangle.withCorners(anchor, others.first, others.second) }
+		}
 	}
 	
 	/**
@@ -189,13 +216,13 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * @return The center point of this shape
 	  */
 	override def center = {
+		// Converts this polygon into a set of triangles
+		// and calculates the weighed average of those triangles' center points, where weights are triangle areas
 		val c = corners
-		if (c.isEmpty)
-			Point.origin
-		else {
-			val total = c.reduce { _ + _ }
-			total / c.size
-		}
+		if (c.hasSize <= 3)
+			Point.average(c)
+		else
+			Point.weighedAverage(toTriangles.map { t => t.center -> t.area })
 	}
 	
 	/**
