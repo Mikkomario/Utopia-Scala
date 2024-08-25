@@ -25,21 +25,12 @@ case class Polygon(corners: Seq[Point]) extends Polygonic
 	// ATTRIBUTES	--------------------
 	
 	// Some more calculation extensive operations are cached in lazy variables
-	
 	override lazy val sides = super.sides
-	
 	override lazy val rotationDirection = super.rotationDirection
-	
 	override lazy val isConvex = super.isConvex
-	
 	override lazy val collisionAxes = super.collisionAxes
-	
 	override lazy val convexParts = super.convexParts
-	
-	
-	// IMPLEMENTED  -------------------
-	
-	override def center = super[Polygonic].center
+	override lazy val center = super[Polygonic].center
 	
 	
 	// OTHER	------------------------

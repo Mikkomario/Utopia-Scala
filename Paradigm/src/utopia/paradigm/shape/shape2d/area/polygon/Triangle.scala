@@ -1,8 +1,8 @@
 package utopia.paradigm.shape.shape2d.area.polygon
 
 import utopia.flow.collection.immutable.Single
+import utopia.flow.util.Mutate
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape3d.Matrix3D
@@ -58,8 +58,13 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
 	override def convexParts = Single(this)
 	override def collisionAxes = edges.map { _.normal2D }
 	
-	override def transformedWith(transformation: Matrix3D) = mapCorners { _ * transformation }
-	override def transformedWith(transformation: Matrix2D) = mapCorners { _ * transformation }
+	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
+	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }
+	
+	override def map(f: Mutate[Point]) = {
+		val mapped = corners.map(f)
+		Triangle.withCorners(mapped.head, mapped(1), mapped(2))
+	}
 	
 	
 	// OTHER    -------------------
@@ -68,8 +73,6 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
 	 * @param f A mapping function
 	 * @return A copy of this triangle with mapped corners
 	 */
-	def mapCorners(f: Point => Point) = {
-		val mapped = corners.map(f)
-		Triangle.withCorners(mapped.head, mapped(1), mapped(2))
-	}
+	@deprecated("Renamed to .map(...)", "v1.6.1")
+	def mapCorners(f: Point => Point) = map(f)
 }

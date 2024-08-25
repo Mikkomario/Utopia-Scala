@@ -5,13 +5,17 @@
 - **Polygonic**`.center` now properly calculates the polygon centroid (previous version used average)
 - Similarly, **Polygonic**`.circleWithin` now actually places the circle completely within the polygon 
 - Bugfix to **Parallelogramic**`.area`, which previously only calculated correct values in case of rectangles 
+### Deprecations
+- Deprecated `.mapCorners(...)` in **Triangle** in favor of the new `.map(...)`
 ### New methods
 - **Animation** (object)
   - Added a couple of utility constructors
 - **Matrix2D** (object)
   - Added `.quarterRotationTowards(RotationDirection)`
 - **Polygonic**
+  - Added `.sidesIterator` and `.edgesIterator`
   - Added `.toTriangles`
+  - Added `.map(...)`
 - **TimedAnimation** (object)
   - Added `.fixed(...)` constructor
 ### Other changes
@@ -19,6 +23,7 @@
 - **BoundsFactoryLike**`.between(...)` now accepts **HasDoubleDimensions** instead of just **P**
 - **AnyAnimation** is now covariant
 - Added some optimizations to more specific polygon classes
+- Optimized / refactored various functions in **Polygonic**
 
 ## v1.6 - 28.07.2024
 This is a smaller update, focusing on:

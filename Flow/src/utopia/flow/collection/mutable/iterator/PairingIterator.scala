@@ -37,6 +37,25 @@ object PairingIterator
 	def from[A](start: => A, more: IterableOnce[A]) = new PairingIterator[A](start, more.iterator)
 	/**
 	  * Creates a new pairing iterator by pairing the items in the specified collection.
+	  * Please note that the resulting iterator will be empty if the specified collection is empty.
+	  * @param coll A collection to iterate
+	  * @param end The last element of the last returned Pair
+	  * @tparam A Type of the items in the specified collection
+	  * @return A new pairing iterator based on the elements of the specified collection.
+	  *         E.g. If the specified collection contains elements A, B and C, and 'end' is E,
+	  *         the resulting iterator would return AB, BC and CE.
+	  */
+	def to[A](coll: IterableOnce[A], end: => A) = {
+		val iter = coll.iterator
+		if (iter.hasNext) {
+			val start = iter.next()
+			new PairingIterator[A](start, iter :+ end)
+		}
+		else
+			Iterator.empty
+	}
+	/**
+	  * Creates a new pairing iterator by pairing the items in the specified collection.
 	  * @param start The first element of the first returned Pair
 	  * @param middle  A collection to iterate
 	  * @param end The second element of last returned Pair

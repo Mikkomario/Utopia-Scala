@@ -1608,7 +1608,8 @@ object CollectionExtensions
 		  *         argument. The last item will be presented once as the second argument. If this sequence
 		  *         contains less than two items, an empty seq is returned.
 		  */
-		def paired = (1 until seq.size).map { i => Pair(seq(i - 1), seq(i)) }
+		def paired =
+			(1 until seq.size).view.map { i => Pair(seq(i - 1), seq(i)) }.toOptimizedSeq
 		
 		/**
 		  * Same as apply except returns None on non-existing indices
@@ -1686,8 +1687,20 @@ object CollectionExtensions
 		  *         E.g. If this collection contains elements A, B and C and 'start' is defined as O,
 		  *         the resulting collection would be: [OA, AB, BC].
 		  */
-		def pairedFrom[B >: A](start: B) = seq.headOption match {
+		def pairedFrom[B >: A](start: => B) = seq.headOption match {
 			case Some(first) => Pair(start, first) +: paired
+			case None => Empty
+		}
+		/**
+		  * Forms pairs based on the contents of this collection
+		  * @param end The last element of the last pair
+		  * @tparam B Type of the items returned
+		  * @return A collection that contains the consecutive items of this collection as pairs.
+		  *         E.g. If this collection contains elements A, B and C and 'end' is defined as E,
+		  *         the resulting collection would be: [AB, BC, CE].
+		  */
+		def pairedTo[B >: A](end: => B) = seq.lastOption match {
+			case Some(last) => paired :+ Pair(last, end)
 			case None => Empty
 		}
 		/**
@@ -1723,10 +1736,8 @@ object CollectionExtensions
 		  * @return The first non-empty map result, along with the index of the mapped item. None if all items were
 		  *         mapped to None.
 		  */
-		def findMapAndIndex[B](f: A => Option[B]) = seq.indices.view.flatMap { i =>
-			f(seq(i))
-				.map { _ -> i }
-		}.headOption
+		def findMapAndIndex[B](f: A => Option[B]) =
+			seq.indices.view.flatMap { i => f(seq(i)).map { _ -> i } }.headOption
 		/**
 		  * Maps each item + index in this sequence
 		  * @param f A mapping function that takes both the item and the index of that item
@@ -2227,13 +2238,22 @@ object CollectionExtensions
 		
 		/**
 		  * @param start The prepended pair start point (call-by-name).
-		  *              This will be never called if this iterator is empty.
+		  *              This will never be called if this iterator is empty.
 		  * @tparam B Type of pair parts
 		  * @return A copy of this iterator that returns items as pairs, with the 'start' prepended.
 		  *         E.g. If this iterator contained items [A, B, C] and start was X, the resulting iterator would
 		  *         return [XA, AB, BC]
 		  */
 		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
+		/**
+		  * @param end The appended pair end point (call-by-name). I.e. the last value of the last returned pair.
+		  *            This will never be called if this iterator is empty.
+		  * @tparam B Type of pair parts
+		  * @return A copy of this iterator that returns items as pairs, with the 'end' appended.
+		  *         E.g. If this iterator contained items [A, B, C] and end was X, the resulting iterator would
+		  *         return [AB, BC, CX]
+		  */
+		def pairedTo[B >: A](end: => B) = PairingIterator.to(i, end)
 		/**
 		  * Creates an iterator that returns the consecutive items in this collection as pairs.
 		  * @param start  The first element of the first returned Pair

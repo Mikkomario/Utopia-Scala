@@ -107,13 +107,14 @@ trait Parallelogramic extends Polygonic with Transformable[Parallelogramic]
 	override def toTriangles =
 		Pair(Triangle(topLeftCorner, topEdge, leftEdge), Triangle(bottomRightCorner, rightEdge, bottomEdge))
 	
-	override def transformedWith(transformation: Matrix3D) = map { _ * transformation }
-	override def transformedWith(transformation: Matrix2D) = map { _ * transformation }
+	override def transformedWith(transformation: Matrix3D) = _map { _ * transformation }
+	override def transformedWith(transformation: Matrix2D) = _map { _ * transformation }
 	
 	
-	// OTHER	----------------
+	// OTHER    -----------------------
 	
-	private def map(f: Point => Point) = {
+	// NB: Assumes that the transformation would not change this to a non-parallelogram
+	private def _map(f: Point => Point) = {
 		val topLeft2 = f(topLeftCorner)
 		val topRight2 = f(topRightCorner).toVector
 		val bottomRight2 = f(bottomRightCorner).toVector

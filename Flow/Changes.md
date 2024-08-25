@@ -19,6 +19,12 @@
   - Added `.toOptimizedSeq`
   - Added `.toTryCatch` for collections that contain instances of **TryCatch**
   - Added `.toIntSet` for collections of **Ints**
+- **Iterator** (**CollectionExtensions**)
+  - Added `.pairedTo(...)`
+- **PairingIterator** (object)
+  - Added `.to(...)`
+- **Seq** (**CollectionExtensions**)
+  - Added `.pairedTo(...)`
 - **TryCatch**
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
@@ -30,6 +36,7 @@
 - Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
+- Minor refactoring in pairing functions in **CollectionExtensions**
 
 ## v2.4 - 28.07.2024
 This is a pretty large update, mostly due to its delayed release.
