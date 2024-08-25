@@ -22,6 +22,49 @@ import scala.util.Try
  */
 object ConsoleExtensions
 {
+	// OTHER    -----------------------------
+	
+	/**
+	 * A more advanced function for parsing a date from an (input) string.
+	 * Allows use of relative and/or impartial dates, such as "today", "last tuesday", or "3.6".
+	 * Expects dates, months and years to be separated with ".", and to be in ascending order.
+	 * @param str String to convert into a date
+	 * @param defaultMonth Month and year to supply when missing from the input.
+	 *                     Default = current month & year.
+	 * @return Parsed date. None if the input couldn't be parsed.
+	 */
+	def parseDate(str: String, defaultMonth: YearMonth = Today.yearMonth) = {
+		str.toLowerCase match {
+			case "today" => Some(Today.toLocalDate)
+			case "yesterday" => Some(Today.yesterday)
+			case "tomorrow" => Some(Today.tomorrow)
+			case str =>
+				// Case: Targeting some past week day
+				if (str.startsWith("last"))
+					WeekDay.matching(str.drop(4).trim).map { Today.previous(_) }
+				// Case: Targeting some future week day
+				else if (str.startsWith("next"))
+					WeekDay.matching(str.drop(4).trim).map { Today.next(_) }
+				// Case: Targets a specific date
+				else {
+					val parts = str.split('.').toVector
+						.flatMap { _.trim.filter { _.isDigit }.dropWhile { _ == '0' }.toIntOption }
+					NotEmpty(parts).flatMap { parts =>
+						Try {
+							LocalDate.of(
+								parts.getOrElse(2, defaultMonth.year.value),
+								parts.getOrElse(1, defaultMonth.month.value),
+								parts.head
+							)
+						}.toOption
+					}
+				}
+		}
+	}
+	
+	
+	// EXTENSIONS   -------------------------
+	
 	implicit class RichStdIn(val in: StdIn.type) extends AnyVal
 	{
 		/**
@@ -162,7 +205,7 @@ object ConsoleExtensions
 			println("\tInstruction: Supported format is dd.mm.yyyy")
 			println("\tIf some parts are left empty, current month and year are substituted")
 			println("\tAlso supports options: today, yesterday, last Monday, next Tuesday, etc.")
-			readNonEmptyLine().flatMap { dateFromString(_) }
+			readNonEmptyLine().flatMap { parseDate(_) }
 		}
 		/**
 		 * Reads a date range from user input.
@@ -193,8 +236,8 @@ object ConsoleExtensions
 				}
 				else {
 					val (startPart, endPart) = input.splitAtFirst("-").map { _.trim }.toTuple
-					val endDate = dateFromString(endPart)
-					val startDate = dateFromString(startPart, endDate.getOrElse(Today.toLocalDate).yearMonth)
+					val endDate = parseDate(endPart)
+					val startDate = parseDate(startPart, endDate.getOrElse(Today.toLocalDate).yearMonth)
 					startDate match {
 						case Some(start) =>
 							endDate match {
@@ -241,8 +284,8 @@ object ConsoleExtensions
 		 * @return The selected or added item.
 		 */
 		def selectFromOrAdd[A](options: Seq[(A, String)], target: String = "items", verb: String = "select",
-		                       maxListCount: Int = 20)(addNew: () => Option[A]) =
-			_selectFrom(options, Some(addNew), target, verb, maxListCount)
+		                       maxListCount: Int = 20)(addNew: => Option[A]) =
+			_selectFrom(options, Some({ () => addNew }), target, verb, maxListCount)
 		
 		// Allows the user to select from the specified options.
 		// Option description is the second item in 'options'
@@ -351,37 +394,6 @@ object ConsoleExtensions
 				case "last" | "prev" => Some(prev(current))
 				case "next" => Some(next(current))
 				case _ => None
-			}
-		}
-		
-		// Expects input such as "5.6.2024", "today" or "next monday"
-		// Uses defaults where values are omitted
-		private def dateFromString(str: String, defaultMonth: YearMonth = Today.yearMonth) = {
-			str.toLowerCase match {
-				case "today" => Some(Today.toLocalDate)
-				case "yesterday" => Some(Today.yesterday)
-				case "tomorrow" => Some(Today.tomorrow)
-				case str =>
-					// Case: Targeting some past week day
-					if (str.startsWith("last"))
-						WeekDay.matching(str.drop(4).trim).map { Today.previous(_) }
-					// Case: Targeting some future week day
-					else if (str.startsWith("next"))
-						WeekDay.matching(str.drop(4).trim).map { Today.next(_) }
-					// Case: Targets a specific date
-					else {
-						val parts = str.split('.').toVector
-							.flatMap { _.trim.filter { _.isDigit }.dropWhile { _ == '0' }.toIntOption }
-						NotEmpty(parts).flatMap { parts =>
-							Try {
-								LocalDate.of(
-									parts.getOrElse(2, defaultMonth.year.value),
-									parts.getOrElse(1, defaultMonth.month.value),
-									parts.head
-								)
-							}.toOption
-						}
-					}
 			}
 		}
 	}

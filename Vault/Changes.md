@@ -12,6 +12,8 @@
     so this addition only affects custom factories not utilizing these traits or their sub-traits. 
 - `SqlSegment.combine(...)` now accepts two parameter lists instead of one
   - Also changed the type of the function input from **Tuple** to **Pair**
+- Modified generic type parameters in **LatestOrEarliestModelAccess**'s inheritance of **FilterableView**
+  - It is quite unlikely that this would negatively affect your code, however
 ### Deprecations
 - Deprecated **SelectDistinct** in favor of `Select.distinct(...)`
 - Deprecated `.pullAttribute(String)` in favor of `.pullProperty(String)` in **DistinctReadModelAccess**

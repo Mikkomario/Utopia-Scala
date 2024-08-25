@@ -88,8 +88,7 @@ object CollectionExtensions
 		  * @param buildFrom Builder for the new collection
 		  * @return A collection with only distinct values (when considering the provided 'equals' function)
 		  */
-		def distinctWith(equals: (iter.A, iter.A) => Boolean)(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-		{
+		def distinctWith(equals: EqualsFunction[iter.A])(implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr = {
 			val builder = buildFrom.newBuilder(coll)
 			val collected = mutable.HashSet[iter.A]()
 			

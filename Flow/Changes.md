@@ -10,6 +10,9 @@
 ### New methods
 - **Changing**
   - Added a new variant of `.lazyMergeWith(...)`
+- **ConsoleExtensions**
+  - Added `.parseDate(String)`, which provides semi-flexible date-parsing 
+    often useful when dealing with user (console) input
 - **CopyOnDemand** (object)
   - Added a new function-based constructor
 - **IterableOnce** (**CollectionExtensions**)
@@ -20,6 +23,9 @@
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
 - Built with Scala v2.13.14
+- `.distinctWith(...)` in **IterableOnce** (via **CollectionExtensions**) now accepts an **EqualsFunction** 
+  instead of a regular function
+  - Use-cases should get resolved implicitly, however
 - Modified **HasEnds** `toString` implementation
 - Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant

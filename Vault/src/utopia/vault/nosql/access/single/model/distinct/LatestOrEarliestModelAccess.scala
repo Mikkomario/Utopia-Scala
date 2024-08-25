@@ -60,13 +60,13 @@ object LatestOrEarliestModelAccess
 }
 
 /**
-  * Used for accessing the latest or the earliest model within a table or a sub-group
+  * Used for accessing the latest or the earliest model within a table or a subgroup
   * @author Mikko Hilpinen
   * @since 24.4.2024, v1.19
   */
 trait LatestOrEarliestModelAccess[+A]
 	extends SingleRowModelAccess[A] with DistinctReadModelAccess[A, Option[A], Value]
-		with FilterableView[LatestOrEarliestModelAccess[A]]
+		with FilterableView[SingleRowModelAccess[A] with DistinctReadModelAccess[A, Option[A], Value]]
 {
 	// ABSTRACT ----------------------------
 	
