@@ -1,6 +1,6 @@
 package utopia.paradigm.shape.shape2d.line
 
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, Span}
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -136,6 +136,24 @@ case class Line(override val ends: Pair[Point])
     
     
     // OTHER METHODS    ----------------
+    
+    /**
+      * Tests whether these two lines intersect with each other
+      * @param other Another line
+      * @return Whether these lines intersect with each other
+      */
+    def intersectsWith(other: Line) = _containsProjectionOf(other) && other._containsProjectionOf(this)
+    private def _containsProjectionOf(other: Line) = {
+        val normal = vector.normal2D
+        implicit val ord: Ordering[Point] = {
+            if (normal.x == 0) Ordering.by[Point, Double] { _.y } else Ordering.by[Point, Double] { _.x }
+        }
+        
+        val myPosition = start.projectedOver(normal)
+        val theirRange = Span(other.projectedOver(normal).ends)(ord)
+        
+        theirRange.contains(myPosition)
+    }
     
     /**
      * Calculates the intersection point between this and another line

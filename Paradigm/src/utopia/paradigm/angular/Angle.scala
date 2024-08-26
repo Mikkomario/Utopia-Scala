@@ -148,6 +148,11 @@ case class Angle private(radians: Double)
     // COMPUTED PROPERTIES    --------
     
     /**
+      * @return An angle pointing to the opposite direction from this angle
+      */
+    def opposite = this + Rotation.circles(0.5).clockwise
+    
+    /**
       * @return This angle as a ratio of a full circle [0, 1[
       */
     def circleRatio = radians / (2 * math.Pi)

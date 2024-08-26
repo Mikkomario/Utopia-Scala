@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.immutable.range.Span
+import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -118,6 +119,28 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	
 	override def zip[B](other: HasTwoSides[B]) = super[HasTwoSides].zip(other)
 	
+	override def drop(n: Int) = n match {
+		case 1 => only(Last)
+		case x if x <= 0 => self
+		case _ => _empty
+	}
+	override def dropRight(n: Int) = n match {
+		case 1 => only(First)
+		case x if x <= 0 => self
+		case _ => _empty
+	}
+	
+	override def take(n: Int) = n match {
+		case 1 => only(First)
+		case x if x >= 2 => self
+		case _ => _empty
+	}
+	override def takeRight(n: Int) = n match {
+		case 1 => only(Last)
+		case x if x >= 2 => self
+		case _ => _empty
+	}
+	
 	
 	// OTHER    --------------------------
 	
@@ -182,6 +205,33 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  * @return A mapped copy of this pair
 	  */
 	def mapWithSides[B](f: (A, End) => B) = newPair(f(first, First), f(second, Last))
+	
+	/**
+	  * @param f A mapping function applied to the first item in this pair. Yields 0-n items.
+	  * @tparam B Type of individual mapping results
+	  * @return A collection containing mapped first items, plus the second item in this pair
+	  */
+	def flatMapFirst[B >: A](f: A => IterableOnce[B]) =
+		iterableFactory.from(f(first).iterator ++ PollableOnce(second))
+	/**
+	  * @param f A mapping function applied to the second item in this pair. Yields 0-n items.
+	  * @tparam B Type of individual mapping results
+	  * @return A collection containing the first item in this pair,
+	  *         followed by the mapping results of the second item in this pair.
+	  */
+	def flatMapSecond[B >: A](f: A => IterableOnce[B]) =
+		iterableFactory.from(PollableOnce(first) ++ f(second).iterator)
+	/**
+	  * @param side Targeted side
+	  * @param f A mapping function applied to the targeted side. Yields 0-n items.
+	  * @tparam B Type of individual mapping results
+	  * @return A collection containing the mapped items, as well as the other side from this pair.
+	  *         Ordering is dependent on the targeted side.
+	  */
+	def flatMapSide[B >: A](side: End)(f: A => IterableOnce[B]) = side match {
+		case First => flatMapFirst(f)
+		case Last => flatMapSecond(f)
+	}
 	
 	/**
 	  * Attempts to perform a mapping function for both items in this pair.

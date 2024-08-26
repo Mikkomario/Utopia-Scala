@@ -426,27 +426,6 @@ case class Pair[+A](first: A, second: A)
 	}
 	override def filterNot(pred: A => Boolean) = filter { !pred(_) }
 	
-	override def take(n: Int) = n match {
-		case 1 => Single(first)
-		case x if x >= 2 => self
-		case _ => _empty
-	}
-	override def takeRight(n: Int) = n match {
-		case 1 => Single(second)
-		case x if x >= 2 => self
-		case _ => _empty
-	}
-	override def drop(n: Int) = n match {
-		case 1 => Single(second)
-		case x if x <= 0 => self
-		case _ => _empty
-	}
-	override def dropRight(n: Int) = n match {
-		case 1 => Single(first)
-		case x if x <= 0 => self
-		case _ => _empty
-	}
-	
 	override def appended[B >: A](elem: B) = Vector(first, second, elem)
 	override def prepended[B >: A](elem: B) = Vector(elem, first, second)
 	

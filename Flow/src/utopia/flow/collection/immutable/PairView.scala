@@ -41,4 +41,10 @@ class PairView[+A](firstView: => A, secondView: => A)
 		super[AbstractIndexedSeqView].fromSpecific(coll)
 	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, collection.View[A]] =
 		super[AbstractIndexedSeqView].newSpecificBuilder
+	
+	override def drop(n: Int) = super[AbstractIndexedSeqView].drop(n)
+	override def dropRight(n: Int) = super[AbstractIndexedSeqView].dropRight(n)
+	
+	override def take(n: Int) = super[AbstractIndexedSeqView].take(n)
+	override def takeRight(n: Int) = super[AbstractIndexedSeqView].takeRight(n)
 }

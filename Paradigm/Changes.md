@@ -1,15 +1,22 @@
 # Utopia Paradigm - List of Changes
 
-## v1.6.1 (in development)
+## v1.7 (in development)
+### Breaking changes
+- `.cutBetween(...)` in **Polygonic** now returns a **Pair** instead of a **Tuple**
 ### Bugfixes
+- Redesigned and rewrote `.convexParts` in **Polygonic**, as the previous version had some issues
 - **Polygonic**`.center` now properly calculates the polygon centroid (previous version used average)
 - Similarly, **Polygonic**`.circleWithin` now actually places the circle completely within the polygon 
 - Bugfix to **Parallelogramic**`.area`, which previously only calculated correct values in case of rectangles 
 ### Deprecations
 - Deprecated `.mapCorners(...)` in **Triangle** in favor of the new `.map(...)`
 ### New methods
+- **Angle**
+  - Added `.opposite`
 - **Animation** (object)
   - Added a couple of utility constructors
+- **Line**
+  - Added `.intersectsWith(Line)`
 - **Matrix2D** (object)
   - Added `.quarterRotationTowards(RotationDirection)`
 - **Polygonic**

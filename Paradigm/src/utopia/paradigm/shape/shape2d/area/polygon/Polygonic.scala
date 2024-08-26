@@ -1,8 +1,13 @@
 package utopia.paradigm.shape.shape2d.area.polygon
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.Mutate
+import utopia.paradigm.angular.DirectionalRotation
+import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.paradigm.shape.shape2d.area.{Area2D, Circle}
@@ -17,6 +22,156 @@ import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.Transformable
 
 import java.awt.Shape
+
+object Polygonic
+{
+	def apply(corners: Seq[Point]): Polygonic =
+		if (corners.hasSize(3)) Triangle.withCorners(corners.head, corners(1), corners(2)) else Polygon(corners)
+	
+	// NB: Assumes that:
+	//      1) 'polygon' doesn't cross itself
+	//      2) 'polygon' is of size 4 or greater
+	private def convexPartsFrom(polygon: Polygonic, rotations: Seq[DirectionalRotation],
+	                            direction: RotationDirection, originIndex: Int = 0): Seq[Polygonic] =
+	{
+		val indexCount = rotations.size
+		// Converts a relative index to an actual polygon index
+		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
+		def isConvex(relativeIndex: Int) = this.isConvex(rotations(index(relativeIndex)), direction)
+		
+		// Case: Origin is convex => Finds the first non-convex index and uses that as the splitting index
+		if (isConvex(0))
+			(1 until indexCount).find { !isConvex(_) } match {
+				case Some(advanceToNonConvex) => splitFrom(polygon, index(advanceToNonConvex), rotations, direction)
+					
+				// Case: No non-convex index was found => This polygon is convex
+				case None => Single(polygon)
+			}
+		// Case: Origin is non-convex => Uses it as the primary splitting index
+		// Case: The next index is convex => starts scanning for more indices towards that direction
+		else if (isConvex(1))
+			splitFrom(polygon, originIndex, rotations, direction, splitDirection = Positive)
+		// Case: Two consecutive non-convex indices to the positive direction
+		//       => Moves to the negative (i.e. default) direction instead
+		else if (isConvex(-1))
+			splitFrom(polygon, originIndex, rotations, direction)
+		// Case: Three consecutive non-convex indices
+		//       => Finds the next convex index and places the primary split index next to that
+		//          (instead of at the origin), so that the first index after the split will be convex
+		else
+			(2 until indexCount).find(isConvex) match {
+				case Some(advanceToConvex) =>
+					// splitFrom(polygon, originIndex, rotations, direction, advanceToConvex - 1, Positive)
+					splitFrom(polygon, index(advanceToConvex - 1), rotations, direction, splitDirection = Positive)
+				
+				// Case: All the rotations are "non-convex" => Indicates a miscalculated rotation direction (error)
+				case None =>
+					throw new IllegalArgumentException(
+						s"Rotation direction of polygon $polygon is not $direction, as claimed")
+			}
+	}
+	
+	// 'splitDirection' is the direction from origin, towards which the secondary split index is estimated to be.
+	// Should be on the opposite side of the primary split index, relative to the origin.
+	// NB: Doesn't work if the first index in the 'splitDirection' is non-convex
+	private def splitFrom(polygon: Polygonic, originIndex: Int, rotations: Seq[DirectionalRotation],
+	                      polygonDirection: RotationDirection,
+	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative) =
+	{
+		val indexCount = rotations.size
+		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
+		
+		lazy val absoluteSplitIndex = index(relativeSplitIndex)
+		lazy val splitPoint = polygon.corners(index(relativeSplitIndex))
+		// Reference point is the next point from the split point
+		// towards direction to that is being tested / iterated
+		lazy val referencePoint = polygon.corners(index(relativeSplitIndex + splitDirection.modifier))
+		lazy val referenceDirection = (referencePoint - splitPoint).direction
+		
+		// Finds the first index from the origin, where either:
+		//      1) That index is non-convex
+		//      2) Angle at the split point, when joined to that index, would become larger than 180 degrees
+		//          - In these cases, the previous index is selected instead
+		//            (i.e. would select the last possible index which keeps the angle low enough)
+		// Note: The index for triggering case 2 is always at least 3 steps away from the splitting point,
+		//       as the resulting shape will always contain at least 4 corners.
+		//       Also, the two splitting indices are never consecutive, meaning that absolute minimum advance is 2.
+		val minimumAdvanceForAngle = (3 - relativeSplitIndex.abs) min 2
+		(2 until indexCount).findMap { advance =>
+			val absoluteIndex = index(splitDirection * advance)
+			
+			// Case: Found a non-convex index => Splits at that
+			if (!isConvex(rotations(absoluteIndex), polygonDirection))
+				Some(Left(absoluteIndex))
+			else if (advance >= minimumAdvanceForAngle) {
+				val targetPoint = polygon.corners(absoluteIndex)
+				val angle = (targetPoint - splitPoint).direction - referenceDirection
+				
+				// Case: Angle is still smaller than 180 degrees => Moves on to the next index
+				if (angle.direction == polygonDirection * splitDirection)
+					None
+				// Case: Angle became larger than 180 degrees => Returns the previous step
+				else
+					Some(Right(advance - 1))
+			}
+			// Case: Neither condition is fulfilled => Moves on to the next index
+			else
+				None
+		} match {
+			// Case: The other split point was found
+			//       => Separates the area between these points as a convex polygons
+			//          and moves on to process the remainder
+			case Some(otherSplitIndex) =>
+				val absoluteOtherSplitIndex = otherSplitIndex.leftOrMap { advance => index(splitDirection * advance) }
+				val cutOffRange = splitDirection match {
+					case Positive => NumericSpan(absoluteSplitIndex, absoluteOtherSplitIndex)
+					case Negative => NumericSpan(absoluteOtherSplitIndex, absoluteSplitIndex)
+				}
+				val cutOffAndRemainder = {
+					val ascendingRange = cutOffRange.ascending
+					val ascendingRangePolygon = apply(polygon.corners.slice(ascendingRange))
+					val outsideAscendingRangePolygon = apply(polygon.corners.slice(ascendingRange.end, indexCount) ++
+						polygon.corners.slice(0, ascendingRange.start + 1))
+					
+					if (cutOffRange.isAscending)
+						Pair(ascendingRangePolygon, outsideAscendingRangePolygon)
+					else
+						Pair(outsideAscendingRangePolygon, ascendingRangePolygon)
+				}
+				
+				// Case: The remainder is small enough to always be convex => Finishes
+				if (cutOffAndRemainder.second.corners.hasSize <= 4)
+					cutOffAndRemainder
+				// Case: The remainder may be non-convex => Splits it, if necessary
+				else {
+					// If the secondary split was made at a non-convex index, selects that as the next origin
+					val nextOrigin = polygon.corners(
+						if (otherSplitIndex.isLeft) absoluteOtherSplitIndex else absoluteSplitIndex)
+					cutOffAndRemainder.flatMapSecond { p =>
+						convexPartsFrom(p, p.rotations, polygonDirection, p.corners.indexOf(nextOrigin))
+					}
+				}
+				
+			// Case: No non-convex point was found => The remainder is convex
+			case None => Single(polygon)
+		}
+	}
+	
+	private def relativeToAbsolute(originIndex: Int, indexCount: Int, relativeIndex: Int) = {
+		indexInRange(originIndex + relativeIndex, indexCount)
+	}
+	private def indexInRange(index: Int, indexCount: Int) = {
+		if (index >= indexCount)
+			index - indexCount
+		else if (index < 0)
+			indexCount + index
+		else
+			index
+	}
+	
+	private def isConvex(rotation: DirectionalRotation, polygonDirection: RotationDirection) =
+		rotation.isZero || rotation.direction == polygonDirection
+}
 
 /**
   * This trait is extended by 2D shapes that have 3 or more corners
@@ -65,7 +220,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	def rotations = sides.notEmpty match {
 		case Some(sides) =>
 			val directions = sides.map { _.direction }
-			directions.pairedFrom(directions.last).map { _.merge { _ - _ } }
+			directions.pairedFrom(directions.last).map { _.merge { (incoming, outgoing) => incoming.opposite - outgoing } }
 		case None => Empty
 	}
 	/**
@@ -85,7 +240,7 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  */
 	def isConvex = {
 		lazy val dir = rotationDirection
-		rotations.forall { r => r.nonZero && r.direction == dir }
+		rotations.forall { r => r.isZero || r.direction == dir }
 	}
 	
 	/**
@@ -147,70 +302,48 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	}
 	
 	/**
-	  * Divides this polygon into convex portions. Each of the returned parts is convex and can
-	  * be used in collision checks
+	  * @return This polygon divided into convex polygons.
+	  *         If this polygon is convex already, returns self.
 	  */
 	def convexParts: Seq[Polygonic] = {
 		val c = corners
-		if (c.size < 3)
+		// Case: 3 or fewer corners => Always convex, without there existing a possibility for crossing either
+		if (c.hasSize <= 3)
 			Single(this)
 		else {
-			val dir = rotationDirection
-			val r = rotations
-			
-			// Checks whether there are any spots within this polygon where the rotation direction changes
-			// (indicates non-convexity)
-			r.findIndexWhere { r => r.nonZero && r.direction != dir } match {
-				case Some(firstBrokenIndex) =>
-					// Tries to find another (non-sequential) broken index
-					val secondBrokenIndex = {
-						if (firstBrokenIndex < c.size - 1)
-							Some(rotations.indexWhere({ r => r.nonZero && r.direction != dir }, firstBrokenIndex + 1))
-								.filter { _ >= 0 }
-						else
-							None
+			// Tests whether there exists crossing within this polygon
+			val lines = sides
+			val lineCount = lines.size
+			(0 until (lineCount - 2)).findMap { startIndex =>
+				val line1 = lines(startIndex)
+				val lastTargetIndex = if (startIndex == 0) lineCount - 2 else lineCount - 1
+				((startIndex + 2) to lastTargetIndex).reverseIterator.findMap { otherIndex =>
+					val line2 = lines(otherIndex)
+					line1.intersection(line2).map { intersectionPoint =>
+						(startIndex, otherIndex, intersectionPoint)
 					}
+				}
+			} match {
+				// Case: There exists crossing within this polygon => Splits at the intersection point
+				case Some((firstLineIndex, secondLineIndex, intersectionPoint)) =>
+					// This first polygon certainly doesn't cross itself
+					val part1 = Polygonic((corners.take(firstLineIndex + 1) :+ intersectionPoint) ++
+						corners.drop(secondLineIndex + 1))
+					// This second polygon may still cross itself
+					val part2 = Polygonic(intersectionPoint +: corners.slice(firstLineIndex + 1, secondLineIndex + 1))
 					
-					secondBrokenIndex match {
-						// Case: Second broken index was found =>
-						// Cuts this polygon between these two indices and continues recursively
-						case Some(secondBrokenIndex) =>
-							val (firstPart, secondPart) = cutBetween(firstBrokenIndex, secondBrokenIndex)
-							firstPart.convexParts ++ secondPart.convexParts
-						// Case: Only one broken index found =>
-						// Cuts this polygon at that location so that the remaining parts become convex
-						case None =>
-							val brokenVertex = vertex(firstBrokenIndex)
-							val incomeAngle = side(firstBrokenIndex - 1).direction
-							
-							val remainingOutcomeIndex = {
-								if (firstBrokenIndex < c.size - 2)
-									c.indexWhere({ vertex =>
-										val rotation = Line(brokenVertex, vertex).direction - incomeAngle
-										rotation.isZero || rotation.direction == rotationDirection
-									}, firstBrokenIndex + 2)
-								else
-									-1
-							}
-							
-							if (remainingOutcomeIndex >= 0) {
-								val (firstPart, secondPart) = cutBetween(firstBrokenIndex, remainingOutcomeIndex)
-								firstPart.convexParts ++ secondPart.convexParts
-							}
-							else {
-								// WET WET (needs refactoring)
-								val outcomeIndex = c.indexWhere { vertex =>
-									val rotation = Line(brokenVertex, vertex).direction - incomeAngle
-									rotation.isZero || rotation.direction == rotationDirection
-								}
-								val (firstPart, secondPart) = cutBetween(outcomeIndex, firstBrokenIndex)
-								firstPart.convexParts ++ secondPart.convexParts
-							}
-					}
-				case None =>
-					Single(this)
+					part1._convexParts ++ part2.convexParts
+				
+				// Case: No crossing exists
+				case None => _convexParts
 			}
 		}
+	}
+	// This version assumes that crossing has been tested and ruled out and that this polygon has 4 or more corners
+	private def _convexParts = {
+		val r = rotations
+		val direction = r.reduce { _ + _ }.direction
+		Polygonic.convexPartsFrom(this, r, direction)
 	}
 	
 	
@@ -332,14 +465,13 @@ trait Polygonic extends ShapeConvertible with LineProjectable with Transformable
 	  * polygon pieces will contain those vertices.
 	  * @param index1 The index of the first common index (< index2 - 1)
 	  * @param index2 The index of the second common index (> index 1 + 1)
-	  * @return Two polygon pieces
+	  * @return Two polygon pieces as a pair
 	  */
 	def cutBetween(index1: Int, index2: Int) = {
 		val c = corners
-		
 		val cutVertices = c.slice(index1, index2 + 1)
 		val remainingVertices = c.take(index1 + 1) ++ c.drop(index2)
-		Polygon(remainingVertices) -> Polygon(cutVertices)
+		Pair(Polygon(remainingVertices), Polygon(cutVertices))
 	}
 	
 	/**

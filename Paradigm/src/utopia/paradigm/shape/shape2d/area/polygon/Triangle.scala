@@ -26,6 +26,7 @@ object Triangle
   * @param side1 The first side of this triangle as a vector
   * @param side2 The second side of this triangle as a vector
   */
+// TODO: Change into a trait and allow 2 formats: sides or corners
 case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
 	extends Polygonic with Transformable[Triangle]
 {
@@ -73,6 +74,6 @@ case class Triangle(origin: Point, side1: Vector2D, side2: Vector2D)
 	 * @param f A mapping function
 	 * @return A copy of this triangle with mapped corners
 	 */
-	@deprecated("Renamed to .map(...)", "v1.6.1")
+	@deprecated("Renamed to .map(...)", "v1.7")
 	def mapCorners(f: Point => Point) = map(f)
 }

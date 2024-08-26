@@ -23,6 +23,8 @@
   - Added `.pairedTo(...)`
 - **PairingIterator** (object)
   - Added `.to(...)`
+- **PairOps**
+  - Added `.flatMapFirst(...)`, `.flatMapSecond(...)` and `.flatMapSide(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
 - **TryCatch**

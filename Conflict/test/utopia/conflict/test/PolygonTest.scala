@@ -49,7 +49,7 @@ object PolygonTest extends App
     assert(polygon.circleAround.contains(Point.origin))
     
     // Tests polygon splitting
-    val (part1, part2) = polygon.cutBetween(0, 2)
+    val (part1, part2) = polygon.cutBetween(0, 2).toTuple
     
     assert(part1.corners.size == 3)
 	assert(part2.corners.size == 3)
