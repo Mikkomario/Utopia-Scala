@@ -3,6 +3,7 @@ package utopia.terra.controller.coordinate.world
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.{LatLong, LatLongRotation, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.{EastWest, NorthSouth, South}
@@ -40,7 +41,7 @@ object GridArea extends VectorDistanceConversion
   * @param origin The location of the "origin" of this grid area, matching the (0,0) vector coordinate.
   *               Please note that locations far from the origin will be more inaccurate.
   */
-class GridArea(val origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSurfacePoint, AerialGridPoint]
+class GridArea(val origin: LatLong) extends FlatWorldView[GridSurfacePoint, AerialGridPoint]
 {
 	// ATTRIBUTES   ------------------
 	
@@ -62,7 +63,7 @@ class GridArea(val origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSu
 	override def apply(latLong: LatLong, altitude: WorldDistance) = AerialGridPoint(latLong, altitude)
 	
 	override def aerialVector(vector: Vector3D): AerialGridPoint = AerialGridPoint(vector)
-	override def surfaceVector(vector: Vector2D): GridSurfacePoint = GridSurfacePoint(vector)
+	override def surfaceVector(vector: DoubleVector): GridSurfacePoint = GridSurfacePoint(vector.toVector2D)
 	
 	/**
 	  * Converts a latitude-longitude coordinate into a grid-based vector
@@ -85,7 +86,7 @@ class GridArea(val origin: LatLong) extends WorldView[Vector2D, Vector3D, GridSu
 	  * @param vector A vector in this grid-based system
 	  * @return A latitude-longitude coordinate that matches that vector
 	  */
-	override def vectorToLatLong(vector: Vector2D) = {
+	override def vectorToLatLong(vector: DoubleVector) = {
 		// Converts vector length (X) to latitude angular travel
 		val northSouthPosition = vectorLengthToLatitudeRotation(vector.x)
 		// Converts vector length (Y) to latitude angular travel first

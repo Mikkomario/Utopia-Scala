@@ -1,7 +1,17 @@
 # Utopia Terra - list of changes
 
-## v1.1.2 (in development)
-Built with Scala v2.13.14
+## v1.2 (in development)
+### Breaking changes
+- **WorldView** now accepts 5 type parameters instead of 4
+  - This addition was made in order to support covariance in lat-long to vector conversion and contravariance in 
+    conversions from 2D vectors.
+### New features
+- Added two new traits for making more general world view support easier:
+  - **SurfaceVectorConversions**, which combines conversions between (2D) vectors and latitude-longitude coordinates, 
+    as well as distance conversions
+  - **FlatWorldView**, which removes 3 of the 5 type parameters, assuming a flat earth representation
+### Other changes
+- Built with Scala v2.13.14
 
 ## v1.1.1 - 28.07.2024
 A minor update adding support for **Flow v2.4**.

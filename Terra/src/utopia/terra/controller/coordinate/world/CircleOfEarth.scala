@@ -3,6 +3,7 @@ package utopia.terra.controller.coordinate.world
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.terra.controller.coordinate.GlobeMath
 import utopia.terra.model.angular.{LatLong, NorthSouthRotation}
 import utopia.terra.model.enumeration.CompassDirection.South
@@ -22,7 +23,7 @@ import utopia.terra.model.world.circle.{AerialCirclePoint, CircleSurfacePoint}
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, AerialCirclePoint]
+object CircleOfEarth extends FlatWorldView[CircleSurfacePoint, AerialCirclePoint]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -53,7 +54,7 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, A
 	override def apply(latLong: LatLong, altitude: WorldDistance): AerialCirclePoint =
 		AerialCirclePoint(latLong, altitude)
 	
-	override def surfaceVector(vector: Vector2D): CircleSurfacePoint = CircleSurfacePoint(vector)
+	override def surfaceVector(vector: DoubleVector): CircleSurfacePoint = CircleSurfacePoint(vector.toVector2D)
 	override def aerialVector(vector: Vector3D): AerialCirclePoint = AerialCirclePoint(vector)
 	
 	/**
@@ -76,7 +77,7 @@ object CircleOfEarth extends WorldView[Vector2D, Vector3D, CircleSurfacePoint, A
 	  *               (where X axis runs from the north pole towards Greenwich, England)
 	  * @return A latitude-longitude coordinate that matches that vector position
 	  */
-	override def vectorToLatLong(vector: Vector2D) = {
+	override def vectorToLatLong(vector: DoubleVector) = {
 		// 0.0 latitude is at the equator, which lies at length 100 000
 		// Lat = 90 degrees * vectorLength / R - 90 degrees
 		val latitude = South.radians(math.Pi * vector.length / (equatorVectorRadius * 2.0) - (math.Pi / 2.0))

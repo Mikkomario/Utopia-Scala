@@ -24,7 +24,7 @@ import utopia.terra.model.world.sphere.SpherePoint
  * @author Mikko Hilpinen
  * @since 29.8.2023, v1.0
  */
-object SphericalEarth extends WorldView[Vector3D, Vector3D, SpherePoint, SpherePoint]
+object SphericalEarth extends WorldView[Vector3D, Vector3D, Vector3D, SpherePoint, SpherePoint]
 {
 	// ATTRIBUTES   -------------------------
 	

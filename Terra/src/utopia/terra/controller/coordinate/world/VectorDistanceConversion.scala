@@ -1,6 +1,7 @@
 package utopia.terra.controller.coordinate.world
 
 import utopia.paradigm.measurement.Distance
+import utopia.terra.model.world.WorldDistance
 
 /**
   * A system used for converting between vector lengths and real world distances
@@ -29,4 +30,15 @@ trait VectorDistanceConversion
 	  * @return A real life distance matching that value in this world view
 	  */
 	def distanceOf(vectorLength: Double) = unitDistance * vectorLength
+	
+	/**
+	  * @param distance A distance travelled
+	  * @return Copy of that distance as a "world distance"
+	  */
+	def distance(distance: Distance): WorldDistance = WorldDistance(distance)(this)
+	/**
+	  * @param vectorDistance A distance travelled (in vector space)
+	  * @return Copy of that distance as a "world distance"
+	  */
+	def distance(vectorDistance: Double): WorldDistance = WorldDistance.vector(vectorDistance)(this)
 }
