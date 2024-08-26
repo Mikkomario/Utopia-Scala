@@ -7,14 +7,14 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
+import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
-import ParadigmDataType._
-import utopia.flow.generic.model.mutable.DataType
+import utopia.paradigm.generic.ParadigmDataType._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
@@ -22,8 +22,8 @@ import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
 import utopia.paradigm.motion.template.Change
 import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -439,7 +439,7 @@ object ParadigmValueCaster extends ValueCaster
         case _ => None
     }
     
-    private def polygonOf(value: Value): Option[Polygonic] = value.dataType match {
+    private def polygonOf(value: Value): Option[Polygon] = value.dataType match {
         case VectorType => Some(Polygon(value.getVector.map { _.getPoint }))
         case LineType => Some(Polygon(value.getLine.ends.toVector))
         case CircleType => Some(value.getCircle.toPolygon(12))

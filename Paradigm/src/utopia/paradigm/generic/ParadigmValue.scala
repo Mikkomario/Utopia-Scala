@@ -1,23 +1,23 @@
 package utopia.paradigm.generic
 
-import utopia.flow.error.DataTypeException
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.error.DataTypeException
+import utopia.flow.generic.model.immutable.Value
 import utopia.paradigm.angular.{Angle, DirectionalRotation, Rotation}
 import utopia.paradigm.color.{Color, Hsl, Rgb}
 import utopia.paradigm.generic.ParadigmDataType._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
 import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
+import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape3d.{Matrix3D, Vector3D}
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
@@ -31,7 +31,7 @@ object ParadigmValue
         def size = v.objectValue(SizeType).map { _.asInstanceOf[Size] }
         def line = v.objectValue(LineType).map { _.asInstanceOf[Line] }
         def circle = v.objectValue(CircleType).map { _.asInstanceOf[Circle] }
-        def polygon = v.objectValue(PolygonType).map { _.asInstanceOf[Polygonic] }
+        def polygon = v.objectValue(PolygonType).map { _.asInstanceOf[Polygon] }
         def bounds = v.objectValue(BoundsType).map { _.asInstanceOf[Bounds] }
         def angle = v.objectValue(AngleType).map { _.asInstanceOf[Angle] }
         def rotation = v.objectValue(RotationType).map { _.asInstanceOf[DirectionalRotation] }
@@ -56,7 +56,7 @@ object ParadigmValue
         def sizeOr(default: => Size = Size.zero) = size.getOrElse(default)
         def lineOr(default: => Line = Line.zero) = line.getOrElse(default)
         def circleOr(default: => Circle = Circle(Point.origin, 0)) = circle.getOrElse(default)
-        def polygonOr(default: => Polygonic = Polygon(Empty)) = polygon.getOrElse(default)
+        def polygonOr(default: => Polygon = Polygon(Empty)) = polygon.getOrElse(default)
         def boundsOr(default: => Bounds = Bounds.zero) = bounds.getOrElse(default)
         def angleOr(default: => Angle = Angle.zero) = angle.getOrElse(default)
         def rotationOr(default: => DirectionalRotation = Rotation.clockwise.zero) = rotation.getOrElse(default)

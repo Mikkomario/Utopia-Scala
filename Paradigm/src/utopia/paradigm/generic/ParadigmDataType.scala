@@ -10,7 +10,7 @@ import utopia.paradigm.motion.motion2d.{Acceleration2D, Velocity2D}
 import utopia.paradigm.motion.motion3d.{Acceleration3D, Velocity3D}
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -71,7 +71,7 @@ object ParadigmDataType
     object PolygonType extends ParadigmDataType
     {
         override def name = "Polygon"
-        override lazy val supportedClass = classOf[Polygonic]
+        override lazy val supportedClass = classOf[Polygon]
         override def superType = Some(AnyType)
     }
     object BoundsType extends ParadigmDataType

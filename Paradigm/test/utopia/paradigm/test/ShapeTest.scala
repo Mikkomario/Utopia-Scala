@@ -132,7 +132,7 @@ object ShapeTest extends App
     assert(par1.bottomLeftCorner == Point(-10, 10))
     assert(par1.bounds == Bounds.between(Point(-10, -10), Point(10, 10)))
     
-    assert(par1.translated(X(10)) == par1.copy(topLeftCorner = Point(0, -10)))
+    assert(par1.translated(X(10)) == par1 + X(10))
     
     val par2 = par1 * Matrix2D.rotation(Rotation.clockwise.degrees(45))
     println(par2)

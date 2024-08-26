@@ -10,6 +10,8 @@
 - Bugfix to **Parallelogramic**`.area`, which previously only calculated correct values in case of rectangles 
 ### Deprecations
 - Deprecated `.mapCorners(...)` in **Triangle** in favor of the new `.map(...)`
+- Deprecated **Polygonic**, which is now **Polygon**
+- Deprecated **Parallelogramic**, which is now **Parallelogram**
 ### New methods
 - **Angle**
   - Added `.opposite`
@@ -19,14 +21,16 @@
   - Added `.intersectsWith(Line)`
 - **Matrix2D** (object)
   - Added `.quarterRotationTowards(RotationDirection)`
-- **Polygonic**
+- **Polygon**
   - Added `.sidesIterator` and `.edgesIterator`
   - Added `.toTriangles`
   - Added `.map(...)`
+  - Added `+(HasDoubleDimension)` for translation
 - **TimedAnimation** (object)
   - Added `.fixed(...)` constructor
 ### Other changes
 - Built with Scala v2.13.14
+- **Polygon**, **Triangle** and **Parallelogram** are now traits, replacing their previous trait counterparts
 - **BoundsFactoryLike**`.between(...)` now accepts **HasDoubleDimensions** instead of just **P**
 - **AnyAnimation** is now covariant
 - Added some optimizations to more specific polygon classes

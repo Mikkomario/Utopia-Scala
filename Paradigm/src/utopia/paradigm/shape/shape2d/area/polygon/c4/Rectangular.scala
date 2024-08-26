@@ -1,12 +1,14 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 /**
   * Rectangular shapes have 4 90-degree corners
   */
-trait Rectangular extends Parallelogramic
+trait Rectangular extends Parallelogram with Combinable[HasDoubleDimensions, Rectangular]
 {
 	// ABSTRACT	-----------------
 	
@@ -26,4 +28,6 @@ trait Rectangular extends Parallelogramic
 	override def collisionAxes: Seq[Vector2D] = Pair(topEdge, rightEdge)
 	
 	override def area = topEdge.length * rightEdgeLength
+	
+	override def +(other: HasDoubleDimensions): Rectangular = Rectangle(topLeftCorner + other, topEdge, rightEdgeLength)
 }
