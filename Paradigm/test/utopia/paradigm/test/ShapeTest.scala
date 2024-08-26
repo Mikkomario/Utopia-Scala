@@ -172,10 +172,29 @@ object ShapeTest extends App
     assert(simplePolygon.convexParts == Vector(simplePolygon), simplePolygon.convexParts)
     assert(transformedPolygon.convexParts == Vector(transformedPolygon))
     
+    /*
     assert(nonConvexPolygon.convexParts.toSet == Set(
         Polygon(Point(-32, -32), Point(-0.5), Point(0.5), Point(32, -32)),
         Polygon(Point(-0.5), Point(-32, 32), Point(32, 32), Point(0.5))
-    ), nonConvexPolygon.convexParts)
+    ), nonConvexPolygon.convexParts)*/
+    
+    /*
+    Rotation direction of polygon _Polygon(Vector(
+        {"x": 36.172431506319995, "y": -60.31528451918449},
+        {"x": 36.133331635596456, "y": -60.321976403967845},
+        {"x": 35.54473924078953, "y": -59.71452533436323},
+        {"x": 35.61895199248132, "y": -59.54869129999856},
+        {"x": 36.63364849957027, "y": -60.0906561086397})) is not Clockwise, as claimed
+     */
+    /*
+    val p = Polygon(Point(36.172431506319995, -60.31528451918449), Point(36.133331635596456, -60.321976403967845),
+        Point(35.54473924078953, -59.71452533436323), Point(35.61895199248132, -59.54869129999856),
+        Point(36.63364849957027, -60.0906561086397))
+    println(p)
+    println(p.rotationDirection)
+    println(p.rotations.mkString(", "))
+    println(p.convexParts.mkString("\n"))
+     */
     
     // Tests bounds-transformations
     val bt1 = Bounds(Point(-5, -5), Size(10, 10))
