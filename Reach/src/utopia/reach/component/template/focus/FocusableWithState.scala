@@ -1,7 +1,7 @@
 package utopia.reach.component.template.focus
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.reach.focus.FocusTracking
 
@@ -17,7 +17,7 @@ trait FocusableWithState extends Focusable with FocusTracking
 	/**
 	  * @return A pointer to this component's current focus state (true when focused, false when not)
 	  */
-	def focusPointer: FlagLike
+	def focusPointer: Flag
 	
 	
 	// IMPLEMENTED	--------------------------
@@ -60,7 +60,7 @@ trait FocusableWithState extends Focusable with FocusTracking
 	{
 		// IMPLEMENTED  --------------------------
 		
-		override def handleCondition: FlagLike = focusPointer
+		override def handleCondition: Flag = focusPointer
 		
 		override def onKeyState(event: KeyStateEvent) = onEvent(event)
 	}

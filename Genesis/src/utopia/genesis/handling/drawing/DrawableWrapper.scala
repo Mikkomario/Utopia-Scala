@@ -1,6 +1,6 @@
 package utopia.genesis.handling.drawing
 
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{DrawOrder, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
@@ -21,7 +21,7 @@ trait DrawableWrapper extends Drawable
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def handleCondition: FlagLike = wrapped.handleCondition
+	override def handleCondition: Flag = wrapped.handleCondition
 	override def drawBoundsPointer: Changing[Bounds] = wrapped.drawBoundsPointer
 	
 	override def drawOrder: DrawOrder = wrapped.drawOrder

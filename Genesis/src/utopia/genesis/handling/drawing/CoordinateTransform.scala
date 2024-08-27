@@ -3,7 +3,7 @@ package utopia.genesis.handling.drawing
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.util.Use
 import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.mouse._
@@ -72,7 +72,7 @@ trait CoordinateTransform
 		
 		val handlers = Handlers(buttonHandler, moveHandler, wheelHandler, dragHandler)
 		
-		override lazy val handleCondition: FlagLike = buttonHandler.handleCondition || moveHandler.handleCondition ||
+		override lazy val handleCondition: Flag = buttonHandler.handleCondition || moveHandler.handleCondition ||
 			wheelHandler.handleCondition || dragHandler.handleCondition
 		
 		

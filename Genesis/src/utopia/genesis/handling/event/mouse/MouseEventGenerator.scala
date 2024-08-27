@@ -6,8 +6,8 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.Flag
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.mutable.eventful.SettableFlag
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -54,8 +54,8 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
     // ATTRIBUTES    -----------------
     
     // Set once this generator should stop generating events
-    private val stopFlag = Flag()
-    override val handleCondition: FlagLike = !stopFlag && activeCondition
+    private val stopFlag = SettableFlag()
+    override val handleCondition: Flag = !stopFlag && activeCondition
     
     // Generated events are fired one at a time using an event queue
     private val eventQueue = new ActionQueue()

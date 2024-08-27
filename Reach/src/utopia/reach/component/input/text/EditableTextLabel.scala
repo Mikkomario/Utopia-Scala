@@ -8,7 +8,7 @@ import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Tab}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard._
@@ -481,7 +481,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		// IMPLEMENTED  ---------------------------
 		
-		override def handleCondition: FlagLike = editingFlag
+		override def handleCondition: Flag = editingFlag
 		
 		override def onKeyTyped(event: KeyTypedEvent): Unit = {
 			// Removes a character on backspace / delete
@@ -519,7 +519,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Cha
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def handleCondition: FlagLike = editingFlag
+		override def handleCondition: Flag = editingFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			if (event.keyboardState(Control)) {

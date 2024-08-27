@@ -16,7 +16,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.VeryHigh
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
@@ -48,7 +48,7 @@ import scala.util.Try
 abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
                                            contextPointer: Changing[TextContext],
                                            textPointer: Changing[LocalizedString],
-                                           val selectableFlag: FlagLike,
+                                           val selectableFlag: Flag,
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                            enabledPointer: Changing[Boolean] = AlwaysTrue)
 	extends CustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
@@ -333,7 +333,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		/**
 		  * A pointer that contains true while this component is in focus
 		  */
-		val focusPointer: FlagLike = _focusPointer.readOnly
+		val focusPointer: Flag = _focusPointer.readOnly
 		
 		
 		// COMPUTED	------------------------------
@@ -369,7 +369,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def handleCondition: FlagLike = interactiveFlag
+		override def handleCondition: Flag = interactiveFlag
 		
 		override def act(duration: FiniteDuration) = {
 			passedDuration += duration
@@ -399,7 +399,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		var keyStatus = KeyboardState.default
 		
-		override val handleCondition: FlagLike = focusPointer && selectableFlag
+		override val handleCondition: Flag = focusPointer && selectableFlag
 		
 		
 		// COMPUTED	------------------------------
@@ -451,7 +451,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// IMPLEMENTED	---------------------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
@@ -510,7 +510,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	{
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.released
 		
-		override def handleCondition: FlagLike = draggingFlag
+		override def handleCondition: Flag = draggingFlag
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			draggingFlag.reset()

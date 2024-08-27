@@ -8,7 +8,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -102,8 +102,8 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	val alignmentPointer = EventfulPointer[Alignment](initialAlignment)
 	
 	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
-	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
-	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
+	override val enabledPointer: Flag = _statePointer.map { _ isNot Disabled }
+	override val focusPointer: Flag = _statePointer.map { _ is Focused }
 	
 	/**
 	  * A pointer to this button's currently displayed image

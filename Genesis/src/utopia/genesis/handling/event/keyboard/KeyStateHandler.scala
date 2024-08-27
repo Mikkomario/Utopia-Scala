@@ -3,7 +3,7 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.EventHandler
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
@@ -27,10 +27,10 @@ object KeyStateHandler
 	
 	// NESTED   ---------------------------
 	
-	case class KeyStateHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+	case class KeyStateHandlerFactory(override val condition: Flag = AlwaysTrue)
 		extends HandlerFactory[KeyStateListener, KeyStateHandler, KeyStateHandlerFactory]
 	{
-		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
+		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
 		
 		override def apply(initialItems: IterableOnce[KeyStateListener]) =
 			new KeyStateHandler(initialItems, condition)

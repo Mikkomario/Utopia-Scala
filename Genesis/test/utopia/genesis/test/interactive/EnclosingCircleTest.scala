@@ -3,7 +3,7 @@ package utopia.genesis.test.interactive
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.drawing.AbstractDrawable
 import utopia.genesis.handling.event.consume.ConsumeChoice
@@ -63,7 +63,7 @@ object EnclosingCircleTest extends App
 		
 		// IMPLEMENTED  ----------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = drawer.draw(Circle.within(bounds))
 	}
@@ -88,7 +88,7 @@ object EnclosingCircleTest extends App
 		
 		// IMPLEMENTED  ----------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
 		// On mouse drag, follows the mouse

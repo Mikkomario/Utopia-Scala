@@ -5,8 +5,8 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{CopyOnDemand, Flag, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, FlagLike}
+import utopia.flow.view.mutable.eventful.{CopyOnDemand, SettableFlag, ResettableFlag}
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.animation.AnimationEvent.{Completed, Paused, Started}
 
@@ -17,7 +17,7 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 22/02/2024, v4.0
   */
-class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeFlag: FlagLike = AlwaysTrue)
+class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeFlag: Flag = AlwaysTrue)
 	extends Actor with ChangingWrapper[A]
 {
 	// ATTRIBUTES   ---------------------------
@@ -26,7 +26,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	private val staticStatePointer = instructionPointer.map { _.fixedState }
 	// Contains true while the animation is allowed to play.
 	// Contains false if this animator should display a fixed state.
-	private val isAnimationFlag: FlagLike = staticStatePointer.map { _.isEmpty }
+	private val isAnimationFlag: Flag = staticStatePointer.map { _.isEmpty }
 	
 	// Left if the animation never finishes or has already finished
 	// Right if the animation may finish
@@ -41,7 +41,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 					if (instruction.loops)
 						Left(AlwaysFalse)
 					else
-						Right(Right(Flag()))
+						Right(Right(SettableFlag()))
 				case None => Right(Left(ResettableFlag()))
 			}
 	}
@@ -57,7 +57,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	
 	private val animationPointer = instructionPointer.map { _.animation }
 	private val velocityPointer = animationPointer.map { _.velocity }
-	private val hasVelocityFlag: FlagLike = velocityPointer.map { _.nonZero }
+	private val hasVelocityFlag: Flag = velocityPointer.map { _.nonZero }
 	
 	// Contains true while the animation is paused (either via activeFlag or by setting animation velocity to zero)
 	private val notPausedFlag = activeFlag && hasVelocityFlag
@@ -66,7 +66,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	//      2) Animation must not be stopped after completion
 	//      3) Animation must have velocity (progress)
 	//      4) Animation must not be fixed to a single frame
-	override val handleCondition: FlagLike = notPausedFlag && notFinishedFlag && isAnimationFlag
+	override val handleCondition: Flag = notPausedFlag && notFinishedFlag && isAnimationFlag
 	
 	/**
 	  * A pointer that contains the current animation progress. Between 0 and 1.

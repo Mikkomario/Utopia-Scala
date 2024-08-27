@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyTypedEvent.{KeyTypedEventFilter, KeyTypedFilteringFactory}
 import utopia.genesis.handling.template.Handleable
@@ -27,14 +27,14 @@ object KeyTypedListener
     
     // NESTED   --------------------------
     
-    case class KeyTypedListenerFactory(condition: FlagLike = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
+    case class KeyTypedListenerFactory(condition: Flag = AlwaysTrue, filter: KeyTypedEventFilter = AcceptAll)
         extends ListenerFactory[KeyTypedEvent, KeyTypedListenerFactory]
             with KeyTypedFilteringFactory[KeyTypedListenerFactory]
     {
         // IMPLEMENTED  ------------------
         
         override def usingFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: FlagLike): KeyTypedListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: Flag): KeyTypedListenerFactory = copy(condition = condition)
         
         override protected def withFilter(filter: Filter[KeyTypedEvent]): KeyTypedListenerFactory =
             copy(filter = this.filter && filter)
@@ -50,7 +50,7 @@ object KeyTypedListener
         def apply[U](f: KeyTypedEvent => U): KeyTypedListener = new _KeyTypedListener[U](condition, filter, f)
     }
     
-    private class _KeyTypedListener[U](override val handleCondition: FlagLike,
+    private class _KeyTypedListener[U](override val handleCondition: Flag,
                                        override val keyTypedEventFilter: KeyTypedEventFilter, f: KeyTypedEvent => U)
         extends KeyTypedListener
     {

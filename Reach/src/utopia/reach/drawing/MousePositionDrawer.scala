@@ -3,7 +3,7 @@ package utopia.reach.drawing
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Foreground
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.mouse.{MouseMoveEvent, MouseMoveListener}
@@ -50,7 +50,7 @@ class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]]
 	override def opaque: Boolean = false
 	override def drawLevel: DrawLevel = Foreground
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
 	override def onMouseMove(event: MouseMoveEvent): Unit = componentPointer.value.foreach { c =>

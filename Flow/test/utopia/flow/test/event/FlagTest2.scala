@@ -1,7 +1,7 @@
 package utopia.flow.test.event
 
 import utopia.flow.test.TestContext._
-import utopia.flow.view.mutable.eventful.{Flag, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{SettableFlag, ResettableFlag}
 
 /**
   *
@@ -10,10 +10,10 @@ import utopia.flow.view.mutable.eventful.{Flag, ResettableFlag}
   */
 object FlagTest2 extends App
 {
-	private val _openedFlag = Flag()
+	private val _openedFlag = SettableFlag()
 	private val _visibleFlag = ResettableFlag()
 	private val _minimizedFlag = ResettableFlag()
-	private val _closedFlag = Flag()
+	private val _closedFlag = SettableFlag()
 	private val openFlag = _openedFlag && (!_closedFlag)
 	
 	private val fullyVisibleFlag = (_visibleFlag && (!_minimizedFlag)) && (!_closedFlag)

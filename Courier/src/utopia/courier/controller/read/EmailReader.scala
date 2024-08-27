@@ -14,8 +14,8 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.Flag
-import utopia.flow.view.template.eventful.{ChangingWrapper, FlagLike}
+import utopia.flow.view.mutable.eventful.SettableFlag
+import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -86,7 +86,7 @@ object EmailReader
 	 * @tparam A Type of processing result
 	 * @return A new email reader
 	 */
-	def filteredWithDeletionFlags[A](makeBuilder: (LazyEmailHeadersView, Flag) => Option[FromEmailBuilder[A]])
+	def filteredWithDeletionFlags[A](makeBuilder: (LazyEmailHeadersView, SettableFlag) => Option[FromEmailBuilder[A]])
 	                                (implicit settings: ReadSettings) =
 		new EmailReader[A](settings, (hv, df) => makeBuilder(hv, df.get), generateDeletionFlags = true)
 	/**
@@ -97,7 +97,7 @@ object EmailReader
 	 * @tparam A Type of processing result
 	 * @return A new email reader
 	 */
-	def withDeletionFlags[A](makeBuilder: (LazyEmailHeadersView, Flag) => FromEmailBuilder[A])
+	def withDeletionFlags[A](makeBuilder: (LazyEmailHeadersView, SettableFlag) => FromEmailBuilder[A])
 	                        (implicit settings: ReadSettings) =
 		filteredWithDeletionFlags { (hv, df) => Some(makeBuilder(hv, df)) }
 	
@@ -176,7 +176,7 @@ object EmailReader
   * @since 11.9.2021, v0.1
   */
 class EmailReader[A](settings: ReadSettings,
-                     makeBuilder: (LazyEmailHeadersView, Option[Flag]) => Option[FromEmailBuilder[A]],
+                     makeBuilder: (LazyEmailHeadersView, Option[SettableFlag]) => Option[FromEmailBuilder[A]],
                      generateDeletionFlags: Boolean = false)
 {
 	/**
@@ -309,7 +309,7 @@ class EmailReader[A](settings: ReadSettings,
 	
 	private class FoldersIterator(source: Iterator[Try[Folder]], skipMessageCount: Int, deletionRule: DeletionRule)
 	                             (implicit log: Logger)
-		extends Iterator[Try[(Message, Option[Flag])]]
+		extends Iterator[Try[(Message, Option[SettableFlag])]]
 	{
 		// ATTRIBUTES   ---------------------------
 		
@@ -321,7 +321,7 @@ class EmailReader[A](settings: ReadSettings,
 		private var nextMessageIndex = 1
 		private var queuedFailures: Iterator[Throwable] = Iterator.empty
 		
-		private val closedFlag = Flag()
+		private val closedFlag = SettableFlag()
 		
 		// Sometimes message deletions are queued to be completed later
 		private lazy val deletionQueuePointer = VolatileList[(Folder, Message)]()
@@ -333,7 +333,7 @@ class EmailReader[A](settings: ReadSettings,
 		// IMPLEMENTED  --------------------------
 		
 		@tailrec
-		override final def next(): Try[(Message, Option[Flag])] = queuedFailures.nextOption() match {
+		override final def next(): Try[(Message, Option[SettableFlag])] = queuedFailures.nextOption() match {
 			// Case: A failure was queued => Returns the queued failure
 			case Some(error) => Failure(error)
 			case None =>
@@ -587,8 +587,8 @@ class EmailReader[A](settings: ReadSettings,
 	}
 	
 	// Returns Success(None) for messages that are skipped
-	private class RawMessageIterator(source: Iterator[Try[(Message, Option[Flag])]], deletionRule: DeletionRule,
-	                                 makeBuilder: (LazyEmailHeadersView, Option[Flag]) => Option[FromEmailBuilder[A]])
+	private class RawMessageIterator(source: Iterator[Try[(Message, Option[SettableFlag])]], deletionRule: DeletionRule,
+	                                 makeBuilder: (LazyEmailHeadersView, Option[SettableFlag]) => Option[FromEmailBuilder[A]])
 		extends Iterator[Try[Option[(Message, FromEmailBuilder[A])]]]
 	{
 		// IMPLEMENTED  -----------------------------
@@ -667,18 +667,18 @@ class EmailReader[A](settings: ReadSettings,
 	private class DeleteMessagePointer(folder: Folder, message: Message,
 	                                   queueDeletion: (Folder, Message) => Unit)
 	                                  (implicit log: Logger)
-		extends Flag with ChangingWrapper[Boolean]
+		extends SettableFlag with ChangingWrapper[Boolean]
 	{
 		// ATTRIBUTES   -----------------------
 		
-		private val lazyFlag = Lazy { Flag() }
+		private val lazyFlag = Lazy { SettableFlag() }
 		
 		
 		// IMPLEMENTED  -----------------------
 		
 		override def listenerLogger: Logger = log
 		override protected def wrapped = lazyFlag.value
-		override def view: FlagLike = wrapped.view
+		override def view: Flag = wrapped.view
 		
 		override def set(): Boolean = {
 			// Case: Message has not yet been deleted (via this pointer)

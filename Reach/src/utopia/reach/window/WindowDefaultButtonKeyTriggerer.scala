@@ -3,7 +3,7 @@ package utopia.reach.window
 import utopia.firmament.component.Window
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.Key.Enter
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.reach.component.template.focus.FocusableWithState
@@ -54,7 +54,7 @@ class WindowDefaultButtonKeyTriggerer(window: Window, buttons: Iterable[Focusabl
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def handleCondition: FlagLike = window.fullyVisibleAndFocusedFlag
+	override def handleCondition: Flag = window.fullyVisibleAndFocusedFlag
 	
 	override def onKeyState(event: KeyStateEvent) = {
 		// Checks whether required conditions are met

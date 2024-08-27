@@ -1,7 +1,7 @@
 package utopia.reflection.container.swing.window
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.Key.Enter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener}
 import utopia.reflection.component.swing.button.ButtonLike
@@ -33,7 +33,7 @@ class DefaultButtonHandler(val defaultButton: ButtonLike, val allButtons: Iterab
 	// Only triggers on enter
 	override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(Enter)
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	
 	override def onKeyState(event: KeyStateEvent) = {
 		// Only listens to events while a) none of the buttons is in focus and b) additional focus condition

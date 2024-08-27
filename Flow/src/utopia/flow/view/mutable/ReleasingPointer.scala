@@ -73,8 +73,9 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	// 1) Held value (weak or strong)
-	// 2) Release process (running)
+	// Contains:
+	//      1) Held value (weak or strong)
+	//      2) Release process (running)
 	private val pointer = VolatileOption[(Either[WeakReference[A], A], Option[Process])]()
 	
 	
@@ -84,6 +85,13 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 	
 	
 	// IMPLEMENTED  ----------------------
+	
+	override def isSet: Boolean = pointer.value.exists { case (current, _) =>
+		current match {
+			case Left(weak) => weak.get.isDefined
+			case Right(_) => true
+		}
+	}
 	
 	override def value = pointer.value.flatMap { case (current, _) =>
 		current match {

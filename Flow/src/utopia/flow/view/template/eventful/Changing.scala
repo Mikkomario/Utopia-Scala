@@ -15,7 +15,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
-import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.Flag.wrap
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -92,7 +92,7 @@ object Changing
 	 * @param log Implicit logging implementation for handling failures thrown by assigned listeners
 	  * @return A pointer that contains true when the specified future has completed
 	 */
-	def completionOf(future: Future[Any])(implicit exc: ExecutionContext, log: Logger): FlagLike = {
+	def completionOf(future: Future[Any])(implicit exc: ExecutionContext, log: Logger): Flag = {
 		if (future.isCompleted)
 			AlwaysTrue
 		else
@@ -666,7 +666,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A pointer that conditionally contains either the value of this pointer or a previous value,
 	  *         if active viewing is not allowed.
 	  */
-	def viewWhile(condition: => FlagLike) = {
+	def viewWhile(condition: => Flag) = {
 		if (mayChange) {
 			val c = condition
 			c.fixedValue match {
@@ -713,8 +713,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A (strongly) mirrored version of this item, using specified mapping function
 	  */
-	def mapWhile[B](condition: => FlagLike)(f: A => B): Changing[B] = diverge {
-		val conditionFlag: FlagLike = condition
+	def mapWhile[B](condition: => Flag)(f: A => B): Changing[B] = diverge {
+		val conditionFlag: Flag = condition
 		// Case: Mirroring is never actually allowed => Uses a fixed value instead
 		if (conditionFlag.isAlwaysFalse)
 			Fixed(f(value))
@@ -869,7 +869,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from both of these items
 	  */
-	def mergeWithWhile[B, R](other: Changing[B], condition: FlagLike)(f: (A, B) => R): Changing[R] =
+	def mergeWithWhile[B, R](other: Changing[B], condition: Flag)(f: (A, B) => R): Changing[R] =
 	{
 		if (condition.isAlwaysFalse)
 			Fixed(f(value, other.value))
@@ -889,7 +889,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from all three of these items
 	  */
-	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: FlagLike)
+	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Flag)
 	                           (merge: (A, B, C) => R): Changing[R] =
 	{
 		if (condition.isAlwaysFalse)
@@ -1037,7 +1037,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A view into this pointer that only fires change events when there is a long enough pause in
 	  *         this pointer's changes
 	  */
-	def delayedBy(threshold: => Duration, viewCondition: FlagLike = AlwaysTrue)
+	def delayedBy(threshold: => Duration, viewCondition: Flag = AlwaysTrue)
 	             (implicit exc: ExecutionContext): Changing[A] =
 	{
 		// Case: The view is not allowed to update => Returns a fixed value

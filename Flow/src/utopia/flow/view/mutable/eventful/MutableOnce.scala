@@ -15,7 +15,7 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger) extends AbstractMayS
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val _setFlag = Flag()
+	private val _setFlag = SettableFlag()
 	private var _value = initialValue
 	
 	/**

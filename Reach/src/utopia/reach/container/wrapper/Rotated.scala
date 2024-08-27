@@ -6,7 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.event.mouse.MouseEvent
@@ -107,7 +107,7 @@ private case class RotatedHierarchy(parentHierarchy: ComponentHierarchy, contain
 	
 	// IMPLEMENTED  --------------------
 	
-	override def linkPointer: FlagLike = parentHierarchy.linkPointer
+	override def linkPointer: Flag = parentHierarchy.linkPointer
 	override def isThisLevelLinked: Boolean = true
 	
 	override def coordinateTransform: Option[CoordinateTransform] = Some(Transform)

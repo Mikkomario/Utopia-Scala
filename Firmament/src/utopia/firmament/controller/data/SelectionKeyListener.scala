@@ -4,7 +4,7 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener}
@@ -113,7 +113,7 @@ class SelectionKeyListener(nextKey: Key = DownArrow, prevKey: Key = UpArrow,
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	
 	override def onKeyState(event: KeyStateEvent) = {
 		val direction = if (event.index == nextKey.index) Positive else Negative

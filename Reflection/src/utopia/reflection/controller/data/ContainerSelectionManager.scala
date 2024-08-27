@@ -12,7 +12,7 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
@@ -245,7 +245,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftPressed &&
 			MouseEvent.filter.over(container.bounds)
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			val nearest = container.itemNearestTo(event.position.relative - container.position)

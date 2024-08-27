@@ -14,7 +14,7 @@ import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
@@ -960,7 +960,7 @@ object CollectionExtensions
 		def popWhile(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
 			val popBuilder = bf.newBuilder(coll)
 			val remainBuilder = bf.newBuilder(coll)
-			val foundFlag = Flag()(SysErrLogger)
+			val foundFlag = SettableFlag()(SysErrLogger)
 			val currentBuilderPointer = foundFlag.strongMap { if (_) remainBuilder else popBuilder }
 			ops.foreach { item =>
 				if (foundFlag.isNotSet && !f(item))

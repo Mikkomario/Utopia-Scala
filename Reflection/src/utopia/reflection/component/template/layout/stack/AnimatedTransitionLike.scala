@@ -6,7 +6,7 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -148,7 +148,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	
 	private class Animator(handler: ActorHandler) extends Actor
 	{
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def act(duration: FiniteDuration) = {
 			// Advances the animation, may also finish transition and/or trigger component update

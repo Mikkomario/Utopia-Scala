@@ -9,7 +9,7 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -363,7 +363,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		// ATTRIBUTES	-------------
 		
 		private val progressPointer = Volatile(1.0)
-		override val handleCondition: FlagLike = progressPointer.map { _ < 1.0 }
+		override val handleCondition: Flag = progressPointer.map { _ < 1.0 }
 		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (value) 1.0 else 0.0)
 		
@@ -475,7 +475,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def handleCondition: FlagLike = focusPointer
+		override def handleCondition: Flag = focusPointer
 		
 		override def onKeyState(event: KeyStateEvent) = value = event.index == KeyEvent.VK_RIGHT
 	}

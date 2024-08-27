@@ -3,8 +3,8 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.Flag
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.mutable.eventful.SettableFlag
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.{KeyStateEventFilter, KeyStateFilteringFactory}
 import utopia.genesis.handling.template.Handleable
@@ -35,7 +35,7 @@ object KeyStateListener
     
     // NESTED   -----------------------------
     
-    case class KeyStateListenerFactory(condition: FlagLike = AlwaysTrue,
+    case class KeyStateListenerFactory(condition: Flag = AlwaysTrue,
                                        filter: KeyStateEventFilter = AcceptAll)
         extends ListenerFactory[KeyStateEvent, KeyStateListenerFactory]
             with KeyStateFilteringFactory[KeyStateListenerFactory]
@@ -43,7 +43,7 @@ object KeyStateListener
         // IMPLEMENTED  ---------------------
         
         override def usingFilter(filter: Filter[KeyStateEvent]): KeyStateListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: FlagLike): KeyStateListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: Flag): KeyStateListenerFactory = copy(condition = condition)
 	    
 	    override protected def withFilter(filter: Filter[KeyStateEvent]): KeyStateListenerFactory = filtering(filter)
 	    
@@ -64,7 +64,7 @@ object KeyStateListener
           * @return A listener that receives one event only
           */
         def once[U](f: KeyStateEvent => U): KeyStateListener = {
-            val completionFlag = Flag()(SysErrLogger)
+            val completionFlag = SettableFlag()(SysErrLogger)
             conditional(!completionFlag) { event =>
                 f(event)
                 completionFlag.set()
@@ -81,7 +81,7 @@ object KeyStateListener
             withFilter(f(KeyStateEventFilter))
     }
     
-    private class _KeyStateListener[U](override val handleCondition: FlagLike,
+    private class _KeyStateListener[U](override val handleCondition: Flag,
                                        override val keyStateEventFilter: KeyStateEventFilter,
                                        f: KeyStateEvent => U)
         extends KeyStateListener

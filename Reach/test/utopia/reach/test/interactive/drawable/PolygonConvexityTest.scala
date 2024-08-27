@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.filter.Filter
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.drawing.AbstractDrawable
 import utopia.genesis.handling.event.consume.ConsumeChoice
@@ -32,7 +32,7 @@ object PolygonConvexityTest extends App
 	// ATTRIBUTES   --------------------
 	
 	private val cornersPointer = EventfulPointer[Seq[Point]](Empty)
-	private val hasCornersFlag: FlagLike = cornersPointer.strongMap { _.nonEmpty }
+	private val hasCornersFlag: Flag = cornersPointer.strongMap { _.nonEmpty }
 	private val polygonPointer = cornersPointer.strongMap(Polygon.apply)
 	private val polygonCenterPointer = polygonPointer.strongMap { _.center }
 	
@@ -61,7 +61,7 @@ object PolygonConvexityTest extends App
 		
 		// IMPLEMENTED  ----------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = event.button match {
 			case MouseButton.Left =>
@@ -81,7 +81,7 @@ object PolygonConvexityTest extends App
 		
 		// IMPLEMENTED  --------------------
 		
-		override def handleCondition: FlagLike = hasCornersFlag
+		override def handleCondition: Flag = hasCornersFlag
 		
 		override def onKeyState(event: KeyStateEvent): Unit = triangleModeFlag.value = event.pressed
 	}
@@ -108,7 +108,7 @@ object PolygonConvexityTest extends App
 		
 		
 		// IMPLEMENTED
-		override def handleCondition: FlagLike = hasCornersFlag
+		override def handleCondition: Flag = hasCornersFlag
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
 			val drawBounds = this.drawBounds

@@ -1,6 +1,6 @@
 package utopia.genesis.handling.template
 
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 
 /**
   * Common trait for items which may be placed within handlers
@@ -15,7 +15,7 @@ trait Handleable
 	  * @return A condition that must be met in order for this item to be handled.
 	  *         The [[Handler]] implementations *should* respect this condition.
 	  */
-	def handleCondition: FlagLike
+	def handleCondition: Flag
 	
 	
 	// COMPUTED --------------------

@@ -2,7 +2,7 @@ package utopia.genesis.graphics
 
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.Extender
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.transform.JavaAffineTransformConvertible
@@ -28,7 +28,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => 
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val closedPointer = Flag()(SysErrLogger)
+	private lazy val closedPointer = SettableFlag()(SysErrLogger)
 	private lazy val statePointer = closedPointer || parentClosedPointer
 	
 	

@@ -1,8 +1,7 @@
 package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair.PairOrVectorBuilder
-import utopia.flow.collection.immutable.{Pair, PairOps, PairView}
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair, PairOps, PairView}
 import utopia.flow.collection.mutable.builder.LazyBuilder
 import utopia.flow.collection.template.factory.LazyFactory
 import utopia.flow.operator.enumeration.End
@@ -101,9 +100,9 @@ object LazyPair
 					LazyVector.from(o)
 		}
 		
-		override def newBuilder[A]: mutable.Builder[A, IndexedSeq[A]] = new PairOrVectorBuilder[A].mapResult {
-			case Left(vector) => LazyVector(vector.map(Lazy.initialized))
-			case Right(pair) => new LazyPair[A](pair.map(Lazy.initialized))
+		override def newBuilder[A]: mutable.Builder[A, IndexedSeq[A]] = OptimizedIndexedSeq.newBuilder[A].mapResult {
+			case p: Pair[A] => new LazyPair[A](p.map(Lazy.initialized))
+			case seq => LazyVector.from(seq)
 		}
 	}
 }

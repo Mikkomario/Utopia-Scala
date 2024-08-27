@@ -4,7 +4,7 @@ import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.CopyOnDemand
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -74,7 +74,7 @@ abstract class Animator[A] extends Actor
 	
 	// IMPLEMENTED	--------------------
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	
 	override def act(duration: FiniteDuration) = {
 		// Advances animation progress

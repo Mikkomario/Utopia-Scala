@@ -4,7 +4,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Use
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 
@@ -32,7 +32,7 @@ object HoldKeyToTypeGenerator
 	def start(keyDownHandler: KeyDownHandler, keyStateHandler: KeyStateHandler, keyTypedHandler: KeyTypedHandler,
 	          listener: KeyTypedListener, initialDelay: FiniteDuration = 0.8.seconds,
 	          eventInterval: FiniteDuration = 0.2.seconds,
-	          condition: FlagLike = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll): Unit =
+	          condition: Flag = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll): Unit =
 	{
 		val generator = new HoldKeyToTypeGenerator(listener, initialDelay, eventInterval, condition, filter)
 		keyDownHandler += generator
@@ -64,12 +64,12 @@ object HoldKeyToTypeGenerator
  */
 class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: FiniteDuration = 0.8.seconds,
                              eventInterval: FiniteDuration = 0.2.seconds,
-                             condition: FlagLike = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll)
+                             condition: Flag = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll)
 	extends KeyDownListener with KeyStateListener with KeyTypedListener
 {
 	// ATTRIBUTES   -----------------------
 	
-	override lazy val handleCondition: FlagLike = condition && listener.handleCondition
+	override lazy val handleCondition: Flag = condition && listener.handleCondition
 	override val keyDownEventFilter: KeyDownEventFilter = filter && KeyDownEvent.filter.after(initialDelay)
 	override val keyStateEventFilter: KeyStateEventFilter = KeyStateEventFilter.released
 	

@@ -3,7 +3,7 @@ package utopia.reach.component.hierarchy
 import utopia.firmament.model.CoordinateTransform
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{FontMetricsWrapper, Priority}
 import utopia.genesis.text.Font
@@ -36,7 +36,7 @@ trait ComponentHierarchy
 	  *         Should take into account possible parent state.
 	  */
 	// TODO: Rename to linkedFlag
-	def linkPointer: FlagLike
+	def linkPointer: Flag
 	// TODO: Consider adding the following two methods
 	/*
 	  * @return A pointer that contains the direct parent component's position relative to the root canvas component

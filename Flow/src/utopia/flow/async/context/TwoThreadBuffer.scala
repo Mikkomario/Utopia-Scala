@@ -10,7 +10,7 @@ import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -290,7 +290,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	/**
 	  * Flag that contains true while this buffer contains unread elements
 	  */
-	val nonEmptyFlag: FlagLike = buffer.mapValue { _.nonEmpty }
+	val nonEmptyFlag: Flag = buffer.mapValue { _.nonEmpty }
 	/**
 	  * Flag that contains true while this buffer is empty
 	  */

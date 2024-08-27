@@ -3,7 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.model.{ChangeResponse, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.template.eventful.{Changing, FlagLike, OptimizedChanging}
+import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
 
 object OptimizedMirror
 {
@@ -28,7 +28,7 @@ object OptimizedMirror
 	  * @tparam R Type of mapping results
 	  * @return A new pointer that returns mapped origin values
 	  */
-	def apply[O, R](origin: Changing[O], mirrorCondition: FlagLike = AlwaysTrue,
+	def apply[O, R](origin: Changing[O], mirrorCondition: Flag = AlwaysTrue,
 	                disableCaching: Boolean = false)
 	               (f: O => R) =
 		new OptimizedMirror[O, R](origin, f, mirrorCondition, cachingDisabled = disableCaching)
@@ -41,7 +41,7 @@ object OptimizedMirror
 	  *  @tparam O Type of the viewed values
 	  * @return A new view that reflects the specified pointer's value, but only while the view condition is met
 	  */
-	def viewWhile[O](origin: Changing[O], viewCondition: FlagLike) =
+	def viewWhile[O](origin: Changing[O], viewCondition: Flag) =
 		apply(origin, viewCondition, disableCaching = true)(Identity)
 }
 
@@ -54,7 +54,7 @@ object OptimizedMirror
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
-class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: FlagLike = AlwaysTrue,
+class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = AlwaysTrue,
                             cachingDisabled: Boolean = false)
 	extends OptimizedChanging[R]
 {

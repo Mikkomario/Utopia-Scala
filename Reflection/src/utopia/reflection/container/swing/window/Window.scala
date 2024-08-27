@@ -10,7 +10,7 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
@@ -97,7 +97,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	
 	private val uponCloseAction = VolatileOption[() => Unit]()
 	
-	private val _closedFlag = Flag()
+	private val _closedFlag = SettableFlag()
 	/**
 	  * A flag that contains true while this window has not yet been closed
 	  */

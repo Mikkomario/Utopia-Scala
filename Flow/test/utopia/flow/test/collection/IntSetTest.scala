@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.range.NumericSpan
 /**
   * A test for the IntSet collection type
   * @author Mikko Hilpinen
-  * @since 05.08.2024, v2.4.1
+  * @since 05.08.2024, v2.5
   */
 object IntSetTest extends App
 {

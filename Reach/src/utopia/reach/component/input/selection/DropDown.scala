@@ -11,7 +11,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
@@ -179,7 +179,7 @@ private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]
 	
 	// IMPLEMENTED	-------------------
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	
 	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		// Requests focus or opens the field, except when the pop-up was just closed

@@ -2,8 +2,8 @@ package utopia.genesis.handling.template
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike._
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.Flag._
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 /**
   * An abstract Handler implementation which extends the Handleable trait
@@ -16,5 +16,5 @@ abstract class DeepHandler[A <: Handleable](initialItems: IterableOnce[A] = Empt
 {
 	// ATTRIBUTES   --------------------
 	
-	override val handleCondition: FlagLike = itemsPointer.readOnly.map { _.nonEmpty } && additionalHandleCondition
+	override val handleCondition: Flag = itemsPointer.readOnly.map { _.nonEmpty } && additionalHandleCondition
 }

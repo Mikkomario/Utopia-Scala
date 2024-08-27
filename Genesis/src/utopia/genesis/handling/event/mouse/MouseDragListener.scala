@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.mouse.MouseDragEvent.{MouseDragEventFilter, MouseDragFilteringFactory}
 import utopia.genesis.handling.template.Handleable
@@ -27,14 +27,14 @@ object MouseDragListener
 	
 	// NESTED   --------------------------
 	
-	case class MouseDragListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseDragEventFilter = AcceptAll)
+	case class MouseDragListenerFactory(condition: Flag = AlwaysTrue, filter: MouseDragEventFilter = AcceptAll)
 		extends ListenerFactory[MouseDragEvent, MouseDragListenerFactory]
 			with MouseDragFilteringFactory[MouseDragListenerFactory]
 	{
 		// IMPLEMENTED  -----------------------
 		
 		override def usingFilter(filter: Filter[MouseDragEvent]): MouseDragListenerFactory = copy(filter = filter)
-		override def usingCondition(condition: FlagLike): MouseDragListenerFactory = copy(condition = condition)
+		override def usingCondition(condition: Flag): MouseDragListenerFactory = copy(condition = condition)
 		
 		override protected def withFilter(filter: Filter[MouseDragEvent]): MouseDragListenerFactory =
 			copy(filter = this.filter && filter)
@@ -51,7 +51,7 @@ object MouseDragListener
 		def apply[U](f: MouseDragEvent => U): MouseDragListener = new _MouseDragListener[U](condition, filter, f)
 	}
 	
-	private class _MouseDragListener[U](override val handleCondition: FlagLike,
+	private class _MouseDragListener[U](override val handleCondition: Flag,
 	                                    override val mouseDragEventFilter: MouseDragEventFilter,
 	                                    f: MouseDragEvent => U)
 		extends MouseDragListener

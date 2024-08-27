@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.mouse.MouseOverEvent.{MouseOverEventFilter, MouseOverFilteringFactory}
@@ -30,14 +30,14 @@ object MouseOverListener
 	
 	// NESTED   ------------------------
 	
-	case class MouseOverListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseOverEventFilter = AcceptAll)
+	case class MouseOverListenerFactory(condition: Flag = AlwaysTrue, filter: MouseOverEventFilter = AcceptAll)
 		extends ListenerFactory[MouseOverEvent, MouseOverListenerFactory]
 			with MouseOverFilteringFactory[MouseOverListenerFactory]
 	{
 		// IMPLEMENTED  ---------------------
 		
 		override def usingFilter(filter: Filter[MouseOverEvent]): MouseOverListenerFactory = copy(filter = filter)
-		override def usingCondition(condition: FlagLike): MouseOverListenerFactory = copy(condition = condition)
+		override def usingCondition(condition: Flag): MouseOverListenerFactory = copy(condition = condition)
 		
 		override protected def withFilter(filter: Filter[MouseOverEvent]): MouseOverListenerFactory = filtering(filter)
 		
@@ -54,7 +54,7 @@ object MouseOverListener
 			new _MouseOverListener(condition, filter, contains, f)
 	}
 	
-	private class _MouseOverListener(override val handleCondition: FlagLike,
+	private class _MouseOverListener(override val handleCondition: Flag,
 	                                 override val mouseOverEventFilter: MouseOverEventFilter,
 	                                 containment: DoubleVector => Boolean, f: MouseOverEvent => ConsumeChoice)
 		extends MouseOverListener

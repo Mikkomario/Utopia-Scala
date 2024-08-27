@@ -1,6 +1,6 @@
 package utopia.genesis.handling.drawing
 
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawOrder
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
@@ -44,7 +44,7 @@ trait TransformingDrawableWrapper extends Drawable with CoordinateTransform
 	
 	// IMPLEMENTED  --------------------
 	
-	override def handleCondition: FlagLike = wrapped.handleCondition
+	override def handleCondition: Flag = wrapped.handleCondition
 	
 	override def drawOrder: DrawOrder = wrapped.drawOrder
 	

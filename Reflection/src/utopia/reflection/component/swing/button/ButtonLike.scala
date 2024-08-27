@@ -4,7 +4,7 @@ import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
@@ -160,7 +160,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		
 		// IMPLEMENTED  -------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			// Only allows handling while in focus
@@ -180,7 +180,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		override val keyStateEventFilter =
 			KeyStateEventFilter { e => hotKeys.contains(e.index) || hotKeyCharacters.exists(e.concernsChar) }
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			if (enabled) {
@@ -206,7 +206,7 @@ trait ButtonLike extends ReflectionStackable with AwtComponentRelated with Focus
 		
 		// IMPLEMENTED	--------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		// On left mouse within bounds, brightens color and remembers, on release, returns
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {

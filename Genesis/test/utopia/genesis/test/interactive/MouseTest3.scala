@@ -8,7 +8,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
@@ -93,7 +93,7 @@ object MouseTest3 extends App
 	{
 		override def onKeyState(event: KeyStateEvent): Unit = println(event)
 		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 	}
 	
 	private object TestItem
@@ -138,7 +138,7 @@ object MouseTest3 extends App
 		override def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 		
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = drawer.draw(shapeCache(bounds))
 		

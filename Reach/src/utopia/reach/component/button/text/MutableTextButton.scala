@@ -11,7 +11,7 @@ import utopia.firmament.model.{GuiElementStatus, HotKey, TextDrawContext}
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -143,8 +143,8 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	// ATTRIBUTES	---------------------------------
 	
 	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
-	override val enabledPointer: FlagLike = _statePointer.map { _ isNot Disabled }
-	override val focusPointer: FlagLike = _statePointer.map { _ is Focused }
+	override val enabledPointer: Flag = _statePointer.map { _ isNot Disabled }
+	override val focusPointer: Flag = _statePointer.map { _ is Focused }
 	
 	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialStyle, allowTextShrink)
 	/**

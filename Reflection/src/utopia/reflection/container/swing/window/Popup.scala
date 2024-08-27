@@ -5,7 +5,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.operator.filter.Filter
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
@@ -141,7 +141,7 @@ object Popup
 		
 		// IMPLEMENTED	----------------------
 		
-		override def handleCondition: FlagLike = popup.notClosedFlag
+		override def handleCondition: Flag = popup.notClosedFlag
 	}
 	
 	private class HideOnOutsideClickListener(override val popup: Window[_])

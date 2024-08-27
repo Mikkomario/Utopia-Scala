@@ -14,7 +14,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.Consumable
@@ -187,7 +187,7 @@ private object SelectionKeyListener
 	private val triggerKeys = Set(KeyEvent.VK_ENTER, KeyEvent.VK_SPACE)
 }
 private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPressedPointer: Pointer[Boolean], maxIndex: Int,
-                                   focusPointer: FlagLike, actions: Map[Int, () => Unit])
+                                   focusPointer: Flag, actions: Map[Int, () => Unit])
 	extends KeyStateListener
 {
 	import SelectionKeyListener._
@@ -205,7 +205,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 	// IMPLEMENTED  -------------------
 	
 	// Only listens to events while has focus
-	override def handleCondition: FlagLike = focusPointer
+	override def handleCondition: Flag = focusPointer
 	override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 	
 	override def onKeyState(event: KeyStateEvent) = {
@@ -269,7 +269,7 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
 	override def opaque = false
 	override def drawLevel = Normal
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {

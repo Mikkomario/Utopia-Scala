@@ -7,7 +7,7 @@ import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
@@ -116,7 +116,7 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	private var _margin = initialMargin
 	private var _cap = initialCap
 	
-	override lazy val visibilityPointer: FlagLike = _componentsPointer.map { _.nonEmpty }
+	override lazy val visibilityPointer: Flag = _componentsPointer.map { _.nonEmpty }
 	
 	
 	// COMPUTED -----------------------------

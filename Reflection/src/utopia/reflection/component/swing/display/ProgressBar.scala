@@ -8,7 +8,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -135,7 +135,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		// ATTRIBUTES	------------------
 		
 		private val animationProgressPointer = Volatile(1.0)
-		override val handleCondition: FlagLike = animationProgressPointer.map { _ <= 1.0 }
+		override val handleCondition: Flag = animationProgressPointer.map { _ <= 1.0 }
 		
 		private var currentProgressAnimation: AnyAnimation[Double] = Animation.fixed(progress)
 		

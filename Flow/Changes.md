@@ -6,6 +6,11 @@
   - This requirement was added because previously errors would not always get properly logged or even handled, 
     and could break the change event distribution system
   - This same requirement is extended to instances of **ListenableLazy**, because of their `stateView` property
+  - Note: For **Flags**, if you didn't utilize the change events, 
+    you may want to use the new **Settable** and **Switch** instead
+- Renamed **FlagLike** to **Flag** and **Flag** to **SettableFlag**
+- **Resettable** is now required to implement `isSet: Boolean`
+- **ResettableFlag** now requires the implementation of `value_=(...)` instead of `set()` and `reset()`
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
@@ -13,6 +18,8 @@
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 - Added **LazyTripleMergeMirror** for more complex lazy pointer-merging
+- Added **Settable** and **Switch** classes, which provide the functionality of 
+  **SettableFlag** (previously **Flag**) and **ResettableFlag** without change events
 - **Loggers** are now implicitly convertible to **ScopeUsable**, allowing for scoped logging definitions
 ### New methods
 - **Changing**

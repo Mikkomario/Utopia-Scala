@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Foreground
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer, StrokeSettings}
 import utopia.genesis.handling.drawing.{AbstractDrawable, Drawable, RepaintListener}
@@ -47,7 +47,7 @@ object DrawableMouseTest extends App
 		
 		// IMPLEMENTED  ---------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def drawBoundsPointer: Changing[Bounds] = shapePointer
 		
@@ -96,7 +96,7 @@ object DrawableMouseTest extends App
 		override def repaintListeners: Iterable[RepaintListener] = _repaintListeners
 		
 		override def mouseWheelEventFilter: Filter[MouseWheelEvent] = AcceptAll
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = drawer.draw(shapeCache(bounds))
 		

@@ -18,7 +18,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, IndirectPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
@@ -460,7 +460,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
                 progressVelocityWithArrow: LinearVelocity = LinearVelocity(1.0, 1.seconds),
                 hoverRadius: Double = 0.0, hoverColor: Color = Color.white, leftToRightBarHeightRatio: Double = 1.5,
                 animationDuration: Duration = 0.2.seconds, maxJumpWithoutAnimationDistance: Double = 2.0,
-                enabledFlag: FlagLike = AlwaysTrue, additionalFocusListeners: Seq[FocusListener] = Empty,
+                enabledFlag: Flag = AlwaysTrue, additionalFocusListeners: Seq[FocusListener] = Empty,
                 additionalDrawers: Seq[CustomDrawer] = Empty)
                (progressToSelection: Double => A)(selectionToProgress: A => Double)
 	extends CustomDrawReachComponent with InteractionWithPointer[A] with HasGuiState with FocusableWithState
@@ -478,7 +478,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	}
 	
 	private val _focusPointer = ResettableFlag()
-	override def focusPointer: FlagLike = _focusPointer.readOnly
+	override def focusPointer: Flag = _focusPointer.readOnly
 	
 	private val enabledAndFocusedFlag = _focusPointer && enabledFlag
 	
@@ -489,7 +489,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	private val draggingFlag = ResettableFlag()
 	// Contains Some(initialProgress -> direction) while this slider is being adjusted with a keyboard key
 	private val keyDownPointer = EventfulPointer.empty[(Double, Sign)]()
-	private val keyDownFlag: FlagLike = keyDownPointer.strongMap { _.isDefined }
+	private val keyDownFlag: Flag = keyDownPointer.strongMap { _.isDefined }
 	
 	private val activatedFlag = draggingFlag || keyDownFlag
 	
@@ -760,7 +760,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 		
 		// IMPLEMENTED  ------------------------
 		
-		override def handleCondition: FlagLike = enabledFlag
+		override def handleCondition: Flag = enabledFlag
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
@@ -787,7 +787,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	
 	private object DragListener extends MouseDragListener
 	{
-		override def handleCondition: FlagLike = draggingFlag
+		override def handleCondition: Flag = draggingFlag
 		override def mouseDragEventFilter: Filter[MouseDragEvent] = AcceptAll
 		
 		override def onMouseDrag(event: MouseDragEvent): Unit = {
@@ -804,7 +804,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override val handleCondition: FlagLike = enabledAndFocusedFlag || keyDownFlag
+		override val handleCondition: Flag = enabledAndFocusedFlag || keyDownFlag
 		
 		
 		// IMPLEMENTED  ------------------------
@@ -843,7 +843,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	
 	private object ArrowKeyProgressUpdater extends KeyDownListener
 	{
-		override def handleCondition: FlagLike = keyDownFlag
+		override def handleCondition: Flag = keyDownFlag
 		override def keyDownEventFilter: KeyDownEventFilter = AcceptAll
 		
 		override def whileKeyDown(event: KeyDownEvent): Unit =

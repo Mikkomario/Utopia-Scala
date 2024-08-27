@@ -1,7 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.firmament.model.CoordinateTransform
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.reach.component.template.ReachComponentLike
 
 /**
@@ -10,7 +10,7 @@ import utopia.reach.component.template.ReachComponentLike
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: FlagLike)
+class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: Flag)
 	extends ComponentHierarchy
 {
 	// ATTRIBUTES	---------------------------

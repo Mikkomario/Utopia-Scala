@@ -16,7 +16,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.Resettable
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
@@ -79,7 +79,7 @@ object ReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def apply[C <: ReachComponentLike, R](attachmentPointer: FlagLike,
+	def apply[C <: ReachComponentLike, R](attachmentPointer: Flag,
 	                                      absoluteParentPositionView: => Either[View[Point], Changing[Point]],
 	                                      backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
 	                                      enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
@@ -288,7 +288,7 @@ object ReachCanvas
   * @param exc Implicit execution context
   */
 // TODO: Set up drag handling
-class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: FlagLike,
+class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: Flag,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
                             enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
@@ -581,7 +581,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			if (focusManager.hasFocus) {
@@ -627,7 +627,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		
 		// IMPLEMENTED	-----------------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseMove(event: MouseMoveEvent) = {

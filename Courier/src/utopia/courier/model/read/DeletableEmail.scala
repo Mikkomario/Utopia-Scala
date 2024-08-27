@@ -1,6 +1,6 @@
 package utopia.courier.model.read
 
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.Extender
 
 /**
@@ -12,4 +12,4 @@ import utopia.flow.view.template.Extender
  * @param deleteFlag A flag that contains true for deleted emails.
  *                   Setting this flag may (should) cause the represented email to be deleted.
  */
-class DeletableEmail[+A](override val wrapped: A, val deleteFlag: Flag) extends Extender[A]
+class DeletableEmail[+A](override val wrapped: A, val deleteFlag: SettableFlag) extends Extender[A]

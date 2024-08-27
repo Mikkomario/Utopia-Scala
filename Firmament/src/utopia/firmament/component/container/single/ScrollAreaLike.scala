@@ -11,7 +11,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Foreground
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -460,7 +460,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		// ATTRIBUTES	-----------------------
 		
 		private val velocityPointer = EventfulPointer(Velocity2D.zero)
-		override val handleCondition: FlagLike = velocityPointer.map { _.amount.nonZero }
+		override val handleCondition: Flag = velocityPointer.map { _.amount.nonZero }
 		
 		
 		// COMPUTED ---------------------------
@@ -518,7 +518,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
@@ -599,7 +599,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 			
 			// IMPLEMENTED  ------------------------
 			
-			override def handleCondition: FlagLike = AlwaysTrue
+			override def handleCondition: Flag = AlwaysTrue
 			
 			override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 				// When mouse is released, stops dragging. May apply scrolling velocity

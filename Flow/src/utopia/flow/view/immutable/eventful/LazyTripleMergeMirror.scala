@@ -74,7 +74,7 @@ object LazyTripleMergeMirror
 /**
   * A lazily calculating pointer that bases its value on three pointers and a merge function
   * @author Mikko Hilpinen
-  * @since 16.8.2024, v2.4.1
+  * @since 16.8.2024, v2.5
   */
 class LazyTripleMergeMirror[+O1, +O2, +O3, +Reflection](source1: Changing[O1], source2: Changing[O2],
                                                         source3: Changing[O3])

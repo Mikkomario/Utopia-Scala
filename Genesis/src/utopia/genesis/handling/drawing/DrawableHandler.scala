@@ -14,7 +14,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.{High, Normal, VeryLow}
 import utopia.genesis.graphics._
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
@@ -48,7 +48,7 @@ object DrawableHandler
 	  * @param log Logging implementation for catching errors in queued repaints
 	  */
 	case class DrawableHandlerFactory(clipPointer: Option[Changing[Bounds]] = None,
-	                                  visiblePointer: FlagLike = AlwaysTrue,
+	                                  visiblePointer: Flag = AlwaysTrue,
 	                                  fpsLimits: Map[Priority, Fps] = Map(), preDrawPriority: Priority = High,
 	                                  drawOrder: DrawOrder = DrawOrder.default)
 	                                 (implicit exc: ExecutionContext, log: Logger)
@@ -61,7 +61,7 @@ object DrawableHandler
 		
 		// IMPLEMENTED  ------------------
 		
-		override def usingCondition(newCondition: FlagLike): DrawableHandlerFactory = copy(visiblePointer = newCondition)
+		override def usingCondition(newCondition: Flag): DrawableHandlerFactory = copy(visiblePointer = newCondition)
 		
 		override def apply(items: IterableOnce[Drawable]) =
 			new DrawableHandler(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)

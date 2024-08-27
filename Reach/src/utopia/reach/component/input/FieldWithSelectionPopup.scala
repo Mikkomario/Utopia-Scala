@@ -28,7 +28,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
@@ -510,7 +510,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	val popUpVisiblePointer: FlagLike = lazyPopup.stateView.flatMap {
+	val popUpVisiblePointer: Flag = lazyPopup.stateView.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
@@ -744,7 +744,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
@@ -767,7 +767,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// ATTRIBUTES	-------------------------
 		
 		// Is interested in key events while the field has focus and pop-up is not open
-		override def handleCondition: FlagLike = popUpHiddenWhileFocusedFlag
+		override def handleCondition: Flag = popUpHiddenWhileFocusedFlag
 		
 		// Listens to down arrow presses
 		// Also supports additional key-strokes (based on the 'additionalActivationKeys' parameter)
@@ -798,7 +798,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		// IMPLEMENTED	-------------------------
 		
 		// Only reacts to events while the pop-up is visible
-		override def handleCondition: FlagLike = popup.fullyVisibleFlag
+		override def handleCondition: Flag = popup.fullyVisibleFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			// Stores the selected value, if applicable

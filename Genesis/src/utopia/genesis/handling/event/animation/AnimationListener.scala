@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.animation
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.animation.AnimationEvent.{AnimationEventFilter, AnimationFilteringFactory}
 import utopia.genesis.handling.template.Handleable
@@ -27,14 +27,14 @@ object AnimationListener
 	
 	// NESTED   --------------------------
 	
-	case class AnimationListenerFactory(condition: FlagLike = AlwaysTrue, filter: AnimationEventFilter = AcceptAll)
+	case class AnimationListenerFactory(condition: Flag = AlwaysTrue, filter: AnimationEventFilter = AcceptAll)
 		extends ListenerFactory[AnimationEvent, AnimationListenerFactory]
 			with AnimationFilteringFactory[AnimationListenerFactory]
 	{
 		// IMPLEMENTED  ---------------------
 		
 		override def usingFilter(filter: Filter[AnimationEvent]): AnimationListenerFactory = copy(filter = filter)
-		override def usingCondition(condition: FlagLike): AnimationListenerFactory = copy(condition = condition)
+		override def usingCondition(condition: Flag): AnimationListenerFactory = copy(condition = condition)
 		
 		override protected def withFilter(filter: AnimationEventFilter): AnimationListenerFactory =
 			copy(filter = this.filter && filter)
@@ -50,7 +50,7 @@ object AnimationListener
 		def apply[U](f: AnimationEvent => U): AnimationListener = new _AnimationListener[U](condition, filter, f)
 	}
 	
-	private class _AnimationListener[U](override val handleCondition: FlagLike,
+	private class _AnimationListener[U](override val handleCondition: Flag,
 	                                    override val animationEventFilter: AnimationEventFilter, f: AnimationEvent => U)
 		extends AnimationListener
 	{

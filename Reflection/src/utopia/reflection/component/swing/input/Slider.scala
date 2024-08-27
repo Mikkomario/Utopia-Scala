@@ -14,7 +14,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -280,10 +280,10 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	private var animator: Option[Animator] = None
 	
 	private val statePointer = EventfulPointer(GuiElementStatus.identity)
-	private val pressedPointer: FlagLike = statePointer.map { _ is Activated }
+	private val pressedPointer: Flag = statePointer.map { _ is Activated }
 	private val notPressedPointer = !pressedPointer
-	private val enabledPointer: FlagLike = statePointer.map { _ isNot Disabled }
-	private val focusPointer: FlagLike = statePointer.map { _ is Focused }
+	private val enabledPointer: Flag = statePointer.map { _ isNot Disabled }
+	private val focusPointer: Flag = statePointer.map { _ is Focused }
 	private val focusedAndEnabledPointer = focusPointer && enabledPointer
 	
 	
@@ -467,7 +467,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		// ATTRIBUTES   ---------------------
 		
 		private val movingFlag = ResettableFlag()
-		override val handleCondition: FlagLike = movingFlag.view
+		override val handleCondition: Flag = movingFlag.view
 		
 		private var passedDuration = animationDuration
 		private var startProgress = progressPointer.value
@@ -544,7 +544,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	{
 		// ATTRIBUTES   -----------------------
 		
-		override val handleCondition: FlagLike = notPressedPointer && enabledPointer
+		override val handleCondition: Flag = notPressedPointer && enabledPointer
 		
 		override val mouseButtonStateEventFilter =
 			MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(bounds)
@@ -563,7 +563,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	private object MouseOverListener extends MouseMoveListener
 	{
-		override def handleCondition: FlagLike = enabledPointer
+		override def handleCondition: Flag = enabledPointer
 		
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
@@ -585,7 +585,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		// IMPLEMENTED  -------------------
 		
-		override def handleCondition: FlagLike = pressedPointer
+		override def handleCondition: Flag = pressedPointer
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
@@ -609,7 +609,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		// IMPLEMENTED  --------------------
 		
-		override def handleCondition: FlagLike = focusedAndEnabledPointer
+		override def handleCondition: Flag = focusedAndEnabledPointer
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			val direction = if (event.index == KeyEvent.VK_RIGHT) Positive else Negative

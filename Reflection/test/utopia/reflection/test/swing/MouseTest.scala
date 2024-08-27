@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.firmament.component.HasMutableBounds
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateListener
 import utopia.genesis.handling.event.mouse.{MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener, MouseWheelListener}
@@ -26,7 +26,7 @@ object MouseTest extends App
 	{
 		override val mouseMoveEventFilter = MouseMoveEvent.filter.enteredOrExited(area.bounds)
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onMouseMove(event: MouseMoveEvent) = println("Mouse entered or exited area")
 	}

@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseWheelEvent.{MouseWheelEventFilter, MouseWheelFilteringFactory}
@@ -62,14 +62,14 @@ object MouseWheelListener
     
     // NESTED   ----------------------
     
-    case class MouseWheelListenerFactory(condition: FlagLike = AlwaysTrue, filter: MouseWheelEventFilter = AcceptAll)
+    case class MouseWheelListenerFactory(condition: Flag = AlwaysTrue, filter: MouseWheelEventFilter = AcceptAll)
         extends ListenerFactory[MouseWheelEvent, MouseWheelListenerFactory]
             with MouseWheelFilteringFactory[MouseWheelListenerFactory]
     {
         // IMPLEMENTED  --------------
         
         override def usingFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory = copy(filter = filter)
-        override def usingCondition(condition: FlagLike): MouseWheelListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: Flag): MouseWheelListenerFactory = copy(condition = condition)
         
         override protected def withFilter(filter: Filter[MouseWheelEvent]): MouseWheelListenerFactory =
             copy(filter = this.filter && filter)
@@ -86,7 +86,7 @@ object MouseWheelListener
             new _MouseWheelListener(condition, filter, f)
     }
     
-    private class _MouseWheelListener(override val handleCondition: FlagLike,
+    private class _MouseWheelListener(override val handleCondition: Flag,
                                       override val mouseWheelEventFilter: MouseWheelEventFilter,
                                       f: MouseWheelEvent => ConsumeChoice)
         extends MouseWheelListener

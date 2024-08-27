@@ -15,7 +15,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary

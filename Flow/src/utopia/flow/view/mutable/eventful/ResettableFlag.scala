@@ -6,7 +6,7 @@ import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
-import utopia.flow.view.mutable.{Pointer, Resettable}
+import utopia.flow.view.mutable.Switch
 import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.util.Try
@@ -25,7 +25,7 @@ object ResettableFlag
 	// NESTED   -----------------------
 	
 	private class _ResettableFlag(initialValue: Boolean = false)(implicit log: Logger)
-		extends AbstractChanging[Boolean] with ResettableFlag with Pointer[Boolean]
+		extends AbstractChanging[Boolean] with ResettableFlag
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -37,29 +37,7 @@ object ResettableFlag
 		// IMPLEMENTED  -----------------------
 		
 		override def value = _value
-		override def value_=(newValue: Boolean) = _set(newValue)
-		
-		override def set() = {
-			if (isNotSet) {
-				_set(true)
-				true
-			}
-			else
-				false
-		}
-		override def reset() = {
-			if (isSet) {
-				_set(false)
-				true
-			}
-			else
-				false
-		}
-		
-		
-		// OTHER    --------------------------
-		
-		private def _set(newValue: Boolean) = {
+		override def value_=(newValue: Boolean) = {
 			val oldValue = _value
 			_value = newValue
 			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
@@ -72,7 +50,7 @@ object ResettableFlag
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait ResettableFlag extends Flag with Resettable with EventfulPointer[Boolean]
+trait ResettableFlag extends SettableFlag with Switch with EventfulPointer[Boolean]
 {
 	// COMPUTED --------------------------
 	
@@ -86,16 +64,5 @@ trait ResettableFlag extends Flag with Resettable with EventfulPointer[Boolean]
 	
 	override def destiny: Destiny = ForeverFlux
 	
-	override def value_=(newValue: Boolean) = if (newValue) set() else reset()
-	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
-	
-	
-	// OTHER    --------------------------
-	
-	/**
-	  * Reverses the current value of this flag
-	  * @return The new value in this flag
-	  */
-	def switch() = updateAndGet { !_ }
 }

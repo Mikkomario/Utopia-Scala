@@ -9,28 +9,29 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.template.MaybeSet
 
 import scala.language.implicitConversions
 
-object FlagLike
+object Flag
 {
 	// IMPLICIT ------------------
 	
 	// Wraps any Changing[Boolean] into a more specific FlagLike
-	implicit def wrap(c: Changing[Boolean]): FlagLike = c match {
-		case f: FlagLike => f
+	implicit def wrap(c: Changing[Boolean]): Flag = c match {
+		case f: Flag => f
 		case o =>
 			o.fixedValue match {
 				case Some(fixed) => if (fixed) AlwaysTrue else AlwaysFalse
-				case None => new FlagLikeWrapper(o)
+				case None => new FlagWrapper(o)
 			}
 	}
 	
 	
 	// NESTED   ------------------
 	
-	private class FlagLikeWrapper(override protected val wrapped: Changing[Boolean])
-		extends FlagLike with ChangingWrapper[Boolean]
+	private class FlagWrapper(override protected val wrapped: Changing[Boolean])
+		extends Flag with ChangingWrapper[Boolean]
 	{
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def toString = s"FlagLike($wrapped)"
@@ -42,18 +43,9 @@ object FlagLike
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait FlagLike extends Changing[Boolean]
+trait Flag extends Changing[Boolean] with MaybeSet
 {
 	// COMPUTED	-----------------
-	
-	/**
-	  * @return Whether this flag has been set
-	  */
-	def isSet = value
-	/**
-	  * @return Whether this flag hasn't been set yet
-	  */
-	def isNotSet = !isSet
 	
 	/**
 	  * @return Whether this flag will always remain true
@@ -67,7 +59,7 @@ trait FlagLike extends Changing[Boolean]
 	/**
 	  * @return A reversed copy of this flag
 	  */
-	def unary_! : FlagLike = fixedValue match {
+	def unary_! : Flag = fixedValue match {
 		case Some(fixed) => if (fixed) AlwaysFalse else AlwaysTrue
 		case None => ReverseView
 	}
@@ -82,13 +74,18 @@ trait FlagLike extends Changing[Boolean]
 	def nextFuture = findMapNextFuture { if (_) Some(()) else None }
 	
 	
+	// IMPLEMENTED  -------------
+	
+	override def isSet = value
+	
+	
 	// OTHER	-----------------
 	
 	/**
 	  * @param other Another flag
 	  * @return A flag that contains true when both of these flags contain true
 	  */
-	def &&(other: Changing[Boolean]): FlagLike = {
+	def &&(other: Changing[Boolean]): Flag = {
 		// If one of the pointers is always false, returns always false
 		// If one of the pointers is always true, returns the other pointer
 		// If both are changing, returns a combination of these pointers
@@ -108,7 +105,7 @@ trait FlagLike extends Changing[Boolean]
 	  * @param other Another flag
 	  * @return A flag that contains true when either one of these flags contains true
 	  */
-	def ||(other: Changing[Boolean]): FlagLike = {
+	def ||(other: Changing[Boolean]): Flag = {
 		// If one of the pointers is always false, returns the other pointer
 		// If one of the pointers is always true, returns always true
 		// If both are changing, returns a combination of these pointers
@@ -199,7 +196,7 @@ trait FlagLike extends Changing[Boolean]
 			Continue
 	}
 	
-	private object ReverseView extends FlagLike
+	private object ReverseView extends Flag
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -210,7 +207,7 @@ trait FlagLike extends Changing[Boolean]
 		
 		// COMPUTED ---------------------------
 		
-		private def target = FlagLike.this
+		private def target = Flag.this
 		
 		
 		// IMPLEMENTED  -----------------------

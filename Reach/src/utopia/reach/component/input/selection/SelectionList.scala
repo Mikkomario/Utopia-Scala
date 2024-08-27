@@ -16,7 +16,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -545,7 +545,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 		
 		// IMPLEMENTED	----------------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 		
 		override def onMouseMove(event: MouseMoveEvent) = {
@@ -591,7 +591,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	{
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftReleased
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) =
 			LocalMouseListener.release()

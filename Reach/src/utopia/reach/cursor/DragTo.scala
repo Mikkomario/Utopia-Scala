@@ -12,7 +12,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileOption
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener, MouseMoveEvent, MouseMoveListener}
@@ -272,7 +272,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		// 4 = Maximum bounds at drag start
 		// 5 = Drag directions, which are empty when repositioning
 		private val dragPointer = EventfulPointer.empty[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])]()
-		private val draggingFlag: FlagLike = dragPointer.map { _.isDefined }
+		private val draggingFlag: Flag = dragPointer.map { _.isDefined }
 		
 		override val mouseButtonStateEventFilter =
 			MouseButtonStateEvent.filter.leftPressed && Consumable.unconsumedFilter
@@ -287,7 +287,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		
 		// IMPLEMENTED  -------------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		// Case: Mouse pressed
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
@@ -359,7 +359,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			
 			// IMPLEMENTED  ----------------
 			
-			override def handleCondition: FlagLike = draggingFlag
+			override def handleCondition: Flag = draggingFlag
 			override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll
 			
 			override def onMouseMove(event: MouseMoveEvent): Unit = {
@@ -457,7 +457,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 			
 			// IMPLEMENTED  ------------------
 			
-			override def handleCondition: FlagLike = draggingFlag
+			override def handleCondition: Flag = draggingFlag
 			
 			// Stops the drag
 			override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {

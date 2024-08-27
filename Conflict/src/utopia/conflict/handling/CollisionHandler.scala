@@ -3,7 +3,7 @@ package utopia.conflict.handling
 import utopia.conflict.collision.{Collision, CollisionShape}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.template.factory.FromCollectionFactory
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.Handleable
 
@@ -48,7 +48,7 @@ class CollisionHandler(targetHandler: CollisionTargetHandler, initialListeners: 
 {
     // ATTRIBUTES   --------------------
     
-    override val handleCondition: FlagLike = itemsPointer.readOnly.map { _.nonEmpty }
+    override val handleCondition: Flag = itemsPointer.readOnly.map { _.nonEmpty }
     
     // Contains the collisions that are active at any time
     private var activeCollisions = Map[CollisionListener, Iterable[(CanCollideWith, Collision)]]()

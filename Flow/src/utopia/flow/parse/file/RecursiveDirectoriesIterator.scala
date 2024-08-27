@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 
 import java.nio.file.Path
 import scala.util.Try
@@ -18,7 +18,7 @@ class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Vec
 {
 	// ATTRIBUTES   ---------------------
 	
-	private val originConsumedFlag = Flag()(SysErrLogger)
+	private val originConsumedFlag = SettableFlag()(SysErrLogger)
 	// Left side is regular children, right side is sub-directories
 	private lazy val children = origin.iterateChildren { _.divideBy { _.isDirectory }.map { _.toVector } }
 	private lazy val subDirectoriesIterator = children.toOption.iterator

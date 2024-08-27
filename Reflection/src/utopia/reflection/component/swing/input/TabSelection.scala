@@ -11,7 +11,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
@@ -219,7 +219,7 @@ class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMar
 		
 		// IMPLEMENTED	---------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		// When pressed, selects the label
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) =

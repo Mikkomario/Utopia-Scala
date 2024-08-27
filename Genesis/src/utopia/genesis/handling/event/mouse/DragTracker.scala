@@ -3,7 +3,7 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.{KeyboardEvents, KeyboardState}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
@@ -24,7 +24,7 @@ class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener 
 	
 	// IMPLEMENTED  --------------------
 	
-	override def handleCondition: FlagLike = AlwaysTrue
+	override def handleCondition: Flag = AlwaysTrue
 	
 	override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
 	override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll

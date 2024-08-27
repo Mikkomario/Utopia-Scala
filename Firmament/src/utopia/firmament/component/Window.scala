@@ -19,8 +19,8 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.flow.view.mutable.eventful.{EventfulPointer, Flag, IndirectPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.FlagLike._
+import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableFlag, IndirectPointer, ResettableFlag}
+import utopia.flow.view.template.eventful.Flag._
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
@@ -288,8 +288,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// Stores window state in private flags
 	// These are updated based on awt window events, but also accept preliminary updates from other sources
-	private val _openedFlag = Flag()
-	private val _closedFlag = Flag()
+	private val _openedFlag = SettableFlag()
+	private val _closedFlag = SettableFlag()
 	private val _visibleFlag = ResettableFlag()
 	private val _minimizedFlag = ResettableFlag()
 	private val _activeFlag = ResettableFlag()
@@ -343,7 +343,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * A flag that is set when this window becomes visible for the first time.
 	  * Setting this flag will display this window (unless already set).
 	  */
-	lazy val openedFlag = Flag.wrap(_openedFlag) {
+	lazy val openedFlag = SettableFlag.wrap(_openedFlag) {
 		if (_openedFlag.isSet)
 			false
 		else
@@ -353,7 +353,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * A flag that is set once this window closes.
 	  * Setting this flag will close this window (unless closed already)
 	  */
-	lazy val closedFlag = Flag.wrap(_closedFlag) {
+	lazy val closedFlag = SettableFlag.wrap(_closedFlag) {
 		// Case: Already closed => No operation
 		if (_closedFlag.isSet)
 			false

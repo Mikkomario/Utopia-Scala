@@ -11,7 +11,7 @@ import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -153,7 +153,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		override val mouseButtonStateEventFilter =
 			MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(bounds)
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		// When this switch is pressed, changes its state
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
@@ -177,7 +177,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 		// ATTRIBUTES	-------------
 		
 		private val progressPointer = Volatile(1.0)
-		override val handleCondition: FlagLike = progressPointer.map { _ < 1.0 }
+		override val handleCondition: Flag = progressPointer.map { _ < 1.0 }
 		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)
 		

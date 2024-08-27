@@ -2,7 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.mouse.MouseMoveEvent.MouseMoveFilteringFactory
 import utopia.genesis.handling.template.Handleable
@@ -77,7 +77,7 @@ object MouseMoveListener
     
     // NESTED   ----------------------
     
-    case class MouseMoveEventListenerFactory(condition: FlagLike = AlwaysTrue,
+    case class MouseMoveEventListenerFactory(condition: Flag = AlwaysTrue,
                                              filter: Filter[MouseMoveEvent] = AcceptAll)
         extends ListenerFactory[MouseMoveEvent, MouseMoveEventListenerFactory]
             with MouseMoveFilteringFactory[MouseMoveEvent, MouseMoveEventListenerFactory]
@@ -89,7 +89,7 @@ object MouseMoveListener
         
         override def usingFilter(filter: Filter[MouseMoveEvent]): MouseMoveEventListenerFactory =
             copy(filter = filter)
-        override def usingCondition(condition: FlagLike): MouseMoveEventListenerFactory = copy(condition = condition)
+        override def usingCondition(condition: Flag): MouseMoveEventListenerFactory = copy(condition = condition)
             
         
         // OTHER    -----------------------
@@ -102,7 +102,7 @@ object MouseMoveListener
         def apply(f: MouseMoveEvent => Unit): MouseMoveListener = new _MouseMoveListener(condition, filter, f)
     }
     
-    private class _MouseMoveListener(override val handleCondition: FlagLike,
+    private class _MouseMoveListener(override val handleCondition: Flag,
                                      override val mouseMoveEventFilter: Filter[MouseMoveEvent],
                                      f: MouseMoveEvent => Unit)
         extends MouseMoveListener

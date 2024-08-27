@@ -22,7 +22,7 @@ abstract class OptimizedChanging[A]
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */
-	val hasListenersFlag: FlagLike = listenersPointer.strongMap { _.exists { _.nonEmpty } }
+	val hasListenersFlag: Flag = listenersPointer.strongMap { _.exists { _.nonEmpty } }
 	
 	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	

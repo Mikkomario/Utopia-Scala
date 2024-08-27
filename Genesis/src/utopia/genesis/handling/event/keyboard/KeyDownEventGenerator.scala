@@ -7,8 +7,8 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.Flag
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.mutable.eventful.SettableFlag
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.template.Handlers
@@ -25,7 +25,7 @@ object KeyDownEventGenerator
 	 * @return A new functioning key-down event generator
 	 */
 	@deprecated("Please use .start(...) instead", "v4.0.1")
-	def apply(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: FlagLike = AlwaysTrue) =
+	def apply(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: Flag = AlwaysTrue) =
 		start(actorHandler, keyStateHandler, activeCondition)(SysErrLogger)
 	
 	/**
@@ -34,7 +34,7 @@ object KeyDownEventGenerator
 	  * @param activeCondition A condition that must be met in order for key-down events to be generated or fired
 	  * @return A new started key-down event generator
 	  */
-	def start(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: FlagLike = AlwaysTrue)
+	def start(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: Flag = AlwaysTrue)
 	         (implicit log: Logger) =
 	{
 		val generator = new KeyDownEventGenerator(KeyDownHandler.conditional(activeCondition)())
@@ -56,12 +56,12 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(impl
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val startedFlag = Flag()
+	private val startedFlag = SettableFlag()
 	
 	private val keyboardStatePointer = Volatile(KeyboardState.default)
 	private val downKeysPointer = Volatile(Set[(Int, KeyLocation, Instant)]())
 	
-	private val hasKeysDownFlag: FlagLike = downKeysPointer.map { _.nonEmpty }
+	private val hasKeysDownFlag: Flag = downKeysPointer.map { _.nonEmpty }
 	
 	
 	// INITIAL CODE --------------------------
@@ -100,7 +100,7 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(impl
 	
 	private object KeyStateTracker extends KeyStateListener
 	{
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
 		
 		override def onKeyState(event: KeyStateEvent): Unit = {
@@ -120,7 +120,7 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(impl
 	{
 		// ATTRIBUTES   -------------------
 		
-		override val handleCondition: FlagLike = hasKeysDownFlag && handler.handleCondition
+		override val handleCondition: Flag = hasKeysDownFlag && handler.handleCondition
 		
 		
 		// IMPLEMENTED  -------------------

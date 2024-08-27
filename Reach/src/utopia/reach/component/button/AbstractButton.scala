@@ -3,7 +3,7 @@ package utopia.reach.component.button
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Disabled, Focused}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key
 import utopia.reach.component.template.ButtonLike
 import utopia.reach.focus.FocusListener
@@ -18,7 +18,7 @@ abstract class AbstractButton(settings: ButtonSettingsLike[_], triggerKeys: Set[
 {
 	// ATTRIBUTES   ------------------------
 	
-	override val enabledPointer: FlagLike = settings.enabledPointer
+	override val enabledPointer: Flag = settings.enabledPointer
 	
 	private val baseStatePointer = EventfulPointer(GuiElementStatus.identity)
 	override val statePointer: Changing[GuiElementStatus] = {
@@ -29,7 +29,7 @@ abstract class AbstractButton(settings: ButtonSettingsLike[_], triggerKeys: Set[
 	}
 	
 	override val focusId: Int = hashCode()
-	override val focusPointer: FlagLike = statePointer.map { _ is Focused }
+	override val focusPointer: Flag = statePointer.map { _ is Focused }
 	override val focusListeners: Seq[FocusListener] =
 		new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 		

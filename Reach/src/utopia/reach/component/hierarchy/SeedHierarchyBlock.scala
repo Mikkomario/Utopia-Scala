@@ -6,8 +6,8 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
-import utopia.flow.view.template.eventful.FlagLike.wrap
-import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, FlagLike}
+import utopia.flow.view.template.eventful.Flag.wrap
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 
@@ -33,7 +33,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		case Some(r) => r.parent
 		case None => foundParent.getOrElse(Left(top))
 	}
-	override def linkPointer: FlagLike = replacement match {
+	override def linkPointer: Flag = replacement match {
 		case Some(replacement) => replacement.linkPointer
 		case None => LinkManager
 	}
@@ -113,7 +113,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	// NESTED	------------------------------
 	
-	private object LinkManager extends ChangingWrapper[Boolean] with FlagLike
+	private object LinkManager extends ChangingWrapper[Boolean] with Flag
 	{
 		// ATTRIBUTES	----------------------
 		

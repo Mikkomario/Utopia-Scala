@@ -4,7 +4,7 @@ import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.enumeration.Alignment
@@ -30,8 +30,8 @@ object ButtonBluePrint
 	def apply(text: LocalizedString = LocalizedString.empty,
 	          icon: SingleColorIcon = SingleColorIcon.empty,
 	          role: ColorRole = Primary, location: Alignment = BottomRight,
-	          hotKey: Option[HotKey] = None, visiblePointer: FlagLike = AlwaysTrue,
-	          enabledPointer: FlagLike = AlwaysTrue, isDefault: Boolean = false) =
+	          hotKey: Option[HotKey] = None, visiblePointer: Flag = AlwaysTrue,
+	          enabledPointer: Flag = AlwaysTrue, isDefault: Boolean = false) =
 		ButtonBlueprintFactory(text, icon, role, location, hotKey, visiblePointer, enabledPointer, isDefault)
 	
 	
@@ -50,8 +50,8 @@ object ButtonBluePrint
 	case class ButtonBlueprintFactory(text: LocalizedString = LocalizedString.empty,
 	                                  icon: SingleColorIcon = SingleColorIcon.empty,
 	                                  role: ColorRole = Primary, location: Alignment = BottomRight,
-	                                  hotKey: Option[HotKey] = None, visiblePointer: FlagLike = AlwaysTrue,
-	                                  enabledPointer: FlagLike = AlwaysTrue, isDefault: Boolean = false)
+	                                  hotKey: Option[HotKey] = None, visiblePointer: Flag = AlwaysTrue,
+	                                  enabledPointer: Flag = AlwaysTrue, isDefault: Boolean = false)
 		extends ButtonBluePrintTemplate
 	{
 		// COMPUTED -------------------
@@ -96,7 +96,7 @@ object ButtonBluePrint
 			AlwaysFalse
 		}
 		
-		private def apply[A](loadingEnabled: Boolean)(act: Promise[A] => FlagLike): ButtonBluePrint[A] =
+		private def apply[A](loadingEnabled: Boolean)(act: Promise[A] => Flag): ButtonBluePrint[A] =
 			new _BluePrint[A](act, loadingEnabled)
 		
 		
@@ -141,12 +141,12 @@ object ButtonBluePrint
 				}
 		}
 		
-		private class _BluePrint[A](act: Promise[A] => FlagLike, override val loadingEnabled: Boolean)
+		private class _BluePrint[A](act: Promise[A] => Flag, override val loadingEnabled: Boolean)
 			extends ButtonBluePrint[A]
 		{
 			override protected def template: ButtonBluePrintTemplate = ButtonBlueprintFactory.this
 			
-			override def activate(resultPromise: Promise[A]): FlagLike = act(resultPromise)
+			override def activate(resultPromise: Promise[A]): Flag = act(resultPromise)
 		}
 	}
 }
@@ -176,11 +176,11 @@ trait ButtonBluePrintTemplate
 	/**
 	 * @return A pointer that contains true while this button should be displayed (default = always true)
 	 */
-	def visiblePointer: FlagLike
+	def visiblePointer: Flag
 	/**
 	 * @return A pointer that contains true while this button is interactive (default = always true)
 	 */
-	def enabledPointer: FlagLike
+	def enabledPointer: Flag
 	/**
 	 * @return Whether this is the default form button
 	 */
@@ -205,7 +205,7 @@ trait ButtonBluePrint[A] extends ButtonBluePrintTemplate
 	 * @param resultPromise Promise that accepts the action result, if acquired
 	 * @return A flag that contains true while this button shall be displayed as "loading" or disabled
 	 */
-	def activate(resultPromise: Promise[A]): FlagLike
+	def activate(resultPromise: Promise[A]): Flag
 	
 	
 	// IMPLEMENTED  ------------------
@@ -215,7 +215,7 @@ trait ButtonBluePrint[A] extends ButtonBluePrintTemplate
 	override def role: ColorRole = template.role
 	override def location: Alignment = template.location
 	override def hotKey: Option[HotKey] = template.hotKey
-	override def visiblePointer: FlagLike = template.visiblePointer
-	override def enabledPointer: FlagLike = template.enabledPointer
+	override def visiblePointer: Flag = template.visiblePointer
+	override def enabledPointer: Flag = template.enabledPointer
 	override def isDefault: Boolean = template.isDefault
 }

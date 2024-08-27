@@ -93,6 +93,11 @@ trait ResettableLazy[+A] extends Lazy[A] with Resettable
 	def resettingValueIterator = valueIterator ++ Iterator.continually { newValue() }
 	
 	
+	// IMPLEMENTED  -------------------
+	
+	override def isSet: Boolean = isInitialized
+	
+	
 	// OTHER	----------------------
 	
 	/**

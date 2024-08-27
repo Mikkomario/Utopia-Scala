@@ -2,7 +2,7 @@ package utopia.genesis.handling.template
 
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 /**
   * Common trait for factory classes used for constructing handlers of some type.
@@ -22,14 +22,14 @@ trait HandlerFactory[-A, +H, +Repr] extends FromCollectionFactory[A, H]
 	/**
 	  * @return Condition that must be met for the items in this handler to be handled
 	  */
-	def condition: FlagLike = AlwaysTrue
+	def condition: Flag = AlwaysTrue
 	
 	/**
 	  * @param newCondition New handling-condition to apply.
 	  *                     Overwrites any existing condition.
 	  * @return Copy of this factory that uses the specified handling-condition instead of any existing condition.
 	  */
-	def usingCondition(newCondition: FlagLike): Repr
+	def usingCondition(newCondition: Flag): Repr
 	
 	/**
 	  * @param initialItems The items to place on this handler, initially. Default = empty collection.

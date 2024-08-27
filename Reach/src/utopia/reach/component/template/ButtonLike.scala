@@ -4,7 +4,7 @@ import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, H
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Space}
@@ -40,7 +40,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 	/**
 	  * @return A pointer that contains true while this button may be interacted with
 	  */
-	def enabledPointer: FlagLike
+	def enabledPointer: Flag
 	
 	/**
 	  * Triggers the actions associated with this button
@@ -144,7 +144,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		// Listens to keys involved in the hotkeys. Doesn't necessarily mean that any key is triggered.
 		override val keyStateEventFilter = KeyStateEventFilter(hotKeys.flatMap { _.keys })
 		
-		override val handleCondition: FlagLike = {
+		override val handleCondition: Flag = {
 			if (requiresFocus)
 				enabledPointer && focusPointer
 			else
@@ -196,7 +196,7 @@ trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorD
 		
 		// IMPLEMENTED	----------------------------
 		
-		override def handleCondition: FlagLike = enabledPointer
+		override def handleCondition: Flag = enabledPointer
 		
 		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {

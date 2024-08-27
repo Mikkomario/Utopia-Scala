@@ -3,7 +3,7 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.EventHandler
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
@@ -28,10 +28,10 @@ object KeyDownHandler
 	
 	// NESTED   --------------------------
 	
-	case class KeyDownHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+	case class KeyDownHandlerFactory(override val condition: Flag = AlwaysTrue)
 		extends HandlerFactory[KeyDownListener, KeyDownHandler, KeyDownHandlerFactory]
 	{
-		override def usingCondition(newCondition: FlagLike): KeyDownHandlerFactory = copy(condition = newCondition)
+		override def usingCondition(newCondition: Flag): KeyDownHandlerFactory = copy(condition = newCondition)
 		
 		override def apply(initialItems: IterableOnce[KeyDownListener]): KeyDownHandler =
 			new KeyDownHandler(initialItems, condition)

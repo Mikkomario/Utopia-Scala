@@ -10,7 +10,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.Y
@@ -307,7 +307,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, contextPointer: C
 		
 		// IMPLEMENTED  --------------------
 		
-		override def handleCondition: FlagLike = focusPointer
+		override def handleCondition: Flag = focusPointer
 		
 		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(settings.axis).foreach { direction =>
 			if (moveFocusInside(direction.sign, forceFocusLeave = true))

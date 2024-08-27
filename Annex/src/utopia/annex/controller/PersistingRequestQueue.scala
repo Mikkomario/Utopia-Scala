@@ -10,7 +10,7 @@ import utopia.flow.parse.file.container.SaveTiming.OnJvmClose
 import utopia.flow.parse.file.container.{FileContainer, ModelsFileContainer, SaveTiming}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.eventful.SettableFlag
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext
@@ -151,7 +151,7 @@ trait PersistingRequestQueue extends SystemRequestQueue
 	private def pushPersisting[A](request: Persisting)(pushRequest: => QueuedAction[RequestResult[A]]) =
 	{
 		// Uses pointers to determine when the data should be persisted and in which form
-		val sentFlag = Flag()(SysErrLogger)
+		val sentFlag = SettableFlag()(SysErrLogger)
 		val modelPointer = request.persistingModelPointer
 		val storedModelPointer = modelPointer.lightMergeWithUntil(sentFlag) { (model, sent) =>
 			if (sent) None else model } { (_, sent, _) => sent

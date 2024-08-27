@@ -4,7 +4,7 @@ import utopia.firmament.context.TextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
-import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.hierarchy.ComponentHierarchy

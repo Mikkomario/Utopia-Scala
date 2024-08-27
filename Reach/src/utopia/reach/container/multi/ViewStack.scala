@@ -12,7 +12,7 @@ import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Changing
-import utopia.flow.view.template.eventful.FlagLike.wrap
+import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff

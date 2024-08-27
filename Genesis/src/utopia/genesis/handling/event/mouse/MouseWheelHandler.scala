@@ -3,7 +3,7 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.{ConsumableEventHandler, ConsumeChoice}
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
@@ -27,10 +27,10 @@ object MouseWheelHandler
 	
 	// NESTED   ---------------------------
 	
-	case class MouseWheelHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+	case class MouseWheelHandlerFactory(override val condition: Flag = AlwaysTrue)
 		extends HandlerFactory[MouseWheelListener, MouseWheelHandler, MouseWheelHandlerFactory]
 	{
-		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
+		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
 		
 		override def apply(initialItems: IterableOnce[MouseWheelListener]) =
 			new MouseWheelHandler(initialItems, condition)

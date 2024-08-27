@@ -14,7 +14,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, V
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.view.immutable.eventful.AlwaysFalse
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -80,7 +80,7 @@ object PersistingApiRequest
 		  * @return A new API request targeting the specified path and posting the specified body
 		  */
 		def apply(path: String, body: Value = Value.empty,
-		          deprecationFlag: FlagLike = AlwaysFalse): PersistingApiRequest[A] =
+		          deprecationFlag: Flag = AlwaysFalse): PersistingApiRequest[A] =
 			new _PersistingApiRequest[A](persistingIdentifier, method, path, body, deprecationFlag)(sendFunction)
 	}
 	
@@ -124,7 +124,7 @@ object PersistingApiRequest
 	
 	private class _PersistingApiRequest[+A](persistingIdentifier: Constant, override val method: Method,
 	                                        override val path: String, bodyValue: Value,
-	                                        deprecationFlag: FlagLike)
+	                                        deprecationFlag: Flag)
 	                                       (sendFunction: Send[A])
 		extends PersistingApiRequest[A]
 	{

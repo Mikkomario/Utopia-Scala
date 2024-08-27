@@ -6,7 +6,7 @@ import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 object Fixed
 {
@@ -39,7 +39,7 @@ case class Fixed[+A](override val value: A) extends Changing[A]
 /**
   * A pointer that always contains 'true'
   */
-object AlwaysTrue extends Fixed(true) with FlagLike
+object AlwaysTrue extends Fixed(true) with Flag
 {
 	override def unary_! = AlwaysFalse
 	
@@ -49,7 +49,7 @@ object AlwaysTrue extends Fixed(true) with FlagLike
 /**
   * A pointer that always contains 'false'
   */
-object AlwaysFalse extends Fixed(false) with FlagLike
+object AlwaysFalse extends Fixed(false) with Flag
 {
 	override def unary_! = AlwaysTrue
 	

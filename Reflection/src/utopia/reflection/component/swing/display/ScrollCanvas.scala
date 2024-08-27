@@ -8,7 +8,7 @@ import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler
@@ -158,7 +158,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] = AcceptAll
 		override def mouseMoveEventFilter: Filter[MouseMoveEvent] = AcceptAll

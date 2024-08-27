@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.async
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.eventful.ResettableFlag
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 
 object VolatileFlag
 {
@@ -25,25 +25,12 @@ class VolatileFlag(initialState: Boolean = false)(implicit log: Logger)
 {
     // ATTRIBUTES   --------------
     
-    override lazy val readOnly: FlagLike = new FlagView(this)
+    override lazy val readOnly: Flag = new FlagView(this)
     
     
     // IMPLEMENTED  ---------------
     
     override def view = readOnly
-    
-    /**
-      * Sets this flag (same as !getAndSet(true))
-      * @return True if this flag was NOT previously set, i.e. the state of this flag was altered by this method call.
-      *         False if this flag was already set.
-      */
-    def set(): Boolean = !getAndSet(true)
-    /**
-      * Resets this flag (same as getAndSet(false))
-      * @return True if this flag was previously set, i.e. the state of this flag was altered by this method call.
-      *         False if this flag was not set.
-      */
-    def reset() = getAndSet(false)
     
     
 	// OTHER    ------------------

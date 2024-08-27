@@ -1,7 +1,7 @@
 package utopia.reach.focus
 
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.reach.component.template.ReachComponentLike
@@ -14,7 +14,7 @@ import utopia.reach.component.template.ReachComponentLike
   * @param enabledFlag A pointer that determines whether this feature is enabled or not. Default = always enabled.
   */
 class RequestFocusOnClickListener(component: FocusRequestable with ReachComponentLike,
-                                  enabledFlag: FlagLike = AlwaysTrue)
+                                  enabledFlag: Flag = AlwaysTrue)
 	extends MouseButtonStateListener
 {
 	// ATTRIBUTES   -----------------------------
@@ -25,7 +25,7 @@ class RequestFocusOnClickListener(component: FocusRequestable with ReachComponen
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def handleCondition: FlagLike = enabledFlag
+	override def handleCondition: Flag = enabledFlag
 	
 	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		component.requestFocus()

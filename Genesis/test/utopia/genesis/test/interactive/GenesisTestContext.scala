@@ -8,7 +8,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{DrawOrder, DrawSettings, Drawer}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
@@ -100,6 +100,6 @@ object GenesisTestContext
 	{
 		override def onKeyState(event: KeyStateEvent): Unit = println(event)
 		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 	}
 }

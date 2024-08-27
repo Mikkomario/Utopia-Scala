@@ -62,7 +62,7 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 /**
   * A set of integers, where consecutive sequences are stored as ranges.
   * @author Mikko Hilpinen
-  * @since 30.07.2024, v2.4.1
+  * @since 30.07.2024, v2.5
   */
 case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 {

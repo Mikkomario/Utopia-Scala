@@ -4,7 +4,7 @@ import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.util.Fps
 import utopia.paradigm.path.ProjectilePath
@@ -172,7 +172,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	private object SizeUpdater extends Actor
 	{
-		override def handleCondition: FlagLike = AlwaysTrue
+		override def handleCondition: Flag = AlwaysTrue
 		
 		override def act(duration: FiniteDuration) = {
 			// Advances, and may conclude process

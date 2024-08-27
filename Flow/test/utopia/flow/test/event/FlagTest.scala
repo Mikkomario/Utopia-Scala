@@ -2,8 +2,8 @@ package utopia.flow.test.event
 
 import utopia.flow.test.TestContext._
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.view.mutable.eventful.{EventfulPointer, Flag, ResettableFlag}
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableFlag, ResettableFlag}
+import utopia.flow.view.template.eventful.Flag
 
 /**
   * Tests eventful flags
@@ -12,7 +12,7 @@ import utopia.flow.view.template.eventful.FlagLike
   */
 object FlagTest extends App
 {
-	val i1 = Flag()
+	val i1 = SettableFlag()
 	val ri1 = ResettableFlag()
 	
 	var lastEvent = false
@@ -50,7 +50,7 @@ object FlagTest extends App
 	assert(ri1.hasNoListeners)
 	
 	// Tests !
-	val i2 = Flag()
+	val i2 = SettableFlag()
 	val ni2 = !i2
 	ni2.addListener(updateLastEventListener)
 	lastEvent = true
@@ -69,10 +69,10 @@ object FlagTest extends App
 	assert(!ni2.mayChange)
 	
 	// Tests && with ! - Optimized
-	val i3 = Flag()
+	val i3 = SettableFlag()
 	val ni3 = !i3 // Initially true
 	val pi1 = EventfulPointer(false)
-	val piv1: FlagLike = pi1.readOnly // Initially false
+	val piv1: Flag = pi1.readOnly // Initially false
 	val and2 = piv1 && ni3 // Initially false
 	ni2.removeListener(updateLastEventListener)
 	and2.addListener(updateLastEventListener)
@@ -106,7 +106,7 @@ object FlagTest extends App
 	assert(piv1.hasNoListeners)
 	
 	// Tests || (optimized)
-	val i4 = Flag()
+	val i4 = SettableFlag()
 	val or1 = i4 || piv1 // Piv1 == true => or == true
 	or1.addListener(updateLastEventListener)
 	lastEvent = true

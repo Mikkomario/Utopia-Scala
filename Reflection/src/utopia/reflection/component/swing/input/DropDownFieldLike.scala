@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Tab}
@@ -220,7 +220,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val handleCondition: FlagLike = visiblePopupPointer.map { _.isEmpty }
+		override val handleCondition: Flag = visiblePopupPointer.map { _.isEmpty }
 		
 		override val keyStateEventFilter = KeyStateEvent.filter.pressed && !KeyStateEvent.filter(Set(Esc, Tab))
 		override val mouseButtonStateEventFilter =

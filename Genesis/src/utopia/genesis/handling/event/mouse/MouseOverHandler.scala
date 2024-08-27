@@ -5,7 +5,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
@@ -32,10 +32,10 @@ object MouseOverHandler
 	
 	// NESTED   ---------------------------
 	
-	case class MouseOverHandlerFactory(override val condition: FlagLike = AlwaysTrue)
+	case class MouseOverHandlerFactory(override val condition: Flag = AlwaysTrue)
 		extends HandlerFactory[MouseOverListener, MouseOverHandler, MouseOverHandlerFactory]
 	{
-		override def usingCondition(newCondition: FlagLike) = copy(condition = newCondition)
+		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
 		
 		override def apply(initialItems: IterableOnce[MouseOverListener]) =
 			new MouseOverHandler(initialItems, condition)

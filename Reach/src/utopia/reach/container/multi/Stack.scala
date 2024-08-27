@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.sign.Sign.Negative
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
-import utopia.flow.view.template.eventful.FlagLike
+import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
@@ -506,7 +506,7 @@ trait Stack extends CustomDrawReachComponent with StackLike[ReachComponentLike]
 	/**
 	  * @return A pointer that contains true while this stack should be displayed. I.e. is non-empty.
 	  */
-	def visibilityPointer: FlagLike
+	def visibilityPointer: Flag
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -520,5 +520,5 @@ private class _Stack(override val parentHierarchy: ComponentHierarchy,
                      override val cap: StackLength, override val customDrawers: Seq[CustomDrawer])
 	extends Stack
 {
-	override lazy val visibilityPointer: FlagLike = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	override lazy val visibilityPointer: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
 }

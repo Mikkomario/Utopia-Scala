@@ -2,7 +2,7 @@ package utopia.genesis.handling.event
 
 import utopia.flow.operator.filter.Filter
 import utopia.flow.util.Mutate
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 /**
   * Common trait for factories used for creating event listeners
@@ -16,7 +16,7 @@ trait ListenerFactory[Event, +Repr]
     /**
       * @return Condition on which the created listeners should be informed of events
       */
-    def condition: FlagLike
+    def condition: Flag
     /**
       * @return Filter applied by the created listeners on incoming events
       */
@@ -31,7 +31,7 @@ trait ListenerFactory[Event, +Repr]
       * @param condition A condition for receiving event information (overrides existing condition)
       * @return Copy of this factory that uses (only) the specified condition for managing listening-states
       */
-    def usingCondition(condition: FlagLike): Repr
+    def usingCondition(condition: Flag): Repr
     
     
     // OTHER    -------------------------
@@ -61,5 +61,5 @@ trait ListenerFactory[Event, +Repr]
       * @param f A mapping function applied to this factory's listening condition
       * @return Copy of this factory that applies the mapped condition instead
       */
-    def mapCondition(f: Mutate[FlagLike]): Repr = usingCondition(f(condition))
+    def mapCondition(f: Mutate[Flag]): Repr = usingCondition(f(condition))
 }
