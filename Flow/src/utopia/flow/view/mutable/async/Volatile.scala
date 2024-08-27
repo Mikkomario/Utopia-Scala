@@ -3,24 +3,28 @@ package utopia.flow.view.mutable.async
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.event.model.{ChangeEvent, Destiny}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
 object Volatile
 {
     /**
-     * Creates a new volatile value
+     * Creates a new volatile container
+      * @param log Implicit logging implementation for handling failures thrown by event listeners
+      * @param value Initial value to wrap
      */
-    def apply[A](value: A) = new Volatile(value)
+    def apply[A](value: A)(implicit log: Logger) = new Volatile(value)
 }
 
 /**
-* This class wraps a value that may be changed from multiple threads. The class itself is 
-* mutable, but should only be used with types that have value semantics.
-* @author Mikko Hilpinen
+* This class wraps a value that may be changed from multiple threads.
+* @param _value Initial value to place in this container
+  * @author Mikko Hilpinen
 * @since 27.3.2019
 **/
-class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] with EventfulPointer[A]
+class Volatile[A](@volatile private var _value: A)(implicit log: Logger)
+    extends AbstractChanging[A] with EventfulPointer[A]
 {
     // ATTRIBUTES   ----------------
     
@@ -140,7 +144,6 @@ class Volatile[A](@volatile private var _value: A) extends AbstractChanging[A] w
         }
         // Fires the change event, if necessary
         changeEvent.foreach { fireEvent(_).foreach { _() } }
-        // Returns the custom result
         result
     }
 }

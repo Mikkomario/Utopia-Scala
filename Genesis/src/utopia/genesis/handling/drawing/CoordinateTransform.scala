@@ -1,13 +1,13 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.Use
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.template.eventful.FlagLike
-import utopia.genesis.graphics.DrawOrder
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 /**
@@ -72,9 +72,8 @@ trait CoordinateTransform
 		
 		val handlers = Handlers(buttonHandler, moveHandler, wheelHandler, dragHandler)
 		
-		override lazy val handleCondition: FlagLike =
-			buttonHandler.handleCondition || moveHandler.handleCondition ||
-				wheelHandler.handleCondition || dragHandler.handleCondition
+		override lazy val handleCondition: FlagLike = buttonHandler.handleCondition || moveHandler.handleCondition ||
+			wheelHandler.handleCondition || dragHandler.handleCondition
 		
 		
 		// IMPLEMENTED  ----------------------

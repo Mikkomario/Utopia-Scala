@@ -5,6 +5,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
@@ -79,6 +80,8 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	extends Runnable with Breakable
 {
 	// ATTRIBUTES   ---------------------------------
+	
+	private implicit val log: Logger = SysErrLogger
 	
 	private val currentRunsPointer = Volatile(0)
 	private val stopFlag = new VolatileFlag()

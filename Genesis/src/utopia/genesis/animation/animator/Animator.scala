@@ -1,5 +1,6 @@
 package utopia.genesis.animation.animator
 
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.CopyOnDemand
@@ -30,7 +31,7 @@ abstract class Animator[A] extends Actor
 	var allowsRepeat = true
 	private var _progress: Duration = Duration.Zero
 	
-	private val _pointer = CopyOnDemand(View { apply(_progress / animationDuration) })
+	private val _pointer = CopyOnDemand(View { apply(_progress / animationDuration) })(SysErrLogger)
 	
 	
 	// ABSTRACT	-----------------------

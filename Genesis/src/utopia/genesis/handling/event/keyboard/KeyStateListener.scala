@@ -1,6 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
 import utopia.flow.view.template.eventful.FlagLike
@@ -63,7 +64,7 @@ object KeyStateListener
           * @return A listener that receives one event only
           */
         def once[U](f: KeyStateEvent => U): KeyStateListener = {
-            val completionFlag = Flag()
+            val completionFlag = Flag()(SysErrLogger)
             conditional(!completionFlag) { event =>
                 f(event)
                 completionFlag.set()

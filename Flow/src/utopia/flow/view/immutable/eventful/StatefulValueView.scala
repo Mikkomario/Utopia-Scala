@@ -2,6 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.model.{ChangeEvent, ChangeResult, Destiny}
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
@@ -13,7 +14,8 @@ object StatefulValueView
 	  * @tparam A Type of values in the original pointer
 	  * @return A pointer that attaches the "will change" -status to the original pointer's values
 	  */
-	def apply[A](origin: Changing[A]) = new StatefulValueView[A, A](origin, Identity, cachingDisabled = true)
+	def apply[A](origin: Changing[A]) =
+		new StatefulValueView[A, A](origin, Identity, cachingDisabled = true)
 	/**
 	  * Creates a new stateful and mapping view into a pointer
 	  * @param origin Pointer to view / map
@@ -96,6 +98,8 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	
 	
 	// IMPLEMENTED  ---------------------
+	
+	override implicit def listenerLogger: Logger = origin.listenerLogger
 	
 	// Seals (stops changing) if maps to a final value
 	override def destiny: Destiny =

@@ -1,10 +1,11 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.AbstractChanging
 
@@ -23,10 +24,12 @@ object Variable
       *                              If false (default), the proposed value will be assigned as is on casting failures.
       *                              If this variable doesn't have a fixed type (i.e. 'isFixedType' is false),
       *                              this parameter is irrelevant.
+      * @param log Logging implementation for handling failures in change-event -handling
       * @return A new variable
       */
     def apply(name: String, initialValue: Value = Value.empty, isFixedType: Boolean = false,
-              requireCastingSuccess: Boolean = false): Variable =
+              requireCastingSuccess: Boolean = false)
+             (implicit log: Logger): Variable =
     {
         if (isFixedType)
             new FixedTypeVariable(name, initialValue.dataType, initialValue, requireCastingSuccess)
@@ -42,9 +45,11 @@ object Variable
       *                              the casting is required to succeed in order for a proposed value to be assigned.
       *                              If true, an empty value will be assigned on casting failures.
       *                              If false (default), the proposed value will be assigned as is on casting failures.
+      * @param log Logging implementation for handling failures in change-event -handling
       * @return A new variable
       */
-    def withFixedType(name: String, initialValue: Value = Value.empty, requireCastingSuccess: Boolean = false) =
+    def withFixedType(name: String, initialValue: Value = Value.empty, requireCastingSuccess: Boolean = false)
+                     (implicit log: Logger) =
         apply(name, initialValue, isFixedType = true, requireCastingSuccess)
     /**
       * Creates a new variable where values are cast to a specific data type before they are assigned.
@@ -55,57 +60,64 @@ object Variable
       *                              the casting is required to succeed in order for a proposed value to be assigned.
       *                              If true, an empty value will be assigned on casting failures.
       *                              If false (default), the proposed value will be assigned as is on casting failures.
+      * @param log Logging implementation for handling failures in change-event -handling
       * @return A new empty variable
       */
-    def emptyWithFixedType(name: String, dataType: DataType, requireCastingSuccess: Boolean = false) =
+    def emptyWithFixedType(name: String, dataType: DataType, requireCastingSuccess: Boolean = false)
+                          (implicit log: Logger) =
         withFixedType(name, Value.emptyWithType(dataType), requireCastingSuccess)
     
     
     // NESTED   -----------------------
     
-    private class _Variable(override val name: String, initialValue: Value = Value.empty)
+    private abstract class AbstractVariable(override val name: String, initialValue: Value = Value.empty)
+                                           (implicit log: Logger)
         extends AbstractChanging[Value] with Variable
     {
+        // ATTRIBUTES   ---------------------
+        
         private var _value = initialValue
-        override lazy val readOnly = super.readOnly
+        
+        
+        // ABSTRACT -------------------------
+        
+        protected def processValue(value: Value): Value
+        
+        
+        // IMPLEMENTED  ---------------------
+        
+        override def destiny: Destiny = ForeverFlux
         
         override def value: Value = _value
         override def value_=(newValue: Value): Unit = {
             val oldValue = _value
-            _value = newValue
+            // May process the value before assigning it
+            _value = processValue(value)
             fireEventIfNecessary(oldValue).foreach { _() }
         }
-        
-        override def destiny: Destiny = ForeverFlux
         
         override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
     }
     
+    private class _Variable(override val name: String, initialValue: Value = Value.empty)(implicit log: Logger)
+        extends AbstractVariable(name, initialValue)
+    {
+        override protected def processValue(value: Value): Value = value
+    }
+    
     private class FixedTypeVariable(override val name: String, override val dataType: DataType,
                                     initialValue: Value = Value.empty, requireCastingSuccess: Boolean = false)
-        extends AbstractChanging[Value] with Variable
+                                   (implicit log: Logger)
+        extends AbstractVariable(name, initialValue)
     {
-        // ATTRIBUTES   ------------------
+        // INITIAL CODE ------------------
         
-        private var _value = cast(initialValue)
+        value = cast(value)
         
         
         // IMPLEMENTED  ------------------
         
-        override def value = _value
-        override def value_=(value: Value) = {
-            // Casts to correct data type before assigning
-            val castValue = cast(value)
-            if (value != _value) {
-                val event = ChangeEvent(_value, castValue)
-                _value = castValue
-                fireEvent(event).foreach { _() }
-            }
-        }
-        
-        override def destiny: Destiny = ForeverFlux
-        
-        override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
+        override protected def processValue(value: Value): Value = cast(value)
         
         
         // OTHER    ---------------------

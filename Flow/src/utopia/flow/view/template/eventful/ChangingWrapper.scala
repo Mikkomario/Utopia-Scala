@@ -21,6 +21,7 @@ object ChangingWrapper
 	private class _ChangingWrapper[+A](override val wrapped: Changing[A]) extends ChangingWrapper[A]
 	{
 		override def readOnly = this
+		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 	}
 }
 
@@ -29,6 +30,7 @@ object ChangingWrapper
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
+// TODO: Consider removing some of the overridden functions
 trait ChangingWrapper[+A] extends Changing[A]
 {
 	// ABSTRACT ------------------------
@@ -69,11 +71,14 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def incrementalMap[B](initialMap: A => B)(incrementMap: (B, ChangeEvent[A]) => B) =
 		wrapped.incrementalMap(initialMap)(incrementMap)
 	override def incrementalMergeWith[B, R](other: Changing[B])(initialMerge: (A, B) => R)
-	                                       (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R) =
+	                                       (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R)
+	                                        =
 		wrapped.incrementalMergeWith(other)(initialMerge)(incrementMerge)
 	
-	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = wrapped.mergeWith(other)(f)
-	override def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R) =
+	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
+		wrapped.mergeWith(other)(f)
+	override def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R)
+	                                =
 		wrapped.mergeWith(first, second)(merge)
 	override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
 		wrapped.lazyMergeWith(other)(f)
@@ -87,9 +92,9 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def flatMap[B](f: A => Changing[B]) = wrapped.flatMap(f)
 	override def incrementalMapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean)
 	                                               (f: A2 => B)(merge: (R, B) => R)
-	                                               (implicit exc: ExecutionContext, log: Logger) =
+	                                               (implicit exc: ExecutionContext) =
 		wrapped.incrementalMapAsync(placeHolderResult, skipInitialMap)(f)(merge)
 	override def mapAsync[A2 >: A, B](placeHolderResult: B, skipInitialMap: Boolean)(f: A2 => B)
-	                                  (implicit exc: ExecutionContext, log: Logger) =
+	                                  (implicit exc: ExecutionContext) =
 		wrapped.mapAsync(placeHolderResult, skipInitialMap)(f)
 }

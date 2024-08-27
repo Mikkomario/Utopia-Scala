@@ -1,6 +1,6 @@
 package utopia.reach.test.interactive.drawable
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.handling.template.Handleable
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -52,14 +52,16 @@ object DrawableReachTestContext
 	  * Starts this test by displaying the window / canvas
 	  * @param viewedItems Items that will be added to the canvas element (for drawing & mouse-event delivery)
 	  */
-	def start(viewedItems: IterableOnce[Handleable] = Empty) = {
+	def display(viewedItems: IterableOnce[Handleable] = Empty) = {
 		canvas.viewHandlers ++= viewedItems
 		window.display(centerOnParent = true)
 		ReachTestContext.start()
 	}
+	def display(item: Handleable): Unit = display(Single(item))
 	/**
 	  * Starts this test by displaying the window / canvas
 	  * @param firstItem & moreItems Items that will be added to the canvas element (for drawing & mouse-event delivery)
 	  */
-	def start(firstItem: Handleable, moreItems: Handleable*): Unit = start(firstItem +: moreItems)
+	def display(firstItem: Handleable, secondItem: Handleable, moreItems: Handleable*): Unit =
+		display(Pair(firstItem, secondItem) ++ moreItems)
 }

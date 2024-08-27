@@ -8,7 +8,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.eventful.SettableOnce
 
 import java.time.Instant
@@ -81,6 +81,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 	
 	override def intercept(request: Request): Request = {
 		// Remembers the request, as well as the time, in order to log it later, once the response has been received
+		implicit val log: Logger = SysErrLogger
 		queue :+= (request, new SettableOnce(), Now)
 		request
 	}

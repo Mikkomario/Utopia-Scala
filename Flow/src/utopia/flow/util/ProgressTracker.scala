@@ -5,6 +5,7 @@ import utopia.flow.event.listener.ProgressListener
 import utopia.flow.event.model.ProgressEvent
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 
@@ -28,7 +29,7 @@ object ProgressTracker
 	 * @tparam A Type of process values used
 	 * @return A new progress tracker
 	 */
-	def apply[A](initialValue: A)(progressFrom: A => Double) =
+	def apply[A](initialValue: A)(progressFrom: A => Double)(implicit log: Logger) =
 		new ProgressTracker[A](EventfulPointer(initialValue))(progressFrom)
 	
 	/**
@@ -40,7 +41,9 @@ object ProgressTracker
 	 * @tparam A Type of process values used
 	 * @return A new progress tracker
 	 */
-	def apply[A](initialValue: A, listener: ProgressListener[A])(progressFrom: A => Double): ProgressTracker[A] = {
+	def apply[A](initialValue: A, listener: ProgressListener[A])(progressFrom: A => Double)
+	            (implicit log: Logger): ProgressTracker[A] =
+	{
 		val tracker = apply(initialValue)(progressFrom)
 		tracker.addListener(listener)
 		tracker
@@ -94,6 +97,7 @@ class ProgressTracker[A](val pointer: EventfulPointer[A])(progressFrom: A => Dou
 	override def value: A = pointer.value
 	override def value_=(newValue: A): Unit = pointer.value = newValue
 	override def valueIterator = pointer.valueIterator
+	@deprecated("Please use .map(...) instead in order to specify logging behavior", "v2.5")
 	override def mapValue[B](f: A => B) = pointer.mapValue(f)
 	
 	

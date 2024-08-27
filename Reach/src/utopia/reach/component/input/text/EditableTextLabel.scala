@@ -1,6 +1,6 @@
 package utopia.reach.component.input.text
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
 import utopia.flow.collection.immutable.{Empty, Pair}
@@ -324,7 +324,7 @@ object EditableTextLabel extends EditableTextLabelSetup()
 // TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
-                        val textPointer: EventfulPointer[String] = EventfulPointer(""))
+                        val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger))
 	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped },
 		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledPointer, settings.labelSettings,

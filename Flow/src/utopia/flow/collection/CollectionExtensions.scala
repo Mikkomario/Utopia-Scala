@@ -11,7 +11,7 @@ import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.Flag
@@ -960,7 +960,7 @@ object CollectionExtensions
 		def popWhile(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
 			val popBuilder = bf.newBuilder(coll)
 			val remainBuilder = bf.newBuilder(coll)
-			val foundFlag = Flag()
+			val foundFlag = Flag()(SysErrLogger)
 			val currentBuilderPointer = foundFlag.strongMap { if (_) remainBuilder else popBuilder }
 			ops.foreach { item =>
 				if (foundFlag.isNotSet && !f(item))
@@ -2303,7 +2303,8 @@ object CollectionExtensions
 		  * @tparam B Type of items in the resulting iterator
 		  * @return A copy of this iterator that supports change events
 		  */
-		def eventful[B >: A](initialValue: B) = EventfulIterator[B](initialValue, i)
+		def eventful[B >: A](initialValue: B)(implicit log: Logger) =
+			EventfulIterator[B](initialValue, i)
 		/**
 		  * Creates a copy of this iterator that supports change events
 		  * @param initialValue The value of the resulting iterator until next() is called for the first time
@@ -2311,7 +2312,7 @@ object CollectionExtensions
 		  * @return A copy of this iterator that supports change events
 		  */
 		@deprecated("Renamed to .eventful(B)", "v2.2")
-		def withEvents[B >: A](initialValue: B) = new EventfulIterator[B](initialValue, i)
+		def withEvents[B >: A](initialValue: B)(implicit log: Logger) = new EventfulIterator[B](initialValue, i)
 	}
 	
 	implicit class TryIterator[A](val i: Iterator[Try[A]]) extends AnyVal

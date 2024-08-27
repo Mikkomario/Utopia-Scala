@@ -5,6 +5,7 @@ import utopia.flow.async.process.Wait
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.time.Now
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -97,6 +98,7 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	
 	// IMPLEMENTED -----------------------------
 	
+	override implicit def listenerLogger: Logger = source.listenerLogger
 	override protected def wrapped = valuePointer
 	
 	override def destiny = source.destiny.fluxIf(queuedValuePointer.nonEmpty)

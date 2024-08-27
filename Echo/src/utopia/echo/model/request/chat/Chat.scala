@@ -8,6 +8,7 @@ import utopia.echo.model.ChatMessage
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -22,7 +23,7 @@ object Chat
 	  * @param jsonParser Implicit json parser used
 	  * @return Factory for creating chat requests which use streamed response-parsing
 	  */
-	def streamed(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def streamed(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		StreamedChat.factory
 }
 

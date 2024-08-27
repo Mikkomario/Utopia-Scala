@@ -2,6 +2,7 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.util.logging.Logger
 
 /**
   * Superclass for pointers that may be listened to and which may, at some point,
@@ -10,7 +11,7 @@ import utopia.flow.event.listener.ChangingStoppedListener
   * @since 31.8.2023, v2.2
   * @tparam A Type of changing values in this item
   */
-abstract class AbstractMayStopChanging[A] extends AbstractChanging[A] with MayStopChanging[A]
+abstract class AbstractMayStopChanging[A](implicit log: Logger) extends AbstractChanging[A] with MayStopChanging[A]
 {
 	// ATTRIBUTES   ------------------------
 	

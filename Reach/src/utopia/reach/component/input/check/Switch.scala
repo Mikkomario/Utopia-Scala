@@ -151,6 +151,8 @@ trait SwitchSettingsWrapper[+Repr] extends SwitchSettingsLike[Repr]
   */
 trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// OTHER    -------------------
 	
 	/**
@@ -234,6 +236,8 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
                          settings: SwitchSettings = SwitchSettings.default)
 	extends SwitchFactoryLike[SwitchFactory] with FromContextFactory[ColorContext, ContextualSwitchFactory]
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(context: ColorContext) = ContextualSwitchFactory(parentHierarchy, context, settings)
@@ -302,7 +306,7 @@ object Switch extends SwitchSetup()
   */
 class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-             override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
+             override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends AbstractButton(settings) with CustomDrawReachComponent with InteractionWithPointer[Boolean]

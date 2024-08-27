@@ -1,7 +1,7 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -230,6 +230,8 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	extends CheckBoxFactoryLike[CheckBoxFactory]
 		with FromContextFactory[ColorContext, ContextualCheckBoxFactory]
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(context: ColorContext) =
@@ -362,7 +364,7 @@ object CheckBox extends CheckBoxSetup()
 class CheckBox(parentHierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
-               override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false))
+               override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger))
 	extends AbstractButton(settings) with ReachComponentWrapper with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------

@@ -206,6 +206,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	// IMPLEMENTED  ---------------------
 	
 	override protected def wrapped = pointer
+	override implicit def listenerLogger: Logger = source.listenerLogger
 	
 	override def destiny = source.destiny.fluxIf(value.isProcessing)
 	

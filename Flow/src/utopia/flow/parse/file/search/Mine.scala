@@ -5,6 +5,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.immutable.{Empty, Tree}
 import utopia.flow.parse.file.search.ExcavationStatus.{Finished, Passed, Started, Unexplored}
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.VolatileLazy
 import utopia.flow.view.mutable.async.Volatile
 
@@ -20,6 +21,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class Mine[R](val directory: Path)
 {
 	// ATTRIBUTES	--------------------
+	
+	private implicit val log: Logger = SysErrLogger
 	
 	private val _status: Volatile[ExcavationStatus] = Volatile(Unexplored)
 	// Underlying pathways are lazily initialized

@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.display.{Refreshable, RefreshableWithPointer}
 import utopia.firmament.context.{AnimationContext, TextContext}
 import utopia.firmament.controller.data.ContainerContentDisplayer

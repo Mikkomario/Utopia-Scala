@@ -1,6 +1,9 @@
 # Utopia Annex - List of Changes
 
-## v1.8.1 (in development)
+## v1.9 (in development)
+### Breaking changes
+- Most **Schrodinger** constructors now require access to an implicit **Logger** implementation, 
+  because error-logging was added to their managed state pointers.
 ### New features
 - Added **RequestResultExtensions** that adds a couple of new methods for **Futures** that contain **RequestResults**
 ### New methods

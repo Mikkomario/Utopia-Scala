@@ -1,8 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.event.model.{ChangeResponse, Destiny}
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, FlagLike, OptimizedChanging}
 
 object OptimizedMirror
@@ -38,7 +38,7 @@ object OptimizedMirror
 	  * @param origin The viewed pointer
 	  * @param viewCondition A condition that must be met in order for the viewing to be active.
 	  *                      If set to false, the last available value will be viewed instead.
-	  * @tparam O Type of the viewed values
+	  *  @tparam O Type of the viewed values
 	  * @return A new view that reflects the specified pointer's value, but only while the view condition is met
 	  */
 	def viewWhile[O](origin: Changing[O], viewCondition: FlagLike) =
@@ -90,6 +90,8 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: FlagLike 
 	
 	
 	// IMPLEMENTED  -------------------------
+	
+	override implicit def listenerLogger: Logger = origin.listenerLogger
 	
 	override def value: R = placeholder.getOrElse(bridge.value)
 	override def destiny: Destiny = origin.destiny.sealedIf { condition.isAlwaysFalse }

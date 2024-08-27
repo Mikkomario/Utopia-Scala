@@ -3,6 +3,7 @@ package utopia.firmament.controller.data
 import utopia.firmament.component.Component
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing

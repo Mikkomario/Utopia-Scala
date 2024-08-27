@@ -1,13 +1,16 @@
 # Utopia Firmament - List of Changes
 
 ## v1.3.1 (in development)
-Built with Scala v2.13.14
 ### New features
 - Added **HasGuiState** trait
 ### New methods
 - **GuiElementStatus**
   - Added multiple new utility getters & setters
 ### Other changes
+- Built with Scala v2.13.14
+- **ComponentCreationDefaults** now contains `implicit var componentLogger: Logger`, 
+  which is used for logging errors within GUI-components and systems
+  - This property is implicitly available to all instances of **Component**
 - **Component** now contains a protected `relativizeMouseEventForChildren(...)` function.
   - Overriding this function affects how mouse events are distributed downwards.
 

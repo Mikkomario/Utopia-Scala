@@ -1,5 +1,6 @@
 package utopia.reflection.controller.data
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.AreaOfItems
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable

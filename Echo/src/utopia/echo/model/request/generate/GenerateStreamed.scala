@@ -7,6 +7,7 @@ import utopia.echo.model.LlmDesignator
 import utopia.echo.model.response.generate.StreamedReply
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,7 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class GenerateStreamed(prompt: Prompt, override val conversationContext: Value = Value.empty,
                        testDeprecation: => Boolean = false)
-                      (implicit override val llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser)
+                      (implicit override val llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser,
+                       log: Logger)
 	extends Generate[StreamedReply]
 {
 	// ATTRIBUTES   -----------------------------

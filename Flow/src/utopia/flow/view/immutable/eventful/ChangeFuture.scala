@@ -22,11 +22,13 @@ object ChangeFuture
 	  *              yielding a new value to store.
 	  *              Will be called on both successful and failed resolves.
 	  * @param exc Implicit execution context.
+	  * @param log Implicit logging implementation used for handling failures thrown by listeners assigned to this pointer
 	  * @tparam A Type of stored value
 	  * @tparam F Type of future result, when successful
 	  * @return A new change future
 	  */
-	def merging[A, F](placeHolder: A, future: Future[F])(merge: (A, Try[F]) => A)(implicit exc: ExecutionContext) =
+	def merging[A, F](placeHolder: A, future: Future[F])(merge: (A, Try[F]) => A)
+	                 (implicit exc: ExecutionContext, log: Logger) =
 		new ChangeFuture[A, F](placeHolder, future)(merge)
 	
 	/**
@@ -35,6 +37,7 @@ object ChangeFuture
 	  * @param future      A future
 	  * @param exc         Implicit execution context
 	  * @param log A logging implementation for recording cases where the future fails
+	  *            or where an assigned listener throws an exception
 	  * @tparam A Type of held value
 	  * @return A new change future.
 	  *         This future will continue to contain the placeholder value if the future fails to resolve.
@@ -54,7 +57,7 @@ object ChangeFuture
   * @since 9.12.2020, v1.9
   */
 class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A, Try[F]) => A)
-                        (implicit exc: ExecutionContext)
+                        (implicit exc: ExecutionContext, log: Logger)
 	extends AbstractChanging[A]
 {
 	// ATTRIBUTES	------------------------------
@@ -74,7 +77,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		
 		// Generates change events, if needed
 		if (v != placeHolder)
-			fireEvent(ChangeEvent(placeHolder, v)).foreach { _() }
+			fireEvent(ChangeEvent(placeHolder, v)).foreach { effect => Try { effect() }.logFailure }
 		
 		// Informs the stop listeners
 		stopListeners.foreach { _.onChangingStopped() }
@@ -96,7 +99,6 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	// IMPLEMENTED	------------------------------
 	
 	override def value = resultPointer.value.getOrElse(placeHolder)
-	
 	override def destiny: Destiny = if (isCompleted) Sealed else MaySeal
 	
 	override def readOnly = this

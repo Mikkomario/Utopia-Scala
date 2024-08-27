@@ -7,6 +7,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.HasIsEmpty
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
@@ -63,7 +64,7 @@ object Schrodinger
 	                                                                      resultFuture: Future[RequestResult[R]],
 	                                                                      emptyIsDead: Boolean = false)
 	                                                                     (localize: R => L)
-	                                                                     (implicit exc: ExecutionContext) =
+	                                                                     (implicit exc: ExecutionContext, log: Logger) =
 	{
 		makePointer[L, R, Try[R]](local, Success(placeHolder), resultFuture,
 			Flux(!emptyIsDead || !local.isEmpty))(Identity){
@@ -73,14 +74,14 @@ object Schrodinger
 	                                                           resultFuture: Future[RequestResult[M]],
 	                                                           emptyIsDead: Boolean = false,
 	                                                           expectFailure: Boolean = false)
-	                                                          (implicit exc: ExecutionContext) =
+	                                                          (implicit exc: ExecutionContext, log: Logger) =
 	{
 		makePointer[M, M, Try[M]](placeHolder, Success(placeHolder), resultFuture, Flux(!expectFailure))(Identity){
 			(placeHolder, result) => testEmptyState(placeHolder, result, emptyIsDead)(Identity) }
 	}
 	private[schrodinger] def pullPointer[A](initialManifest: Try[A], placeHolderResult: Try[A],
 	                                        resultFuture: Future[RequestResult[Try[A]]], flux: Flux = Flux)
-	                                       (implicit exc: ExecutionContext) =
+	                                       (implicit exc: ExecutionContext, log: Logger) =
 	{
 		makePointer[Try[A], Try[A], Try[A]](initialManifest, placeHolderResult, resultFuture, flux) { _.flatten } {
 			(placeHolder, parsed) =>
@@ -93,7 +94,7 @@ object Schrodinger
 	                                              resultFuture: Future[RequestResult[B]], flux: Flux = Flux)
 	                                             (process: Try[B] => R)
 	                                             (merge: (M, R) => (M, R, Final))
-	                                             (implicit exc: ExecutionContext) =
+	                                             (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Stores the state in a Volatile pointer
 		val pointer = Volatile[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
@@ -150,7 +151,8 @@ object Schrodinger
   *           (i.e. the common class between the Schrödinger state, the alive state and the dead state)
   * @tparam R Type for tracking received responses
   */
-class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)]) extends HasSchrodingerState
+class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)])
+	extends HasSchrodingerState
 {
 	// ATTRIBUTES   ----------------------
 	

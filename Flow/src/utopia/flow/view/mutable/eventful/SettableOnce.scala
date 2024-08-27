@@ -1,9 +1,13 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
+
+import scala.util.Try
 
 object SettableOnce
 {
@@ -11,7 +15,7 @@ object SettableOnce
 	  * @tparam A Type of set item
 	  * @return A new pointer that may only be set once
 	  */
-	def apply[A]() = new SettableOnce[A]()
+	def apply[A]()(implicit log: Logger) = new SettableOnce[A]()
 	
 	/**
 	  * @param value A preset value
@@ -19,7 +23,7 @@ object SettableOnce
 	  * @return A pointer that has been set and can't be modified anymore
 	  */
 	def set[A](value: A) = {
-		val pointer = new SettableOnce[A]()
+		val pointer = new SettableOnce[A]()(SysErrLogger)
 		pointer.set(value)
 		pointer
 	}
@@ -31,7 +35,7 @@ object SettableOnce
   * @author Mikko Hilpinen
   * @since 16.11.2022, v2.0
   */
-class SettableOnce[A] extends AbstractMayStopChanging[Option[A]] with EventfulPointer[Option[A]]
+class SettableOnce[A](implicit log: Logger) extends AbstractMayStopChanging[Option[A]] with EventfulPointer[Option[A]]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -73,7 +77,7 @@ class SettableOnce[A] extends AbstractMayStopChanging[Option[A]] with EventfulPo
 			throw new IllegalStateException("SettableOnce.value may only be defined once")
 		else if (newValue.isDefined) {
 			_value = newValue
-			fireEventIfNecessary(None, newValue).foreach { _() }
+			fireEventIfNecessary(None, newValue).foreach { effect => Try { effect() }.logFailure }
 			declareChangingStopped()
 		}
 	}

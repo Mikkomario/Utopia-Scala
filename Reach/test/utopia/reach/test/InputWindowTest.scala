@@ -34,6 +34,7 @@ import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
+import ReachTestContext._
 
 /**
   * Tests input window creation
@@ -42,8 +43,6 @@ import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
   */
 object InputWindowTest extends App
 {
-	import ReachTestContext._
-	
 	Changing.listenerDebuggingLimit = 100
 	
 	val icons = ImageCache.icons("Reach/test-images", Some(Size.square(40))).mapValues { _.map { _.cropped } }
@@ -71,7 +70,7 @@ object InputWindowTest extends App
 		override protected def warningPopupContext: ReachContentWindowContext =
 			windowContext.borderless.nonResizable.withContentContext(baseContext.against(colors.failure).forTextComponents)
 		
-		override protected def log: Logger = ReachTestContext.log
+		override implicit protected def log: Logger = ReachTestContext.log
 		
 		override protected def inputTemplate = {
 			val nameErrorPointer = EventfulPointer(LocalizedString.empty)

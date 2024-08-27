@@ -6,7 +6,6 @@ import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
 import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.modifier.MaxOptimalSizeModifier
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.flow.view.template.eventful.FlagLike
@@ -144,7 +143,7 @@ class ScrollCanvas(originalWorldSize: Size, val drawHandler: DrawableHandler, ac
 	  * @param maxFPS The largest frames per second rate allowed (default = 60 Hrz)
 	  * @param context The asynchronous execution context (implicit)
 	  */
-	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext, logger: Logger) = {
+	def startDrawing(maxFPS: Fps = Fps.default)(implicit context: ExecutionContext) = {
 		if (started.set()) {
 			canvas.addCustomDrawer(new CustomDraw())
 			val repaintLoop = new RepaintLoop(canvas.component, maxFPS)

@@ -7,6 +7,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -82,13 +83,14 @@ object PullManySchrodinger
 	  *                     Default = false = Result is alive as long as it resolves successfully.
 	  * @param localize     A function that converts a remotely pulled instance into its local variant
 	  * @param exc          Implicit execution context
+	  * @param log Implicit logging implementation for handling event-system failures
 	  * @tparam L The locally stored item variants (spirits)
 	  * @tparam R The remotely store item variants (instances)
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
 	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult[Seq[R]]], emptyIsDead: Boolean = false)
-	               (localize: R => L)(implicit exc: ExecutionContext) =
+	               (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
 		wrap(Schrodinger.getPointer(local, Empty: Seq[R], resultFuture, emptyIsDead) { _.map(localize) })
 	
 	/**
@@ -102,18 +104,19 @@ object PullManySchrodinger
 	  *                     Default = false = Result is alive as long as it resolves successfully.
 	  * @param localize     A function that converts a remotely pulled instance into its local variant
 	  * @param exc          Implicit execution context
+	  * @param log Implicit logging implementation for handling event-system failures
 	  * @tparam L The locally stored item variants (spirits)
 	  * @tparam R The remotely store item variants (instances)
 	  * @return A new schrödinger that contains local pull results
 	  *         and updates itself once the server-side results arrive.
 	  */
 	def pullAndParse[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
-	                       emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext) =
+	                       emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
 		apply(local, resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
-	               (localize: R => L)(implicit exc: ExecutionContext): PullManySchrodinger[L, R] =
+	               (localize: R => L)(implicit exc: ExecutionContext, log: Logger): PullManySchrodinger[L, R] =
 		pullAndParse(local, resultFuture, parser)(localize)
 	
 	/**
@@ -124,12 +127,13 @@ object PullManySchrodinger
 	  *                      Default = false = Successful request always yields Alive (provided parsing succeeds, also)
 	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
 	  * @param exc           Implicit execution context
+	  * @param log Implicit logging implementation for handling event-system failures
 	  * @tparam A Type of items parsed
 	  * @return A new schrödinger that will contain an empty vector until server results arrive
 	  */
 	def remote[A](resultFuture: Future[RequestResult[Seq[A]]],
 	              emptyIsDead: Boolean = false, expectFailure: Boolean = false)
-	             (implicit exc: ExecutionContext) =
+	             (implicit exc: ExecutionContext, log: Logger) =
 		wrap(Schrodinger.remoteGetPointer[Seq[A]](Empty, resultFuture, emptyIsDead, expectFailure))
 	
 	/**
@@ -141,17 +145,18 @@ object PullManySchrodinger
 	  *                      Default = false = Successful request always yields Alive (provided parsing succeeds, also)
 	  * @param expectFailure Whether the request is expected to fail (default = false = expected to succeed)
 	  * @param exc           Implicit execution context
+	  * @param log Implicit logging implementation for handling event-system failures
 	  * @tparam A Type of items parsed
 	  * @return A new schrödinger that will contain an empty vector until server results arrive
 	  */
 	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                   emptyIsDead: Boolean = false, expectFailure: Boolean = false)
-	                  (implicit exc: ExecutionContext) =
+	                  (implicit exc: ExecutionContext, log: Logger) =
 		remote[A](resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead, expectFailure)
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
 	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
-	             (implicit exc: ExecutionContext): PullManySchrodinger[A, A] =
+	             (implicit exc: ExecutionContext, log: Logger): PullManySchrodinger[A, A] =
 		parseRemote(resultFuture, parser)
 }
 

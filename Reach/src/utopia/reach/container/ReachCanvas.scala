@@ -201,7 +201,7 @@ object ReachCanvas
 	
 	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: ResettableFlag,
 	                                     absolutePositionView: Resettable, mouseDisabled: Boolean)
-	                                    (implicit exc: ExecutionContext)
+	                                    (implicit exc: ExecutionContext, log: Logger)
 		extends AncestorListener
 	{
 		// ATTRIBUTES   --------------------
@@ -234,7 +234,7 @@ object ReachCanvas
 	
 	private class SwingMouseEventConverter(actorHandler: ActorHandler, canvas: ReachCanvas,
 	                                       parentPointer: Changing[Option[java.awt.Component]])
-	                                      (implicit exc: ExecutionContext)
+	                                      (implicit exc: ExecutionContext, log: Logger)
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -286,7 +286,6 @@ object ReachCanvas
   *                                     3) Call updateLayout() for all parent elements of this canvas, and this canvas.
   *                                 This might happen immediately or after a delay.
   * @param exc Implicit execution context
-  * @param log Implicit logging implementation for some error cases
   */
 // TODO: Set up drag handling
 class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: FlagLike,
@@ -294,7 +293,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
                             enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
                            (revalidateImplementation: ReachCanvas => Unit)
-                           (implicit exc: ExecutionContext, log: Logger)
+                           (implicit exc: ExecutionContext)
 	extends ReachCanvasLike with Stackable
 {
 	// ATTRIBUTES	---------------------------
@@ -616,7 +615,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 				// Calculates new cursor image to use when mouse position changes
 				.mapAsync(defaultCursor, skipInitialMap = true) { position =>
 					cursorManager.cursorImageAt(position) { _ => defaultBackgroundShadePointer.value }
-				}(swapExc, log)
+				}(swapExc)
 				// Whenever the image gets updated, changes the component cursor
 				.addListener { e =>
 					cursorManager.cursorForImage(e.newValue).foreach { cursor =>

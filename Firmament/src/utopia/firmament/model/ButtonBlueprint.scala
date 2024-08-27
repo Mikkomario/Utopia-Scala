@@ -1,5 +1,6 @@
 package utopia.firmament.model
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}

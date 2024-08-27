@@ -30,7 +30,7 @@ object LazyMergeMirror
 		else if (source2.mayChange)
 			source2.lazyMap { merge(source1.value, _) }
 		else
-			Lazy.listenable { merge(source1.value, source2.value) }
+			Lazy.listenable { merge(source1.value, source2.value) }(source1.listenerLogger)
 	}
 	
 	/**
@@ -53,12 +53,13 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[+O1, +O2, +Reflection](source1: Changing[O1], source2: Changing[O2])(merge: (O1, O2) => Reflection)
+class LazyMergeMirror[+O1, +O2, +Reflection](source1: Changing[O1], source2: Changing[O2])
+                                            (merge: (O1, O2) => Reflection)
 	extends ListenableLazyWrapper[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value) }
+	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value) }(source1.listenerLogger)
 	private lazy val listener = ChangeListener.onAnyChange { cache.reset(); Continue }
 	
 	

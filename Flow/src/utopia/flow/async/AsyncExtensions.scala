@@ -3,6 +3,7 @@ package utopia.flow.async
 import utopia.flow.async.process.{Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.TryCatch
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
@@ -207,7 +208,7 @@ object AsyncExtensions
 		                            (implicit exc: ExecutionContext) =
 		{
 			// Pointer that collects the results of both futures, once they arrive
-			val resultsPointer = Volatile[(Option[Try[A]], Option[Try[B]])](None -> None)
+			val resultsPointer = Volatile[(Option[Try[A]], Option[Try[B]])](None -> None)(SysErrLogger)
 			// Completes the pointer asynchronously
 			f.onComplete { result1 =>
 				resultsPointer.update { case (_, otherResult) => Some(result1) -> otherResult }

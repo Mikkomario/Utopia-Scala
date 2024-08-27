@@ -4,14 +4,18 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.mutable.{MutableModel, Variable}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.generic.model.template
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.model.immutable.{Storable, Table}
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.OrderBy
 
 import scala.util.Success
+import DBModel.log
 
 object DBModel
 {
+    private implicit val log: Logger = SysErrLogger
+    
     /**
      * Creates a new factory for storable models of a certain table
      */
@@ -34,7 +38,7 @@ object DBModel
 * @since 22.5.2018
 **/
 class DBModel(override val table: Table)
-    extends MutableModel[Variable](Empty, table.toModelDeclaration.toVariableFactory) with Storable with Readable
+    extends MutableModel[Variable](Empty, table.toModelDeclaration.toVariableFactory(log)) with Storable with Readable
 {
     // COMPUTED    -------------------
     
@@ -50,8 +54,9 @@ class DBModel(override val table: Table)
 class DBModelFactory(override val table: Table, override val defaultOrdering: Option[OrderBy] = None)
     extends FromRowModelFactory[DBModel]
 {
-    override def apply(model: template.ModelLike[Property]) =
-    {
+    private implicit val log: Logger = SysErrLogger
+    
+    override def apply(model: template.ModelLike[Property]) = {
         val storable = new DBModel(table)
         storable ++= model.properties.map { p => Variable(p.name, p.value) }
     

@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectableWithPointers
 import utopia.firmament.drawing.template.CustomDrawer
@@ -92,7 +93,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	protected val popupContentView = SwitchPanel[AwtStackable](searchStack)
 	
 	private var focusGainSkips = 0
-	private val visiblePopupPointer = EventfulPointer.empty[Window[_]]()
+	private val visiblePopupPointer = EventfulPointer.empty[Window[_]]()(log)
 	
 	
 	// COMPUTED	-------------------------------

@@ -18,7 +18,7 @@ object LazyMirror
 }
 
 /**
-  * Provides a read-only access to a changing item's mapped value. Performs the mapping operation only when required,
+  * Provides read-only access to a changing item's mapped value. Performs the mapping operation only when required,
   * but doesn't provide listener interface because of that.
   * @author Mikko Hilpinen
   * @since 22.7.2020, v1.8
@@ -32,7 +32,7 @@ class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Ref
 {
 	// ATTRIBUTES	--------------------------
 	
-	private val cache = ResettableLazy.listenable { f(source.value) }
+	private val cache = ResettableLazy.listenable { f(source.value) }(source.listenerLogger)
 	
 	
 	// INITIAL CODE	--------------------------

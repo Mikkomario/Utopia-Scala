@@ -26,6 +26,7 @@ import utopia.paradigm.transform.Adjustment
   */
 object DrawableMouseTest extends App
 {
+	import utopia.reach.test.ReachTestContext._
 	import DrawableReachTestContext._
 	
 	private val viewBoundsPointer = Fixed(viewBounds)
@@ -33,7 +34,7 @@ object DrawableMouseTest extends App
 	println(canvas.stackSize)
 	
 	window.display(centerOnParent = true)
-	start(TestItem, DrawBoundsDrawer)
+	display(TestItem, DrawBoundsDrawer)
 	
 	private object DrawBoundsDrawer extends AbstractDrawable(Foreground)
 	{

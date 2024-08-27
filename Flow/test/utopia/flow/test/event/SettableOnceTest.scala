@@ -1,6 +1,7 @@
 package utopia.flow.test.event
 
 import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.test.TestContext._
 
 import scala.util.Try
 

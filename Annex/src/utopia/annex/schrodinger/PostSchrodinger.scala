@@ -6,6 +6,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -60,12 +61,14 @@ object PostSchrodinger
 	  * @param spiritualize A function for presenting a "spirit" form / manifest from the received response,
 	  *                     if successful
 	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation for handling certain unexpected failures.
+	  *            For example those thrown by listeners attached to this Schrödinger's pointers.
 	  * @tparam S Type of spirit / manifest used
 	  * @tparam A Type of created instance
 	  * @return A new schrödinger
 	  */
 	def apply[S, A](spirit: S, resultFuture: Future[RequestResult[A]])(spiritualize: A => S)
-	               (implicit exc: ExecutionContext) =
+	               (implicit exc: ExecutionContext, log: Logger) =
 		wrap(Schrodinger.makePointer[S, A, Try[A]](spirit, pendingFailure, resultFuture, PositiveFlux)(Identity){
 			(spirit, result) =>
 				val manifest = result match {
@@ -85,17 +88,19 @@ object PostSchrodinger
 	  * @param spiritualize A function for presenting a "spirit" form / manifest from the received response,
 	  *                     if successful
 	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation for handling certain unexpected failures.
+	  *            For example those thrown by listeners attached to this Schrödinger's pointers.
 	  * @tparam S Type of spirit / manifest used
 	  * @tparam A Type of created instance
 	  * @return A new schrödinger
 	  */
 	def postAndParse[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
-	                      (spiritualize: A => S)(implicit exc: ExecutionContext) =
+	                      (spiritualize: A => S)(implicit exc: ExecutionContext, log: Logger) =
 		apply[S, A](spirit, resultFuture.map { _.parsingOneWith(parser) })(spiritualize)
 	
 	@deprecated("Please use .postAndParse(...) instead", "v1.8")
 	def apply[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
-	               (spiritualize: A => S)(implicit exc: ExecutionContext): PostSchrodinger[S, A] =
+	               (spiritualize: A => S)(implicit exc: ExecutionContext, log: Logger): PostSchrodinger[S, A] =
 		postAndParse(spirit, resultFuture, parser)(spiritualize)
 }
 
@@ -107,4 +112,5 @@ object PostSchrodinger
   * @tparam S Type of the data being posted (local data, aka. spirit)
   * @tparam A Type of data after it has been instantiated on server-side (remote data, aka. instance)
   */
-class PostSchrodinger[+S, +A](pointer: Changing[(S, Try[A], SchrodingerState)]) extends Schrodinger[S, Try[A]](pointer)
+class PostSchrodinger[+S, +A](pointer: Changing[(S, Try[A], SchrodingerState)])
+	extends Schrodinger[S, Try[A]](pointer)

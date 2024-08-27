@@ -1,5 +1,20 @@
 package utopia.flow.operator
 
+object ScopeUsable
+{
+	// OTHER    ----------------------
+	
+	def apply[A](item: A): ScopeUsable[A] = Wrapper(item)
+	
+	
+	// NESTED   ----------------------
+	
+	private case class Wrapper[+A](wrapped: A) extends ScopeUsable[A]
+	{
+		override def self: A = wrapped
+	}
+}
+
 /**
   * A common trait for context items that are usable in a specific scope
   * @author Mikko Hilpinen

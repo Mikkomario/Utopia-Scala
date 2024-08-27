@@ -7,6 +7,7 @@ import utopia.echo.model.ChatMessage
 import utopia.echo.model.response.chat.StreamedReplyMessage
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 
 import scala.annotation.unused
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,14 +22,15 @@ object StreamedChat
 	  * @param jsonParser Json parser used in response-parsing
 	  * @return A factory for constructing streamed chat requests
 	  */
-	def factory(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def factory(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		ChatRequestFactory { (msg, history, testDeprecation) => new StreamedChat(msg, history, testDeprecation()) }
 		
 	
 	// IMPLICIT -----------------------------
 	
 	implicit def objectToFactory(@unused o: StreamedChat.type)
-	                            (implicit exc: ExecutionContext, jsonParser: JsonParser): ChatRequestFactory[StreamedChat] =
+	                            (implicit exc: ExecutionContext, jsonParser: JsonParser,
+	                             log: Logger): ChatRequestFactory[StreamedChat] =
 		factory
 }
 
@@ -40,7 +42,7 @@ object StreamedChat
   */
 class StreamedChat(override val message: ChatMessage, override val conversationHistory: Seq[ChatMessage] = Empty,
                    testDeprecation: => Boolean = false)
-                  (implicit exc: ExecutionContext, jsonParser: JsonParser)
+                  (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends Chat[StreamedReplyMessage]
 {
 	// ATTRIBUTES   ------------------------

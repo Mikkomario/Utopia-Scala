@@ -1,6 +1,7 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.graphics.Priority.Low

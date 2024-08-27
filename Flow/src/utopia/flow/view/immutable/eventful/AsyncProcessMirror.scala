@@ -54,7 +54,6 @@ object AsyncProcessMirror
 	  *                           Default = false = mapping will start immediately.
 	  * @param map                A synchronous mapping function
 	  * @param exc                Implicit execution context
-	  * @param log                Implicit logging implementation for encountered errors
 	  * @tparam Origin     Original pointer value type
 	  * @tparam Reflection Successful mapping result type
 	  * @return A new asynchronously mirroring pointer
@@ -62,7 +61,7 @@ object AsyncProcessMirror
 	def apply[Origin, Reflection](source: Changing[Origin], placeHolder: Reflection,
 	                              skipInitialProcess: Boolean = false)
 	                             (map: Origin => Reflection)
-	                             (implicit exc: ExecutionContext, log: Logger): Changing[AsyncMirrorValue[Origin, Reflection]] =
+	                             (implicit exc: ExecutionContext): Changing[AsyncMirrorValue[Origin, Reflection]] =
 		merging[Origin, Reflection, Reflection](source, placeHolder, skipInitialProcess)(map) { (_, result) => result }
 	
 	/**
@@ -77,7 +76,6 @@ object AsyncProcessMirror
 	  * @param merge              A function that merges mapping results and previously acquired value into a new pointer value.
 	  *                           Handles possible mapping function errors, also.
 	  * @param exc                Implicit execution context
-	  * @param log                Implicit logging implementation for encountered errors
 	  * @tparam Origin     Original pointer value type
 	  * @tparam Result     Mapping result type before merging
 	  * @tparam Reflection Mapping result type after merging
@@ -87,7 +85,7 @@ object AsyncProcessMirror
 	                                      skipInitialProcess: Boolean = false)
 	                                     (map: Origin => Result)
 	                                     (merge: (Reflection, Result) => Reflection)
-	                                     (implicit exc: ExecutionContext, log: Logger): Changing[AsyncMirrorValue[Origin, Reflection]] =
+	                                     (implicit exc: ExecutionContext): Changing[AsyncMirrorValue[Origin, Reflection]] =
 	{
 		// Case: Mapping required => constructs a proper mirror
 		if (source.mayChange || !skipInitialProcess)
@@ -119,7 +117,6 @@ object AsyncProcessMirror
   * @param merge A function that merges mapping results and previously acquired value into a new pointer value.
   *              Handles possible mapping function errors, also.
   * @param exc Implicit execution context
-  * @param log Implicit logging implementation for encountered errors
   *
   * @tparam Origin Original pointer value type
   * @tparam Result Mapping result type before merging
@@ -129,7 +126,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
                                                      skipInitialProcess: Boolean = false)
                                                     (f: Origin => Result)
                                                     (merge: (Reflection, Result) => Reflection)
-                                                    (implicit exc: ExecutionContext, log: Logger)
+                                                    (implicit exc: ExecutionContext)
 	extends ChangingWrapper[AsyncMirrorValue[Origin, Reflection]]
 		with MayStopChanging[AsyncMirrorValue[Origin, Reflection]]
 {
@@ -169,6 +166,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	
 	// IMPLEMENTED  ---------------------
 	
+	override implicit def listenerLogger: Logger = source.listenerLogger
 	override protected def wrapped = pointer
 	
 	override def destiny = source.destiny.fluxIf(value.isProcessing)

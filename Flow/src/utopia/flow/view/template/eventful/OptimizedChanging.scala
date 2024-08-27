@@ -12,7 +12,8 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
-abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MayStopChanging[A]
+abstract class OptimizedChanging[A]
+	extends ChangingWithListeners[A] with MayStopChanging[A]
 {
 	// ATTRIBUTES   -------------------------
 	

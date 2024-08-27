@@ -1,5 +1,6 @@
 package utopia.genesis.handling.drawing
 
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.shape.shape2D.MutableTransformable
@@ -13,6 +14,7 @@ import utopia.paradigm.transform.AffineTransformation
   * @since 22/02/2024, v4.0
   */
 class MutableTransformer(item: Drawable, initialTransform: AffineTransformation = AffineTransformation.identity)
+                        (implicit log: Logger)
 	extends DrawableWrapper with MutableTransformable with CoordinateTransform
 {
 	// ATTRIBUTES   ----------------------

@@ -1,5 +1,6 @@
 package utopia.reach.focus
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}

@@ -1,6 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
+
+import scala.util.Try
 
 object LockablePointer
 {
@@ -8,16 +12,18 @@ object LockablePointer
 	
 	/**
 	  * @param initialValue Initial value to assign to this pointer
+	  * @param log Logging implementation for handling failures in change-event -handling
 	  * @tparam A Type of values held within this pointer
 	  * @return A new pointer
 	  */
-	def apply[A](initialValue: A) = new LockablePointer[A](initialValue)
+	def apply[A](initialValue: A)(implicit log: Logger) = new LockablePointer[A](initialValue)
 	
 	/**
+	  * @param log Logging implementation for handling failures in change-event -handling
 	  * @tparam A Type of values held within this pointer, when defined
 	  * @return An empty pointer that may contain values of the specified type
 	  */
-	def empty[A]() = apply[Option[A]](None)
+	def empty[A]()(implicit log: Logger) = apply[Option[A]](None)
 }
 
 /**
@@ -26,7 +32,8 @@ object LockablePointer
   * @author Mikko Hilpinen
   * @since 26.7.2023, v2.2
   */
-class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] with Lockable[A] with EventfulPointer[A]
+class LockablePointer[A](initialValue: A)(implicit log: Logger)
+	extends AbstractMayStopChanging[A] with Lockable[A] with EventfulPointer[A]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -76,6 +83,6 @@ class LockablePointer[A](initialValue: A) extends AbstractMayStopChanging[A] wit
 	private def _set(newValue: A) = {
 		val oldValue = _value
 		_value = newValue
-		fireEventIfNecessary(oldValue, newValue).foreach { _() }
+		fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
 	}
 }

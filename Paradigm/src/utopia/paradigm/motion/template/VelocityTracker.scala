@@ -6,6 +6,7 @@ import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.template.eventful.AbstractChanging
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
@@ -21,7 +22,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
 	+S <: MovementStatusLike[X, V, A, _], H]
 (maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
-	extends AbstractChanging[H] with MovementHistoryLike[X, V, A, S]
+	extends AbstractChanging[H]()(SysErrLogger) with MovementHistoryLike[X, V, A, S]
 {
 	// ATTRIBUTES	-----------------------
 	

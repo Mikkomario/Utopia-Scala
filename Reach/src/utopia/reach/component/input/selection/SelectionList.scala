@@ -165,6 +165,8 @@ trait SelectionListSettingsWrapper[+Repr] extends SelectionListSettingsLike[Repr
   */
 trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// ABSTRACT	--------------------
 	
 	/**
@@ -233,6 +235,8 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	extends SelectionListFactoryLike[SelectionListFactory]
 		with FromVariableContextFactory[ColorContext, ContextualSelectionListFactory]
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// IMPLEMENTED  ----------------------
 	
 	override def withContextPointer(p: Changing[ColorContext]): ContextualSelectionListFactory =

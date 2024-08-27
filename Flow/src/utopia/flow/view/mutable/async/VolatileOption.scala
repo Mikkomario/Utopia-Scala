@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.async
 
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 
 object VolatileOption
@@ -7,12 +8,12 @@ object VolatileOption
     /**
      * Creates a new filled volatile option
      */
-    def apply[A](item: A) = new VolatileOption(Some(item))
+    def apply[A](item: A)(implicit log: Logger) = new VolatileOption(Some(item))
     
     /**
      * Creates a new empty volatile option
      */
-    def apply[A]() = new VolatileOption[A](None)
+    def apply[A]()(implicit log: Logger) = new VolatileOption[A](None)
 }
 
 /**
@@ -20,7 +21,7 @@ object VolatileOption
 * @author Mikko Hilpinen
 * @since 29.3.2019
 **/
-class VolatileOption[A](initialValue: Option[A])
+class VolatileOption[A](initialValue: Option[A])(implicit log: Logger)
     extends Volatile[Option[A]](initialValue) with Iterable[A]
 {
 	// IMPLEMENTED    ---------------

@@ -63,6 +63,7 @@ object Calendar
 	{
 		def makeDayNameLabel(day: WeekDay) =
 		{
+			import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 			new ItemLabel[WeekDay](EventfulPointer(day), dayNameDisplayFunction, dayNameFont, dayNameTextColor,
 				dayNameInsets, Alignment.Center)
 		}

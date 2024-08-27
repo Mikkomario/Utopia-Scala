@@ -1,18 +1,17 @@
 package utopia.reflection.container.swing.window
 
 import utopia.firmament.context.ComponentCreationDefaults
-import utopia.flow.async.process
-import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.genesis.image.Image
-import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}
-import utopia.reflection.component.template.layout.stack.{ReflectionStackLeaf, ReflectionStackable}
-import utopia.firmament.model.enumeration.WindowResizePolicy.{Program, User}
-import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
+import utopia.firmament.model.enumeration.WindowResizePolicy.{Program, User}
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.async.process
+import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reflection.component.swing.template.{AwtComponentWrapper, AwtComponentWrapperWrapper}
+import utopia.reflection.component.template.layout.stack.{ReflectionStackLeaf, ReflectionStackable}
+import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 
 import javax.swing.JFrame
 import scala.concurrent.ExecutionContext
@@ -186,8 +185,6 @@ class Frame[C <: ReflectionStackable with AwtContainerRelated](override val cont
       * @param delay Delay after window closing before closing the JVM
       * @param exc Implicit execution context
      */
-    def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) = {
-        implicit val logger: Logger = SysErrLogger
+    def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) =
         closeFuture.onComplete { _ => process.Delay(delay) { System.exit(0) } }
-    }
 }

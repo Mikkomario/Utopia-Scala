@@ -48,7 +48,7 @@ object Mirror
  */
 class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
                    (f: (R, ChangeEvent[O]) => R)
-	extends AbstractMayStopChanging[R]
+	extends AbstractMayStopChanging[R]()(source.listenerLogger)
 {
 	// ATTRIBUTES   ------------------------------
 	

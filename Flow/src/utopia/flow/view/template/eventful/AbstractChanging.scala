@@ -4,25 +4,24 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 
 /**
-  * Changing instances generate change events
+  * An abstract implementation of the [[Changing]] trait. Handles [[ChangeListener]] handling.
+  * Suitable as a parent for all types of Changing implementations, except for those based on wrapping.
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.4.1
   */
-abstract class AbstractChanging[A] extends ChangingWithListeners[A]
+abstract class AbstractChanging[A](implicit override val listenerLogger: Logger) extends ChangingWithListeners[A]
 {
 	// ATTRIBUTES   -----------------
 	
 	// First value contains high priority listeners, second contains standard priority listeners
 	private var _listeners = Pair.twice[Seq[ChangeListener[A]]](Empty)
-	
-	// Caches the withState -version
-	override lazy val withState = super.withState
 	
 	
 	// COMPUTED --------------------

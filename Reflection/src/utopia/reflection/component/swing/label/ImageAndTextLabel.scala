@@ -21,6 +21,8 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ImageAndTextLabel
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	/**
 	  * Creates a new image and text label using a component creation context
 	  * @param pointer Content pointer

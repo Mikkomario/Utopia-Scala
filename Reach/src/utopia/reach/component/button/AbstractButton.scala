@@ -9,7 +9,7 @@ import utopia.reach.component.template.ButtonLike
 import utopia.reach.focus.FocusListener
 
 /**
-  * An abstract (immutable) implementation of the ButtonLike trait, intended to simplify sub-class implementation
+  * An abstract (immutable) implementation of the ButtonLike trait, intended to simplify subclass implementation
   * @author Mikko Hilpinen
   * @since 21/02/2024, v1.3
   */

@@ -7,6 +7,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.FlagLike
@@ -259,8 +260,9 @@ object TwoThreadBuffer
   *
   * @param capacity Maximum buffer size (must be > 0)
   * @param exc Implicit execution context used in certain read actions
+  * @param log Implicit logging implementation used for non-direct errors (e.g. errors caused by pointer-listeners)
   */
-class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext)
+class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Logger)
 {
 	if (capacity <= 0)
 		throw new IllegalArgumentException(s"Capacity must be positive. Currently $capacity")

@@ -10,6 +10,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.time.Now
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.Changing
 
@@ -38,6 +39,10 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends ResponseParse
 	  * @return Json parser used
 	  */
 	protected implicit def jsonParser: JsonParser
+	/**
+	  * @return Implicit logging implementation used
+	  */
+	protected implicit def log: Logger
 	
 	/**
 	  * @return Response returned when no response body is read

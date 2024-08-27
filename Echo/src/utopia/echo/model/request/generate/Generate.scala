@@ -9,6 +9,7 @@ import utopia.echo.model.request.RetractableRequestFactory
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 
 import scala.annotation.unused
@@ -79,7 +80,7 @@ object Generate
 		  * @param jsonParser Implicit json parser used in response-parsing
 		  * @return A request for sending out the specified query and for receiving the response in a streamed format.
 		  */
-		def streamed(prompt: Prompt)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		def streamed(prompt: Prompt)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 			new GenerateStreamed(prompt, context, testDeprecation)
 		/**
 		  * @param query Query to send out to the LLM
@@ -91,7 +92,8 @@ object Generate
 		  * @param jsonParser Implicit json parser used in response-parsing
 		  * @return A request for sending out the specified query
 		  */
-		def apply(query: Query, stream: Boolean = false)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+		def apply(query: Query, stream: Boolean = false)
+		         (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 			new GenerateBufferedOrStreamed(query, context, stream, testDeprecation)
 			
 		private def testDeprecation = deprecationCondition.forall { _.value }

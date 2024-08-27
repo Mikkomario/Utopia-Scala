@@ -1,9 +1,9 @@
 package utopia.genesis.handling.template
 
-import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.{Changing, FlagLike}
-import FlagLike._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.template.eventful.FlagLike._
+import utopia.flow.view.template.eventful.{Changing, FlagLike}
 
 /**
   * An abstract Handler implementation which extends the Handleable trait

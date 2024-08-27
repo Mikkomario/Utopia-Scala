@@ -3,6 +3,7 @@ package utopia.flow.view.mutable.caching
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{LazyListener, LazyResetListener}
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ResetListenable}
@@ -16,7 +17,7 @@ object ListenableMutableLazy
 	  * @tparam A Type of values held within this container
 	  * @return A new container that initializes itself lazily, but also allows modifications
 	  */
-	def apply[A](generator: => A) = new ListenableMutableLazy[A](generator)
+	def apply[A](generator: => A)(implicit log: Logger)  = new ListenableMutableLazy[A](generator)
 }
 
 /**
@@ -24,7 +25,8 @@ object ListenableMutableLazy
   * @author Mikko Hilpinen
   * @since 25.7.2023, v2.2
   */
-class ListenableMutableLazy[A](generator: => A) extends MutableLazy[A] with ListenableResettableLazy[A]
+class ListenableMutableLazy[A](generator: => A)(implicit log: Logger)
+	extends MutableLazy[A] with ListenableResettableLazy[A]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -87,7 +89,8 @@ class ListenableMutableLazy[A](generator: => A) extends MutableLazy[A] with List
 	}
 	
 	override protected def mapToListenable[B](f: A => B): ListenableLazy[B] = {
-		val newLazy = ListenableResettableLazy { f(value) }
+		// TODO: Use a better logging system here
+		val newLazy = ListenableResettableLazy { f(value) }(SysErrLogger)
 		// TODO: Optimize?
 		statePointer.addContinuousListener { e =>
 			if (e.oldValue.isDefined)

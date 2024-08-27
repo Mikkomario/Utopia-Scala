@@ -1,6 +1,12 @@
 package utopia.flow.view.template.eventful
 
+import utopia.flow.collection.immutable.caching.cache.Cache
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.Destiny
+import utopia.flow.operator.enumeration.End
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 
@@ -26,9 +32,7 @@ object FlagLike
 	private class FlagLikeWrapper(override protected val wrapped: Changing[Boolean])
 		extends FlagLike with ChangingWrapper[Boolean]
 	{
-		//noinspection PostfixUnaryOperation
-		override lazy val unary_! = super.unary_!
-		
+		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def toString = s"FlagLike($wrapped)"
 	}
 }
@@ -38,7 +42,7 @@ object FlagLike
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait FlagLike extends Any with Changing[Boolean]
+trait FlagLike extends Changing[Boolean]
 {
 	// COMPUTED	-----------------
 	
@@ -65,7 +69,7 @@ trait FlagLike extends Any with Changing[Boolean]
 	  */
 	def unary_! : FlagLike = fixedValue match {
 		case Some(fixed) => if (fixed) AlwaysFalse else AlwaysTrue
-		case None => lightMap { !_ }
+		case None => ReverseView
 	}
 	
 	/**
@@ -127,7 +131,8 @@ trait FlagLike extends Any with Changing[Boolean]
 	  * @tparam A Type of the viewed values
 	  * @return A view that presents one of the specified values based on the state of this flag
 	  */
-	def lightSwitch[A](falseState: => A, trueState: => A) = lightMap { if (_) trueState else falseState }
+	def lightSwitch[A](falseState: => A, trueState: => A) =
+		lightMap { if (_) trueState else falseState }
 	/**
 	  * @param falseState Value when this flag is not set (lazily called)
 	  * @param trueState Value when this flag is set (lazily called)
@@ -192,5 +197,42 @@ trait FlagLike extends Any with Changing[Boolean]
 		}
 		else
 			Continue
+	}
+	
+	private object ReverseView extends FlagLike
+	{
+		// ATTRIBUTES   -----------------------
+		
+		private lazy val listenerCache = Cache { listener: ChangeListener[Boolean] =>
+			ChangeListener[Boolean] { event => listener.onChangeEvent(event.map { !_ }) }
+		}
+		
+		
+		// COMPUTED ---------------------------
+		
+		private def target = FlagLike.this
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override implicit def listenerLogger: Logger = target.listenerLogger
+		
+		override def value: Boolean = !target.value
+		override def destiny: Destiny = target.destiny
+		
+		override def hasListeners: Boolean = target.hasListeners
+		override def numberOfListeners: Int = target.numberOfListeners
+		
+		override def unary_! = target
+		
+		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Boolean]]): Unit =
+			target.addListenerOfPriority(priority) { listenerCache(lazyListener.value) }
+		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
+			target.addChangingStoppedListener(listener)
+		
+		override def removeListener(changeListener: Any): Unit = changeListener match {
+			case listener: ChangeListener[Boolean] => listenerCache.cached(listener).foreach(target.removeListener)
+			case _ => ()
+		}
 	}
 }

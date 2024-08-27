@@ -4,6 +4,7 @@ import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.Property
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
+import utopia.flow.util.logging.Logger
 
 /**
   * Constants are named properties whose value can't be changed
@@ -21,8 +22,9 @@ case class Constant(name: String, value: Value) extends Property with ApproxEqua
 	
 	/**
 	  * Converts this constant to a variable
+	  * @param log Implicit logging implementation for handling failures in change event -handling
 	  */
-	def toVariable = Variable(name, value)
+	def toVariable(implicit log: Logger) = Variable(name, value)
 	
 	
 	// IMPLEMENTED  ----------------

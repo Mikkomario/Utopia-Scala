@@ -5,6 +5,7 @@ import utopia.flow.event.model.ChangeResponse.{ContinueAnd, DetachAnd}
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.enumeration.End.First
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, ChangingView, OptimizedChanging}
 
 object LockableBridge
@@ -50,6 +51,8 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override implicit def listenerLogger: Logger = origin.listenerLogger
 	
 	override def value: A = lockedValue.getOrElse(origin.value)
 	override def destiny: Destiny = if (locked) Sealed else origin.destiny.possibleToSeal

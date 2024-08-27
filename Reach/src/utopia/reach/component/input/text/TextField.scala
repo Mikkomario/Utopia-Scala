@@ -1,7 +1,7 @@
 package utopia.reach.component.input.text
 
 import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
@@ -684,7 +684,7 @@ object TextField extends TextFieldSetup()
   */
 class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
                    defaultWidth: StackLength, settings: TextFieldSettings = TextFieldSettings.default,
-                   textContentPointer: EventfulPointer[String] = EventfulPointer(""),
+                   textContentPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
                    inputValidation: Option[A => InputValidationResult] = None)
 				  (parseResult: String => A)
 	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithPointerWrapper

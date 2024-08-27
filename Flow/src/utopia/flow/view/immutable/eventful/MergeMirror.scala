@@ -31,12 +31,13 @@ object MergeMirror
 	  * @param initialMerge A merge function used for acquiring the initially stored value
 	  * @param incrementalMerge A merge function used for acquiring consecutive merge results.
 	  *                         Accepts:
-	  *                             1) Current value of this pointer,
-	  *                             2) Current or new value of the first source item,
-	  *                             3) Current or new value of the second source item,
-	  *                             4) Either:
-	  *                                 Left) Change event that occurred in the first source item, or
-	  *                                 Right) Change event that occurred in the second source item.
+	  *                             1. Current value of this pointer,
+	  *                             1. Current or new value of the first source item,
+	  *                             1. Current or new value of the second source item,
+	  *                             1. Either:
+	  *                                 - Left: Change event that occurred in the first source item, or
+	  *                                 - Right: Change event that occurred in the second source item.
+	  *
 	  *                         Yields a merge result.
 	  * @tparam O1 Type of values in the first source item
 	  * @tparam O2 Type of values in the second source item
@@ -69,7 +70,7 @@ object MergeMirror
 class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing[O2], initialValue: R,
                                condition: Changing[Boolean] = AlwaysTrue)
                               (merge: (R, O1, O2, Either[ChangeEvent[O1], ChangeEvent[O2]]) => R)
-	extends AbstractMayStopChanging[R]
+	extends AbstractMayStopChanging[R]()(firstSource.listenerLogger)
 {
 	// ATTRIBUTES   ------------------------------
 	

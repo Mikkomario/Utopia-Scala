@@ -1,6 +1,7 @@
 package utopia.flow.collection.mutable.iterator
 
 import utopia.flow.event.model.ChangeEvent
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -13,7 +14,8 @@ object EventfulIterator
 	  * @tparam A Type of values returned by this iterator
 	  * @return A new eventful iterator
 	  */
-	def apply[A](initialValue: A, source: Iterator[A]) = new EventfulIterator[A](initialValue, source)
+	def apply[A](initialValue: A, source: Iterator[A])(implicit log: Logger) =
+		new EventfulIterator[A](initialValue, source)
 }
 
 /**
@@ -21,7 +23,8 @@ object EventfulIterator
   * @author Mikko Hilpinen
   * @since 22.9.2022, v1.17
   */
-class EventfulIterator[A](initialValue: A, source: Iterator[A]) extends Iterator[A] with ChangingWrapper[A]
+class EventfulIterator[A](initialValue: A, source: Iterator[A])(implicit log: Logger)
+	extends Iterator[A] with ChangingWrapper[A]
 {
 	// ATTRIBUTES   -------------------
 	
@@ -29,6 +32,8 @@ class EventfulIterator[A](initialValue: A, source: Iterator[A]) extends Iterator
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	override def listenerLogger: Logger = log
 	
 	override def hasNext = {
 		val result = source.hasNext
@@ -70,7 +75,7 @@ class EventfulIterator[A](initialValue: A, source: Iterator[A]) extends Iterator
 	{
 		// ATTRIBUTES   ------------
 		
-		private val pointer = LockablePointer[R](f(source.value))
+		private val pointer = LockablePointer[R](f(source.value))(log)
 		
 		
 		// INITIAL CODE ------------
@@ -80,6 +85,7 @@ class EventfulIterator[A](initialValue: A, source: Iterator[A]) extends Iterator
 		
 		// IMPLEMENTED  ------------
 		
+		override implicit def listenerLogger: Logger = source.listenerLogger
 		override protected def wrapped = pointer
 		
 		override def hasNext = {

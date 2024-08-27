@@ -405,6 +405,7 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 		
 		itemsPointer.addContinuousListenerAndSimulateEvent(Empty) { e =>
 			val (changes, _) = e.values.separateMatching
+			val updatedBounds = Bounds.around(changes.flatMap { _.map { _.drawBounds } })
 			// Case: Items removed => Stops listening on them
 			changes.first.foreach { a =>
 				a.removeRepaintListener(LayerRepaintListener)
@@ -417,7 +418,7 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 			}
 			// Repaints the changed area
 			updateDrawBounds()
-			repaint(Bounds.around(changes.flatMap { _.map { _.drawBounds } }))
+			repaint(updatedBounds)
 		}
 		
 		
@@ -516,7 +517,11 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 				}
 			}
 		}
-		private def resetAndResizeBuffer(newSize: Size = Size.zero) = accessBuffer { _.resetAndResize(newSize) }
+		private def resetAndResizeBuffer(newSize: Size = Size.zero) = {
+			accessBuffer { _.resetAndResize(newSize) }
+			// Repaints the whole canvas after resetting
+			requestParentRepaint(clipPointer.map { _.value })
+		}
 		
 		/**
 		  * Checks whether this layer fully or partially covers the specified region with opaque elements

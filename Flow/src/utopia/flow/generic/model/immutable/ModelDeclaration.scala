@@ -10,6 +10,7 @@ import utopia.flow.generic.model.mutable.{DataType, Variable}
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.util.logging.Logger
 
 import scala.util.{Failure, Try}
 
@@ -116,7 +117,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @return This model declaration as a variable factory.
       *         Utilizes information about property types, default values and alternative property names.
       */
-    def toVariableFactory = toPropertyFactory { Variable(_, _) }
+    def toVariableFactory(implicit log: Logger) = toPropertyFactory { Variable(_, _) }
     
     
     // IMPLEMENTED  -----------

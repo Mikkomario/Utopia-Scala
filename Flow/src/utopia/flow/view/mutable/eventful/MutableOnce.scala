@@ -2,6 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.AbstractMayStopChanging
 
 /**
@@ -10,12 +11,11 @@ import utopia.flow.view.template.eventful.AbstractMayStopChanging
   * @since 22.12.2022, v2.0
   * @tparam A Type of value held within this pointer
   */
-class MutableOnce[A](initialValue: A) extends AbstractMayStopChanging[A] with EventfulPointer[A]
+class MutableOnce[A](initialValue: A)(implicit log: Logger) extends AbstractMayStopChanging[A] with EventfulPointer[A]
 {
 	// ATTRIBUTES   -----------------------
 	
 	private val _setFlag = Flag()
-	
 	private var _value = initialValue
 	
 	/**

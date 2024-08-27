@@ -13,7 +13,7 @@ object TripleMergeMirror
 	 * @param thirdSource Third input pointer
 	 * @param condition A condition that must be met for the listening / tracking to occur (default = always active)
 	  * @param merge A function for merging pointer values
-	 * @tparam O1 Type of first pointer value
+	  * @tparam O1 Type of first pointer value
 	 * @tparam O2 Type of second pointer value
 	 * @tparam O3 Type of third pointer value
 	 * @tparam R Type of merge result
@@ -106,7 +106,7 @@ object TripleMergeMirror
 class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changing[O2], source3: Changing[O3],
                                           initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
                                          (merge: (R, O1, O2, O3) => R)
-	extends AbstractMayStopChanging[R]
+	extends AbstractMayStopChanging[R]()(source1.listenerLogger)
 {
 	// ATTRIBUTES   -----------------------------
 	

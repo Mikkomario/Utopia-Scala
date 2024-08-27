@@ -14,7 +14,7 @@ object ResettableLazy
 	
 	/**
 	  * Creates a new lazily initialized wrapper
-	  * @param make A function for generating the wrapped item when it is requested (may be called multiple times)
+	  * @param make A function for generating the wrapped item when it is requested (maybe called multiple times)
 	  * @tparam A Type of wrapped item
 	  * @return A new lazy wrapper
 	  */
@@ -23,10 +23,11 @@ object ResettableLazy
 	/**
 	  * Creates a listenable lazily initialized wrapper
 	  * @param make A function for generating the wrapped item on request
+	  * @param log Logging implementation for recording failures thrown by listeners
 	  * @tparam A Type of the wrapped item
 	  * @return A new lazy container with events
 	  */
-	def listenable[A](make: => A) = ListenableResettableLazy(make)
+	def listenable[A](make: => A)(implicit log: Logger) = ListenableResettableLazy(make)
 	
 	/**
 	  * @param threshold Time threshold after which this lazy is automatically reset

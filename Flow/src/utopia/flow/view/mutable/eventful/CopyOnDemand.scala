@@ -1,12 +1,16 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.operator.enumeration.End
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+
+import scala.util.Try
 
 object CopyOnDemand
 {
@@ -14,19 +18,21 @@ object CopyOnDemand
 	
 	/**
 	  * @param f A function for producing the viewed value
+	  * @param log Implicit logging implementation for handling failures thrown by event listeners
 	  * @tparam A Type of viewed values
 	  * @return A pointer that updates its cached value on demand (i.e. whenever update() is called)
 	  */
-	def apply[A](f: => A): CopyOnDemand[A] = new ViewOnDemand[A](View(f))
+	def apply[A](f: => A)(implicit log: Logger): CopyOnDemand[A] = new ViewOnDemand[A](View(f))
 	
 	/**
 	  * Creates a new pointer for viewing the specified source view
 	  * @param source A value view
+	  * @param log Implicit logging implementation for handling failures thrown by event listeners
 	  * @tparam A Type of the viewed values
 	  * @return A pointer that will mirror the specified view's value, whenever update() is called
 	  */
 	// Checks what kind of source is in question
-	def apply[A](source: View[A]): CopyOnDemand[A] = source match {
+	def apply[A](source: View[A])(implicit log: Logger): CopyOnDemand[A] = source match {
 		// Case: Changing item
 		case c: Changing[A] => apply(c)
 		// Case: General view
@@ -48,7 +54,7 @@ object CopyOnDemand
 				new _CopyOnDemand[A](source)
 			// Case: The source is unlikely to ever stop changing => Uses the more simple, view-based approach
 			else
-				new ViewOnDemand[A](source)
+				new ViewOnDemand[A](source)(source.listenerLogger)
 	}
 	
 	/**
@@ -63,7 +69,8 @@ object CopyOnDemand
 	// NESTED   -------------------------------
 	
 	// Implementation for Changing items
-	private class _CopyOnDemand[A](source: Changing[A]) extends AbstractChanging[A] with CopyOnDemand[A]
+	private class _CopyOnDemand[A](source: Changing[A])
+		extends AbstractChanging[A]()(source.listenerLogger) with CopyOnDemand[A]
 	{
 		// ATTRIBUTES   -----------------------
 		
@@ -87,7 +94,7 @@ object CopyOnDemand
 		override def update() = {
 			val oldValue = cachedValue
 			cachedValue = source.value
-			fireEventIfNecessary(oldValue).foreach { _() }
+			fireEventIfNecessary(oldValue).foreach { effect => Try { effect() }.logFailure }
 		}
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
@@ -95,7 +102,8 @@ object CopyOnDemand
 	}
 	
 	// Implementation for general Views
-	private class ViewOnDemand[A](source: View[A]) extends AbstractChanging[A] with CopyOnDemand[A]
+	private class ViewOnDemand[A](source: View[A])(implicit log: Logger)
+		extends AbstractChanging[A] with CopyOnDemand[A]
 	{
 		// ATTRIBUTES   --------------------
 		
@@ -119,6 +127,8 @@ object CopyOnDemand
 	// Implementation for fixed values
 	private class FixedOnDemand[+A](override val value: A) extends CopyOnDemand[A]
 	{
+		override implicit def listenerLogger: Logger = SysErrLogger
+		
 		override def destiny: Destiny = Sealed
 		
 		override def hasListeners: Boolean = false

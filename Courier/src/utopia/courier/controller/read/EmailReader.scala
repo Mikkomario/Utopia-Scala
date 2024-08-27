@@ -676,6 +676,7 @@ class EmailReader[A](settings: ReadSettings,
 		
 		// IMPLEMENTED  -----------------------
 		
+		override def listenerLogger: Logger = log
 		override protected def wrapped = lazyFlag.value
 		override def view: FlagLike = wrapped.view
 		

@@ -485,13 +485,13 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	+P <: Changing[Seq[A]]]
 (parentHierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext],
  isEmptyPointer: Changing[Boolean], override val contentPointer: P,
- override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
+ override val valuePointer: EventfulPointer[Option[A]],
  settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default,
  sameItemCheck: Option[EqualsFunction[A]] = None)
 (makeField: FieldCreationContext => C)
 (makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
-(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger)
+(implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P]
 {

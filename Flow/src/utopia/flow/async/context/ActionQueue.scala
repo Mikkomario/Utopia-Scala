@@ -5,6 +5,7 @@ import utopia.flow.async.process.ProcessState.{BasicProcessState, Completed, Not
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.flow.view.template.eventful.Changing
@@ -100,7 +101,7 @@ object ActionQueue
 	{
 		// ATTRIBUTES   ------------------
 		
-		private val _statePointer = Volatile[BasicProcessState](NotStarted)
+		private val _statePointer = Volatile[BasicProcessState](NotStarted)(SysErrLogger)
 		
 		override lazy val startFuture: Future[Unit] =
 			_statePointer.findMapFuture { state => if (state.hasStarted) Some(()) else None }
@@ -157,7 +158,7 @@ object ActionQueue
 		// Contains Some(Left) if requested before this action is started
 		// Contains Some(Right) if requested after this action has started
 		// Contains None before requested
-		private val wrappedPointer = VolatileOption[Either[Promise[A], Future[A]]]()
+		private val wrappedPointer = VolatileOption[Either[Promise[A], Future[A]]]()(SysErrLogger)
 		
 		
 		// IMPLEMENTED  ---------------

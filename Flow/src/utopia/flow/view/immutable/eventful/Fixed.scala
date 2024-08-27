@@ -4,6 +4,7 @@ import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.operator.enumeration.End
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, FlagLike}
 
@@ -17,6 +18,8 @@ object Fixed
 case class Fixed[+A](override val value: A) extends Changing[A]
 {
 	// IMPLEMENTED	-------------
+	
+	override implicit def listenerLogger: Logger = SysErrLogger
 	
 	override def destiny: Destiny = Sealed
 	

@@ -1,6 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
@@ -43,13 +44,14 @@ object Changing
 	  * @param future A future
 	  * @param processResult A function to process the successful or failed future result once it arrives
 	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation for handling failures thrown by assigned listeners
 	  * @tparam A Type of processed future result, as well as the placeholder value
 	  *           (i.e. the type of value stored in the changing item)
 	  * @tparam F Type of value yielded by the future, when successful
 	  * @return A changing item, based on the future
 	  */
 	def future[A, F](placeholder: => A, future: Future[F])(processResult: Try[F] => A)
-	                (implicit exc: ExecutionContext) =
+	                (implicit exc: ExecutionContext, log: Logger) =
 		future.currentResult match {
 			case Some(result) => Fixed(processResult(result))
 			case None => ChangeFuture.merging(placeholder, future) { (_, result) => processResult(result) }
@@ -87,9 +89,10 @@ object Changing
 	 * Creates a pointer that tracks the completion of a future, whether successful or failed
 	 * @param future A future to track
 	 * @param exc    Implicit execution context
-	 * @return A pointer that contains true when the specified future has completed
+	 * @param log Implicit logging implementation for handling failures thrown by assigned listeners
+	  * @return A pointer that contains true when the specified future has completed
 	 */
-	def completionOf(future: Future[Any])(implicit exc: ExecutionContext): FlagLike = {
+	def completionOf(future: Future[Any])(implicit exc: ExecutionContext, log: Logger): FlagLike = {
 		if (future.isCompleted)
 			AlwaysTrue
 		else
@@ -185,6 +188,12 @@ object Changing
 trait Changing[+A] extends Any with View[A]
 {
 	// ABSTRACT	---------------------
+	
+	/**
+	  * @return A logging implementation used for handling errors thrown
+	  *         by the listeners assigned to this changing item (and possibly to the derived items as well)
+	  */
+	implicit def listenerLogger: Logger
 	
 	/**
 	  * @return The "destiny" if this item.
@@ -724,7 +733,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A (lightly) mirrored version of this item, using the specified mapping function
 	  */
-	def lightMap[B](f: A => B): Changing[B] = diverge { OptimizedMirror(this, disableCaching = true)(f) } { f(value) }
+	def lightMap[B](f: A => B): Changing[B] =
+		diverge { OptimizedMirror(this, disableCaching = true)(f) } { f(value) }
 	/**
 	  * Creates a new mapped view into this changing pointer.
 	  * The mapping / viewing will be terminated once the specified condition is met.
@@ -759,7 +769,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B): ListenableLazy[B] = lazyDiverge { LazyMirror(this)(f) } { f(value) }
+	def lazyMap[B](f: A => B): ListenableLazy[B] =
+		lazyDiverge { LazyMirror(this)(f) } { f(value) }
 	
 	/**
 	  * @param f A mapping function
@@ -773,7 +784,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Mapping result type
 	  * @return A pointer that contains mapped values merged with this pointer's "isChanging" status
 	  */
-	def lightMapWithState[B](f: A => B) = _mapWithState(f, disableCaching = true)
+	def lightMapWithState[B](f: A => B) =
+		_mapWithState(f, disableCaching = true)
 	/**
 	  * @param f A mapping function
 	  * @param stopCondition A condition that, if met, will end mirroring of this pointer and mark the resulting value
@@ -844,7 +856,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from all three of these items
 	  */
-	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
+	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R)
+	                      : Changing[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	/**
 	  * Creates a mirror that reflects the merged value of this and another pointer.
@@ -856,7 +869,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from both of these items
 	  */
-	def mergeWithWhile[B, R](other: Changing[B], condition: FlagLike)(f: (A, B) => R): Changing[R] = {
+	def mergeWithWhile[B, R](other: Changing[B], condition: FlagLike)(f: (A, B) => R): Changing[R] =
+	{
 		if (condition.isAlwaysFalse)
 			Fixed(f(value, other.value))
 		else
@@ -910,7 +924,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge results
 	  * @return A new pointer
 	  */
-	def lightMergeWithUntil[B, R](other: Changing[B])(merge: (A, B) => R)(stopCondition: (A, B, R) => Boolean) =
+	def lightMergeWithUntil[B, R](other: Changing[B])(merge: (A, B) => R)(stopCondition: (A, B, R) => Boolean)
+	                              =
 	{
 		if (mayChange) {
 			if (other.mayChange) {
@@ -949,7 +964,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A new changing item
 	  */
 	def incrementalMergeWith[B, R](other: Changing[B])(initialMerge: (A, B) => R)
-	                              (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R) =
+	                              (incrementMerge: (R, A, B, Either[ChangeEvent[A], ChangeEvent[B]]) => R)
+	                               =
 		divergeMerge[B, Changing[R]](other) {
 			MergeMirror.incremental(this, other)(initialMerge)(incrementMerge) } { v2 =>
 			incrementalMap { initialMerge(_, v2) } { (r, e1) => incrementMerge(r, e1.newValue, v2, Left(e1)) } } {
@@ -988,7 +1004,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of values in the resulting items
 	  * @return A pointer to the current value of the last map result
 	  */
-	def flatMap[B](f: A => Changing[B]) = if (mayChange) FlatteningMirror(this)(f) else f(value)
+	def flatMap[B](f: A => Changing[B]) =
+		if (mayChange) FlatteningMirror(this)(f) else f(value)
 	/**
 	  * Maps this changing item with a function that yields other changing items.
 	  * These are wrapped under a single "Changing" interface.
@@ -1003,7 +1020,8 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A new pointer that wraps the mapping result pointers
 	  */
 	def incrementalFlatMap[B](initialMap: A => Changing[B])
-	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
+	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B])
+	                          =
 	{
 		if (mayChange)
 			FlatteningMirror.incremental(this)(initialMap)(incrementMap)
@@ -1055,14 +1073,13 @@ trait Changing[+A] extends Any with View[A]
 	  * @param merge             A function which accepts the previously held value and the new map result and
 	  *                          produces a new pointer value.
 	  * @param exc               Implicit execution context
-	  * @param log               Implicit logging implementation
 	  * @tparam B Type of mapping result
 	  * @tparam R Type of merged / reduced mapping results
 	  * @return An asynchronously mapped view of this changing item
 	  */
 	def incrementalMapAsync[A2 >: A, B, R](placeHolderResult: R, skipInitialMap: Boolean = false)
 	                                      (f: A2 => B)(merge: (R, B) => R)
-	                                      (implicit exc: ExecutionContext, log: Logger) =
+	                                      (implicit exc: ExecutionContext) =
 		AsyncProcessMirror.merging[A2, B, R](this, placeHolderResult, skipInitialMap)(f)(merge)
 	/**
 	  * Creates an asynchronously mapping view of this changing item
@@ -1073,12 +1090,11 @@ trait Changing[+A] extends Any with View[A]
 	  *                          Default = false.
 	  * @param f                 A synchronous mapping function
 	  * @param exc               Implicit execution context
-	  * @param log               Implicit logging implementation
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
 	def mapAsync[A2 >: A, B](placeHolderResult: B, skipInitialMap: Boolean = false)(f: A2 => B)
-	                         (implicit exc: ExecutionContext, log: Logger) =
+	                         (implicit exc: ExecutionContext) =
 		incrementalMapAsync[A2, B, B](placeHolderResult, skipInitialMap)(f) { (_, res) => res }
 	/**
 	  * Creates an asynchronously mapping view of this changing item
@@ -1137,13 +1153,12 @@ trait Changing[+A] extends Any with View[A]
 	  *                       Default = false.
 	  * @param f An asynchronous mapping function
 	  * @param exc Implicit execution context
-	  * @param logger An implicit logger that will receive encountered errors
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
 	def mapToFuture[B](placeHolderResult: B, mapCondition: Changing[Boolean] = AlwaysTrue,
 	                   skipInitialMap: Boolean = false)(f: A => Future[B])
-	                  (implicit exc: ExecutionContext, logger: Logger) =
+	                  (implicit exc: ExecutionContext) =
 		AsyncMirror.catching(this, placeHolderResult, mapCondition, skipInitialProcess = skipInitialMap)(f)
 	/**
 	  * Creates an asynchronously mapping view of this changing item.
@@ -1158,13 +1173,12 @@ trait Changing[+A] extends Any with View[A]
 	  *                       Default = false.
 	  * @param f An asynchronous mapping function that may fail
 	  * @param exc Implicit execution context
-	  * @param logger An implicit logger that will receive encountered errors
 	  * @tparam B Type of mapping result
 	  * @return An asynchronously mapped view of this changing item
 	  */
 	def mapToTryFuture[B](placeHolderResult: B, mapCondition: Changing[Boolean] = AlwaysTrue,
 	                      skipInitialMap: Boolean = false)(f: A => Future[Try[B]])
-	                     (implicit exc: ExecutionContext, logger: Logger) =
+	                     (implicit exc: ExecutionContext) =
 		AsyncMirror.tryCatching(this, placeHolderResult, mapCondition, skipInitialProcess = skipInitialMap)(f)
 	
 	/**
@@ -1247,7 +1261,8 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
 	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
-	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
+	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit)
+	                                           =
 	{
 		// Calculates the event lazily
 		// In case where the current and old value are equal, won't generate an event
@@ -1277,7 +1292,8 @@ trait Changing[+A] extends Any with View[A]
 	  */
 	protected def fireEvent[B >: A](lazyEvent: View[Option[ChangeEvent[B]]])
 	                               (acquireListeners: End => Iterable[ChangeListener[B]])
-	                               (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
+	                               (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit)
+	                                =
 	{
 		// Informs the listeners in order or priority
 		End.values.flatMap { priority =>
@@ -1300,8 +1316,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam B Type of change events and listeners applied
 	  * @return The specified listeners, coupled with their responses to the change events
 	  */
-	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]]) =
-	{
+	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]]) = {
 		// Case: No listeners => No events required
 		if (listeners.isEmpty)
 			Empty
@@ -1311,9 +1326,11 @@ trait Changing[+A] extends Any with View[A]
 			event match {
 				// Case: Event is real => Relays if to the listeners
 				case Some(event) =>
-					listeners.map { listener =>
-						val response = listener.onChangeEvent(event)
-						listener -> response
+					listeners.flatMap { listener =>
+						// Catches and logs failures, in case the listener throws
+						Try { listener.onChangeEvent(event) }
+							.logToOptionWithMessage(s"Failure while processing $event")
+							.map { listener -> _ }
 					}
 				// Case: There wasn't a change event after all => Skips the process
 				case None => Empty
@@ -1375,10 +1392,11 @@ trait Changing[+A] extends Any with View[A]
 		}
 	}
 	
-	private def _mapWithState[B](f: A => B, disableCaching: Boolean = false) = destiny match {
-		case Sealed => Fixed(ChangeResult.finalValue(f(value)))
-		case MaySeal => StatefulValueView.map(this, cachingDisabled = disableCaching)(f)
-		case ForeverFlux => map { v => ChangeResult.temporal(f(v)) }
-	}
+	private def _mapWithState[B](f: A => B, disableCaching: Boolean = false) =
+		destiny match {
+			case Sealed => Fixed(ChangeResult.finalValue(f(value)))
+			case MaySeal => StatefulValueView.map(this, cachingDisabled = disableCaching)(f)
+			case ForeverFlux => map { v => ChangeResult.temporal(f(v)) }
+		}
 }
 

@@ -10,6 +10,7 @@ import utopia.echo.model.ChatMessage
 import utopia.echo.model.response.chat.{BufferedReplyMessage, StreamedOrBufferedReplyMessage}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,7 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class BufferedOrStreamedChat(override val message: ChatMessage,
                              override val conversationHistory: Seq[ChatMessage] = Empty,
                              override val stream: Boolean = false, testDeprecation: => Boolean = false)
-                            (implicit exc: ExecutionContext, jsonParser: JsonParser)
+                            (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends Chat[StreamedOrBufferedReplyMessage]
 {
 	// ATTRIBUTES   --------------------------

@@ -8,7 +8,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.api.util.ScribeContext
@@ -34,7 +34,7 @@ object Scribe
 		DatabaseActionQueue()
 	}
 	// Counts the number of logging entries in order to apply a maximum limit
-	private val logCounter = Volatile(0)
+	private val logCounter = Volatile(0)(SysErrLogger)
 	// Maximum allowed logCounter value. None if not limited.
 	private var logLimit: Option[Int] = None
 	// Process for resetting the logging counter regularly

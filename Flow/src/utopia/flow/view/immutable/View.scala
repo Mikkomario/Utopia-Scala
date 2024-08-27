@@ -1,7 +1,6 @@
 package utopia.flow.view.immutable
 
 import utopia.flow.collection.mutable.iterator.PollableOnce
-import utopia.flow.view.immutable.caching.Lazy
 
 object View
 {

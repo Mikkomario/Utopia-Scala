@@ -43,6 +43,18 @@ object CollectSingleFailureLogger
 		new CollectSingleFailureLogger(processMessage = f)
 	
 	/**
+	  * @param messageLogger A logger used for recording logged messages that have no associated throwable
+	  * @return A logger that collects logged throwables and forwards encountered messages to the specified logger
+	  *         in situations where no throwable has been attached.
+	  */
+	def delegatingMessagesTo(messageLogger: Logger) =
+		processingMessages { (message, logged) =>
+			if (!logged)
+				messageLogger(message)
+			None
+		}
+	
+	/**
 	 * Creates a new logger that ignores any string-based log-entries (i.e. only handles Throwables)
 	 * @return A new logger
 	 */
@@ -55,12 +67,13 @@ object CollectSingleFailureLogger
  * @author Mikko Hilpinen
  * @since 19.10.2023, v2.3
  */
-class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwable]] = EventfulPointer.empty(),
+class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwable]] = EventfulPointer.empty()(SysErrLogger),
                                  processMessage: (String, Boolean) => Option[Throwable] = (_, _) => None)
 	extends Logger with ChangingWrapper[Option[Throwable]]
 {
 	// IMPLEMENTED  ---------------------
 	
+	override implicit def listenerLogger: Logger = SysErrLogger
 	override protected def wrapped: Changing[Option[Throwable]] = failureContainer.readOnly
 	
 	override def apply(error: Option[Throwable], message: String): Unit = {

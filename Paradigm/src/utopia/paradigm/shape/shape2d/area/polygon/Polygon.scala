@@ -8,7 +8,7 @@ import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.Mutate
-import utopia.paradigm.angular.DirectionalRotation
+import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
@@ -24,6 +24,7 @@ import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.Transformable
 
 import java.awt.Shape
+import scala.annotation.tailrec
 
 object Polygon
 {
@@ -48,18 +49,23 @@ object Polygon
 	// NB: Assumes that:
 	//      1) 'polygon' doesn't cross itself
 	//      2) 'polygon' is of size 4 or greater
+	@tailrec
 	private def convexPartsFrom(polygon: Polygon, angles: Seq[DirectionalRotation],
-	                            direction: RotationDirection, originIndex: Int = 0): Seq[Polygon] =
+	                            direction: RotationDirection, originIndex: Int = 0,
+	                            defaultAdvanceDirection: Sign = Positive): Seq[Polygon] =
 	{
 		val indexCount = angles.size
 		// Converts a relative index to an actual polygon index
-		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
+		def index(relativeIndex: Int) =
+			relativeToAbsolute(originIndex, indexCount, defaultAdvanceDirection * relativeIndex)
 		def isConvex(relativeIndex: Int) = this.isConvex(angles(index(relativeIndex)), direction)
 		
 		// Case: Origin is convex => Finds the first non-convex index and uses that as the splitting index
 		if (isConvex(0))
 			(1 until indexCount).find { !isConvex(_) } match {
-				case Some(advanceToNonConvex) => splitFrom(polygon, index(advanceToNonConvex), angles, direction)
+				case Some(advanceToNonConvex) =>
+					splitFrom(polygon, index(advanceToNonConvex), angles, direction,
+						splitDirection = defaultAdvanceDirection)
 				
 				// Case: No non-convex index was found => This polygon is convex
 				case None => Single(polygon)
@@ -67,34 +73,31 @@ object Polygon
 		// Case: Origin is non-convex => Uses it as the primary splitting index
 		// Case: The next index is convex => starts scanning for more indices towards that direction
 		else if (isConvex(1))
-			splitFrom(polygon, originIndex, angles, direction, splitDirection = Positive)
+			splitFrom(polygon, originIndex, angles, direction, splitDirection = defaultAdvanceDirection)
 		// Case: Two consecutive non-convex indices to the positive direction
 		//       => Moves to the negative (i.e. default) direction instead
 		else if (isConvex(-1))
-			splitFrom(polygon, originIndex, angles, direction)
+			splitFrom(polygon, originIndex, angles, direction, splitDirection = defaultAdvanceDirection.opposite)
 		// Case: Three consecutive non-convex indices
 		//       => Finds the next convex index and places the primary split index next to that
 		//          (instead of at the origin), so that the first index after the split will be convex
 		else
 			(2 until indexCount).find(isConvex) match {
 				case Some(advanceToConvex) =>
-					// splitFrom(polygon, originIndex, rotations, direction, advanceToConvex - 1, Positive)
-					splitFrom(polygon, index(advanceToConvex - 1), angles, direction, splitDirection = Positive)
+					splitFrom(polygon, index(advanceToConvex - 1), angles, direction,
+						splitDirection = defaultAdvanceDirection)
 				
 				// Case: All the rotations are "non-convex" => Indicates a miscalculated rotation direction (error)
-				case None =>
-					throw new IllegalArgumentException(
-						s"Rotation direction of polygon $polygon is not $direction, as claimed")
+				case None => convexPartsFrom(polygon, angles, direction.opposite, originIndex, defaultAdvanceDirection)
 			}
 	}
 	
 	// 'splitDirection' is the direction from origin, towards which the secondary split index is estimated to be.
 	// Should be on the opposite side of the primary split index, relative to the origin.
 	// NB: Doesn't work if the first index in the 'splitDirection' is non-convex
-	// TODO: In some semi-rare circumstances, there's still the possibility to encounter crossing, which messes up this logic
 	private def splitFrom(polygon: Polygon, originIndex: Int, angles: Seq[DirectionalRotation],
 	                      polygonDirection: RotationDirection,
-	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative) =
+	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative): Seq[Polygon] =
 	{
 		val indexCount = angles.size
 		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
@@ -113,37 +116,51 @@ object Polygon
 		//            (i.e. would select the last possible index which keeps the angle low enough)
 		// Note: The index for triggering case 2 is always at least 3 steps away from the splitting point,
 		//       as the resulting shape will always contain at least 4 corners.
-		//       Also, the two splitting indices are never consecutive, meaning that absolute minimum advance is 2.
+		//       Also, the two splitting indices are never consecutive, meaning that absolute minimum advance is 2
+		//       and maximum advance is until the index adjacent to the splitting point.
 		val minimumAdvanceForAngle = (3 - relativeSplitIndex.abs) min 2
-		(2 until indexCount).findMap { advance =>
+		// Tracks the previously measured angle in order to make sure crossing doesn't become an issue
+		var previousAbsoluteAngle = Rotation.zero
+		(2 until (indexCount - relativeSplitIndex.abs)).findMap[Option[Int]] { advance =>
 			val absoluteIndex = index(splitDirection * advance)
+			val targetPoint = polygon.corners(absoluteIndex)
 			
+			val angle = (targetPoint - splitPoint).direction - referenceDirection
+			val absoluteAngle = angle.absolute
+			val previous = previousAbsoluteAngle
+			previousAbsoluteAngle = absoluteAngle
+			
+			// Case: Angle became larger than 180 degrees => Cuts at the previous index
+			if (advance >= minimumAdvanceForAngle &&
+				(angle.nonZero && angle.direction != polygonDirection * splitDirection))
+				Some(Some(index(splitDirection * (advance - 1))))
+			// Case: The measured corner angle started getting smaller => Indicates that there is crossing,
+			//       which makes clean cutting impossible (from this point with this direction)
+			else if (absoluteAngle < previous)
+				Some(None)
 			// Case: Found a non-convex index => Splits at that
-			if (!isConvex(angles(absoluteIndex), polygonDirection))
-				Some(Left(absoluteIndex))
-			else if (advance >= minimumAdvanceForAngle) {
-				val targetPoint = polygon.corners(absoluteIndex)
-				val angle = (targetPoint - splitPoint).direction - referenceDirection
-				
-				// Case: Angle is still smaller than 180 degrees => Moves on to the next index
-				if (angle.isZero || angle.direction == polygonDirection * splitDirection)
-					None
-				// Case: Angle became larger than 180 degrees => Returns the previous step
-				else
-					Some(Right(advance - 1))
-			}
-			// Case: Neither condition is fulfilled => Moves on to the next index
+			else if (!isConvex(angles(absoluteIndex), polygonDirection))
+				Some(Some(absoluteIndex))
+			// None of these conditions are fulfilled => Moves on to the next index
 			else
 				None
 		} match {
-			// Case: The other split point was found
-			//       => Separates the area between these points as a convex polygons
-			//          and moves on to process the remainder
-			case Some(otherSplitIndex) =>
-				val absoluteOtherSplitIndex = otherSplitIndex.leftOrMap { advance => index(splitDirection * advance) }
+			// Case: No other split index was found => This polygon is convex (shouldn't arrive here)
+			case None => Single(polygon)
+			
+			// Case: Encountered crossing => Must change the rotation direction,
+			//       and/or if that's not possible, the origin
+			case Some(None) =>
+				val randomOrigin = ((0 until absoluteSplitIndex) ++
+					((absoluteSplitIndex + 1) until angles.size)).random
+				convexPartsFrom(polygon, angles, polygonDirection, randomOrigin, splitDirection.opposite)
+			
+			// Case: Found the other index to split at => Performs the split
+			case Some(Some(otherSplitIndex)) =>
+				// Determines the area that will be cut off as a separate polygon, as well as the remaining polygon
 				val cutOffRange = splitDirection match {
-					case Positive => NumericSpan(absoluteSplitIndex, absoluteOtherSplitIndex)
-					case Negative => NumericSpan(absoluteOtherSplitIndex, absoluteSplitIndex)
+					case Positive => NumericSpan(absoluteSplitIndex, otherSplitIndex)
+					case Negative => NumericSpan(otherSplitIndex, absoluteSplitIndex)
 				}
 				val cutOffAndRemainder = {
 					val ascendingRange = cutOffRange.ascending
@@ -158,31 +175,23 @@ object Polygon
 				}
 				
 				// Case: The remainder is small enough to always be convex => Finishes
-				if (cutOffAndRemainder.second.corners.hasSize <= 4)
+				if (cutOffAndRemainder.second.corners.hasSize <= 3)
 					cutOffAndRemainder
 				// Case: The remainder may be non-convex => Splits it, if necessary
-				else {
-					// If the secondary split was made at a non-convex index, selects that as the next origin
-					val nextOrigin = polygon.corners(
-						if (otherSplitIndex.isLeft) absoluteOtherSplitIndex else absoluteSplitIndex)
+				else
 					cutOffAndRemainder.flatMapSecond { p =>
-						convexPartsFrom(p, p.rotations, polygonDirection, p.corners.indexOf(nextOrigin))
+						convexPartsFrom(p, p.rotations, polygonDirection, absoluteSplitIndex)
 					}
-				}
-			
-			// Case: No non-convex point was found => The remainder is convex
-			case None => Single(polygon)
 		}
 	}
 	
-	private def relativeToAbsolute(originIndex: Int, indexCount: Int, relativeIndex: Int) = {
+	private def relativeToAbsolute(originIndex: Int, indexCount: Int, relativeIndex: Int) =
 		indexInRange(originIndex + relativeIndex, indexCount)
-	}
 	private def indexInRange(index: Int, indexCount: Int) = {
 		if (index >= indexCount)
-			index - indexCount
+			index % indexCount
 		else if (index < 0)
-			indexCount + index
+			indexCount + (index % indexCount)
 		else
 			index
 	}

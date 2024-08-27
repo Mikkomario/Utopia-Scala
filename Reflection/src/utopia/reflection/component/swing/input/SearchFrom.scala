@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
@@ -15,7 +16,6 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
-import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.swing.label.{ItemLabel, ViewLabel}
 import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable

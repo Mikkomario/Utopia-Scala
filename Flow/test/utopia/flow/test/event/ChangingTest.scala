@@ -1,5 +1,6 @@
 package utopia.flow.test.event
 
+import utopia.flow.test.TestContext._
 import utopia.flow.event.model.ChangeResult
 import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
 

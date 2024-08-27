@@ -1,33 +1,40 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+
+import scala.util.Try
 
 object EventfulPointer
 {
 	// OTHER    -----------------------
 	
 	/**
+	  * @param log Implicit logging implementation for handling failures thrown by event listeners
 	  * @tparam A Type of values stored in this pointer, when defined
 	  * @return A new pointer that's currently empty
 	  */
-	def empty[A]() = apply[Option[A]](None)
+	def empty[A]()(implicit log: Logger) = apply[Option[A]](None)
 	
 	/**
 	  * Creates a new mutable pointer
 	  * @param initialValue Initial value to assign to this pointer
+	  * @param log Implicit logging implementation for handling failures thrown by event listeners
 	  * @tparam A Type of values held within this pointer
 	  * @return A new pointer
 	  */
-	def apply[A](initialValue: A): EventfulPointer[A] = new _EventfulPointer[A](initialValue)
+	def apply[A](initialValue: A)(implicit log: Logger): EventfulPointer[A] = new _EventfulPointer[A](initialValue)
 	
 	
 	// NESTED   -----------------------
 	
-	private class _EventfulPointer[A](initialValue: A) extends AbstractChanging[A] with EventfulPointer[A]
+	private class _EventfulPointer[A](initialValue: A)(implicit log: Logger)
+		extends AbstractChanging[A] with EventfulPointer[A]
 	{
 		// ATTRIBUTES	----------------
 		
@@ -60,7 +67,7 @@ object EventfulPointer
 		def value_=(newValue: A) = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { _() }
+			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
 		}
 		
 		override def toString = s"EventfulPointer(${_value})"

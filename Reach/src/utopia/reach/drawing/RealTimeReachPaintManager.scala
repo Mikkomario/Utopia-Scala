@@ -1,5 +1,6 @@
 package utopia.reach.drawing
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}

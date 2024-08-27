@@ -3,6 +3,7 @@ package utopia.genesis.handling.event.consume
 import utopia.flow.operator.Identity
 import utopia.flow.operator.filter.Filter
 import utopia.flow.util.Mutate
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 
@@ -119,6 +120,8 @@ trait Consumable[+Repr]
 		}
 		// Case: Not yet consumed => Prepares for a possible consume event
 		else {
+			implicit val log: Logger = SysErrLogger
+			
 			// Swaps this event to a consumed copy once a consume event has been received
 			val consumeEventPointer = SettableOnce[ConsumeEvent]()
 			val eventPointer = consumeEventPointer.strongMap {

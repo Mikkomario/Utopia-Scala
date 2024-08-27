@@ -1,6 +1,8 @@
 package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Use
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.FlagLike
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
@@ -89,6 +91,7 @@ class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: FiniteDur
 	
 	override def keyTypedEventFilter: Filter[KeyTypedEvent] = listener.keyTypedEventFilter
 	
+	//noinspection ScalaUnnecessaryParentheses
 	// Case: Key typed => Prepares for firing events
 	override def onKeyTyped(event: KeyTypedEvent): Unit = eventDelays(event.index) = (event.typedChar -> eventInterval)
 	// Case: Key released => Won't fire events for it anymore
@@ -108,6 +111,7 @@ class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: FiniteDur
 					(delay - event.duration) -> false
 			}
 			// Schedules the next event
+			//noinspection ScalaUnnecessaryParentheses
 			eventDelays(event.index) = (character -> delayAfter)
 			// Fires event now, if appropriate (and if accepted by the listener)
 			if (shouldFireEvent) {

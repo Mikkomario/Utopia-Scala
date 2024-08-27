@@ -1,10 +1,10 @@
 package utopia.genesis.graphics
 
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.transform.{AffineTransformable, LinearTransformable, Transformable}
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.Transformable
 
 import java.awt.{AlphaComposite, Font, RenderingHints}
 
@@ -94,7 +94,7 @@ trait GraphicsContextLike[+Repr] extends Transformable[Repr]
 	  *                 The area should be within this graphics's transformation context.
 	  * @return A copy of this graphics context, clipped to that area (overwrites any current clipping)
 	  */
-	def withClip(clipping: => Polygonic): Repr = mapGraphics { _.withClip(clipping) }
+	def withClip(clipping: => Polygon): Repr = mapGraphics { _.withClip(clipping) }
 	/**
 	  * @param clippingBounds A new set of clipping bounds. Should be set within this instance's transformation context.
 	  * @return A copy of this context where clipping is reduced to the specified bounds.

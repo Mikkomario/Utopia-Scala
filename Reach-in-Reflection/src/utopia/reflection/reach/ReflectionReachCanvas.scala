@@ -1,5 +1,6 @@
 package utopia.reflection.reach
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
@@ -117,11 +118,11 @@ object ReflectionReachCanvas
 class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]],
                                       absoluteParentPositionView: => View[Point],
                                       backgroundPointer: EventfulPointer[Color],
-                                      attachmentPointer: ResettableFlag = ResettableFlag(),
+                                      attachmentPointer: ResettableFlag = ResettableFlag()(ComponentCreationDefaults.componentLogger),
                                       cursors: Option[CursorSet] = None,
                                       enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
                                      (revalidateImplementation: ReachCanvas => Unit)
-                                     (implicit exc: ExecutionContext, log: Logger)
+                                     (implicit exc: ExecutionContext)
 	extends ReachCanvas(contentPointer, attachmentPointer, Left(absoluteParentPositionView), backgroundPointer, cursors,
 		enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
 		with ReflectionStackable with AwtContainerRelated with SwingComponentRelated

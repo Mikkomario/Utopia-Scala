@@ -7,7 +7,7 @@ import java.time.Instant
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
-  * Used for tracking two dimensional movement over time
+  * Used for tracking two-dimensional movement over time
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */

@@ -1,5 +1,6 @@
 package utopia.annex.model.schrodinger
 
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.LazyFuture
 import utopia.flow.view.mutable.eventful.EventfulPointer
 
@@ -27,6 +28,8 @@ trait Schrodinger[R, +I] extends ShcrodingerLike[R, I]
 	
 	
 	// ATTRIBUTES   -----------------------
+	
+	protected implicit val log: Logger = SysErrLogger
 	
 	protected val _serverResultPointer: EventfulPointer[Option[R]] = EventfulPointer(None)
 	

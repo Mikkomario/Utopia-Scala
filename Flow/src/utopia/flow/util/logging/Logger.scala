@@ -1,5 +1,7 @@
 package utopia.flow.util.logging
 
+import utopia.flow.operator.ScopeUsable
+
 import scala.language.implicitConversions
 
 object Logger
@@ -12,6 +14,8 @@ object Logger
 	  * @return A new logger based on the specified function
 	  */
 	implicit def apply(f: (Option[Throwable], String) => Unit): Logger = new LoggerFunction(f)
+	
+	implicit def scopeUsableLogger(l: Logger): ScopeUsable[Logger] = ScopeUsable(l)
 	
 	
 	// NESTED   ---------------------------

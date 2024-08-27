@@ -1,6 +1,8 @@
 package utopia.firmament.component
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.util.logging.Logger
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeChoice}
@@ -49,6 +51,12 @@ trait Component extends HasMutableBounds
     
     
     // COMPUTED    ---------------------------
+    
+    /**
+      * @return Implicit logging implementation used for handling component-related errors,
+      *         especially errors within the event system.
+      */
+    implicit protected def log: Logger = ComponentCreationDefaults.componentLogger
     
     /**
       * Calculates text width within this component

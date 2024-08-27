@@ -56,6 +56,7 @@ trait ListenerFactory[Event, +Repr]
       *         (using logical and).
       */
     def conditional(condition: Changing[Boolean]): Repr = usingCondition(this.condition && condition)
+    
     /**
       * @param f A mapping function applied to this factory's listening condition
       * @return Copy of this factory that applies the mapped condition instead

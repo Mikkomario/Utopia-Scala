@@ -2,6 +2,7 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.LazyListener
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.eventful.SettableOnce
 import utopia.flow.view.template.eventful.{Changing, ChangingView}
@@ -16,15 +17,16 @@ object ListenableLazy
 	  * Creates a new lazily initialized container that fires an event when it becomes initialized.
 	  * The initialization occurs when the wrapped value is first requested.
 	  * @param make A function for generating a new value when it is first requested
+	  * @param log Implicit logger for handling failures in change event -handling
 	  * @tparam A Type of value being stored
 	  * @return A new lazily initialized container
 	  */
-	def apply[A](make: => A): ListenableLazy[A] = new _ListenableLazy[A](make)
+	def apply[A](make: => A)(implicit log: Logger): ListenableLazy[A] = new _ListenableLazy[A](make)
 	
 	
 	// NESTED   ----------------------
 	
-	private class _ListenableLazy[A](generator: => A) extends ListenableLazy[A]
+	private class _ListenableLazy[A](generator: => A)(implicit log: Logger) extends ListenableLazy[A]
 	{
 		// ATTRIBUTES   -------------------------------
 		

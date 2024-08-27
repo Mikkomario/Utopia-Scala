@@ -1,11 +1,14 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, FlagLike}
 
 import scala.concurrent.Future
+import scala.util.Try
 
 object Flag
 {
@@ -14,7 +17,7 @@ object Flag
 	/**
 	  * @return A new flag
 	  */
-	def apply(): Flag = new _Flag()
+	def apply()(implicit log: Logger): Flag = new _Flag()
 	
 	/**
 	  * Wraps a flag view, adding a mutable interface to it
@@ -34,7 +37,7 @@ object Flag
 	  * @author Mikko Hilpinen
 	  * @since 18.9.2022, v1.17
 	  */
-	private class _Flag() extends AbstractMayStopChanging[Boolean] with Flag
+	private class _Flag(implicit log: Logger) extends AbstractMayStopChanging[Boolean] with Flag
 	{
 		// ATTRIBUTES   ---------------------
 		
@@ -42,9 +45,6 @@ object Flag
 		
 		override lazy val view = new FlagView(this)
 		override lazy val future = super.future
-		
-		//noinspection PostfixUnaryOperation
-		override lazy val unary_! = super.unary_!
 		
 		
 		// IMPLEMENTED  ---------------------
@@ -58,7 +58,7 @@ object Flag
 		override def set() = {
 			if (isNotSet) {
 				_value = true
-				fireEvent(ChangeEvent(false, true)).foreach { _() }
+				fireEvent(ChangeEvent(false, true)).foreach { effect => Try { effect() }.logFailure }
 				// Forgets all the listeners at this point, because no more change events will be fired
 				declareChangingStopped()
 				true
@@ -76,6 +76,7 @@ object Flag
 			case o => o
 		}
 		
+		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def readOnly = view
 		
 		override def set(): Boolean = indirectSet()

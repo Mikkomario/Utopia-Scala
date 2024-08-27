@@ -1,6 +1,7 @@
 package utopia.genesis.handling.event.animation
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.Volatile
@@ -170,6 +171,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	
 	// IMPLEMENTED  ---------------------------
 	
+	override implicit def listenerLogger: Logger = instructionPointer.listenerLogger
 	override protected def wrapped: Changing[A] = animatedPointer
 	
 	override def act(duration: FiniteDuration): Unit = {

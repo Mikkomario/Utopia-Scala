@@ -1,5 +1,6 @@
 package utopia.firmament.drawing.view
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.drawing.template.SelectableTextDrawerLike
 import utopia.firmament.model.TextDrawContext
 import utopia.flow.collection.immutable.Empty

@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -33,6 +34,7 @@ object IndirectPointer
 	
 	private class _IndirectPointer[A](override val wrapped: Changing[A], set: A => Unit) extends IndirectPointer[A]
 	{
+		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def value_=(newValue: A): Unit = set(newValue)
 	}
 }

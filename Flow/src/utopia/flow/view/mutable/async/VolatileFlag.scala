@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.async
 
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.FlagLike
@@ -11,7 +12,7 @@ object VolatileFlag
       * @param initialState Initial state of this flag
       * @return A new volatile flag
       */
-    def apply(initialState: Boolean = false) = new VolatileFlag(initialState)
+    def apply(initialState: Boolean = false)(implicit log: Logger)  = new VolatileFlag(initialState)
 }
 
 /**
@@ -19,14 +20,12 @@ object VolatileFlag
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class VolatileFlag(initialState: Boolean = false) extends Volatile[Boolean](initialState) with ResettableFlag
+class VolatileFlag(initialState: Boolean = false)(implicit log: Logger)
+    extends Volatile[Boolean](initialState) with ResettableFlag
 {
     // ATTRIBUTES   --------------
     
     override lazy val readOnly: FlagLike = new FlagView(this)
-    
-    //noinspection PostfixUnaryOperation
-    override lazy val unary_! = super.unary_!
     
     
     // IMPLEMENTED  ---------------

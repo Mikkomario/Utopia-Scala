@@ -5,6 +5,7 @@ import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
@@ -46,7 +47,7 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) e
 	private lazy val waitLock = new AnyRef()
 	// Each request accepts whether it should be completed (true) or immediately failed (false)
 	private lazy val pendingRequests = VolatileList[Boolean => Future[_]]()
-	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.successful(()))
+	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.successful(()))(SysErrLogger)
 	
 	
 	// COMPUTED ------------------------------------

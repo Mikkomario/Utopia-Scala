@@ -6,6 +6,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -53,7 +54,7 @@ object PutSchrodinger
 	  * @return A new schrödinger
 	  */
 	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[A]])
-	            (implicit exc: ExecutionContext) =
+	            (implicit exc: ExecutionContext, log: Logger) =
 		wrap(Schrodinger.makePointer[A, A, Try[A]](modifiedLocal, Success(modifiedLocal), resultFuture,
 			PositiveFlux)(Identity){ (_, result) => (result.getOrElse(original), result, Final(result.isSuccess)) })
 	
@@ -71,13 +72,13 @@ object PutSchrodinger
 	  */
 	def putAndParse[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],
 	                   parser: FromModelFactory[A])
-	                  (implicit exc: ExecutionContext) =
+	                  (implicit exc: ExecutionContext, log: Logger) =
 		apply(original, modifiedLocal, resultFuture.map { _.parsingOneWith(parser) })
 	
 	@deprecated("Deprecated for removal. Please use .putAndParse(...) instead", "v1.8")
 	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],
 	             parser: FromModelFactory[A])
-	            (implicit exc: ExecutionContext): PutSchrodinger[A] =
+	            (implicit exc: ExecutionContext, log: Logger): PutSchrodinger[A] =
 		putAndParse(original, modifiedLocal, resultFuture, parser)
 }
 

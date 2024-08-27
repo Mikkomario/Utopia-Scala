@@ -87,7 +87,7 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 {
 	// ATTRIBUTES   -------------------
 	
-	private val lastLogTimePointer = Volatile(Now.toLocalDateTime)
+	private val lastLogTimePointer = Volatile(Now.toLocalDateTime)(SysErrLogger)
 	private val fileWriter = logDirectory.map { dir =>
 		implicit val codec: Codec = Codec.UTF8
 		DeprecatingLazy {

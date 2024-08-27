@@ -1,9 +1,10 @@
 # Utopia Genesis - List of Changes
 
-## v4.0.1 (in development)
+## v4.1 (in development)
 ### Breaking changes
 - **KeyDownEventGenerator** no longer extends **Actor** nor **KeyStateListener**. 
   Instead of adding the generator to these handlers, one should call `.start(...)`.
+- Multiple systems now require an implicit **Logger** construction parameter for handling errors in managed pointers
 ### Bugfixes
 - Debugged **KeyDownEventGenerator**
 - Debugged **Animator**

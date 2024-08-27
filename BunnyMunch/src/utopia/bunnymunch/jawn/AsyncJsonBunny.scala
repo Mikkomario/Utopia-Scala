@@ -6,6 +6,7 @@ import utopia.flow.async.context.TwoThreadBuffer
 import utopia.flow.async.context.TwoThreadBuffer.EmptyInput
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.logging.SysErrLogger
 
 import java.io.{FileInputStream, InputStream}
 import java.nio.file.Path
@@ -359,7 +360,7 @@ object AsyncJsonBunny
 	{
 		val parser = AsyncParser[Value](mode, multiValue = flattenJsonArrays)
 		// Uses an asynchronous thread to push values into the buffer
-		val buffer = new TwoThreadBuffer[Value](valueBufferSize)
+		val buffer = SysErrLogger.use { implicit log => new TwoThreadBuffer[Value](valueBufferSize) }
 		val finalFuture = Future {
 			// Keeps pushing the read values to the buffer as long as there are some available
 			val result = processStream(stream, parser, byteBufferSize)(buffer.output.push).flatMap { _ =>

@@ -19,6 +19,10 @@
   - Added `.linkedFlag`
 ### Other changes
 - Built with Scala v2.13.14
+- `ComponentCreationDefaults.componentLogger` is now implicitly accessible within instances of 
+  **ContextualFactory** and **GenericContextualFactory**
+- **ReachCanvas** now uses `ComponentCreationDefaults.componentLogger` 
+  instead of the **Logger** passed to some constructor functions
 
 ## v1.3 - 28.07.2024
 This update follows changes introduced in **Genesis v4.0**, which mostly affect the component 

@@ -18,6 +18,8 @@ import utopia.firmament.model.stack.StackInsets
 
 object ItemLabel
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	/**
 	  * Creates a new item label
 	  * @param font Font used in this label's text

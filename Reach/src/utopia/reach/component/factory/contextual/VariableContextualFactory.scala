@@ -1,5 +1,7 @@
 package utopia.reach.component.factory.contextual
 
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.template.PartOfComponentHierarchy
@@ -22,6 +24,14 @@ trait VariableContextualFactory[N, +Repr] extends PartOfComponentHierarchy
 	  * @return Copy of this factory that uses the specified context pointer
 	  */
 	def withContextPointer(p: Changing[N]): Repr
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Implicit logging implementation used in component-construction
+	  */
+	implicit protected def log: Logger = ComponentCreationDefaults.componentLogger
 	
 	
 	// OTHER    --------------------------

@@ -1,7 +1,8 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ColorContextLike
+import utopia.firmament.context.{ColorContextLike, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
+import utopia.flow.util.logging.Logger
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
@@ -93,6 +94,14 @@ trait ContextualFactory[N, +Repr] extends Any with HasContext[N]
 	  * @return A copy of this factory that uses the specified context
 	  */
 	def withContext(context: N): Repr
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	  * @return Logging implementation used for component-related logging
+	  */
+	protected implicit def log: Logger = ComponentCreationDefaults.componentLogger
 
 
 	// OTHER    -----------------------

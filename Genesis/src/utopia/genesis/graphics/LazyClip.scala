@@ -2,7 +2,7 @@ package utopia.genesis.graphics
 
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.transform.Transformable
 
@@ -12,7 +12,7 @@ object LazyClip
 	  * @param clippingArea A clipping area (called lazily)
 	  * @return That clipping area wrapped as a LazyClip instance
 	  */
-	def apply(clippingArea: => Polygonic) = new LazyClip(Left(Lazy(clippingArea)))
+	def apply(clippingArea: => Polygon) = new LazyClip(Left(Lazy(clippingArea)))
 }
 
 /**
@@ -20,14 +20,14 @@ object LazyClip
   * @author Mikko Hilpinen
   * @since 28.1.2022, v2.6.3
   */
-class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
-	extends Lazy[Polygonic] with Transformable[LazyClip]
+class LazyClip(parent: Either[Lazy[Polygon], (LazyClip, Lazy[Matrix3D])])
+	extends Lazy[Polygon] with Transformable[LazyClip]
 {
 	// ATTRIBUTES   -----------------------------
 	
 	// Calculates the actual (relative) clipping shape lazily, as late as possible, utilizing parent calculations
 	// if such have been performed at this point
-	private val cache: Lazy[Polygonic] = Lazy {
+	private val cache: Lazy[Polygon] = Lazy {
 		parent match {
 			// Case: No lazy parent => presents the wrapped clipping area
 			case Left(area) => area.value
@@ -52,7 +52,7 @@ class LazyClip(parent: Either[Lazy[Polygonic], (LazyClip, Lazy[Matrix3D])])
 	// Returns materials used in clipping calculation. Either:
 	// Right: A pre-calculated clipping shape in current transformation context
 	// Left: Some clipping shape + transformation to apply to that shape (lazy)
-	private def materials: Either[(Polygonic, Lazy[Matrix3D]), Polygonic] = cache.current match {
+	private def materials: Either[(Polygon, Lazy[Matrix3D]), Polygon] = cache.current match {
 		case Some(shape) => Right(shape)
 		case None =>
 			parent match {

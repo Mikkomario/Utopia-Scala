@@ -3,6 +3,7 @@ package utopia.genesis.handling.event.mouse
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.Flag
@@ -27,10 +28,11 @@ object MouseEventGenerator
       * @param component The component on which mouse button and wheel events are received
       * @param activeCondition Condition on which mouse-listening is performed (default = always listen)
       * @param exc Implicit execution context (used for delivering mouse events)
+      * @param log Implicit logger used for handling-system failures
       * @return A new mouse event generator, already attached to the specified ActorHandler
       */
     def apply(handler: ActorHandler, component: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
-             (implicit exc: ExecutionContext) =
+             (implicit exc: ExecutionContext, log: Logger) =
     {
         val generator = new MouseEventGenerator(component, activeCondition)
         handler += generator
@@ -46,7 +48,7 @@ object MouseEventGenerator
  * @since 22.1.2017
  */
 class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = AlwaysTrue)
-                         (implicit exc: ExecutionContext)
+                         (implicit exc: ExecutionContext, log: Logger)
     extends Actor with Breakable
 {
     // ATTRIBUTES    -----------------

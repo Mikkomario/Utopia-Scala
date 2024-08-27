@@ -1,11 +1,15 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.{Pointer, Resettable}
 import utopia.flow.view.template.eventful.AbstractChanging
+
+import scala.util.Try
 
 object ResettableFlag
 {
@@ -15,12 +19,12 @@ object ResettableFlag
 	 * @param initialValue The initial value of this flag
 	  * @return A new resettable flag
 	  */
-	def apply(initialValue: Boolean = false): ResettableFlag = new _ResettableFlag(initialValue)
+	def apply(initialValue: Boolean = false)(implicit log: Logger): ResettableFlag = new _ResettableFlag(initialValue)
 	
 	
 	// NESTED   -----------------------
 	
-	private class _ResettableFlag(initialValue: Boolean = false)
+	private class _ResettableFlag(initialValue: Boolean = false)(implicit log: Logger)
 		extends AbstractChanging[Boolean] with ResettableFlag with Pointer[Boolean]
 	{
 		// ATTRIBUTES   -----------------------
@@ -28,8 +32,6 @@ object ResettableFlag
 		private var _value = initialValue
 		
 		override lazy val view = new FlagView(this)
-		//noinspection PostfixUnaryOperation
-		override lazy val unary_! = super.unary_!
 		
 		
 		// IMPLEMENTED  -----------------------
@@ -60,7 +62,7 @@ object ResettableFlag
 		private def _set(newValue: Boolean) = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { _() }
+			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
 		}
 	}
 }

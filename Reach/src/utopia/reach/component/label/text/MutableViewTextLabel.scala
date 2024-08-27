@@ -29,6 +29,8 @@ object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	extends FromContextFactory[TextContext, ContextualMutableViewTextLabelFactory]
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// IMPLEMENTED	----------------------------
 	
 	override def withContext(context: TextContext) =

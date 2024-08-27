@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.caching
 
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.VolatileOption
 
 object MutableVolatileLazy
@@ -21,7 +22,7 @@ class MutableVolatileLazy[A](generator: => A) extends MutableLazy[A]
 {
 	// ATTRIBUTES	---------------------
 	
-	private val wrapped: VolatileOption[A] = VolatileOption()
+	private val wrapped: VolatileOption[A] = VolatileOption()(SysErrLogger)
 	
 	
 	// IMPLEMENTED	--------------------

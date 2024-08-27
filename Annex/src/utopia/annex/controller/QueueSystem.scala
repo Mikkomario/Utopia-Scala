@@ -10,6 +10,7 @@ import utopia.flow.async.process.Wait
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -32,7 +33,7 @@ class QueueSystem(api: ApiClient, offlineModeWaitThreshold: FiniteDuration = 30.
                   minOfflineDelay: FiniteDuration = 5.seconds,
                   maxOfflineDelay: FiniteDuration = 2.minutes,
                   increaseOfflineDelay: FiniteDuration => FiniteDuration = _ * 2)
-                 (implicit exc: ExecutionContext)
+                 (implicit exc: ExecutionContext, log: Logger)
 {
 	// ATTRIBUTES   ------------------------------
 	

@@ -4,6 +4,7 @@ import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.generate.StreamedReply
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
@@ -17,7 +18,8 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-class StreamedReplyResponseParser(implicit override val exc: ExecutionContext, override val jsonParser: JsonParser)
+class StreamedReplyResponseParser(implicit override val exc: ExecutionContext, override val jsonParser: JsonParser,
+                                  override val log: Logger)
 	extends StreamedOllamaResponseParser[StreamedReply]
 {
 	// IMPLEMENTED  -------------------------

@@ -3,6 +3,7 @@ package utopia.annex.schrodinger
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, PositiveFlux}
 import utopia.annex.model.response.RequestResult
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -32,7 +33,8 @@ object DeleteSchrodinger
 	  * @tparam A Type of the item being deleted
 	  * @return A new schrödinger
 	  */
-	def wrap[A](pointer: Changing[(Option[A], Try[Unit], SchrodingerState)]) = new DeleteSchrodinger[A](pointer)
+	def wrap[A](pointer: Changing[(Option[A], Try[Unit], SchrodingerState)]) =
+		new DeleteSchrodinger[A](pointer)
 	
 	/**
 	  * Creates a schrödinger that represents a failed attempt to delete an instance
@@ -51,10 +53,12 @@ object DeleteSchrodinger
 	  *              Call-by-name, only called if the request fails and the instance needs to be brought back.
 	  * @param resultFuture A future that resolves into server's response, if successful
 	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation for handling certain unexpected failures.
+	  *            For example those thrown by listeners attached to this Schrödinger's pointers.
 	  * @tparam A Type of instance being deleted
 	  * @return A new schrödinger
 	  */
-	def apply[A](ghost: => A, resultFuture: Future[RequestResult[Any]])(implicit exc: ExecutionContext) =
+	def apply[A](ghost: => A, resultFuture: Future[RequestResult[Any]])(implicit exc: ExecutionContext, log: Logger) =
 		wrap(Schrodinger.makePointer[Option[A], Any, Try[Unit]](None, successValue, resultFuture,
 			PositiveFlux) { _.map { _ => () } } {
 			(_, result) => (if (result.isSuccess) None else Some(ghost), result, Final(result.isSuccess)) })

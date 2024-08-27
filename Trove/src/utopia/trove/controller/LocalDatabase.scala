@@ -7,6 +7,7 @@ import utopia.flow.async.context.CloseHook
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}
 import utopia.trove.event.DatabaseSetupEvent.{DatabaseConfigured, DatabaseStarted, SetupFailed, SetupSucceeded, UpdateApplied, UpdateFailed, UpdatesFound}
@@ -29,6 +30,8 @@ import scala.util.{Failure, Success, Try}
 object LocalDatabase
 {
 	// ATTRIBUTES	---------------------------
+	
+	private implicit val log: Logger = SysErrLogger
 	
 	private val _statusPointer = Volatile[DatabaseStatus](NotStarted)
 	private val dbPointer = VolatileOption[DB]()

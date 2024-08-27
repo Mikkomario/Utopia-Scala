@@ -1,5 +1,6 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.TextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}

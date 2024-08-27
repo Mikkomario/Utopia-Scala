@@ -29,7 +29,7 @@ object LazyTripleMergeMirror
 				source2.fixedValue match {
 					case Some(v2) =>
 						source3.fixedValue match {
-							case Some(v3) => ListenableLazy { merge(v1, v2, v3) }
+							case Some(v3) => ListenableLazy { merge(v1, v2, v3) }(source1.listenerLogger)
 							case None => LazyMirror(source3) { merge(v1, v2, _) }
 						}
 					case None =>
@@ -83,7 +83,8 @@ class LazyTripleMergeMirror[+O1, +O2, +O3, +Reflection](source1: Changing[O1], s
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value, source3.value) }
+	private val cache = ResettableLazy
+		.listenable { merge(source1.value, source2.value, source3.value) }(source1.listenerLogger)
 	private lazy val listener = ChangeListener.onAnyChange { cache.reset(); Continue }
 	
 	

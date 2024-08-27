@@ -5,6 +5,7 @@ import utopia.firmament.image.ButtonImageEffect.{Highlight, LowerAlphaOnDisabled
 import utopia.firmament.model.Margins
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -21,6 +22,12 @@ import java.util.concurrent.TimeUnit
   */
 object ComponentCreationDefaults
 {
+	/**
+	  * A logging implementation used for handling component-related errors.
+	  * Mainly errors within the reactive event systems.
+	  */
+	implicit var componentLogger: Logger = SysErrLogger
+	
 	/**
 	  * The maximum refresh rate for animations by default. This limits the amount of component hierarchy revalidations
 	  * and repaint calls from animated components inside the action loop. Default value is 90 Hz (times per second).

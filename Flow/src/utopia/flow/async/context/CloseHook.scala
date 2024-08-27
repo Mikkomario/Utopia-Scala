@@ -6,6 +6,7 @@ import utopia.flow.collection.immutable.WeakList
 import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,6 +19,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object CloseHook
 {
 	// ATTRIBUTES    ----------------
+	
+	private implicit val log: Logger = SysErrLogger
 	
 	private val additionalShutdownTime = 200.millis
 	

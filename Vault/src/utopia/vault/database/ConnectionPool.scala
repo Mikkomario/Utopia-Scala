@@ -30,6 +30,8 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 {
 	// ATTRIBUTES	----------------------
 	
+	private implicit val log: Logger = SysErrLogger
+	
 	private val connections = VolatileList[ReusableConnection]()
 	private val waitLock = new AnyRef()
 	private val timeoutCompletion: Volatile[Future[Any]] = new Volatile(Future.successful(()))
@@ -85,7 +87,6 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	override def stop() = {
 		// Closes all current connections (may have to wait for clients to exit)
-		implicit val logger: Logger = SysErrLogger
 		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures)
 			.futureCompletion(new NewThreadExecutionContext("Closing connection pool"))
 	}

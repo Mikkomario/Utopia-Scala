@@ -5,6 +5,7 @@ import utopia.flow.parse.json.{JsonReader, JsonParser}
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
+import TestContext._
 
 /**
  * Provides a test console

@@ -4,6 +4,7 @@ import utopia.flow.async.process.Breakable
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.operator.Identity
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
 import scala.concurrent.Future
@@ -59,6 +60,8 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	
 	
 	// IMPLEMENTED  --------------------
+	
+	override implicit def listenerLogger: Logger = origin.listenerLogger
 	
 	override def value: R = bridge.value
 	override def destiny: Destiny = if (stopped) Sealed else origin.destiny.possibleToSeal

@@ -1,5 +1,6 @@
 package utopia.flow.test.event
 
+import utopia.flow.test.TestContext._
 import utopia.flow.view.mutable.eventful.{Flag, ResettableFlag}
 
 /**

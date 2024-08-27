@@ -7,10 +7,12 @@ import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny.MaySeal
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.enumeration.End
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object OnceFlatteningPointer
 {
@@ -27,19 +29,26 @@ object OnceFlatteningPointer
 	  * @param future A future that will resolve into the pointer to wrap.
 	  *               This future is not expected to fail;
 	  *                     If this future contains an immediate failure, it is thrown.
-	  *                     Other failures are (merely) reported to the specified execution context.
+	  *                     Other failures are reported to the specified logging implementation.
 	  * @param placeholderValue A value to return until the future resolves (call-by-name).
 	  *                         Not called in situations where the future has already resolved.
 	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation used for handling situations where:
+	  *                 1. A listener assigned to this pointer throws an exception
+	  *                    while it is being transferred to the newly acquired pointer
+	  *                 1. The specified future fails after this method call
 	  * @tparam A Type of values returned by this pointer
 	  * @return A new pointer that will match the future pointer in function, after that future has resolved.
 	  */
-	def wrap[A](future: Future[Changing[A]], placeholderValue: => A)(implicit exc: ExecutionContext) =
+	def wrap[A](future: Future[Changing[A]], placeholderValue: => A)(implicit exc: ExecutionContext, log: Logger) =
 		future.currentResult match {
 			case Some(immediate) => immediate.get
 			case None =>
 				val waiter = apply(placeholderValue)
-				future.foreach(waiter.complete)
+				future.onComplete {
+					case Success(pointer) => waiter.complete(pointer)
+					case Failure(error) => log(error, "Pointer future failed")
+				}
 				waiter
 		}
 }
@@ -62,6 +71,8 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	
 	
 	// IMPLEMENTED  ------------------------
+	
+	override implicit def listenerLogger: Logger = SysErrLogger
 	
 	override def value: A = pointer match {
 		case Some(p) => p.value
@@ -127,8 +138,18 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 						// whether it shall be transferred over or simply discarded
 						// The after-effects are bundled for later
 						val (listenersToTransfer, afterEffects) = queuedListeners(prio).splitFlatMap { listener =>
-							val response = listener.onChangeEvent(event)
-							(if (response.shouldContinueListening) Some(listener) else None) -> response.afterEffects
+							// Catches possible failures thrown by listeners
+							Try { listener.onChangeEvent(event) } match {
+								case Success(response) =>
+									(if (response.shouldContinueListening) Some(listener) else None) ->
+										response.afterEffects
+								// Case: Listener threw => Logs the error and continues as if the listener
+								//                         had accepted the event and wishes to continue
+								case Failure(error) =>
+									pointer.listenerLogger(error,
+										s"A queued change listener threw an exception when reacting to a generated change event: $event")
+									Some(listener) -> Empty
+							}
 						}
 						// Transfers the remaining listeners
 						listenersToTransfer.foreach { pointer.addListenerOfPriority(prio)(_) }

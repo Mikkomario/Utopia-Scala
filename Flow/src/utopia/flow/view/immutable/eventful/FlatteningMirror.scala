@@ -5,6 +5,7 @@ import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
@@ -87,6 +88,8 @@ class FlatteningMirror[+O, R](source: Changing[O])(initialMap: O => Changing[R])
 	
 	
 	// IMPLEMENTED  -----------------------
+	
+	override implicit def listenerLogger: Logger = source.listenerLogger
 	
 	// As long as the source pointer is changing, won't know whether the final result will be forever flux or sealed
 	// Except that, if the source never stops changing, this pointer never stops changing either

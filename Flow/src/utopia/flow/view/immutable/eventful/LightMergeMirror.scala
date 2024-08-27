@@ -4,6 +4,7 @@ import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
 
@@ -83,6 +84,8 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	override implicit def listenerLogger: Logger = origin1.listenerLogger
 	
 	override def value: R = merge(input1.value, input2.value)
 	

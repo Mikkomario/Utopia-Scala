@@ -2,6 +2,7 @@ package utopia.flow.collection.mutable
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
@@ -41,7 +42,7 @@ object VolatileList extends SeqFactory[VolatileList]
 * @since 28.3.2019
 **/
 class VolatileList[T] private(list: IndexedSeq[T])
-	extends Volatile(list) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
+	extends Volatile(list)(SysErrLogger) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
 {
     // IMPLEMENTED    ---------------
 	

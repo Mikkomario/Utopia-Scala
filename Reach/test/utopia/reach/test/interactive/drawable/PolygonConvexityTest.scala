@@ -20,6 +20,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.test.interactive.drawable.DrawableReachTestContext._
+import utopia.reach.test.ReachTestContext._
 
 /**
   * A visual test for splitting polygons to their convex parts
@@ -43,7 +44,9 @@ object PolygonConvexityTest extends App
 	
 	// APP CODE ------------------------
 	
-	start(MouseTracker, PolygonsDrawer)
+	cornersPointer.addContinuousListener { e => println(s"Now at ${ e.newValue.size } corners") }
+	
+	display(MouseTracker, PolygonsDrawer)
 	KeyboardEvents += KeyTracker
 	
 	
@@ -62,10 +65,8 @@ object PolygonConvexityTest extends App
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = event.button match {
 			case MouseButton.Left =>
+				println("\n------")
 				cornersPointer.update { _ :+ event.position }
-				println(s"Corners: ${ cornersPointer.value.size }")
-				println(s"Polygons: ${ polygonsPointer.value.size }")
-				
 			case MouseButton.Right => cornersPointer.value = Empty
 			case _ => ()
 		}
@@ -91,7 +92,8 @@ object PolygonConvexityTest extends App
 		
 		private val centerDs = StrokeSettings(Color.white).toDrawSettings
 		
-		override val drawBoundsPointer: Changing[Bounds] = cornersPointer.map { Bounds.aroundPoints(_).enlarged(2.0) }
+		override val drawBoundsPointer: Changing[Bounds] =
+			cornersPointer.strongMap { Bounds.aroundPoints(_).enlarged(2.0) }
 		private val drawSettingsPointer = polygonsPointer.strongMap { _.size }.strongMap { colorCount =>
 			(0 until colorCount).map { i =>
 				val color = Hsl(Angle.circles(i.toDouble / colorCount))
@@ -115,6 +117,7 @@ object PolygonConvexityTest extends App
 			drawer.antialiasing.use { drawer =>
 				// Draws the polygons
 				val drawnPolygons = polygonsPointer.value.map { _.map(convert) }.zip(drawSettingsPointer.value)
+				println(s"Drawing ${ drawnPolygons.size } polygons")
 				drawnPolygons.foreach { case (polygon, drawSettings) =>
 					implicit val ds: DrawSettings = drawSettings
 					polygon.corners.size match {

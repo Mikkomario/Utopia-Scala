@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.filter.AcceptAll
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.Flag
@@ -25,7 +26,7 @@ object KeyDownEventGenerator
 	 */
 	@deprecated("Please use .start(...) instead", "v4.0.1")
 	def apply(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: FlagLike = AlwaysTrue) =
-		start(actorHandler, keyStateHandler, activeCondition)
+		start(actorHandler, keyStateHandler, activeCondition)(SysErrLogger)
 	
 	/**
 	  * @param actorHandler An actor handler that will deliver action events to this generator
@@ -33,7 +34,8 @@ object KeyDownEventGenerator
 	  * @param activeCondition A condition that must be met in order for key-down events to be generated or fired
 	  * @return A new started key-down event generator
 	  */
-	def start(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: FlagLike = AlwaysTrue) =
+	def start(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: FlagLike = AlwaysTrue)
+	         (implicit log: Logger) =
 	{
 		val generator = new KeyDownEventGenerator(KeyDownHandler.conditional(activeCondition)())
 		generator.start(actorHandler, keyStateHandler)
@@ -50,7 +52,7 @@ object KeyDownEventGenerator
  * @author Mikko Hilpinen
  * @since 29/03/2024, v4.0
  */
-class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())
+class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(implicit log: Logger)
 {
 	// ATTRIBUTES   --------------------------
 	

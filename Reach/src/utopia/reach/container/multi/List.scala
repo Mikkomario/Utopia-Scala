@@ -56,6 +56,8 @@ object List extends Cff[ListFactory]
 class ListFactory(parentHierarchy: ComponentHierarchy)
 	extends FromContextFactory[ColorContext, ContextualListFactory]
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
 	override def withContext(context: ColorContext) = ContextualListFactory(this, context)
@@ -232,6 +234,8 @@ private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer:
                        keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener
 {
+	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+	
 	// ATTRIBUTES	----------------------------------
 	
 	private lazy val locationTrackerPointer = stackPointer.map { _.map { StackItemAreas(_) } }

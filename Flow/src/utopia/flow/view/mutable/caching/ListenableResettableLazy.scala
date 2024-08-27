@@ -1,14 +1,17 @@
 package utopia.flow.view.mutable.caching
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangingStoppedListener, LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, ResetListenable}
 
 import scala.concurrent.{Future, Promise}
+import scala.util.Try
 
 object ListenableResettableLazy
 {
@@ -16,15 +19,18 @@ object ListenableResettableLazy
 	
 	/**
 	  * @param make A function for generating a new value when one is requested
+	  * @param log Implicit logging implementation for handling possible failures thrown by attached change listeners
 	  * @tparam A Type of stored value
 	  * @return A new resettable lazy container
 	  */
-	def apply[A](make: => A): ListenableResettableLazy[A] = new _ListenableResettableLazy[A](make)
+	def apply[A](make: => A)(implicit log: Logger): ListenableResettableLazy[A] =
+		new _ListenableResettableLazy[A](log)(make)
 	
 	
 	// NESTED   ----------------------
 	
-	private class _ListenableResettableLazy[A](generator: => A) extends ListenableResettableLazy[A]
+	private class _ListenableResettableLazy[A](log: Logger)(generator: => A)
+		extends ListenableResettableLazy[A]
 	{
 		// ATTRIBUTES   ------------------------------
 		
@@ -100,7 +106,7 @@ object ListenableResettableLazy
 			resetListeners = resetListeners.filterNot { _ == listener }
 		
 		override protected def mapToListenable[B](f: A => B) = {
-			val newLazy = ListenableResettableLazy { f(value) }
+			val newLazy = ListenableResettableLazy { f(value) }(log)
 			addResetListener(LazyResetListener.onAnyReset { newLazy.reset() })
 			newLazy
 		}
@@ -110,7 +116,7 @@ object ListenableResettableLazy
 		
 		// NESTED   -------------------------------
 		
-		private object StateView extends AbstractChanging[Option[A]]
+		private object StateView extends AbstractChanging[Option[A]]()(log)
 		{
 			// IMPLEMENTED  ----------------------
 			
@@ -122,8 +128,9 @@ object ListenableResettableLazy
 			
 			// OTHER    --------------------------
 			
-			def onValueGenerated() = fireEventIfNecessary(None).foreach { _() }
-			def onValueReset(oldValue: A) = fireEventIfNecessary(Some(oldValue)).foreach { _() }
+			def onValueGenerated() = fireEventIfNecessary(None).foreach { effect => Try { effect() }.logFailure }
+			def onValueReset(oldValue: A) =
+				fireEventIfNecessary(Some(oldValue)).foreach { effect => Try { effect }.logFailure }
 		}
 	}
 }

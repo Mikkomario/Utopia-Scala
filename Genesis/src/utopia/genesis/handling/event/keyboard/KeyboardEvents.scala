@@ -2,6 +2,7 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable, Handlers}
@@ -99,12 +100,14 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	 * @param actorHandler An actor handler that will deliver action events required for event-generation
 	 * @param beforeMultiTypeDelay Duration how long a key must be held down before
 	 *                             continuous key typed -events will be generated.
-	 *                             Set to infinite to disable continuous key typed -events.
+	 *                             Set to infinite in order to disable continuous key typed -events.
 	 *                             Default = 0.8 seconds.
 	 * @param multiTypeInterval Time interval between generated key typed -events. Default = 0.2 seconds
+	  * @param log Implicit logging implementation used in pointer-related error-handling
 	 */
 	def setupKeyDownEvents(actorHandler: ActorHandler, beforeMultiTypeDelay: Duration = 0.8.seconds,
-	                       multiTypeInterval: FiniteDuration = 0.2.seconds): Unit =
+	                       multiTypeInterval: FiniteDuration = 0.2.seconds)
+	                      (implicit log: Logger): Unit =
 	{
 		if (!keyDownStarted) {
 			keyDownStarted = true

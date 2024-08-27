@@ -1,6 +1,8 @@
 package utopia.reach.component.hierarchy
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.model.CoordinateTransform
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
@@ -129,6 +131,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// IMPLEMENTED  ----------------------
 		
+		override implicit def listenerLogger: Logger = ComponentCreationDefaults.componentLogger
 		override protected def wrapped: Changing[Boolean] = _wrapped
 		
 		

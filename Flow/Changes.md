@@ -1,12 +1,19 @@
 # Utopia Flow - List of Changes
 
-## v2.4.1 (in development)
+## v2.5 (in development)
+### Breaking changes
+- All non-wrapping pointers now require an implicit logger as a construction parameter
+  - This requirement was added because previously errors would not always get properly logged or even handled, 
+    and could break the change event distribution system
+  - This same requirement is extended to instances of **ListenableLazy**, because of their `stateView` property
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### New features
+- **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 - Added **LazyTripleMergeMirror** for more complex lazy pointer-merging
+- **Loggers** are now implicitly convertible to **ScopeUsable**, allowing for scoped logging definitions
 ### New methods
 - **Changing**
   - Added a new variant of `.lazyMergeWith(...)`

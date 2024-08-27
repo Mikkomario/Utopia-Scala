@@ -1,7 +1,8 @@
 package utopia.flow.view.immutable.caching
 
 import utopia.flow.collection.immutable.caching.iterable.LazySeq
-import utopia.flow.collection.mutable.iterator.{LazyInitIterator, PollableOnce}
+import utopia.flow.collection.mutable.iterator.LazyInitIterator
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.caching.DeprecatingLazy
@@ -24,7 +25,7 @@ object Lazy
 	  * @tparam A Type of wrapped value
 	  * @return A new lazily initialized container
 	  */
-	def listenable[A](make: => A) = ListenableLazy(make)
+	def listenable[A](make: => A)(implicit log: Logger) = ListenableLazy(make)
 	/**
 	  * @param make A function for creating an item when it is requested
 	  * @tparam A Type of the item in this wrapper

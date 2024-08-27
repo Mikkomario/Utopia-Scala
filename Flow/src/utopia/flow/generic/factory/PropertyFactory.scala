@@ -3,6 +3,7 @@ package utopia.flow.generic.factory
 import utopia.flow.generic.factory.PropertyFactory.MappingFactory
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.{DataType, Variable}
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.language.implicitConversions
 
@@ -29,7 +30,7 @@ object PropertyFactory
 	/**
 	  * A basic property factory that yields variables
 	  */
-	val forVariables = apply { Variable(_, _) } { _ => false }
+	val forVariables = apply { Variable(_, _)(SysErrLogger) } { _ => false }
 	
 	
 	// OTHER    ------------------------
@@ -102,7 +103,7 @@ object PropertyFactory
 	  *                              If true, the default value will be used.
 	  * @return A new variable factory
 	  */
-	def variableWithDefault(defaultValue: Value, requireCastingSuccess: Boolean = false) =
+	def variableWithDefault(defaultValue: Value, requireCastingSuccess: Boolean = false)(implicit log: Logger) =
 		withDefault(defaultValue, requireCastingSuccess) { Variable(_, _) }
 	
 	/**
@@ -140,7 +141,7 @@ object PropertyFactory
 	  * @param targetType The data type to which the proposed values will be cast before they are assigned to a property
 	  * @return A new variable factory
 	  */
-	def variableOfType(targetType: DataType) =
+	def variableOfType(targetType: DataType)(implicit log: Logger) =
 		castingTo(targetType, requireCastingSuccess = true) { Variable(_, _) }
 	
 	
