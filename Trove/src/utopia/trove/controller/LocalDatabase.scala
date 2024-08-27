@@ -1,16 +1,15 @@
 package utopia.trove.controller
 
-import java.nio.file.Path
 import ch.vorburger.mariadb4j.{DB, DBConfigurationBuilder}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.CloseHook
-import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}
-import utopia.trove.event.DatabaseSetupEvent.{DatabaseConfigured, DatabaseStarted, SetupFailed, SetupSucceeded, UpdateApplied, UpdateFailed, UpdatesFound}
+import utopia.trove.event.DatabaseSetupEvent._
 import utopia.trove.event.{DatabaseSetupEvent, DatabaseSetupListener}
 import utopia.trove.model.enumeration.DatabaseStatus
 import utopia.trove.model.enumeration.DatabaseStatus.{NotStarted, Setup, Started, Starting, Stopping, Updating}
@@ -19,6 +18,7 @@ import utopia.trove.model.stored.DatabaseVersion
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.immutable.Table
 
+import java.nio.file.Path
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
@@ -33,8 +33,8 @@ object LocalDatabase
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	private val _statusPointer = Volatile[DatabaseStatus](NotStarted)
-	private val dbPointer = VolatileOption[DB]()
+	private val _statusPointer = Volatile.eventful[DatabaseStatus](NotStarted)
+	private val dbPointer = Volatile.optional[DB]()
 	
 	
 	// COMPUTED	-------------------------------

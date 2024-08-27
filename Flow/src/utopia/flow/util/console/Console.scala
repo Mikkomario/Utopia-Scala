@@ -1,14 +1,14 @@
 package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -83,8 +83,8 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	private val currentRunsPointer = Volatile(0)
-	private val stopFlag = new VolatileFlag()
+	private val currentRunsPointer = Volatile.eventful(0)
+	private val stopFlag = Volatile.switch
 	private val stopPromiseCache = ResettableLazy { Promise[Unit]() }
 	
 	private lazy val helpCommand = Command("help", "man",

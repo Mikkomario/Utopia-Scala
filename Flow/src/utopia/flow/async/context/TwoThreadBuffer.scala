@@ -3,11 +3,10 @@ package utopia.flow.async.context
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Flag
@@ -184,7 +183,7 @@ object TwoThreadBuffer
 		 * @param max The largest number of items that may be returned from this function.
 		 * @return Next min-max items from this input.
 		 */
-		def collectNextBetween(min: Int, max: Int): IndexedSeq[A] = {
+		def collectNextBetween(min: Int, max: Int): Seq[A] = {
 			val immediate = immediately.collectNext(max)
 			if (immediate.hasSize < min)
 				immediate ++ this.collectNext(min - immediate.size)
@@ -220,7 +219,7 @@ object TwoThreadBuffer
 		 * @param n Maximum number of immediately available items to pull
 		 * @return The next immediately available items (up to 'n' items). May be empty.
 		 */
-		def collectNext(n: Int): IndexedSeq[A]
+		def collectNext(n: Int): Seq[A]
 	}
 	
 	/**
@@ -270,10 +269,10 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	// ATTRIBUTES   ------------------------
 	
 	// Contains true when Input is closed
-	private val _declaredFilledPointer = Volatile[UncertainBoolean](UncertainBoolean)
+	private val _declaredFilledPointer = Volatile.eventful[UncertainBoolean](UncertainBoolean)
 	// Contains the remaining input size / length. Actively tracked, but may be uncertain.
 	// Based on declarations and appended input size
-	private val _remainingInputSize = Volatile[UncertainInt](zeroOrMore)
+	private val _remainingInputSize = Volatile.eventful[UncertainInt](zeroOrMore)
 	/**
 	  * Pointer that contains whether this buffer is receiving more elements.
 	  * May contain an uncertain value.
@@ -285,7 +284,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		}
 	}
 	
-	private val buffer = VolatileList[A]()
+	private val buffer = Volatile.eventful.seq[A]()
 	
 	/**
 	  * Flag that contains true while this buffer contains unread elements
@@ -350,11 +349,11 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	  * @return Whether this buffer is currently full.
 	  *         Full buffers don't accept new items before some are read.
 	  */
-	def isCurrentlyFull = buffer.hasSize >= capacity
+	def isCurrentlyFull = buffer.value.hasSize >= capacity
 	/**
 	  * @return Whether this buffer still has available capacity at this time.
 	  */
-	def isNotCurrentlyFull = buffer.hasSize < capacity
+	def isNotCurrentlyFull = buffer.value.hasSize < capacity
 	
 	/**
 	  * @return Whether this buffer is currently empty.
@@ -465,7 +464,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		
 		object Immediate extends TwoThreadBuffer.ImmediateOutput[A]
 		{
-			override def isFull = buffer.hasSize >= capacity
+			override def isFull = buffer.value.hasSize >= capacity
 			
 			override def availableCapacity = capacity - buffer.size
 			
@@ -569,12 +568,12 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 			override def nextOption() = takeFromBuffer[Option[A]](None) { b => Some(b.head) -> b.tail }
 			
 			override def collectNext(n: Int) =
-				if (n <= 0) Empty else takeFromBuffer[IndexedSeq[A]](Empty) { _.splitAt(n) }
+				if (n <= 0) Empty else takeFromBuffer[Seq[A]](Empty) { _.splitAt(n) }
 			
 			
 			// OTHER    ---------------
 			
-			private def takeFromBuffer[R](ifEmpty: => R)(ifNonEmpty: IndexedSeq[A] => (R, IndexedSeq[A])) =
+			private def takeFromBuffer[R](ifEmpty: => R)(ifNonEmpty: Seq[A] => (R, Seq[A])) =
 				buffer.mutate { b =>
 					// Case: No immediate items available
 					if (b.isEmpty)

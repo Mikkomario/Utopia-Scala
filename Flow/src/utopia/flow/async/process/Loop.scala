@@ -3,7 +3,7 @@ package utopia.flow.async.process
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.time.WeekDay
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
@@ -117,7 +117,7 @@ object Loop
                 Iterator.iterate(firstInterval: Duration) { _ * intervalModifier }
         }.take(maxAttempts - 1)
         // Stores the function return value(s) to a pointer
-        val resultPointer = VolatileOption[Try[A]]()
+        val resultPointer = Volatile.optional[Try[A]]()
         // Starts looping in the background
         val loop = apply {
             val result = Try(f).flatten

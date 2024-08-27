@@ -137,7 +137,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	  */
 	type Value = AsyncMirrorValue[Origin, Reflection]
 	
-	private val pointer = Volatile[Value](
+	private val pointer = Volatile.eventful[Value](
 		AsyncMirrorValue(initialPlaceHolder, if (skipInitialProcess) None else Some(source.value)))
 	private val activeOriginPointer = pointer.map { _.activeOrigin }
 	
@@ -170,6 +170,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	override protected def wrapped = pointer
 	
 	override def destiny = source.destiny.fluxIf(value.isProcessing)
+	override def readOnly = this
 	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()

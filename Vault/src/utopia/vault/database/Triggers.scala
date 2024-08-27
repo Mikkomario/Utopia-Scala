@@ -2,8 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.mutable.VolatileList
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.model.immutable.{Table, TableUpdateEvent}
 
@@ -18,11 +17,9 @@ object Triggers
 {
 	// ATTRIBUTES   -------------------------------
 	
-	private implicit val log: Logger = SysErrLogger
-	
 	private var queue: Option[ActionQueue] = None
 	
-	private val globalListeners = VolatileList[TableUpdateListener]()
+	private val globalListeners = Volatile.seq[TableUpdateListener]()
 	private val databaseListeners = Volatile(Map[String, Seq[TableUpdateListener]]())
 	private val tableListeners = Volatile(Map[(String, String), Seq[TableUpdateListener]]())
 	
@@ -33,7 +30,8 @@ object Triggers
 	  * Provides an execution context for this object to use, enabling asynchronous event handling
 	  * @param exc Execution context to use in event handling
 	  */
-	def specifyExecutionContext(exc: ExecutionContext) = queue = Some(new ActionQueue()(exc))
+	def specifyExecutionContext(exc: ExecutionContext)(implicit log: Logger) =
+		queue = Some(new ActionQueue()(exc, log))
 	
 	/**
 	  * Delivers an event to be distributed to all interested listeners. The operation is performed asynchronously if

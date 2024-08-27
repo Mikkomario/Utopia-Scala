@@ -88,7 +88,6 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	override implicit def listenerLogger: Logger = origin1.listenerLogger
 	
 	override def value: R = merge(input1.value, input2.value)
-	
 	override def destiny: Destiny = {
 		// If stopped, it is certain that this mirror won't change
 		if (stopped)
@@ -98,6 +97,8 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 		else
 			inputs.mapAndMerge { _.origin.destiny } { _ + _ }.possibleToSealIf(stopCondition.isDefined)
 	}
+	
+	override def readOnly: Changing[R] = this
 	
 	override def toString = s"Light merge of $origin1 and $origin2; Currently $value $destiny; Stopped = $stopped"
 	

@@ -12,7 +12,6 @@ import utopia.flow.async.process.{Loop, PostponingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.template.ModelLike.AnyModel
@@ -125,12 +124,12 @@ object MasterScribe
 		private implicit val jsonParser: JsonParser = JsonBunny
 		
 		// Pointer for tracking outgoing issue count/velocity (for limiting output)
-		private val issueCounter = Volatile(0)
+		private val issueCounter = Volatile.eventful(0)
 		private val firstIssueTimestampPointer = issueCounter.incrementalMap { _ => Now.toInstant } { (prev, event) =>
 			if (event.newValue <= 1) Now.toInstant else prev
 		}
 		
-		private val pendingIssuesPointer = VolatileList[(ClientIssue, Instant)]()
+		private val pendingIssuesPointer = Volatile.eventful.seq[(ClientIssue, Instant)]()
 		
 		private lazy val requestQueue: RequestQueue = requestStoreLocation match {
 			case Some(path) =>
@@ -296,7 +295,7 @@ object MasterScribe
 					.toTryCatch
 		}
 		
-		private class PostIssuesRequest(initialIssues: IndexedSeq[(ClientIssue, Instant)])
+		private class PostIssuesRequest(initialIssues: Seq[(ClientIssue, Instant)])
 			extends ApiRequest[Unit] with Persisting
 		{
 			// ATTRIBUTES   --------------------

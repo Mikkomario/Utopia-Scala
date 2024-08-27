@@ -1,10 +1,9 @@
 package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 
 import java.util.concurrent.{Executor, TimeUnit}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -25,8 +24,8 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
     
     private val indexCounter = Iterator.iterate(1) { _ + 1 }
     // Creates the core threads from the very beginning
-    private val threads = VolatileList(Vector.fill(coreSize)(WorkerThread.core(nextCoreName()) { nextQueueTask() }))
-    private val queue = VolatileList[Runnable]()
+    private val threads = Volatile.seq(Vector.fill(coreSize)(WorkerThread.core(nextCoreName()) { nextQueueTask() }))
+    private val queue = Volatile.seq[Runnable]()
     
     /**
      * An execution context based on this thread pool
@@ -97,9 +96,9 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
 {
     // ATTRIBUTES    ---------------------
     
-    private val ended = new VolatileFlag()
+    private val ended = Volatile.switch
     // Some(...) when accepting a new task, None when not accepting
-    private val waitingTask = VolatileOption[Promise[Runnable]]()
+    private val waitingTask = Volatile.optional[Promise[Runnable]]()
     
     private var nextTask = initialTask
     
@@ -151,7 +150,7 @@ private class WorkerThread(name: String, val maxIdleDuration: Duration, initialT
     def offer(task: Runnable) = {
         // Only accepts new tasks if not busy already
         if (ended.isNotSet) {
-            waitingTask.lock { opt =>
+            waitingTask.lockWhile { opt =>
                 opt.filterNot { _.isCompleted } match {
                     // Case: Waiting for a task => Provides a task
                     case Some(waitingThread) =>

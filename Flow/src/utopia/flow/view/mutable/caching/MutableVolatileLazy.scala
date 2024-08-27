@@ -1,7 +1,6 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 object MutableVolatileLazy
 {
@@ -22,16 +21,15 @@ class MutableVolatileLazy[A](generator: => A) extends MutableLazy[A]
 {
 	// ATTRIBUTES	---------------------
 	
-	private val wrapped: VolatileOption[A] = VolatileOption()(SysErrLogger)
+	private val wrapped = Volatile.optional[A]()
 	
 	
 	// IMPLEMENTED	--------------------
 	
+	override def value = wrapped.setOneIfEmpty { generator }
 	override def value_=(newValue: A) = wrapped.setOne(newValue)
 	
-	override def reset() = wrapped.clear()
-	
-	override def value = wrapped.setOneIfEmpty { generator }
-	
 	override def current = wrapped.value
+	
+	override def reset() = wrapped.reset()
 }

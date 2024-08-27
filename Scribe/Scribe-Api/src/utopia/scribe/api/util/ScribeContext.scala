@@ -21,7 +21,7 @@ object ScribeContext
 {
 	// ATTRIBUTES   ---------------------
 	
-	private val settingsPointer = Pointer.empty[Settings]()
+	private val settingsPointer = Pointer.empty[Settings]
 	
 	
 	// INITIAL CODE ---------------------

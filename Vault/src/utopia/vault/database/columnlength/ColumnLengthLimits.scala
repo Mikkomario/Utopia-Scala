@@ -1,7 +1,6 @@
 package utopia.vault.database.columnlength
 
 import utopia.flow.collection.immutable.{DeepMap, Pair}
-import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.model.immutable.{Column, Table}
 
@@ -15,7 +14,7 @@ object ColumnLengthLimits
 	// ATTRIBUTES   ------------------------------
 	
 	// (database name -> table name -> property name) => column length limit
-	private val limits = Volatile(DeepMap.empty[String, ColumnLengthLimit])(SysErrLogger)
+	private val limits = Volatile(DeepMap.empty[String, ColumnLengthLimit])
 	
 	
 	// IMPLEMENTED  ------------------------------

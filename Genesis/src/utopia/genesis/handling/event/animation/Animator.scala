@@ -5,7 +5,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{CopyOnDemand, SettableFlag, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{CopyOnDemand, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.animation.AnimationEvent.{Completed, Paused, Started}
@@ -71,7 +71,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	/**
 	  * A pointer that contains the current animation progress. Between 0 and 1.
 	  */
-	protected val progressPointer = Volatile(instructionPointer.value.start)
+	protected val progressPointer = Volatile.eventful(instructionPointer.value.start)
 	
 	// NB: Needs to be updated manually because of the animation-switching
 	// (progress and animation may need to be updated simultaneously)

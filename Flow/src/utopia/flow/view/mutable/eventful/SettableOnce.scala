@@ -5,7 +5,8 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.template.eventful.AbstractMayStopChanging
+import utopia.flow.view.template.MaybeSet
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 import scala.util.Try
 
@@ -35,11 +36,14 @@ object SettableOnce
   * @author Mikko Hilpinen
   * @since 16.11.2022, v2.0
   */
-class SettableOnce[A](implicit log: Logger) extends AbstractMayStopChanging[Option[A]] with EventfulPointer[Option[A]]
+class SettableOnce[A](implicit log: Logger)
+	extends AbstractMayStopChanging[Option[A]] with EventfulPointer[Option[A]] with MaybeSet
 {
 	// ATTRIBUTES   -------------------------
 	
 	private var _value: Option[A] = None
+	
+	override lazy val readOnly: Changing[Option[A]] = if (_value.isDefined) this else ChangingWrapper(this)
 	
 	/**
 	  * @return Future that resolves once this pointer is set
@@ -81,6 +85,8 @@ class SettableOnce[A](implicit log: Logger) extends AbstractMayStopChanging[Opti
 			declareChangingStopped()
 		}
 	}
+	
+	override def isSet: Boolean = _value.isDefined
 	
 	
 	// OTHER    ---------------------------

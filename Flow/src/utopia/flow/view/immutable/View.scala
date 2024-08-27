@@ -2,8 +2,17 @@ package utopia.flow.view.immutable
 
 import utopia.flow.collection.mutable.iterator.PollableOnce
 
+import scala.language.implicitConversions
+
 object View
 {
+	// IMPLICIT -----------------------------
+	
+	// Implicitly unwraps to some of the commonly used data types in order to provide access to Iterable functions
+	implicit def viewToOption[A](v: View[Option[A]]): Option[A] = v.value
+	implicit def viewToSeq[A](v: View[Seq[A]]): Seq[A] = v.value
+	
+	
 	// OTHER	-----------------------------
 	
 	/**
@@ -21,7 +30,7 @@ object View
 	def fixed[A](value: A): View[A] = FixedView[A](value)
 	
 	
-	// IMPLICIT -----------------------------
+	// EXTENSIONS -----------------------------
 	
 	implicit class DeepView[A](val v: View[View[A]]) extends AnyVal
 	{

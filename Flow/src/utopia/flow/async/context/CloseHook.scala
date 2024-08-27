@@ -1,9 +1,8 @@
 package utopia.flow.async.context
 
-import utopia.flow.async.process.Breakable
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.process.Breakable
 import utopia.flow.collection.immutable.WeakList
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -26,7 +25,7 @@ object CloseHook
 	
 	private val _shutdownPointer = VolatileFlag()
 	private val breakables = Volatile(WeakList[Breakable]())
-	private val hooks = VolatileList[() => Future[Any]]()
+	private val hooks = Volatile.seq[() => Future[Any]]()
 	
 	/**
 	  * Maximum duration the shutdown process can take

@@ -1,19 +1,19 @@
 package utopia.flow.parse.file.container
 
-import java.nio.file.Path
-import utopia.flow.async.process.{DelayedProcess, Process}
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.ProcessState.NotStarted
 import utopia.flow.async.process.ShutdownReaction.DelayShutdown
-import utopia.flow.parse.file.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.parse.json.JsonParser
+import utopia.flow.async.process.{DelayedProcess, Process}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 
+import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -52,8 +52,8 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 	/**
 	  * Currently stored item (as a volatile pointer)
 	  */
-	protected lazy val _current = new Volatile(fromFile)
-	private val saveProcess = VolatileOption[Process]()
+	protected lazy val _current = Volatile.eventful(fromFile)
+	private val saveProcess = Volatile.optional[Process]()
 	
 	
 	// COMPUTED	-------------------------------
@@ -126,7 +126,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		}
 		if (listen)
 			_current.addListenerAndSimulateEvent(empty) { _ =>
-				saveProcess.lock { _.foreach { _.runAsync(loopIfRunning = true) } }
+				saveProcess.lockWhile { _.foreach { _.runAsync(loopIfRunning = true) } }
 				Continue
 			}
 	}

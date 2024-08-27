@@ -3,7 +3,6 @@ package utopia.flow.collection.immutable.caching.cache
 import utopia.flow.async.process.{LoopingProcess, Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -56,7 +55,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 	
 	private val waitLock = new AnyRef
 	private val cachePointer = Volatile(Map[K, V]())
-	private val queuedExpirationsPointer = VolatileList[(Instant, K)]()
+	private val queuedExpirationsPointer = Volatile.seq[(Instant, K)]()
 	
 	
 	// IMPLEMENTED  -----------------------------

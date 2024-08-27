@@ -165,7 +165,7 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 {
 	// ATTRIBUTES   --------------------
 	
-	override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty()
+	override val valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty
 	
 	// Updates the display value every time content is updated, because the display may change or be not found anymore
 	override lazy val selectedDisplayPointer =

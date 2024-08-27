@@ -92,7 +92,8 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	  * Sets up the execution context that is used for distributing keyboard events
 	  * @param context An execution context used when distributing keyboard events
 	  */
-	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context))
+	def specifyExecutionContext(context: ExecutionContext)(implicit log: Logger) =
+		eventQueue = Some(new ActionQueue()(context, log))
 	
 	/**
 	 * Sets up the key-down event generation, unless it has been set up already.

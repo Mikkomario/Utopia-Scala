@@ -68,7 +68,7 @@ object ScribeConsoleApp extends App
 	
 	private val queuedIssuesPointer = Pointer[(Seq[Either[Int, IssueInstances]], Int)](Empty -> 0)
 	private val queuedVariantsPointer = EventfulPointer[(Seq[IssueVariantInstances], Int)](Empty -> 0)
-	private val queuedErrorIdPointer = EventfulPointer.empty[Int]()
+	private val queuedErrorIdPointer = EventfulPointer.empty[Int]
 	
 	// More issues and more occurrences are mutually exclusive
 	private val moreIssuesOrOccurrencesPointer =

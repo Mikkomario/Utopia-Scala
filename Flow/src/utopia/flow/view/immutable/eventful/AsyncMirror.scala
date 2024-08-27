@@ -184,7 +184,7 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	  */
 	type Value = AsyncMirrorValue[Origin, Reflection]
 	
-	private val pointer = Volatile[Value](
+	private val pointer = Volatile.eventful[Value](
 		AsyncMirrorValue(initialPlaceHolder, if (skipInitialProcess) None else Some(source.value)))
 	
 	private var stopListeners: Seq[ChangingStoppedListener] = Empty
@@ -209,6 +209,8 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	override implicit def listenerLogger: Logger = source.listenerLogger
 	
 	override def destiny = source.destiny.fluxIf(value.isProcessing)
+	
+	override def readOnly = this
 	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()

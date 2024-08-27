@@ -1,10 +1,13 @@
 package utopia.reflection.container.swing.window.interaction
 
 import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.AsyncExtensions.RichFuture
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.view.mutable.async.Volatile
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.LinearAlignment
 import utopia.paradigm.enumeration.LinearAlignment.Close
@@ -12,10 +15,7 @@ import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{ImageAndTextButton, TextButton}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Dialog, Frame, Window}
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 
@@ -29,7 +29,7 @@ trait InteractionWindow[+A]
 	// ATTRIBUTES   -------------------
 	
 	// Keeps track of the currently displayed dialog.
-	private val _visibleDialogs = VolatileList[Window[_]]()
+	private val _visibleDialogs = Volatile.seq[Window[_]]()
 	
 	
 	// ABSTRACT	-----------------------

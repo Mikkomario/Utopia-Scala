@@ -6,9 +6,10 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.modifier.StackSizeModifier
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.genesis.graphics.FontMetricsWrapper
@@ -93,9 +94,9 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	private var _constraints: Seq[StackSizeModifier] = Empty
 	
 	private val cachedStackSize = ResettableLazy { calculatedStackSizeWithConstraints }
-	private val generatorActivated = new VolatileFlag()
+	private val generatorActivated = Settable()
 	
-	private val uponCloseAction = VolatileOption[() => Unit]()
+	private val uponCloseAction = Volatile.optional[() => Unit]()
 	
 	private val _closedFlag = SettableFlag()
 	/**

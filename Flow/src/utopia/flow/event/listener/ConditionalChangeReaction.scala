@@ -4,9 +4,7 @@ import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
-import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.flow.view.mutable.{Pointer, Switch}
 import utopia.flow.view.template.eventful.Changing
 
 object ConditionalChangeReaction
@@ -146,16 +144,14 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 {
 	// ATTRIBUTES   ------------------------
 	
-	private implicit val log: Logger = origin.listenerLogger
-	
 	// Contains true while this listener has been scheduled to detach
 	// The detachment is appropriated upon a change event received from the 'origin' pointer
 	// This flag is set when the 'listenConditionPointer' is set to false
-	private val detachmentQueuedFlag = ResettableFlag()
+	private val detachmentQueuedFlag = Switch()
 	
 	// Contains a value while detached
 	// Used for simulating a change event upon reattachment
-	private val memorizedValuePointer = Pointer.empty[A]()
+	private val memorizedValuePointer = Pointer.empty[A]
 	
 	// Contains true after this listener has permanently ended its listening functions
 	// due to a DetachmentChoice received from 'effect'

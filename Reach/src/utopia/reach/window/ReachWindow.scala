@@ -16,7 +16,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
@@ -391,7 +391,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		// ATTRIBUTES   -----------------
 		
 		// Contains the latest allowed update time, which is first unfulfilled update request time + max wait duration
-		private val latestUpdateTimePointer = VolatileOption[Instant]()
+		private val latestUpdateTimePointer = Volatile.optional[Instant]()
 		
 		
 		// IMPLEMENTED  -----------------

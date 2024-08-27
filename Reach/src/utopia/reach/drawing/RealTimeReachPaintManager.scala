@@ -1,12 +1,11 @@
 package utopia.reach.drawing
 
-import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.graphics.{Drawer, PaintManager, Priority}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorShade}
@@ -63,9 +62,9 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Seq[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	// TODO: Consider using a MutableImage as a buffer?
-	private val bufferPointer = VolatileOption[Image]()
+	private val bufferPointer = Volatile.optional[Image]()
 	// None while overfilled, a vector of update images otherwise
-	private val queuedUpdatesPointer = VolatileOption[Seq[(Image, Point)]]()
+	private val queuedUpdatesPointer = Volatile.optional[Seq[(Image, Point)]]()
 	
 	
 	// COMPUTED ----------------------------------

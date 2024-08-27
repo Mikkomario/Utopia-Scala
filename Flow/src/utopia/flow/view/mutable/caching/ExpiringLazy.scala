@@ -5,7 +5,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -68,7 +68,7 @@ class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
 	private implicit val log: Logger = SysErrLogger
 	
 	private val cache: ResettableLazy[A] = ResettableVolatileLazy(generator)
-	private val expirationProcessPointer = VolatileOption[Process]()
+	private val expirationProcessPointer = Volatile.optional[Process]()
 	
 	
 	// IMPLEMENTED  --------------------------

@@ -24,7 +24,7 @@ object MutableImageDrawer
   * @since 25.3.2020, Reflection v1
   */
 class MutableImageDrawer(imagePointer: Pointer[Image],
-                         transformationPointer: Pointer[Option[Matrix2D]] = Pointer.empty(),
+                         transformationPointer: Pointer[Option[Matrix2D]] = Pointer.empty,
                          insetsPointer: Pointer[StackInsets] = Pointer(StackInsets.any),
                          alignmentPointer: Pointer[Alignment] = Pointer(Center),
                          override val drawLevel: DrawLevel = Normal,

@@ -2,12 +2,30 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.template.eventful.AbstractMayStopChanging
+import utopia.flow.view.mutable.PointerFactory
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
+import scala.annotation.unused
+import scala.language.implicitConversions
 import scala.util.Try
 
 object LockablePointer
 {
+	// COMPUTED --------------------------
+	
+	/**
+	  * @param log Logging implementation for handling failures in change-event -handling
+	  * @return Factory for constructing lockable pointers
+	  */
+	def factory(implicit log: Logger): PointerFactory[LockablePointer] = new LockablePointerFactory()
+	
+	
+	// IMPLICIT --------------------------
+	
+	implicit def objectToFactory(@unused o: LockablePointer.type)
+	                            (implicit log: Logger): PointerFactory[LockablePointer] = factory
+	
+	
 	// OTHER    --------------------------
 	
 	/**
@@ -18,12 +36,13 @@ object LockablePointer
 	  */
 	def apply[A](initialValue: A)(implicit log: Logger) = new LockablePointer[A](initialValue)
 	
-	/**
-	  * @param log Logging implementation for handling failures in change-event -handling
-	  * @tparam A Type of values held within this pointer, when defined
-	  * @return An empty pointer that may contain values of the specified type
-	  */
-	def empty[A]()(implicit log: Logger) = apply[Option[A]](None)
+	
+	// NESTED   ---------------------------
+	
+	private class LockablePointerFactory(implicit log: Logger) extends PointerFactory[LockablePointer]
+	{
+		override def apply[A](initialValue: A): LockablePointer[A] = LockablePointer(initialValue)
+	}
 }
 
 /**
@@ -39,6 +58,8 @@ class LockablePointer[A](initialValue: A)(implicit log: Logger)
 	
 	private var _value = initialValue
 	private var _locked = false
+	
+	override lazy val readOnly: Changing[A] = ChangingWrapper(this)
 	
 	
 	// IMPLEMENTED  -------------------------

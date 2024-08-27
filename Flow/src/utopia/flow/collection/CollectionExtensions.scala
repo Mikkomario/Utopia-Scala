@@ -1501,7 +1501,8 @@ object CollectionExtensions
 		  *             a) (Some(result), other items), if a result was found, or
 		  *             b) (None, this collection), if no result was found
 		  */
-		def findAndPop[B >: seq.A](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
+		def findAndPop[B >: seq.A](f: seq.A => Boolean)
+		                          (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
 		{
 			ops.indexWhere(f) match {
 				case index if index >= 0 => Some(ops(index)) -> _withoutIndex(ops.iterator, index)

@@ -7,7 +7,7 @@ import utopia.flow.view.template.MaybeSet
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-trait Resettable extends MaybeSet
+trait Resettable extends Any with MaybeSet
 {
 	/**
 	  * Resets this item to its original state

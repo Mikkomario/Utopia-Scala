@@ -63,7 +63,7 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	/**
 	  * Pointer to the transformation applied when drawing the image
 	  */
-	val transformationPointer = EventfulPointer.empty[Matrix2D]()
+	val transformationPointer = EventfulPointer.empty[Matrix2D]
 	
 	private val visualImageSizePointer = imagePointer.mergeWith(transformationPointer) { (img, t) =>
 		t match {

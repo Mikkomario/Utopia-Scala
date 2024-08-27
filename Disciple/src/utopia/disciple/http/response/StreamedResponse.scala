@@ -2,8 +2,7 @@ package utopia.disciple.http.response
 
 import utopia.access.http.{Headers, Status}
 import utopia.flow.parse.AutoClose._
-import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.Volatile
 
 import java.io.InputStream
 import scala.concurrent.ExecutionContext
@@ -41,7 +40,7 @@ class StreamedResponse(override val status: Status, override val headers: Header
 {
 	// ATTRIBUTES    ------------------------
 	
-	private val consumedFlag = VolatileFlag()(SysErrLogger)
+	private val consumedFlag = Volatile.switch
 	
 	
 	// IMPLEMENTED  -------------------------

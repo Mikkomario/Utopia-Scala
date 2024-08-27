@@ -34,7 +34,7 @@ object Scribe
 		DatabaseActionQueue()
 	}
 	// Counts the number of logging entries in order to apply a maximum limit
-	private val logCounter = Volatile(0)(SysErrLogger)
+	private val logCounter = Volatile.eventful(0)(SysErrLogger)
 	// Maximum allowed logCounter value. None if not limited.
 	private var logLimit: Option[Int] = None
 	// Process for resetting the logging counter regularly

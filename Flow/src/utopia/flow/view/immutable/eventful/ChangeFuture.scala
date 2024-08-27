@@ -6,7 +6,7 @@ import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -62,7 +62,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 {
 	// ATTRIBUTES	------------------------------
 	
-	private val resultPointer = VolatileOption[A]()
+	private val resultPointer = Volatile.optional[A]()
 	
 	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	

@@ -61,7 +61,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 {
 	// ATTRIBUTES   ------------------------------
 	
-	private val _statePointer = Volatile[ProcessState](NotStarted)
+	private val _statePointer = Volatile.eventful[ProcessState](NotStarted)
 	private val completionFuturePointer = ResettableLazy { _statePointer.futureWhere { _.isFinal } }
 	private val _shutdownPointer = VolatileFlag()
 	

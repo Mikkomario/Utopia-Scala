@@ -7,7 +7,7 @@ import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.template.eventful.AbstractChanging
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 import java.time.Instant
@@ -31,6 +31,8 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	private var _accelerationHistory: Seq[(A, Instant)] = Empty
 	
 	private var cachedValue: Option[H] = None
+	
+	override lazy val readOnly: Changing[H] = ChangingWrapper(this)
 	
 	
 	// ABSTRACT	---------------------------

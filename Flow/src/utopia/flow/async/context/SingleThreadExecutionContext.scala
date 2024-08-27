@@ -1,8 +1,9 @@
 package utopia.flow.async.context
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,9 +42,9 @@ class SingleThreadExecutionContext(name: String)(implicit log: Logger)
 		// ATTRIBUTES   ----------------------
 		
 		private val waitLock = new AnyRef
-		private val killedFlag = SettableFlag()
+		private val killedFlag = Settable()
 		private val finishedFlag = SettableFlag()
-		private val taskQueue = VolatileList[Runnable]()
+		private val taskQueue = Volatile.eventful.seq[Runnable]()
 		
 		
 		// INITIAL CODE ----------------------

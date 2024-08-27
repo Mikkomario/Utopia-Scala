@@ -18,8 +18,8 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
-import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableFlag, IndirectPointer, ResettableFlag}
+import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.eventful.Flag._
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
@@ -303,12 +303,12 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated
-	private val pendingAnchor = VolatileOption[Point]()
+	private val pendingAnchor = Volatile.optional[Point]()
 	
 	// Tracks situations where position and/or size are yet to update because the updates are performed within
 	// the AWT event thread
 	// BoundLocks contains unique instances for each pending position/size/bounds event
-	private val boundLocks = Volatile(Set[AnyRef]())
+	private val boundLocks = Volatile.eventful(Set[AnyRef]())
 	private val boundsUpdatingFlag = boundLocks.lightMap { _.nonEmpty }
 	
 	/**

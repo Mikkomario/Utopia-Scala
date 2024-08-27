@@ -1,12 +1,12 @@
 package utopia.flow.view.mutable
 
-import utopia.flow.async.process.{DelayedProcess, Process}
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.async.process.{DelayedProcess, Process}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -76,7 +76,7 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 	// Contains:
 	//      1) Held value (weak or strong)
 	//      2) Release process (running)
-	private val pointer = VolatileOption[(Either[WeakReference[A], A], Option[Process])]()
+	private val pointer = Volatile.optional[(Either[WeakReference[A], A], Option[Process])]()
 	
 	
 	// INITIAL CODE ----------------------

@@ -7,13 +7,13 @@ import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.Resettable
+import utopia.flow.view.mutable.{Resettable, Switch}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -199,7 +199,7 @@ object ReachCanvas
 	
 	// NESTED   ----------------------------
 	
-	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: ResettableFlag,
+	private class SwingAttachmentTracker(actorHandler: ActorHandler, canvas: ReachCanvas, attachedFlag: Switch,
 	                                     absolutePositionView: Resettable, mouseDisabled: Boolean)
 	                                    (implicit exc: ExecutionContext, log: Logger)
 		extends AncestorListener
@@ -211,7 +211,7 @@ object ReachCanvas
 			if (mouseDisabled)
 				None
 			else {
-				val p = EventfulPointer.empty[java.awt.Component]()
+				val p = EventfulPointer.empty[java.awt.Component]
 				new SwingMouseEventConverter(actorHandler, canvas, p)
 				Some(p)
 			}
@@ -287,7 +287,6 @@ object ReachCanvas
   *                                 This might happen immediately or after a delay.
   * @param exc Implicit execution context
   */
-// TODO: Set up drag handling
 class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: Flag,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
@@ -298,8 +297,8 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 {
 	// ATTRIBUTES	---------------------------
 	
-	private val layoutUpdateQueue = VolatileList[Seq[ReachComponentLike]]()
-	private val updateFinishedQueue = VolatileList[() => Unit]()
+	private val layoutUpdateQueue = Volatile.seq[Seq[ReachComponentLike]]()
+	private val updateFinishedQueue = Volatile.seq[() => Unit]()
 	
 	override val focusManager = new ReachFocusManager(CustomDrawPanel)
 	private val painterPointer = contentPointer.map { _.map { c =>

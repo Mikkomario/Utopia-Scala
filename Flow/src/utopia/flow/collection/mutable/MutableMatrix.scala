@@ -24,7 +24,7 @@ object MutableMatrix
 	  * @tparam A Type of values that may be assigned to cells
 	  * @return A new matrix with all values set as None
 	  */
-	def empty[A](size: Pair[Int]) = apply(Matrix.fill(size) { _ => Pointer.empty[A]() })
+	def empty[A](size: Pair[Int]) = apply(Matrix.fill(size) { _ => Pointer.empty[A] })
 	
 	/**
 	  * @param pointers A matrix with mutable pointer values

@@ -97,7 +97,7 @@ object Schrodinger
 	                                             (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Stores the state in a Volatile pointer
-		val pointer = Volatile[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
+		val pointer = Volatile.eventful[(M, R, SchrodingerState)]((initialManifest, placeHolderResult, flux))
 		// Updates the state with future result once it arrives
 		resultFuture.onComplete { result =>
 			// Acquires the response body, if successful

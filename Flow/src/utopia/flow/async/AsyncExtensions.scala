@@ -208,7 +208,7 @@ object AsyncExtensions
 		                            (implicit exc: ExecutionContext) =
 		{
 			// Pointer that collects the results of both futures, once they arrive
-			val resultsPointer = Volatile[(Option[Try[A]], Option[Try[B]])](None -> None)(SysErrLogger)
+			val resultsPointer = Volatile.eventful[(Option[Try[A]], Option[Try[B]])](None -> None)(SysErrLogger)
 			// Completes the pointer asynchronously
 			f.onComplete { result1 =>
 				resultsPointer.update { case (_, otherResult) => Some(result1) -> otherResult }

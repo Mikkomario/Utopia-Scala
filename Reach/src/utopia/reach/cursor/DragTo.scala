@@ -10,7 +10,7 @@ import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.Consumable
@@ -271,7 +271,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		// 3 = Component stack size (at drag start)
 		// 4 = Maximum bounds at drag start
 		// 5 = Drag directions, which are empty when repositioning
-		private val dragPointer = EventfulPointer.empty[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])]()
+		private val dragPointer = EventfulPointer.empty[(Point, Bounds, StackSize, Bounds, Map[Axis2D, End])]
 		private val draggingFlag: Flag = dragPointer.map { _.isDefined }
 		
 		override val mouseButtonStateEventFilter =
@@ -351,7 +351,7 @@ class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets
 		{
 			// ATTRIBUTES   ----------------
 			
-			private val queuedBoundsP = VolatileOption[Bounds]()
+			private val queuedBoundsP = Volatile.optional[Bounds]()
 			private val updateBoundsProcess = PostponingProcess.by(Span.singleValue(updateDelay)) {
 				queuedBoundsP.pop().foreach(setBounds)
 			}

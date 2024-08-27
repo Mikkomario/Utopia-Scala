@@ -362,7 +362,7 @@ class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: Act
 	{
 		// ATTRIBUTES	-------------
 		
-		private val progressPointer = Volatile(1.0)
+		private val progressPointer = Volatile.eventful(1.0)
 		override val handleCondition: Flag = progressPointer.map { _ < 1.0 }
 		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (value) 1.0 else 0.0)

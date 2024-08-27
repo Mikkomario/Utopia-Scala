@@ -41,13 +41,19 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 	/**
 	  * An immutable view into this pointer
 	  */
-	lazy val view: Changing[A] = new ChangingView[A](this)
+	override lazy val readOnly: Changing[A] = new ChangingView[A](this)
 	
 	
 	// INITIAL CODE --------------------------
 	
 	origin.addListenerWhile(hasListenersFlag, priority = First)(relayEventsListener)
 	stopOnceSourceStops(origin)
+	
+	
+	// COMPUTED -----------------------------
+	
+	@deprecated("Please use .readOnly instead", "v2.5")
+	def view = readOnly
 	
 	
 	// IMPLEMENTED  --------------------------

@@ -217,6 +217,8 @@ trait Flag extends Changing[Boolean] with MaybeSet
 		override def value: Boolean = !target.value
 		override def destiny: Destiny = target.destiny
 		
+		override def readOnly: Changing[Boolean] = this
+		
 		override def hasListeners: Boolean = target.hasListeners
 		override def numberOfListeners: Int = target.numberOfListeners
 		

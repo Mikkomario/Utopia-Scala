@@ -8,7 +8,7 @@ import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{AbstractChanging, ResetListenable}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ResetListenable}
 
 import scala.concurrent.{Future, Promise}
 import scala.util.Try
@@ -36,7 +36,7 @@ object ListenableResettableLazy
 		
 		private var _value: Option[A] = None
 		
-		private val nextValuePromisePointer = Pointer.option[Promise[A]]()
+		private val nextValuePromisePointer = Pointer.optional[Promise[A]]()
 		private var generationListeners: Seq[LazyListener[A]] = Empty
 		private var resetListeners: Seq[LazyResetListener[A]] = Empty
 		
@@ -122,6 +122,8 @@ object ListenableResettableLazy
 			
 			override def value = current
 			override def destiny: Destiny = ForeverFlux
+			
+			override def readOnly: Changing[Option[A]] = this
 			
 			override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 			

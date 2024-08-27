@@ -7,7 +7,7 @@ import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.template.Property
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.AbstractChanging
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
 object Variable
 {
@@ -77,6 +77,8 @@ object Variable
         // ATTRIBUTES   ---------------------
         
         private var _value = initialValue
+        
+        override lazy val readOnly: Changing[Value] = ChangingWrapper(this)
         
         
         // ABSTRACT -------------------------

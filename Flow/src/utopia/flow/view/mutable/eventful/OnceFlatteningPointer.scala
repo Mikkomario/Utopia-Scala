@@ -9,7 +9,7 @@ import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -68,6 +68,8 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	private var queuedStopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	private var pointer: Option[Changing[A]] = None
+	
+	override lazy val readOnly: Changing[A] = if (pointer.isDefined) this else ChangingWrapper(this)
 	
 	
 	// IMPLEMENTED  ------------------------

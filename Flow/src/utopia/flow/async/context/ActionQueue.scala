@@ -3,11 +3,10 @@ package utopia.flow.async.context
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ProcessState.{BasicProcessState, Completed, NotStarted, Running}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.util.logging.SysErrLogger
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.duration.Duration
@@ -101,7 +100,7 @@ object ActionQueue
 	{
 		// ATTRIBUTES   ------------------
 		
-		private val _statePointer = Volatile[BasicProcessState](NotStarted)(SysErrLogger)
+		private val _statePointer = Volatile.eventful[BasicProcessState](NotStarted)(SysErrLogger)
 		
 		override lazy val startFuture: Future[Unit] =
 			_statePointer.findMapFuture { state => if (state.hasStarted) Some(()) else None }
@@ -158,7 +157,7 @@ object ActionQueue
 		// Contains Some(Left) if requested before this action is started
 		// Contains Some(Right) if requested after this action has started
 		// Contains None before requested
-		private val wrappedPointer = VolatileOption[Either[Promise[A], Future[A]]]()(SysErrLogger)
+		private val wrappedPointer = Volatile.optional[Either[Promise[A], Future[A]]]()
 		
 		
 		// IMPLEMENTED  ---------------
@@ -204,14 +203,14 @@ object ActionQueue
   * @author Mikko Hilpinen
   * @since 22.5.2019, v1.4.1+
   */
-class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext)
+class ActionQueue(val maxWidth: Int = 1)(implicit context: ExecutionContext, log: Logger)
 {
 	import ActionQueue._
 	
 	// ATTRIBUTES	------------------
 	
-	private val queue = VolatileList[InteractiveAction[_]]()
-	private val handleCompletions = VolatileList[Future[_]]()
+	private val queue = Volatile.eventful.seq[InteractiveAction[_]]()
+	private val handleCompletions = Volatile.seq[Future[_]]()
 	
 	/**
 	  * A pointer that contains the number of queued (waiting) items in this queue at any time.

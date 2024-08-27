@@ -488,7 +488,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
 	// Contains true while this slider is being dragged using the mouse
 	private val draggingFlag = ResettableFlag()
 	// Contains Some(initialProgress -> direction) while this slider is being adjusted with a keyboard key
-	private val keyDownPointer = EventfulPointer.empty[(Double, Sign)]()
+	private val keyDownPointer = EventfulPointer.empty[(Double, Sign)]
 	private val keyDownFlag: Flag = keyDownPointer.strongMap { _.isDefined }
 	
 	private val activatedFlag = draggingFlag || keyDownFlag

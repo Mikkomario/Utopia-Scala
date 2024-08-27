@@ -19,7 +19,7 @@ class DragTracker(listener: MouseDragListener) extends MouseButtonStateListener 
 	// ATTRIBUTES   --------------------
 	
 	private val dragPointers = MouseButton.standardValues
-		.map { b => b -> Pointer.empty[(DragStart, Option[MouseMoveEvent])]() }.toMap
+		.map { b => b -> Pointer.empty[(DragStart, Option[MouseMoveEvent])] }.toMap
 	
 	
 	// IMPLEMENTED  --------------------

@@ -5,21 +5,31 @@ import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.mutable.{Pointer, PointerFactory}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
+import scala.annotation.unused
+import scala.language.implicitConversions
 import scala.util.Try
 
 object EventfulPointer
 {
-	// OTHER    -----------------------
+	// COMPUTED -----------------------
 	
 	/**
 	  * @param log Implicit logging implementation for handling failures thrown by event listeners
-	  * @tparam A Type of values stored in this pointer, when defined
-	  * @return A new pointer that's currently empty
+	  * @return Factory for constructing eventful pointers
 	  */
-	def empty[A]()(implicit log: Logger) = apply[Option[A]](None)
+	def factory(implicit log: Logger): PointerFactory[EventfulPointer] = new EventfulPointerFactory()
+	
+	
+	// IMPLICIT -----------------------
+	
+	implicit def objectToFactory(@unused o: EventfulPointer.type)(implicit log: Logger): PointerFactory[EventfulPointer] =
+		factory
+	
+	
+	// OTHER    -----------------------
 	
 	/**
 	  * Creates a new mutable pointer
@@ -33,6 +43,11 @@ object EventfulPointer
 	
 	// NESTED   -----------------------
 	
+	private class EventfulPointerFactory(implicit log: Logger) extends PointerFactory[EventfulPointer]
+	{
+		override def apply[A](initialValue: A): EventfulPointer[A] = EventfulPointer(initialValue)
+	}
+	
 	private class _EventfulPointer[A](initialValue: A)(implicit log: Logger)
 		extends AbstractChanging[A] with EventfulPointer[A]
 	{
@@ -41,7 +56,7 @@ object EventfulPointer
 		private var _value = initialValue
 		
 		// Caches the read-only view
-		override lazy val readOnly = super.readOnly
+		override lazy val readOnly = ChangingWrapper(this)
 		
 		
 		// COMPUTED --------------------

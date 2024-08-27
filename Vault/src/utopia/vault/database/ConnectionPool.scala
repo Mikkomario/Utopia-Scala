@@ -1,16 +1,16 @@
 package utopia.vault.database
 
-import java.time.Instant
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.NewThreadExecutionContext
 import utopia.flow.async.process.{Breakable, Wait}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.async.context.NewThreadExecutionContext
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.mutable.Settable
+import utopia.flow.view.mutable.async.Volatile
 
+import java.time.Instant
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -32,10 +32,10 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	private val connections = VolatileList[ReusableConnection]()
+	private val connections = Volatile.seq[ReusableConnection]()
 	private val waitLock = new AnyRef()
-	private val timeoutCompletion: Volatile[Future[Any]] = new Volatile(Future.successful(()))
-	private val closeFutures = VolatileList[Future[Unit]]()
+	private val timeoutCompletion = Volatile(Future.successful[Any](()))
+	private val closeFutures = Volatile.seq[Future[Unit]]()
 	
 	private val maxClientThresholds = {
 		var currentMax = 1
@@ -164,10 +164,10 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	{
 		// ATTRIBUTES	-------------------
 		
-		private val closed = new VolatileFlag()
+		private val closed = Settable()
 		private val connection = new Connection()
 		private val connectionClosePromise = Promise[Unit]()
-		private val clientCount = new Volatile(1)
+		private val clientCount = Volatile(1)
 		
 		private var _lastLeaveTime = Instant.now()
 		
@@ -218,7 +218,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		}
 		
 		def tryClose() = {
-			clientCount.lock { count => if (count <= 0) closeConnection() }
+			clientCount.lockWhile { count => if (count <= 0) closeConnection() }
 			closed.set()
 			connectionClosePromise.future
 		}

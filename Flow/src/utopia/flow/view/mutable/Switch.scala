@@ -47,7 +47,7 @@ object Switch
   * @author Mikko Hilpinen
   * @since 27.08.2024, v2.5
   */
-trait Switch extends Settable with Resettable with Pointer[Boolean]
+trait Switch extends Any with Settable with Resettable with Pointer[Boolean]
 {
 	// IMPLEMENTED  -------------------
 	
@@ -63,4 +63,23 @@ trait Switch extends Settable with Resettable with Pointer[Boolean]
 	  * If this item has been set, resets it. Otherwise, sets it.
 	  */
 	def switch() = value = !value
+	
+	/**
+	  * Sets this flag and also returns the state before conversion
+	  */
+	def getAndSet(): Boolean = getAndSet(newValue = true)
+	/**
+	  * Resets this flag
+	  * @return Value before this flag was reset
+	  */
+	def getAndReset() = getAndSet(newValue = false)
+	
+	/**
+	  * If this switch is not currently set,
+	  * runs the specified function and replaces the current value of this switch with the function result value
+	  * @param f A function that is run if this switch is not currently set.
+	  *          Returns the new value to assign to this switch.
+	  * @return Value of this switch after this method call
+	  */
+	def setToIfNotSet(f: => Boolean) = setIf { !_ }(f)
 }

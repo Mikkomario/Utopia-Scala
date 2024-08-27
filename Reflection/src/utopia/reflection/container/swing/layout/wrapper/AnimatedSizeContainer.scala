@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout.wrapper
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.util.Fps
@@ -65,7 +65,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	private var timePassed = Duration.Zero
 	private var nextRevalidationThreshold = Duration.Zero
 	
-	private val transitioningFlag = new VolatileFlag()
+	private val transitioningFlag = Volatile.switch
 	
 	
 	// INITIAL CODE	--------------------

@@ -2,8 +2,8 @@ package utopia.flow.collection.mutable.iterator
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.{Process, ProcessState}
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -28,7 +28,7 @@ class PrePollingIterator[A](source: Iterator[A], prePollCount: Int = 1)(implicit
 	// ATTRIBUTES   -------------------------
 	
 	// Stores pre-polled items
-	private val queue = VolatileList[A]()
+	private val queue = Volatile.eventful.seq[A]()
 	// Asynchronous process for filling the queue. Stops once the queue has been (re)filled.
 	private val queueProcess = Process() { _ =>
 		while (queue.size < prePollCount && source.hasNext) {

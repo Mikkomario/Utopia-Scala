@@ -66,6 +66,8 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	override def value: R = bridge.value
 	override def destiny: Destiny = if (stopped) Sealed else origin.destiny.possibleToSeal
 	
+	override def readOnly: Changing[R] = this
+	
 	override def stop(): Future[Any] = {
 		if (!stopped) {
 			stopped = true

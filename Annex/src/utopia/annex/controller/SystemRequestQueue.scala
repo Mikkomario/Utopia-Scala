@@ -4,6 +4,7 @@ import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
+import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -17,13 +18,14 @@ object SystemRequestQueue
 	  * @param exc Implicit execution context
 	  * @return A new request queue
 	  */
-	def apply(master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext): SystemRequestQueue =
+	def apply(master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext, log: Logger): SystemRequestQueue =
 		new SimpleRequestQueue(master, width)
 	
 	
 	// NESTED	--------------------------
 	
-	private class SimpleRequestQueue(override val master: QueueSystem, width: Int = 1)(implicit exc: ExecutionContext)
+	private class SimpleRequestQueue(override val master: QueueSystem, width: Int = 1)
+	                                (implicit exc: ExecutionContext, log: Logger)
 		extends SystemRequestQueue
 	{
 		override protected val queue = new ActionQueue(width)

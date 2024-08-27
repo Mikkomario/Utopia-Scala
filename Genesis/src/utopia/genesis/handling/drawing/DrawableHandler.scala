@@ -12,7 +12,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.{High, Normal, VeryLow}
@@ -189,7 +189,8 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 		if (fpsLimits.isEmpty)
 			None
 		else
-			Some(VolatileOption[(WaitTarget, Option[Bounds], Priority)]((UntilNotified, None, VeryLow)))
+			Some(Volatile.eventful.optional[(WaitTarget, Option[Bounds], Priority)](
+				Some((UntilNotified, None, VeryLow))))
 	}
 	private val repaintWaitPointer = queuedRepaintPointer.map { _.strongMap {
 		case Some((time, _ , _)) => time
@@ -353,14 +354,14 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 		
 		private val buffer = MutableImage.empty
 		// Contains the queued area to repaint
-		private val queuedBufferUpdatePointer = Pointer.empty[Bounds]()
+		private val queuedBufferUpdatePointer = Pointer.empty[Bounds]
 		
 		private val itemsPointer = groupedItemsPointer.map { _(level) }
 		private val orderedItemsPointer = itemsPointer.map { _.sortBy { _.drawOrder.orderIndex } }
 		
 		private var extensionsCount = 0
 		
-		val drawBoundsPointer = EventfulPointer.empty[Bounds]()
+		val drawBoundsPointer = EventfulPointer.empty[Bounds]
 		private val boundsListener = ChangeListener[Bounds] { e =>
 			// Extends the draw bounds, if necessary
 			if (extensionsCount > 100) {

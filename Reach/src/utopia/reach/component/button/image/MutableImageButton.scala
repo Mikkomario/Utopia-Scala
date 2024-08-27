@@ -91,7 +91,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	/**
 	  * A mutable pointer into this button's image-transformation
 	  */
-	val transformationPointer = EventfulPointer.empty[Matrix2D]()
+	val transformationPointer = EventfulPointer.empty[Matrix2D]
 	/**
 	  * A mutable pointer to this button's current insets
 	  */

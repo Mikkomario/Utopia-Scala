@@ -44,7 +44,7 @@ class ImageLabel2(initialImage: Image, override val allowUpscaling: Boolean = fa
 	/**
 	  * Pointer that contains the currently displayed transformation applied to the drawn image
 	  */
-	val transformationPointer = EventfulPointer.empty[Matrix2D]()
+	val transformationPointer = EventfulPointer.empty[Matrix2D]
 	
 	private val imageBoundsPointer = contentPointer.map { _.bounds }
 	private val visualImageSizePointer = imageBoundsPointer.mergeWith(transformationPointer) { (b, t) =>

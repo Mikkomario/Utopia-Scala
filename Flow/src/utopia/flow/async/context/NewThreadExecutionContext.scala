@@ -14,10 +14,9 @@ import scala.concurrent.ExecutionContext
  */
 class NewThreadExecutionContext(val name: String = "NewThreadExc")(implicit logger: Logger) extends ExecutionContext
 {
-	private val threadCounter = new Volatile[Int](0)
+	private val threadCounter = Volatile[Int](0)
 	
-	override def execute(runnable: Runnable) =
-	{
+	override def execute(runnable: Runnable) = {
 		val nextIndex = threadCounter.updateAndGet { _ + 1 }
 		val thread = new Thread(runnable)
 		thread.setDaemon(true)

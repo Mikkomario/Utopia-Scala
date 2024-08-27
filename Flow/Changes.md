@@ -2,24 +2,43 @@
 
 ## v2.5 (in development)
 ### Breaking changes
-- All non-wrapping pointers now require an implicit logger as a construction parameter
-  - This requirement was added because previously errors would not always get properly logged or even handled, 
-    and could break the change event distribution system
-  - This same requirement is extended to instances of **ListenableLazy**, because of their `stateView` property
-  - Note: For **Flags**, if you didn't utilize the change events, 
-    you may want to use the new **Settable** and **Switch** instead
-- Renamed **FlagLike** to **Flag** and **Flag** to **SettableFlag**
+- A large number of pointer-related changes:
+  - All non-wrapping pointers now require an implicit logger as a construction parameter
+    - Classes implementing **Changing** are now required to implement `listenerLogger: Logger`
+    - This requirement was added because previously errors would not always get properly logged or even handled, 
+      and could break the change event distribution system
+    - This same requirement is extended to instances of **ListenableLazy**, because of their `stateView` property
+    - Note: For **Flags**, if you didn't utilize the change events, 
+      you may want to use the new **Settable** and **Switch** instead
+  - `Pointer.empty`, `EventfulPointer.empty` and `LockablePointer.empty` are now all computed properties 
+    instead of methods (i.e. adding empty parentheses at the end is no longer required nor supported)
+  - `readOnly: Changing` in **Changing** is now abstract, 
+    meaning that if you extend Changing in one of your classes, you may have to specify this value manually
+  - Previously the available implicit collection functions for **Pointer** required **Vector** content type.
+    The current version requires **Seq** instead of **Vector**. This affects some of the function return types.
+- A number of changes to **Volatile** and its subclasses
+  - **Volatile** no longer supports change events by default
+    - In order to utilize change events, use **EventfulVolatile** (also available as `Volatile.eventful`) instead
+  - **Volatile** is now a trait instead of a class
+    - If you have extensions of this class, you may need to implement some required properties
+- A number of changes to flag classes
+  - Renamed **FlagLike** to **Flag** and **Flag** to **SettableFlag**
+  - **ResettableFlag** now requires the implementation of `value_=(...)` instead of `set()` and `reset()`
 - **Resettable** is now required to implement `isSet: Boolean`
-- **ResettableFlag** now requires the implementation of `value_=(...)` instead of `set()` and `reset()`
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
+### Deprecations
+- Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
+  which now provide almost the same interface using implicit functions.
 ### New features
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 - Added **LazyTripleMergeMirror** for more complex lazy pointer-merging
 - Added **Settable** and **Switch** classes, which provide the functionality of 
   **SettableFlag** (previously **Flag**) and **ResettableFlag** without change events
+  - Related to this update, added **MaybeSet** trait
+- Added **VolatileSwitch** class, which implements the features of **VolatileFlag**, but without change events
 - **Loggers** are now implicitly convertible to **ScopeUsable**, allowing for scoped logging definitions
 ### New methods
 - **Changing**
@@ -39,6 +58,9 @@
   - Added `.to(...)`
 - **PairOps**
   - Added `.flatMapFirst(...)`, `.flatMapSecond(...)` and `.flatMapSide(...)`
+- **Pointer** and its subclasses
+  - Added a number of new constructors and refactored certain existing constructors
+  - A large number of new methods are now available of **Pointers** of type **Option** and of type **Seq**
 - **Seq** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
 - **TryCatch**

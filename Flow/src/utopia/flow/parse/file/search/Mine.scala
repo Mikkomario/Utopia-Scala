@@ -1,14 +1,14 @@
 package utopia.flow.parse.file.search
 
-import java.nio.file.Path
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.collection.immutable.{Empty, Tree}
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.search.ExcavationStatus.{Finished, Passed, Started, Unexplored}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.VolatileLazy
 import utopia.flow.view.mutable.async.Volatile
 
+import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -24,7 +24,7 @@ class Mine[R](val directory: Path)
 	
 	private implicit val log: Logger = SysErrLogger
 	
-	private val _status: Volatile[ExcavationStatus] = Volatile(Unexplored)
+	private val _status = Volatile.eventful[ExcavationStatus](Unexplored)
 	// Underlying pathways are lazily initialized
 	private val _pathWays = VolatileLazy { directory.subDirectories.getOrElse(Empty).map { new Mine[R](_) } }
 	private var foundResults: Option[R] = None
@@ -36,10 +36,8 @@ class Mine[R](val directory: Path)
 	 * @param exc Implicit execution context
 	 * @return A future of the eventual results for this mine
 	 */
-	def futureLocalResults(implicit exc: ExecutionContext) =
-	{
-		foundResults match
-		{
+	def futureLocalResults(implicit exc: ExecutionContext) = {
+		foundResults match {
 			case Some(results) => Future.successful(results)
 			case None => _status.futureWhere { _.isCompleted }.map { _ => foundResults.get }
 		}

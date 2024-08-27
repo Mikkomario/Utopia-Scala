@@ -9,7 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.{VolatileFlag, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 
@@ -99,7 +99,7 @@ object PostponingProcess
 		// ATTRIBUTES   -----------------
 		
 		// Contains the latest allowed update time, which is first unfulfilled update request time + max wait duration
-		private val latestUpdateTimePointer = VolatileOption[Instant]()
+		private val latestUpdateTimePointer = Volatile.optional[Instant]()
 		
 		
 		// IMPLEMENTED  -----------------
@@ -138,7 +138,7 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 	// ATTRIBUTES   ------------------------
 	
 	// True while the wait target was swapped during wait
-	private val resetFlag = VolatileFlag()
+	private val resetFlag = Volatile.switch
 	
 	
 	// INITIAL CODE -------------------------

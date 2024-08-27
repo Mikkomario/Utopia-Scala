@@ -2,6 +2,7 @@ package utopia.flow.async
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.collection.BuildFrom
 import scala.collection.generic.{IsIterable, IsIterableOnce}
@@ -48,6 +49,7 @@ object AsyncCollectionExtensions
 					// Case: May be larger than the thread limit
 					//       => Utilizes an action queue to limit the number of parallel processes
 					else {
+						implicit val log: Logger = SysErrLogger
 						val queue = new ActionQueue(maxWidth)
 						iter.foreach { a => queue.push { f(a) }.waitUntilStarted() }
 					}
@@ -98,6 +100,7 @@ object AsyncCollectionExtensions
 					mapAllParallel(f)
 				else {
 					// Prepares the queue for parallel processing
+					implicit val log: Logger = SysErrLogger
 					val queue = new ActionQueue(maxWidth)
 					val builder = bf.newBuilder(coll)
 					ops

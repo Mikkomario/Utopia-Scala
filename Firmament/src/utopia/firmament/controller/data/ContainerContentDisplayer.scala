@@ -4,7 +4,6 @@ import utopia.firmament.component.Component
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable
 import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
@@ -116,7 +115,7 @@ class ContainerContentDisplayer[A, -W, Display <: Refreshable[A] with Component,
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val capacity = Volatile(Set[Display]())(SysErrLogger)
+	private val capacity = Volatile(Set[Display]())
 	
 	
 	// IMPLEMENTED	-----------------------

@@ -3,6 +3,7 @@ package utopia.flow.view.mutable.async
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 
+@deprecated("Deprecated for removal. Please use Volatile.optional or EventfulVolatile.optional", "v2.5")
 object VolatileOption
 {
     /**
@@ -21,8 +22,9 @@ object VolatileOption
 * @author Mikko Hilpinen
 * @since 29.3.2019
 **/
+@deprecated("Deprecated for removal. Please use Volatile.optional or EventfulVolatile.optional", "v2.5")
 class VolatileOption[A](initialValue: Option[A])(implicit log: Logger)
-    extends Volatile[Option[A]](initialValue) with Iterable[A]
+    extends VolatileOld[Option[A]](initialValue) with Iterable[A]
 {
 	// IMPLEMENTED    ---------------
     

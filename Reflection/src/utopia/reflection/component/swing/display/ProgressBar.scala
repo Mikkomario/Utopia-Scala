@@ -134,7 +134,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 	{
 		// ATTRIBUTES	------------------
 		
-		private val animationProgressPointer = Volatile(1.0)
+		private val animationProgressPointer = Volatile.eventful(1.0)
 		override val handleCondition: Flag = animationProgressPointer.map { _ <= 1.0 }
 		
 		private var currentProgressAnimation: AnyAnimation[Double] = Animation.fixed(progress)

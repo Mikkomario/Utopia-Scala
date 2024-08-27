@@ -6,8 +6,8 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
@@ -56,10 +56,10 @@ class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(impl
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val startedFlag = SettableFlag()
+	private val startedFlag = Settable()
 	
 	private val keyboardStatePointer = Volatile(KeyboardState.default)
-	private val downKeysPointer = Volatile(Set[(Int, KeyLocation, Instant)]())
+	private val downKeysPointer = Volatile.eventful(Set[(Int, KeyLocation, Instant)]())
 	
 	private val hasKeysDownFlag: Flag = downKeysPointer.map { _.nonEmpty }
 	

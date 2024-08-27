@@ -3,11 +3,12 @@ package utopia.flow.collection.mutable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.async.VolatileOld
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.{SeqFactory, mutable}
 
+@deprecated("Deprecated for removal. Please use Volatile.seq or EventfulVolatile.seq instead", "v2.5")
 object VolatileList extends SeqFactory[VolatileList]
 {
 	// IMPLEMENTED  --------------------
@@ -41,8 +42,9 @@ object VolatileList extends SeqFactory[VolatileList]
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
+@deprecated("Deprecated for removal. Please use Volatile.seq or EventfulVolatile.seq instead", "v2.5")
 class VolatileList[T] private(list: IndexedSeq[T])
-	extends Volatile(list)(SysErrLogger) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
+	extends VolatileOld(list)(SysErrLogger) with mutable.SeqOps[T, VolatileList, VolatileList[T]] with mutable.Seq[T]
 {
     // IMPLEMENTED    ---------------
 	

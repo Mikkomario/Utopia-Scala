@@ -63,7 +63,7 @@ object Settable
   * @author Mikko Hilpinen
   * @since 27.08.2024, v2.5
   */
-trait Settable extends MaybeSet
+trait Settable extends Any with MaybeSet
 {
 	// ABSTRACT -------------------------
 	

@@ -6,13 +6,13 @@ import utopia.courier.model.{Email, EmailAddress}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.LazyTree
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
@@ -324,7 +324,7 @@ class EmailReader[A](settings: ReadSettings,
 		private val closedFlag = SettableFlag()
 		
 		// Sometimes message deletions are queued to be completed later
-		private lazy val deletionQueuePointer = VolatileList[(Folder, Message)]()
+		private lazy val deletionQueuePointer = Volatile.seq[(Folder, Message)]()
 		
 		override def hasNext: Boolean = queuedFailures.hasNext || openFolder.exists { _._2 >= nextMessageIndex } ||
 			openNextFolder()

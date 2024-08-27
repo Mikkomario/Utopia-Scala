@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.{Volatile, VolatileOption}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
@@ -50,8 +50,8 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	
 	private val waitLock = new AnyRef
 	
-	private val queuedValuePointer = VolatileOption[(A, Instant)]()
-	private val valuePointer = Volatile(source.value)
+	private val queuedValuePointer = Volatile.eventful.optional[(A, Instant)]()
+	private val valuePointer = Volatile.eventful(source.value)
 	
 	private var stopListeners: Seq[ChangingStoppedListener] = Empty
 	

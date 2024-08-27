@@ -33,7 +33,7 @@ class ListenableMutableLazy[A](generator: => A)(implicit log: Logger)
 	private var listeners: Seq[LazyListener[A]] = Empty
 	private var resetListeners: Seq[LazyResetListener[A]] = Empty
 	
-	private val statePointer = EventfulPointer.empty[A]()
+	private val statePointer = EventfulPointer.empty[A]
 	
 	override lazy val valueFuture: Future[A] = statePointer.findMapFuture(Identity)
 	

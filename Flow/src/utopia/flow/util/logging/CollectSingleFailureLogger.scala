@@ -67,7 +67,7 @@ object CollectSingleFailureLogger
  * @author Mikko Hilpinen
  * @since 19.10.2023, v2.3
  */
-class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwable]] = EventfulPointer.empty()(SysErrLogger),
+class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwable]] = EventfulPointer.factory(SysErrLogger).empty,
                                  processMessage: (String, Boolean) => Option[Throwable] = (_, _) => None)
 	extends Logger with ChangingWrapper[Option[Throwable]]
 {

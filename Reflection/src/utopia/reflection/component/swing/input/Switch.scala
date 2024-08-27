@@ -176,7 +176,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	{
 		// ATTRIBUTES	-------------
 		
-		private val progressPointer = Volatile(1.0)
+		private val progressPointer = Volatile.eventful(1.0)
 		override val handleCondition: Flag = progressPointer.map { _ < 1.0 }
 		
 		private var currentAnimation: AnyAnimation[Double] = Animation.fixed(if (isOn) 1.0 else 0.0)

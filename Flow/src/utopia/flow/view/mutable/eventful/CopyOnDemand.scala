@@ -8,7 +8,7 @@ import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing}
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
 import scala.util.Try
 
@@ -78,6 +78,8 @@ object CopyOnDemand
 		private var cachedValue = source.value
 		private var changingStoppedListeners: Seq[ChangingStoppedListener] = Empty
 		
+		override lazy val readOnly: Changing[A] = ChangingWrapper(this)
+		
 		
 		// INITIAL CODE -----------------------
 		
@@ -109,6 +111,8 @@ object CopyOnDemand
 		
 		private var cachedValue = source.value
 		
+		override lazy val readOnly: Changing[A] = ChangingWrapper(this)
+		
 		
 		// IMPLEMENTED  --------------------
 		
@@ -130,6 +134,7 @@ object CopyOnDemand
 		override implicit def listenerLogger: Logger = SysErrLogger
 		
 		override def destiny: Destiny = Sealed
+		override def readOnly: Changing[A] = this
 		
 		override def hasListeners: Boolean = false
 		override def numberOfListeners: Int = 0

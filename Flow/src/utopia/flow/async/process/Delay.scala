@@ -2,7 +2,7 @@ package utopia.flow.async.process
 
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.async.VolatileOption
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -62,7 +62,7 @@ object Delay
 	                     (f: => A)
 	                     (implicit exc: ExecutionContext, logger: Logger) =
 	{
-		val resultPointer = VolatileOption[Try[A]]()
+		val resultPointer = Volatile.optional[Try[A]]()
 		val process = DelayedProcess(target, lock, Some(shutdownReaction)) { _ => resultPointer.setOne(Try { f }) }
 		process.runAsync()
 		process.completionFuture.map { _ =>

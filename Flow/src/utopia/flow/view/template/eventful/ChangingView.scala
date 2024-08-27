@@ -9,5 +9,9 @@ import utopia.flow.util.logging.Logger
   */
 class ChangingView[+A](override protected val wrapped: Changing[A]) extends ChangingWrapper[A]
 {
+	// IMPLEMENTED  ----------------------
+	
 	override implicit def listenerLogger: Logger = wrapped.listenerLogger
+	
+	override def readOnly = this
 }

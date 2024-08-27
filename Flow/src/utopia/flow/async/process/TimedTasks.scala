@@ -5,7 +5,6 @@ import utopia.flow.async.process.ProcessState.Completed
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{DailyTime, UntilNotified, WeeklyTime}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
 import utopia.flow.operator.MaybeEmpty
@@ -34,7 +33,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	
 	// First item is the next task run time
 	// Second item is the actual operation, which may either may be asynchronous (Right)
-	private val queue = VolatileList[(Changing[Option[Instant]], () => Future[Changing[Option[Instant]]])]()
+	private val queue = Volatile.seq[(Changing[Option[Instant]], () => Future[Changing[Option[Instant]]])]()
 	private val nextWaitTarget = Volatile[WaitTarget](UntilNotified)
 	
 	private val scheduleTimeChangeListener = ChangeListener.onAnyChange {

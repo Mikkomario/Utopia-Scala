@@ -237,6 +237,11 @@ trait Changing[+A] extends Any with View[A]
 	def numberOfListeners: Int
 	
 	/**
+	  * @return A read-only view into this item
+	  */
+	def readOnly: Changing[A]
+	
+	/**
 	  * Assigns a new change listener to this item.
 	  * The implementation may assume that mayChange has been tested to be true, as no listener should be applied after
 	  * changing has stopped.
@@ -265,11 +270,6 @@ trait Changing[+A] extends Any with View[A]
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	  * @return A read-only view into this item
-	  */
-	def readOnly: Changing[A] = ChangingWrapper(this)
 	
 	/**
 	  * @return Whether this item might ever change its value in the future.

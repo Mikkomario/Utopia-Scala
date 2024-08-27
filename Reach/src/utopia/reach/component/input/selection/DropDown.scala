@@ -143,7 +143,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new field
 	  */
 	def simple[A, P <: Changing[Seq[A]]](contentPointer: P,
-	                                        valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
+	                                        valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
 	                                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 	                                        sameItemCheck: Option[EqualsFunction[A]] = None)
 	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,

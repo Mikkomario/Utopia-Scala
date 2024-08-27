@@ -93,7 +93,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 	protected val popupContentView = SwitchPanel[AwtStackable](searchStack)
 	
 	private var focusGainSkips = 0
-	private val visiblePopupPointer = EventfulPointer.empty[Window[_]]()(log)
+	private val visiblePopupPointer = EventfulPointer.factory(log).empty[Window[_]]
 	
 	
 	// COMPUTED	-------------------------------

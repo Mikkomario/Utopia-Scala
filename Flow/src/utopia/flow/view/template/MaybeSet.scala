@@ -5,7 +5,7 @@ package utopia.flow.view.template
   * @author Mikko Hilpinen
   * @since 27.08.2024, v2.5
   */
-trait MaybeSet
+trait MaybeSet extends Any
 {
 	// ABSTRACT -------------------------
 	

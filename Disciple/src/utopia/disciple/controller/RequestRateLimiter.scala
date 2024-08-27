@@ -1,16 +1,14 @@
 package utopia.disciple.controller
 
 import utopia.flow.async.process.{Breakable, Wait, WaitUtils}
-import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 object RequestRateLimiter
@@ -42,12 +40,12 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) e
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private val requestTimes = VolatileList[Instant]()
+	private val requestTimes = Volatile.seq[Instant]()
 	
 	private lazy val waitLock = new AnyRef()
 	// Each request accepts whether it should be completed (true) or immediately failed (false)
-	private lazy val pendingRequests = VolatileList[Boolean => Future[_]]()
-	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.successful(()))(SysErrLogger)
+	private lazy val pendingRequests = Volatile.seq[Boolean => Future[_]]()
+	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.successful(()))
 	
 	
 	// COMPUTED ------------------------------------

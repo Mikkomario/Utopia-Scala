@@ -25,9 +25,9 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
-import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.{Pointer, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
@@ -423,7 +423,7 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	  */
 	def apply[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
 		P <: Changing[Seq[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
-	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty(),
+	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
 	                              sameItemCheck: Option[EqualsFunction[A]] = None)
 	                             (makeField: FieldCreationContext => C)
 	                             (makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
@@ -503,7 +503,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	private var lastPopupCloseTime = Now.toInstant
 	
 	// Tracks the last selected value in order to return selection when content is updated
-	private val lastSelectedValuePointer = Pointer.empty[A]()
+	private val lastSelectedValuePointer = Pointer.empty[A]
 	
 	private val lazyPopup = ListenableResettableLazy[Window] { createPopup() }
 	// Follows the pop-up visibility state with a pointer
@@ -739,7 +739,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.left
 		
 		// Only closes the pop-up on mouse release if it was visible on the previous mouse press
-		private val closeOnReleaseFlag = ResettableFlag()
+		private val closeOnReleaseFlag = Switch()
 		
 		
 		// IMPLEMENTED  ----------------------

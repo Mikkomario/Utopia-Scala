@@ -4,18 +4,17 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.genesis.graphics.Drawer
+import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
-import utopia.reach.component.wrapper.OpenComponent
-import utopia.genesis.graphics.DrawLevel
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
+import utopia.reach.component.wrapper.OpenComponent
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths
@@ -97,7 +96,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	{
 		// ATTRIBUTES	-------------------------
 		
-		val isUpdatingFlag = new VolatileFlag()
+		val isUpdatingFlag = Volatile.switch
 		
 		
 		// INITIAL CODE	-------------------------

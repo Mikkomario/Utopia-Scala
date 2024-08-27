@@ -3,7 +3,7 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.template.eventful.AbstractMayStopChanging
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 /**
   * A pointer that, besides the initial value, may only be set once
@@ -22,6 +22,8 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger) extends AbstractMayS
 	  * A future that resolves when this item is mutated
 	  */
 	lazy val future = _setFlag.findMapFuture { if (_) Some(_value) else None }
+	
+	override lazy val readOnly: Changing[A] = if (_setFlag.value) this else ChangingWrapper(this)
 	
 	
 	// COMPUTED ---------------------------
