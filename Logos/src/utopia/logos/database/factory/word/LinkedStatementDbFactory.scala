@@ -1,7 +1,8 @@
 package utopia.logos.database.factory.word
 
 import utopia.logos.model.combined.word.LinkedStatement
-import utopia.logos.model.stored.word.{Statement, TextStatementLink}
+import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.word.TextStatementLink
 import utopia.vault.nosql.factory.row.FromRowFactory
 
 @deprecated("Replaced with PlacedStatementDbFactory", "v0.3")

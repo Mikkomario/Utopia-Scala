@@ -1,6 +1,7 @@
 package utopia.logos.database.factory.word
 
-import utopia.logos.model.stored.word.Statement
+import utopia.logos.database.factory.text.StatementDbFactory
+import utopia.logos.model.stored.text.Statement
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 

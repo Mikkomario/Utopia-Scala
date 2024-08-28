@@ -49,7 +49,8 @@ CREATE TABLE `word_placement`(
 	`statement_id` INT NOT NULL, 
 	`word_id` INT NOT NULL, 
 	`order_index` TINYINT NOT NULL DEFAULT 0, 
-	`style_id` TINYINT NOT NULL, 
+	`style_id` TINYINT NOT NULL,
+	INDEX wp_placement_idx (`statement_id`, `order_index`),
 	CONSTRAINT wp_s_statement_ref_fk FOREIGN KEY wp_s_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT wp_w_word_ref_fk FOREIGN KEY wp_w_word_ref_idx (word_id) REFERENCES `word`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
@@ -100,7 +101,8 @@ CREATE TABLE `link_placement`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`statement_id` INT NOT NULL, 
 	`link_id` INT NOT NULL, 
-	`order_index` TINYINT NOT NULL DEFAULT 0, 
+	`order_index` TINYINT NOT NULL DEFAULT 0,
+	INDEX lp_placement_idx (`statement_id`, `order_index`),
 	CONSTRAINT lp_s_statement_ref_fk FOREIGN KEY lp_s_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT lp_l_link_ref_fk FOREIGN KEY lp_l_link_ref_idx (link_id) REFERENCES `link`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

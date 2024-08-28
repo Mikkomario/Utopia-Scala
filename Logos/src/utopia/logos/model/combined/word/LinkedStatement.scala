@@ -1,6 +1,7 @@
 package utopia.logos.model.combined.word
 
-import utopia.logos.model.stored.word.{Statement, TextStatementLink}
+import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.word.TextStatementLink
 
 @deprecated("Replaced with PlacedStatement", "v0.3")
 object LinkedStatement

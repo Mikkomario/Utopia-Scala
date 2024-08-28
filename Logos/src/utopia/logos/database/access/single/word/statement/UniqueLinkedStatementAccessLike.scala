@@ -1,6 +1,7 @@
 package utopia.logos.database.access.single.word.statement
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
 import utopia.logos.model.cached.StatementLinkDbConfig
 import utopia.logos.model.template.PlacedFactory
 import utopia.vault.database.Connection
@@ -13,7 +14,7 @@ import utopia.vault.nosql.view.FilterableView
   */
 @deprecated("Replaced with UniquePlacedStatementAccessLike", "v0.3")
 trait UniqueLinkedStatementAccessLike[+A, +Repr] 
-	extends UniqueStatementAccessLike[A] with FilterableView[Repr] with PlacedFactory[Repr]
+	extends UniqueStatementAccessLike[A, Repr] with FilterableView[Repr] with PlacedFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	

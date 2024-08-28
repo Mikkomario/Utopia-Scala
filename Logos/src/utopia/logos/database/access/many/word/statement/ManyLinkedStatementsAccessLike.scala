@@ -1,6 +1,7 @@
 package utopia.logos.database.access.many.word.statement
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.many.text.statement.ManyStatementsAccessLike
 import utopia.logos.database.access.template.PlacedAccessLike
 import utopia.logos.model.cached.StatementLinkDbConfig
 import utopia.vault.database.Connection

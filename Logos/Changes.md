@@ -1,6 +1,22 @@
 # Utopia Logos - List of Changes
 
-## v0.2.1 (in development)
+## v0.3 (in development)
+### Breaking changes
+- Renamed packages `word` to `text`
+- Renamed all database models to -DbModel
+- Multiple changes in access packages:
+  - Moved `url.link_placement` to `url.link.placement`
+  - Moved `url.reques_path` to `url.path`
+- Renamed **Link**'s `requestPathId` to `pathId`
+- Renamed some access / filter functions
+- There may be other changes caused by Vault Coder generation changes as well
+### Deprecations
+- Replaced **TextStatementLink** and related classes with **TextPlacement** + related classes
+- Replaced **LinkedStatement** and related classes with **PlacedStatement** and related classes
+- Deprecated **StatementLinkDbConfig** in favor of **TextPlacementDbProps**
+### New features
+- Added factory wrapper traits
+- Added **TextPlacement** traits for classes placing something at specific places in some texts
 ### Other changes
 - Built with Scala v2.13.14
 - Supports Vault v1.20

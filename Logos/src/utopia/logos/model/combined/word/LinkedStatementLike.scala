@@ -1,7 +1,8 @@
 package utopia.logos.model.combined.word
 
-import utopia.logos.model.partial.word.StatementData
-import utopia.logos.model.stored.word.{Statement, TextStatementLink}
+import utopia.logos.model.partial.text.StatementData
+import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.word.TextStatementLink
 import utopia.logos.model.template.Placed
 import utopia.vault.model.template.Stored
 
