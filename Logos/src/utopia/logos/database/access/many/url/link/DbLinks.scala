@@ -8,40 +8,33 @@ import utopia.flow.parse.string.Regex
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.logos.database.access.many.url.domain.DbDomains
-import utopia.logos.database.access.many.url.request_path.DbRequestPaths
-import utopia.logos.database.storable.url.RequestPathModel
+import utopia.logos.database.access.many.url.path.DbRequestPaths
+import utopia.logos.database.storable.url.RequestPathDbModel
 import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.partial.url.{LinkData, RequestPathData}
 import utopia.logos.model.stored.url.{Domain, Link}
 import utopia.vault.database.Connection
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
 /**
   * The root access point when targeting multiple links at a time
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-object DbLinks extends ManyLinksAccess with UnconditionalView
+object DbLinks extends ManyLinksAccess with UnconditionalView with ViewManyByIntIds[ManyLinksAccess]
 {
 	// ATTRIBUTES	--------------------
 	
 	private val maximumModelLength = 2048
 	
 	private lazy val parameterSeparatorRegex = Regex.escape('&').ignoringQuotations
-	
 	private lazy val parameterAssignmentRegex = Regex.escape('=').ignoringQuotations
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	  * @param ids Ids of the targeted links
-	  * @return An access point to links with the specified ids
-	  */
-	def apply(ids: Set[Int]) = new DbLinksSubset(ids)
-	
-	/**
-	  * Stores all of the specified links to the database.
+	  * Stores all the specified links to the database.
 	  * Avoids inserting duplicate information.
 	  * @param links Links to store
 	  * @param connection Implicit DB connection
@@ -97,7 +90,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 				val data = domainId -> links
 				if (wasInserted) Left(data) else Right(data)
 			}
-			val firstInsertedPaths = RequestPathModel
+			val firstInsertedPaths = RequestPathDbModel
 				.insert(pathsToInsert.flatMap { case (domainId, paths) =>
 					paths.keys.distinctBy { _.toLowerCase }.map { RequestPathData(domainId, _) }.toVector
 				})
@@ -143,8 +136,8 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			// Checks for duplicates in certain cases
 			val (linksToInsert, existingLinks) = {
 				if (linksToStore.nonEmpty) {
-					val existing = toPaths(linksToStore.map { _._1 }.toSet).pull
-					val existingParamsPerPathId = existing.groupMap { _.requestPathId } { _.queryParameters }
+					val existing = withPaths(linksToStore.map { _._1 }.toSet).pull
+					val existingParamsPerPathId = existing.groupMap { _.pathId } { _.queryParameters }
 					val newLinks = linksToStore.filter { case (pathId, params) =>
 						existingParamsPerPathId.get(pathId).forall { _.forNone { _ ~== params } }
 					}
@@ -160,7 +153,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			
 			// Combines domain, path and link information
 			Pair(insertedLinks, existingLinks).map { _.map { link =>
-				val path = pathPerId(link.requestPathId)
+				val path = pathPerId(link.pathId)
 				val domain = domainPerId(path.domainId)
 				DetailedLink(link, domain, path)
 			} }
@@ -196,16 +189,6 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 		})
 		// Limits maximum output length
 		ensureModelMaxLength(model)
-	}
-	
-	
-	// NESTED	--------------------
-	
-	class DbLinksSubset(targetIds: Set[Int]) extends ManyLinksAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(index in targetIds)
 	}
 }
 

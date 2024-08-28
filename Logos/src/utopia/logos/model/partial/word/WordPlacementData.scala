@@ -10,6 +10,7 @@ import utopia.logos.model.enumeration.DisplayStyle.Default
 import utopia.logos.model.factory.word.WordPlacementFactory
 import utopia.logos.model.template.Placed
 
+@deprecated("Replaced with a new version", "v0.3")
 object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
 {
 	// ATTRIBUTES	--------------------
@@ -39,6 +40,7 @@ object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int, style: DisplayStyle = Default) 
 	extends WordPlacementFactory[WordPlacementData] with ModelConvertible with Placed
 {

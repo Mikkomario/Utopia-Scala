@@ -7,6 +7,7 @@ import utopia.vault.model.immutable.Table
  * @author Mikko Hilpinen
  * @since 15.10.2023, Emissary Email Client v0.1, added to Logos v1.0 11.3.2024
  */
+@deprecated("Replaced with TextPlacementDbModel", "v0.3")
 trait StatementLinkedModel
 {
 	// ABSTRACT -----------------------

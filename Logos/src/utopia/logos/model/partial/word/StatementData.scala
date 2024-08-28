@@ -10,6 +10,7 @@ import utopia.logos.model.factory.word.StatementFactory
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object StatementData extends FromModelFactoryWithSchema[StatementData]
 {
 	// ATTRIBUTES	--------------------
@@ -27,13 +28,13 @@ object StatementData extends FromModelFactoryWithSchema[StatementData]
 
 /**
   * Represents an individual statement made within some text. Consecutive statements form whole texts.
-  * 
-	@param delimiterId Id of the delimiter that terminates this sentence. None if this sentence is not terminated 
+  * @param delimiterId Id of the delimiter that terminates this sentence. None if this sentence is not terminated
   * with any character.
   * @param created Time when this statement was first made
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class StatementData(delimiterId: Option[Int] = None, created: Instant = Now) 
 	extends StatementFactory[StatementData] with ModelConvertible
 {

@@ -19,6 +19,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with WordDbModel", "v0.3")
 object WordModel extends StorableFactory[WordModel, Word, WordData]
 	with WordFactory[WordModel] with FromIdFactory[Int, WordModel]
 {
@@ -94,6 +95,7 @@ object WordModel extends StorableFactory[WordModel, Word, WordData]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with WordDbModel", "v0.3")
 case class WordModel(id: Option[Int] = None, text: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Word] with WordFactory[WordModel] with FromIdFactory[Int, WordModel]
 {

@@ -13,6 +13,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object UniqueWordPlacementAccess
 {
 	// OTHER	--------------------
@@ -39,6 +40,7 @@ object UniqueWordPlacementAccess
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait UniqueWordPlacementAccess 
 	extends SingleRowModelAccess[WordPlacement] with FilterableView[UniqueWordPlacementAccess] 
 		with DistinctModelAccess[WordPlacement, Option[WordPlacement], Value] with Indexed

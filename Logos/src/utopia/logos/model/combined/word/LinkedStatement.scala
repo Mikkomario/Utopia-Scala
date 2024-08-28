@@ -2,6 +2,7 @@ package utopia.logos.model.combined.word
 
 import utopia.logos.model.stored.word.{Statement, TextStatementLink}
 
+@deprecated("Replaced with PlacedStatement", "v0.3")
 object LinkedStatement
 {
 	// OTHER    ------------------------------
@@ -24,4 +25,5 @@ object LinkedStatement
  * @author Mikko Hilpinen
  * @since 14/03/2024, v0.2
  */
+@deprecated("Replaced with PlacedStatement", "v0.3")
 trait LinkedStatement extends LinkedStatementLike[TextStatementLink]

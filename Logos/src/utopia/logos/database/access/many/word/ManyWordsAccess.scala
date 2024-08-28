@@ -7,6 +7,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -33,6 +34,7 @@ object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with ManyRowModelAccess[Word]
 {
 	// COMPUTED	--------------------

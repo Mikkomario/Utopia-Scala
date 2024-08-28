@@ -14,6 +14,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// COMPUTED	--------------------
@@ -73,8 +74,7 @@ trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexe
 	  * @return Access to statements that end with the specified delimiter
 	  */
 	def endingWith(delimiterId: Option[Int]): Repr = {
-		delimiterId match 
-		{
+		delimiterId match {
 			case Some(id) => endingWith(id)
 			case None => withoutDelimiter
 		}

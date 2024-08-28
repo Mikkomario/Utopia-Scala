@@ -27,7 +27,7 @@ object RequestPathData extends FromModelFactoryWithSchema[RequestPathData]
 }
 
 /**
-  * Represents a specific http(s) request url, not including any query parameters
+  * Represents a specific http(s) request url path part, not including any query parameters
   * @param domainId Id of the domain part of this url
   * @param path Part of this url that comes after the domain part. Doesn't include any query parameters, 
   * nor the initial forward slash.
@@ -43,7 +43,9 @@ case class RequestPathData(domainId: Int, path: String = "", created: Instant = 
 	override def toModel = Model(Vector("domainId" -> domainId, "path" -> path, "created" -> created))
 	
 	override def withCreated(created: Instant) = copy(created = created)
+	
 	override def withDomainId(domainId: Int) = copy(domainId = domainId)
+	
 	override def withPath(path: String) = copy(path = path)
 }
 

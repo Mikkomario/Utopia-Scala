@@ -10,6 +10,7 @@ import utopia.vault.model.template.FromIdFactory
  * @author Mikko Hilpinen
  * @since 15/03/2024, v0.2
  */
+@deprecated("Replaced with StoredTextPlacementLike", "v0.3")
 trait TextStatementLinkLike[+Data <: TextStatementLinkDataLike[Data], +Repr]
 	extends TextStatementLinkDataLike[Repr] with StoredPlaced[Data, Int] with FromIdFactory[Int, Repr]
 {

@@ -9,6 +9,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Deprecated for removal", "v0.3")
 trait ManyStatementPlacedAccess[+Sub] extends FilterableView[Sub]
 {
 	// ABSTRACT	--------------------

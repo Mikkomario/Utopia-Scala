@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with DelimiterDbModel", "v0.3")
 object DelimiterModel 
 	extends StorableFactory[DelimiterModel, Delimiter, DelimiterData] with DelimiterFactory[DelimiterModel]
 		with FromIdFactory[Int, DelimiterModel]
@@ -98,6 +99,7 @@ object DelimiterModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with DelimiterDbModel", "v0.3")
 case class DelimiterModel(id: Option[Int] = None, text: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Delimiter] with DelimiterFactory[DelimiterModel] with FromIdFactory[Int, DelimiterModel]
 {

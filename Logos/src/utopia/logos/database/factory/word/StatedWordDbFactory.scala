@@ -9,6 +9,7 @@ import utopia.vault.nosql.factory.row.linked.CombiningFactory
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with a new version", "v0.3")
 object StatedWordDbFactory extends CombiningFactory[StatedWord, Word, WordPlacement]
 {
 	// IMPLEMENTED	--------------------

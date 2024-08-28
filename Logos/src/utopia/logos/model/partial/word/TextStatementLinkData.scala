@@ -1,5 +1,6 @@
 package utopia.logos.model.partial.word
 
+@deprecated("Replaced TextPlacementData", "v0.3")
 object TextStatementLinkData
 {
 	// OTHER    ---------------------
@@ -25,6 +26,7 @@ object TextStatementLinkData
  * @author Mikko Hilpinen
  * @since 14/03/2024, v0.2
  */
+@deprecated("Replaced TextPlacementData", "v0.3")
 trait TextStatementLinkData extends TextStatementLinkDataLike[TextStatementLinkData]
 {
 	override protected def buildCopy(textId: Int, statementId: Int, orderIndex: Int) =

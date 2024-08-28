@@ -4,7 +4,7 @@
 -- Last generated: 2024-08-27
 --
 
---	Word	----------
+--	Text	----------
 
 -- Represents a character sequence used to separate two statements or parts of a statement
 -- text:    The characters that form this delimiter
@@ -44,7 +44,6 @@ CREATE TABLE `statement`(
 -- style_id:     Style in which this word is used in this context
 -- 		References enumeration DisplayStyle
 -- 		Possible values are: 1 = default
--- TODO: Manually add orderIndex combo index
 CREATE TABLE `word_placement`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`statement_id` INT NOT NULL, 
@@ -97,7 +96,6 @@ CREATE TABLE `link`(
 -- statement_id: Id of the statement where the specified link is referenced
 -- link_id:      Referenced / placed link
 -- order_index:  0-based index that indicates the specific location of the placed text
--- TODO: Manually add orderIndex combo index
 CREATE TABLE `link_placement`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`statement_id` INT NOT NULL, 

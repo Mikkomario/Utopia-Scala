@@ -1,7 +1,7 @@
 package utopia.logos.database.access.single.url.domain
 
 import utopia.logos.database.factory.url.DomainDbFactory
-import utopia.logos.database.storable.url.DomainModel
+import utopia.logos.database.storable.url.DomainDbModel
 import utopia.logos.model.stored.url.Domain
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -18,9 +18,9 @@ object DbDomain extends SingleRowModelAccess[Domain] with UnconditionalView with
 	// COMPUTED	--------------------
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = DomainModel
+	private def model = DomainDbModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -41,6 +41,6 @@ object DbDomain extends SingleRowModelAccess[Domain] with UnconditionalView with
 	  *  unique domains.
 	  * @return An access point to the domain that satisfies the specified condition
 	  */
-	protected def filterDistinct(condition: Condition) = UniqueDomainAccess(mergeCondition(condition))
+	private def distinct(condition: Condition) = UniqueDomainAccess(condition)
 }
 

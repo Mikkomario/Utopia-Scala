@@ -1,10 +1,23 @@
 package utopia.logos.model.stored.url
 
-import utopia.logos.database.access.single.url.link_placement.DbSingleLinkPlacement
-import utopia.logos.model.factory.url.LinkPlacementFactory
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.logos.database.access.single.url.link.placement.DbSingleLinkPlacement
+import utopia.logos.model.factory.url.{LinkPlacementFactory, LinkPlacementFactoryWrapper}
+import utopia.logos.model.partial.text.TextPlacementData
 import utopia.logos.model.partial.url.LinkPlacementData
+import utopia.logos.model.stored.text.StoredTextPlacementLike
 import utopia.logos.model.template.StoredPlaced
-import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
+import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+
+object LinkPlacement extends StoredFromModelFactory[LinkPlacementData, LinkPlacement]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = LinkPlacementData
+	
+	override protected def complete(model: AnyModel, data: LinkPlacementData) = 
+		model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a link placement that has already been stored in the database
@@ -14,8 +27,8 @@ import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
   * @since 20.03.2024, v0.2
   */
 case class LinkPlacement(id: Int, data: LinkPlacementData) 
-	extends StoredModelConvertible[LinkPlacementData] with LinkPlacementFactory[LinkPlacement] 
-		with FromIdFactory[Int, LinkPlacement] with StoredPlaced[LinkPlacementData, Int]
+	extends LinkPlacementFactoryWrapper[LinkPlacementData, LinkPlacement] with TextPlacementData
+		with StoredTextPlacementLike[LinkPlacementData, LinkPlacement]
 {
 	// COMPUTED	--------------------
 	
@@ -29,10 +42,6 @@ case class LinkPlacement(id: Int, data: LinkPlacementData)
 	
 	override def withId(id: Int) = copy(id = id)
 	
-	override def withLinkId(linkId: Int) = copy(data = data.withLinkId(linkId))
-	
-	override def withOrderIndex(orderIndex: Int) = copy(data = data.withOrderIndex(orderIndex))
-	
-	override def withStatementId(statementId: Int) = copy(data = data.withStatementId(statementId))
+	override protected def wrap(data: LinkPlacementData) = copy(data = data)
 }
 

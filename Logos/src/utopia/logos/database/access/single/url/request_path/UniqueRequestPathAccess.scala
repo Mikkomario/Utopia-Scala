@@ -6,6 +6,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object UniqueRequestPathAccess
 {
 	// OTHER	--------------------
@@ -32,6 +33,7 @@ object UniqueRequestPathAccess
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait UniqueRequestPathAccess 
 	extends UniqueRequestPathAccessLike[RequestPath] with SingleRowModelAccess[RequestPath] 
 		with FilterableView[UniqueRequestPathAccess]

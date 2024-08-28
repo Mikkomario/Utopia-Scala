@@ -6,6 +6,7 @@ package utopia.logos.model.template
  * @author Mikko Hilpinen
  * @since 14/03/2024, v0.2
  */
+@deprecated("Replaced with TextPlacementFactory", "v0.3")
 trait StatementLinkFactory[+A] extends PlacedFactory[A]
 {
 	/**

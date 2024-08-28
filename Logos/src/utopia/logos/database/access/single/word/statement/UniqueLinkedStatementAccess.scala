@@ -6,6 +6,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.Condition
 
+@deprecated("Deprecated for removal", "v0.3")
 object UniqueLinkedStatementAccess
 {
 	// OTHER	--------------------
@@ -33,6 +34,7 @@ object UniqueLinkedStatementAccess
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Deprecated for removal", "v0.3")
 trait UniqueLinkedStatementAccess 
 	extends UniqueLinkedStatementAccessLike[LinkedStatement, UniqueLinkedStatementAccess] 
 		with SingleRowModelAccess[LinkedStatement]

@@ -14,6 +14,7 @@ import utopia.vault.sql.Condition
  * @author Mikko Hilpinen
  * @since 16/03/2024, v0.2
  */
+@deprecated("Replaced with RootTextPlacementAccess", "v0.3")
 case class DbTextStatementLink(factory: TextStatementLinkDbFactory)
 	extends SingleRowModelAccess[TextStatementLink] with UnconditionalView with Indexed
 {

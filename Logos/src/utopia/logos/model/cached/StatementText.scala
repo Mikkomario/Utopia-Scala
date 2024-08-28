@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
-import utopia.logos.model.stored.word.Delimiter
+import utopia.logos.model.stored.text.Delimiter
 import utopia.logos.model.stored.url.Link
 
 import scala.collection.immutable.VectorBuilder

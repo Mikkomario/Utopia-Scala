@@ -11,6 +11,7 @@ import utopia.vault.model.template.Stored
  * @author Mikko Hilpinen
  * @since 15/03/2024, v0.2
  */
+@deprecated("Replaced with PlacedStatementLike", "v0.3")
 trait LinkedStatementLike[+Link <: TextStatementLink] extends Stored[StatementData, Int] with Placed
 {
 	// ABSTRACT -------------------------

@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with DomainDbModel", "v0.3")
 object DomainModel 
 	extends StorableFactory[DomainModel, Domain, DomainData]
 		with DomainFactory[DomainModel] with FromIdFactory[Int, DomainModel]
@@ -99,6 +100,7 @@ object DomainModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with DomainDbModel", "v0.3")
 case class DomainModel(id: Option[Int] = None, url: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Domain] with DomainFactory[DomainModel] with FromIdFactory[Int, DomainModel]
 {

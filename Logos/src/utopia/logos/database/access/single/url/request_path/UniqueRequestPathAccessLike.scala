@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait UniqueRequestPathAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
 {

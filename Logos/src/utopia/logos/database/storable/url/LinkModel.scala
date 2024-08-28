@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with LinkDbModel", "v0.3")
 object LinkModel
 	extends StorableFactory[LinkModel, Link, LinkData] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
 {
@@ -81,7 +82,7 @@ object LinkModel
 	override def table = factory.table
 	
 	override def apply(data: LinkData) = 
-		apply(None, Some(data.requestPathId), data.queryParameters, Some(data.created))
+		apply(None, Some(data.pathId), data.queryParameters, Some(data.created))
 	
 	/**
 	  * @return A model with that id
@@ -109,7 +110,7 @@ object LinkModel
 	  * @param requestPathId Id of the targeted internet address, including the specific sub-path
 	  * @return A model containing only the specified request path id
 	  */
-	def withRequestPathId(requestPathId: Int) = apply(requestPathId = Some(requestPathId))
+	def withPathId(requestPathId: Int) = apply(requestPathId = Some(requestPathId))
 }
 
 /**
@@ -118,6 +119,7 @@ object LinkModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with LinkDbModel", "v0.3")
 case class LinkModel(id: Option[Int] = None, requestPathId: Option[Int] = None, 
 	queryParameters: Model = Model.empty, created: Option[Instant] = None) 
 	extends StorableWithFactory[Link] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
@@ -152,6 +154,6 @@ case class LinkModel(id: Option[Int] = None, requestPathId: Option[Int] = None,
 	  * @param requestPathId Id of the targeted internet address, including the specific sub-path
 	  * @return A new copy of this model with the specified request path id
 	  */
-	def withRequestPathId(requestPathId: Int) = copy(requestPathId = Some(requestPathId))
+	def withPathId(requestPathId: Int) = copy(requestPathId = Some(requestPathId))
 }
 

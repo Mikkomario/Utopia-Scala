@@ -3,18 +3,18 @@ package utopia.logos.model.enumeration
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.util.{OpenEnumeration, OpenEnumerationValue}
 
 /**
   * Represents a style chosen for displaying words, such as underlining or bold text. An open enumeration, 
-  * meaning that sub-modules may introduce their own values.
+  * meaning that submodules may introduce their own values.
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-trait DisplayStyle extends ValueConvertible
+trait DisplayStyle extends ValueConvertible with OpenEnumerationValue[Int]
 {
 	// ABSTRACT	--------------------
 	
@@ -26,22 +26,19 @@ trait DisplayStyle extends ValueConvertible
 	
 	// IMPLEMENTED	--------------------
 	
+	override def identifier: Int = id
+	
 	override def toValue = id
 }
 
-object DisplayStyle
+object DisplayStyle extends OpenEnumeration[DisplayStyle, Int]
 {
-	// ATTRIBUTES	--------------------
+	// INITIAL CODE ----------------
 	
-	private var _values: Seq[DisplayStyle] = Single(Default)
+	introduce(Single(default))
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	  * All currently available display style values
-	  */
-	def values = _values
 	
 	/**
 	  * The default display style (i.e. default)
@@ -80,24 +77,6 @@ object DisplayStyle
 	  * or the default display style (default)
 	  */
 	def fromValue(value: Value) = findForValue(value).getOrElse(default)
-	
-	/**
-	  * Introduces a new possible value for this enumeration
-	  * @param value New value to introduce
-	  */
-	def introduce(value: DisplayStyle) = {
-		if (!_values.contains(value))
-			_values :+= value
-	}
-	/**
-	  * Introduces 0-n new values to this enumeration
-	  * @param values New values to introduce
-	  */
-	def introcude(values: IterableOnce[DisplayStyle]) = {
-		val newValues = Set.from(values) -- _values
-		if (newValues.nonEmpty)
-			_values ++= newValues
-	}
 	
 	
 	// NESTED	--------------------

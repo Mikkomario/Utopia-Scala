@@ -1,7 +1,8 @@
 package utopia.logos.database.access.many.url.link
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.logos.database.access.many.url.request_path.DbRequestPaths
+import utopia.logos.database.access.many.url.path.DbRequestPaths
 import utopia.logos.database.factory.url.LinkDbFactory
 import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.stored.url.Link
@@ -18,17 +19,13 @@ object ManyLinksAccess extends ViewFactory[ManyLinksAccess]
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	override def apply(condition: Condition): ManyLinksAccess = new _ManyLinksAccess(condition)
+	override def apply(condition: Condition): ManyLinksAccess = _ManyLinksAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
 	
-	private class _ManyLinksAccess(condition: Condition) extends ManyLinksAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyLinksAccess(override val accessCondition: Option[Condition])
+		 extends ManyLinksAccess
 }
 
 /**
@@ -45,11 +42,8 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 	  * @param connection Implicit DB donnection
 	  */
 	def toMap(implicit connection: Connection) = {
-		pullColumnMultiMap(model.requestPathId.column, model.queryParameters.column).map 
-		{
-			 case (pathIdVal, 
-					paramVals) => pathIdVal.getInt -> paramVals.map { _.getModel } 
-		}
+		pullColumnMultiMap(model.pathId.column, model.queryParameters.column)
+			.map { case (pathIdVal, paramVals) => pathIdVal.getInt -> paramVals.map { _.getModel } }
 	}
 	
 	/**
@@ -60,10 +54,10 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 		val links = pull
 		if (links.nonEmpty) {
 			// Pulls associated request paths
-			val pathMap = DbRequestPaths(links.map { _.requestPathId }.toSet).pullDetailed
+			val pathMap = DbRequestPaths(links.map { _.pathId }.toIntSet).pullDetailed
 				.view.map { p => p.id -> p }.toMap
 			// Combines the links with the paths
-			links.map { link => DetailedLink(link, pathMap(link.requestPathId)) }
+			links.map { link => DetailedLink(link, pathMap(link.pathId)) }
 		}
 		else
 			Empty
@@ -73,7 +67,6 @@ trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with Ma
 	// IMPLEMENTED	--------------------
 	
 	override def factory = LinkDbFactory
-	
 	override protected def self = this
 	
 	override def apply(condition: Condition): ManyLinksAccess = ManyLinksAccess(condition)

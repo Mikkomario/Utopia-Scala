@@ -14,5 +14,6 @@ import utopia.vault.nosql.storable.DataInserter
  * @author Mikko Hilpinen
  * @since 14/03/2024, v1.0
  */
+@deprecated("Replaced with TextPlacementDbModelFactoryLike", "v0.3")
 trait TextStatementLinkModelFactoryLike[+DbModel <: Storable, +Complete, -Data]
 	extends DataInserter[DbModel, Complete, Data] with StatementLinkFactory[DbModel] with FromIdFactory[Int, DbModel]

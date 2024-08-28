@@ -10,5 +10,6 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
  * @author Mikko Hilpinen
  * @since 16/03/2024, v0.2
  */
+@deprecated("Deprecated for removal", "v0.3")
 case class DbSingleTextStatementLink(factory: TextStatementLinkDbFactory, id: Int)
 	extends UniqueTextStatementLinkAccess with SingleIntIdModelAccess[TextStatementLink]

@@ -12,6 +12,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object UniqueLinkPlacementAccess
 {
 	// OTHER	--------------------
@@ -38,7 +39,8 @@ object UniqueLinkPlacementAccess
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-trait UniqueLinkPlacementAccess 
+@deprecated("Replaced with a new version", "v0.3")
+trait UniqueLinkPlacementAccess
 	extends SingleRowModelAccess[LinkPlacement] with FilterableView[UniqueLinkPlacementAccess] 
 		with DistinctModelAccess[LinkPlacement, Option[LinkPlacement], Value] with Indexed
 {

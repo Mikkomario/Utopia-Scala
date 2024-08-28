@@ -11,6 +11,7 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with a new version", "v0.3")
 object DelimiterDbFactory extends FromValidatedRowModelFactory[Delimiter]
 {
 	// IMPLEMENTED	--------------------

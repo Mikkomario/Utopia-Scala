@@ -16,6 +16,7 @@ import utopia.vault.nosql.storable.StorableFactory
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with WordPlacementDbModel", "v0.3")
 object WordPlacementModel 
 	extends StorableFactory[WordPlacementModel, WordPlacement, WordPlacementData] 
 		with WordPlacementFactory[WordPlacementModel] with FromIdFactory[Int, WordPlacementModel]
@@ -118,6 +119,7 @@ object WordPlacementModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with WordPlacementDbModel", "v0.3")
 case class WordPlacementModel(id: Option[Int] = None, statementId: Option[Int] = None, 
 	wordId: Option[Int] = None, orderIndex: Option[Int] = None, style: Option[Int] = None) 
 	extends StorableWithFactory[WordPlacement] with WordPlacementFactory[WordPlacementModel]

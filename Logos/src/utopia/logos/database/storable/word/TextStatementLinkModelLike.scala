@@ -14,6 +14,7 @@ import utopia.vault.model.template.{FromIdFactory, HasId}
  * @author Mikko Hilpinen
  * @since 14/03/2024, v1.0
  */
+@deprecated("Replaced with TextPlacementDbModelLike", "v0.3")
 trait TextStatementLinkModelLike[+Repr]
 	extends StorableWithFactory[TextStatementLink] with StatementLinkFactory[Repr]
 		with FromIdFactory[Int, Repr] with HasId[Option[Int]]

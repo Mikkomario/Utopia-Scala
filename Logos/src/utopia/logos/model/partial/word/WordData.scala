@@ -10,6 +10,7 @@ import utopia.logos.model.factory.word.WordFactory
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object WordData extends FromModelFactoryWithSchema[WordData]
 {
 	// ATTRIBUTES	--------------------
@@ -32,6 +33,7 @@ object WordData extends FromModelFactoryWithSchema[WordData]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class WordData(text: String, created: Instant = Now) extends WordFactory[WordData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------

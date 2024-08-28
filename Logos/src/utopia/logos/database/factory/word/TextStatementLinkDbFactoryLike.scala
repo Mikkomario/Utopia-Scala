@@ -12,6 +12,7 @@ import utopia.vault.sql.OrderBy
  * @author Mikko Hilpinen
  * @since 14/03/2024, v1.0
  */
+@deprecated("Replaced with PlacedStatementDbFactoryLike", "v0.3")
 trait TextStatementLinkDbFactoryLike[+A] extends FromValidatedRowModelFactory[A]
 {
 	// ABSTRACT ------------------------

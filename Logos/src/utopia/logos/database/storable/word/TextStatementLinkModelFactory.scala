@@ -12,6 +12,7 @@ import utopia.vault.model.immutable.Table
  * @author Mikko Hilpinen
  * @since 14/03/2024, v1.0
  */
+@deprecated("Replaced with TextPlacementDbModelFactory", "v0.3")
 case class TextStatementLinkModelFactory(factory: TextStatementLinkDbFactory)
 	extends TextStatementLinkModelFactoryLike[TextStatementLinkModel, TextStatementLink, TextStatementLinkData]
 {

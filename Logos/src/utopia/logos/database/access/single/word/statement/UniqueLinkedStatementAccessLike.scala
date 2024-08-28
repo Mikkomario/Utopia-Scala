@@ -11,6 +11,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Replaced with UniquePlacedStatementAccessLike", "v0.3")
 trait UniqueLinkedStatementAccessLike[+A, +Repr] 
 	extends UniqueStatementAccessLike[A] with FilterableView[Repr] with PlacedFactory[Repr]
 {
@@ -31,8 +32,7 @@ trait UniqueLinkedStatementAccessLike[+A, +Repr]
 	def textId(implicit connection: Connection) = pullColumn(linkConfig.textIdColumn).int
 	
 	/**
-	  * 
-		Position index of the accessible statement within the linked text. None if no statement was accessible.
+	  * Position index of the accessible statement within the linked text. None if no statement was accessible.
 	  * @param connection Implicit DB connection
 	  */
 	def orderIndex(implicit connection: Connection) = pullColumn(linkConfig.orderIndexColumn).int

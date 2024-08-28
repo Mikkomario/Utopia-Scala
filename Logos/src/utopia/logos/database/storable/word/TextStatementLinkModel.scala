@@ -3,6 +3,7 @@ package utopia.logos.database.storable.word
 import utopia.flow.collection.immutable.Empty
 import utopia.logos.database.factory.word.TextStatementLinkDbFactory
 
+@deprecated("Replaced with TextPlacementDbModel", "v0.3")
 object TextStatementLinkModel
 {
 	// OTHER    --------------------------
@@ -41,6 +42,7 @@ object TextStatementLinkModel
  * @author Mikko Hilpinen
  * @since 14/03/2024, v1.0
  */
+@deprecated("Replaced with TextPlacementDbModel", "v0.3")
 trait TextStatementLinkModel extends TextStatementLinkModelLike[TextStatementLinkModel]
 {
 	// IMPLEMENTED  -------------------------

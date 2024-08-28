@@ -14,6 +14,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Replaced with ManyTextPlacementsAccessLike", "v0.3")
 trait ManyTextStatementLinksAccessLike[+A, +Repr] 
 	extends ManyModelAccess[A] with FilterableView[Repr] with Indexed with PlacedAccessLike[Repr]
 {

@@ -48,9 +48,7 @@
             "in": "atIndices"
           }
         ]
-      }
-    ],
-    "word": [
+      },
       {
         "name": "Word",
         "doc": "Represents an individual word used in a text document. Case-sensitive.",
@@ -118,7 +116,7 @@
       },
       {
         "name": "WordPlacement",
-        "access": "placement",
+        "access": "word.placement",
         "extends": "TextPlacement",
         "doc": "Records when a word is used in a statement",
         "combo_index": ["statementId", "orderIndex"],

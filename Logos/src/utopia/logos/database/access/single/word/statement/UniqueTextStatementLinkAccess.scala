@@ -5,6 +5,7 @@ import utopia.logos.model.cached.StatementLinkDbConfig
 import utopia.logos.model.stored.word.TextStatementLink
 import utopia.vault.sql.Condition
 
+@deprecated("Deprecated for removal", "v0.3")
 object UniqueTextStatementLinkAccess
 {
 	// OTHER	--------------------
@@ -31,6 +32,7 @@ object UniqueTextStatementLinkAccess
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Deprecated for removal", "v0.3")
 trait UniqueTextStatementLinkAccess 
 	extends UniqueTextStatementLinkAccessLike[TextStatementLink, UniqueTextStatementLinkAccess]
 {

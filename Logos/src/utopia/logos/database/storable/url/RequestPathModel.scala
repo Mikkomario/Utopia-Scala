@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with RequestPathDbModel", "v0.3")
 object RequestPathModel 
 	extends StorableFactory[RequestPathModel, RequestPath, RequestPathData] 
 		with RequestPathFactory[RequestPathModel] with FromIdFactory[Int, RequestPathModel]
@@ -120,6 +121,7 @@ object RequestPathModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with RequestPathDbModel", "v0.3")
 case class RequestPathModel(id: Option[Int] = None, domainId: Option[Int] = None, path: String = "", 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[RequestPath] with RequestPathFactory[RequestPathModel]

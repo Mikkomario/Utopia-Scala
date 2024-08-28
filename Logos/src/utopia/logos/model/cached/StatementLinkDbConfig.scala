@@ -19,6 +19,7 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 14/03/2024, v0.2
  */
+@deprecated("Replaced with TextPlacementDbProps", "v0.3")
 case class StatementLinkDbConfig(tableName: String, textIdAttName: String = "textId",
                                  statementIdAttName: String = "statementId",
                                  orderIndexAttName: String = "orderIndex")

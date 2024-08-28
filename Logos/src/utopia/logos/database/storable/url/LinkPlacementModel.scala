@@ -16,6 +16,7 @@ import utopia.vault.nosql.storable.StorableFactory
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with LinkPlacementDbModel", "v0.3")
 object LinkPlacementModel 
 	extends StorableFactory[LinkPlacementModel, LinkPlacement, LinkPlacementData] 
 		with LinkPlacementFactory[LinkPlacementModel] with FromIdFactory[Int, LinkPlacementModel]
@@ -99,6 +100,7 @@ object LinkPlacementModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with LinkPlacementDbModel", "v0.3")
 case class LinkPlacementModel(id: Option[Int] = None, statementId: Option[Int] = None, 
 	linkId: Option[Int] = None, orderIndex: Option[Int] = None) 
 	extends StorableWithFactory[LinkPlacement] with LinkPlacementFactory[LinkPlacementModel]

@@ -10,6 +10,7 @@ import utopia.logos.model.factory.word.DelimiterFactory
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object DelimiterData extends FromModelFactoryWithSchema[DelimiterData]
 {
 	// ATTRIBUTES	--------------------
@@ -32,6 +33,7 @@ object DelimiterData extends FromModelFactoryWithSchema[DelimiterData]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class DelimiterData(text: String, created: Instant = Now) 
 	extends DelimiterFactory[DelimiterData] with ModelConvertible
 {

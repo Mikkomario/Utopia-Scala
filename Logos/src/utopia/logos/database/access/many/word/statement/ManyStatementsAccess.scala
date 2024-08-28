@@ -12,6 +12,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.{ChronoRowFactoryView, ViewFactory}
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -38,6 +39,7 @@ object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyStatementsAccess 
 	extends ManyStatementsAccessLike[Statement, ManyStatementsAccess] with ManyRowModelAccess[Statement] 
 		with ChronoRowFactoryView[Statement, ManyStatementsAccess]

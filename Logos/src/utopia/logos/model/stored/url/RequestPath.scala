@@ -1,11 +1,22 @@
 package utopia.logos.model.stored.url
 
-import utopia.logos.database.access.single.url.request_path.DbSingleRequestPath
-import utopia.logos.model.factory.url.RequestPathFactory
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.logos.database.access.single.url.path.DbSingleRequestPath
+import utopia.logos.model.factory.url.{RequestPathFactory, RequestPathFactoryWrapper}
 import utopia.logos.model.partial.url.RequestPathData
-import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
+import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 import java.time.Instant
+
+object RequestPath extends StoredFromModelFactory[RequestPathData, RequestPath]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = RequestPathData
+	
+	override protected def complete(model: AnyModel, data: RequestPathData) = 
+		model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a request path that has already been stored in the database
@@ -15,8 +26,8 @@ import java.time.Instant
   * @since 20.03.2024, v0.2
   */
 case class RequestPath(id: Int, data: RequestPathData) 
-	extends StoredModelConvertible[RequestPathData] with RequestPathFactory[RequestPath] 
-		with FromIdFactory[Int, RequestPath]
+	extends StoredModelConvertible[RequestPathData] with FromIdFactory[Int, RequestPath] 
+		with RequestPathFactoryWrapper[RequestPathData, RequestPath]
 {
 	// COMPUTED	--------------------
 	
@@ -28,12 +39,10 @@ case class RequestPath(id: Int, data: RequestPathData)
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withCreated(created: Instant) = copy(data = data.withCreated(created))
-	
-	override def withDomainId(domainId: Int) = copy(data = data.withDomainId(domainId))
+	override protected def wrappedFactory = data
 	
 	override def withId(id: Int) = copy(id = id)
 	
-	override def withPath(path: String) = copy(data = data.withPath(path))
+	override protected def wrap(data: RequestPathData) = copy(data = data)
 }
 

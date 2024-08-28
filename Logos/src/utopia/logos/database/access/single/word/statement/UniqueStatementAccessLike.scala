@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait UniqueStatementAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
 {

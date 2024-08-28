@@ -11,6 +11,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyLinkPlacementsAccess extends ViewFactory[ManyLinkPlacementsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -38,6 +39,7 @@ object ManyLinkPlacementsAccess extends ViewFactory[ManyLinkPlacementsAccess]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyLinkPlacementsAccess 
 	extends ManyRowModelAccess[LinkPlacement] with Indexed 
 		with ManyStatementPlacedAccess[ManyLinkPlacementsAccess]

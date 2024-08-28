@@ -14,6 +14,7 @@ import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class WordPlacement(id: Int, data: WordPlacementData) 
 	extends StoredModelConvertible[WordPlacementData] with WordPlacementFactory[WordPlacement] 
 		with FromIdFactory[Int, WordPlacement] with StoredPlaced[WordPlacementData, Int]

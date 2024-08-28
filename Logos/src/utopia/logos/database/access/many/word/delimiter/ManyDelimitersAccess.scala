@@ -12,6 +12,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -38,6 +39,7 @@ object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyDelimitersAccess 
 	extends ManyRowModelAccess[Delimiter] with FilterableView[ManyDelimitersAccess] with Indexed
 {

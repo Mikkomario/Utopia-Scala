@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class Delimiter(id: Int, data: DelimiterData) 
 	extends StoredModelConvertible[DelimiterData] with DelimiterFactory[Delimiter] with FromIdFactory[Int, Delimiter]
 {
@@ -37,6 +38,7 @@ case class Delimiter(id: Int, data: DelimiterData)
 	override def withText(text: String) = copy(data = data.withText(text))
 }
 
+@deprecated("Replaced with a new version", "v0.3")
 object Delimiter
 {
 	// ATTRIBUTES	--------------------

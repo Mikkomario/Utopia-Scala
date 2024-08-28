@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with StatementDbModel", "v0.3")
 object StatementModel 
 	extends StorableFactory[StatementModel, Statement, StatementData] with StatementFactory[StatementModel]
 		with FromIdFactory[Int, StatementModel]
@@ -99,6 +100,7 @@ object StatementModel
   * @author Mikko Hilpinen
   * @since 20.03.2024, v1.0
   */
+@deprecated("Replaced with StatementDbModel", "v0.3")
 case class StatementModel(id: Option[Int] = None, delimiterId: Option[Int] = None, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[Statement] with StatementFactory[StatementModel] with FromIdFactory[Int, StatementModel]

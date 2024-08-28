@@ -1,13 +1,36 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.url.link.DbSingleLink
-import utopia.logos.model.factory.url.LinkFactory
+import utopia.logos.model.factory.url.LinkFactoryWrapper
 import utopia.logos.model.partial.url.LinkData
-import utopia.vault.model.template.{FromIdFactory, StoredModelConvertible}
+import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
-import java.time.Instant
+object Link extends StoredFromModelFactory[LinkData, Link]
+{
+	// ATTRIBUTES	--------------------
+	
+	private lazy val questionMarkRegex = Regex.escape('?')
+	private lazy val pathCharacterRegex = 
+		(Regex.letterOrDigit || Regex.anyOf("-._~:/#[]@!$&'()*+,;%=")).withinParenthesis
+	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParenthesis
+	/**
+	  * A regular expression that matches to the parameters -part of a link
+	  */
+	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParenthesis
+	/**
+	  * A regular expression that matches to links
+	  */
+	lazy val regex = Domain.regex + pathCharacterRegex.anyTimes + paramPartRegex.noneOrOnce
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = LinkData
+	
+	override protected def complete(model: AnyModel, data: LinkData) = model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a link that has already been stored in the database
@@ -17,7 +40,7 @@ import java.time.Instant
   * @since 20.03.2024, v0.2
   */
 case class Link(id: Int, data: LinkData) 
-	extends StoredModelConvertible[LinkData] with LinkFactory[Link] with FromIdFactory[Int, Link]
+	extends StoredModelConvertible[LinkData] with FromIdFactory[Int, Link] with LinkFactoryWrapper[LinkData, Link]
 {
 	// COMPUTED	--------------------
 	
@@ -29,35 +52,10 @@ case class Link(id: Int, data: LinkData)
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withCreated(created: Instant) = copy(data = data.withCreated(created))
+	override protected def wrappedFactory = data
 	
 	override def withId(id: Int) = copy(id = id)
 	
-	override def withQueryParameters(queryParameters: Model) = 
-		copy(data = data.withQueryParameters(queryParameters))
-	
-	override def withRequestPathId(requestPathId: Int) = copy(data = data.withRequestPathId(requestPathId))
-}
-
-object Link
-{
-	// ATTRIBUTES	--------------------
-	
-	private lazy val questionMarkRegex = Regex.escape('?')
-	
-	private lazy val pathCharacterRegex = 
-		(Regex.letterOrDigit || Regex.anyOf("-._~:/#[]@!$&'()*+,;%=")).withinParenthesis
-	
-	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParenthesis
-	
-	/**
-	  * A regular expression that matches to the parameters -part of a link
-	  */
-	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParenthesis
-	
-	/**
-	  * A regular expression that matches to links
-	  */
-	lazy val regex = Domain.regex + pathCharacterRegex.anyTimes + paramPartRegex.noneOrOnce
+	override protected def wrap(data: LinkData) = copy(data = data)
 }
 

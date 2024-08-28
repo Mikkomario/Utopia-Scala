@@ -12,6 +12,7 @@ import utopia.vault.model.immutable.Column
   * @since 31.07.2024
   */
 // WET WET (from ManyStatementLinksAccessLike)
+@deprecated("Replaced with ManyPlacedStatementsAccessLike", "v0.3")
 trait ManyLinkedStatementsAccessLike[+A, +Repr] 
 	extends ManyStatementsAccessLike[A, Repr] with PlacedAccessLike[Repr]
 {

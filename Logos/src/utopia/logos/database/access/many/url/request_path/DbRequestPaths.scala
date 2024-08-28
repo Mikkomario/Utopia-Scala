@@ -13,6 +13,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v0.3")
 object DbRequestPaths extends ManyRequestPathsAccess with UnconditionalView
 {
 	// OTHER	--------------------

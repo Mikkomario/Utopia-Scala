@@ -1,7 +1,7 @@
 package utopia.logos.database.access.single.url.link
 
 import utopia.logos.database.factory.url.LinkDbFactory
-import utopia.logos.database.storable.url.LinkModel
+import utopia.logos.database.storable.url.LinkDbModel
 import utopia.logos.model.stored.url.Link
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -18,9 +18,9 @@ object DbLink extends SingleRowModelAccess[Link] with UnconditionalView with Ind
 	// COMPUTED	--------------------
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = LinkModel
+	private def model = LinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -41,6 +41,6 @@ object DbLink extends SingleRowModelAccess[Link] with UnconditionalView with Ind
 	  *  unique links.
 	  * @return An access point to the link that satisfies the specified condition
 	  */
-	protected def filterDistinct(condition: Condition) = UniqueLinkAccess(mergeCondition(condition))
+	private def distinct(condition: Condition) = UniqueLinkAccess(condition)
 }
 

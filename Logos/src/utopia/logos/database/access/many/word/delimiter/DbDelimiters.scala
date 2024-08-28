@@ -10,6 +10,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 object DbDelimiters extends ManyDelimitersAccess with UnconditionalView
 {
 	// OTHER	--------------------

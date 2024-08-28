@@ -14,6 +14,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// COMPUTED	--------------------

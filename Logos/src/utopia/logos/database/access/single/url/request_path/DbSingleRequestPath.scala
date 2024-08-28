@@ -8,6 +8,7 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 case class DbSingleRequestPath(id: Int) 
 	extends UniqueRequestPathAccess with SingleIntIdModelAccess[RequestPath]
 

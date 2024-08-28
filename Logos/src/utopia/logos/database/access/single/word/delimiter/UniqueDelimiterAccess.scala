@@ -14,6 +14,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object UniqueDelimiterAccess
 {
 	// OTHER	--------------------
@@ -40,6 +41,7 @@ object UniqueDelimiterAccess
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait UniqueDelimiterAccess 
 	extends SingleRowModelAccess[Delimiter] with FilterableView[UniqueDelimiterAccess] 
 		with DistinctModelAccess[Delimiter, Option[Delimiter], Value] with Indexed

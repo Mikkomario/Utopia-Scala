@@ -10,6 +10,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyRequestPathsAccess extends ViewFactory[ManyRequestPathsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -36,6 +37,7 @@ object ManyRequestPathsAccess extends ViewFactory[ManyRequestPathsAccess]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyRequestPathsAccess 
 	extends ManyRequestPathsAccessLike[RequestPath, ManyRequestPathsAccess] 
 		with ManyRowModelAccess[RequestPath]

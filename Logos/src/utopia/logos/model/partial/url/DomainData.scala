@@ -1,5 +1,6 @@
 package utopia.logos.model.partial.url
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
@@ -14,9 +15,9 @@ object DomainData extends FromModelFactoryWithSchema[DomainData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("url", StringType), PropertyDeclaration("created", 
-			InstantType, isOptional = true)))
+	override lazy val schema = ModelDeclaration(Pair(
+		PropertyDeclaration("url", StringType),
+		PropertyDeclaration("created", InstantType, isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -38,7 +39,7 @@ case class DomainData(url: String, created: Instant = Now)
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector("url" -> url, "created" -> created))
+	override def toModel = Model(Pair("url" -> url, "created" -> created))
 	
 	override def toString = url
 	

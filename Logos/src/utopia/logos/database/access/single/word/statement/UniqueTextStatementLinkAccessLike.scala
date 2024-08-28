@@ -15,6 +15,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 31.07.2024
   */
+@deprecated("Replaced with UniqueTextPlacementAccessLike", "v0.3")
 trait UniqueTextStatementLinkAccessLike[+A, +Repr] 
 	extends StatementLinkFactory[Repr] with SingleRowModelAccess[A] with FilterableView[Repr] 
 		with DistinctModelAccess[A, Option[A], Value] with Indexed

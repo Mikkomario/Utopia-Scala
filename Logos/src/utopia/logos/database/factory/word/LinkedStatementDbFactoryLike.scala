@@ -12,6 +12,7 @@ import utopia.vault.nosql.factory.row.model.FromRowModelFactory
  * @author Mikko Hilpinen
  * @since 16/03/2024, v1.0
  */
+@deprecated("Replaced with PlacedStatementDbFactoryLike", "v0.3")
 trait LinkedStatementDbFactoryLike[+Combined, Link] extends CombiningFactory[Combined, Statement, Link]
 {
 	override def parentFactory: FromRowModelFactory[Statement] = StatementDbFactory

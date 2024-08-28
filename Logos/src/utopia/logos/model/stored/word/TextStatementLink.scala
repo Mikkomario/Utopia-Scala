@@ -2,6 +2,7 @@ package utopia.logos.model.stored.word
 
 import utopia.logos.model.partial.word.TextStatementLinkData
 
+@deprecated("Replaced with TextPlacement", "v0.3")
 object TextStatementLink
 {
 	// OTHER    ----------------------
@@ -24,6 +25,7 @@ object TextStatementLink
  * @author Mikko Hilpinen
  * @since 14/03/2024, v0.2
  */
+@deprecated("Replaced with TextPlacement", "v0.3")
 trait TextStatementLink
 	extends TextStatementLinkLike[TextStatementLinkData, TextStatementLink]
 {

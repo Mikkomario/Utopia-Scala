@@ -11,6 +11,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
+@deprecated("Replaced with a new version", "v0.3")
 object ManyDetailedRequestPathsAccess extends ViewFactory[ManyDetailedRequestPathsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -38,6 +39,7 @@ object ManyDetailedRequestPathsAccess extends ViewFactory[ManyDetailedRequestPat
   * @author Mikko Hilpinen
   * @since 16.10.2023
   */
+@deprecated("Replaced with a new version", "v0.3")
 trait ManyDetailedRequestPathsAccess 
 	extends ManyRequestPathsAccessLike[DetailedRequestPath, ManyDetailedRequestPathsAccess] 
 		with ManyRowModelAccess[DetailedRequestPath]

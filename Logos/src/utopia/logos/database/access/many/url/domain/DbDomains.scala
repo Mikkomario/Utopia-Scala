@@ -1,25 +1,18 @@
 package utopia.logos.database.access.many.url.domain
 
 import utopia.flow.collection.immutable.{Empty, Pair}
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.model.partial.url.DomainData
 import utopia.vault.database.Connection
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
 /**
   * The root access point when targeting multiple domains at a time
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-object DbDomains extends ManyDomainsAccess with UnconditionalView
+object DbDomains extends ManyDomainsAccess with UnconditionalView with ViewManyByIntIds[ManyDomainsAccess]
 {
 	// OTHER	--------------------
-	
-	/**
-	  * @param ids Ids of the targeted domains
-	  * @return An access point to domains with the specified ids
-	  */
-	def apply(ids: Set[Int]) = new DbDomainsSubset(ids)
 	
 	/**
 	  * Stores the specified domains in the DB. Avoids inserting duplicates.
@@ -45,16 +38,6 @@ object DbDomains extends ManyDomainsAccess with UnconditionalView
 		}
 		else
 			Pair.twice(Empty)
-	}
-	
-	
-	// NESTED	--------------------
-	
-	class DbDomainsSubset(targetIds: Set[Int]) extends ManyDomainsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(index in targetIds)
 	}
 }
 

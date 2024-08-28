@@ -8,6 +8,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v0.3")
 object DbWordPlacements extends ManyWordPlacementsAccess with UnconditionalView
 {
 	// OTHER	--------------------
