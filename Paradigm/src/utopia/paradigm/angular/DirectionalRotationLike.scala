@@ -40,7 +40,7 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 	protected def copy(amount: Rotation = absolute, reverseDirection: Boolean = false): Repr
 	
 	
-	// PROPS    --------------------------
+	// COMPUTED    --------------------------
 	
 	/**
 	  * @return Copy of this rotation without direction information.
@@ -77,6 +77,36 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 	  * @return Arc tangent (atan) of this rotation (clockwise) angle
 	  */
 	def arcTangent = math.atan(unidirectional.radians)
+	
+	/**
+	  * @return A copy of this rotation that reaches the same end angle,
+	  *         but does so by traversing to the opposite direction.
+	  *
+	  *         E.g. If this rotation is 60 degrees clockwise,
+	  *         the complementary rotation is 300 degrees counter-clockwise.
+	  *
+	  *         If this rotation is larger than 360 degrees,
+	  *         each full revolution is converted to a full revolution with a different direction.
+	  *         E.g. If this rotation is 370 degrees counter-clockwise,
+	  *         the complementary is 360 + 350 = 710 degrees clockwise.
+	  */
+	def complementary = {
+		// Converts this rotation into circle units
+		// and splits into full circles (i.e. 360 degree rotations) and partial circles (i.e. the remainder)
+		val circles = absolute / Rotation.revolution
+		val fullCircles = circles.toInt
+		val incompleteCircles = circles - fullCircles
+		
+		// Full circles are reversed and the remainder is converted,
+		// so that the same angle is reached but from the other direction
+		val absoluteComplementaryRotation = {
+			if (incompleteCircles > 0)
+				Rotation.circles(circles + (1 - incompleteCircles))
+			else
+				Rotation.circles(circles)
+		}
+		copy(absoluteComplementaryRotation, reverseDirection = true)
+	}
 	
 	
 	// IMPLEMENTED    --------------------
@@ -141,6 +171,27 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 		else
 			Rotation.zero
 	}
+	
+	/**
+	  * Converts this rotation to a rotation of the specified direction, preserving the resulting end angle.
+	  *
+	  * E.g. If this rotation is 40 degrees clockwise,
+	  * converting it to a counter-clockwise rotation would yield 320 degrees counter-clockwise.
+	  *
+	  * When changing directions, full revolutions are preserved but reversed.
+	  * E.g. If this is a rotation of 390 degrees counter-clockwise,
+	  * the clockwise counterpart would be 360 + 330 = 690 degrees clockwise.
+	  *
+	  * @param direction Direction of the resulting rotation
+	  * @tparam D Type of the direction used
+	  *
+	  * @return If this rotation is towards that direction already, returns this,
+	  *         otherwise returns a rotation complementary to this one, leading to the same end angle.
+	  *
+	  * @see [[complementary]]
+	  */
+	def towardsPreservingEndAngle[D >: Direction](direction: D) =
+		if (isTowards(direction)) self else complementary
 	
 	/**
 	  * Calculates the length of an arc produced by this rotation / angle over a specific circle

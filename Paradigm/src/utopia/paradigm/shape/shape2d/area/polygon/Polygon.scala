@@ -3,12 +3,12 @@ package utopia.paradigm.shape.shape2d.area.polygon
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.util.Mutate
-import utopia.paradigm.angular.{DirectionalRotation, Rotation}
+import utopia.paradigm.angular.{AngleRange, Rotation}
 import utopia.paradigm.enumeration.RotationDirection
 import utopia.paradigm.enumeration.RotationDirection.Clockwise
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
@@ -50,21 +50,21 @@ object Polygon
 	//      1) 'polygon' doesn't cross itself
 	//      2) 'polygon' is of size 4 or greater
 	@tailrec
-	private def convexPartsFrom(polygon: Polygon, angles: Seq[DirectionalRotation],
+	private def convexPartsFrom(polygon: Polygon, vertexConvexity: Seq[Boolean],
 	                            direction: RotationDirection, originIndex: Int = 0,
 	                            defaultAdvanceDirection: Sign = Positive): Seq[Polygon] =
 	{
-		val indexCount = angles.size
+		val indexCount = vertexConvexity.size
 		// Converts a relative index to an actual polygon index
 		def index(relativeIndex: Int) =
 			relativeToAbsolute(originIndex, indexCount, defaultAdvanceDirection * relativeIndex)
-		def isConvex(relativeIndex: Int) = this.isConvex(angles(index(relativeIndex)), direction)
+		def isConvex(relativeIndex: Int) = vertexConvexity(index(relativeIndex))
 		
 		// Case: Origin is convex => Finds the first non-convex index and uses that as the splitting index
 		if (isConvex(0))
 			(1 until indexCount).find { !isConvex(_) } match {
 				case Some(advanceToNonConvex) =>
-					splitFrom(polygon, index(advanceToNonConvex), angles, direction,
+					splitFrom(polygon, index(advanceToNonConvex), vertexConvexity, direction,
 						splitDirection = defaultAdvanceDirection)
 				
 				// Case: No non-convex index was found => This polygon is convex
@@ -73,41 +73,42 @@ object Polygon
 		// Case: Origin is non-convex => Uses it as the primary splitting index
 		// Case: The next index is convex => starts scanning for more indices towards that direction
 		else if (isConvex(1))
-			splitFrom(polygon, originIndex, angles, direction, splitDirection = defaultAdvanceDirection)
+			splitFrom(polygon, originIndex, vertexConvexity, direction, splitDirection = defaultAdvanceDirection)
 		// Case: Two consecutive non-convex indices to the positive direction
 		//       => Moves to the negative (i.e. default) direction instead
 		else if (isConvex(-1))
-			splitFrom(polygon, originIndex, angles, direction, splitDirection = defaultAdvanceDirection.opposite)
+			splitFrom(polygon, originIndex, vertexConvexity, direction, splitDirection = defaultAdvanceDirection.opposite)
 		// Case: Three consecutive non-convex indices
 		//       => Finds the next convex index and places the primary split index next to that
 		//          (instead of at the origin), so that the first index after the split will be convex
 		else
 			(2 until indexCount).find(isConvex) match {
 				case Some(advanceToConvex) =>
-					splitFrom(polygon, index(advanceToConvex - 1), angles, direction,
+					splitFrom(polygon, index(advanceToConvex - 1), vertexConvexity, direction,
 						splitDirection = defaultAdvanceDirection)
 				
 				// Case: All the rotations are "non-convex" => Indicates a miscalculated rotation direction (error)
-				case None => convexPartsFrom(polygon, angles, direction.opposite, originIndex, defaultAdvanceDirection)
+				case None => convexPartsFrom(polygon, vertexConvexity, direction.opposite, originIndex, defaultAdvanceDirection)
 			}
 	}
 	
 	// 'splitDirection' is the direction from origin, towards which the secondary split index is estimated to be.
 	// Should be on the opposite side of the primary split index, relative to the origin.
 	// NB: Doesn't work if the first index in the 'splitDirection' is non-convex
-	private def splitFrom(polygon: Polygon, originIndex: Int, angles: Seq[DirectionalRotation],
+	private def splitFrom(polygon: Polygon, originIndex: Int, vertexConvexity: Seq[Boolean],
 	                      polygonDirection: RotationDirection,
 	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative): Seq[Polygon] =
 	{
-		val indexCount = angles.size
+		val indexCount = vertexConvexity.size
 		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
 		
 		lazy val absoluteSplitIndex = index(relativeSplitIndex)
-		lazy val splitPoint = polygon.corners(index(relativeSplitIndex))
+		val splitPoint = polygon.corners(index(relativeSplitIndex))
 		// Reference point is the next point from the split point
 		// towards direction to that is being tested / iterated
-		lazy val referencePoint = polygon.corners(index(relativeSplitIndex + splitDirection.modifier))
-		lazy val referenceDirection = (referencePoint - splitPoint).direction
+		val referencePoint = polygon.corners(index(relativeSplitIndex + splitDirection.modifier))
+		val referenceDirection = (referencePoint - splitPoint).direction
+		val advanceRotationDirection = splitDirection * polygonDirection
 		
 		// Finds the first index from the origin, where either:
 		//      1) That index is non-convex
@@ -125,21 +126,20 @@ object Polygon
 			val absoluteIndex = index(splitDirection * advance)
 			val targetPoint = polygon.corners(absoluteIndex)
 			
-			val angle = (targetPoint - splitPoint).direction - referenceDirection
-			val absoluteAngle = angle.absolute
+			val angle = AngleRange(referenceDirection, (targetPoint - splitPoint).direction, advanceRotationDirection)
+			val absoluteAngle = angle.size
 			val previous = previousAbsoluteAngle
 			previousAbsoluteAngle = absoluteAngle
 			
 			// Case: Angle became larger than 180 degrees => Cuts at the previous index
-			if (advance >= minimumAdvanceForAngle &&
-				(angle.nonZero && angle.direction != polygonDirection * splitDirection))
+			if (advance >= minimumAdvanceForAngle && absoluteAngle > Rotation.halfCircle)
 				Some(Some(index(splitDirection * (advance - 1))))
 			// Case: The measured corner angle started getting smaller => Indicates that there is crossing,
 			//       which makes clean cutting impossible (from this point with this direction)
 			else if (absoluteAngle < previous)
 				Some(None)
 			// Case: Found a non-convex index => Splits at that
-			else if (!isConvex(angles(absoluteIndex), polygonDirection))
+			else if (!vertexConvexity(absoluteIndex))
 				Some(Some(absoluteIndex))
 			// None of these conditions are fulfilled => Moves on to the next index
 			else
@@ -152,8 +152,8 @@ object Polygon
 			//       and/or if that's not possible, the origin
 			case Some(None) =>
 				val randomOrigin = ((0 until absoluteSplitIndex) ++
-					((absoluteSplitIndex + 1) until angles.size)).random
-				convexPartsFrom(polygon, angles, polygonDirection, randomOrigin, splitDirection.opposite)
+					((absoluteSplitIndex + 1) until indexCount)).random
+				convexPartsFrom(polygon, vertexConvexity, polygonDirection, randomOrigin, splitDirection.opposite)
 			
 			// Case: Found the other index to split at => Performs the split
 			case Some(Some(otherSplitIndex)) =>
@@ -180,7 +180,7 @@ object Polygon
 				// Case: The remainder may be non-convex => Splits it, if necessary
 				else
 					cutOffAndRemainder.flatMapSecond { p =>
-						convexPartsFrom(p, p.rotations, polygonDirection, absoluteSplitIndex)
+						convexPartsFrom(p, p.vertexConvexityIterator.toVector, polygonDirection, absoluteSplitIndex)
 					}
 		}
 	}
@@ -195,9 +195,6 @@ object Polygon
 		else
 			index
 	}
-	
-	private def isConvex(angle: DirectionalRotation, polygonDirection: RotationDirection) =
-		angle.isZero || angle.direction == polygonDirection
 	
 	
 	// NESTED   ------------------------------
@@ -276,20 +273,37 @@ trait Polygon
 	  * @return The angles at each corner of this shape, starting from the corner at vertex 0.
 	  *         Angles are always less than 180 degrees, also containing directional information.
 	  *
-	  *         If you want to acquire the angles inside this polygon,
+	  *         If you want to acquire the angles outside this polygon,
 	  *         convert these angles to this polygon's [[rotationDirection]].
-	  *         If you want the angles outside this polygon,
+	  *         If you want the angles inside this polygon,
 	  *         convert them to the direction opposite to this polygon's rotation direction.
 	  *
 	  *         Please also note that angles are different from [[rotations]].
 	  *         An angle of near 180 degrees would correspond to a rotation of nearly 0.
+	  * @see [[innerAngles]] & [[outerAngles]]
 	  */
 	def angles = sides.notEmpty match {
 		case Some(sides) =>
-			val directions = sides.map { _.direction }
-			directions.pairedFrom(directions.last)
-				.map { _.merge { (incoming, outgoing) => incoming.opposite - outgoing } }
+			val sideDirections = sides.map { _.direction }
+			sideDirections.pairedFrom(sideDirections.last)
+				.map { _.merge { (incoming, outgoing) => AngleRange.shortestRangeBetween(incoming.opposite, outgoing) } }
 		case None => Empty
+	}
+	/**
+	  * @return The angles inside this polygon structure.
+	  *         For convex vertices this is <= 180 degrees and for non-convex > 180 degrees.
+	  */
+	def innerAngles = {
+		val targetDirection = rotationDirection.opposite
+		angles.map { _.rotating(targetDirection) }
+	}
+	/**
+	  * @return the angles outside of this polygon structure.
+	  *         For convex vertices this is >= 180 degrees and for non-convex < 180 degrees.
+	  */
+	def outerAngles = {
+		val targetDirection = rotationDirection
+		angles.map { _.rotating(targetDirection) }
 	}
 	
 	/**
@@ -302,10 +316,7 @@ trait Polygon
 	  * Whether this polygon is convex. Convex polygons only need to turn clockwise or
 	  * counter-clockwise when traversing through the polygon. They don't have holes or dips, so to speak.
 	  */
-	def isConvex = {
-		lazy val dir = rotationDirection
-		angles.forall { r => r.isZero || r.direction == dir }
-	}
+	def isConvex = vertexConvexityIterator.forall(Identity)
 	
 	/**
 	  * @return The total surface area of this polygon
@@ -404,7 +415,20 @@ trait Polygon
 		}
 	}
 	// This version assumes that crossing has been tested and ruled out and that this polygon has 4 or more corners
-	private def _convexParts = Polygon.convexPartsFrom(this, angles, rotationDirection)
+	private def _convexParts =
+		Polygon.convexPartsFrom(this, vertexConvexityIterator.toVector, rotationDirection)
+	
+	/**
+	  * @return An iterator that goes over all vertices in this polygon in order.
+	  *         Yields true for convex vertices and false for non-convex vertices.
+	  */
+	private def vertexConvexityIterator = {
+		lazy val dir = rotationDirection
+		angles.iterator.map { angle =>
+			lazy val angleSize = angle.size
+			angle.direction != dir || angleSize.isZero || angleSize == Rotation.halfCircle
+		}
+	}
 	
 	
 	// IMPLEMENTED	------------

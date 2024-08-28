@@ -13,6 +13,8 @@
 - Deprecated `.mapCorners(...)` in **Triangle** in favor of the new `.map(...)`
 - Deprecated **Polygonic**, which is now **Polygon**
 - Deprecated **Parallelogramic**, which is now **Parallelogram**
+### New features
+- Added **AngleRange** class
 ### New methods
 - **Angle**
   - Added `.opposite`
@@ -25,6 +27,7 @@
 - **Polygon**
   - Added `.sidesIterator` and `.edgesIterator`
   - Added `.toTriangles`
+  - Added `.innerAngles` and `.outerAngles`
   - Added `.map(...)`
   - Added `+(HasDoubleDimension)` for translation
 - **TimedAnimation** (object)

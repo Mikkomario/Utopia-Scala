@@ -104,14 +104,14 @@ case class DirectionalRotation private(absolute: Rotation, direction: RotationDi
 	@deprecated("Please use .clockwise.degrees instead", "v1.5")
 	def clockwiseDegrees = absolute.degrees * direction.modifier
 	/**
-	  * @return A radian double value of this rotation to counter clockwise direction. Negative if this direction is
+	  * @return A radian double value of this rotation to counter-clockwise direction. Negative if this direction is
 	  *         clockwise.
 	  */
 	@deprecated("Please use .counterClockwise.radians instead", "v1.5")
 	def counterClockwiseRadians = -clockwiseRadians
 	/**
-	  * @return A degree double value of this rotation to counter clockwise direction. Negative if this direction is
-	  *         counter clockwise.
+	  * @return A degree double value of this rotation to counter-clockwise direction. Negative if this direction is
+	  *         counter-clockwise.
 	  */
 	@deprecated("Please use .counterClockwise.degrees instead", "v1.5")
 	def counterClockwiseDegrees = -clockwiseDegrees
@@ -131,7 +131,7 @@ case class DirectionalRotation private(absolute: Rotation, direction: RotationDi
 	  */
 	def isClockwise = direction == Clockwise
 	/**
-	  * @return Whether this rotation is towards the counter clockwise direction
+	  * @return Whether this rotation is towards the counter-clockwise direction
 	  */
 	def isCounterClockwise = direction == Counterclockwise
 	

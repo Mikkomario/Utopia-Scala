@@ -40,6 +40,10 @@ trait RotationFactory[+R]
 	  * @return A 270 degree rotation
 	  */
 	def threeQuarters = circles(0.75)
+	/**
+	  * @return A full 360 degree rotation
+	  */
+	def revolution = circles(1.0)
 	
 	
 	// OTHER	--------------------------

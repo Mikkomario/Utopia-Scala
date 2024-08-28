@@ -30,6 +30,7 @@ object Rotation extends RotationFactory[Rotation]
 	override lazy val quarter = super.quarter
 	override lazy val circle = super.circle
 	override lazy val halfCircle = super.halfCircle
+	override lazy val revolution = super.revolution
 	
 	
 	// COMPUTED ---------------------------

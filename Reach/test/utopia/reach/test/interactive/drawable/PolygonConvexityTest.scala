@@ -45,6 +45,7 @@ object PolygonConvexityTest extends App
 	// APP CODE ------------------------
 	
 	cornersPointer.addContinuousListener { e => println(s"Now at ${ e.newValue.size } corners") }
+	polygonPointer.addContinuousListener { e => println(s"Convex: ${ e.newValue.isConvex }") }
 	
 	display(MouseTracker, PolygonsDrawer)
 	KeyboardEvents += KeyTracker
