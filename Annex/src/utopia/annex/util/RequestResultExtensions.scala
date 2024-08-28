@@ -11,7 +11,7 @@ import scala.util.{Success, Try}
 /**
   * Adds methods relating to request results
   * @author Mikko Hilpinen
-  * @since 01.08.2024, v1.8.1
+  * @since 01.08.2024, v1.9
   */
 object RequestResultExtensions
 {
