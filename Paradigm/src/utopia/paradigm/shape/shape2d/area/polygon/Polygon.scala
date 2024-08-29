@@ -52,7 +52,7 @@ object Polygon
 	@tailrec
 	private def convexPartsFrom(polygon: Polygon, vertexConvexity: Seq[Boolean],
 	                            direction: RotationDirection, originIndex: Int = 0,
-	                            defaultAdvanceDirection: Sign = Positive): Seq[Polygon] =
+	                            defaultAdvanceDirection: Sign = Positive, crossingCount: Int = 0): Seq[Polygon] =
 	{
 		val indexCount = vertexConvexity.size
 		// Converts a relative index to an actual polygon index
@@ -65,7 +65,7 @@ object Polygon
 			(1 until indexCount).find { !isConvex(_) } match {
 				case Some(advanceToNonConvex) =>
 					splitFrom(polygon, index(advanceToNonConvex), vertexConvexity, direction,
-						splitDirection = defaultAdvanceDirection)
+						splitDirection = defaultAdvanceDirection, crossingCount = crossingCount)
 				
 				// Case: No non-convex index was found => This polygon is convex
 				case None => Single(polygon)
@@ -73,11 +73,13 @@ object Polygon
 		// Case: Origin is non-convex => Uses it as the primary splitting index
 		// Case: The next index is convex => starts scanning for more indices towards that direction
 		else if (isConvex(1))
-			splitFrom(polygon, originIndex, vertexConvexity, direction, splitDirection = defaultAdvanceDirection)
+			splitFrom(polygon, originIndex, vertexConvexity, direction, splitDirection = defaultAdvanceDirection,
+				crossingCount = crossingCount)
 		// Case: Two consecutive non-convex indices to the positive direction
 		//       => Moves to the negative (i.e. default) direction instead
 		else if (isConvex(-1))
-			splitFrom(polygon, originIndex, vertexConvexity, direction, splitDirection = defaultAdvanceDirection.opposite)
+			splitFrom(polygon, originIndex, vertexConvexity, direction,
+				splitDirection = defaultAdvanceDirection.opposite, crossingCount = crossingCount)
 		// Case: Three consecutive non-convex indices
 		//       => Finds the next convex index and places the primary split index next to that
 		//          (instead of at the origin), so that the first index after the split will be convex
@@ -85,10 +87,11 @@ object Polygon
 			(2 until indexCount).find(isConvex) match {
 				case Some(advanceToConvex) =>
 					splitFrom(polygon, index(advanceToConvex - 1), vertexConvexity, direction,
-						splitDirection = defaultAdvanceDirection)
+						splitDirection = defaultAdvanceDirection, crossingCount = crossingCount)
 				
 				// Case: All the rotations are "non-convex" => Indicates a miscalculated rotation direction (error)
-				case None => convexPartsFrom(polygon, vertexConvexity, direction.opposite, originIndex, defaultAdvanceDirection)
+				case None =>
+					convexPartsFrom(polygon, vertexConvexity, direction.opposite, originIndex, defaultAdvanceDirection)
 			}
 	}
 	
@@ -97,7 +100,7 @@ object Polygon
 	// NB: Doesn't work if the first index in the 'splitDirection' is non-convex
 	private def splitFrom(polygon: Polygon, originIndex: Int, vertexConvexity: Seq[Boolean],
 	                      polygonDirection: RotationDirection,
-	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative): Seq[Polygon] =
+	                      relativeSplitIndex: Int = 0, splitDirection: Sign = Negative, crossingCount: Int): Seq[Polygon] =
 	{
 		val indexCount = vertexConvexity.size
 		def index(relativeIndex: Int) = relativeToAbsolute(originIndex, indexCount, relativeIndex)
@@ -132,8 +135,12 @@ object Polygon
 			previousAbsoluteAngle = absoluteAngle
 			
 			// Case: Angle became larger than 180 degrees => Cuts at the previous index
-			if (advance >= minimumAdvanceForAngle && absoluteAngle > Rotation.halfCircle)
-				Some(Some(index(splitDirection * (advance - 1))))
+			if (advance >= minimumAdvanceForAngle && absoluteAngle > Rotation.halfCircle) {
+				if (advance <= 2)
+					Some(None)
+				else
+					Some(Some(index(splitDirection * (advance - 1))))
+			}
 			// Case: The measured corner angle started getting smaller => Indicates that there is crossing,
 			//       which makes clean cutting impossible (from this point with this direction)
 			else if (absoluteAngle < previous)
@@ -151,9 +158,24 @@ object Polygon
 			// Case: Encountered crossing => Must change the rotation direction,
 			//       and/or if that's not possible, the origin
 			case Some(None) =>
-				val randomOrigin = ((0 until absoluteSplitIndex) ++
-					((absoluteSplitIndex + 1) until indexCount)).random
-				convexPartsFrom(polygon, vertexConvexity, polygonDirection, randomOrigin, splitDirection.opposite)
+				// Avoids infinite looping by tacking cross recursion count
+				// If the count gets too high, skips the solution
+				// (This approach is not very elegant, but it is better than stackOverFlow)
+				if (crossingCount > 10)
+					Single(polygon)
+				else {
+					val randomOrigin = ((0 until absoluteSplitIndex) ++
+						((absoluteSplitIndex + 1) until indexCount)).random
+					val correctedRotationDirection = polygon.rotationDirection
+					
+					// Checks whether rotation direction assumption is wrong
+					if (polygonDirection == correctedRotationDirection)
+						convexPartsFrom(polygon, vertexConvexity, polygonDirection, randomOrigin, splitDirection.opposite,
+							crossingCount + 1)
+					else
+						convexPartsFrom(polygon, polygon.vertexConvexityIterator.toVector, correctedRotationDirection,
+							randomOrigin, splitDirection, crossingCount + 1)
+				}
 			
 			// Case: Found the other index to split at => Performs the split
 			case Some(Some(otherSplitIndex)) =>
@@ -417,6 +439,19 @@ trait Polygon
 	// This version assumes that crossing has been tested and ruled out and that this polygon has 4 or more corners
 	private def _convexParts =
 		Polygon.convexPartsFrom(this, vertexConvexityIterator.toVector, rotationDirection)
+	
+	/**
+	  * @return Copy of this polygon with all the concave / non-convex areas or "holes" filled in,
+	  *         so that the resulting polygon is completely convex.
+	  */
+	def filledToConvex = {
+		val nonConvexIndices = vertexConvexityIterator.zipWithIndex.filter { !_._1 }.map { _._2 }.toSet
+		if (nonConvexIndices.isEmpty)
+			this
+		else
+			Polygon(corners.view.zipWithIndex
+				.filterNot { case (_, index) => nonConvexIndices.contains(index) }.map { _._1 }.toOptimizedSeq)
+	}
 	
 	/**
 	  * @return An iterator that goes over all vertices in this polygon in order.

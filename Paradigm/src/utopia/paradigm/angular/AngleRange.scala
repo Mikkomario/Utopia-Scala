@@ -19,8 +19,15 @@ object AngleRange
 	  * @param direction Direction taken
 	  * @return An angle range that starts from 'start' and ends at 'end', taking the route determined by 'direction'
 	  */
-	def apply(start: Angle, end: Angle, direction: RotationDirection): AngleRange =
-		apply(start, (end - start).towardsPreservingEndAngle(direction))
+	def apply(start: Angle, end: Angle, direction: RotationDirection): AngleRange = {
+		val res = apply(start, (end - start).towardsPreservingEndAngle(direction))
+		if (res.size >= Rotation.revolution) {
+			println("INVALID ANGLE")
+			println(s"\tStart = $start; End = $end; Direction = $direction; Rotation = ${ res.rotation }")
+		}
+		res
+	}
+	
 	/**
 	  * Creates a new angle range
 	  * @param ends The start and end angle of this range
@@ -137,8 +144,8 @@ case class AngleRange(start: Angle, rotation: DirectionalRotation) extends Path[
 	  * @return Whether this range contains the specified angle
 	  */
 	def contains(angle: Angle) = {
-		val progress = (angle - start).towards(direction)
-		progress >= Rotation.zero && progress <= size
+		val progress = progressOf(angle)
+		progress >= 0.0 && progress <= 1.0
 	}
 	/**
 	  * @param range Another range of angles

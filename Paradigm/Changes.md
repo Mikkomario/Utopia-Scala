@@ -27,6 +27,7 @@
 - **Polygon**
   - Added `.sidesIterator` and `.edgesIterator`
   - Added `.toTriangles`
+  - Added `.filledToConvex`
   - Added `.innerAngles` and `.outerAngles`
   - Added `.map(...)`
   - Added `+(HasDoubleDimension)` for translation

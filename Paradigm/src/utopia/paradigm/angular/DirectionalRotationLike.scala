@@ -101,9 +101,9 @@ trait DirectionalRotationLike[+Direction <: Signed[Direction], -C <: Directional
 		// so that the same angle is reached but from the other direction
 		val absoluteComplementaryRotation = {
 			if (incompleteCircles > 0)
-				Rotation.circles(circles + (1 - incompleteCircles))
+				Rotation.circles(fullCircles + (1 - incompleteCircles))
 			else
-				Rotation.circles(circles)
+				Rotation.circles(fullCircles)
 		}
 		copy(absoluteComplementaryRotation, reverseDirection = true)
 	}
