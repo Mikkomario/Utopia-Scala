@@ -20,7 +20,6 @@ trait Change[+A, +Repr <: Change[A, _]] extends LinearSizeAdjustable[Repr]
 	  * @return The amount of change within 'duration'
 	  */
 	def amount: A
-	
 	/**
 	  * @return The duration over which change is applied
 	  */
@@ -63,5 +62,9 @@ trait Change[+A, +Repr <: Change[A, _]] extends LinearSizeAdjustable[Repr]
 	  * @param duration New duration
 	  * @return A copy of this change in specified duration. Will have same relative change.
 	  */
-	def in(duration: Duration) = this * (duration / this.duration)
+	def in(duration: Duration) = {
+		if (this.duration == Duration.Zero)
+			throw new IllegalStateException(s"Duration of $this is zero => Can't calculate distances")
+		this * (duration / this.duration)
+	}
 }

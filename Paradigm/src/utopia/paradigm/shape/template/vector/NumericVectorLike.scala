@@ -308,7 +308,13 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  * Creates a new vector with the same direction with this vector
 	  * @param length The length of the new vector
 	  */
-	def withLength(length: Double) = scaledBy(length / this.length)
+	def withLength(length: Double) = {
+		val myLength = this.length
+		if (myLength == 0)
+			throw new IllegalStateException("withLength called on a vector with 0 length")
+		else
+			scaledBy(length / this.length)
+	}
 	/**
 	  * Alters the length of this vector
 	  * @param f A mapping function applied to the length of this vector

@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape2d.vector
 
 import utopia.flow.collection.CollectionExtensions.RichSeqLike
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -87,7 +88,7 @@ class Vector2D private(override val dimensions: Dimensions[Double])
 	
 	override def zero = Vector2D.zero
 	
-	override protected def equalsProperties = dimensions
+	override protected def equalsProperties = Single(dimensions)
 	
 	override implicit def toValue: Value = new Value(Some(this), Vector2DType)
 	override def toModel = Model.from("x" -> x, "y" -> y)

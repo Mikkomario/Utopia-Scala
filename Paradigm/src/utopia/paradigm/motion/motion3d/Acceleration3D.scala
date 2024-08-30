@@ -15,10 +15,15 @@ import scala.concurrent.duration.{Duration, TimeUnit}
 object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Acceleration3D]
 	with ChangeFromModelFactory[Acceleration3D, Velocity3D]
 {
+	// ATTRIBUTES   --------------------------
+	
 	/**
 	  * A zero acceleration
 	  */
 	val zero = Acceleration3D(Velocity3D.zero, 1.seconds)
+	
+	
+	// IMPLEMENTED  --------------------------
 	
 	override def zeroDimension = LinearAcceleration.zero
 	
@@ -35,6 +40,9 @@ object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Accel
 	
 	override protected def amountFromValue(value: Value) = value.tryVelocity3D
 	
+	
+	// OTHER    -----------------------------
+	
 	/**
 	  * @param velocityChange Amount of velocity change in 1 time unit
 	  * @param timeUnit Time unit used (implicit)
@@ -42,6 +50,14 @@ object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Accel
 	  */
 	def apply(velocityChange: Vector3D)(implicit timeUnit: TimeUnit): Acceleration3D =
 		new Acceleration3D(Velocity3D(velocityChange), Duration(1, timeUnit))
+	
+	/**
+	  * @param velocityChange Amount of change in velocity over duration
+	  * @param duration Duration in which the specified change occurs
+	  * @return An acceleration adjusting velocity by 'velocityChange' over 'duration'
+	  */
+	def apply(velocityChange: Vector3D, duration: Duration): Acceleration3D =
+		apply(Velocity3D(velocityChange, duration), duration)
 }
 
 /**
@@ -49,8 +65,9 @@ object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Accel
   * @author Mikko Hilpinen
   * @since Genesis 14.7.2020, v2.3
   */
-case class Acceleration3D(override val amount: Velocity3D, override val duration: Duration) extends
-	AccelerationLike[Vector3D, Velocity3D, Acceleration3D] with ModelConvertibleChange[Velocity3D, Acceleration3D]
+case class Acceleration3D(override val amount: Velocity3D, override val duration: Duration)
+	extends AccelerationLike[Vector3D, Velocity3D, Acceleration3D]
+		with ModelConvertibleChange[Velocity3D, Acceleration3D]
 {
 	// ATTRIBUTES   -------------------
 	
@@ -68,9 +85,8 @@ case class Acceleration3D(override val amount: Velocity3D, override val duration
 	
 	// IMPLEMENTED	-------------------
 	
-	override def zero = Acceleration3D.zero
-	
 	override def self = this
+	override def zero = Acceleration3D.zero
 	
 	override def withDimensions(newDimensions: Dimensions[LinearAcceleration]) =
 		copy(Velocity3D(newDimensions.map { _ over duration }))

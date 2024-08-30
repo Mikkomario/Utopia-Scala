@@ -3,6 +3,7 @@ package utopia.paradigm.test
 import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
@@ -14,6 +15,9 @@ object VectorTest extends App
     val v1 = Vector3D(1, 1)
     
     println(s"$v1 * ${ Vector3D.identity } = ${ v1 * Vector3D.identity }")
+    
+    assert(Vector3D(1, 0, 0) == Vector3D(1))
+    assert(Vector3D(1, 0, 0) == X(1).in3D)
     
     assert(v1.map(Identity) == v1)
     assert(v1 == Vector3D(1, 1))

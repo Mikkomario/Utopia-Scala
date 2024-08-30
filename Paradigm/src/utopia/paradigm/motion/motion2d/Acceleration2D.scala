@@ -1,6 +1,8 @@
 package utopia.paradigm.motion.motion2d
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearAcceleration
@@ -16,12 +18,15 @@ object Acceleration2D
 	extends DimensionsWrapperFactory[LinearAcceleration, Acceleration2D]
 		with ChangeFromModelFactory[Acceleration2D, Velocity2D]
 {
+	// ATTRIBUTES   ------------------------
+	
 	/**
 	  * A zero acceleration
 	  */
 	val zero = Acceleration2D(Velocity2D.zero, 1.seconds)
 	
-	override protected def amountFromValue(value: Value) = value.tryVelocity2D
+	
+	// IMPLEMENTED  ------------------------
 	
 	override def zeroDimension = LinearAcceleration.zero
 	
@@ -29,12 +34,16 @@ object Acceleration2D
 		val duration = dimensions.x.duration
 		apply(Velocity2D(dimensions.map { _ over duration }), duration)
 	}
-	
 	override def from(other: HasDimensions[LinearAcceleration]) = other match {
 		case a: Acceleration2D => a
 		case a: Acceleration3D => a.in2D
 		case o => apply(o.dimensions)
 	}
+	
+	override protected def amountFromValue(value: Value) = value.tryVelocity2D
+	
+	
+	// OTHER    ---------------------------
 	
 	/**
 	  * @param velocityChange Amount of velocity change in 1 time unit
@@ -43,6 +52,14 @@ object Acceleration2D
 	  */
 	def apply(velocityChange: Vector2D)(implicit timeUnit: TimeUnit): Acceleration2D =
 		new Acceleration2D(Velocity2D(velocityChange), Duration(1, timeUnit))
+	
+	/**
+	  * @param velocityChange Amount of velocity change within 'duration'
+	  * @param duration Duration during which this velocity change occurs
+	  * @return A new acceleration affecting velocity by the specified amount over the specified duration
+	  */
+	def apply(velocityChange: Vector2D, duration: Duration) =
+		new Acceleration2D(Velocity2D(velocityChange, duration), duration)
 }
 
 /**
@@ -50,8 +67,9 @@ object Acceleration2D
   * @author Mikko Hilpinen
   * @since Genesis 14.7.2020, v2.3
   */
-case class Acceleration2D(override val amount: Velocity2D, override val duration: Duration) extends
-	AccelerationLike[Vector2D, Velocity2D, Acceleration2D] with ModelConvertibleChange[Velocity2D, Acceleration2D]
+case class Acceleration2D(override val amount: Velocity2D, override val duration: Duration)
+	extends AccelerationLike[Vector2D, Velocity2D, Acceleration2D]
+		with ModelConvertibleChange[Velocity2D, Acceleration2D]
 {
 	// COMPUTED	-----------------------
 	
@@ -63,12 +81,11 @@ case class Acceleration2D(override val amount: Velocity2D, override val duration
 	
 	// IMPLEMENTED	-------------------
 	
-	override def withDimensions(newDimensions: Dimensions[LinearAcceleration]) =
-		copy(Velocity2D(newDimensions.map { _ over duration }))
-	
+	override def self = this
 	override def zero = Acceleration2D.zero
 	
-	override def self = this
+	override def withDimensions(newDimensions: Dimensions[LinearAcceleration]) =
+		copy(Velocity2D(newDimensions.map { _ over duration }))
 	
 	override protected def buildCopy(amount: Velocity2D, duration: Duration) = copy(amount, duration)
 	

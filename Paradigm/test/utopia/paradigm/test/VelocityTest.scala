@@ -64,7 +64,7 @@ object VelocityTest extends App
 	assert(v4 * 2 == Velocity3D(X(2)))
 	assert(v4 + v5 == Velocity3D(Vector3D(3, 1), 2.millis))
 	
-	assert(v4(2.millis) == X(2).in3D)
+	assert(v4(2.millis) == X(2).in3D, v4(2.millis))
 	assert(v5(1.millis) == Vector3D(0.5, 0.5))
 	assert(v6(2.millis) == Vector3D(4, 2, 1))
 	
@@ -100,6 +100,21 @@ object VelocityTest extends App
 	val expectedResult1 = (4.0, LinearVelocity(0.0, 1.millis))
 	assert(v2(4.millis, a3) == expectedResult1)
 	assert(v2(8.millis, a3, preserveDirection = true) == expectedResult1)
+	
+	val v0 = LinearVelocity.zero
+	assert(v0 + a1(1.millis) == v1)
+	
+	/*
+	Acceleration = -2.0/ms^2 (over 1.00 seconds)
+	This velocity = {"x": 0.0, "y": 0.0}/ms (over 1.00 seconds)
+	End velocity = {"x": NaN, "y": NaN}/ms (over 1.00 seconds)
+	 */
+	val acc = LinearAcceleration(LinearVelocity(-2000, 1.seconds), 1.seconds)(20.millis)
+	println(acc)
+	println(acc.amount)
+	println(acc.duration.description)
+	println(Velocity2D(Vector2D.zero, 1.seconds) +
+		LinearAcceleration(LinearVelocity(-2000, 1.seconds), 1.seconds)(20.millis))
 	
 	println("Success!")
 }

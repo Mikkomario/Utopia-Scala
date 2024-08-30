@@ -74,11 +74,11 @@ case class Velocity2D(transition: Vector2D, override val duration: Duration)
 	
 	// IMPLEMENTED	-------------
 	
+	override def self = this
 	override def zero = Velocity2D.zero
 	
-	override def self = this
-	
 	override implicit def toValue: Value = new Value(Some(this), Velocity2DType)
+	override def toString = super[VelocityLike].toString
 	
 	override protected def buildCopy(transition: Vector2D, duration: Duration) = copy(transition, duration)
 	

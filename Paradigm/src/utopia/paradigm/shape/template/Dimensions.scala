@@ -1,10 +1,10 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.operator.equality.{EqualsBy, EqualsFunction}
-import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.MayBeZero
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
@@ -129,7 +129,7 @@ object Dimensions
   */
 class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	extends IndexedSeq[A] with IndexedSeqOps[A, IndexedSeq, Dimensions[A]]
-		with HasDimensions[A] with MayBeZero[Dimensions[A]] with EqualsBy
+		with HasDimensions[A] with MayBeZero[Dimensions[A]] with Equals
 {
 	// COMPUTED ------------------------------
 	
@@ -186,6 +186,10 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	
 	override def self = this
 	
+	override def empty = withDimensions(Empty)
+	override def zero: Dimensions[A] = withDimensions[A](Vector.fill[A](length)(zeroValue))
+	override def isZero = values.forall { _ == zeroValue }
+	
 	override def dimensions: Dimensions[A] = this
 	/**
 	  * @return Components of these dimensions
@@ -195,21 +199,15 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	
 	override def length = values.length
 	
-	override def empty = withDimensions(Empty)
+	override def toVector = values.toVector
+	override def toString = s"[${values.mkString(", ")}]"
 	
-	override protected def equalsProperties: Seq[Any] = zeroValue +: values
+	override def hashCode = foldLeft(1)((result, property) => 31 * result + property.hashCode())
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
-		withDimensions(Vector.from(coll))
-	
+		withDimensions(OptimizedIndexedSeq.from(coll))
 	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, Dimensions[A]] =
 		new DimensionsBuilder[A](lazyZeroValue)
-	
-	override def toVector = values.toVector
-	
-	override def toString() = s"[${values.mkString(", ")}]"
-	
-	override def slice(from: Int, until: Int) = withDimensions(values.slice(from, until))
 	
 	override def apply(i: Int) = {
 		if (i < 0 || i >= length)
@@ -217,19 +215,38 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 		else
 			values(i)
 	}
-	
-	override def map[B](f: A => B) = new Dimensions(lazyZeroValue.map(f), values.map(f))
-	
-	override def zero: Dimensions[A] = withDimensions[A](Vector.fill[A](length)(zeroValue))
-	override def isZero = values.forall { _ == zeroValue }
-	
-	override def padTo[B >: A](len: Int, elem: B) = withDimensions(super.padTo(len, elem))
-	
 	/**
 	  * @param axis Targeted axis
 	  * @return Dimension of this item along that axis
 	  */
 	override def apply(axis: Axis): A = apply(axis.index)
+	
+	override def slice(from: Int, until: Int) = withDimensions(values.slice(from, until))
+	
+	override def map[B](f: A => B) = new Dimensions(lazyZeroValue.map(f), values.map(f))
+	
+	override def padTo[B >: A](len: Int, elem: B) = withDimensions(super.padTo(len, elem))
+	
+	// TODO: Implement
+	override def canEqual(that: Any) = that.isInstanceOf[Dimensions[_]] || that.isInstanceOf[HasDimensions[_]]
+	override def sameElements[B >: A](o: IterableOnce[B]) = {
+		val myIter = iterator
+		val theirIter = o.iterator
+		
+		var areSame = true
+		while (areSame && myIter.hasNext && theirIter.hasNext) {
+			areSame = myIter.next() == theirIter.next()
+		}
+		
+		areSame && myIter.forall { _ == zeroValue } && theirIter.forall { _ == zeroValue }
+	}
+	override def equals(o: Any) = o match {
+		case d: Dimensions[_] => sameElements(d) && (zeroValue: Any) == d.zeroValue
+		case d: HasDimensions[_] =>
+			val otherDimensions = d.dimensions
+			sameElements(otherDimensions) && (zeroValue: Any) == otherDimensions.zeroValue
+		case _ => false
+	}
 	
 	
 	// OTHER    ------------------------------

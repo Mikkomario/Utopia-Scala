@@ -150,15 +150,20 @@ trait VelocityLike[X <: NumericVectorLike[Double, X, X], +Repr <: Change[X, Repr
 		// Sometimes translation & acceleration needs to be stopped when velocity would change direction
 		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).finite.filter(_ < time)
+				durationUntilStopWith(acceleration).finite.filter { _ < time }
 			else
 				None
 		}
 		durationLimit match {
-			case Some(limit) => apply(limit, acceleration)
+			case Some(limit) =>
+				if (limit.isZero)
+					zeroTransition -> zero
+				else
+					apply(limit, acceleration)
 			case None =>
 				val endVelocity = this + acceleration(time)
 				val averageVelocity = this.average(endVelocity)
+				
 				averageVelocity(time) -> endVelocity
 		}
 	}

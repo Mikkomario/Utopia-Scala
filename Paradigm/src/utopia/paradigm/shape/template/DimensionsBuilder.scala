@@ -1,10 +1,10 @@
 package utopia.paradigm.shape.template
 
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.paradigm.enumeration.Axis
 
-import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 
 /**
@@ -16,7 +16,7 @@ class DimensionsBuilder[A](zero: Lazy[A]) extends DimensionalBuilder[A, Dimensio
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val linearBuilder = new VectorBuilder[A]()
+	private val linearBuilder = OptimizedIndexedSeq.newBuilder[A]
 	private val assigned = ResettableLazy { mutable.Map[Axis, A]() }
 	
 	

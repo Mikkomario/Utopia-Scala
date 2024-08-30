@@ -5,6 +5,8 @@
 - `.cutBetween(...)` in **Polygonic** now returns a **Pair** instead of a **Tuple**
 - **Polygon**`.angles` now functions differently (more according to the function's name)
 ### Bugfixes
+- Bugfix to def `VelocityLike.apply(Duration, LinearAcceleration, Boolean)`, so that with zero or near-zero values, 
+  it now returns zero instead of NaN values (when preserveDirection is set to true).
 - Redesigned and rewrote `.convexParts` in **Polygonic**, as the previous version had some issues
 - **Polygon**`.center` now properly calculates the polygon centroid (previous version used average)
 - Similarly, **Polygonic**`.circleWithin` now actually places the circle completely within the polygon 
@@ -38,6 +40,11 @@
 - **Polygon**, **Triangle** and **Parallelogram** are now traits, replacing their previous trait counterparts
 - **BoundsFactoryLike**`.between(...)` now accepts **HasDoubleDimensions** instead of just **P**
 - **AnyAnimation** is now covariant
+- **Dimensions** and **DimensionsBuilder** now use **OptimizedIndexedSeq** instead of **Vector**
+- Vectors now throw if `.withLength(...)` is called for a zero vector
+- **Change** now throws if its duration is zero and amounts are being calculated
+- Changed equality logic in Dimensions, Vector2D and Vector3D
+  - Now, for example, `Vector3D(1)` equals `Vector3D(1, 0, 0)`
 - Added some optimizations to more specific polygon classes
 - Optimized / refactored various functions in **Polygonic**
 

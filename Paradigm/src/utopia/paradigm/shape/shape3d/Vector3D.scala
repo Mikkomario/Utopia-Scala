@@ -1,5 +1,6 @@
 package utopia.paradigm.shape.shape3d
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -174,7 +175,7 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 	
 	override def self = this
 	override protected def factory = Vector3D
-	override protected def equalsProperties = dimensions
+	override protected def equalsProperties = Single(dimensions)
 	
 	override def zero = Vector3D.zero
 	
