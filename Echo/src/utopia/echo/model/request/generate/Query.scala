@@ -1,11 +1,19 @@
 package utopia.echo.model.request.generate
 
+import utopia.echo.model.LlmDesignator
 import utopia.flow.operator.equality.ComparisonOperator.{DirectionalComparison, Equality}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.UncertainNumber.{AnyNumber, CertainNumber, NumberComparison, UncertainInt, UncertainNumberRange}
 import utopia.flow.util.StringExtensions._
 
 import scala.annotation.tailrec
+import scala.language.implicitConversions
+
+object Query
+{
+	// Queries can be implicitly converted to request parameters
+	implicit def queryToParams(q: Query)(implicit llm: LlmDesignator): GenerateParams = GenerateParams(q)
+}
 
 /**
   * Represents some type of query made to the Ollama (or other LLM API) generate or chat end-point.
@@ -97,6 +105,12 @@ case class Query(private val prompt: Prompt, responseSchema: ObjectSchema = Obje
 		else
 			system
 	}
+	
+	/**
+	  * @param llm Implicit LLM to target
+	  * @return Request parameters for sending out this query
+	  */
+	def toRequestParams(implicit llm: LlmDesignator) = GenerateParams(this)
 	
 	
 	// OTHER    ----------------------------

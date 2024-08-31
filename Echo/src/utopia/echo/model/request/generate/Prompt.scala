@@ -2,6 +2,7 @@ package utopia.echo.model.request.generate
 
 import utopia.echo.model.request.CanAttachImages
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.util.UncertainNumber.UncertainInt
 
 import scala.language.implicitConversions
 
@@ -26,6 +27,14 @@ object Prompt
 case class Prompt(text: String, context: String = "", systemMessage: String = "", encodedImages: Seq[String] = Empty)
 	extends CanAttachImages[Prompt]
 {
+	// COMPUTED ---------------------------
+	
+	/**
+	  * @return This prompt as a query
+	  */
+	def toQuery = Query(this)
+	
+	
 	// IMPLEMENTED  -----------------------
 	
 	override def attachImages(base64EncodedImages: Seq[String]): Prompt =
@@ -45,4 +54,19 @@ case class Prompt(text: String, context: String = "", systemMessage: String = ""
 	  * @return Copy of this prompt with the specified system message
 	  */
 	def withSystemMessage(systemMessage: String) = copy(systemMessage = systemMessage)
+	
+	/**
+	  * @param numberOfExpectedResponses Number of responses to expect from the LLM
+	  * @return A query with this prompt, plus a prompt to respond as a json array with that many responses
+	  */
+	def toMultiQuery(numberOfExpectedResponses: UncertainInt) =
+		Query(this, numberOfExpectedResponses = numberOfExpectedResponses, requestJson = true)
+	/**
+	  * @param schema Schema which describes how the LLM should respond
+	  * @param numberOfExpectedResponses Number of individual response values expected in the model response.
+	  *                                  Default = exactly 1.
+	  * @return A query with this prompt and the specified schema
+	  */
+	def toQueryWithSchema(schema: ObjectSchema, numberOfExpectedResponses: UncertainInt = 1) =
+		Query(this, schema, numberOfExpectedResponses, requestJson = true)
 }

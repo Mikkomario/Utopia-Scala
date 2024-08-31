@@ -32,6 +32,9 @@ object Chat
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
+// FIXME: This is missing the model parameter
+// TODO: Also add support for options
+// TODO: Also add support for the new tools feature
 trait Chat[+R] extends ApiRequest[R]
 {
 	// ABSTRACT -----------------------------
