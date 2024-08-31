@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.logos.database.factory.url.LinkDbFactory
 import utopia.logos.model.factory.url.LinkFactory
 import utopia.logos.model.partial.url.LinkData
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.model.template.FromIdFactory
 import utopia.vault.nosql.storable.StorableFactory
@@ -19,7 +19,7 @@ import java.time.Instant
   */
 @deprecated("Replaced with LinkDbModel", "v0.3")
 object LinkModel
-	extends StorableFactory[LinkModel, Link, LinkData] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
+	extends StorableFactory[LinkModel, StoredLink, LinkData] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -89,7 +89,7 @@ object LinkModel
 	  */
 	override def withId(id: Int) = apply(Some(id))
 	
-	override protected def complete(id: Value, data: LinkData) = Link(id.getInt, data)
+	override protected def complete(id: Value, data: LinkData) = StoredLink(id.getInt, data)
 	
 	
 	// OTHER	--------------------
@@ -122,7 +122,7 @@ object LinkModel
 @deprecated("Replaced with LinkDbModel", "v0.3")
 case class LinkModel(id: Option[Int] = None, requestPathId: Option[Int] = None, 
 	queryParameters: Model = Model.empty, created: Option[Instant] = None) 
-	extends StorableWithFactory[Link] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
+	extends StorableWithFactory[StoredLink] with LinkFactory[LinkModel] with FromIdFactory[Int, LinkModel]
 {
 	// IMPLEMENTED	--------------------
 	

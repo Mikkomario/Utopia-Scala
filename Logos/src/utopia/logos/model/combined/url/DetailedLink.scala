@@ -3,7 +3,7 @@ package utopia.logos.model.combined.url
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.template.Extender
 import utopia.logos.model.partial.url.LinkData
-import utopia.logos.model.stored.url.{Domain, Link, RequestPath}
+import utopia.logos.model.stored.url.{Domain, StoredLink, RequestPath}
 
 object DetailedLink
 {
@@ -14,7 +14,7 @@ object DetailedLink
 	 * @param path Associated request path
 	 * @return A new link containing all of the specified data
 	 */
-	def apply(link: Link, domain: Domain, path: RequestPath): DetailedLink =
+	def apply(link: StoredLink, domain: Domain, path: RequestPath): DetailedLink =
 		apply(link, DetailedRequestPath(path, domain))
 }
 
@@ -23,7 +23,7 @@ object DetailedLink
  * @author Mikko Hilpinen
  * @since 16.10.2023, Emissary Email Client v0.1, added to Logos v0.2 11.3.2024
  */
-case class DetailedLink(link: Link, requestPath: DetailedRequestPath) extends Extender[LinkData]
+case class DetailedLink(link: StoredLink, requestPath: DetailedRequestPath) extends Extender[LinkData]
 {
 	// COMPUTED -------------------------
 	

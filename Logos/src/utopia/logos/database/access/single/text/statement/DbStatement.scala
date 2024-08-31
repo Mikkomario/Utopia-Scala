@@ -10,7 +10,7 @@ import utopia.logos.database.storable.text.{StatementDbModel, WordPlacementDbMod
 import utopia.logos.database.storable.url.LinkPlacementDbModel
 import utopia.logos.model.partial.text.{StatementData, WordPlacementData}
 import utopia.logos.model.partial.url.LinkPlacementData
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -22,7 +22,7 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-object DbStatement extends SingleRowModelAccess[Statement] with UnconditionalView with Indexed
+object DbStatement extends SingleRowModelAccess[StoredStatement] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
 	

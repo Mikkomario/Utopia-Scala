@@ -1,7 +1,7 @@
 package utopia.logos.database.access.many.text.word
 
 import utopia.logos.database.factory.text.WordDbFactory
-import utopia.logos.model.stored.text.Word
+import utopia.logos.model.stored.text.StoredWord
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
@@ -28,7 +28,7 @@ object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with ManyRowModelAccess[Word]
+trait ManyWordsAccess extends ManyWordsAccessLike[StoredWord, ManyWordsAccess] with ManyRowModelAccess[StoredWord]
 {
 	// IMPLEMENTED	--------------------
 	

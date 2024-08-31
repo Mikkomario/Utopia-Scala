@@ -1,6 +1,6 @@
 package utopia.logos.database.factory.text
 
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 
@@ -9,7 +9,7 @@ import utopia.vault.nosql.factory.row.model.FromRowModelFactory
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait PlacedStatementDbFactoryLike[+Combined, Placement] extends CombiningFactory[Combined, Statement, Placement]
+trait PlacedStatementDbFactoryLike[+Combined, Placement] extends CombiningFactory[Combined, StoredStatement, Placement]
 {
-	override def parentFactory: FromRowModelFactory[Statement] = StatementDbFactory
+	override def parentFactory: FromRowModelFactory[StoredStatement] = StatementDbFactory
 }

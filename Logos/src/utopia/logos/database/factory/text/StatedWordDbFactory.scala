@@ -1,7 +1,7 @@
 package utopia.logos.database.factory.text
 
 import utopia.logos.model.combined.text.StatedWord
-import utopia.logos.model.stored.text.{Word, WordPlacement}
+import utopia.logos.model.stored.text.{StoredWord, WordPlacement}
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
 
 /**
@@ -9,7 +9,7 @@ import utopia.vault.nosql.factory.row.linked.CombiningFactory
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-object StatedWordDbFactory extends CombiningFactory[StatedWord, Word, WordPlacement]
+object StatedWordDbFactory extends CombiningFactory[StatedWord, StoredWord, WordPlacement]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -21,6 +21,6 @@ object StatedWordDbFactory extends CombiningFactory[StatedWord, Word, WordPlacem
 	  * @param word word to wrap
 	  * @param useCase use case to attach to this word
 	  */
-	override def apply(word: Word, useCase: WordPlacement) = StatedWord(word, useCase)
+	override def apply(word: StoredWord, useCase: WordPlacement) = StatedWord(word, useCase)
 }
 

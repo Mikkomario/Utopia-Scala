@@ -6,7 +6,7 @@ import utopia.logos.database.factory.text.StatementDbFactory
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.logos.database.storable.text.WordPlacementDbModel
 import utopia.logos.database.storable.url.LinkPlacementDbModel
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.template.HasTable
@@ -37,8 +37,8 @@ object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
   * @since 27.08.2024, v0.3
   */
 trait ManyStatementsAccess 
-	extends ManyStatementsAccessLike[Statement, ManyStatementsAccess] with ManyRowModelAccess[Statement] 
-		with ChronoRowFactoryView[Statement, ManyStatementsAccess]
+	extends ManyStatementsAccessLike[StoredStatement, ManyStatementsAccess] with ManyRowModelAccess[StoredStatement]
+		with ChronoRowFactoryView[StoredStatement, ManyStatementsAccess]
 {
 	// COMPUTED ------------------------
 	

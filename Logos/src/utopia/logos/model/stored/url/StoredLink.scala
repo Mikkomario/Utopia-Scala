@@ -7,7 +7,7 @@ import utopia.logos.model.factory.url.LinkFactoryWrapper
 import utopia.logos.model.partial.url.LinkData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
-object Link extends StoredFromModelFactory[LinkData, Link]
+object StoredLink extends StoredFromModelFactory[LinkData, StoredLink]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -39,8 +39,9 @@ object Link extends StoredFromModelFactory[LinkData, Link]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-case class Link(id: Int, data: LinkData) 
-	extends StoredModelConvertible[LinkData] with FromIdFactory[Int, Link] with LinkFactoryWrapper[LinkData, Link]
+case class StoredLink(id: Int, data: LinkData)
+	extends StoredModelConvertible[LinkData] with FromIdFactory[Int, StoredLink]
+		with LinkFactoryWrapper[LinkData, StoredLink]
 {
 	// COMPUTED	--------------------
 	

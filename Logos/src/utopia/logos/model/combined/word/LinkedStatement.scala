@@ -1,6 +1,6 @@
 package utopia.logos.model.combined.word
 
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.logos.model.stored.word.TextStatementLink
 
 @deprecated("Replaced with PlacedStatement", "v0.3")
@@ -13,12 +13,12 @@ object LinkedStatement
 	 * @param link Link to the text where the statement appears
 	 * @return A new linked statement
 	 */
-	def apply(statement: Statement, link: TextStatementLink): LinkedStatement = _LinkedStatement(statement, link)
+	def apply(statement: StoredStatement, link: TextStatementLink): LinkedStatement = _LinkedStatement(statement, link)
 	
 	
 	// NESTED   ------------------------------
 	
-	private case class _LinkedStatement(statement: Statement, link: TextStatementLink) extends LinkedStatement
+	private case class _LinkedStatement(statement: StoredStatement, link: TextStatementLink) extends LinkedStatement
 }
 
 /**

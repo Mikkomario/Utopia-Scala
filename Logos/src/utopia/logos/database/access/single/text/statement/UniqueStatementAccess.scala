@@ -1,7 +1,7 @@
 package utopia.logos.database.access.single.text.statement
 
 import utopia.logos.database.factory.text.StatementDbFactory
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
@@ -29,8 +29,8 @@ object UniqueStatementAccess extends ViewFactory[UniqueStatementAccess]
   * @since 27.08.2024, v0.3
   */
 trait UniqueStatementAccess 
-	extends UniqueStatementAccessLike[Statement, UniqueStatementAccess] 
-		with SingleChronoRowModelAccess[Statement, UniqueStatementAccess]
+	extends UniqueStatementAccessLike[StoredStatement, UniqueStatementAccess]
+		with SingleChronoRowModelAccess[StoredStatement, UniqueStatementAccess]
 {
 	// IMPLEMENTED	--------------------
 	

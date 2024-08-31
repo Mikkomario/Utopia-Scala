@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.logos.database.LogosTables
 import utopia.logos.model.factory.url.LinkFactory
 import utopia.logos.model.partial.url.LinkData
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
 import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
 import utopia.vault.nosql.storable.StorableFactory
@@ -18,7 +18,7 @@ import java.time.Instant
   * @since 27.08.2024, v0.3
   */
 object LinkDbModel 
-	extends StorableFactory[LinkDbModel, Link, LinkData] with FromIdFactory[Int, LinkDbModel] 
+	extends StorableFactory[LinkDbModel, StoredLink, LinkData] with FromIdFactory[Int, LinkDbModel]
 		with HasIdProperty with LinkFactory[LinkDbModel]
 {
 	// ATTRIBUTES	--------------------
@@ -68,7 +68,7 @@ object LinkDbModel
 	  */
 	override def withQueryParameters(queryParameters: Model) = apply(queryParameters = queryParameters)
 	
-	override protected def complete(id: Value, data: LinkData) = Link(id.getInt, data)
+	override protected def complete(id: Value, data: LinkData) = StoredLink(id.getInt, data)
 }
 
 /**

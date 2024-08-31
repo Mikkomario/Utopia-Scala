@@ -6,8 +6,8 @@ import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
 import utopia.logos.database.access.many.url.link.DbLinks
 import utopia.logos.database.access.single.text.statement.DbStatement
-import utopia.logos.model.cached.StatementText
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.cached.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
@@ -27,7 +27,7 @@ object DbStatements
 	  * @return Stored statements, where each entry is either right, if it existed already, or left,
 	  * if it was newly inserted
 	  */
-	def store(text: String)(implicit connection: Connection): Seq[Sided[Statement]] = store(StatementText.allFrom(text))
+	def store(text: String)(implicit connection: Connection): Seq[Sided[StoredStatement]] = store(Statement.allFrom(text))
 	/**
 	  * Stores the specified text to the database as a sequence of statements.
 	  * Avoids inserting duplicate entries.
@@ -36,7 +36,7 @@ object DbStatements
 	  * @return Stored statements, where each entry is either right, if it existed already, or left,
 	  * if it was newly inserted
 	  */
-	def store(statementData: Seq[StatementText])(implicit connection: Connection) = {
+	def store(statementData: Seq[Statement])(implicit connection: Connection) = {
 		// Stores the delimiters first
 		val delimiterMap = DbDelimiters.store(statementData.map { _.delimiter }.toSet.filterNot { _.isEmpty })
 		

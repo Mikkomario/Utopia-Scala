@@ -6,7 +6,7 @@ import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
-object Word extends StoredFromModelFactory[WordData, Word]
+object StoredWord extends StoredFromModelFactory[WordData, StoredWord]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -23,9 +23,9 @@ object Word extends StoredFromModelFactory[WordData, Word]
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-case class Word(id: Int, data: WordData) 
-	extends StoredModelConvertible[WordData] with FromIdFactory[Int, Word] 
-		with WordFactoryWrapper[WordData, Word]
+case class StoredWord(id: Int, data: WordData)
+	extends StoredModelConvertible[WordData] with FromIdFactory[Int, StoredWord]
+		with WordFactoryWrapper[WordData, StoredWord]
 {
 	// COMPUTED	--------------------
 	

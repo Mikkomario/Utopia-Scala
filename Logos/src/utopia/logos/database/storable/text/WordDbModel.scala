@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.LogosTables
 import utopia.logos.model.factory.text.WordFactory
 import utopia.logos.model.partial.text.WordData
-import utopia.logos.model.stored.text.Word
+import utopia.logos.model.stored.text.StoredWord
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
 import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
 import utopia.vault.nosql.storable.StorableFactory
@@ -18,7 +18,7 @@ import java.time.Instant
   * @since 27.08.2024, v0.3
   */
 object WordDbModel 
-	extends StorableFactory[WordDbModel, Word, WordData] with FromIdFactory[Int, WordDbModel] 
+	extends StorableFactory[WordDbModel, StoredWord, WordData] with FromIdFactory[Int, WordDbModel]
 		with HasIdProperty with WordFactory[WordDbModel]
 {
 	// ATTRIBUTES	--------------------
@@ -52,7 +52,7 @@ object WordDbModel
 	  */
 	override def withText(text: String) = apply(text = text)
 	
-	override protected def complete(id: Value, data: WordData) = Word(id.getInt, data)
+	override protected def complete(id: Value, data: WordData) = StoredWord(id.getInt, data)
 }
 
 /**

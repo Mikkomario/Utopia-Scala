@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.LogosTables
 import utopia.logos.model.factory.text.StatementFactory
 import utopia.logos.model.partial.text.StatementData
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
 import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
 import utopia.vault.nosql.storable.StorableFactory
@@ -18,7 +18,7 @@ import java.time.Instant
   * @since 27.08.2024, v0.3
   */
 object StatementDbModel 
-	extends StorableFactory[StatementDbModel, Statement, StatementData] 
+	extends StorableFactory[StatementDbModel, StoredStatement, StatementData]
 		with FromIdFactory[Int, StatementDbModel] with HasIdProperty with StatementFactory[StatementDbModel]
 {
 	// ATTRIBUTES	--------------------
@@ -53,7 +53,7 @@ object StatementDbModel
 	override def withDelimiterId(delimiterId: Int) = apply(delimiterId = Some(delimiterId))
 	override def withId(id: Int) = apply(id = Some(id))
 	
-	override protected def complete(id: Value, data: StatementData) = Statement(id.getInt, data)
+	override protected def complete(id: Value, data: StatementData) = StoredStatement(id.getInt, data)
 }
 
 /**

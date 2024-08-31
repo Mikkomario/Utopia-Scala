@@ -2,7 +2,7 @@ package utopia.logos.database.access.single.url.link
 
 import utopia.logos.database.factory.url.LinkDbFactory
 import utopia.logos.database.storable.url.LinkDbModel
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
@@ -13,7 +13,7 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-object DbLink extends SingleRowModelAccess[Link] with UnconditionalView with Indexed
+object DbLink extends SingleRowModelAccess[StoredLink] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
 	

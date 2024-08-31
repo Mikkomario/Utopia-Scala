@@ -1,7 +1,7 @@
 package utopia.logos.database.factory.text
 
 import utopia.logos.model.combined.text.PlacedStatement
-import utopia.logos.model.stored.text.{Statement, TextPlacement}
+import utopia.logos.model.stored.text.{StoredStatement, TextPlacement}
 import utopia.vault.nosql.factory.row.FromRowFactory
 
 object PlacedStatementDbFactory
@@ -29,5 +29,5 @@ object PlacedStatementDbFactory
   */
 trait PlacedStatementDbFactory extends PlacedStatementDbFactoryLike[PlacedStatement, TextPlacement]
 {
-	override def apply(parent: Statement, child: TextPlacement): PlacedStatement = PlacedStatement(parent, child)
+	override def apply(parent: StoredStatement, child: TextPlacement): PlacedStatement = PlacedStatement(parent, child)
 }

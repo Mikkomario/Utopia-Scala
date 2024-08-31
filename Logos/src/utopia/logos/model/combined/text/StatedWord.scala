@@ -3,7 +3,7 @@ package utopia.logos.model.combined.text
 import utopia.flow.view.template.Extender
 import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
-import utopia.logos.model.stored.text.{Word, WordPlacement}
+import utopia.logos.model.stored.text.{StoredWord, WordPlacement}
 import utopia.vault.model.template.HasId
 
 object StatedWord
@@ -15,7 +15,7 @@ object StatedWord
 	  * @param useCase use case to attach to this word
 	  * @return Combination of the specified word and use case
 	  */
-	def apply(word: Word, useCase: WordPlacement): StatedWord = _StatedWord(word, useCase)
+	def apply(word: StoredWord, useCase: WordPlacement): StatedWord = _StatedWord(word, useCase)
 	
 	
 	// NESTED	--------------------
@@ -24,11 +24,11 @@ object StatedWord
 	  * @param word word to wrap
 	  * @param useCase use case to attach to this word
 	  */
-	private case class _StatedWord(word: Word, useCase: WordPlacement) extends StatedWord
+	private case class _StatedWord(word: StoredWord, useCase: WordPlacement) extends StatedWord
 	{
 		// IMPLEMENTED	--------------------
 		
-		override protected def wrap(factory: Word) = copy(word = factory)
+		override protected def wrap(factory: StoredWord) = copy(word = factory)
 	}
 }
 
@@ -37,14 +37,14 @@ object StatedWord
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrapper[Word, StatedWord]
+trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrapper[StoredWord, StatedWord]
 {
 	// ABSTRACT	--------------------
 	
 	/**
 	  * Wrapped word
 	  */
-	def word: Word
+	def word: StoredWord
 	/**
 	  * The use case that is attached to this word
 	  */

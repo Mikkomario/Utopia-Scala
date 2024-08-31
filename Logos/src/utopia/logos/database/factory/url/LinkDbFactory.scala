@@ -4,7 +4,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.logos.database.LogosContext
 import utopia.logos.database.storable.url.LinkDbModel
 import utopia.logos.model.partial.url.LinkData
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.sql.OrderBy
 
@@ -13,7 +13,7 @@ import utopia.vault.sql.OrderBy
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.3
   */
-object LinkDbFactory extends FromValidatedRowModelFactory[Link]
+object LinkDbFactory extends FromValidatedRowModelFactory[StoredLink]
 {
 	// COMPUTED	--------------------
 	
@@ -30,7 +30,7 @@ object LinkDbFactory extends FromValidatedRowModelFactory[Link]
 	override def table = model.table
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Link(valid(this.model.id.name).getInt, LinkData(valid(this.model.pathId.name).getInt, 
+		StoredLink(valid(this.model.id.name).getInt, LinkData(valid(this.model.pathId.name).getInt,
 			valid(this.model.queryParameters.name).notEmpty match {
 				case Some(v) => LogosContext.jsonParser.valueOf(v.getString).getModel
 				case None => Model.empty

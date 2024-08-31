@@ -1,7 +1,7 @@
 package utopia.logos.model.combined.text
 
 import utopia.logos.model.partial.text.{StatementData, TextPlacementDataLike}
-import utopia.logos.model.stored.text.{Statement, StoredTextPlacementLike}
+import utopia.logos.model.stored.text.{StoredStatement, StoredTextPlacementLike}
 
 /**
   * Common trait for implementations that link a statement with its placement in some text
@@ -10,17 +10,17 @@ import utopia.logos.model.stored.text.{Statement, StoredTextPlacementLike}
   */
 trait PlacedStatementLike[+Repr, +Placement <: StoredTextPlacementLike[PlacementData, Placement],
 	PlacementData <: TextPlacementDataLike[PlacementData]]
-	extends PlacedTextLike[Repr, Statement, StatementData, Placement, PlacementData]
+	extends PlacedTextLike[Repr, StoredStatement, StatementData, Placement, PlacementData]
 {
 	// ABSTRACT ----------------------
 	
 	/**
 	  * @return The wrapped statement
 	  */
-	def statement: Statement
+	def statement: StoredStatement
 	
 	
 	// IMPLEMENTED  ------------------
 	
-	override def placedText: Statement = statement
+	override def placedText: StoredStatement = statement
 }

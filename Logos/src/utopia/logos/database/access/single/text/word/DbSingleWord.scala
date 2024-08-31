@@ -1,6 +1,6 @@
 package utopia.logos.database.access.single.text.word
 
-import utopia.logos.model.stored.text.Word
+import utopia.logos.model.stored.text.StoredWord
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 
 /**
@@ -8,5 +8,5 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-case class DbSingleWord(id: Int) extends UniqueWordAccess with SingleIntIdModelAccess[Word]
+case class DbSingleWord(id: Int) extends UniqueWordAccess with SingleIntIdModelAccess[StoredWord]
 

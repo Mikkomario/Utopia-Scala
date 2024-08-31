@@ -3,6 +3,10 @@
 ## v0.3 (in development)
 ### Breaking changes
 - Renamed packages `word` to `text`
+- Renamed **Statement** (stored instance) to **StoredStatement** and **StatementText** to **Statement**
+- Renamed **Word** (stored instance) to **StoredWord**
+- Renamed **Link** (stored instance) to **StoredLink**
+- Renamed **WordOrLinkText** to **WordOrLink**
 - Renamed all database models to -DbModel
 - Multiple changes in access packages:
   - Moved `url.link_placement` to `url.link.placement`

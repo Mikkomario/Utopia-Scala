@@ -1,7 +1,7 @@
 package utopia.logos.model.combined.word
 
 import utopia.logos.model.partial.text.StatementData
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.logos.model.stored.word.TextStatementLink
 import utopia.logos.model.template.Placed
 import utopia.vault.model.template.Stored
@@ -20,7 +20,7 @@ trait LinkedStatementLike[+Link <: TextStatementLink] extends Stored[StatementDa
 	/**
 	 * @return The wrapped statement
 	 */
-	def statement: Statement
+	def statement: StoredStatement
 	/**
 	 * @return Link to the text where this statement appears
 	 */

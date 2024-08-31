@@ -6,7 +6,7 @@ import utopia.logos.model.factory.text.StatementFactoryWrapper
 import utopia.logos.model.partial.text.StatementData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
-object Statement extends StoredFromModelFactory[StatementData, Statement]
+object StoredStatement extends StoredFromModelFactory[StatementData, StoredStatement]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -23,9 +23,9 @@ object Statement extends StoredFromModelFactory[StatementData, Statement]
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-case class Statement(id: Int, data: StatementData) 
-	extends StoredModelConvertible[StatementData] with FromIdFactory[Int, Statement] 
-		with StatementFactoryWrapper[StatementData, Statement]
+case class StoredStatement(id: Int, data: StatementData)
+	extends StoredModelConvertible[StatementData] with FromIdFactory[Int, StoredStatement]
+		with StatementFactoryWrapper[StatementData, StoredStatement]
 {
 	// COMPUTED	--------------------
 	

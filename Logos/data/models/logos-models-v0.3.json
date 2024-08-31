@@ -51,6 +51,7 @@
       },
       {
         "name": "Word",
+        "prefix": "Stored",
         "doc": "Represents an individual word used in a text document. Case-sensitive.",
         "combo": {
           "name": "StatedWord",
@@ -77,7 +78,7 @@
         ]
       },
       {
-        "name": "Delimiter",
+        "name": "Delimiter", 
         "doc": "Represents a character sequence used to separate two statements or parts of a statement",
         "props": [
           {
@@ -98,6 +99,7 @@
       },
       {
         "name": "Statement",
+        "prefix": "Stored",
         "has_many_combos": true,
         "doc": "Represents an individual statement made within some text. Consecutive statements form whole texts.",
         "props": [
@@ -195,6 +197,7 @@
       },
       {
         "name": "Link",
+        "prefix": "Stored",
         "doc": "Represents a link for a specific http(s) request",
         "has_combos": true,
         "props": [

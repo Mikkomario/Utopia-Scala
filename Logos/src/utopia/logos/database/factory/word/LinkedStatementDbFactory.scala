@@ -1,7 +1,7 @@
 package utopia.logos.database.factory.word
 
 import utopia.logos.model.combined.word.LinkedStatement
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.logos.model.stored.word.TextStatementLink
 import utopia.vault.nosql.factory.row.FromRowFactory
 
@@ -33,5 +33,5 @@ object LinkedStatementDbFactory
 @deprecated("Replaced with PlacedStatementDbFactory", "v0.3")
 trait LinkedStatementDbFactory extends LinkedStatementDbFactoryLike[LinkedStatement, TextStatementLink]
 {
-	override def apply(parent: Statement, child: TextStatementLink): LinkedStatement = LinkedStatement(parent, child)
+	override def apply(parent: StoredStatement, child: TextStatementLink): LinkedStatement = LinkedStatement(parent, child)
 }

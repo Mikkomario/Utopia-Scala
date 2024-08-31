@@ -5,11 +5,11 @@ import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 import utopia.logos.model.stored.text.Delimiter
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 
 import scala.collection.immutable.VectorBuilder
 
-object StatementText
+object Statement
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -32,7 +32,7 @@ object StatementText
 	 */
 	def allFrom(text: String) = {
 		// Separates between links, delimiters and words
-		val parts = Link.regex.divide(text).flatMap {
+		val parts = StoredLink.regex.divide(text).flatMap {
 			case Left(text) =>
 				// Trims words and filters out empty strings
 				Delimiter.anyDelimiterRegex.divide(text).flatMap {
@@ -43,7 +43,7 @@ object StatementText
 		}
 		
 		// Groups words and links to delimiter-separated groups
-		val statementsBuilder = new VectorBuilder[StatementText]()
+		val statementsBuilder = new VectorBuilder[Statement]()
 		var nextStartIndex = 0
 		while (nextStartIndex < parts.size) {
 			// Finds the next delimiter
@@ -56,13 +56,13 @@ object StatementText
 						.flatMap { case (str, role) =>
 							// Case: Link => Removes the terminating /-character, if present
 							if (role == _link)
-								Some(WordOrLinkText.link(str.notEndingWith("/")))
+								Some(WordOrLink.link(str.notEndingWith("/")))
 							// Case: Word or words => Splits into separate words
 							else
 								wordSplitRegex.split(str).filter { _.nonEmpty }
 									// Cuts very long words
 									.map { word => if (word.length > maxWordLength) s"${word.take(18)}..." else word }
-									.map(WordOrLinkText.word)
+									.map(WordOrLink.word)
 						}
 					
 					statementsBuilder += apply(wordAndLinkParts, delimiterText)
@@ -70,7 +70,7 @@ object StatementText
 				// Case: No delimiter found => Extracts text part without delimiter
 				case None =>
 					statementsBuilder += apply(
-						parts.drop(nextStartIndex).map { case (str, role) => WordOrLinkText(str, isLink = role == _link) })
+						parts.drop(nextStartIndex).map { case (str, role) => WordOrLink(str, isLink = role == _link) })
 					nextStartIndex = parts.size
 			}
 		}
@@ -83,7 +83,7 @@ object StatementText
  * @author Mikko Hilpinen
  * @since 11/03/2024, v0.2
  */
-case class StatementText(words: Seq[WordOrLinkText], delimiter: String = "")
+case class Statement(words: Seq[WordOrLink], delimiter: String = "")
 {
 	// ATTRIBUTES   -----------------------
 	

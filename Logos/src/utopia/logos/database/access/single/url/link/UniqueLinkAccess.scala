@@ -1,7 +1,7 @@
 package utopia.logos.database.access.single.url.link
 
 import utopia.logos.database.factory.url.LinkDbFactory
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
@@ -29,7 +29,7 @@ object UniqueLinkAccess extends ViewFactory[UniqueLinkAccess]
   * @since 20.03.2024, v0.2
   */
 trait UniqueLinkAccess 
-	extends UniqueLinkAccessLike[Link, UniqueLinkAccess] with SingleRowModelAccess[Link]
+	extends UniqueLinkAccessLike[StoredLink, UniqueLinkAccess] with SingleRowModelAccess[StoredLink]
 {
 	// IMPLEMENTED	--------------------
 	

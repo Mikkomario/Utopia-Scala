@@ -12,7 +12,7 @@ import utopia.logos.database.access.many.url.path.DbRequestPaths
 import utopia.logos.database.storable.url.RequestPathDbModel
 import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.partial.url.{LinkData, RequestPathData}
-import utopia.logos.model.stored.url.{Domain, Link}
+import utopia.logos.model.stored.url.{Domain, StoredLink}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
@@ -50,7 +50,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView with ViewManyByInt
 					// Removes the / from domain, if present
 					val domainPart = link.slice(domainRange).notEndingWith("/")
 					val remainingPart = link.drop(domainRange.last + 1)
-					Link.paramPartRegex.firstRangeFrom(remainingPart) match {
+					StoredLink.paramPartRegex.firstRangeFrom(remainingPart) match {
 						// Case: Parameters are specified => Extracts them from the path
 						case Some(paramsRange) =>
 							val paramsPart = remainingPart.slice(paramsRange).drop(1)

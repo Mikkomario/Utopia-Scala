@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.logos.database.access.many.url.path.DbRequestPaths
 import utopia.logos.database.factory.url.LinkDbFactory
 import utopia.logos.model.combined.url.DetailedLink
-import utopia.logos.model.stored.url.Link
+import utopia.logos.model.stored.url.StoredLink
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
@@ -33,7 +33,7 @@ object ManyLinksAccess extends ViewFactory[ManyLinksAccess]
   * @author Mikko Hilpinen
   * @since 20.03.2024, v0.2
   */
-trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with ManyRowModelAccess[Link]
+trait ManyLinksAccess extends ManyLinksAccessLike[StoredLink, ManyLinksAccess] with ManyRowModelAccess[StoredLink]
 {
 	// COMPUTED	--------------------
 	

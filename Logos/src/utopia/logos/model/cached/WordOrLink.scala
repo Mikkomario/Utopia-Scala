@@ -2,7 +2,7 @@ package utopia.logos.model.cached
 
 import utopia.flow.util.Mutate
 
-object WordOrLinkText
+object WordOrLink
 {
 	/**
 	 * @param word A word
@@ -21,7 +21,7 @@ object WordOrLinkText
  * @author Mikko Hilpinen
  * @since 11/03/2024, v0.2
  */
-case class WordOrLinkText(text: String, isLink: Boolean)
+case class WordOrLink(text: String, isLink: Boolean)
 {
 	// COMPUTED ------------------------
 	
@@ -31,13 +31,18 @@ case class WordOrLinkText(text: String, isLink: Boolean)
 	def isWord = !isLink
 	
 	/**
-	 * @return This element as a word. None if this is a link.
+	 * @return This element as a word. Empty string if this is a link.
 	 */
-	def word = if (isWord) Some(text) else None
+	def word = if (isWord) text else ""
 	/**
-	 * @return This element as a link. None if this is a word.
+	 * @return This element as a link. Empty string if this is a word.
 	 */
-	def link = if (isLink) Some(text) else None
+	def link = if (isLink) text else ""
+	
+	/**
+	  * @return Either Left: a word or Right: a link
+	  */
+	def toEither = if (isLink) Right(text) else Left(text)
 	
 	
 	// IMPLEMENTED  --------------------

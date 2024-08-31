@@ -2,7 +2,7 @@ package utopia.logos.database.access.single.text.word
 
 import utopia.logos.database.factory.text.WordDbFactory
 import utopia.logos.database.storable.text.WordDbModel
-import utopia.logos.model.stored.text.Word
+import utopia.logos.model.stored.text.StoredWord
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
@@ -14,7 +14,7 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-object DbWord extends SingleRowModelAccess[Word] with UnconditionalView with Indexed
+object DbWord extends SingleRowModelAccess[StoredWord] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
 	

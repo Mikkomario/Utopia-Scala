@@ -1,7 +1,7 @@
 package utopia.logos.database.factory.word
 
 import utopia.logos.database.factory.text.StatementDbFactory
-import utopia.logos.model.stored.text.Statement
+import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.nosql.factory.row.linked.CombiningFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 
@@ -14,7 +14,7 @@ import utopia.vault.nosql.factory.row.model.FromRowModelFactory
  * @since 16/03/2024, v1.0
  */
 @deprecated("Replaced with PlacedStatementDbFactoryLike", "v0.3")
-trait LinkedStatementDbFactoryLike[+Combined, Link] extends CombiningFactory[Combined, Statement, Link]
+trait LinkedStatementDbFactoryLike[+Combined, Link] extends CombiningFactory[Combined, StoredStatement, Link]
 {
-	override def parentFactory: FromRowModelFactory[Statement] = StatementDbFactory
+	override def parentFactory: FromRowModelFactory[StoredStatement] = StatementDbFactory
 }
