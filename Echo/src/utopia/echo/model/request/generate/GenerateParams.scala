@@ -2,6 +2,7 @@ package utopia.echo.model.request.generate
 
 import utopia.echo.model.LlmDesignator
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.request.RequestParams
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
@@ -23,7 +24,8 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   */
 case class GenerateParams(query: Query, options: Map[ModelParameter, Value] = Map(),
                           conversationContext: Value = Value.empty, deprecationView: View[Boolean] = AlwaysFalse)
-                         (implicit val llm: LlmDesignator)
+                         (implicit override val llm: LlmDesignator)
+	extends RequestParams[GenerateParams]
 {
 	// COMPUTED -------------------------
 	
@@ -34,17 +36,16 @@ case class GenerateParams(query: Query, options: Map[ModelParameter, Value] = Ma
 	def toRequest = Generate(this)
 	
 	/**
-	  * @return Copy of these parameters with no options / parameters assigned
-	  */
-	def withoutOptions = copy(options = Map())
-	/**
 	  * @return Copy of these parameters without conversation context included
 	  */
 	def withoutContext = withContext(Value.empty)
-	/**
-	  * @return Copy of these parameters with no deprecation condition
-	  */
-	def neverDeprecating = withDeprecationView(AlwaysFalse)
+	
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def toLlm(llm: LlmDesignator) = copy()(llm = llm)
+	override def withOptions(options: Map[ModelParameter, Value]): GenerateParams = copy(options = options)
+	override def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
 	
 	
 	// OTHER    -------------------------
@@ -54,44 +55,10 @@ case class GenerateParams(query: Query, options: Map[ModelParameter, Value] = Ma
 	  * @return Copy of these parameters with the specified context
 	  */
 	def withContext(context: Value) = copy(conversationContext = context)
-	/**
-	  * @param condition A view which contains true once or if this request deprecates.
-	  *                  Deprecations are only applied until this request is sent.
-	  * @return Copy of these parameters with the specified deprecation condition
-	  */
-	def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
-	/**
-	  * @param condition A call-by-name function used for testing whether this request is deprecated.
-	  *                  Deprecations are only applied until this request is sent.
-	  * @return Copy of these parameters with the specified deprecation condition
-	  */
-	def withDeprecationCondition(condition: => Boolean) = withDeprecationView(View(condition))
-	/**
-	  * @param llm Targeted LLM
-	  * @return Copy of these parameters with the specified LLM assigned as the target
-	  */
-	def toLlm(llm: LlmDesignator) = copy()(llm = llm)
 	
 	/**
 	  * @param f A mapping function for the wrapped query
 	  * @return Copy of these parameters with a mapped query
 	  */
 	def mapQuery(f: Mutate[Query]) = copy(query = f(query))
-	/**
-	  * @param f A mapping function for the applied parameters / options
-	  * @return Copy of these parameters with mapped parameters
-	  */
-	def mapOption(f: Mutate[Map[ModelParameter, Value]]) = copy(options = f(options))
-	
-	/**
-	  * @param parameter Parameter to assign
-	  * @param value Value assigned to the specified parameter
-	  * @return Copy of these parameters with the specified value assigned
-	  */
-	def withOption(parameter: ModelParameter, value: Value) = mapOption { _ + (parameter -> value) }
-	/**
-	  * @param parameter A parameter value pair to assign
-	  * @return Copy of these parameters with the specified parameter assigned
-	  */
-	def +(parameter: (ModelParameter, Value)) = mapOption { _ + parameter }
 }

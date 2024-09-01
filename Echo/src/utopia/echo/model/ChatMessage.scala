@@ -3,6 +3,8 @@ package utopia.echo.model
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.request.CanAttachImages
+import utopia.echo.model.request.chat.ChatParams
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
@@ -17,8 +19,12 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	// IMPLEMENTED  ----------------------
 	
 	override def apply(model: ModelLike[Property]): Try[ChatMessage] =
-		model("role").tryString.flatMap(ChatRole.forName).map { role =>
-			apply(model("content", "text").getString, role, model("images").getVector.flatMap { _.string })
+		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
+			model("tool_calls").getVector.tryMap { v => ToolCall(v.getModel) }.map { toolCalls =>
+				apply(
+					model("content", "text").getString, role,
+					model("images").getVector.flatMap { _.string }, toolCalls)
+			}
 		}
 		
 	
@@ -33,7 +39,8 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	def parseFrom(model: AnyModel, defaultRole: => ChatRole) =
 		apply(model("content", "text").getString,
 			model("role").string.flatMap(ChatRole.findForName).getOrElse(defaultRole),
-			model("images").getVector.flatMap { _.string })
+			model("images").getVector.flatMap { _.string },
+			model("tool_calls").getVector.flatMap { v => v.model.flatMap { ToolCall(_).toOption } })
 }
 
 /**
@@ -45,13 +52,24 @@ object ChatMessage extends FromModelFactory[ChatMessage]
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages: Seq[String] = Empty)
+case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages: Seq[String] = Empty,
+                       toolCalls: Seq[ToolCall] = Empty)
 	extends ModelConvertible with CanAttachImages[ChatMessage]
 {
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @param llm Targeted LLM
+	  * @return Request parameters for sending out this message
+	  */
+	def toRequestParams(implicit llm: LlmDesignator) = ChatParams(this)
+	
+	
 	// IMPLEMENTED  ------------------------
 	
 	override def toModel: Model =
-		Model.from("role" -> senderRole.name, "content" -> text, "images" -> encodedImages).withoutEmptyValues
+		Model.from("role" -> senderRole.name, "content" -> text, "images" -> encodedImages, "tool_calls" -> toolCalls)
+			.withoutEmptyValues
 	
 	override def attachImages(base64EncodedImages: Seq[String]): ChatMessage =
 		copy(encodedImages = encodedImages ++ base64EncodedImages)

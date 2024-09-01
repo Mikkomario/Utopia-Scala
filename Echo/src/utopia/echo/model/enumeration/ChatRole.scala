@@ -31,7 +31,7 @@ object ChatRole
 	/**
 	  * All chat roles
 	  */
-	val values = Vector[ChatRole](User, System, Assistant)
+	val values = Vector[ChatRole](User, System, Assistant, Tool)
 	
 	
 	// OTHER    -----------------------
@@ -76,5 +76,14 @@ object ChatRole
 	{
 		override val name: String = "assistant"
 		override def opposite = User
+	}
+	
+	/**
+	  * Role representing additional tools provided for the LLM
+	  */
+	case object Tool extends ChatRole
+	{
+		override def name: String = "tool"
+		override def opposite: ChatRole = Assistant
 	}
 }

@@ -1,14 +1,20 @@
 # Utopia Echo - List of Changes
 
 ## v1.1 (in development)
-TODO: Document options support
 ### Breaking changes
-- Refactored how **Generate** requests are constructed. 
-  - The current implementation is largely based on **GenerateParams**.
+- Refactored how requests are constructed
+  - The current implementation is largely based on **GenerateParams** and **ChatParams**
+- Renamed **Chat** to **ChatRequest**
+  - Also renamed the subclasses accordingly
 - Streaming-based requests, as well as instances of **StreamedOllamaResponseParser** 
   now require an implicit **Logger** construction parameter
   - This was added in order to manage errors within the managed pointers 
     (possibly introduced via external change event listeners)
+### Bugfixes
+- Added the missing `model` parameter to the chat requests
+### New features
+- Requests now support custom options (e.g. changing the temperature or context size)
+- Chat requests now support tools
 ### New methods
 - **Prompt**
   - Added various `.toQuery` functions

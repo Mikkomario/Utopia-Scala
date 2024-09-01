@@ -6,6 +6,7 @@ import utopia.echo.model.request.RetractableRequestFactory
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.View
 
+@deprecated("Deprecated for removal", "v1.1")
 object ChatRequestFactory
 {
 	// OTHER    --------------------------
@@ -57,6 +58,7 @@ object ChatRequestFactory
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
+@deprecated("Deprecated for removal", "v1.1")
 trait ChatRequestFactory[+A] extends RetractableRequestFactory[ChatRequestFactory[A]]
 {
 	// ABSTRACT --------------------------

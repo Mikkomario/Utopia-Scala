@@ -7,34 +7,13 @@ import utopia.disciple.http.request.Body
 import utopia.echo.model.ChatMessage
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.logging.Logger
-
-import scala.concurrent.ExecutionContext
-
-object Chat
-{
-	/**
-	  * @return Factory for creating chat requests which use buffering in response-parsing
-	  */
-	def buffered = BufferedChat.factory
-	/**
-	  * @param exc Implicit execution context used in asynchronous response-parsing
-	  * @param jsonParser Implicit json parser used
-	  * @return Factory for creating chat requests which use streamed response-parsing
-	  */
-	def streamed(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
-		StreamedChat.factory
-}
 
 /**
   * Common trait for chat requests, which are used for conversing with LLMs
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-// FIXME: This is missing the model parameter
-// TODO: Also add support for options
-// TODO: Also add support for the new tools feature
+@deprecated("Deprecated for removal. Replaced with ChatRequest", "v1.1")
 trait Chat[+R] extends ApiRequest[R]
 {
 	// ABSTRACT -----------------------------
