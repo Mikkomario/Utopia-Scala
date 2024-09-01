@@ -17,6 +17,8 @@ import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.window.ReachWindow
 
+import scala.util.Random
+
 /**
   * Tests selection list class
   * @author Mikko Hilpinen
@@ -69,6 +71,8 @@ object SelectionListTest extends App
 	// Changes content based on digit key-presses
 	KeyboardEvents += KeyTypedListener.unconditional { event =>
 		event.digit.foreach { i => contentPointer.value = (1 to i).toVector }
+		if (event.typedChar == ' ')
+			contentPointer.update { Random.shuffle(_) }
 	}
 	
 	contentPointer.addListener { e => println(s"Content: $e") }
