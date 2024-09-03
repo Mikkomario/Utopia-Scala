@@ -3,9 +3,9 @@ package utopia.vault.util
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.util.DatabaseActionQueue.Action
 
@@ -41,7 +41,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val queue = VolatileList[Action[_]]()
+	private val queue = Volatile.seq[Action[_]]()
 	
 	
 	// OTHER    ----------------------------

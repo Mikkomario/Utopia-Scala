@@ -13,8 +13,8 @@ import utopia.flow.util.Mutate
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.generic.ParadigmDataType.CircleType
 import utopia.paradigm.generic.ParadigmValue._
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
-import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -321,7 +321,7 @@ case class Circle(origin: Point = Point.origin, radius: Double)
 	/**
 	  * Checks whether the circle contains the provided rectangle
 	  */
-	def contains(poly: Polygonic): Boolean = poly.corners.forall { contains(_) }
+	def contains(poly: Polygon): Boolean = poly.corners.forall { contains(_) }
 	
 	/**
 	  * Checks whether the other circle is contained within this circle's area
