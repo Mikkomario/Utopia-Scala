@@ -108,17 +108,4 @@ class StreamedReply(val textPointer: Changing[String], val newTextPointer: Chang
 		case Some(result) => Final(result.flatten.isSuccess)
 		case None => PositiveFlux
 	}
-	
-	
-	// OTHER    ------------------------------
-	
-	/**
-	 * Prints all of this reply that has been read so far, and continues appending the text as additions are received.
-	 * This method does not block during this printing process.
-	 * @param f A mapping function applied to each printed string before printing it. Default = identity.
-	 */
-	def printAsReceived(f: Mutate[String] = Identity) = {
-		println(f(textPointer.value))
-		newTextPointer.addContinuousListener { e => print(f(e.newValue)) }
-	}
 }

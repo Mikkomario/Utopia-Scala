@@ -1,5 +1,6 @@
 package utopia.echo.model.enumeration
 
+import utopia.echo.model.ChatMessage
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
@@ -28,6 +29,15 @@ sealed trait ChatRole
 	  *         If this role is System, returns self.
 	  */
 	def opposite: ChatRole
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	 * @param message Message to write in the name of this role
+	 * @return A message from this role with the specified message
+	 */
+	def apply(message: String) = ChatMessage(message, senderRole = this)
 }
 
 object ChatRole

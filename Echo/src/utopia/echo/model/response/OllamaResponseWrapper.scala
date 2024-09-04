@@ -28,6 +28,7 @@ trait OllamaResponseWrapper[+Buffered] extends OllamaResponse[Buffered]
 	
 	override def text: String = wrapped.text
 	override def textPointer: Changing[String] = wrapped.textPointer
+	override def newTextPointer: Changing[String] = wrapped.newTextPointer
 	
 	override def lastUpdated: Instant = wrapped.lastUpdated
 	override def lastUpdatedPointer: Changing[Instant] = wrapped.lastUpdatedPointer

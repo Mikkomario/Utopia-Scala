@@ -25,6 +25,7 @@
   - Renamed **FlagLike** to **Flag** and **Flag** to **SettableFlag**
   - **ResettableFlag** now requires the implementation of `value_=(...)` instead of `set()` and `reset()`
 - **Resettable** is now required to implement `isSet: Boolean`
+- `StdIn.selectFrom(...)` doesn't print "Found X items" anymore
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)

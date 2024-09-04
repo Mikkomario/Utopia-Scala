@@ -1,6 +1,8 @@
 package utopia.echo.model.response
 
 import utopia.annex.model.manifest.HasSchrodingerState
+import utopia.flow.operator.Identity
+import utopia.flow.util.Mutate
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
@@ -38,6 +40,10 @@ trait OllamaResponse[+Buffered] extends HasSchrodingerState
 	  * @return A pointer which contains the currently built response text
 	  */
 	def textPointer: Changing[String]
+	/**
+	 * @return A pointer which contains the latest read reply message addition.
+	 */
+	def newTextPointer: Changing[String]
 	
 	/**
 	  * @return Time when the latest version of this response was originated.
@@ -47,4 +53,18 @@ trait OllamaResponse[+Buffered] extends HasSchrodingerState
 	  * @return A pointer which contains the origination time of the latest version of this response's contents.
 	  */
 	def lastUpdatedPointer: Changing[Instant]
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	 * Prints all of this reply that has been read so far, and continues appending the text as additions are received.
+	 * This method does not block during this printing process.
+	 * @param f A mapping function applied to each printed string before printing it. Default = identity.
+	 */
+	def printAsReceived(f: Mutate[String] = Identity) = {
+		println()
+		print(f(textPointer.value))
+		newTextPointer.addContinuousListener { e => print(f(e.newValue)) }
+	}
 }

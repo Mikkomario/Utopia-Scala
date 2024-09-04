@@ -50,6 +50,7 @@ case class BufferedReply(text: String, statistics: ResponseStatistics, lastUpdat
 	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
 	
 	override def textPointer: Changing[String] = Fixed(text)
+	override def newTextPointer: Changing[String] = Fixed(text)
 	override def lastUpdatedPointer: Changing[Instant] = Fixed(lastUpdated)
 	
 	override def state = Alive

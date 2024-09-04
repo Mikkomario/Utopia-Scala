@@ -47,6 +47,7 @@ case class BufferedReplyMessage(message: ChatMessage, statistics: ResponseStatis
 	
 	override def text: String = message.text
 	override def textPointer: Changing[String] = Fixed(text)
+	override def newTextPointer: Changing[String] = Fixed(text)
 	
 	override def senderRole: ChatRole = message.senderRole
 	

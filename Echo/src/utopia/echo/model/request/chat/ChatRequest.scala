@@ -79,8 +79,6 @@ trait ChatRequest[+R] extends OllamaRequest[R]
 	
 	override def deprecated: Boolean = params.deprecationView.value
 	
-	override def customProperties: Seq[Constant] = Pair(
-		Constant("messages", params.conversationHistory :+ params.message),
-		Constant("tools", params.tools)
-	)
+	override def customProperties: Seq[Constant] =
+		Pair(Constant("messages", params.messages), Constant("tools", params.tools))
 }

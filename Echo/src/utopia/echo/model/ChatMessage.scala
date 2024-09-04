@@ -11,6 +11,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.util.NotEmpty
 
 import scala.util.Try
 
@@ -73,7 +74,16 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 	
 	override def attachImages(base64EncodedImages: Seq[String]): ChatMessage =
 		copy(encodedImages = encodedImages ++ base64EncodedImages)
-		
+	
+	override def toString = {
+		val toolsStr = NotEmpty(toolCalls) match {
+			case Some(calls) => s" calling ${ calls.mkString(" & ") }"
+			case None => ""
+		}
+		val imagesStr = if (encodedImages.nonEmpty) s" with ${ encodedImages.size } images" else ""
+		s"$senderRole: $text$imagesStr$toolsStr"
+	}
+	
 	
 	// OTHER    ----------------------------
 	

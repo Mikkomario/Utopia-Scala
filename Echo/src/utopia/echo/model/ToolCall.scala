@@ -33,4 +33,6 @@ case class ToolCall(name: String, args: Model = Model.empty) extends ModelConver
 		"name" -> name,
 		"arguments" -> args
 	))
+	
+	override def toString = s"$name(${ args.properties.view.map { c => s"${c.name} = ${c.value}" }.mkString(", ") })"
 }

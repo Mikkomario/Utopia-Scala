@@ -38,8 +38,15 @@ object LlmDesignator
   */
 trait LlmDesignator
 {
+	// ABSTRACT -----------------------
+	
 	/**
 	 * @return Name of the designated / targeted LLM
 	 */
 	def llmName: String
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def toString = llmName
 }

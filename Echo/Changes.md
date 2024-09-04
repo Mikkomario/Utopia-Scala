@@ -34,6 +34,7 @@
   - Added `.printAsReceived(...)`
 ### Other changes
 - Built with Scala v2.13.14
+- Added some toString implementations
 
 ## v1.0 - 28.07.2024
 Initial version. See README for more details.

@@ -326,9 +326,9 @@ object ConsoleExtensions
 						
 				// Case: Multiple options to choose from => Asks the user to filter or to select one
 				case Some(Right(options)) =>
-					println(s"Found ${options.size} $target")
 					val tooMany = options.hasSize > maxListCount
 					if (tooMany) {
+						println(s"There are ${options.size} $target to $verb from")
 						println("Please narrow the selection by specifying an additional filter (empty cancels)")
 						if (addNew.isDefined)
 							println("Hint: you can also add a new item by typing \"new\"")
