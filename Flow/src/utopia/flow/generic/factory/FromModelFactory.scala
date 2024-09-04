@@ -1,8 +1,9 @@
 package utopia.flow.generic.factory
 
 import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 
+import java.nio.file.Path
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -53,6 +54,16 @@ trait FromModelFactory[+A]
 	
 	@deprecated("Please use fromJson instead", "< v2.3")
 	def fromJSON(json: String) = JsonReader(json).map(v => apply(v.getModel)).flatten
+	
+	/**
+	 * Parses the contents of a json file.
+	 * Assumes that the file contains a single json object.
+	 * @param jsonFilePath Path to the json file to parse
+	 * @param jsonParser Implicit json parser used
+	 * @return Parsed instance. Failure if parsing or file-reading failed.
+	 */
+	def fromPath(jsonFilePath: Path)(implicit jsonParser: JsonParser) =
+		jsonParser(jsonFilePath).flatMap { _.tryModel.flatMap(apply) }
 	
 	/**
 	  * @param f A mapping function for parse results

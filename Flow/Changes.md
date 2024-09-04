@@ -49,6 +49,8 @@
     often useful when dealing with user (console) input
 - **CopyOnDemand** (object)
   - Added a new function-based constructor
+- **FromModelFactory**
+  - Added `.fromPath(Path)`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.toOptimizedSeq`
   - Added `.toTryCatch` for collections that contain instances of **TryCatch**
