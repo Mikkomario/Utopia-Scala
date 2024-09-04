@@ -55,7 +55,7 @@ trait OllamaRequest[+R] extends ApiRequest[R]
 	
 	override def body: Either[Value, Body] = {
 		val baseModel = Model.from(
-			"model" -> llm.name,
+			"model" -> llm.llmName,
 			"stream" -> stream,
 			"options" -> optionsModel.notEmpty)
 		Left((baseModel ++ customProperties).withoutEmptyValues)

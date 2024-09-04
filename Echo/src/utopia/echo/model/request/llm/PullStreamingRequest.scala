@@ -74,7 +74,7 @@ class PullStreamingRequest(deprecationView: View[Boolean] = AlwaysFalse)
 	override def method: Method = Post
 	override def path: String = "pull"
 	
-	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.name, "stream" -> true))
+	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> true))
 	override def deprecated: Boolean = deprecationView.value
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedPullStatus]] =

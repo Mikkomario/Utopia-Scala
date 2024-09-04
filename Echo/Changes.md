@@ -10,6 +10,9 @@
   now require an implicit **Logger** construction parameter
   - This was added in order to manage errors within the managed pointers 
     (possibly introduced via external change event listeners)
+- **LlmDesignator** is now a trait instead of a case class
+- Renamed **LlmDesignator**'s `name` to `llmName`
+- Modified **StreamedOllamaResponseParser** trait (only affects custom response-parsers)
 ### Bugfixes
 - Added the missing `model` parameter to the chat requests
 ### New features
@@ -17,6 +20,7 @@
 - Chat requests now support tools
 - Added a request for listing locally available models (**ListModelRequest**)
 - Added requests for pulling model data (**PullStreamingRequest** & **PullWithoutStatusRequest**)
+- Streamed requests (**StreamedReply** and **StreamedReplyMessage**) now contain property `newTextPointer`
 - Added **StreamedResponseParser** which makes creating Ollama-compatible response-parsers easier 
   (in case you need to add your own)
 ### New methods
@@ -26,6 +30,8 @@
   - Added various `.toQuery` functions
 - **Query**
   - Added `.toRequestParams`
+- **StreamedReply**
+  - Added `.printAsReceived(...)`
 ### Other changes
 - Built with Scala v2.13.14
 

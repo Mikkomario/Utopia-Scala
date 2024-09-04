@@ -8,6 +8,7 @@ import utopia.flow.time.Now
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.view.template.Extender
 
 import java.time.Instant
 
@@ -38,7 +39,7 @@ object GeneralOllamaModelInfo extends FromModelFactoryWithSchema[GeneralOllamaMo
  */
 case class GeneralOllamaModelInfo(name: String, sizeBytes: Long, digest: String, details: OllamaModelDetails,
                                   lastModified: Instant = Now)
-	extends ModelConvertible
+	extends Extender[OllamaModelDetails] with ModelConvertible
 {
 	// COMPUTED --------------------------
 	
@@ -49,6 +50,8 @@ case class GeneralOllamaModelInfo(name: String, sizeBytes: Long, digest: String,
 	
 	
 	// IMPLEMENTED  ----------------------
+	
+	override def wrapped: OllamaModelDetails = details
 	
 	override def toModel: Model = Model.from("name" -> name, "size" -> sizeBytes, "digest" -> digest,
 		"modified_at" -> lastModified, "details" -> details)

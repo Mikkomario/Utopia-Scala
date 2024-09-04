@@ -29,12 +29,14 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedRespo
 	
 	/**
 	  * @param textPointer Pointer that will contain all response text (built incrementally)
-	  * @param lastUpdatedPointer Pointer that contains the origin time of the latest response update
+	  * @param newTextPointer A pointer that contains the latest addition to the response text
+	 * @param lastUpdatedPointer Pointer that contains the origin time of the latest response update
 	  * @param statisticsFuture Future that eventually resolves into statistics concerning this response,
 	  *                         or to a failure if response or json processing fails.
 	  * @return Completed streamed response instance
 	  */
-	protected def responseFrom(textPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
+	protected def responseFrom(textPointer: Changing[String], newTextPointer: Changing[String],
+	                           lastUpdatedPointer: Changing[Instant],
 	                           statisticsFuture: Future[Try[ResponseStatistics]]): A
 	
 	
@@ -54,7 +56,8 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedRespo
 		
 		// Prepares a pointer to store the read reply text
 		// TODO: May need Volatile features here
-		private val textPointer = new LockablePointer[String]("")
+		private val newTextPointer = LockablePointer("")
+		private val textPointer = LockablePointer("")
 		private val lastUpdatedPointer = new LockablePointer[Instant](Now)
 		
 		
@@ -62,6 +65,7 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedRespo
 		
 		override def updateStatus(response: Model): Unit = {
 			val newText = textFromResponse(response)
+			newTextPointer.value = textFromResponse(response)
 			// Appends the read text to the text pointer
 			textPointer.update { _ + newText }
 			lastUpdatedPointer.value = response("created_at").getInstant
@@ -73,11 +77,13 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedRespo
 		
 		override def finish(): Unit = {
 			// Locks the pointers - There shall not be any updates afterwards
+			newTextPointer.lock()
 			textPointer.lock()
 			lastUpdatedPointer.lock()
 		}
 		
 		override def responseFrom(future: Future[Try[ResponseStatistics]]): A =
-			StreamedOllamaResponseParser.this.responseFrom(textPointer.readOnly, lastUpdatedPointer.readOnly, future)
+			StreamedOllamaResponseParser.this.responseFrom(textPointer.readOnly, newTextPointer.readOnly,
+				lastUpdatedPointer.readOnly, future)
 	}
 }

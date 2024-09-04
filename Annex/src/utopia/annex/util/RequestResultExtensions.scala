@@ -1,7 +1,7 @@
 package utopia.annex.util
 
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
-import utopia.annex.model.response.RequestResult
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 
@@ -60,6 +60,17 @@ object RequestResultExtensions
 		  */
 		def tryMapSuccess[B](f: A => Try[B])(implicit exc: ExecutionContext) =
 			this.f.map { _.toTry.flatMap(f) }
+		/**
+		 * Maps the response body value, if successful, once it resolves.
+		 * The results are collapsed into a Try.
+		 * @param f A mapping function applied to a successfully acquired body value.
+		 *          Yields a future. May yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A mapped copy of this future, containing a Try instead of a RequestResult.
+		 */
+		def tryFlatMapSuccess[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
+			this.f.flatMap { _.toTry.map(f).flattenToFuture }
 	}
 	
 	implicit class AsyncRequestMultiResult[+A](val f: Future[RequestResult[Seq[A]]]) extends AnyVal

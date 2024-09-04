@@ -5,10 +5,10 @@ import utopia.disciple.http.response.{Response, StreamedResponse}
 import utopia.flow.async.context.CloseHook
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableOnce
 
 import java.time.Instant
@@ -58,7 +58,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 	private lazy val withSecondsFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 	private lazy val secondsFormat = DateTimeFormatter.ofPattern("ss")
 	
-	private val queue = VolatileList[(Request, SettableOnce[(Try[Response], Instant)], Instant)]()
+	private val queue = Volatile.seq[(Request, SettableOnce[(Try[Response], Instant)], Instant)]()
 	
 	
 	// INITIAL CODE ----------------------------

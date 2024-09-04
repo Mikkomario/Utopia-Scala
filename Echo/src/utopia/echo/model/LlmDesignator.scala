@@ -15,6 +15,20 @@ object LlmDesignator
 	// IMPLICIT ---------------------
 	
 	implicit def designateWithName(name: String): LlmDesignator = apply(name)
+	
+	
+	// OTHER    ---------------------
+	
+	/**
+	 * @param llmName Name of the targeted LLM
+	 * @return An LLM designator targeting that LLM
+	 */
+	def apply(llmName: String): LlmDesignator = _LlmDesignator(llmName)
+	
+	
+	// NESTED   ---------------------
+	
+	private case class _LlmDesignator(llmName: String) extends LlmDesignator
 }
 
 /**
@@ -22,4 +36,10 @@ object LlmDesignator
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-case class LlmDesignator(name: String)
+trait LlmDesignator
+{
+	/**
+	 * @return Name of the designated / targeted LLM
+	 */
+	def llmName: String
+}

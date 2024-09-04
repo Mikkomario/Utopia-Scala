@@ -61,7 +61,7 @@ class PullWithoutStatusRequest(deprecationView: View[Boolean] = AlwaysFalse)(imp
 	
 	override def method: Method = Post
 	override def path: String = "pull"
-	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.name, "stream" -> false))
+	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> false))
 	
 	override def deprecated: Boolean = deprecationView.value
 	

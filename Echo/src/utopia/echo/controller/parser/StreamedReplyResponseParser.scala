@@ -28,7 +28,8 @@ class StreamedReplyResponseParser(implicit override val exc: ExecutionContext, o
 	
 	override protected def textFromResponse(response: Model): String = response("response").getString
 	
-	override protected def responseFrom(textPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
+	override protected def responseFrom(textPointer: Changing[String], newTextPointer: Changing[String],
+	                                    lastUpdatedPointer: Changing[Instant],
 	                                    statisticsFuture: Future[Try[ResponseStatistics]]): StreamedReply =
-		StreamedReply(textPointer, lastUpdatedPointer, statisticsFuture)
+		StreamedReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture)
 }

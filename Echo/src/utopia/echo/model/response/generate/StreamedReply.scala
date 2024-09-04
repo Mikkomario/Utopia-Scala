@@ -4,7 +4,9 @@ import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
 import utopia.echo.model.response.ResponseStatistics
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.operator.Identity
 import utopia.flow.time.Now
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -53,21 +55,23 @@ object StreamedReply
 	  */
 	def completed(statistics: Try[ResponseStatistics], text: String = "", lastUpdated: Instant = Now)
 	             (implicit exc: ExecutionContext) =
-		apply(Fixed(text), Fixed(lastUpdated), Future.successful(statistics))
+		apply(Fixed(text), Fixed(text), Fixed(lastUpdated), Future.successful(statistics))
 	
 	/**
 	  * Creates a new streamed reply
 	  * @param textPointer Pointer that contains the latest version of this reply's text contents
-	  * @param lastUpdatedPointer Pointer that contains the origin time of the latest version of this reply
+	 * @param newTextPointer A pointer which contains the latest read reply message addition.
+	 *                       Will stop changing once this reply has been fully read.
+	 * @param lastUpdatedPointer Pointer that contains the origin time of the latest version of this reply
 	  * @param statisticsFuture A future that resolves into reply statistics or a failure once
 	  *                         reply reading / parsing has completed or failed.
 	  * @param exc Implicit execution context
 	  * @return A new streamed reply
 	  */
-	def apply(textPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
+	def apply(textPointer: Changing[String], newTextPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
 	          statisticsFuture: Future[Try[ResponseStatistics]])
 	         (implicit exc: ExecutionContext) =
-		new StreamedReply(textPointer, lastUpdatedPointer, statisticsFuture)
+		new StreamedReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture)
 }
 
 /**
@@ -76,13 +80,16 @@ object StreamedReply
   * @since 18.07.2024, v1.0
   * @param textPointer A pointer which contains the reply message as text.
   *                    Will stop changing once this reply has been fully generated / read.
-  * @param lastUpdatedPointer A pointer which contains origin time of the latest version of text in this reply
+  * @param newTextPointer A pointer which contains the latest read reply message addition.
+ *                       Will stop changing once this reply has been fully read.
+ * @param lastUpdatedPointer A pointer which contains origin time of the latest version of text in this reply
   * @param statisticsFuture A future that resolves into statistics about this response,
   *                         once this response has been fully generated.
   *                         Will contain a failure if reply parsing failed.
   */
-class StreamedReply(val textPointer: Changing[String], val lastUpdatedPointer: Changing[Instant],
-                    val statisticsFuture: Future[Try[ResponseStatistics]])
+// TODO: Add a common trait between this class and StreamedReplyMessage
+class StreamedReply(val textPointer: Changing[String], val newTextPointer: Changing[String],
+                    val lastUpdatedPointer: Changing[Instant], val statisticsFuture: Future[Try[ResponseStatistics]])
                    (implicit exc: ExecutionContext)
 	extends Reply
 {
@@ -92,7 +99,7 @@ class StreamedReply(val textPointer: Changing[String], val lastUpdatedPointer: C
 		statisticsFuture.mapIfSuccess { statistics => BufferedReply(text, statistics, lastUpdated) }
 	
 	
-	// COMPUTED ------------------------------
+	// IMPLEMENTED ---------------------------
 	
 	override def text: String = textPointer.value
 	override def lastUpdated: Instant = lastUpdatedPointer.value
@@ -100,5 +107,18 @@ class StreamedReply(val textPointer: Changing[String], val lastUpdatedPointer: C
 	override def state: SchrodingerState = statisticsFuture.currentResult match {
 		case Some(result) => Final(result.flatten.isSuccess)
 		case None => PositiveFlux
+	}
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	 * Prints all of this reply that has been read so far, and continues appending the text as additions are received.
+	 * This method does not block during this printing process.
+	 * @param f A mapping function applied to each printed string before printing it. Default = identity.
+	 */
+	def printAsReceived(f: Mutate[String] = Identity) = {
+		println(f(textPointer.value))
+		newTextPointer.addContinuousListener { e => print(f(e.newValue)) }
 	}
 }
