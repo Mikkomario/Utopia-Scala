@@ -1,24 +1,14 @@
 package utopia.echo.controller.parser
 
-import utopia.access.http.{Headers, Status}
-import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
-import utopia.echo.controller.EchoContext
 import utopia.echo.model.response.{OllamaResponse, ResponseStatistics}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.IterateLines
 import utopia.flow.time.Now
-import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.Changing
 
-import java.io.InputStream
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future}
-import scala.io.Codec
-import scala.util.{Success, Try}
+import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * A response parser which parses LLM replies from a streamed json response.
@@ -27,27 +17,9 @@ import scala.util.{Success, Try}
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends ResponseParser[A]
+trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedResponseParser[A, ResponseStatistics]
 {
 	// ABSTRACT ---------------------------
-	
-	/**
-	  * @return Implicit execution context used in asynchronous parsing
-	  */
-	protected implicit def exc: ExecutionContext
-	/**
-	  * @return Json parser used
-	  */
-	protected implicit def jsonParser: JsonParser
-	/**
-	  * @return Implicit logging implementation used
-	  */
-	protected implicit def log: Logger
-	
-	/**
-	  * @return Response returned when no response body is read
-	  */
-	protected def emptyResponse: A
 	
 	/**
 	  * @param response Response model to read
@@ -66,67 +38,46 @@ trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends ResponseParse
 	                           statisticsFuture: Future[Try[ResponseStatistics]]): A
 	
 	
-	// COMPUTED   -------------------------
-	
-	private implicit def codec: Codec = Codec.UTF8
-	
-	/**
-	  * Copy of this parser which processes the replies into full responses,
-	  * handling failures & failure responses, also.
-	  */
-	def toResponse =
-		toRight(ResponseParser.string.map { _.getOrMap { _.getMessage } })
-			.mapToResponseOrFail { _.wrapped.mapLeft { EchoContext.parseFailureStatus -> _ } } {
-				_.leftOrMap { _.textPointer.value } }
-	
-	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(status: Status, headers: Headers, stream: Option[InputStream]) = {
-		stream match {
-			// Case: Streamed response => Starts parsing the stream json contents
-			case Some(stream) =>
-				// Prepares a pointer to store the read reply text
-				// TODO: May need Volatile features here
-				val textPointer = new LockablePointer[String]("")
-				val lastUpdatedPointer = new LockablePointer[Instant](Now)
-				
-				// Starts reading the stream asynchronously
-				val statisticsFuture = Future {
-					// Reads one line at a time. Expects each line to contain a json object.
-					val result = IterateLines
-						.fromStream(stream) { linesIter =>
-							// Stores the latest read line / model for the final result -parsing
-							var lastResult: Try[Model] = Success(Model.empty)
-							// Parses each line to a model
-							linesIter.map { line => jsonParser(line).flatMap { _.tryModel } }.foreach { parseResult =>
-								lastResult = parseResult
-								// From successful parsings, acquires the response text and the last update time value
-								parseResult.foreach { responseModel =>
-									val newText = textFromResponse(responseModel)
-									// Appends the read text to the text pointer
-									textPointer.update { _ + newText }
-									lastUpdatedPointer.value = responseModel("created_at").getInstant
-								}
-							}
-							// Converts the last read model into response statistics, if possible
-							lastResult.map(ResponseStatistics.fromOllamaResponse)
-						}
-						.flatten
-					
-					// Locks the pointers - There shall not be any updates afterwards
-					textPointer.lock()
-					lastUpdatedPointer.lock()
-					
-					result
-				}
-				
-				// Returns the acquired reply (building)
-				ResponseParseResult(responseFrom(textPointer.readOnly, lastUpdatedPointer.readOnly, statisticsFuture),
-					statisticsFuture)
-				
-			// Case: Empty response => Returns an empty reply
-			case None => ResponseParseResult.buffered(emptyResponse)
+	override protected def newParser: SingleStreamedResponseParser[A, ResponseStatistics] =
+		new SingleOllamaResponseParser
+	
+	override protected def failureMessageFrom(response: A): String = response.text
+	
+	
+	// NESTED   ------------------------
+	
+	private class SingleOllamaResponseParser extends SingleStreamedResponseParser[A, ResponseStatistics]
+	{
+		// ATTRIBUTES   ----------------
+		
+		// Prepares a pointer to store the read reply text
+		// TODO: May need Volatile features here
+		private val textPointer = new LockablePointer[String]("")
+		private val lastUpdatedPointer = new LockablePointer[Instant](Now)
+		
+		
+		// IMPLEMENTED  ----------------
+		
+		override def updateStatus(response: Model): Unit = {
+			val newText = textFromResponse(response)
+			// Appends the read text to the text pointer
+			textPointer.update { _ + newText }
+			lastUpdatedPointer.value = response("created_at").getInstant
 		}
+		
+		// Converts the last read model into response statistics, if possible
+		override def processFinalParseResult(finalResponse: Try[Model]): Try[ResponseStatistics] =
+			finalResponse.map(ResponseStatistics.fromOllamaResponse)
+		
+		override def finish(): Unit = {
+			// Locks the pointers - There shall not be any updates afterwards
+			textPointer.lock()
+			lastUpdatedPointer.lock()
+		}
+		
+		override def responseFrom(future: Future[Try[ResponseStatistics]]): A =
+			StreamedOllamaResponseParser.this.responseFrom(textPointer.readOnly, lastUpdatedPointer.readOnly, future)
 	}
 }

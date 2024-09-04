@@ -10,6 +10,7 @@ import utopia.disciple.apache.Gateway
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.{Body, StringBody}
 import utopia.disciple.http.response.ResponseParser
+import utopia.echo.model.request.llm.ListModelsRequest
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
@@ -34,6 +35,14 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	
 	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
 	private lazy val queue = RequestQueue(queueSystem)
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	 * @return A future / action which resolves into a list of locally available models, if successful
+	 */
+	def localModels = push(ListModelsRequest)
 	
 	
 	// IMPLEMENTED  ------------------------

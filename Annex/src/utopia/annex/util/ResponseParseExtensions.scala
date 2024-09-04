@@ -3,6 +3,7 @@ package utopia.annex.util
 import utopia.access.http.Status
 import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
+import utopia.flow.collection.CollectionExtensions._
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 
 import scala.util.{Failure, Success, Try}
@@ -75,7 +76,7 @@ object ResponseParseExtensions
 			} }(extractErrorMessage)
 	}
 	
-	implicit class TryResponseParser[A](val p: ResponseParser[Try[A]]) extends AnyVal
+	implicit class TryToResponseParser[A](val p: ResponseParser[Try[A]]) extends AnyVal
 	{
 		/**
 		  * Converts this parser to an Annex-compatible response parser.
@@ -117,6 +118,25 @@ object ResponseParseExtensions
 			} {
 				case Success(body) => extractErrorMessage(body)
 				case Failure(error) => error.getMessage
+			}
+	}
+	
+	implicit class EitherToResponseParser[S, F](val p: ResponseParser[Either[F, S]]) extends AnyVal
+	{
+		/**
+		  * Converts this response-parser into an Annex-compatible response parser
+		  * @param parseFailureStatus (Failure) response status used for parsing failures
+		  * @param failureToErrorMessage Extracts an error message from a left (i.e. failure) side item
+		  * @param successToErrorMessage Extracts an error message from a right (i.e. success) side item.
+		  *                              Only called if the response status indicates a failure (i.e. is 4XX or 5XX)
+		  * @return A response parser that yields the right-side value on success
+		  */
+		def rightToResponse(parseFailureStatus: => Status)
+		                   (failureToErrorMessage: F => String)
+		                   (successToErrorMessage: S => String) =
+			p.mapToResponseOrFail { _.wrapped.mapLeft { parseFailureStatus -> failureToErrorMessage(_) } } {
+				case Right(s) => successToErrorMessage(s)
+				case Left(f) => failureToErrorMessage(f)
 			}
 	}
 	

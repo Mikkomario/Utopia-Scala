@@ -168,6 +168,8 @@ object PreparingResponseParser
 /**
   * Used for converting [[utopia.disciple.http.response.StreamedResponse]]s to
   * [[utopia.annex.model.response.Response]]s by utilizing a preparing [[ResponseParser]]
+  * @tparam M Type of the preliminary parse result utilized
+  * @tparam A Type of the final parsed success response body
   * @author Mikko Hilpinen
   * @since 14.07.2024, v1.8
   */

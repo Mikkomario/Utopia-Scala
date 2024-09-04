@@ -15,7 +15,13 @@
 ### New features
 - Requests now support custom options (e.g. changing the temperature or context size)
 - Chat requests now support tools
+- Added a request for listing locally available models (**ListModelRequest**)
+- Added requests for pulling model data (**PullStreamingRequest** & **PullWithoutStatusRequest**)
+- Added **StreamedResponseParser** which makes creating Ollama-compatible response-parsers easier 
+  (in case you need to add your own)
 ### New methods
+- **OllamaClient**
+  - Added `.localModels` which fires a **ListModelsRequest**
 - **Prompt**
   - Added various `.toQuery` functions
 - **Query**

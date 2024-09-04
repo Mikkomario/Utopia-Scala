@@ -5,9 +5,9 @@ import utopia.access.http.StatusGroup.{ClientError, Redirect, ServerError}
 import utopia.access.http.{ContentCategory, ContentType, Headers, Status, StatusGroup}
 import utopia.disciple.http.response.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
@@ -317,6 +317,53 @@ object ResponseParser
 		  * @return Copy of this parser which also applies the specified mapping function on successes
 		  */
 		def flatMap[B](f: A => Try[B]) = p.map { _.flatMap(f) }
+		
+		/**
+		  * Applies a recovery function to this response-parser
+		  * @param f A function which accepts a failure and yields a value that simulates a success
+		  * @return A response-parser which handles failures (Try.Failure) using the specified function
+		  */
+		def recoverWith(f: Throwable => A) = p.map { _.getOrMap(f) }
+	}
+	
+	implicit class EitherResponseParser[F, S](val p: ResponseParser[Either[F, S]]) extends AnyVal
+	{
+		/**
+		  * Maps the responses in case they're right (which is typically associated with success)
+		  * @param f A mapping function for right-side values
+		  * @tparam S2 Type of mapped right values
+		  * @return Copy of this response parser which maps the right side further
+		  */
+		def mapRight[S2](f: S => S2) = p.map { _.mapRight(f) }
+		/**
+		  * Maps responses in case they're left (which is typically associated with failure)
+		  * @param f A mapping function applied for left-side values
+		  * @tparam F2 Type of mapped left values
+		  * @return Copy of this parser which maps the left side further
+		  */
+		def mapLeft[F2](f: F => F2) = p.map { _.mapLeft(f) }
+		
+		/**
+		  * If the response is Right (i.e. a success), maps it into either another Right value
+		  * or a Left (i.e. a failure) value
+		  * @param f A mapping function applied to right-side values
+		  * @tparam S2 Type of new right-side values
+		  * @return Copy of this parser which further divides the right-side case
+		  */
+		def flatMap[S2](f: S => Either[F, S2]) = p.map { _.flatMap(f) }
+	}
+	
+	implicit class TryOrLeftResponseParser[F, S](val p: ResponseParser[Either[F, Try[S]]]) extends AnyVal
+	{
+		/**
+		  * Converts a failure value from the right side to a value on the left side
+		  * @param f A mapping function which accepts a failure (throwable) and yields a left-side value
+		  * @return Copy of this response-parser where right-side failures are moved to the left
+		  */
+		def failureToLeft(f: Throwable => F) = p.flatMap {
+			case Success(s) => Right(s)
+			case Failure(e) => Left(f(e))
+		}
 	}
 	
 	

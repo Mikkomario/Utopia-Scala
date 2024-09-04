@@ -1,7 +1,12 @@
 # Utopia Disciple - List of Changes
 
 ## v1.7.1 (in development)
-Built with Scala v2.13.14
+### New methods
+- **ResponseParser**
+  - Added multiple new methods for **ResponseParsers** of type **Either**
+  - Added `.recoverWith(...)` to **ResponseParsers** of type **Try**
+### Other changes
+- Built with Scala v2.13.14
 
 ## v1.7 - 28.07.2024
 This update introduces major changes to response parsing and response-processing.  
