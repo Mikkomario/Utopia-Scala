@@ -3,6 +3,7 @@ package utopia.echo.model.request.generate
 import utopia.echo.model.LlmDesignator
 import utopia.flow.operator.equality.ComparisonOperator.{DirectionalComparison, Equality}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.util.Mutate
 import utopia.flow.util.UncertainNumber.{AnyNumber, CertainNumber, NumberComparison, UncertainInt, UncertainNumberRange}
 import utopia.flow.util.StringExtensions._
 
@@ -33,7 +34,7 @@ object Query
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-case class Query(private val prompt: Prompt, responseSchema: ObjectSchema = ObjectSchema.empty,
+case class Query(prompt: Prompt, responseSchema: ObjectSchema = ObjectSchema.empty,
                  numberOfExpectedResponses: UncertainInt = 1, requestJson: Boolean = false)
 {
 	// COMPUTED ----------------------------
@@ -114,6 +115,12 @@ case class Query(private val prompt: Prompt, responseSchema: ObjectSchema = Obje
 	
 	
 	// OTHER    ----------------------------
+	
+	/**
+	 * @param f A function for modifying this query's prompt
+	 * @return Copy of this query with a modified prompt
+	 */
+	def mapPrompt(f: Mutate[Prompt]) = copy(prompt = f(prompt))
 	
 	@tailrec
 	private def _expectedValuesCountString(n: UncertainInt, typeStr: String): String = n match {

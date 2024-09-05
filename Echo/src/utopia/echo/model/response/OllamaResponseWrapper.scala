@@ -7,18 +7,19 @@ import scala.concurrent.Future
 import scala.util.Try
 
 /**
-  * An implementation of [[OllamaResponse]] by wrapping another response.
+  * An implementation of [[OllamaResponseLike]] by wrapping another response.
+ *
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-trait OllamaResponseWrapper[+Buffered] extends OllamaResponse[Buffered]
+trait OllamaResponseWrapper[+Buffered] extends OllamaResponseLike[Buffered]
 {
 	// ABSTRACT ----------------------------
 	
 	/**
 	  * @return The wrapped reply instance
 	  */
-	protected def wrapped: OllamaResponse[Buffered]
+	protected def wrapped: OllamaResponseLike[Buffered]
 	
 	
 	// IMPLEMENTED  ------------------------

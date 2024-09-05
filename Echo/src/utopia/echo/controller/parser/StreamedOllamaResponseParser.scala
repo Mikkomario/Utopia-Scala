@@ -1,6 +1,6 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.{OllamaResponse, ResponseStatistics}
+import utopia.echo.model.response.{OllamaResponseLike, ResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.eventful.LockablePointer
@@ -17,7 +17,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait StreamedOllamaResponseParser[A <: OllamaResponse[_]] extends StreamedResponseParser[A, ResponseStatistics]
+trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedResponseParser[A, ResponseStatistics]
 {
 	// ABSTRACT ---------------------------
 	

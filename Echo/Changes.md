@@ -12,6 +12,8 @@
     (possibly introduced via external change event listeners)
 - **LlmDesignator** is now a trait instead of a case class
 - Renamed **LlmDesignator**'s `name` to `llmName`
+- Renamed **OllamaResponse** to **OllamaResponseLike** and added a new **OllamaResponse** trait 
+  which doesn't have a generic type parameter
 - Modified **StreamedOllamaResponseParser** trait (only affects custom response-parsers)
 ### Bugfixes
 - Added the missing `model` parameter to the chat requests
