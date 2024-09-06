@@ -74,6 +74,7 @@
 - `.distinctWith(...)` in **IterableOnce** (via **CollectionExtensions**) now accepts an **EqualsFunction** 
   instead of a regular function
   - Use-cases should get resolved implicitly, however
+- String to number conversions in **Value** now trim the string and remove any control characters, such as newlines
 - Modified **HasEnds** `toString` implementation
 - Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant

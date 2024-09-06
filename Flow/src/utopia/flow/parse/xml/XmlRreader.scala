@@ -343,7 +343,7 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
         nextEvent() match {
             case ElementStart =>
                 // Text before element start is discarded
-                openElement.foreach { _.text = "" }
+                openElement.filter { !_.completed }.foreach { _.text = "" }
                 1
             case ElementEnd =>
                 openElement.foreach { _.completed = true }
