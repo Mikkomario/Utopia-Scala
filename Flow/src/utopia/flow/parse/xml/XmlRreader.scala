@@ -4,8 +4,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.parse.json.JsonReader
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.json.JsonReader
 
 import java.io._
 import java.nio.charset.{Charset, StandardCharsets}
@@ -65,7 +65,6 @@ object XmlReader
       * @return The read xml element
       */
     def parseWith(reader: Reader) = readWith(reader) { xml =>
-    
         val element = xml.readElement()
         if (element.isDefined) Success(element.get) else Failure(new NoSuchElementException())
     }
@@ -302,15 +301,11 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
      */
     def skipParent() = skip(-1)
     
-    private def skip(depthChangeRequirement: Int) = 
-    {
+    private def skip(depthChangeRequirement: Int) = {
         var depth = _toNextElementStart()
-        
-        while (depth > depthChangeRequirement && !isAtDocumentEnd)
-        {
+        while (depth > depthChangeRequirement && !isAtDocumentEnd) {
             depth += _toNextElementStart()
         }
-        
         depth
     }
     
@@ -319,8 +314,7 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
         val element = new UnfinishedElement(Namespace(name.getPrefix)(name.getLocalPart), parseAttributes())
         var depthChange = _toNextElementStart(Some(element))
         
-        while (depthChange > 0)
-        {
+        while (depthChange > 0) {
             val nextResult = _readElement()
             element.children :+= nextResult._1
             depthChange += nextResult._2
@@ -345,30 +339,30 @@ class XmlReader(streamReader: Reader) extends AutoCloseable
     }
     
     // Updates openElement text, returns the depth change
-    private def _toNextElementStart(openElement: Option[UnfinishedElement] = None): Int = 
-    {
-        nextEvent() match
-        {
-            case ElementStart => 1
-            case ElementEnd => _toNextElementStart(openElement) - 1
-            case Text => 
-                openElement.foreach(_.text += reader.getText)
+    private def _toNextElementStart(openElement: Option[UnfinishedElement] = None): Int = {
+        nextEvent() match {
+            case ElementStart =>
+                // Text before element start is discarded
+                openElement.foreach { _.text = "" }
+                1
+            case ElementEnd =>
+                openElement.foreach { _.completed = true }
+                _toNextElementStart(openElement) - 1
+            case Text =>
+                // Text after element end is discarded
+                openElement.filter { !_.completed }.foreach { _.text += reader.getText }
                 _toNextElementStart(openElement)
             case DocumentEnd => 0
         }
     }
     
-    private def nextEvent(): XmlReadEvent = 
-    {
-        if (reader.hasNext)
-        {
+    private def nextEvent(): XmlReadEvent = {
+        if (reader.hasNext) {
             reader.next()
             currentEvent
         }
         else
-        {
             DocumentEnd
-        }
     }
 }
 
@@ -384,6 +378,7 @@ private class UnfinishedElement(name: NamespacedString, attributes: Map[Namespac
     
     var children: Seq[UnfinishedElement] = Empty
     var text = ""
+    var completed = false
     
     
     // COMPUTED PROPERTIES    --------------

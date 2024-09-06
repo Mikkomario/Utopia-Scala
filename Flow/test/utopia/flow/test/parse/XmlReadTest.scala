@@ -1,9 +1,8 @@
 package utopia.flow.test.parse
 
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.parse.xml.XmlReader
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.StringFrom
+import utopia.flow.parse.xml.XmlReader
 
 import java.nio.charset.StandardCharsets
 
@@ -16,8 +15,8 @@ object XmlReadTest extends App
 {
 	
 	
-	println(StringFrom.path("Flow/test/test.xml", StandardCharsets.UTF_8).get.takeWhile { _ != '<' }.length)
-	val xml = XmlReader.parseFile("Flow/test/test.xml").get
+	println(StringFrom.path("Flow/data/test-material/test.xml", StandardCharsets.UTF_8).get.takeWhile { _ != '<' }.length)
+	val xml = XmlReader.parseFile("Flow/data/test-material/test.xml").get
 	println(xml.toXml)
 	/*
 	val xml2 = xml.mutableCopy()

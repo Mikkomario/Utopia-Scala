@@ -28,6 +28,7 @@
 - `StdIn.selectFrom(...)` doesn't print "Found X items" anymore
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
+- **XmlReader** now doesn't include text content which was outside the read XML elements (such as tabs etc.)
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 

@@ -431,13 +431,15 @@ object BasicValueCaster extends ValueCaster
 		
 	// Handles both the decimal and integral number form options
 	private def stringToNumber[N](str: String)(fromDecimal: String => N)(fromIntegral: String => N): Option[N] = {
-		if (str.isEmpty)
+		// Removes any leading and trailing spaces and other control characters
+		val cleanStr = str.stripControlCharacters.trim
+		if (cleanStr.isEmpty)
 			None
-		else if (str.contains(','))
-			Try { fromDecimal(str.replace(',', '.')) }.toOption
-		else if (str.contains('.'))
-			Try { fromDecimal(str) }.toOption
+		else if (cleanStr.contains(','))
+			Try { fromDecimal(cleanStr.replace(',', '.')) }.toOption
+		else if (cleanStr.contains('.'))
+			Try { fromDecimal(cleanStr) }.toOption
 		else
-			Try { fromIntegral(str) }.toOption
+			Try { fromIntegral(cleanStr) }.toOption
 	}
 }
