@@ -6,7 +6,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Adds methods relating to request results
@@ -71,6 +71,20 @@ object RequestResultExtensions
 		 */
 		def tryFlatMapSuccess[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
 			this.f.flatMap { _.toTry.map(f).flattenToFuture }
+		/**
+		 * Asynchronously maps the response body value, if successful, once it resolves.
+		 * The results are collapsed into a Try.
+		 * @param f A mapping function applied to a successfully acquired body value. Yields a future.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A mapped copy of this future, containing a Try instead of a RequestResult.
+		 */
+		def flatMapSuccessToTry[B](f: A => Future[B])(implicit exc: ExecutionContext) = {
+			this.f.flatMap { _.toTry match {
+				case Success(value) => f(value).map { Success(_) }
+				case Failure(error) => Future.successful(Failure(error))
+			} }
+		}
 	}
 	
 	implicit class AsyncRequestMultiResult[+A](val f: Future[RequestResult[Seq[A]]]) extends AnyVal

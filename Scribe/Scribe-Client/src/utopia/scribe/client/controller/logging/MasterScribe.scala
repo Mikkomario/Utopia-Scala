@@ -215,7 +215,7 @@ object MasterScribe
 				// merges them together instead of adding a new entry altogether
 				val now = Now.toInstant
 				val modified = modifyIssue(issue)
-				pending.mergeOrAppend(modified -> now) { _._1 ~== issue } { case ((existing, previousRecording), _) =>
+				pending.mergeOrAppend(modified -> now) { _._1 ~== modified } { case ((existing, previousRecording), _) =>
 					existing.repeated(modified.instances, now - previousRecording) -> now
 				}
 			}

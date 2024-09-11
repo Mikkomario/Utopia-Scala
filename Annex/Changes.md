@@ -11,7 +11,7 @@
   - Added multiple new functions for parsing optional values 
     (i.e. parse variants that replace empty responses with None but parse non-empty responses)
 - **Future** (**RequestResultExtensions**)
-  - Added `.tryFlatMapSuccess(...)` for asynchronous **RequestResults**
+  - Added `.tryFlatMapSuccess(...)` and `.flatMapSuccessToTry(...)` for asynchronous **RequestResults**
 - **ResponseParser** (**ResponseParseExtensions**)
   - Added `.rightToResponse(...)` for **ResponseParsers** of type **Either**
 - **RequestQueue**
