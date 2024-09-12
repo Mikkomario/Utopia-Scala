@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.collection.immutable.range.NumericSpan.IntSpan
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.collection.CollectionExtensions._
@@ -17,10 +17,14 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 	
 	override def from(items: IterableOnce[Int]): IntSet = items match {
 		case s: IntSet => s
-		case s: Seq[Int] => if (s.isEmpty) apply(Empty) else fromPreparedIterator(s.sorted.iterator)
+		case s: IntSpan => apply(Single(s.ascending))
+		case s: HasInclusiveEnds[Int] => apply(Single(NumericSpan(s.ends.sorted)))
+		case r: Range.Inclusive => apply(Single[NumericSpan[Int]](r))
+		case r: Range => if (r.isEmpty) empty else apply(Single(NumericSpan(r.start, r.end - 1)))
+		case s: Seq[Int] => if (s.isEmpty) empty else fromPreparedIterator(s.sorted.iterator)
 		case i =>
 			val s = Seq.from(i)
-			if (s.isEmpty) apply(Empty) else fromPreparedIterator(s.sorted.iterator)
+			if (s.isEmpty) empty else fromPreparedIterator(s.sorted.iterator)
 	}
 	
 	override def apply(item: Int): IntSet = apply(Single(NumericSpan.singleValue(item)))

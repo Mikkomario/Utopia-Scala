@@ -41,5 +41,6 @@ object GenerationDurations
 case class GenerationDurations(total: FiniteDuration, load: FiniteDuration, evaluation: FiniteDuration)
 {
 	override def toString =
-		s"loaded ${ load.description }, evaluated ${ evaluation.description }, total ${ total.description }"
+		s"loaded ${ load.description }, evaluated ${ evaluation.description }, generated ${
+			(total - evaluation - load).description }, total ${ total.description }"
 }

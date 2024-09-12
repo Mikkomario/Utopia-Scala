@@ -78,7 +78,7 @@ object NumericSpan
 	
 	// IMPLEMENTED  ---------------------
 	
-	class _NumericSpan[N](override val start: N, override val end: N, _step: N)
+	private class _NumericSpan[N](override val start: N, override val end: N, _step: N)
 	                     (override implicit val n: Numeric[N])
 		extends NumericSpan[N] with EqualsBy
 	{

@@ -41,5 +41,6 @@ object ResponseStatistics
 case class ResponseStatistics(context: Value, duration: GenerationDurations,
                               promptTokenCount: Int, responseTokenCount: Int)
 {
-	override def toString = s"Tokens: $promptTokenCount + $responseTokenCount; Durations: $duration"
+	override def toString = s"Tokens: $promptTokenCount + $responseTokenCount = ${
+		promptTokenCount + responseTokenCount }; Durations: $duration"
 }
