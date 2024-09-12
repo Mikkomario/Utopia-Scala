@@ -79,6 +79,7 @@
 - Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
+- "Create new" option in `StdIn.selectFromOrAdd(...)` is now indented
 - Minor refactoring in pairing functions in **CollectionExtensions**
 
 ## v2.4 - 28.07.2024

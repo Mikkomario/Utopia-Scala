@@ -336,7 +336,7 @@ object ConsoleExtensions
 					else {
 						options.indices.foreach { index => println(s"\t${index + 1}: ${options(index)._2}") }
 						if (addNew.isDefined)
-							println("0: Create new")
+							println("\t0: Create new")
 						println("Please select the correct index or narrow the selection by typing text (empty cancels)")
 					}
 					readNonEmptyLine().flatMap { filter =>
