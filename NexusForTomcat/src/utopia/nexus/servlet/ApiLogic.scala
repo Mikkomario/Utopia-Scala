@@ -5,8 +5,9 @@ import utopia.access.http.StatusGroup.ServerError
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.nexus.http.{Request, Response, ServerSettings}
+import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.interceptor.{RequestInterceptor, ResponseInterceptor}
 import utopia.nexus.rest.RequestHandler
 
@@ -50,8 +51,11 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[RequestInter
 			logger(s"${request.method} $pathString yielded ${response.status}")
 		}
 		// Adds a date-header, if not present. Also post-processes the response
-		postProcessors.foldLeft(
-			response.mapHeaders { h => if (h.hasDate) h else h.withDate(requestTime) }) { (res, p) => p.intercept(res) }
+		val dateModifiedResponse = response.mapHeaders { h => h.withDate(h.date match {
+			case Some(date) => requestTime min date
+			case None => requestTime
+		}) }
+		postProcessors.foldLeft(dateModifiedResponse) { (res, p) => p.intercept(res, request) }
 	}
 	
 	override def processConversionFailure(request: HttpServletRequest, response: HttpServletResponse) =
@@ -64,12 +68,12 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[RequestInter
 	  * @param interceptor A new request interceptor
 	  * @return A new api logic incorporating that interceptor
 	  */
-	def withInterceptor(interceptor: Request => Request) =
+	def withInterceptor(interceptor: RequestInterceptor) =
 		new ApiLogic(requestHandler, interceptors :+ interceptor, postProcessors)
 	/**
 	  * @param processor A new post-processor
 	  * @return A new api logic incorporating that post-processor
 	  */
-	def withPostProcessor(processor: Response => Response) =
+	def withPostProcessor(processor: ResponseInterceptor) =
 		new ApiLogic(requestHandler, interceptors, postProcessors :+ processor)
 }

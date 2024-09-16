@@ -1,7 +1,6 @@
 package utopia.nexus.interceptor
 
-import utopia.flow.util.Mutate
-import utopia.nexus.http.Response
+import utopia.nexus.http.{Request, Response}
 
 import scala.language.implicitConversions
 
@@ -9,16 +8,17 @@ object ResponseInterceptor
 {
 	// IMPLICIT    --------------------
 	
-	implicit def apply(f: Mutate[Response]): ResponseInterceptor = new _ResponseInterceptor(f)
+	implicit def apply(f: (Response, Request) => Response): ResponseInterceptor = new _ResponseInterceptor(f)
 	
-	implicit def readOnly(f: Response => Unit): ResponseInterceptor = new _ResponseInterceptor({ r => f(r); r })
+	implicit def readOnly(f: (Response, Request) => Unit): ResponseInterceptor =
+		new _ResponseInterceptor({ (res, req) => f(res, req); res })
 	
 	
 	// NESTED   -----------------------
 	
-	private class _ResponseInterceptor(f: Mutate[Response]) extends ResponseInterceptor
+	private class _ResponseInterceptor(f: (Response, Request) => Response) extends ResponseInterceptor
 	{
-		override def intercept(response: Response): Response = f(response)
+		override def intercept(response: Response, request: Request): Response = f(response, request)
 	}
 }
 
@@ -31,7 +31,8 @@ trait ResponseInterceptor
 {
 	/**
 	  * @param response Outgoing response
+	  * @param request Request that originated this response
 	  * @return Possibly modified version of the specified response
 	  */
-	def intercept(response: Response): Response
+	def intercept(response: Response, request: Request): Response
 }

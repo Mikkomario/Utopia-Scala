@@ -8,6 +8,7 @@ import utopia.exodus.rest.resource.ExodusResources
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
@@ -50,11 +51,11 @@ class ApiServlet extends LogicWrappingServlet
 	
 	override lazy val logic = new ApiLogic(
 		new RequestHandler(Map("v1" -> ExodusResources.all), Some(Path("exodus", "api")), r => AuthorizedContext(r)),
-		Vector(r => {
+		Single(r => {
 			logger(s"${r.method} ${r.pathString}")
 			r
 		}),
-		Vector(r => {
+		Single((r, _) => {
 			logger(s"=> ${r.status}")
 			r
 		})

@@ -1,6 +1,6 @@
 package utopia.nexus.test
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.http.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.immutable.{Pair, Single}
@@ -63,10 +63,9 @@ class TestApiServlet extends LogicWrappingServlet
 		log.apply(s"Received request: ${ request.method } ${ request.pathString }")
 		request
 	}
-	private def postProcess(response: Response) = {
-		log.apply(s"Sending out response: ${ response.status }")
-		// Adds the date header
-		response.mapHeaders { Headers.currentDateHeaders ++ _ }
+	private def postProcess(response: Response, request: Request) = {
+		log.apply(s"Sending out response: ${ response.status } for ${ request.method } ${ request.pathString }")
+		response
 	}
 	
 	private def versionedResources(versionNumber: Int)(makeResources: Version => Seq[Resource[PostContext]]) = {
