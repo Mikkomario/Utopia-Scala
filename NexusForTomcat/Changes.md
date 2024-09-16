@@ -1,7 +1,11 @@
 # Utopia Nexus for Tomcat - List of changes
 
 ## v1.2.8 (in development)
-Built with Scala v2.13.14
+### Other changes
+- Built with Scala v2.13.14
+- **ApiLogic** now accepts **RequestInterceptor** and **ResponseInterceptor** traits instead of simple functions
+  - However, functions should implicitly convert to interceptors, so no build errors should follow
+- Removed previously deprecated **EchoServlet**
 
 ## v1.2.7 - 28.07.2024
 A very minor update

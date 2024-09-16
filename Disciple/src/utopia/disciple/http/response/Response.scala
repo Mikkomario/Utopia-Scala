@@ -16,7 +16,6 @@ trait Response
      * The HTTP status of this response
      */
     def status: Status
-    
     /**
      * The HTTP headers of this response
      */
@@ -50,7 +49,7 @@ trait Response
     def contentLength = headers.contentLength
     
     /**
-     * Whether the response is empty (no body)
+     * Whether the response is empty (i.e. contains no body)
      */
     def isEmpty = headers.isContentLengthProvided && contentLength == 0 && !headers.isChunked
 }
