@@ -4,9 +4,7 @@ import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
 import utopia.echo.model.response.ResponseStatistics
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.operator.Identity
 import utopia.flow.time.Now
-import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -87,7 +85,6 @@ object StreamedReply
   *                         once this response has been fully generated.
   *                         Will contain a failure if reply parsing failed.
   */
-// TODO: Add a common trait between this class and StreamedReplyMessage
 class StreamedReply(val textPointer: Changing[String], val newTextPointer: Changing[String],
                     val lastUpdatedPointer: Changing[Instant], val statisticsFuture: Future[Try[ResponseStatistics]])
                    (implicit exc: ExecutionContext)
@@ -100,6 +97,8 @@ class StreamedReply(val textPointer: Changing[String], val newTextPointer: Chang
 	
 	
 	// IMPLEMENTED ---------------------------
+	
+	override def isBuffered: Boolean = statisticsFuture.isCompleted
 	
 	override def text: String = textPointer.value
 	override def lastUpdated: Instant = lastUpdatedPointer.value

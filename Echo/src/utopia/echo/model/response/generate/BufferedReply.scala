@@ -46,6 +46,8 @@ case class BufferedReply(text: String, statistics: ResponseStatistics, lastUpdat
 {
 	// IMPLEMENTED  -----------------------
 	
+	override def isBuffered: Boolean = true
+	
 	override def future: Future[Try[BufferedReply]] = TryFuture.success(this)
 	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
 	

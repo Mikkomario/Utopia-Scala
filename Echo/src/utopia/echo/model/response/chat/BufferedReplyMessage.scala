@@ -53,6 +53,7 @@ case class BufferedReplyMessage(message: ChatMessage, statistics: ResponseStatis
 	
 	override def lastUpdatedPointer: Changing[Instant] = Fixed(lastUpdated)
 	
+	override def isBuffered: Boolean = true
 	override def future: Future[Try[BufferedReplyMessage]] = TryFuture.success(this)
 	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
 	

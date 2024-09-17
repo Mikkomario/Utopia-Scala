@@ -21,6 +21,11 @@ trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
 	// ABSTRACT -------------------------
 	
 	/**
+	  * @return Whether this response has been fully read / buffered already
+	  */
+	def isBuffered: Boolean
+	
+	/**
 	  * @return A future that resolves into a buffered / completed version of this response, once read.
 	  *         Will yield a failure in case response-parsing failed.
 	  */
@@ -53,6 +58,14 @@ trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
 	  * @return A pointer which contains the origination time of the latest version of this response's contents.
 	  */
 	def lastUpdatedPointer: Changing[Instant]
+	
+	
+	// COMPUTED ------------------------------
+	
+	/**
+	  * @return Whether this response is still incoming
+	  */
+	def isStreaming = !isBuffered
 	
 	
 	// OTHER    ------------------------------

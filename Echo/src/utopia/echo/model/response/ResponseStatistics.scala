@@ -41,6 +41,17 @@ object ResponseStatistics
 case class ResponseStatistics(context: Value, duration: GenerationDurations,
                               promptTokenCount: Int, responseTokenCount: Int)
 {
+	// COMPUTED ---------------------------
+	
+	/**
+	  * @return Total number of tokens used within request context.
+	  *         Contains both prompt and reply tokens.
+	  */
+	def contextTokenCount = promptTokenCount + responseTokenCount
+	
+	
+	// IMPLEMENTED  -----------------------
+	
 	override def toString = s"Tokens: $promptTokenCount + $responseTokenCount = ${
 		promptTokenCount + responseTokenCount }; Durations: $duration"
 }
