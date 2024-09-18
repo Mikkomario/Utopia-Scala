@@ -18,6 +18,7 @@
 ### Bugfixes
 - Added the missing `model` parameter to the chat requests
 ### New features
+- Added new **Chat** interface which manages conversation context (context size, conversation history & tools)
 - Requests now support custom options (e.g. changing the temperature or context size)
 - Chat requests now support tools
 - Added a request for listing locally available models (**ListModelRequest**)
@@ -30,12 +31,15 @@
   - Added `.localModels` which fires a **ListModelsRequest**
 - **Prompt**
   - Added various `.toQuery` functions
+- **ReplyMessage** (object)
+  - Added `.from(OllamaResponse)` and `.async(Future)`
 - **Query**
   - Added `.toRequestParams`
 - **StreamedReply**
   - Added `.printAsReceived(...)`
 ### Other changes
 - Built with Scala v2.13.14
+- Multi-line queries no longer use `"""` as wrappers
 - Added some toString implementations
 
 ## v1.0 - 28.07.2024

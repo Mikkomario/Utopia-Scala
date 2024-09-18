@@ -46,6 +46,9 @@ object Regex
 	  * Contains alpha-numeric (ASCII) words with underscores
 	  */
 	val word = wordCharacter.oneOrMoreTimes
+	/**
+	  * @see [[https://www.regular-expressions.info/wordboundaries.html]]
+	  */
 	val wordBoundary = Regex("\\b")
 	val newLine = Regex("\\R")
 	

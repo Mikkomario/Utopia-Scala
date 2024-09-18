@@ -86,12 +86,7 @@ case class Query(prompt: Prompt, responseSchema: ObjectSchema = ObjectSchema.emp
 			}
 		}
 		
-		// Queries with multiple lines are wrapped in triple quotes
-		val query = builder.result()
-		if (query.isMultiLine)
-			s"\"\"\"$query\"\"\""
-		else
-			query
+		builder.result()
 	}
 	
 	/**
@@ -100,9 +95,7 @@ case class Query(prompt: Prompt, responseSchema: ObjectSchema = ObjectSchema.emp
 	  */
 	def toSystem = prompt.systemMessage.mapIfNotEmpty { system =>
 		if (prompt.context.nonEmpty)
-			s"\"\"\"$system\n\n${prompt.context}\"\"\""
-		else if (system.isMultiLine)
-			s"\"\"\"$system\"\"\""
+			s"$system\n\n${prompt.context}"
 		else
 			system
 	}
