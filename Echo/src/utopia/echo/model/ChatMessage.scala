@@ -69,7 +69,8 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 	// IMPLEMENTED  ------------------------
 	
 	override def toModel: Model =
-		Model.from("role" -> senderRole.name, "content" -> text, "images" -> encodedImages, "tool_calls" -> toolCalls)
+		Model.from("role" -> senderRole.name, "content" -> text,
+				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
 			.withoutEmptyValues
 	
 	override def attachImages(base64EncodedImages: Seq[String]): ChatMessage =

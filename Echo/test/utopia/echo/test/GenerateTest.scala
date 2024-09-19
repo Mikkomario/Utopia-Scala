@@ -33,7 +33,7 @@ object GenerateTest extends App
 	private val prompt1 = Prompt("Define the word \"echo\"")
 	
 	println(s"Sending out: $prompt1")
-	client.push(new GenerateBufferedOrStreamed(Query(prompt1), stream = true)).waitFor().get match {
+	client.push(GenerateBufferedOrStreamed(Query(prompt1), stream = true)).waitFor().get match {
 		case Response.Success(reply: StreamedOrBufferedReply, status, headers) =>
 			println(s"Received response with status $status and headers $headers")
 			println(s"Reply: ")

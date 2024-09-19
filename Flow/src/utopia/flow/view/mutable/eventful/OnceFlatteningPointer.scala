@@ -177,4 +177,19 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		else if (!this.pointer.contains(pointer))
 			throw new IllegalStateException("Pointer had already been assigned")
 	}
+	
+	/**
+	  * Completes this pointer by defining the pointer which to wrap afterwards.
+	  * If this pointer has already been completed, this method does nothing.
+	  * @param pointer A pointer to wrap (call-by-name).
+	  * @return Whether this pointer was completed. False if this was already completed.
+	  */
+	def tryComplete(pointer: => Changing[A]) = {
+		if (this.pointer.isEmpty) {
+			complete(pointer)
+			true
+		}
+		else
+			false
+	}
 }

@@ -7,6 +7,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -80,5 +81,5 @@ trait ChatRequest[+R] extends OllamaRequest[R]
 	override def deprecated: Boolean = params.deprecationView.value
 	
 	override def customProperties: Seq[Constant] =
-		Pair(Constant("messages", params.messages), Constant("tools", params.tools))
+		Pair(Constant("messages", params.messages), Constant("tools", NotEmpty(params.tools)))
 }

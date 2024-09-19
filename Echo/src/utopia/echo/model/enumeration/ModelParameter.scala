@@ -40,6 +40,19 @@ trait ModelParameter
 
 object ModelParameter
 {
+	// ATTRIBUTES   -----------------------
+	
+	/**
+	  * All supported parameters
+	  */
+	val values = Vector[ModelParameter](
+		Seed, ContextTokens, PredictTokens, KeepTokens, RepeatLastTokens,
+		RepeatPenalty, PresencePenalty, FrequencyPenalty, PenalizeNewLine,
+		Temperature, MiroStat, MiroStatTau, MiroStatEta,
+		TopK, TopP, MinP, TypicalP, TailFreeSampling, Stop,
+		NumberOfBatches, NumberOfGpus, MainGpuIndex, Numa, LowVRam, Fp16)
+	
+	
 	// VALUES   ---------------------------
 	
 	/**

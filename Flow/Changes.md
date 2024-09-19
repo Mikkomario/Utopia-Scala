@@ -58,6 +58,8 @@
   - Added `.toIntSet` for collections of **Ints**
 - **Iterator** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
+- **OnceFlatteningPointer**
+  - Added `.tryComplete(Changing)`
 - **PairingIterator** (object)
   - Added `.to(...)`
 - **PairOps**

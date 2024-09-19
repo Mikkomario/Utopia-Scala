@@ -6,6 +6,7 @@ Ambassador/data/coder-build
 Scribe/Scribe-Core/data/coder-build
 Reach/data/coder-build
 Logos/data/coder-build
+Echo/data/test-output
 Vault-Coder/data/test-output
 Scribe/data/coder-build
 Vault/test-data/coder-build

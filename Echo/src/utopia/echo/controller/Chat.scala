@@ -1,18 +1,19 @@
 package utopia.echo.controller
 
-import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Flux, PositiveFlux}
+import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
+import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.model.enumeration.ChatRole.System
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.request.chat.ChatParams
 import utopia.echo.model.request.chat.tool.Tool
+import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.echo.model.{ChatMessage, LlmDesignator}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
@@ -20,14 +21,16 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}
+import utopia.flow.time.Now
+import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt}
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer, MutableOnce, OnceFlatteningPointer}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -72,6 +75,10 @@ class Chat(ollama: OllamaClient)
 	  * One token is about 1/2 a word.
 	  */
 	var expectedReplySize = 256
+	/**
+	  * Number of tokens added to the estimated required context size
+	  */
+	var additionalContextSize = 256
 	
 	private val _messageHistoryPointer = EventfulPointer.emptySeq[ChatMessage]
 	/**
@@ -129,7 +136,23 @@ class Chat(ollama: OllamaClient)
 	  */
 	val toolsPointer = EventfulPointer.emptySeq[Tool]
 	
-	private val _lastContextSizePointer = EventfulPointer[UncertainInt](UncertainNumber.zeroOrMore)
+	/**
+	  * A mutable pointer that contains the number of tokens assumed to be present within the default system message
+	  */
+	val defaultSystemMessageTokensPointer = EventfulPointer(256)
+	/**
+	  * A pointer that contains the estimated size of the currently applied system messages.
+	  * Measured in tokens.
+	  */
+	val systemMessageTokensPointer = systemMessagesPointer
+		.mergeWith(defaultSystemMessageTokensPointer) { (messages, defaultSize) =>
+			if (messages.isEmpty)
+				defaultSize
+			else
+				messages.view.map(countTokensIn).sum
+		}
+	
+	private val _lastContextSizePointer = EventfulPointer[UncertainInt](CertainNumber(0))
 	/**
 	  * A pointer that contains the context size of the most recent successful request
 	  * within the current conversation.
@@ -156,7 +179,7 @@ class Chat(ollama: OllamaClient)
 		val oldHistory = _messageHistoryPointer.getAndSet(newHistory)
 		if (oldHistory != newHistory) {
 			// Resets the known context size whenever message history is manually edited
-			_lastContextSizePointer.value = UncertainNumber.zeroOrMore
+			_lastContextSizePointer.value = if (newHistory.isEmpty) 0 else UncertainNumber.positive
 			_largestContextIncreasePointer.update { previous =>
 				// The largest increase minimum value may be preserved, if the history is only appended
 				previous.smallestPossibleValue match {
@@ -233,6 +256,10 @@ class Chat(ollama: OllamaClient)
 	def lastReply = lastReplyPointer.value
 	
 	/**
+	  * @return Estimated number of tokens in the system messages
+	  */
+	def systemMessageTokens = systemMessageTokensPointer.value
+	/**
 	  * @return Number of tokens used in the previous fully completed request.
 	  *         Uncertain while no requests have yet been completed within the current conversation.
 	  */
@@ -266,20 +293,65 @@ class Chat(ollama: OllamaClient)
 		val statePointer = LockablePointer[(SchrodingerState, Try[BufferedReplyMessage])](
 			Flux(lastResult.isSuccess) -> Failure(new IllegalArgumentException("No response has been acquired yet")))
 		
-		val replyFuture = _push(Single(ChatMessage(message, encodedImages = images)), extraTools,
-			allowStreaming = !noStreaming) {
-			_ => statePointer.value =
-				PositiveFlux -> Failure(new IllegalStateException("The reply hasn't been fully formed yet")) } {
-			reply => statePointer.value = Alive -> Success(reply) } {
-			error =>
-				log(error, "Messaging failed")
-				statePointer.value = Dead -> Failure(error)
-				statePointer.lock()
+		// Prepares the text, newText & lastUpdated pointers
+		// These depend on whether streaming or tools are used
+		val statisticsPromise = Promise[Try[ResponseStatistics]]()
+		val (textPointer, newTextPointer, lastUpdatedPointer, replyIncoming, replyCompleted, handleFailure) = {
+			// Case: Tools are used or streaming is disabled => Prepares to receive only the final reply
+			if (extraTools.nonEmpty || this.usesTools) {
+				val textPointer = new MutableOnce("")
+				val lastUpdatedPointer = new MutableOnce(Now.toInstant)
+				
+				def replyCompleted(reply: BufferedReplyMessage) = {
+					textPointer.value = reply.text
+					lastUpdatedPointer.value = reply.lastUpdated
+				}
+				
+				(textPointer, textPointer, lastUpdatedPointer,
+					None, Some[BufferedReplyMessage => Unit](replyCompleted), None)
+			}
+			// Case: Streaming is enabled
+			//       => Prepares to receive the text incrementally, but only expects to receive a single response
+			else {
+				val textPointer = OnceFlatteningPointer("")
+				val newTextPointer = OnceFlatteningPointer("")
+				val lastUpdatedPointer = OnceFlatteningPointer(Now.toInstant)
+				
+				def replyIncoming(reply: ReplyMessage) = {
+					textPointer.complete(reply.textPointer)
+					newTextPointer.complete(reply.newTextPointer)
+					lastUpdatedPointer.complete(reply.lastUpdatedPointer)
+				}
+				def handleFailure() = {
+					textPointer.tryComplete(Fixed(""))
+					newTextPointer.tryComplete(Fixed(""))
+					lastUpdatedPointer.tryComplete(Fixed(Now))
+				}
+				
+				(textPointer, newTextPointer, lastUpdatedPointer,
+					Some[ReplyMessage => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
+			}
 		}
 		
+		_push(Single(ChatMessage(message, encodedImages = images)), extraTools, allowStreaming = !noStreaming) {
+			streamingReply =>
+				replyIncoming.foreach { _(streamingReply) }
+				statePointer.value =
+					PositiveFlux -> Failure(new IllegalStateException("The reply hasn't been fully formed yet")) } {
+			completedReply =>
+				replyCompleted.foreach { _(completedReply) }
+				statisticsPromise.success(Success(completedReply.statistics))
+				statePointer.value = Alive -> Success(completedReply) } {
+			error =>
+				handleFailure.foreach { _() }
+				statisticsPromise.success(Failure(error))
+				statePointer.value = Dead -> Failure(error)
+				statePointer.lock()
+				log(error, "Messaging failed") }
+		
 		// Returns a Schrödinger
-		val asyncReply = ReplyMessage.async(replyFuture)
-		Schrodinger.wrap(statePointer.strongMap { case (state, reply) => (asyncReply, reply, state) })
+		val reply = StreamedReplyMessage(textPointer, newTextPointer, lastUpdatedPointer, statisticsPromise.future)
+		Schrodinger.wrap(statePointer.strongMap { case (state, finalReply) => (reply, finalReply, state) })
 	}
 	
 	/**
@@ -415,7 +487,7 @@ class Chat(ollama: OllamaClient)
 	// Final call will be either 'replyCompleted' (on success) or 'handleFailure' (on failure)
 	private def _push(messages: Seq[ChatMessage], extraTools: Seq[Tool], allowStreaming: Boolean)
 	                 (replyIncoming: ReplyMessage => Unit)(replyCompleted: BufferedReplyMessage => Unit)
-	                 (handleFailure: Throwable => Unit): Future[Try[BufferedReplyMessage]] =
+	                 (handleFailure: Throwable => Unit): Unit =
 	{
 		_queueSizePointer.update { _ + 1 }
 		
@@ -434,11 +506,12 @@ class Chat(ollama: OllamaClient)
 		val systemMessage = NotEmpty(systemMessages).map { _.mkString("\n\n") }.map { System(_) }
 		// Sends the chat request
 		val replyFuture = ollama.push(
-			ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory, tools, optionsWithContextSize)
+			ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1),
+				tools, optionsWithContextSize)
 				.toRequest(stream = allowStreaming && tools.isEmpty)).future
 		
 		// Updates the pointers once a response is received
-		replyFuture.flatMap { result =>
+		replyFuture.foreachResult { result =>
 			_lastResultPointer.value = result.toTry
 			_queueSizePointer.update { _ - 1 }
 			
@@ -466,17 +539,15 @@ class Chat(ollama: OllamaClient)
 							}
 							reply.future
 						}
-						.flatMap {
+						.foreachResult {
 							// Case: Reply fully parsed
 							//       => Updates message history & finishes state (unless tools are called)
 							case Success(reply) =>
 								_messageHistoryPointer.update { _ ++ (messages :+ reply.message) }
 								
 								// Case: No tool-calls => Finishes
-								if (reply.toolCalls.isEmpty) {
+								if (reply.toolCalls.isEmpty)
 									replyCompleted(reply)
-									TryFuture.success(reply)
-								}
 								// Case: Tool-calls => Applies the tools and forms a new request
 								else {
 									val toolMessages = reply.toolCalls.map { call =>
@@ -492,19 +563,16 @@ class Chat(ollama: OllamaClient)
 								}
 							
 							// Case: Reply parsing failed => Fails
-							case Failure(error) =>
-								handleFailure(error)
-								TryFuture.failure(error)
+							case Failure(error) => handleFailure(error)
 						}
 				
 				// Case: Failed to acquire a response => Fails
-				case f: RequestFailure =>
-					handleFailure(f.cause)
-					TryFuture.failure(f.cause)
+				case f: RequestFailure => handleFailure(f.cause)
 			}
 		}
 	}
 	
+	// TODO: If num_predict is specified, that can override next message token calculation
 	private def contextSize(nextMessage: => String) = {
 		// Prepares for a specific increase in context size
 		val expectedIncrease = _largestContextIncreasePointer.value.exact
@@ -516,17 +584,10 @@ class Chat(ollama: OllamaClient)
 				}
 			}
 		// Attempts to acquire the size of the last interaction context
-		val rawValue = _lastContextSizePointer.value.exact match {
-			case Some(lastUsedContext) => lastUsedContext + expectedIncrease
-			case None =>
-				val systemSize = NotEmpty(systemMessages) match {
-					case Some(messages) => messages.iterator.map(countTokensIn).sum
-					case None => minContextSize
-				}
-				val historySize = messageHistory.iterator.map { m => countTokensIn(m.text) }.sum
-				
-				systemSize + historySize + expectedIncrease
-		}
+		val historySize = lastContextSize.exact
+			.getOrElse { messageHistory.iterator.map { m => countTokensIn(m.text) }.sum }
+		val rawValue = systemMessageTokens + historySize + expectedIncrease + additionalContextSize
+		
 		// Limits to the allowed range
 		if (rawValue >= maxContextSize)
 			maxContextSize
