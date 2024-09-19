@@ -10,7 +10,8 @@ import utopia.disciple.apache.Gateway
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.{Body, StringBody}
 import utopia.disciple.http.response.ResponseParser
-import utopia.echo.model.request.llm.ListModelsRequest
+import utopia.echo.model.LlmDesignator
+import utopia.echo.model.request.llm.{ListModelsRequest, ShowModelRequest}
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
@@ -43,6 +44,12 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	 * @return A future / action which resolves into a list of locally available models, if successful
 	 */
 	def localModels = push(ListModelsRequest)
+	/**
+	  * Retrieves model information
+	  * @param llm Targeted LLM (implicit)
+	  * @return Future that resolves into the implicitly targeted model's information, if successful
+	  */
+	def showModel(implicit llm: LlmDesignator) = push(ShowModelRequest())
 	
 	
 	// IMPLEMENTED  ------------------------

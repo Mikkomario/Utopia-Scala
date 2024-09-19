@@ -15,7 +15,7 @@ trait ModelParameter
 	// ABSTRACT ---------------------------
 	
 	/**
-	  * @return JSON key used for representing this parameter
+	  * @return JSON key used for representing this parameter. Lower case.
 	  */
 	def key: String
 	/**
@@ -51,6 +51,19 @@ object ModelParameter
 		Temperature, MiroStat, MiroStatTau, MiroStatEta,
 		TopK, TopP, MinP, TypicalP, TailFreeSampling, Stop,
 		NumberOfBatches, NumberOfGpus, MainGpuIndex, Numa, LowVRam, Fp16)
+	/**
+	  * All supported parameters as a map where keys are parameter string keys and values are the parameters themselves.
+	  */
+	lazy val valueByKey = values.view.map { v => v.key -> v }.toMap
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * @param key Targeted parameter key
+	  * @return Targeted parameter. None if the specified key didn't match any parameter.
+	  */
+	def findForKey(key: String) = valueByKey.get(key)
 	
 	
 	// VALUES   ---------------------------

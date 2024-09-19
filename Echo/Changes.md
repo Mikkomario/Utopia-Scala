@@ -22,6 +22,7 @@
 - Requests now support custom options (e.g. changing the temperature or context size)
 - Chat requests now support tools
 - Added a request for listing locally available models (**ListModelRequest**)
+- Added a request for showing model information (**ShowModelRequest**)
 - Added requests for pulling model data (**PullStreamingRequest** & **PullWithoutStatusRequest**)
 - Streamed requests (**StreamedReply** and **StreamedReplyMessage**) now contain property `newTextPointer`
 - Added **StreamedResponseParser** which makes creating Ollama-compatible response-parsers easier 
