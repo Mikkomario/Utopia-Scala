@@ -18,7 +18,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object PullStreamingRequest
+object StreamedPullRequest
 {
 	/**
 	  * Creates a new request for pulling LLMs into local Ollama
@@ -34,7 +34,7 @@ object PullStreamingRequest
 	  */
 	def apply(deprecationView: View[Boolean] = AlwaysFalse)
 	         (implicit llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
-		new PullStreamingRequest(deprecationView)
+		new StreamedPullRequest(deprecationView)
 	
 	/**
 	  * Creates a new request for pulling LLMs into local Ollama
@@ -60,8 +60,8 @@ object PullStreamingRequest
   * @author Mikko Hilpinen
   * @since 03.09.2024, v1.1
   */
-class PullStreamingRequest(deprecationView: View[Boolean] = AlwaysFalse)
-                          (implicit llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
+class StreamedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)
+                         (implicit llm: LlmDesignator, exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends ApiRequest[StreamedPullStatus]
 {
 	// ATTRIBUTES   -------------------------

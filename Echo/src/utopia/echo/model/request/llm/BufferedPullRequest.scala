@@ -15,7 +15,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.Future
 
-object PullWithoutStatusRequest
+object BufferedPullRequest
 {
 	/**
 	  * Creates a new condition for pulling an LLM
@@ -27,7 +27,7 @@ object PullWithoutStatusRequest
 	  * @return A new request for pulling LLM data
 	  */
 	def apply(deprecationView: View[Boolean] = AlwaysFalse)(implicit llm: LlmDesignator) =
-		new PullWithoutStatusRequest(deprecationView)
+		new BufferedPullRequest(deprecationView)
 	
 	/**
 	  * Creates a new condition for pulling an LLM
@@ -47,14 +47,14 @@ object PullWithoutStatusRequest
   * This variant of pull request doesn't track the pull / download status at all,
   * and only yields a response once the whole process has completed, which may take a long time.
   *
-  * For status-tracking requests, which are better in for use-cases with a UI, see [[PullStreamingRequest]].
+  * For status-tracking requests, which are better in for use-cases with a UI, see [[StreamedPullRequest]].
   *
   * @param deprecationView A view which contains true if this request becomes deprecated
   * @param llm Targeted LLM's designator
   * @author Mikko Hilpinen
   * @since 03.09.2024, v1.1
   */
-class PullWithoutStatusRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit llm: LlmDesignator)
+class BufferedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit llm: LlmDesignator)
 	extends ApiRequest[String]
 {
 	// IMPLEMENTED  -------------------------

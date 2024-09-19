@@ -74,6 +74,7 @@ object StreamedPullStatus
 case class StreamedPullStatus(statusPointer: Changing[String], downloadsPointer: Changing[Seq[StreamedDownloadStatus]],
                               completionFuture: Future[Try[Unit]])
                              (implicit exc: ExecutionContext, log: Logger)
+	extends StreamedStatus
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -82,7 +83,7 @@ case class StreamedPullStatus(statusPointer: Changing[String], downloadsPointer:
 	/**
 	  * A flag that contains true once this pull process has completed.
 	  */
-	lazy val completionFlag = _completionFlag.view
+	override lazy val completionFlag = _completionFlag.view
 	/**
 	  * A pointer that contains the latest download process or None, if no downloads have been started
 	  */
@@ -111,21 +112,7 @@ case class StreamedPullStatus(statusPointer: Changing[String], downloadsPointer:
 	// COMPUTED -----------------------------
 	
 	/**
-	  * @return The current status of this process as a string
-	  */
-	def status = statusPointer.value
-	
-	/**
 	  * @return The current and past download processes within this process. In chronological order.
 	  */
 	def downloads = downloadsPointer.value
-	
-	/**
-	  * @return Whether this process has completed
-	  */
-	def completed = _completionFlag.value
-	/**
-	  * @return Whether this process has not yet completed
-	  */
-	def incomplete = !completed
 }

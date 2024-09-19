@@ -9,7 +9,6 @@ import utopia.flow.view.immutable.View
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
-@deprecated("Deprecated for removal", "v1.1")
 trait RetractableRequestFactory[+Repr]
 {
 	// ABSTRACT ------------------------
