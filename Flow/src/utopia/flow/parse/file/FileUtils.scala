@@ -16,7 +16,7 @@ object FileUtils
 	
 	private lazy val dashRegex = Regex.escape('-')
 	private lazy val multiDashRegex = dashRegex + dashRegex.oneOrMoreTimes
-	private lazy val validFileNamePartRegex = (Regex.letterOrDigit || dashRegex).withinParenthesis.oneOrMoreTimes
+	private lazy val validFileNamePartRegex = (Regex.letterOrDigit || dashRegex).withinParentheses.oneOrMoreTimes
 	
 	/**
 	 * The current working directory

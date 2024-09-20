@@ -5,8 +5,8 @@ import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
-import utopia.echo.model.enumeration.ChatRole.System
-import utopia.echo.model.enumeration.ModelParameter.ContextTokens
+import utopia.echo.model.enumeration.ChatRole.{Assistant, System}
+import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.request.chat.ChatParams
 import utopia.echo.model.request.chat.tool.Tool
@@ -20,9 +20,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
-import utopia.flow.util.StringExtensions._
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}
@@ -74,7 +72,7 @@ class Chat(ollama: OllamaClient)
 	  * Used when no appropriate statistical information has been collected yet.
 	  * One token is about 1/2 a word.
 	  */
-	var expectedReplySize = 256
+	var expectedReplySize = 384
 	/**
 	  * Number of tokens added to the estimated required context size
 	  */
@@ -149,24 +147,30 @@ class Chat(ollama: OllamaClient)
 			if (messages.isEmpty)
 				defaultSize
 			else
-				messages.view.map(countTokensIn).sum
+				messages.view.map(EstimateTokenCount.in).sum
 		}
 	
-	private val _lastContextSizePointer = EventfulPointer[UncertainInt](CertainNumber(0))
+	private val _lastPromptAndReplySizesPointer = EventfulPointer(Pair.twice(0))
 	/**
-	  * A pointer that contains the context size of the most recent successful request
-	  * within the current conversation.
-	  * May contain unknown. Resets if message history or system messages are modified.
+	  * A pointer that contains the sizes of the most recent successful request prompt and received reply.
 	  */
-	lazy val lastContextSizePointer = _lastContextSizePointer.readOnly
-	// Largest encountered context-size increase within a single chat message (request + reply)
-	private val _largestContextIncreasePointer = EventfulPointer[UncertainInt](UncertainNumber.positive)
+	lazy val lastPromptAndReplySizesPointer = _lastPromptAndReplySizesPointer.readOnly
+	private val _largestReplySizePointer = EventfulPointer[UncertainInt](0)
 	/**
-	  * A pointer that contains the largest increase in context size during the current conversation.
-	  * Contain unknown while no suitable measurements have yet been made.
-	  * Resets when message history is manually modified.
+	  * A pointer that contains the largest encountered reply size during the current conversation.
+	  * May contain inexact values, depending on the context (e.g. whether message history has been manually modified).
 	  */
-	lazy val largestContextIncreasePointer = _largestContextIncreasePointer.readOnly
+	lazy val largestReplySizePointer = _largestReplySizePointer.readOnly
+	private val _historyTokensPointer = EventfulPointer(0)
+	/**
+	  * A pointer that contains the calculated estimation of the message history's token count
+	  */
+	lazy val historyTokensPointer = _historyTokensPointer.readOnly
+	/**
+	  * A pointer that contains the estimated context size of the most recent completed query,
+	  * i.e. the size of the system message, plus the conversation history.
+	  */
+	lazy val lastContextSizePointer = systemMessageTokensPointer.mergeWith(_historyTokensPointer) { _ + _ }
 	
 	/**
 	  * A mutable pointer that contains the current message history.
@@ -178,31 +182,53 @@ class Chat(ollama: OllamaClient)
 	lazy val messageHistoryPointer = IndirectPointer(_messageHistoryPointer) { newHistory =>
 		val oldHistory = _messageHistoryPointer.getAndSet(newHistory)
 		if (oldHistory != newHistory) {
-			// Resets the known context size whenever message history is manually edited
-			_lastContextSizePointer.value = if (newHistory.isEmpty) 0 else UncertainNumber.positive
-			_largestContextIncreasePointer.update { previous =>
+			// Checks whether the message history was appended
+			val isAppend = {
+				val parallelHistory = oldHistory.zip(newHistory)
+				parallelHistory.hasSize.of(oldHistory) &&
+					parallelHistory.forall { case (o, n) => o.text == n.text }
+			}
+			
+			// Recalculates the context size
+			_historyTokensPointer.update { lastSize =>
+				// Case: Messages were appended => Estimates the token count in the appended messages
+				if (isAppend)
+					lastSize + newHistory.view.drop(oldHistory.size)
+						.map { message => EstimateTokenCount.in(message.text) }.sum
+				// Case: Message history was cleared => Resets the count
+				else if (newHistory.isEmpty)
+					0
+				// Case: Message history was otherwise modified => Estimates the size completely
+				else
+					newHistory.view.map { message => EstimateTokenCount.in(message.text) }.sum
+			}
+			
+			// Recalculates the largest reply size
+			_largestReplySizePointer.update { previous =>
+				lazy val estimated = newHistory.view
+					.filter { _.senderRole == Assistant }
+					.map { message => EstimateTokenCount.in(message.text) }
+					.maxOption match
+				{
+					case Some(estimated) => UncertainNumber.greaterThan((estimated * 0.8).toInt, orEqual = true)
+					case None => CertainNumber(0)
+				}
 				// The largest increase minimum value may be preserved, if the history is only appended
 				previous.smallestPossibleValue match {
 					case Some(smallest) =>
-						val parallelHistory = oldHistory.zip(newHistory)
-						if (parallelHistory.hasSize.of(oldHistory) &&
-							parallelHistory.forall { case (o, n) => o.text == n.text })
+						// Case: Message history was appended
+						//       => Keeps the current largest value,
+						//          taking into consideration that the actual reply may be larger
+						if (isAppend)
 							UncertainNumber.greaterThan(smallest, orEqual = true)
+						// Case: Message history was modified more => Calculates a new value
 						else
-							UncertainNumber.positive
-					
-					case None => UncertainNumber.positive
+							estimated
+							
+					case None => estimated
 				}
 			}
 		}
-	}
-	
-	
-	// INITIAL CODE ---------------------------
-	
-	systemMessagesPointer.addContinuousAnyChangeListener {
-		// Resets the known context size whenever the system message is updated
-		_lastContextSizePointer.value = UncertainNumber.zeroOrMore
 	}
 	
 	
@@ -260,14 +286,18 @@ class Chat(ollama: OllamaClient)
 	  */
 	def systemMessageTokens = systemMessageTokensPointer.value
 	/**
+	  * @return Calculated number of tokens in the current conversation history
+	  */
+	def conversationHistoryTokens = _historyTokensPointer.value
+	/**
 	  * @return Number of tokens used in the previous fully completed request.
 	  *         Uncertain while no requests have yet been completed within the current conversation.
 	  */
-	def lastContextSize = _lastContextSizePointer.value
+	def lastContextSize = _lastPromptAndReplySizesPointer.value
 	/**
 	  * @return Largest single request context size increase encountered within this conversation.
 	  */
-	def largestContextIncrease = _largestContextIncreasePointer.value
+	def largestContextIncrease = _largestReplySizePointer.value
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -496,8 +526,10 @@ class Chat(ollama: OllamaClient)
 		val optionsWithContextSize = {
 			if (defaultOptions.contains(ContextTokens))
 				defaultOptions
-			else
-				defaultOptions + (ContextTokens -> (contextSize(messages.mkString(". ")): Value))
+			else {
+				val estimate = contextSize(defaultOptions(PredictTokens).int.toRight { messages.mkString(". ") })
+				defaultOptions + (ContextTokens -> (estimate: Value))
+			}
 		}
 		
 		// At this time, streaming is not supported with tools
@@ -523,19 +555,23 @@ class Chat(ollama: OllamaClient)
 					// Handles the reply completion asynchronously
 					reply.statisticsFuture
 						.tryFlatMapIfSuccess { statistics =>
-							// Updates the minimum context size
-							val contextSizeIncrease = _lastContextSizePointer.mutate { previouslyUsed =>
-								val nowUsed = CertainNumber(statistics.contextTokenCount)
-								(nowUsed - previouslyUsed) -> nowUsed
-							}
-							// Updates the max context size increase
-							contextSizeIncrease.exact.foreach { increase =>
-								_largestContextIncreasePointer.update {
-									_.exact match {
-										case Some(previously) => previously max increase
-										case None => increase
+							// Updates the last context size
+							val increasedReplySize = _lastPromptAndReplySizesPointer.mutate { previouslyUsed =>
+								val nowUsed = Pair(statistics.promptTokenCount, statistics.responseTokenCount)
+								val increasedReplySize = Pair(previouslyUsed, nowUsed)
+									.mapAndMerge { _.second } { (previous, current) =>
+										if (current > previous)
+											Some(current)
+										else
+											None
 									}
-								}
+								increasedReplySize -> nowUsed
+							}
+							// Updates the calculated context size
+							_historyTokensPointer.update { _ + statistics.contextTokenCount }
+							// Updates the max reply size, if appropriate
+							increasedReplySize.foreach { replySize =>
+								_largestReplySizePointer.update { _ max replySize }
 							}
 							reply.future
 						}
@@ -572,21 +608,18 @@ class Chat(ollama: OllamaClient)
 		}
 	}
 	
-	// TODO: If num_predict is specified, that can override next message token calculation
-	private def contextSize(nextMessage: => String) = {
-		// Prepares for a specific increase in context size
-		val expectedIncrease = _largestContextIncreasePointer.value.exact
-			.getOrElse {
-				val calculated = countTokensIn(nextMessage) + expectedReplySize
-				_largestContextIncreasePointer.value.smallestPossibleValue match {
-					case Some(smallest) => smallest max calculated
-					case None => calculated
-				}
-			}
-		// Attempts to acquire the size of the last interaction context
-		val historySize = lastContextSize.exact
-			.getOrElse { messageHistory.iterator.map { m => countTokensIn(m.text) }.sum }
-		val rawValue = systemMessageTokens + historySize + expectedIncrease + additionalContextSize
+	private def contextSize(nextMessageOrNumPredict: Either[String, Int]) = {
+		// Estimates the number of tokens in the message, the history and the reply
+		val messageSize = nextMessageOrNumPredict.rightOrMap(EstimateTokenCount.in)
+		val expectedReplySize = _largestReplySizePointer.value.smallestPossibleValue match {
+			case Some(smallestLargest) => smallestLargest max this.expectedReplySize
+			case None => this.expectedReplySize
+		}
+		val historySize = _historyTokensPointer.value
+		val rawValue = systemMessageTokens + historySize + messageSize + expectedReplySize + additionalContextSize
+		
+		// TODO: Remove test print
+		println(s"Calculated context size:\n\t- System: $systemMessageTokens tokens\n\t- History: $historySize tokens\n\t- Message: $messageSize tokens\n\t- Estimated reply: $expectedReplySize tokens\n\t- Result: $rawValue tokens (including a buffer of $additionalContextSize)")
 		
 		// Limits to the allowed range
 		if (rawValue >= maxContextSize)
@@ -596,7 +629,4 @@ class Chat(ollama: OllamaClient)
 		else
 			rawValue
 	}
-	
-	private def countTokensIn(message: String) =
-		message.splitIterator(Regex.whiteSpace).map { word => if (word.length > 4) 2 else 1 }.sum
 }

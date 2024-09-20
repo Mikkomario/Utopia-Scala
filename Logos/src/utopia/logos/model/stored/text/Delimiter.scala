@@ -23,16 +23,16 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 	
 	private lazy val spacedDelimiterRegex =
 		((commaRegex || periodRegex || exclamationRegex || questionRegex ||
-			colonRegex || endingParenthesisRegex).withinParenthesis.oneOrMoreTimes +
-			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParenthesis).withinParenthesis
-	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParenthesis
+			colonRegex || endingParenthesisRegex).withinParentheses.oneOrMoreTimes +
+			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
+	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParentheses
 	
 	/**
 	  * A regular expression that finds delimiters from text
 	  */
 	lazy val anyDelimiterRegex =
 		(startingParenthesisRegex || endingParenthesisRegex || quotationRegex || spacedDelimiterRegex ||
-			surroundedDashRegex || Regex.newLine).withinParenthesis + Regex.newLine.anyTimes
+			surroundedDashRegex || Regex.newLine).withinParentheses + Regex.newLine.anyTimes
 			
 	
 	// IMPLEMENTED	--------------------

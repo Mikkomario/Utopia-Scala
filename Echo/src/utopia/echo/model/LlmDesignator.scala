@@ -1,5 +1,7 @@
 package utopia.echo.model
 
+import utopia.flow.operator.ScopeUsable
+
 import scala.language.implicitConversions
 
 object LlmDesignator
@@ -36,7 +38,7 @@ object LlmDesignator
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-trait LlmDesignator
+trait LlmDesignator extends ScopeUsable[LlmDesignator]
 {
 	// ABSTRACT -----------------------
 	
@@ -47,6 +49,8 @@ trait LlmDesignator
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	override def self: LlmDesignator = this
 	
 	override def toString = llmName
 }

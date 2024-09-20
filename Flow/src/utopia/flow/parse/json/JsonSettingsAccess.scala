@@ -17,7 +17,7 @@ object JsonSettingsAccess
 	/**
 	 * A regular expression that finds a file that contains "settings" or "Settings" in its file name
 	 */
-	val defaultSettingsRegex = Regex.any + (Regex("s") || Regex("S")).withinParenthesis + Regex("ettings") + Regex.any
+	val defaultSettingsRegex = Regex.any + (Regex("s") || Regex("S")).withinParentheses + Regex("ettings") + Regex.any
 	
 	private val splitterRegex = Regex.escape('/')
 }

@@ -16,6 +16,11 @@ object StreamedStatus
 	// ATTRIBUTES   --------------------------
 	
 	/**
+	  * The expected final status string on success
+	  */
+	val expectedFinalStatus = "success"
+	
+	/**
 	  * A completed success status ("success")
 	  */
 	lazy val success: StreamedStatus = SuccessCompletion()
@@ -82,7 +87,7 @@ object StreamedStatus
 		}
 	}
 	
-	private case class SuccessCompletion(override val status: String = "success") extends StreamedStatus
+	private case class SuccessCompletion(override val status: String = expectedFinalStatus) extends StreamedStatus
 	{
 		override lazy val statusPointer: Changing[String] = Fixed(status)
 		

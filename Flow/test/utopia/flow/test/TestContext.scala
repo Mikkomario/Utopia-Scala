@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext
   */
 object TestContext
 {
-	implicit val logger: Logger = SysErrLogger
+	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Test")
 	implicit val weekdays: WeekDays = MondayToSunday
 }

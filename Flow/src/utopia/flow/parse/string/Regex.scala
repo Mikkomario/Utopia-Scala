@@ -84,7 +84,7 @@ object Regex
 	/**
 	 * Accepts digits and characters
 	 */
-	val letterOrDigit = (letter || digit).withinParenthesis
+	val letterOrDigit = (letter || digit).withinParentheses
 	/**
 	  * Accepts digits and characters
 	  */
@@ -93,7 +93,7 @@ object Regex
 	/**
 	 * Accepts positive integers and decimal numbers
 	 */
-	val positiveNumber = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParenthesis.noneOrOnce
+	val positiveNumber = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParentheses.noneOrOnce
 	/**
 	  * Accepts positive integers and decimal numbers
 	  */
@@ -249,7 +249,9 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	/**
 	  * @return A version of this regex wrapped within parenthesis
 	  */
-	def withinParenthesis = Regex(s"($string)")
+	def withinParentheses = Regex(s"($string)")
+	@deprecated("Renamed to withinParentheses", "v2.5")
+	def withinParenthesis = withinParentheses
 	
 	/**
 	  * @return This regex in sequence 0-n times
@@ -358,7 +360,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		val notStart = !startRegex
 		val notEnd = !endRegex
 		
-		this + "(?=" + (notStart.anyTimes + startRegex + notEnd.anyTimes + endRegex).withinParenthesis
+		this + "(?=" + (notStart.anyTimes + startRegex + notEnd.anyTimes + endRegex).withinParentheses
 			.anyTimes + Regex.noneOf(s"${ start.toString }$end").anyTimes + "$)"
 	}
 	

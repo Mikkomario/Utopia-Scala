@@ -33,6 +33,7 @@
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
   which now provide almost the same interface using implicit functions.
+- Renamed `Regex.withinParenthesis` to `.withinParentheses `
 ### New features
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
