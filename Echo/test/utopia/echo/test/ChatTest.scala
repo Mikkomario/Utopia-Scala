@@ -43,7 +43,8 @@ object ChatTest extends App
 			if (currentSystemMessage.isEmpty) {
 				println("Currently there is no system message defined")
 				val newSystemMessage = {
-					if (StdIn.ask("Do you want to specify a system message for the duration of this session?"))
+					if (StdIn.ask("Do you want to specify a system message for the duration of this session?",
+						default = true))
 						requestSystemMessage()
 					else
 						None
@@ -60,7 +61,7 @@ object ChatTest extends App
 						.flatMap { newModelName =>
 							println("Creating a new model...")
 							client.push(
-									CreateModelRequest.streamed.apply(newModelName, s"FROM $originalLlm\nSYSTEM"))
+									CreateModelRequest.streamed.apply(newModelName, s"FROM $originalLlm\nSYSTEM \n"))
 								.future.waitForResult().toTry.logToOption
 								.flatMap { statusStream =>
 									// Prints the model-creation status

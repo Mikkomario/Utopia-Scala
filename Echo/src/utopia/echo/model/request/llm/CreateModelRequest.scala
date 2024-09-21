@@ -5,9 +5,8 @@ import utopia.access.http.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.http.request.Body
 import utopia.echo.model.request.RetractableRequestFactory
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
@@ -113,8 +112,10 @@ trait CreateModelRequest[+R] extends ApiRequest[R]
 	override def path: String = "create"
 	
 	override def body: Either[Value, Body] = {
-		val modelFileValue = modelFile.rightOrMap { _.real.toJson }
-		Left(Model.from(
-			"name" -> name, "modelfile" -> modelFileValue, "stream" -> stream))
+		val modelFileProp = modelFile match {
+			case Right(str) => Constant("modelfile", str)
+			case Left(path) => Constant("path", path.real.toJson)
+		}
+		Left(Model.from("name" -> name, "stream" -> stream) + modelFileProp)
 	}
 }

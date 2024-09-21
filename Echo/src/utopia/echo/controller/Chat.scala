@@ -527,7 +527,8 @@ class Chat(ollama: OllamaClient)
 			if (defaultOptions.contains(ContextTokens))
 				defaultOptions
 			else {
-				val estimate = contextSize(defaultOptions(PredictTokens).int.toRight { messages.mkString(". ") })
+				val estimate = contextSize(defaultOptions.get(PredictTokens).flatMap { _.int }
+					.toRight { messages.mkString(". ") })
 				defaultOptions + (ContextTokens -> (estimate: Value))
 			}
 		}

@@ -507,6 +507,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  * @return A split result iterator based on the matches of this expression within that string.
 	  *         NB: Doesn't contain any empty strings.
 	  */
+	// FIXME: May return an empty iterator
 	def splitIteratorIn(str: String) = {
 		// Finds pattern breaks (lazily), adds string start and end
 		(breakIndexIteratorIn(str).pairedFrom(0) :+ str.length).zipWithIndex

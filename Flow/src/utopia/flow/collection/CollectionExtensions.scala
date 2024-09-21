@@ -28,7 +28,8 @@ import scala.util.{Failure, Random, Success, Try}
   * This object contains some extensions for the more traditional collections / data structures
   * @author Mikko Hilpinen
   * @since 10.10.2018
-  * */
+  */
+// TODO: Separate non-collection extensions to separate files & add .log to Try
 object CollectionExtensions
 {
 	// TYPES    -----------------------------

@@ -26,9 +26,11 @@ object EstimateTokenCount
 	// Counts the number of words
 	def in(text: String) = text.splitIterator(Regex.whiteSpace)
 		.map { word =>
+			println(word)
 			// Each word may consist of multiple parts (e.g. "it's" or "e-commerce")
 			word.trim.splitIterator(specialCharSeqRegex)
 				.map { part =>
+					println(s"\t$part")
 					// The first 4 letters count as a single token
 					// After that, every 3 letters count as a token
 					if (part.length >= 9)

@@ -103,7 +103,7 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors)
 		
 		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
-			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { _.getString }
+			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v => v("error").stringOr(v.getString) }
 		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
 			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
 		

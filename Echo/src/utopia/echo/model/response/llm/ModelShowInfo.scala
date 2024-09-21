@@ -65,11 +65,39 @@ case class ModelShowInfo(modelFile: String, details: OllamaModelDetails = Ollama
                          parameters: Map[ModelParameter, Value] = Map(), template: String = "",
                          extraInfo: Model = Model.empty)
 {
+	// ATTRIBUTES   --------------------------
+	
 	/**
 	  * System message specified in the model-file
 	  */
-	lazy val systemMessage = modelFile.linesIterator.map { _.trim }.find { _.startsWithIgnoreCase("SYSTEM") } match {
-		case Some(messageLine) => messageLine.drop(6).dropWhile { _ == ' ' }
-		case None => ""
+	lazy val systemMessage = {
+		val linesIter = modelFile.linesIterator.map { _.trim }
+		// Finds the SYSTEM line
+		linesIter.find { _.startsWithIgnoreCase("SYSTEM") } match {
+			case Some(messageLine) =>
+				val firstLine = messageLine.drop(6).dropWhile { _ == ' ' }
+				
+				// Checks whether this SYSTEM message is multi-line (i.e. starts with ")
+				// Case: Multi-line => Parses until "
+				if (firstLine.startsWith("\"") && (firstLine.length == 1 || !firstLine.endsWith("\""))) {
+					val moreLines = linesIter.collectTo { _.endsWith("\"") }
+					((firstLine.dropWhile {  _ == '\"'} +: moreLines.dropRight(1)) ++
+						moreLines.lastOption.map { _.dropRightWhile { _ == '\"' } }.filterNot { _.isEmpty })
+						.dropWhile { _.isEmpty }
+						.mkString("\n")
+				}
+				// Case: Single line => Returns this line
+				else
+					firstLine
+				
+			// Case: No system message specified
+			case None => ""
+		}
 	}
+	
+	
+	// IMPLEMENTED  --------------------------
+	
+	override def toString = s"Model-file: $modelFile\nDetails: $details\nParameters: ${
+		parameters.map { case (k, v) => s"$k = $v" }.mkString(", ") }\nTemplate: $template\nMore: $extraInfo"
 }
