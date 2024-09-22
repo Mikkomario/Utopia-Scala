@@ -1,9 +1,8 @@
 package utopia.scribe.core.test
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.scribe.core.controller.logging.Synagogue
-import utopia.scribe.core.util.logging.TryExtensions._
 
 import scala.util.Try
 
@@ -21,7 +20,7 @@ object SynagogueTest extends App
 	synagogue.register(failingLogger, priority = true)
 	synagogue.register(SysErrLogger, priority = false)
 	
-	Try { throw new IllegalStateException("Original test failure (expected)") }.logFailure
+	Try { throw new IllegalStateException("Original test failure (expected)") }.log
 	
 	println("Done")
 }

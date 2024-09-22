@@ -8,6 +8,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}

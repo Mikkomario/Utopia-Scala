@@ -9,6 +9,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.EitherExtensions._
 import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.result.{Result, ResultParser, UseRawJson}
 

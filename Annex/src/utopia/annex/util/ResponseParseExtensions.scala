@@ -3,8 +3,8 @@ package utopia.annex.util
 import utopia.access.http.Status
 import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
-import utopia.flow.collection.CollectionExtensions._
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
+import utopia.flow.util.EitherExtensions._
 
 import scala.util.{Failure, Success, Try}
 

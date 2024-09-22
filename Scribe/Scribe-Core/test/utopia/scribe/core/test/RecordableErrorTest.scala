@@ -2,7 +2,7 @@ package utopia.scribe.core.test
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.scribe.core.model.cached.logging.RecordableError
 
@@ -33,9 +33,7 @@ object RecordableErrorTest extends App
 	}
 	implicit val threadPool: ThreadPool = new ThreadPool("Test")
 	
-	Future {
-		throw new IllegalStateException("Testing")
-	}.waitFor().logFailure
+	Future { throw new IllegalStateException("Testing") }.waitFor().log
 	
 	println("Done!")
 }

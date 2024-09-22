@@ -2,9 +2,9 @@ package utopia.reach.test
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
@@ -26,7 +26,7 @@ object DropDownTest extends App
 	import ReachTestContext._
 	
 	val arrowImage = Image.readFrom("Reflection/test-images/arrow-back-48dp.png")
-	arrowImage.logFailure
+	arrowImage.log
 	val expandIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationCounterClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
 	val shrinkIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }

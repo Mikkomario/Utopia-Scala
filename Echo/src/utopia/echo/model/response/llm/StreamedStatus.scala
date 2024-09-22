@@ -2,7 +2,7 @@ package utopia.echo.model.response.llm
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -83,7 +83,7 @@ object StreamedStatus
 		
 		completionFuture.foreachResult { result =>
 			_completionFlag.set()
-			result.logFailure
+			result.log
 		}
 	}
 	

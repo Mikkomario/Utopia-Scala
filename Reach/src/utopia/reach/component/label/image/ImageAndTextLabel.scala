@@ -8,8 +8,8 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Small, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard

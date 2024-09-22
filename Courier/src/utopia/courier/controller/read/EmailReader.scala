@@ -10,6 +10,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
@@ -377,9 +378,7 @@ class EmailReader[A](settings: ReadSettings,
 			unqueueDeletions()
 			// Closes the currently open folder
 			// Catches and logs close failures
-			openFolder.foreach { case (folder, _) =>
-				close(folder).logFailureWithMessage("Failed to close the last folder")
-			}
+			openFolder.foreach { case (folder, _) => close(folder).logWithMessage("Failed to close the last folder") }
 			// Logs errors that were queued but not processed
 			queuedFailures.foreach { log(_) }
 		}
@@ -391,7 +390,7 @@ class EmailReader[A](settings: ReadSettings,
 				AutoCloseWrapper(folder) { close(_) }.tryConsumeContent { folder =>
 					folder.open(Folder.READ_WRITE)
 					delete(message)
-				}.logFailureWithMessage("Message deletion failed")
+				}.logWithMessage("Message deletion failed")
 			// Case: Iteration is yet to complete =>
 			//       Queues the deletion to occur later (possibly avoiding unnecessary folder-openings)
 			else
@@ -685,8 +684,7 @@ class EmailReader[A](settings: ReadSettings,
 			if (lazyFlag.current.forall { _.isNotSet }) {
 				if (folder.isOpen) {
 					if (folder.getMode == Folder.READ_WRITE)
-						delete(message)
-							.logFailureWithMessage("Failed to delete a message upon deletionFlag.set()")
+						delete(message).logWithMessage("Failed to delete a message upon deletionFlag.set()")
 					else
 						queueDeletion(folder, message)
 				}

@@ -1,10 +1,10 @@
 package utopia.flow.view.mutable.caching
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangingStoppedListener, LazyListener, LazyResetListener, ResettableLazyListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
@@ -130,9 +130,9 @@ object ListenableResettableLazy
 			
 			// OTHER    --------------------------
 			
-			def onValueGenerated() = fireEventIfNecessary(None).foreach { effect => Try { effect() }.logFailure }
+			def onValueGenerated() = fireEventIfNecessary(None).foreach { effect => Try { effect() }.log }
 			def onValueReset(oldValue: A) =
-				fireEventIfNecessary(Some(oldValue)).foreach { effect => Try { effect }.logFailure }
+				fireEventIfNecessary(Some(oldValue)).foreach { effect => Try { effect }.log }
 		}
 	}
 }

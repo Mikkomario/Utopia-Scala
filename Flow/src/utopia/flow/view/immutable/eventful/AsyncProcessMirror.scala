@@ -2,9 +2,9 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Process
 import utopia.flow.async.process.ShutdownReaction.Cancel
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
 import utopia.flow.view.mutable.async.Volatile
@@ -222,7 +222,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 					val result = f(origin)
 					// Determines the new value by merging the result with the previous value
 					pointer.update { current => AsyncMirrorValue(merge(current.current, result), current.queuedOrigin) }
-				}.logFailure
+				}.log
 			}
 		}
 	}

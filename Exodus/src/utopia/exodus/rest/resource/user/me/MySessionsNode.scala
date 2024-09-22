@@ -11,10 +11,11 @@ import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.util.ExodusContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Constant
+import utopia.flow.util.EitherExtensions._
 import utopia.metropolis.model.post.NewSessionRequest
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{LeafResource, Resource, ResourceWithChildren}

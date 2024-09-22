@@ -1,11 +1,11 @@
 package utopia.firmament.drawing.view
 
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.view.immutable.View
-import utopia.paradigm.color.Color
 import utopia.firmament.drawing.template
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.view.immutable.View
 import utopia.genesis.graphics.DrawLevel
 import utopia.genesis.graphics.DrawLevel.Background
+import utopia.paradigm.color.Color
 
 object RoundedBackgroundViewDrawer
 {

@@ -4,12 +4,12 @@ import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.ProcessState.NotStarted
 import utopia.flow.async.process.ShutdownReaction.DelayShutdown
 import utopia.flow.async.process.{DelayedProcess, Process}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 

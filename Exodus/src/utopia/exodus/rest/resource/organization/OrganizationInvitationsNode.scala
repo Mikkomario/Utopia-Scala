@@ -12,12 +12,13 @@ import utopia.exodus.model.enumeration.ExodusTask.InviteMembers
 import utopia.exodus.rest.resource.scalable.{ExtendableOrganizationResource, ExtendableOrganizationResourceFactory, OrganizationUseCaseImplementation}
 import utopia.exodus.util.ExodusContext
 import utopia.exodus.util.ExodusContext.uuidGenerator
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.util.NotEmpty
+import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation
@@ -97,7 +98,7 @@ class OrganizationInvitationsNode(organizationId: Int) extends ExtendableOrganiz
 										// Creates a new invitation and saves it
 										val invitation = InvitationModel.insert(InvitationData(organizationId,
 											newInvitation.startingRoleId, Now + newInvitation.duration,
-											recipientUserId, Some(recipientEmail), NotEmpty(newInvitation.message),
+											recipientUserId, Some(recipientEmail), newInvitation.message.ifNotEmpty,
 											session.ownerId))
 										// Records a new email validation attempt based on the invitation,
 										// if possible

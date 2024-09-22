@@ -4,6 +4,7 @@ import utopia.flow.async.process.Wait
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 
 import scala.util.Try

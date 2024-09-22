@@ -1,6 +1,6 @@
 package utopia.firmament.context
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.paradigm.color.ColorShade._
 import utopia.paradigm.color.{Color, ColorSet}
 

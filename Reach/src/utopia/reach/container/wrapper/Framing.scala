@@ -8,12 +8,12 @@ import utopia.firmament.factory.FramedFactory
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.util.EitherExtensions._
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}

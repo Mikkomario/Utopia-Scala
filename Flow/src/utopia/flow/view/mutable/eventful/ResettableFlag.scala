@@ -1,9 +1,9 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.Switch
@@ -40,7 +40,7 @@ object ResettableFlag
 		override def value_=(newValue: Boolean) = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
+			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 		}
 	}
 }

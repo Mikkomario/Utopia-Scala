@@ -14,7 +14,7 @@ trait ContainerLike[+C <: ReflectionComponentLike] extends ReflectionComponentLi
 	/**
 	  * The current components in this container
 	  */
-	def components: IndexedSeq[C]
+	def components: Seq[C]
 	
 	
 	// IMPLEMENTED	----------------

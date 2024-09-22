@@ -3,8 +3,8 @@ package utopia.annex.controller
 import utopia.access.http.{Headers, Status}
 import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
+import utopia.flow.util.EitherExtensions._
 
 import java.io.InputStream
 import scala.util.{Failure, Success, Try}

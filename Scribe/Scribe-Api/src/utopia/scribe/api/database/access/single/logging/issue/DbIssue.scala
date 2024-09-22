@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.time.Now
-import utopia.flow.util.StringExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Version
 import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
 import utopia.scribe.api.database.access.single.logging.issue_variant.DbIssueVariant

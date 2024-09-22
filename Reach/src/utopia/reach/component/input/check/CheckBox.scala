@@ -7,9 +7,9 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.enumeration.End.First
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Background

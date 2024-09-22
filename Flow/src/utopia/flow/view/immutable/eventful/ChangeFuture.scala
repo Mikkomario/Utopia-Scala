@@ -1,10 +1,10 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.AbstractChanging
@@ -77,7 +77,7 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 		
 		// Generates change events, if needed
 		if (v != placeHolder)
-			fireEvent(ChangeEvent(placeHolder, v)).foreach { effect => Try { effect() }.logFailure }
+			fireEvent(ChangeEvent(placeHolder, v)).foreach { effect => Try { effect() }.log }
 		
 		// Informs the stop listeners
 		stopListeners.foreach { _.onChangingStopped() }

@@ -1,7 +1,7 @@
 package utopia.echo.model.response.generate
 
 import utopia.echo.model.response.{OllamaResponseWrapper, StreamedOrBufferedResponseFactory}
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 
 object StreamedOrBufferedReply
 	extends StreamedOrBufferedResponseFactory[StreamedReply, BufferedReply, StreamedOrBufferedReply]

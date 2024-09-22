@@ -7,7 +7,7 @@ import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing

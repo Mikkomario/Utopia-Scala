@@ -15,7 +15,7 @@ trait WrappingContainer[C <: ReflectionComponentLike, Wrap] extends Container[C]
 	/**
 	  * @return Wrappers managed by this container
 	  */
-	protected def wrappers: IndexedSeq[Wrap]
+	protected def wrappers: Seq[Wrap]
 	
 	/**
 	  * @param wrapper A wrapper

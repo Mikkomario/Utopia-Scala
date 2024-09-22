@@ -7,6 +7,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonSettingsAccess.defaultSettingsRegex
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 
 import java.io.FileNotFoundException
 import java.nio.file.Path
@@ -74,7 +75,7 @@ class JsonSettingsAccess(rootDirectory: Path = "", fileNameRegex: Regex = defaul
 	 * An empty model in case of a parse failure.
 	 */
 	// Failures are logged. An empty model is used in case of a failure.
-	protected lazy val model = parsed.getOrElseLog(Model.empty)
+	protected lazy val model = parsed.log.getOrElse(Model.empty)
 	
 	
 	// COMPUTED -------------------------

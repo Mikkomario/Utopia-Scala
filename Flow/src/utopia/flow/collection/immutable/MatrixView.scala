@@ -1,11 +1,11 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.template
 import utopia.flow.collection.template.MatrixViewLike
 import utopia.flow.operator.Identity
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 

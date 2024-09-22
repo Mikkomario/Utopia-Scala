@@ -2,6 +2,11 @@
 
 ## v2.5 (in development)
 ### Breaking changes
+- Moved parts of **CollectionExtensions** to different files:
+  - Moved **Try**-related features to **TryExtensions**
+  - Moved **Either**-related features to **EitherExtensions**
+  - Moved **Range**-related features to **RangeExtensions**
+  - This is because the **CollectionExtensions** file was getting bloated, which negatively affected IDE performance
 - A large number of pointer-related changes:
   - All non-wrapping pointers now require an implicit logger as a construction parameter
     - Classes implementing **Changing** are now required to implement `listenerLogger: Logger`
@@ -34,6 +39,8 @@
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
   which now provide almost the same interface using implicit functions.
+- Deprecated a lot of logging functions in **Try** and **TryCatch**, 
+  in favor of a new more simple `.log` & `.logWithMessage(String)` functions
 - Renamed `Regex.withinParenthesis` to `.withinParentheses ` and `.withBraces` to `.withinBrackets`
 ### New features
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
@@ -44,6 +51,7 @@
   - Related to this update, added **MaybeSet** trait
 - Added **VolatileSwitch** class, which implements the features of **VolatileFlag**, but without change events
 - **Loggers** are now implicitly convertible to **ScopeUsable**, allowing for scoped logging definitions
+- Added `.spanTo(...)` and `.spanFrom(...)` to numeric classes via **RangeExtensions**
 ### New methods
 - **Changing**
   - Added a new variant of `.lazyMergeWith(...)`
@@ -71,6 +79,8 @@
   - A large number of new methods are now available of **Pointers** of type **Option** and of type **Seq**
 - **Seq** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
+- **Try** (**TryExtensions**)
+  - Added `.log` and `.logWithMessage(String)`
 - **TryCatch**
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes

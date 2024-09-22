@@ -10,12 +10,13 @@ import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
@@ -922,7 +923,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	def setToExitOnClose(delay: FiniteDuration = Duration.Zero) =
 		closeFuture.onComplete { res =>
-			res.logFailure
+			res.log
 			Delay(delay) { System.exit(0) }
 		}
 	

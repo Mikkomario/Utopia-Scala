@@ -4,10 +4,11 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.async.process.{Delay, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import javax.swing.SwingUtilities
@@ -34,7 +35,7 @@ object AwtEventThread
 	implicit var logger: Logger = SysErrLogger
 	
 	private lazy val taskKeepDuration = 3.seconds
-	private lazy val tasks = VolatileList[TaskWrapper[_]]()
+	private lazy val tasks = Volatile.emptySeq[TaskWrapper[_]]
 	
 	
 	// COMPUTED	----------------------------

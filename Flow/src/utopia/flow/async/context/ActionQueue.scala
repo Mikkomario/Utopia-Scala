@@ -5,6 +5,7 @@ import utopia.flow.async.process.ProcessState.{BasicProcessState, Completed, Not
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing

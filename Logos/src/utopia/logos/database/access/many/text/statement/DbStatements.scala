@@ -2,6 +2,7 @@ package utopia.logos.database.access.many.text.statement
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.util.EitherExtensions._
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
 import utopia.logos.database.access.many.url.link.DbLinks

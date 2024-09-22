@@ -8,11 +8,11 @@ import utopia.firmament.factory.FramedFactory
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing

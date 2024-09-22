@@ -10,11 +10,11 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.ResponseParser
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.duration.Duration

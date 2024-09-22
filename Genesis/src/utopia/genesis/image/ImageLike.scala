@@ -1,15 +1,15 @@
 package utopia.genesis.image
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.util.EitherExtensions._
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.enumeration.Direction2D
+import utopia.paradigm.shape.shape2d.Matrix2D
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.{HasSize, Size}
-import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape3d.Matrix3D
 
 import java.awt.image.BufferedImage

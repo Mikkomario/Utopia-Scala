@@ -4,6 +4,8 @@ import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.string.Regex.unbracketableChars
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.RangeExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -336,7 +338,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @param n A number
 	 * @return This regex 'n' times in sequence
 	 */
-	def times(n: Int) = Regex(string + s"{$n}")
+	def times(n: Int) = Regex(s"$string{$n}")
 	/**
 	 * @param range A range
 	 * @return This regex 'range' times in sequence
@@ -347,7 +349,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 			if (range hasSize 1)
 				times(range.head)
 			else
-				Regex(string + s"{${range.min},${range.max}}")
+				Regex(s"$string{${range.min},${range.max}}")
 		}
 		else
 			throw new IllegalArgumentException("Empty range")
@@ -513,7 +515,6 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  * @return A split result iterator based on the matches of this expression within that string.
 	  *         NB: Doesn't contain any empty strings.
 	  */
-	// FIXME: May return an empty iterator
 	def splitIteratorIn(str: String) = {
 		// Finds pattern breaks (lazily), adds string start and end
 		(breakIndexIteratorIn(str).pairedFrom(0) :+ str.length).zipWithIndex

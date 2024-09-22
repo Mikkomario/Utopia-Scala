@@ -1,11 +1,11 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.operator.enumeration.End
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
@@ -96,7 +96,7 @@ object CopyOnDemand
 		override def update() = {
 			val oldValue = cachedValue
 			cachedValue = source.value
-			fireEventIfNecessary(oldValue).foreach { effect => Try { effect() }.logFailure }
+			fireEventIfNecessary(oldValue).foreach { effect => Try { effect() }.log }
 		}
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =

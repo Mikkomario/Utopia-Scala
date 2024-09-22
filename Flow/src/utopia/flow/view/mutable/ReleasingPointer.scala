@@ -3,8 +3,8 @@ package utopia.flow.view.mutable
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process.{DelayedProcess, Process}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 

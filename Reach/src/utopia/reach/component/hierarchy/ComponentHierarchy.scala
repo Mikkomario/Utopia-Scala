@@ -1,8 +1,8 @@
 package utopia.reach.component.hierarchy
 
 import utopia.firmament.model.CoordinateTransform
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.Priority.Normal
 import utopia.genesis.graphics.{FontMetricsWrapper, Priority}

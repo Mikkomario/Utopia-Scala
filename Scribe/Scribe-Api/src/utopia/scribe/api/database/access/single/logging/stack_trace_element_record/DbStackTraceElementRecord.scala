@@ -3,6 +3,7 @@ package utopia.scribe.api.database.access.single.logging.stack_trace_element_rec
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.util.EitherExtensions._
 import utopia.scribe.api.database.factory.logging.StackTraceElementRecordFactory
 import utopia.scribe.api.database.model.logging.StackTraceElementRecordModel
 import utopia.scribe.core.model.cached.logging.StackTrace

@@ -1,6 +1,6 @@
 package utopia.flow.view.mutable.async
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
@@ -102,7 +102,7 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 		// Case: Value changes => Updates the value and prepares to fire a change event
 		else {
 			assignWithoutEvents(newValue)
-			Single(() => fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure })
+			Single(() => fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log })
 		}
 	}
 }

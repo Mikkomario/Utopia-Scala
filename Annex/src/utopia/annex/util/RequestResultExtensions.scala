@@ -1,9 +1,10 @@
 package utopia.annex.util
 
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
-import utopia.annex.model.response.{RequestResult, Response}
+import utopia.annex.model.response.RequestResult
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

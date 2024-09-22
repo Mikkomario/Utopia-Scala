@@ -1,7 +1,12 @@
 # Utopia Scribe Core - list of changes
 
-## v1.0.3 (in development)
-Built with Scala v2.13.14
+## v1.1 (in development)
+### Breaking changes
+- Renamed **TryExtensions** to **ScribeTryExtensions** (because **TryExtensions** was added to Flow)
+### Deprecations
+- Deprecated a number of functions in **ScribeTryExtensions** in favor of the more simple `.logWith(...)` functions
+### Other changes
+- Built with Scala v2.13.14
 
 ## v1.0.2 - 28.07.2024
 A small update, supporting **Flow v2.4** and adding a few fixes & utilities.

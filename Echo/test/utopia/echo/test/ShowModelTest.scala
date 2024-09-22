@@ -1,8 +1,8 @@
 package utopia.echo.test
 
-import EchoTestContext._
 import utopia.annex.util.RequestResultExtensions._
-import utopia.flow.collection.CollectionExtensions._
+import utopia.echo.test.EchoTestContext._
+import utopia.flow.util.TryExtensions._
 
 /**
   * Tests the show command
@@ -12,7 +12,7 @@ import utopia.flow.collection.CollectionExtensions._
 object ShowModelTest extends App
 {
 	selectModel().foreach { implicit llm =>
-		client.showModel.future.waitForResult().toTry.logToOption.foreach { modelInfo =>
+		client.showModel.future.waitForResult().toTry.log.foreach { modelInfo =>
 			println(modelInfo)
 			println(s"\n\nParsed system message: \"${ modelInfo.systemMessage }\"")
 		}

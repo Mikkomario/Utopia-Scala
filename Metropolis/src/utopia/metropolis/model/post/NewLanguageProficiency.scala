@@ -1,12 +1,12 @@
 package utopia.metropolis.model.post
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.metropolis.model.error.IllegalPostModelException
 

@@ -9,6 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}

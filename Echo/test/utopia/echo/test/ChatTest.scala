@@ -9,12 +9,12 @@ import utopia.echo.model.response.llm.StreamedStatus
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 
 import scala.io.StdIn
@@ -62,13 +62,13 @@ object ChatTest extends App
 							println("Creating a new model...")
 							client.push(
 									CreateModelRequest.streamed.apply(newModelName, s"FROM $originalLlm\nSYSTEM \n"))
-								.future.waitForResult().toTry.logToOption
+								.future.waitForResult().toTry.log
 								.flatMap { statusStream =>
 									// Prints the model-creation status
 									statusStream.statusPointer.addContinuousListenerAndSimulateEvent("") { e =>
 										println(e.newValue)
 									}
-									statusStream.finalStatusFuture.waitForResult().logToOption
+									statusStream.finalStatusFuture.waitForResult().log
 								}
 								.flatMap { finalStatus =>
 									if (finalStatus ~== StreamedStatus.expectedFinalStatus)
@@ -158,7 +158,7 @@ object ChatTest extends App
 					println("\nWaiting for the response...")
 					schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
 					
-					schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.logToOption.foreach { reply =>
+					schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
 						Wait(0.2.seconds)
 						println(s"\n\n${ reply.statistics }\n")
 					}

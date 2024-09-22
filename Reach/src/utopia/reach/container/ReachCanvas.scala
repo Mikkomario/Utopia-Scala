@@ -9,13 +9,14 @@ import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.{Resettable, Switch}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.{Resettable, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
 import utopia.genesis.handling.action.ActorHandler

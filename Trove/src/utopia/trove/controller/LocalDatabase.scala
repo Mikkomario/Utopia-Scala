@@ -6,6 +6,7 @@ import utopia.flow.async.context.CloseHook
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.trove.database.{DbDatabaseVersion, DbDatabaseVersions}

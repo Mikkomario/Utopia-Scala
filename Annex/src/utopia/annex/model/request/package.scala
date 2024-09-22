@@ -1,7 +1,7 @@
 package utopia.annex.model
 
 import utopia.flow.async.TryFuture
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 
 /**
   * @author Mikko Hilpinen

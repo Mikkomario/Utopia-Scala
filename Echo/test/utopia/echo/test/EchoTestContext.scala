@@ -6,11 +6,11 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.AccessLogger
 import utopia.echo.controller.OllamaClient
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 
@@ -53,7 +53,7 @@ object EchoTestContext
 	  *         None if the selection was canceled, or if there were no models available.
 	  */
 	def selectModel() = {
-		client.localModels.future.waitForResult().toTry.logToOption.flatMap { llms =>
+		client.localModels.future.waitForResult().toTry.log.flatMap { llms =>
 			println("Please select the LLM to use")
 			StdIn.selectFrom(llms.map { llm =>
 				llm.designator -> s"${ llm.name } (${ llm.sizeBytes / 100000000L / 10.0 } Gb)"

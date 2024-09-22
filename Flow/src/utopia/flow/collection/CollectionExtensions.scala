@@ -18,7 +18,7 @@ import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
-import scala.collection.{AbstractIterator, AbstractView, BuildFrom, Factory, IterableOps, SeqOps, View, mutable}
+import scala.collection.{AbstractIterator, AbstractView, BuildFrom, IterableOps, SeqOps, View, mutable}
 import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
@@ -29,15 +29,9 @@ import scala.util.{Failure, Random, Success, Try}
   * @author Mikko Hilpinen
   * @since 10.10.2018
   */
-// TODO: Separate non-collection extensions to separate files & add .log to Try
 object CollectionExtensions
 {
 	// TYPES    -----------------------------
-	
-	/**
-	  * Type where the item exists either on the Left or the Right side
-	  */
-	type Sided[+A] = Either[A, A]
 	
 	implicit def pairIsIterable[A]: PairIsIterable[A] = Pair.pairIsIterable
 	
@@ -627,104 +621,6 @@ object CollectionExtensions
 				rBuilder += b
 			}
 			lBuilder.result() -> rBuilder.result()
-		}
-	}
-	
-	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal
-	{
-		/**
-		  * Converts this series of attempts to a single try. The resulting try succeeds only if all attempts succeeded.
-		  * If a failure is encountered, iteration is immediately ended and that failure is returned.
-		  * @return Success containing all success results or Failure containing the encountered error
-		  */
-		def toTry = {
-			val successesBuilder = new VectorBuilder[A]()
-			val iter = tries.iterator
-			var failure: Option[Throwable] = None
-			while (failure.isEmpty && iter.hasNext) {
-				iter.next() match {
-					case Success(item) => successesBuilder += item
-					case Failure(error) => failure = Some(error)
-				}
-			}
-			failure match {
-				case Some(error) => Failure(error)
-				case None => Success(successesBuilder.result())
-			}
-		}
-		/**
-		  * @return Failure if all attempts in this collection failed, containing the first encountered error.
-		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
-		  *         caught errors, as well as successes
-		  */
-		def toTryCatch: TryCatch[Vector[A]] = {
-			val (failures, successes) = tries.divided
-			if (successes.isEmpty) {
-				failures.headOption match {
-					// Case: All attempts failed => fails with the first encountered error
-					case Some(firstError) => TryCatch.Failure(firstError)
-					// Case: No attempts were made => empty success
-					case None => TryCatch.Success(successes, failures)
-				}
-			}
-			// Case: One or more attempts succeeded => success
-			else
-				TryCatch.Success(successes, failures)
-		}
-		
-		/**
-		 * Divides this collection to two separate collections, one for failures and one for successes
-		 * @return Failures + successes
-		 */
-		def divided = {
-			val successesBuilder = new VectorBuilder[A]
-			val failuresBuilder = new VectorBuilder[Throwable]
-			tries.iterator.foreach {
-				case Success(a) => successesBuilder += a
-				case Failure(error) => failuresBuilder += error
-			}
-			failuresBuilder.result() -> successesBuilder.result()
-		}
-		
-		/**
-		  * @return An iterator that only includes failed attempts
-		  */
-		def failuresIterator = tries.iterator.flatMap { _.failure }
-		/**
-		  * @return The first failure that was encountered. None if no failures were encountered.
-		  */
-		def anyFailure = tries.iterator.findMap { _.failure }
-	}
-	
-	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]]) extends AnyVal
-	{
-		/**
-		 * @return Success if at least one of the items in this collection was a success,
-		 *         or if this collection is empty.
-		 *         Failure otherwise.
-		 */
-		def toTryCatch: TryCatch[IndexedSeq[A]] = {
-			// Collects all success and failure values, including partial failures
-			val successesBuilder = new VectorBuilder[A]()
-			val failuresBuilder = new VectorBuilder[Throwable]()
-			tries.iterator.foreach {
-				case TryCatch.Success(v, failures) =>
-					successesBuilder += v
-					failuresBuilder ++= failures
-				case TryCatch.Failure(error) => failuresBuilder += error
-			}
-			val failures = failuresBuilder.result()
-			successesBuilder.result().notEmpty match {
-				// Case: There was at least one success => Succeeds
-				case Some(successes) => TryCatch.Success(successes, failures)
-				case None =>
-					failures.headOption match {
-						// Case: No successes => Fails
-						case Some(error) => TryCatch.Failure(error)
-						// Case: Empty collection => Succeeds
-						case None => TryCatch.Success(Empty)
-					}
-			}
 		}
 	}
 	
@@ -2216,7 +2112,10 @@ object CollectionExtensions
 		  */
 		def foreachCatching[U](f: A => Try[U]) = {
 			val failuresBuilder = new VectorBuilder[Throwable]()
-			i.foreach { failuresBuilder ++= f(_).failure }
+			i.foreach {
+				case Failure(error) => failuresBuilder += error
+				case _ => ()
+			}
 			failuresBuilder.result()
 		}
 		
@@ -2317,46 +2216,6 @@ object CollectionExtensions
 		def withEvents[B >: A](initialValue: B)(implicit log: Logger) = new EventfulIterator[B](initialValue, i)
 	}
 	
-	implicit class TryIterator[A](val i: Iterator[Try[A]]) extends AnyVal
-	{
-		/**
-		 * Iterates until the first success is encountered.
-		 * If this iterator doesn't contain a single success, iterates over all items.
-		 * @return The first success that was encountered,
-		 *         including any failures that were encountered before that success.
-		 *         If no successes were encountered, returns the last encountered failure.
-		 *         Also fails if this iterator is empty
-		 */
-		def trySucceedOnce: TryCatch[A] = {
-			val results = i.iterator.collectTo { _.isSuccess }
-			results.lastOption match {
-				case Some(lastResult) =>
-					lastResult match {
-						case Success(a) => TryCatch.Success(a, results.flatMap { _.failure })
-						case Failure(error) => TryCatch.Failure(error)
-					}
-				case None => TryCatch.Failure(new IllegalStateException("trySucceedOnce called for an empty iterator"))
-			}
-		}
-		
-		/**
-		 * @param f A mapping function performed for successful elements
-		 * @tparam B Mapping result type
-		 * @return Copy of this iterator where all successful elements are mapped (lazily)
-		 */
-		def mapSuccesses[B](f: A => B): Iterator[Try[B]] = i.map { _.map(f) }
-		/**
-		 * @param f A mapping function that may yield a failure
-		 * @tparam B Type of mapping results, when successful
-		 * @return Copy of this iterator where successful results are mapped using the specified function.
-		 *         The mapping is performed on-call only.
-		 */
-		def flatMapSuccesses[B](f: A => Try[B]): Iterator[Try[B]] = i.map {
-			case Success(item) => f(item)
-			case Failure(error) => Failure(error)
-		}
-	}
-	
 	
 	// OTHER    ------------------------------------------
 	
@@ -2397,314 +2256,6 @@ object CollectionExtensions
 					case None => Some(a)
 				}
 			case None => other
-		}
-	}
-	
-	implicit class RichTry[A](val t: Try[A]) extends AnyVal
-	{
-		/**
-		  * The success value of this try. None if this try was a failure
-		  */
-		def success = t.toOption
-		/**
-		  * The failure (throwable) value of this try. None if this try was a success.
-		  */
-		def failure = t.failed.toOption
-		
-		/**
-		 * @return A TryCatch instance based on this Try
-		 */
-		def toTryCatch: TryCatch[A] = t match {
-			case Success(a) => TryCatch.Success(a)
-			case Failure(e) => TryCatch.Failure(e)
-		}
-		
-		/**
-		 * Logs the captured failure, if applicable
-		 * @param log Logging implementation to use
-		 */
-		def logFailure(implicit log: Logger) = failure.foreach { log(_) }
-		/**
-		 * Logs the captured failure, if applicable
-		 * @param message Message to record with the failure (call-by-name)
-		 * @param log Logging implementation to use
-		 */
-		def logFailureWithMessage(message: => String)(implicit log: Logger) = failure.foreach { log(_, message) }
-		
-		/**
-		 * Converts this try into an option. Logs possible failure state.
-		 * @param log Implicit logger to use to log the potential failure.
-		 * @return Some if success, None otherwise
-		 */
-		def logToOption(implicit log: Logger) = t match {
-			case Success(a) => Some(a)
-			case Failure(error) =>
-				log(error)
-				None
-		}
-		/**
-		 * Converts this try into an option. Logs possible failure state.
-		 * @param message Message to log in case of a failure (call-by-name)
-		 * @param log Implicit logger to use to log the potential failure.
-		 * @return Some if success, None otherwise
-		 */
-		def logToOptionWithMessage(message: => String)(implicit log: Logger) = t match {
-			case Success(a) => Some(a)
-			case Failure(error) =>
-				log(error, message)
-				None
-		}
-		
-		/**
-		  * @param f A mapping function for possible failure
-		  * @tparam B Result type
-		  * @return Contents of this try on success, mapped error on failure
-		  */
-		def getOrMap[B >: A](f: Throwable => B): B = t match {
-			case Success(item) => item
-			case Failure(error) => f(error)
-		}
-		/**
-		 * Returns the success value or logs the error and returns a placeholder value
-		 * @param f A function for generating the returned value in case of a failure
-		 * @param log Implicit logging implementation for encountered errors
-		 * @tparam B Result type
-		 * @return Successful contents of this try, or the specified placeholder value
-		 */
-		def getOrElseLog[B >: A](f: => B)(implicit log: Logger): B = getOrMap { error =>
-			log(error)
-			f
-		}
-		
-		/**
-		  * @param f A function called if this is a success
-		  * @param log Implicit logger to record a possible failure with
-		  * @tparam U Arbitrary function result type
-		  */
-		def foreachOrLog[U](f: A => U)(implicit log: Logger): Unit = t match {
-			case Success(a) => f(a)
-			case Failure(error) => log(error)
-		}
-		
-		/**
-		  * Converts this Try into an Option.
-		  * Handles the possible failure case using the specified function.
-		  * @param f A function that handles the possible failure case
-		  * @tparam U Arbitrary function result type
-		  * @return Some if this was a success, None of failure.
-		  */
-		def handleFailure[U](f: Throwable => U) = t match {
-			case Success(v) => Some(v)
-			case Failure(error) => f(error); None
-		}
-		
-		/**
-		  * Maps the value of this Try, if successful.
-		  * @param f A mapping function that accepts a successfully acquired value and returns a
-		  *          TryCatch instance.
-		  * @tparam B Type of the success value in the map function result
-		  * @return Success containing the mapping result and the possible non-critical failures,
-		  *         or a failure.
-		  */
-		def flatMapCatching[B](f: A => TryCatch[B]) = t match {
-			case Success(v) => f(v)
-			case Failure(e) => TryCatch.Failure(e)
-		}
-		
-		/**
-		 * @param error A (secondary) error
-		 * @tparam B Type of failure to yield
-		 * @return This if failure, otherwise a failure based on the specified error
-		 */
-		def failWith[B](error: Throwable) = t match {
-			case Success(_) => Failure[B](error)
-			case Failure(e) => Failure[B](e)
-		}
-		/**
-		 * @param error A potential error (call-by-name, not called if this is a failure already)
-		 * @return Success only if this is a success and the specified error is None.
-		 *         Failure otherwise, preferring an existing failure in this Try, if applicable.
-		 */
-		def failIf(error: => Option[Throwable]) = {
-			t match {
-				case Success(v) =>
-					error match {
-						// Case: This was a success but the specified function failed => Fails
-						case Some(e) => Failure(e)
-						// Case: This was a success and the specified function didn't fail => Success
-						case None => Success(v)
-					}
-				// Case: This was already a failure => Fails
-				case Failure(e) => Failure(e)
-			}
-		}
-	}
-	
-	implicit class RichTryTryCatch[A](val t: Try[TryCatch[A]]) extends AnyVal
-	{
-		/**
-		 * @return Flattened copy of this 2-level try into a single TryCatch instance
-		 */
-		def flattenCatching: TryCatch[A] = t.getOrMap { TryCatch.Failure(_) }
-	}
-	
-	implicit class RichEither[L, R](val e: Either[L, R]) extends AnyVal
-	{
-		/**
-		  * @return This either's left value or None if this either is right
-		  */
-		def leftOption = e match {
-			case Left(l) => Some(l)
-			case Right(_) => None
-		}
-		/**
-		  * @return This either's right value or None if this either is left (same as toOption)
-		  */
-		def rightOption = e.toOption
-		
-		/**
-		  * If this either is left, maps it
-		  * @param f A mapping function for left side
-		  * @tparam B New type for left side
-		  * @return A mapped version of this either
-		  */
-		def mapLeft[B](f: L => B) = e match {
-			case Right(r) => Right(r)
-			case Left(l) => Left(f(l))
-		}
-		/**
-		  * If this either is right, maps it
-		  * @param f A mapping function for left side
-		  * @tparam B New type for right side
-		  * @return A mapped version of this either
-		  */
-		def mapRight[B](f: R => B) = e match {
-			case Right(r) => Right(f(r))
-			case Left(l) => Left(l)
-		}
-		
-		/**
-		  * @param f A mapping function applied if this is left.
-		  *          Returns a new either.
-		  * @tparam L2 Type of left in the mapping result.
-		  * @tparam R2 Type of the resulting right type.
-		  * @return This if right, mapping result if left
-		  */
-		def divergeMapLeft[L2, R2 >: R](f: L => Either[L2, R2]) = e match {
-			case Right(r) => Right(r)
-			case Left(l) => f(l)
-		}
-		/**
-		  * @param f A mapping function applied if this is right.
-		  *          Returns a new either.
-		  * @tparam L2 Type of the resulting left type.
-		  * @tparam R2 Type of right in the mapping result.
-		  * @return This if left, mapping result if right
-		  */
-		def divergeMapRight[L2 >: L, R2](f: R => Either[L2, R2]) = e match {
-			case Right(r) => f(r)
-			case Left(l) => Left(l)
-		}
-		
-		/**
-		  * @param f A mapping function for left values
-		  * @tparam B Type of map result
-		  * @return Right value or the mapped left value
-		  */
-		def rightOrMap[B >: R](f: L => B) = e match {
-			case Right(r) => r
-			case Left(l) => f(l)
-		}
-		/**
-		  * @param f A mapping function for right values
-		  * @tparam B Type of map result
-		  * @return Left value or the mapped right value
-		  */
-		def leftOrMap[B >: L](f: R => B) = e match {
-			case Right(r) => f(r)
-			case Left(l) => l
-		}
-		
-		/**
-		  * Maps the value of this either to a single value, whichever side this is
-		  * @param leftMap  Mapping function used when left value is present
-		  * @param rightMap Mapping function used when right value is present
-		  * @tparam B Resulting item type
-		  * @return Mapped left or mapped right
-		  */
-		def mapToSingle[B](leftMap: L => B)(rightMap: R => B) = e match {
-			case Right(r) => rightMap(r)
-			case Left(l) => leftMap(l)
-		}
-		/**
-		  * Maps this either, no matter which side it is
-		  * @param leftMap  Mapping function used when this either is left
-		  * @param rightMap Mapping function used when this either is right
-		  * @tparam L2 New left type
-		  * @tparam R2 New right type
-		  * @return A mapped version of this either (will have same side)
-		  */
-		def mapBoth[L2, R2](leftMap: L => L2)(rightMap: R => R2) = e match {
-			case Right(r) => Right(rightMap(r))
-			case Left(l) => Left(leftMap(l))
-		}
-	}
-	
-	implicit class RichSingleTypeEither[A](val e: Either[A, A]) extends AnyVal
-	{
-		/**
-		  * @return Left or right side value, whichever is defined
-		  */
-		def either = e match {
-			case Left(l) => l
-			case Right(r) => r
-		}
-		/**
-		  * @return The left or the right side value, plus the side from which the item was found.
-		  *         First represents the left side and Last represents the right side.
-		  */
-		def eitherAndSide: (A, End) = e match {
-			case Left(l) => l -> First
-			case Right(r) => r -> Last
-		}
-		
-		/**
-		  * @return A pair based on this either, where the non-occupied side receives None and the occupied side
-		  *         receives Some
-		  */
-		def toPair = e match {
-			case Left(l) => Pair(Some(l), None)
-			case Right(r) => Pair(None, Some(r))
-		}
-		
-		/**
-		  * @param f A mapping function
-		  * @tparam B Mapping result type
-		  * @return Mapping result, keeping the same side
-		  */
-		def mapEither[B](f: A => B) = e match {
-			case Left(l) => Left(f(l))
-			case Right(r) => Right(f(r))
-		}
-		/**
-		  * Maps the value in this either, but only if the the value resides on the specified side
-		  * @param side The side to map (if applicable), where First represents left and Last represents Right
-		  * @param f A mapping function to use, if applicable
-		  * @tparam B Type of mapping result
-		  * @return Either this either, if the value resided on the opposite side, or a mapped copy of this either
-		  */
-		def mapSide[B >: A](side: End)(f: A => B) = e match {
-			case Left(l) => if (side == First) Left(f(l)) else e
-			case Right(r) => if (side == Last) Right(f(r)) else e
-		}
-		/**
-		  * @param f A mapping function
-		  * @tparam B Mapping result type
-		  * @return Mapping function result, whether from left or from right
-		  */
-		def mapEitherToSingle[B](f: A => B) = e match {
-			case Left(l) => f(l)
-			case Right(r) => f(r)
 		}
 	}
 	
@@ -2766,81 +2317,6 @@ object CollectionExtensions
 		}
 	}
 	
-	implicit class RichIterableOnceEithers[L, R](val i: IterableOnce[Either[L, R]]) extends AnyVal
-	{
-		/**
-		  * Divides this collection to two separate collections, one for left items and one for right items
-		  * @return The Left items (1) and then the Right items (2)
-		  */
-		def divided = {
-			val lBuilder = new VectorBuilder[L]
-			val rBuilder = new VectorBuilder[R]
-			i.iterator.foreach {
-				case Left(l) => lBuilder += l
-				case Right(r) => rBuilder += r
-			}
-			lBuilder.result() -> rBuilder.result()
-		}
-	}
-	
-	/**
-	  * This extension allows tuple lists to be transformed into multi maps directly
-	  */
-	implicit class RichTupleVector[K, V](val list: Vector[(K, V)]) extends AnyVal
-	{
-		/**
-		  * @return This collection as a multi map
-		  */
-		@deprecated("Deprecated for removal. Please use .groupMap(...) instead", "v2.4")
-		def asMultiMap: Map[K, Vector[V]] = list.toMultiMap[K, V, Vector[V]] { t => t }
-	}
-	
-	implicit class RichRange(val range: Range) extends AnyVal
-	{
-		/**
-		  * @return The first index that is outside of this range
-		  */
-		def exclusiveEnd = range match {
-			case r: Range.Exclusive => r.end
-			case r: Range.Inclusive => if (r.step > 0) r.end + 1 else r.end - 1
-		}
-		
-		/**
-		  * This function works like foldLeft, except that it stores each step (including the start) into a vector
-		  * @param start   The starting step
-		  * @param map     A function for calculating the next step, takes the previous result + the next item in this range
-		  * @param factory A factory for final collection (implicit)
-		  * @tparam B The type of steps
-		  * @return All of the steps mapped into a collection
-		  */
-		def foldMapToVector[B](start: B)(map: (B, Int) => B)(implicit factory: Factory[B, Vector[B]]): Vector[B] = {
-			val builder = factory.newBuilder
-			var last = start
-			builder += last
-			
-			range.foreach { item =>
-				last = map(last, item)
-				builder += last
-			}
-			
-			builder.result()
-		}
-	}
-	
-	implicit class RichInclusiveRange(val range: Range.Inclusive) extends AnyVal
-	{
-		/**
-		  * @param stepSize How much this range is advanced on each step (sign doesn't matter)
-		  * @return An iterator that contains all smaller ranges within this range. The length of these ranges is
-		  *         determined by the 'step' of this range, although the last returned range may be shorter.
-		  */
-		def subRangeIterator(stepSize: Int): Iterator[Range.Inclusive] =
-		{
-			val step = if (range.start < range.end) stepSize.abs else -stepSize.abs
-			new RangeIterator(range.start, range.end, step)
-		}
-	}
-	
 	private class RepeatingIterator[A, CC[X]](val c: IterableOps[A, CC, _]) extends Iterator[A]
 	{
 		// ATTRIBUTES   -----------------
@@ -2863,34 +2339,6 @@ object CollectionExtensions
 				currentIterator = Some(c.iterator)
 			
 			currentIterator.get
-		}
-	}
-	
-	private class RangeIterator(start: Int, end: Int, by: Int) extends Iterator[Range.Inclusive]
-	{
-		// ATTRIBUTES   ----------------------
-		
-		private val minStep = if (by < 0) -1 else if (by > 0) 1 else 0
-		
-		private var lastEnd = start - minStep
-		
-		
-		// IMPLEMENTED  ----------------------
-		
-		override def hasNext = lastEnd != end
-		
-		override def next() =
-		{
-			val start = lastEnd + minStep
-			val defaultEnd = start + by
-			val actualEnd = {
-				if ((by < 0 && defaultEnd < end) || (by > 0 && defaultEnd > end))
-					end
-				else
-					defaultEnd
-			}
-			lastEnd = actualEnd
-			start to actualEnd
 		}
 	}
 }

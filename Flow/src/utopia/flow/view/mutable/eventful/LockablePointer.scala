@@ -1,6 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.PointerFactory
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
@@ -104,6 +104,6 @@ class LockablePointer[A](initialValue: A)(implicit log: Logger)
 	private def _set(newValue: A) = {
 		val oldValue = _value
 		_value = newValue
-		fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
+		fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 	}
 }

@@ -10,6 +10,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.IterateLines
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.vault.database.Connection.settings

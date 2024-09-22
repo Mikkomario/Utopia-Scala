@@ -2,7 +2,7 @@ package utopia.echo.model.response.chat
 
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.response.{OllamaResponseWrapper, StreamedOrBufferedResponseFactory}
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 
 object StreamedOrBufferedReplyMessage
 	extends StreamedOrBufferedResponseFactory[StreamedReplyMessage, BufferedReplyMessage, StreamedOrBufferedReplyMessage]

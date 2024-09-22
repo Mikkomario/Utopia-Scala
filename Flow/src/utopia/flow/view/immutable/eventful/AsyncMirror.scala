@@ -1,8 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AsyncMirror.AsyncMirrorValue
 import utopia.flow.view.mutable.async.Volatile

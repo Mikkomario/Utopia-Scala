@@ -10,7 +10,7 @@ import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.many.logging.issue.DbIssues
 import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
 import utopia.scribe.core.model.enumeration.Severity.Debug
-import utopia.scribe.core.util.logging.TryExtensions._
+import utopia.scribe.core.util.logging.ScribeTryExtensions._
 
 import scala.util.Try
 

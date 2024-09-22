@@ -1,9 +1,9 @@
 package utopia.citadel.database.access.many.description
 
 import utopia.citadel.util.CitadelContext
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.{ExpiringLazy, RefreshingLazy}
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
@@ -29,8 +29,7 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 		if (cacheDuration <= Duration.Zero)
 			None
 		else {
-			import CitadelContext.executionContext
-			import CitadelContext.connectionPool
+			import CitadelContext.{connectionPool, executionContext}
 			
 			def _readValues = connectionPool.tryWith { implicit c => super.pull }
 				.getOrMap { error =>

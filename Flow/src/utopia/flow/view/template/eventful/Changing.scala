@@ -1,7 +1,6 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
@@ -11,6 +10,7 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -1329,7 +1329,7 @@ trait Changing[+A] extends Any with View[A]
 					listeners.flatMap { listener =>
 						// Catches and logs failures, in case the listener throws
 						Try { listener.onChangeEvent(event) }
-							.logToOptionWithMessage(s"Failure while processing $event")
+							.logWithMessage(s"Failure while processing $event")
 							.map { listener -> _ }
 					}
 				// Case: There wasn't a change event after all => Skips the process

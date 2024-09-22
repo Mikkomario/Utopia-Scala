@@ -1,6 +1,8 @@
 package utopia.scribe.core.util.logging
 
-import utopia.flow.generic.model.immutable.Model
+import utopia.flow.collection.CollectionExtensions.RichIterable
+import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.TryCatch
 import utopia.scribe.core.controller.logging.Scribe
 import utopia.scribe.core.model.enumeration.Severity
@@ -13,7 +15,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 29.6.2023, v1.0
   */
-object TryExtensions
+object ScribeTryExtensions
 {
 	implicit class LoggableTry[+A](val t: Try[A]) extends AnyVal
 	{
@@ -42,6 +44,7 @@ object TryExtensions
 		  * @param scribe Implicit scribe implementation
 		  * @return Some if this was a success. None otherwise.
 		  */
+		@deprecated("Deprecated for removal", "v1.1")
 		def scribeToOption(log: (Scribe, Throwable) => Unit)(implicit scribe: Scribe): Option[A] =
 			scribeTo[Option[A]] { Some(_) } { None }(log)
 		
@@ -50,6 +53,7 @@ object TryExtensions
 		  * @param log Function that accepts a scribe instance and the encountered error, in case of a failure
 		  * @param scribe Implicit scribe implementation
 		  */
+		@deprecated("Deprecated for removal", "v1.1")
 		def scribe(log: (Scribe, Throwable) => Unit)(implicit scribe: Scribe) = scribeTo { _ => () } { () }(log)
 		
 		/**
@@ -62,10 +66,11 @@ object TryExtensions
 		  * @param scribe Implicit scribe implementation
 		  * @return Some if this was a success. None otherwise.
 		  */
+		@deprecated("Deprecated for removal. .logWith(...) now returns an Option, just like this function.", "v1.1")
 		def logToOptionWith(message: String = "", details: Model = Model.empty, subContext: String = "",
 		                    severity: Severity = Severity.default, variantDetails: Model = Model.empty)
 		                   (implicit scribe: Scribe) =
-			scribeToOption { _.in(subContext)(severity).variant(variantDetails)(_, message, details) }
+			logWith(message, details, subContext, severity, variantDetails)
 		
 		/**
 		  * Logs a potential failure in this Try using a Scribe instance
@@ -75,13 +80,16 @@ object TryExtensions
 		  * @param severity       Error severity (default = Unrecoverable)
 		  * @param variantDetails Issue variant -specific details (optional)
 		  * @param scribe         Implicit scribe implementation
+		  * @return This Try as an option
 		  */
 		def logWith(message: String = "", details: Model = Model.empty, subContext: String = "",
 		            severity: Severity = Severity.default, variantDetails: Model = Model.empty)
 		           (implicit scribe: Scribe) =
 			t match {
-				case Failure(error) => scribe.in(subContext)(severity).variant(variantDetails)(error, message, details)
-				case _ => ()
+				case Failure(error) =>
+					scribe.in(subContext)(severity).variant(variantDetails)(error, message, details)
+					None
+				case Success(v) => Some(v)
 			}
 	}
 	
@@ -123,6 +131,7 @@ object TryExtensions
 		  * @param scribe Implicit Scribe implementation
 		  * @return Success in case of a full or partial success. Failure in case of a full failure.
 		  */
+		@deprecated("Deprecated for removal", "v1.1")
 		def scribeToTry(log: (Scribe, Throwable) => Unit)(implicit scribe: Scribe) =
 			t match {
 				case TryCatch.Success(v, failures) =>
@@ -144,6 +153,7 @@ object TryExtensions
 		  * @param scribe Implicit Scribe implementation
 		  * @return Some in case of a full or partial success. None in case of a full failure.
 		  */
+		@deprecated("Deprecated for removal", "v1.1")
 		def scribeToOption(log: (Scribe, Throwable, Boolean) => Unit)(implicit scribe: Scribe) =
 			scribeTo[Option[A]] { Some(_) } { None }(log)
 		
@@ -157,6 +167,7 @@ object TryExtensions
 		  *               of a partial failure.
 		  * @param scribe Implicit Scribe implementation
 		  */
+		@deprecated("Deprecated for removal", "v1.1")
 		def scribe(log: (Scribe, Throwable, Boolean) => Unit)(implicit scribe: Scribe) =
 			scribeTo { _ => () } { () }(log)
 		
@@ -173,7 +184,18 @@ object TryExtensions
 		def logToTryWith(message: String = "", details: Model = Model.empty, subContext: String = "",
 		                 severity: Severity = Recoverable, variantDetails: Model = Model.empty)
 		                (implicit scribe: Scribe) =
-			scribeToTry { _.in(subContext)(severity).variant(variantDetails)(_, message, details) }
+		{
+			t match {
+				case TryCatch.Success(v, failures) =>
+					failures.groupBy { _.getClass }.valuesIterator.foreach { e =>
+						val failureCountProp = if (e.hasSize > 1) Some(Constant("failureCount", e.size)) else None
+						scribe.in(subContext)(severity).variant(variantDetails)
+							.apply(e.head, message, details ++ failureCountProp)
+					}
+					Success(v)
+				case TryCatch.Failure(error) => Failure(error)
+			}
+		}
 		
 		/**
 		  * Converts this TryCatch into an Option,
@@ -185,6 +207,23 @@ object TryExtensions
 		  * @param scribe         Implicit Scribe implementation
 		  * @return Some in case of a full or partial success. None in case of a full failure.
 		  */
+		def logWith(message: String = "", details: Model = Model.empty, subContext: String = "",
+		            variantDetails: Model = Model.empty)
+		           (implicit scribe: Scribe) =
+			scribeTo[Option[A]] { Some(_) } { None } {
+				(s, e, _) => s.in(subContext).variant(variantDetails)(e, message, details) }
+		
+		/**
+		  * Converts this TryCatch into an Option,
+		  * logging potential encountered failures using a Scribe instance
+		  * @param message        Message to include in logging entries (optional)
+		  * @param details        Error details to include (optional, occurrence-specific)
+		  * @param subContext Sub-context where this issue occurred (optional)
+		  * @param variantDetails Issue variant -specific details (optional)
+		  * @param scribe         Implicit Scribe implementation
+		  * @return Some in case of a full or partial success. None in case of a full failure.
+		  */
+		@deprecated("Renamed to .logWith(...)", "v1.1")
 		def logToOptionWith(message: String = "", details: Model = Model.empty, subContext: String = "",
 		                    variantDetails: Model = Model.empty)
 		                   (implicit scribe: Scribe) =

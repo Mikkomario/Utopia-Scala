@@ -1,6 +1,5 @@
 package utopia.flow.collection.immutable
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq.BuildOptimizedSeqFrom
 import utopia.flow.collection.immutable.caching.iterable.LazyPair
 import utopia.flow.collection.mutable.iterator.ZipPadIterator
@@ -13,20 +12,11 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{BuildFrom, SeqFactory, mutable}
+import scala.collection.{BuildFrom, mutable}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 object Pair
 {
-	// COMPUTED ----------------------------------
-	
-	/**
-	  * @return A factory used for constructing Pairs or other indexed sequences, depending on the input size
-	  */
-	@deprecated("Please use OptimizedIndexedSeq instead", "v2.4")
-	def factory = PairFactory
-	
-	
 	// IMPLICIT ----------------------------------
 	
 	/*
@@ -349,30 +339,6 @@ object Pair
 				nextIndex = 3
 			}
 		}
-	}
-	
-	@deprecated("Please use OptimizedIndexedSeq instead", "v2.4")
-	object PairFactory extends SeqFactory[IndexedSeq]
-	{
-		override def empty[A]: IndexedSeq[A] = Empty
-		
-		override def from[A](source: IterableOnce[A]): IndexedSeq[A] = source match {
-			// Case: Already an indexed sequence => Won't transform
-			case i: IndexedSeq[A] => i
-			// Case: Other collection type
-			case _ =>
-				// Case: Known to contain two elements => Converts to a pair
-				if (source.knownSize == 2) {
-					val iter = source.iterator
-					Pair(iter.next(), iter.next())
-				}
-				// Case: Other number of elements, or number of elements not known => Converts to an indexed seq
-				else
-					IndexedSeq.from(source)
-		}
-		
-		override def newBuilder[A]: mutable.Builder[A, IndexedSeq[A]] =
-			new PairOrVectorBuilder[A].mapResult { _.either }
 	}
 }
 

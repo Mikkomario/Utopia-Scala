@@ -13,12 +13,11 @@ import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.ambassador.rest.util.{AuthUtils, ServiceTarget}
 import utopia.citadel.util.CitadelContext._
 import utopia.exodus.rest.util.AuthorizedContext
-import utopia.exodus.util.ExodusContext.logger
-import utopia.exodus.util.ExodusContext.uuidGenerator
+import utopia.exodus.util.ExodusContext.{logger, uuidGenerator}
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.time.Now
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{Context, ResourceWithChildren}
 import utopia.nexus.result.Result

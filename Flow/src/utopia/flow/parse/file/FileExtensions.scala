@@ -1,18 +1,19 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
-import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
-import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.IterateLines
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryCatch
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 

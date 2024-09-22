@@ -4,11 +4,11 @@ import utopia.access.http.{Headers, Status}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 import utopia.echo.controller.EchoContext
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.IterateLines
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.InputStream

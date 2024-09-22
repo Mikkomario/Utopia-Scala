@@ -21,6 +21,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}

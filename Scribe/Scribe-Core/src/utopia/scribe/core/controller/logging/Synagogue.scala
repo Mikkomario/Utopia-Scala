@@ -6,8 +6,9 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.util.NotEmpty
-import utopia.flow.util.logging.Logger
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.scribe.core.model.enumeration.Severity
 
 import scala.util.{Failure, Success, Try}

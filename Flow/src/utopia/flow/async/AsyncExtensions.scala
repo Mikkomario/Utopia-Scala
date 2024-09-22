@@ -1,8 +1,8 @@
 package utopia.flow.async
 
 import utopia.flow.async.process.{Wait, WaitUtils}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.TryCatch
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 

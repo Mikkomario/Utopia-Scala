@@ -18,13 +18,13 @@ import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}
 import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.OutputStream
@@ -326,7 +326,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * @return Future with the buffered response
 	  */
 	def modelResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
-		responseFor(request)(ResponseParser.model.map { _.getOrElseLog(Model.empty) })
+		responseFor(request)(ResponseParser.model.map { _.log.getOrElse(Model.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a model.
 	  * Supports json and xml content types.
@@ -347,7 +347,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * @return Future with the buffered response
 	  */
 	def valueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
-		responseFor(request)(ResponseParser.valueVector.map { _.getOrElseLog(Vector.empty) })
+		responseFor(request)(ResponseParser.valueVector.map { _.log.getOrElse(Vector.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a value vector.
 	  * Supports json and xml content types. Other content types are interpreted as strings and
@@ -368,7 +368,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * @return Future with the buffered response
 	  */
 	def modelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, logger: Logger, jsonParser: JsonParser) =
-		responseFor(request)(ResponseParser.modelVector.map { _.getOrElseLog(Vector.empty) })
+		responseFor(request)(ResponseParser.modelVector.map { _.log.getOrElse(Vector.empty) })
 	/**
 	  * Performs an asynchronous request and parses response body into a model vector.
 	  * Supports json and xml content types. Responses with only a single model have their

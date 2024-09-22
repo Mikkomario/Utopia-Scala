@@ -1,10 +1,10 @@
 package utopia.firmament.image
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.{Cache, ReleasingCache}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -84,7 +84,7 @@ class ImageCache[+A <: AnyRef](val imageReadDirectory: Path,cacheDuration: Finit
 	
 	private val cache: Cache[String, A] = ReleasingCache
 		.after(cacheDuration) { imgName: String =>
-			f(Image.readFrom(imageReadDirectory/imgName).getOrElseLog(Image.empty))
+			f(Image.readFrom(imageReadDirectory/imgName).log.getOrElse(Image.empty))
 		}
 		// Appends the .png portion to image names, if missing
 		.mapKeys { imgName: String => if (imgName.contains('.')) imgName else s"$imgName.png" }

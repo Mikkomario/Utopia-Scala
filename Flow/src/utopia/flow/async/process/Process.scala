@@ -3,8 +3,8 @@ package utopia.flow.async.process
 import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.ProcessState.{Cancelled, Completed, Looping, NotStarted, Running, Stopped}
 import utopia.flow.async.process.ShutdownReaction.Cancel
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy

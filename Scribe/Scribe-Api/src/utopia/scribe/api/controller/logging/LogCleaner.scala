@@ -1,11 +1,12 @@
 package utopia.scribe.api.controller.logging
 
-import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.ScribeTables
 import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}

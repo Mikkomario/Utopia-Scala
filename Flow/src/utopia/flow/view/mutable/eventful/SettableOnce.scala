@@ -1,9 +1,9 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
@@ -81,7 +81,7 @@ class SettableOnce[A](implicit log: Logger)
 			throw new IllegalStateException("SettableOnce.value may only be defined once")
 		else if (newValue.isDefined) {
 			_value = newValue
-			fireEventIfNecessary(None, newValue).foreach { effect => Try { effect() }.logFailure }
+			fireEventIfNecessary(None, newValue).foreach { effect => Try { effect() }.log }
 			declareChangingStopped()
 		}
 	}

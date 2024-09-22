@@ -1,6 +1,6 @@
 package utopia.genesis.handling.event.animation
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}

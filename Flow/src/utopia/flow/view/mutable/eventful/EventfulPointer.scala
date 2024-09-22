@@ -1,6 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
@@ -82,7 +82,7 @@ object EventfulPointer
 		def value_=(newValue: A) = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.logFailure }
+			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 		}
 		
 		override def toString = s"EventfulPointer(${_value})"

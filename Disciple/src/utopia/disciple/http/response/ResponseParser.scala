@@ -4,14 +4,15 @@ import utopia.access.http.ContentCategory.{Application, Text}
 import utopia.access.http.StatusGroup.{ClientError, Redirect, ServerError}
 import utopia.access.http.{ContentCategory, ContentType, Headers, Status, StatusGroup}
 import utopia.disciple.http.response.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.InputStream

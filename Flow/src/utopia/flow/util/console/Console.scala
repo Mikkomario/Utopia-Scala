@@ -5,6 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed

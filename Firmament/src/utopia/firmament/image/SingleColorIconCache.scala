@@ -1,9 +1,9 @@
 package utopia.firmament.image
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.ReleasingCache
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -31,7 +31,7 @@ class SingleColorIconCache(val imageReadDirectory: Path, standardIconSize: Optio
 	
 	private val cache = ReleasingCache
 		.after[String, SingleColorIcon](cacheDuration) { imgName =>
-			val image = Image.readFrom(imageReadDirectory/imgName).getOrElseLog(Image.empty)
+			val image = Image.readFrom(imageReadDirectory/imgName).log.getOrElse(Image.empty)
 			standardIconSize match {
 				case Some(size) => SingleColorIcon(image.fittingWithin(size), size)
 				case None => SingleColorIcon(image)

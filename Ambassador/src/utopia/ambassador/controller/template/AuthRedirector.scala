@@ -6,7 +6,7 @@ import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.vault.database.Connection
 
 import java.net.URLEncoder

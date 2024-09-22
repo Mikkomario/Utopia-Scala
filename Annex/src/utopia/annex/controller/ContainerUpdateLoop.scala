@@ -6,9 +6,9 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.container.FileContainer
 import utopia.flow.time.Now
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger

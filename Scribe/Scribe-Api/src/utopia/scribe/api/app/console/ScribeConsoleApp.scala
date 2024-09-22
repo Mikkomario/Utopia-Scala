@@ -11,7 +11,9 @@ import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.Fixed
@@ -133,7 +135,7 @@ object ScribeConsoleApp extends App
 					println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
 				}
 			}
-		}.logFailure
+		}.log
 	}
 	// Used for listing latest issues
 	private val listCommand = Command("list", "ls", "Lists currently active issues")(
@@ -301,7 +303,7 @@ object ScribeConsoleApp extends App
 					// Case: No issue targeted
 					case None => println("No issue was found")
 				}
-			}.logFailure
+			}.log
 		}
 	}
 	private val nextCommand = Command.withoutArguments("next", "variant",
@@ -416,7 +418,7 @@ object ScribeConsoleApp extends App
 								}
 							}
 					}
-				}.logFailure
+				}.log
 			case None => println("There is no error to describe")
 		}
 	}

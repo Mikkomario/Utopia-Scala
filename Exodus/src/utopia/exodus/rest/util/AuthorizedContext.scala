@@ -14,11 +14,11 @@ import utopia.exodus.model.enumeration.ScopeIdWrapper
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext.acceptLanguageIdsHeaderName
 import utopia.exodus.util.ExodusContext.logger
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.NotEmpty
+import utopia.flow.util.TryExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}

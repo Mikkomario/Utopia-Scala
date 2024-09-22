@@ -1,6 +1,5 @@
 package utopia.scribe.core.controller.logging
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
@@ -8,6 +7,7 @@ import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.Use
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
@@ -130,7 +130,7 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		fileWriter.foreach { lazyWriter =>
 			lazyWriter.value._1 { writer =>
 				writeWith(writer, t, d, context, error, message, occurrenceDetails, severity, variantDetails)
-			}.logFailure(backupLogger)
+			}.log(backupLogger)
 		}
 	}
 	

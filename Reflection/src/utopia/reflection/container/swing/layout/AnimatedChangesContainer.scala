@@ -3,7 +3,7 @@ package utopia.reflection.container.swing.layout
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.VolatileList
+import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 import utopia.paradigm.enumeration.Axis2D
@@ -50,7 +50,7 @@ class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer
 {
 	// ATTRIBUTES	-----------------------------
 	
-	private val wrappersList = VolatileList[(AnimatedVisibility[C], Boolean)]()
+	private val wrappersList = Volatile.emptySeq[(AnimatedVisibility[C], Boolean)]
 	
 	
 	// IMPLEMENTED	-----------------------------

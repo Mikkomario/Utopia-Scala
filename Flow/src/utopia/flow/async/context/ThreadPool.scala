@@ -3,6 +3,7 @@ package utopia.flow.async.context
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
 import java.util.concurrent.{Executor, TimeUnit}

@@ -7,9 +7,10 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.process.Wait
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.Identity
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 
