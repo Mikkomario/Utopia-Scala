@@ -11,8 +11,17 @@ import utopia.flow.util.StringExtensions._
   */
 object TokenCountingTest extends App
 {
+	private val notLetterOrDigit = !Regex.letterOrDigit
 	private val specialCharSeqRegex = (!Regex.letterOrDigit).withinParentheses.oneOrMoreTimes
 	
+	println(Regex.letterOrDigit)
+	
+	assert(notLetterOrDigit("."))
+	assert(!notLetterOrDigit("m"))
+	// assert(notLetterOrDigit("message"))
+	
+	println(specialCharSeqRegex)
+	println(specialCharSeqRegex.matchesIteratorFrom("message").mkString(", "))
 	println("message".splitIterator(specialCharSeqRegex).toVector)
 	
 	val messages = Vector(

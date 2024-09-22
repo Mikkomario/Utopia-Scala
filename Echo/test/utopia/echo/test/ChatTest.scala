@@ -99,10 +99,10 @@ object ChatTest extends App
 		}
 		
 		newLlm.use { implicit llm =>
-			val chat = new Chat(client)
+			val chat = new Chat(client, llm)
 			
 			// Sets up data-listening
-			chat.lastContextSizePointer.addContinuousListener { e =>
+			chat.usedContextSizePointer.addContinuousListener { e =>
 				println(s"Used context size: ${ e.newValue } tokens")
 			}
 			chat.largestReplySizePointer.addContinuousListener { e =>

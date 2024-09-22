@@ -3,6 +3,7 @@ package utopia.flow.parse.string
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.parse.string.Regex.unbracketableChars
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -84,7 +85,7 @@ object Regex
 	/**
 	 * Accepts digits and characters
 	 */
-	val letterOrDigit = (letter || digit).withinParentheses
+	val letterOrDigit = Regex("[a-zA-ZåäöÅÄÖ\\d]")
 	/**
 	  * Accepts digits and characters
 	  */
@@ -149,6 +150,8 @@ object Regex
 	@deprecated("Renamed to .parentheses", "v2.3")
 	def parenthesis = parentheses
 	
+	private val unbracketableChars = Set[Char]('[', ']', '(', ')', '|')
+	
 	/**
 	  * Creates a regex that accepts any of the specified characters. You don't need to worry about regular expressions
 	  * inside the string, since they are all escaped
@@ -206,8 +209,9 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 			else
 				Regex(s"[^${ string.substring(1) }")
 		}
-		else if (string.endsWith("}") || string.endsWith("*") || string.endsWith("?") || string.endsWith("+"))
-			Regex("(?!" + string + "$).*")
+		else if (string.endsWith("}") || string.endsWith("*") || string.endsWith("?") || string.endsWith("+") ||
+			unbracketableChars.exists { string.contains(_) })
+			Regex(s"(?!$string$$).*")
 		else
 			Regex(s"[^$string]")
 		/*
@@ -245,7 +249,9 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	/**
 	  * @return A copy of this regex with outside braces
 	  */
-	def withBraces = if (hasBrackets) this else Regex(s"[$string]")
+	def withinBrackets = if (hasBrackets) this else Regex(s"[$string]")
+	@deprecated("Renamed to .withinBrackets", "v2.5")
+	def withBraces = withinBrackets
 	/**
 	  * @return A version of this regex wrapped within parenthesis
 	  */
@@ -304,7 +310,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		else if (isEmpty)
 			more
 		else if (hasBrackets && more.hasBrackets)
-			(withoutBrackets + more.withoutBrackets).withBraces
+			(withoutBrackets + more.withoutBrackets).withinBrackets
 		else
 			Regex(s"$string|${ more.string }")
 	}

@@ -69,6 +69,7 @@ object StringUtilsTest extends App
 	assert(control.stripControlCharacters == "\"This is a test string\"")
 	
 	assert("XtestXX2".splitIterator("X").toVector == Vector("test", "2"))
+	assert("XtestXX2".splitIterator("A").toVector == Vector("XtestXX2"))
 	
 	println("YV- 2716".filterWith(Regex.letterOrDigit))
 	

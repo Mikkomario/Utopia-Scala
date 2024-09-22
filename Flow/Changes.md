@@ -26,6 +26,7 @@
   - **ResettableFlag** now requires the implementation of `value_=(...)` instead of `set()` and `reset()`
 - **Resettable** is now required to implement `isSet: Boolean`
 - `StdIn.selectFrom(...)` doesn't print "Found X items" anymore
+- `!` in **Regex** now doesn't use `[^...]` when the content contains special characters, such as parentheses, `|` or brackets.
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - **XmlReader** now doesn't include text content which was outside the read XML elements (such as tabs etc.)
@@ -33,7 +34,7 @@
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
   which now provide almost the same interface using implicit functions.
-- Renamed `Regex.withinParenthesis` to `.withinParentheses `
+- Renamed `Regex.withinParenthesis` to `.withinParentheses ` and `.withBraces` to `.withinBrackets`
 ### New features
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
