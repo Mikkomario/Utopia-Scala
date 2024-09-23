@@ -1,7 +1,7 @@
 package utopia.echo.model.request.generate
 
-import utopia.echo.model.LlmDesignator
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.RequestParams
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.Mutate

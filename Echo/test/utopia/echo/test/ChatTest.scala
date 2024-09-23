@@ -2,8 +2,8 @@ package utopia.echo.test
 
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.{Chat, EstimateTokenCount}
-import utopia.echo.model.LlmDesignator
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.llm.CreateModelRequest
 import utopia.echo.model.response.llm.StreamedStatus
 import utopia.echo.test.EchoTestContext._

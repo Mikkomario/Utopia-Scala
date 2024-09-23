@@ -5,7 +5,7 @@ import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.AccessLogger
 import utopia.echo.controller.OllamaClient
-import utopia.echo.model.LlmDesignator
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.generate.{GenerateBufferedOrStreamed, Prompt, Query}
 import utopia.echo.model.response.generate.StreamedOrBufferedReply
 import utopia.flow.async.AsyncExtensions._

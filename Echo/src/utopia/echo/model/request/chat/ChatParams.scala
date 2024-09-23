@@ -1,7 +1,8 @@
 package utopia.echo.model.request.chat
 
-import utopia.echo.model.{ChatMessage, LlmDesignator}
+import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.RequestParams
 import utopia.echo.model.request.chat.tool.Tool
 import utopia.flow.collection.CollectionExtensions._

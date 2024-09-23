@@ -1,7 +1,7 @@
 package utopia.echo.model.request.chat
 
-import utopia.echo.model.LlmDesignator
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.OllamaRequest
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._

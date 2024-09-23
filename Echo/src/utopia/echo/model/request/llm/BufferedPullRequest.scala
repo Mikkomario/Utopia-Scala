@@ -6,7 +6,7 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.http.request.Body
-import utopia.echo.model.LlmDesignator
+import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}

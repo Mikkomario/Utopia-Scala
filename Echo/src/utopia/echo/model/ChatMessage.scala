@@ -2,6 +2,7 @@ package utopia.echo.model
 
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.User
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.CanAttachImages
 import utopia.echo.model.request.chat.ChatParams
 import utopia.flow.collection.CollectionExtensions._

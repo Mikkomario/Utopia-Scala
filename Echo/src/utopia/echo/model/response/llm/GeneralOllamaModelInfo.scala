@@ -1,6 +1,6 @@
 package utopia.echo.model.response.llm
 
-import utopia.echo.model.LlmDesignator
+import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{InstantType, LongType, StringType}

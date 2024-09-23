@@ -12,7 +12,8 @@ import utopia.echo.model.request.chat.ChatParams
 import utopia.echo.model.request.chat.tool.Tool
 import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
-import utopia.echo.model.{ChatMessage, LlmDesignator}
+import utopia.echo.model.ChatMessage
+import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}

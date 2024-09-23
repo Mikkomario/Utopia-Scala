@@ -1,6 +1,6 @@
 package utopia.echo.model.request.generate
 
-import utopia.echo.model.LlmDesignator
+import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.operator.equality.ComparisonOperator.{DirectionalComparison, Equality}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.Mutate

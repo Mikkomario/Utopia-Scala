@@ -12,7 +12,7 @@ import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.{Body, StringBody}
 import utopia.disciple.http.response.ResponseParser
 import utopia.disciple.model.error.RequestFailedException
-import utopia.echo.model.LlmDesignator
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
 import utopia.echo.model.response.llm.StreamedStatus
 import utopia.flow.async.TryFuture

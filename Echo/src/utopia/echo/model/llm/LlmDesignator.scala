@@ -1,4 +1,4 @@
-package utopia.echo.model
+package utopia.echo.model.llm
 
 import utopia.flow.operator.ScopeUsable
 

@@ -10,8 +10,10 @@
   now require an implicit **Logger** construction parameter
   - This was added in order to manage errors within the managed pointers 
     (possibly introduced via external change event listeners)
-- **LlmDesignator** is now a trait instead of a case class
-- Renamed **LlmDesignator**'s `name` to `llmName`
+- Some changes to **LlmDesignator**:
+  - Moved **LlmDesignator** to `llm` package
+  - **LlmDesignator** is now a trait instead of a case class
+  - Renamed `name` to `llmName`
 - Renamed **OllamaResponse** to **OllamaResponseLike** and added a new **OllamaResponse** trait 
   which doesn't have a generic type parameter
 - Modified **StreamedOllamaResponseParser** trait (only affects custom response-parsers)
