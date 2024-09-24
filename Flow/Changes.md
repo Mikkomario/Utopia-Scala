@@ -43,6 +43,7 @@
   in favor of a new more simple `.log` & `.logWithMessage(String)` functions
 - Renamed `Regex.withinParenthesis` to `.withinParentheses ` and `.withBraces` to `.withinBrackets`
 ### New features
+- **ThreadPool** now supports **ExcEvents** and **ExcListeners**
 - **Changing** items now have a more robust **Logger**-based handling of errors thrown by **ChangeEventListeners**
 - Added **IntSet** class, which stores integers, utilizing their consecutive nature by treating them as ranges
 - Added **LazyTripleMergeMirror** for more complex lazy pointer-merging
@@ -94,6 +95,7 @@
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
 - "Create new" option in `StdIn.selectFromOrAdd(...)` is now indented
+- Internal refactoring within **ThreadPool**
 - Minor refactoring in pairing functions in **CollectionExtensions**
 
 ## v2.4 - 28.07.2024
