@@ -2,7 +2,7 @@ package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ExcEvent.{QueueCleared, TaskAccepted, TaskCompleted, TaskQueued, ThreadClosed, ThreadCreated}
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -22,17 +22,27 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
+// FIXME: Very strange loops involving events
 class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
                  val maxIdleDuration: FiniteDuration = 1.minutes)
                 (implicit log: Logger)
     extends Executor with ExecutionContext
 {
     // ATTRIBUTES    ---------------------
-    
-    private val indexCounter = Iterator.iterate(1) { _ + 1 }
+	
+	private var listeners: Seq[ExcListener] = Empty
+	// Contains generated execution context -events.
+	// These are fired asynchronously at the earliest opportunity.
+	private val eventQueue = Volatile.emptySeq[ExcEvent]
+	
+    private val indexCounter = Iterator.iterate(coreSize + 1) { _ + 1 }
 	// Creates the core threads from the very beginning
 	private val threads: Volatile[Seq[WorkerThread2]] = Volatile.seq(
-		(0 until coreSize).map { i => WorkerThread2.core(s"$name-core-${ i + 1 }", i) })
+		(0 until coreSize).map { i =>
+			val thread = WorkerThread2.core(s"$name-core-${ i + 1 }", i)._1
+			thread.start()
+			thread
+		})
 	// Contains tasks which could not be immediately given to a worker thread
 	// Each entry contains:
 	//      1. The queued task
@@ -40,10 +50,26 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	//      3. Time when this task was added to the queue
     private val queue = Volatile.seq[(Runnable, Boolean, Instant)]()
 	
-	private var listeners: Seq[ExcListener] = Empty
-	// Contains generated execution context -events.
-	// These are fired asynchronously at the earliest opportunity.
-	private val eventQueue = Volatile.emptySeq[ExcEvent]
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Current number of active threads
+	  */
+	def currentSize = threads.value.size
+	/**
+	  * @return Current number of queued (i.e. pending) tasks
+	  */
+	def currentQueueSize = queue.value.size
+	
+	/**
+	  * @return Whether this thread-pool is currently operating at maximum capacity
+	  */
+	def isMaxed = queue.value.nonEmpty
+	/**
+	  * @return Whether this thread-pool still has capacity for accepting new tasks
+	  */
+	def hasCapacity = !isMaxed
     
     
     // IMPLEMENTED    --------------------
@@ -86,63 +112,74 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	    }
 	    // May fire an event, also
 	    if (wasCleared)
-		    fireEvent(QueueCleared)
+		    fireEvent(QueueCleared, synchronous = true)
 	    
 	    unqueued
     }
 	
 	private def _execute(task: Runnable, eventful: Boolean = true): Unit = {
-		val wasQueued = threads.mutate { current =>
+		val (newThread, events) = threads.mutate { current =>
 			// First checks if any of the existing threads accepts the task
 			if (current.exists { _.offer(task, eventful) })
-				false -> current
+				(None -> Empty) -> current
 			else {
 				// If all were busy, tries to create a new thread
 				val currentThreadCount = current.size
 				if (currentThreadCount < maxSize) {
-					val newThread = WorkerThread2.temp(nextThreadName, currentThreadCount, maxIdleDuration, task,
-						eventful)
-					false -> (current :+ newThread)
+					val (newThread, events) = WorkerThread2.temp(nextThreadName, currentThreadCount, maxIdleDuration,
+						task, eventful)
+					(Some(newThread), events) -> (current :+ newThread)
 				}
 				else {
 					// If max thread limit is reached, pushes the task to queue
-					queue :+= (task, eventful, Now)
-					true -> current
+					val queueSize = queue.updateAndGet { _ :+ (task, eventful, Now) }.size
+					val events = if (eventful) Single(TaskQueued(queueSize)) else Empty
+					(None -> events) -> current
 				}
 			}
 		}
-		// If an event gets queued, may generate an event
-		if (wasQueued && eventful)
-			fireEvent(TaskQueued(queue.size), synchronous = true)
+		// Fires the events, if appropriate
+		fireEvents(events)
+		// Starts the new thread, if applicable
+		newThread.foreach { _.start() }
 	}
 	
-	private def fireEvent(event: => ExcEvent, synchronous: Boolean = false) = {
+	private def fireEvent(event: => ExcEvent, synchronous: Boolean = false) =
+		fireEvents(Single(event), synchronous)
+	
+	private def fireEvents(events: => Seq[ExcEvent], synchronous: Boolean = false) = {
 		// Won't bother to perform event-handling if there are no listeners attached
 		if (listeners.nonEmpty) {
-			// Case: Event-firing is synchronous, unless queued already
-			if (synchronous) {
-				// May extend the queue, but doesn't start a new one
-				val wasQueued = eventQueue.mutate { queue =>
-					if (queue.isEmpty)
-						false -> Empty
-					else
-						true -> (queue :+ event)
+			NotEmpty(events).foreach { events =>
+				println(s"Firing ${ events.size } events")
+				// Case: Event-firing is synchronous, unless queued already
+				if (synchronous) {
+					// May extend the queue, but doesn't start a new one
+					val wasQueued = eventQueue.mutate { queue =>
+						if (queue.isEmpty)
+							false -> Empty
+						else
+							true -> (queue ++ events)
+					}
+					// If not queued, immediately fires the event synchronously
+					if (!wasQueued)
+						events.foreach { event =>
+							listeners.foreach { l =>
+								Try { l.onExcEvent(event) }.logWithMessage("An exc event listener threw an exception")
+							}
+						}
 				}
-				// If not queued, immediately fires the event synchronously
-				if (!wasQueued) {
-					val e = event
-					listeners.foreach { l =>
-						Try { l.onExcEvent(e) }.logWithMessage("An exc event listener threw an exception")
+				// Case: Asynchronous event-handling
+				else {
+					// Queues the event
+					val shouldClearQueue = eventQueue.mutate { queued => queued.isEmpty -> (queued ++ events) }
+					// If not running already, initializes the event queue clearance protocol (async)
+					if (shouldClearQueue) {
+						// TODO. Remove test print
+						println("Schedules a new event task")
+						_execute(ClearEventQueueTask, eventful = false)
 					}
 				}
-			}
-			// Case: Asynchronous event-handling
-			else {
-				// Queues the event
-				val shouldClearQueue = eventQueue.mutate { queued => queued.isEmpty -> (queued :+ event) }
-				// If not running already, initializes the event queue clearance protocol (async)
-				if (shouldClearQueue)
-					_execute(ClearEventQueueTask, eventful = false)
 			}
 		}
 	}
@@ -153,6 +190,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	private object ClearEventQueueTask extends Runnable
 	{
 		override def run() = {
+			println(s"\tFiring events (${ eventQueue.size })")
 			OptionsIterator.continually { NotEmpty(eventQueue.popAll()) }.foreach { events =>
 				events.foreach { event =>
 					listeners.foreach { l =>
@@ -160,35 +198,34 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 					}
 				}
 			}
+			println(s"\tEvents fired (remaining ${ eventQueue.size })")
 		}
 	}
 	
 	private object WorkerThread2
 	{
-		def core(name: String, existingThreadCount: Int): WorkerThread2 =
-			apply(existingThreadCount) { new WorkerThread2(name) }
+		def core(name: String, existingThreadCount: Int): (WorkerThread2, Seq[ExcEvent]) =
+			apply(name, existingThreadCount)
 		
 		def temp(name: String, existingThreadCount: Int, maxIdleDuration: Duration, initialTask: Runnable,
-		         eventful: Boolean = true): WorkerThread2 =
-			apply(existingThreadCount, eventful) {
-				new WorkerThread2(name, maxIdleDuration, Some(initialTask -> eventful))
-			}
+		         eventful: Boolean = true): (WorkerThread2, Seq[ExcEvent]) =
+			apply(name, existingThreadCount, maxIdleDuration, Some(initialTask -> eventful))
 		
-		private def apply(existingThreadCount: Int, eventful: Boolean = true)
-		                 (construct: => WorkerThread2): WorkerThread2 =
+		private def apply(name: String, existingThreadCount: Int, maxIdleDuration: Duration = Duration.Inf,
+		                  initialTask: Option[(Runnable, Boolean)] = None): (WorkerThread2, Seq[ExcEvent]) =
 		{
-			// Creates and starts the thread
-			val thread = construct
-			thread.start()
+			// Creates the thread
+			val thread = new WorkerThread2(name, maxIdleDuration, initialTask)
 			
-			// Fires an event, if appropriate
-			if (eventful)
-				fireEvent(ThreadCreated(thread.name, existingThreadCount + 1))
+			// Prepares events
+			val events = Single(ThreadCreated(name, existingThreadCount + 1)) ++
+				initialTask.filter { _._2 }.map { _ => TaskAccepted(name) }
 			
-			thread
+			// Returns the thread and the events
+			thread -> events
 		}
 	}
-	private class WorkerThread2(val name: String, maxIdleDuration: Duration = Duration.Inf,
+	private class WorkerThread2(name: String, maxIdleDuration: Duration = Duration.Inf,
 	                            initialTask: Option[(Runnable, Boolean)] = None)
 		extends Thread
 	{
@@ -282,7 +319,8 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 					waiter.filter { _._1.trySuccess(task -> eventful) } match {
 						// Case: Task was accepted => Fires an event, also, if appropriate
 						case Some((_, waitStarted)) =>
-							fireEvent(TaskAccepted(name, Now - waitStarted))
+							if (eventful)
+								fireEvent(TaskAccepted(name, Now - waitStarted))
 							true
 							
 						// Case: Not waiting for a task => Rejects the task
