@@ -9,6 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
@@ -22,7 +23,6 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-// FIXME: Very strange loops involving events
 class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
                  val maxIdleDuration: FiniteDuration = 1.minutes)
                 (implicit log: Logger)
@@ -33,7 +33,8 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	private var listeners: Seq[ExcListener] = Empty
 	// Contains generated execution context -events.
 	// These are fired asynchronously at the earliest opportunity.
-	private val eventQueue = Volatile.emptySeq[ExcEvent]
+	// The second value is a boolean indicating whether the event-delivery process is currently active
+	private val eventQueue = Volatile[(Seq[ExcEvent], Boolean)](Empty -> false)
 	
     private val indexCounter = Iterator.iterate(coreSize + 1) { _ + 1 }
 	// Creates the core threads from the very beginning
@@ -63,13 +64,10 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	def currentQueueSize = queue.value.size
 	
 	/**
-	  * @return Whether this thread-pool is currently operating at maximum capacity
+	  * @return Whether this thread-pool is currently operating at maximum capacity,
+	  *         i.e. whether maximum number of threads have been created and each is in use.
 	  */
 	def isMaxed = queue.value.nonEmpty
-	/**
-	  * @return Whether this thread-pool still has capacity for accepting new tasks
-	  */
-	def hasCapacity = !isMaxed
     
     
     // IMPLEMENTED    --------------------
@@ -151,18 +149,17 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		// Won't bother to perform event-handling if there are no listeners attached
 		if (listeners.nonEmpty) {
 			NotEmpty(events).foreach { events =>
-				println(s"Firing ${ events.size } events")
 				// Case: Event-firing is synchronous, unless queued already
 				if (synchronous) {
 					// May extend the queue, but doesn't start a new one
-					val wasQueued = eventQueue.mutate { queue =>
-						if (queue.isEmpty)
-							false -> Empty
+					val wasDelivering = eventQueue.mutate { case (queue, delivering) =>
+						if (delivering)
+							true -> ((queue ++ events) -> true)
 						else
-							true -> (queue ++ events)
+							false -> (queue -> delivering)
 					}
-					// If not queued, immediately fires the event synchronously
-					if (!wasQueued)
+					// If not delivering events asynchronously, immediately fires the event synchronously
+					if (!wasDelivering)
 						events.foreach { event =>
 							listeners.foreach { l =>
 								Try { l.onExcEvent(event) }.logWithMessage("An exc event listener threw an exception")
@@ -172,13 +169,12 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 				// Case: Asynchronous event-handling
 				else {
 					// Queues the event
-					val shouldClearQueue = eventQueue.mutate { queued => queued.isEmpty -> (queued ++ events) }
-					// If not running already, initializes the event queue clearance protocol (async)
-					if (shouldClearQueue) {
-						// TODO. Remove test print
-						println("Schedules a new event task")
-						_execute(ClearEventQueueTask, eventful = false)
+					val wasDelivering = eventQueue.mutate { case (queued, delivering) =>
+						delivering -> ((queued ++ events) -> true)
 					}
+					// If not running already, initializes the event queue clearance protocol (async)
+					if (!wasDelivering)
+						_execute(ClearEventQueueTask, eventful = false)
 				}
 			}
 		}
@@ -190,15 +186,19 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	private object ClearEventQueueTask extends Runnable
 	{
 		override def run() = {
-			println(s"\tFiring events (${ eventQueue.size })")
-			OptionsIterator.continually { NotEmpty(eventQueue.popAll()) }.foreach { events =>
-				events.foreach { event =>
-					listeners.foreach { l =>
-						Try { l.onExcEvent(event) }.logWithMessage("An exc event listener threw an exception")
+			OptionsIterator
+				.continually {
+					val nextEvents = eventQueue
+						.mutate { case (queue, _) => queue -> (Empty -> queue.nonEmpty) }
+					NotEmpty(nextEvents)
+				}
+				.foreach { events =>
+					events.foreach { event =>
+						listeners.foreach { l =>
+							Try { l.onExcEvent(event) }.logWithMessage("An exc event listener threw an exception")
+						}
 					}
 				}
-			}
-			println(s"\tEvents fired (remaining ${ eventQueue.size })")
 		}
 	}
 	
@@ -238,8 +238,6 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		//      2. Time when this promise was initiated / wait was started
 		private val waitingTask = Volatile.optional[(Promise[(Runnable, Boolean)], Instant)]()
 		
-		private var nextTask = initialTask
-		
 		
 		// INITIAL CODE    -------------------
 		
@@ -255,16 +253,21 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		// IMPLEMENTED    --------------------
 		
 		override def run() = {
+			val nextTaskPointer = Pointer(initialTask)
 			while (ended.isNotSet) {
 				// Finds the next task to perform, may fail if maximum idle duration is reached
-				val next = nextTask.orElse {
+				val next = nextTaskPointer.pop().orElse {
 					// Starts waiting for the next task
 					val nextFuture = waitingTask
-						.mutate {
-							case Some((existing, initialized)) => existing -> Some(existing -> initialized)
-							case None =>
-								val promise = Promise[(Runnable, Boolean)]()
-								promise -> Some(promise -> Now)
+						.mutate { existing =>
+							existing.filterNot { _._1.isCompleted } match {
+								// Case: Still using an incomplete waiter (not typical)
+								case Some((existing, initialized)) => existing -> Some(existing -> initialized)
+								// Case: Needs a new waiting promise
+								case None =>
+									val promise = Promise[(Runnable, Boolean)]()
+									promise -> Some(promise -> Now)
+							}
 						}
 						.future
 					
@@ -282,7 +285,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 						
 						// Takes the next task right away, if one is available
 						nextQueueTask.foreach { case (task, eventful, queued) =>
-							nextTask = Some(task -> eventful)
+							nextTaskPointer.value = Some(task -> eventful)
 							if (eventful)
 								fireEvent(TaskAccepted(name, queueDuration = Now - queued))
 						}
@@ -293,7 +296,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 			}
 			
 			// Clears remaining task references
-			nextTask = None
+			nextTaskPointer.clear()
 			waitingTask.clear()
 			
 			// Clears this thread from the thread pool

@@ -30,7 +30,7 @@ object ExcEvent
 	  */
 	case class ThreadCreated(name: String, numberOfThreads: Int) extends ThreadEvent
 	{
-		override def toString = s"Thread $name created"
+		override def toString = s"Thread $name created (#$numberOfThreads)"
 	}
 	/**
 	  * An event fired when a temporary worker thread is closed / ends
@@ -39,7 +39,7 @@ object ExcEvent
 	  */
 	case class ThreadClosed(name: String, remainingNumberOfThreads: Int) extends ThreadEvent
 	{
-		override def toString = s"Thread $name closed"
+		override def toString = s"Thread $name closed ($remainingNumberOfThreads threads remain)"
 	}
 	
 	/**

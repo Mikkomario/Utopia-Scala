@@ -21,7 +21,7 @@ object ThreadPoolTest extends App
 	
 	private val eventQueue = Volatile.emptySeq[ExcEvent]
 	pool.addListener { e =>
-		println(e)
+		println(s"Event: $e")
 		eventQueue.update { _ :+ e }
 	}
 	
@@ -35,7 +35,9 @@ object ThreadPoolTest extends App
 	pool.execute(TestTask)
 	pool.execute(TestTask)
 	
-	Wait(0.1.seconds)
+	Wait(0.2.seconds)
+	// NB: This sometimes throws, depending on how the events get handled
+	// (might reserve 2 threads instead of 1 sometimes)
 	testEvents(_.isInstanceOf[TaskAccepted], _.isInstanceOf[ThreadCreated])(2, 1)
 	assert(pool.currentSize == 3)
 	
@@ -47,35 +49,36 @@ object ThreadPoolTest extends App
 	// Initiates 4 tasks. Should occupy the 2 core threads, plus 2 temporary threads (plus fifth for events).
 	(0 until 4).foreach { _ => pool.execute(TestTask) }
 	
-	Wait(0.1.seconds)
+	Wait(0.2.seconds)
 	testEvents(_.isInstanceOf[TaskAccepted], _.isInstanceOf[ThreadCreated])(4, 2)
-	assert(pool.isMaxed)
+	assert(pool.currentSize == 5, pool.currentSize)
 	
 	// Initiates one more task, maxing out the capacity
 	// This blocks the thread-pool event-handling
 	pool.execute(TestTask)
 	
-	Wait(0.1.seconds)
+	Wait(0.2.seconds)
 	testEvents()()
 	assert(pool.isMaxed)
 	
 	// Initiates one more task, which gets queued
 	pool.execute(TestTask)
 	
-	Wait(0.1.seconds)
+	Wait(0.2.seconds)
 	testEvents()()
 	assert(pool.isMaxed)
 	
 	// Waits until the 5 started tasks complete
-	// Should fire the 2 tasks accepted -events and the one queued-event
+	// Should fire the 2 tasks accepted -events, one queued-event and one queue cleared -event
 	Wait(2.5.seconds)
-	testEvents(_.isInstanceOf[TaskAccepted], _.isInstanceOf[TaskQueued], _.isInstanceOf[TaskCompleted])(2, 1, 5)
-	assert(pool.isMaxed)
+	testEvents(_.isInstanceOf[TaskAccepted], _.isInstanceOf[TaskQueued], _.isInstanceOf[TaskCompleted],
+		_ == QueueCleared)(2, 1, 5, 1)
+	assert(pool.currentSize == 5, pool.currentSize)
 	
 	// Waits for the final task to complete
 	Wait(2.5.seconds)
-	testEvents(_.isInstanceOf[TaskCompleted], _ == QueueCleared)(1, 1)
-	assert(pool.isMaxed)
+	testEvents(_.isInstanceOf[TaskCompleted])(1)
+	assert(pool.currentSize == 5, pool.currentSize)
 	
 	// Waits for the temporary threads to get disposed
 	Wait(8.seconds)
