@@ -132,6 +132,20 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 	protected def iteration(): Option[WaitTarget]
 	
 	
+	// COMPUTED --------------------
+	
+	/**
+	  * Converts this loop into a timed task
+	  * @return A regularly performable task based on this loop.
+	  *         None if this loop was only scheduled to run on call, which is beyond the capabilities of [[TimedTask]]s.
+	  *
+	  *         Note: If [[iteration]]() ever yields [[WaitTarget.UntilNotified]], this task will no longer be run,
+	  *         as TimedTasks don't have this feature.
+	  */
+	def toTimedTask =
+		startDelay.endTime.map { TimedTask.firstTimeAt(_).completing { iteration().flatMap { _.endTime } } }
+	
+	
 	// IMPLEMENTED    --------------
 	
 	override protected def runOnce() = {
