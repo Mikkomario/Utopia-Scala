@@ -7,101 +7,73 @@ import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions
 
-object ModelSettings
-{
-	// ATTRIBUTES   -------------------------
-	
-	/**
-	  * Empty set of model settings
-	  */
-	lazy val empty = ModelSettings()
-	
-	
-	// IMPLICIT ----------------------------
-	
-	implicit def collToSettings(settings: Iterable[(ModelParameter, Value)]): ModelSettings =
-		apply(settings.toMap)
-}
 
 /**
   * Common trait for read-accesses to model parameter -assignments
+  * @tparam Repr Type of the implementing class
   * @author Mikko Hilpinen
   * @since 22.09.2024, v1.1
-  *
-  * @param defined Specifically defined parameter values
-  * @param default Default values used in mapping, but not considered specifically defined
   */
-case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
-                         default: Map[ModelParameter, Value] = Map())
+trait HasImmutableModelSettings[+Repr] extends HasModelSettings
 {
+	// ABSTRACT -------------------------
+	
+	/**
+	  * @param settings New settings
+	  * @return Copy of this instance with the specified settings
+	  */
+	def withSettings(settings: ModelSettings): Repr
+	
+	
 	// COMPUTED -------------------------
 	
 	/**
 	  * @return Copy of these settings where all defined fields have been cleared
 	  */
-	def withoutDefinitions = copy(defined = Map())
+	def withoutSettings: Repr = mapSettings { _.withoutDefinitions }
 	/**
 	  * @return Copy of these settings without any default values
 	  */
-	def withoutDefaults = copy(default = Map())
+	def withoutDefaultSettings = mapSettings { _.withoutDefaults }
 	
 	
 	// OTHER    -------------------------
 	
 	/**
-	  * @param setting A setting
-	  * @return Whether that setting has been defined
+	  * @param f A mapping function for model settings
+	  * @return A copy of this instance with mapped settings
 	  */
-	def contains(setting: ModelParameter) = defined.contains(setting)
-	
-	/**
-	  * @param setting Targeted parameter
-	  * @return Value of that parameter. Empty if this value has not been specifically defined.
-	  */
-	def get(setting: ModelParameter) = defined.getOrElse(setting, Value.empty)
-	/**
-	  * @param setting Targeted parameter
-	  * @return Value of that parameter
-	  */
-	def apply(setting: ModelParameter): Value =
-		defined.getOrElse(setting, default.getOrElse(setting, setting.defaultValue))
+	def mapSettings(f: Mutate[ModelSettings]): Repr = withSettings(f(settings))
 	
 	/**
 	  * @param settings New defined parameters. Overwrites all current values.
 	  * @return Copy of these settings preserving the defaults but overwriting the definitions
 	  */
-	def withDefined(settings: Map[ModelParameter, Value]) = copy(defined = settings)
-	/**
-	  * @param f A mapping function for all the defined parameters
-	  * @return Copy of these settings with mapped parameter-definitions
-	  */
-	def mapDefined(f: Mutate[Map[ModelParameter, Value]]) = withDefined(f(defined))
-	
+	def withDefinedSettings(settings: Map[ModelParameter, Value]) = mapSettings { _.withDefined(settings) }
 	/**
 	  * @param params New parameters to apply by default. Overwrites current defaults.
 	  * @return Copy of these settings with new defaults.
 	  */
-	def withDefaults(params: Map[ModelParameter, Value]) = copy(default = params)
+	def withDefaultSettings(params: Map[ModelParameter, Value]) = mapSettings { _.withDefaults(params) }
 	
 	/**
 	  * @param setting Targeted parameter
 	  * @param value Assigned value
 	  * @return Copy of these parameters with the specified parameter-assignment
 	  */
-	def withSetting(setting: ModelParameter, value: Value) =
-		mapDefined { _ + (setting -> value) }
+	def withSetting(setting: ModelParameter, value: Value) = mapSettings { _.withSetting(setting, value) }
 	
 	/**
 	  * @param setting Parameter to undefine
 	  * @return Copy of these parameters with the specified parameter undefined
 	  */
-	def without(setting: ModelParameter) = mapDefined { _ - setting }
+	def without(setting: ModelParameter) = mapSettings { _.without(setting) }
 	/**
 	  * @param settings Parameters to undefine
 	  * @return Copy of these parameters with the specified parameters undefined
 	  */
-	def without(settings: IterableOnce[ModelParameter]) = mapDefined { _ -- settings }
-	def without(first: ModelParameter, second: ModelParameter, more: ModelParameter*): ModelSettings =
+	def without(settings: IterableOnce[ModelParameter]) = mapSettings { _.without(settings) }
+	def without(first: ModelParameter, second: ModelParameter, more: ModelParameter*): Repr =
 		without(Pair(first, second) ++ more)
 	
 	/**
@@ -116,18 +88,18 @@ case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
 	  * @param param A parameter assignment (key + value)
 	  * @return Copy of these parameters with the specified assignment included
 	  */
-	def +(param: (ModelParameter, Value)) = mapDefined { _ + param }
+	def +(param: (ModelParameter, Value)) = mapSettings { _ + param }
 	/**
 	  * @param params Parameter assignments (key + value pairs)
 	  * @return Copy of these parameters with the specified assignments included
 	  */
-	def ++(params: IterableOnce[(ModelParameter, Value)]) = mapDefined { _ ++ params }
+	def ++(params: IterableOnce[(ModelParameter, Value)]) = mapSettings { _ ++ params }
 	/**
-	  * @param other Another set of parameters
+	  * @param settings Another set of parameters
 	  * @return Copy of these parameters with the values from 'other' appended.
 	  *         Affects both the definitions and the defaults.
 	  */
-	def ++(other: ModelSettings) = ModelSettings(defined ++ other.defined, default ++ other.default)
+	def ++(settings: ModelSettings) = mapSettings { _ ++ settings }
 	
 	/**
 	  * @param setting Parameter to undefine

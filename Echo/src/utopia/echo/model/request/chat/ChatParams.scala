@@ -1,13 +1,11 @@
 package utopia.echo.model.request.chat
 
 import utopia.echo.model.ChatMessage
-import utopia.echo.model.enumeration.ModelParameter
-import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.RequestParams
 import utopia.echo.model.request.chat.tool.Tool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -17,7 +15,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @param message Message to send out
   * @param conversationHistory Conversation history displayed for the LLM (default = empty)
   * @param tools Tools made available to the LLM (default = empty)
-  * @param options Behavioral settings (default = empty)
+  * @param settings Behavioral settings (default = empty)
   * @param deprecationView A view which contains true if the request gets deprecated.
   *                        Only tacked until a request is sent.
   *                        Default = never deprecated.
@@ -26,7 +24,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @since 31.08.2024, v1.1
   */
 case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage] = Empty, tools: Seq[Tool] = Empty,
-                      options: Map[ModelParameter, Value] = Map(), deprecationView: View[Boolean] = AlwaysFalse)
+                      settings: ModelSettings = ModelSettings.empty, deprecationView: View[Boolean] = AlwaysFalse)
                      (implicit override val llm: LlmDesignator)
 	extends RequestParams[ChatParams]
 {
@@ -47,7 +45,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	// IMPLEMENTED  --------------------------
 	
 	override def toLlm(llm: LlmDesignator): ChatParams = copy()(llm = llm)
-	override def withOptions(options: Map[ModelParameter, Value]): ChatParams = copy(options = options)
+	override def withSettings(settings: ModelSettings): ChatParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]): ChatParams = copy(deprecationView = condition)
 	
 	

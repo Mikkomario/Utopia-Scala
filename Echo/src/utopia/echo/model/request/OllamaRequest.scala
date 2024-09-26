@@ -4,13 +4,11 @@ import utopia.access.http.Method
 import utopia.access.http.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.http.request.Body
-import utopia.echo.model.enumeration.ModelParameter
-import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.llm.{HasModelSettings, LlmDesignator}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 
 import scala.language.implicitConversions
-
 
 /**
   * Common trait for requests to the Ollama API generation endpoints.
@@ -20,7 +18,7 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait OllamaRequest[+R] extends ApiRequest[R]
+trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 {
 	// ABSTRACT --------------------------
 	
@@ -33,12 +31,6 @@ trait OllamaRequest[+R] extends ApiRequest[R]
 	  * @return Additional properties added to the request body.
 	  */
 	def customProperties: Seq[Constant]
-	
-	/**
-	  * @return Behavioral parameters included in this request.
-	  *         Empty values will not be sent.
-	  */
-	def options: Map[ModelParameter, Value]
 	
 	/**
 	  * @return Whether to receive the response as a stream.
@@ -68,7 +60,7 @@ trait OllamaRequest[+R] extends ApiRequest[R]
 	// OTHER    --------------------------
 	
 	private def optionsModel = Model
-		.withConstants(options.flatMap { case (param, value) =>
+		.withConstants(settings.defined.flatMap { case (param, value) =>
 			value.castTo(param.dataType).flatMap { _.notEmpty }.map { Constant(param.key, _) }
 		})
 		.withoutEmptyValues

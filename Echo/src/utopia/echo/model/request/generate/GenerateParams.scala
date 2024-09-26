@@ -1,7 +1,6 @@
 package utopia.echo.model.request.generate
 
-import utopia.echo.model.enumeration.ModelParameter
-import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.RequestParams
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.Mutate
@@ -11,7 +10,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
 /**
   * A set of parameters used to construct a request to the generate endpoint.
   * @param query The query to send to the LLM
-  * @param options Behavioral parameters included in this request. Default = empty.
+  * @param settings Behavioral parameters included in this request. Default = empty.
   * @param conversationContext 'context' property returned by the last LLM response,
   *                             if conversation context should be kept.
   *                             Default = empty = new conversation.
@@ -22,7 +21,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @author Mikko Hilpinen
   * @since 31.08.2024, v1.1
   */
-case class GenerateParams(query: Query, options: Map[ModelParameter, Value] = Map(),
+case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.empty,
                           conversationContext: Value = Value.empty, deprecationView: View[Boolean] = AlwaysFalse)
                          (implicit override val llm: LlmDesignator)
 	extends RequestParams[GenerateParams]
@@ -44,7 +43,7 @@ case class GenerateParams(query: Query, options: Map[ModelParameter, Value] = Ma
 	// IMPLEMENTED  ---------------------
 	
 	override def toLlm(llm: LlmDesignator) = copy()(llm = llm)
-	override def withOptions(options: Map[ModelParameter, Value]): GenerateParams = copy(options = options)
+	override def withSettings(settings: ModelSettings): GenerateParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
 	
 	

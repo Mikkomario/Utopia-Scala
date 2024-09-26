@@ -1,7 +1,7 @@
 package utopia.echo.model.request.chat
 
 import utopia.echo.model.enumeration.ModelParameter
-import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.OllamaRequest
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
@@ -76,7 +76,7 @@ trait ChatRequest[+R] extends OllamaRequest[R]
 	override def path: String = "chat"
 	
 	override def llm: LlmDesignator = params.llm
-	override def options: Map[ModelParameter, Value] = params.options
+	override def settings: ModelSettings = params.settings
 	
 	override def deprecated: Boolean = params.deprecationView.value
 	

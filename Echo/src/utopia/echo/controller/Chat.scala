@@ -5,15 +5,15 @@ import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
+import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.{Assistant, System}
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
+import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
 import utopia.echo.model.request.chat.ChatParams
 import utopia.echo.model.request.chat.tool.Tool
 import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
-import utopia.echo.model.ChatMessage
-import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
@@ -53,7 +53,7 @@ import scala.util.{Failure, Success, Try}
   */
 class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
           (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser)
-	extends HasSchrodingerState
+	extends HasSchrodingerState with HasMutableModelSettings
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -84,12 +84,6 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Number of tokens added to the estimated required context size
 	  */
 	var additionalContextSize = 256
-	
-	/**
-	  * Targeted LLM's default parameter values. Typically specified in the model's model-file.
-	  * Used in [[mapOption]].
-	  */
-	var defaultModelParameters = Map[ModelParameter, Value]()
 	
 	// First value is the message, second value is its estimated size in tokens
 	private val _messageHistoryPointer = EventfulPointer.emptySeq[(ChatMessage, Int)]
@@ -141,7 +135,7 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Note: If [[ContextTokens]] is defined here,
 	  * that overrides / disables the automatic context size management -feature.
 	  */
-	val optionsPointer = EventfulPointer(Map[ModelParameter, Value]())
+	val settingsPointer = EventfulPointer(ModelSettings.empty)
 	/**
 	  * A mutable pointer that contains the tools that are currently made available for the LLM
 	  * (besides possible request-specific tools).
@@ -289,8 +283,8 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	/**
 	  * @return Applied LLM options / parameters
 	  */
-	def options = optionsPointer.value
-	def options_=(newOptions: Map[ModelParameter, Value]) = optionsPointer.value = newOptions
+	def options = settingsPointer.value
+	def options_=(newOptions: Map[ModelParameter, Value]) = settingsPointer.value = newOptions
 	
 	/**
 	  * @return Tools that are currently made available to the LLM for all outgoing messages
@@ -337,6 +331,11 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	// IMPLEMENTED  ---------------------------
 	
 	override def state: SchrodingerState = statePointer.value
+	
+	override def settings: ModelSettings = settingsPointer.value
+	override def settings_=(newSettings: ModelSettings): Unit = settingsPointer.value = newSettings
+	
+	override def mapSettings(f: Mutate[ModelSettings]) = settingsPointer.update(f)
 	
 	
 	// OTHER    -------------------------------
@@ -419,22 +418,6 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	}
 	
 	/**
-	  * Updates the value of a model parameter
-	  * @param param Modified parameter
-	  * @param value New value assigned for the targeted parameter
-	  */
-	def update(param: ModelParameter, value: Value) = mapOptions { _ + (param -> value) }
-	/**
-	  * Modifies the value of a single model parameter
-	  * @param option Targeted parameter
-	  * @param f Function for mapping the current parameter value.
-	  *          If this parameter has not yet been defined, receives that option's default value.
-	  */
-	def mapOption(option: ModelParameter)(f: Mutate[Value]) = mapOptions { o =>
-		o + (option -> f(o.getOrElse(option, defaultModelParameters.getOrElse(option, option.defaultValue))))
-	}
-	
-	/**
 	  * Adds a new system message at the end of existing custom messages
 	  * @param message System message to add
 	  */
@@ -453,22 +436,6 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Clears all custom system messages, so that the LLM will default to the message specified in its model file.
 	  */
 	def clearSystemMessages() = systemMessages = Empty
-	/**
-	  * Clears all custom LLM parameter definitions
-	  */
-	def clearOptions() = options = Map()
-	/**
-	  * Clears the value of a single option-definition, returning it to its default value
-	  * @param option Option to clear
-	  */
-	def clear(option: ModelParameter) = mapOptions { _ - option }
-	/**
-	  * Clears the value of 0-n option-definitions, returning them to their default values
-	  * @param options Options to clear
-	  */
-	def clearOptions(options: IterableOnce[ModelParameter]) = mapOptions { _ -- options }
-	def clearOptions(option1: ModelParameter, option2: ModelParameter, moreOptions: ModelParameter*): Unit =
-		clearOptions(Pair(option1, option2) ++ moreOptions)
 	
 	/**
 	  * Registers a new tool for the LLM to utilize
@@ -497,37 +464,15 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	}
 	
 	/**
-	  * Updates the value of a model parameter
-	  * @param param Modified parameter + assigned value
-	  */
-	def +=(param: (ModelParameter, Value)) = update(param._1, param._2)
-	/**
 	  * Registers a new tool for the LLM to utilize
 	  * @param tool Tool made available for the LLM
 	  */
 	def +=(tool: Tool) = addTool(tool)
-	
-	/**
-	  * Clears the value of a single option-definition, returning it to its default value
-	  * @param param Option / parameter to clear
-	  */
-	def -=(param: ModelParameter) = clear(param)
 	/**
 	  * Removes a tool from the LLM's options
 	  * @param tool Tool to remove
 	  */
 	def -=(tool: Tool) = removeTool(tool)
-	
-	/**
-	  * Updates 0-n LLM parameters
-	  * @param params New parameters to assign
-	  */
-	def ++=(params: IterableOnce[(ModelParameter, Value)]) = mapOptions { _ ++ params }
-	/**
-	  * Clears 0-n LLM parameters, so that they won't be specified in future requests
-	  * @param params Parameters to clear
-	  */
-	def --=(params: IterableOnce[ModelParameter]) = clearOptions(params)
 	
 	/**
 	  * @param f Mapping function applied to system messages
@@ -537,10 +482,6 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * @param f Mapping function applied to chat history
 	  */
 	def mapMessageHistory(f: Mutate[Seq[ChatMessage]]) = messageHistoryPointer.update(f)
-	/**
-	  * @param f Mapping function applied to LLM options
-	  */
-	def mapOptions(f: Mutate[Map[ModelParameter, Value]]) = optionsPointer.update(f)
 	/**
 	  * @param f Mapping function applied to LLM tools
 	  */
@@ -556,14 +497,13 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 		_queueSizePointer.update { _ + 1 }
 		
 		// Calculates the context size to prepare, unless user-defined
-		val defaultOptions = options
-		val optionsWithContextSize = {
-			if (defaultOptions.contains(ContextTokens))
-				defaultOptions
+		val defaultSettings = settings
+		val settingsWithContextSize = {
+			if (defaultSettings.contains(ContextTokens))
+				defaultSettings
 			else {
-				val estimate = contextSize(defaultOptions.get(PredictTokens).flatMap { _.int }
-					.toRight { messages.mkString(". ") })
-				defaultOptions + (ContextTokens -> (estimate: Value))
+				val estimate = contextSize(defaultSettings.get(PredictTokens).int.toRight { messages.mkString(". ") })
+				defaultSettings + (ContextTokens -> (estimate: Value))
 			}
 		}
 		
@@ -574,7 +514,7 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 		// Sends the chat request
 		val replyFuture = ollama.push(
 			ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1),
-				tools, optionsWithContextSize)
+				tools, settingsWithContextSize)
 				.toRequest(stream = allowStreaming && tools.isEmpty)).future
 		
 		// Updates the pointers once a response is received

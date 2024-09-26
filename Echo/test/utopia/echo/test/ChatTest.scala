@@ -11,7 +11,6 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
@@ -131,11 +130,11 @@ object ChatTest extends App
 				else if (input.startsWith("/options")) {
 					val currentOptions = chat.options
 					StdIn.selectFrom(ModelParameter.values.map { p => p -> s"${ p.key }${
-							currentOptions.getOrElse(p, Value.empty).getString
+							currentOptions(p).getString
 								.mapIfNotEmpty { v => s" (currently $v)" } }" }, maxListCount = 50)
 						.foreach { param =>
 							println(s"Please specify a new value for ${ param.key }.")
-							val current = currentOptions.getOrElse(param, Value.empty)
+							val current = currentOptions.get(param)
 							if (current.isEmpty)
 								println("Empty cancels")
 							else
