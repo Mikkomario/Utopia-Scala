@@ -109,4 +109,17 @@ case class Margins(medium: Double, adjustment: Adjustment = Adjustment(0.382)) e
 		val opt = apply(optimal)
 		StackLength(opt * adjustment(-variance), opt, opt * adjustment(variance))
 	}
+	
+	/**
+	  * Scales a stack margin to match the specified size category.
+	  * Assumes that the Medium size category matches [[medium]].
+	  * @param margin Margin to scale
+	  * @param to Targeted stack margin size
+	  * @return 'margin' scaled to the specified size
+	  */
+	def scaleStackMargin(margin: StackLength, to: SizeCategory) = {
+		val currentLevel = margin.optimal / medium
+		val targetLevel = apply(to) / medium
+		if (currentLevel == targetLevel) margin else margin * (targetLevel / currentLevel)
+	}
 }

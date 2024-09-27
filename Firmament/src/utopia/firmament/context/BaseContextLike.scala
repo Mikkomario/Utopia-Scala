@@ -234,11 +234,7 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	  * @param scaling Targeted stack margin size
 	  * @return Stack margin of this context, scaled to the specified size
 	  */
-	def scaledStackMargin(scaling: SizeCategory) = {
-		val currentLevel = stackMargin.optimal / margins.medium
-		val targetLevel = margins(scaling) / margins.medium
-		if (currentLevel == targetLevel) stackMargin else stackMargin * (targetLevel / currentLevel)
-	}
+	def scaledStackMargin(scaling: SizeCategory) = margins.scaleStackMargin(stackMargin, scaling)
 	
 	/**
 	  * @param f A mapping function for the font used
