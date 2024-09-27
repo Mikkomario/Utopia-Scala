@@ -19,6 +19,14 @@ import scala.util.Try
 
 object BufferedReplyMessage
 {
+	// ATTRIBUTES   ----------------------
+	
+	/**
+	  * An empty reply message
+	  */
+	lazy val empty = apply(Assistant(""), ResponseStatistics.empty)
+	
+	
 	// OTHER    --------------------------
 	
 	/**

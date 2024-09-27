@@ -1,6 +1,6 @@
 package utopia.echo.controller
 
-import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Flux, PositiveFlux}
+import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux, PositiveFlux}
 import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
@@ -15,8 +15,10 @@ import utopia.echo.model.request.chat.tool.Tool
 import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -26,9 +28,11 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer, MutableOnce, OnceFlatteningPointer}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer, MutableOnce, OnceFlatteningPointer, ResettableFlag}
+import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.{Failure, Success, Try}
@@ -109,24 +113,26 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	val lastReplyPointer = _lastResultPointer.incrementalMap { _.get } { (previous, resultEvent) =>
 		resultEvent.newValue.getOrElse(previous)
 	}
-	
 	/**
-	  * A pointer that contains the current chat state.
-	  *     - Contains Flux while messaging is ongoing.
-	  *     - Contains Alive if the last reply has been fully and successfully received.
-	  *     - Contains Dead if failed to acquire a (full) reply for the latest outgoing message
+	  * A pointer that contains the completed last result,
+	  * including information on whether that final result is still pending.
 	  */
-	lazy val statePointer = _queueSizePointer.mergeWith(_lastResultPointer) { (queued, lastResult) =>
-		// Case: Messages have been queued => Flux state
-		if (queued > 0)
-			Flux(lastResult.isSuccess)
-		else
-			lastResult match {
-				// Case: Reply at least partially received => Flux+ or Alive if completed
-				case Success(reply) => if (reply.isBuffered) Alive else PositiveFlux
-				// Case: Response-reading failed => Dead
-				case Failure(_) => Dead
+	lazy val lastResultCompletionPointer = {
+		val initialResult = lastResult.flatMap { message =>
+			message.future.currentResult match {
+				case Some(current) => current.flatten
+				case None => Success(BufferedReplyMessage.empty)
 			}
+		}
+		_lastResultPointer.mapToFuture(initialResult) {
+			case Success(reply) => reply.future
+			case Failure(error) => TryFuture.failure(error)
+		}
+	}
+	private val lazyPendingFlag = Lazy[Flag] {
+		queueSizePointer.mergeWith(lastResultCompletionPointer) { (queueSize, completion) =>
+			queueSize > 0 || completion.isProcessing
+		}
 	}
 	
 	/**
@@ -258,6 +264,65 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 		}
 	}
 	
+	/**
+	  * A pointer that contains:
+	  *     1. The context size (token count) at which the conversation history will be
+	  *     automatically summarized in order to conserve space.
+	  *     1. The minimum number of messages in the message history before auto-summarization may be applied.
+	  *
+	  * Contains None if auto-summarization is not used.
+	  *
+	  * During the auto-summarization process, no other messages are sent via this interface.
+	  */
+	val autoSummarizeAtTokensPointer = EventfulPointer.empty[Pair[Int]]
+	private val _summarizingFlag = ResettableFlag()
+	/**
+	  * A flag that contains true while this interface is forming a conversation summary.
+	  * While true, no chat messages will be sent.
+	  */
+	lazy val summarizingFlag = _summarizingFlag.view
+	private lazy val testAutoSummaryListener = ChangeListener.continuousOnAnyChange { summarizeIfAppropriate() }
+	
+	/**
+	  * A pointer that contains the current chat state.
+	  *     - Contains Flux while messaging or summarizing is ongoing.
+	  *     - Contains Alive if the last reply has been fully and successfully received.
+	  *     - Contains Dead if failed to acquire a (full) reply for the latest outgoing message
+	  */
+	lazy val statePointer = _queueSizePointer
+		.mergeWith(lastResultCompletionPointer, _summarizingFlag) { (queued, lastResultState, summarizing) =>
+			lastResultState.queuedOrigin.orElse(lastResultState.activeOrigin) match {
+				// Case: Processing a reply => Flux
+				case Some(pending) => Flux(pending.isSuccess)
+				// Case: Latest reply fully processed
+				case None =>
+					val lastResultWasSuccess = lastResultState.current.isSuccess
+					// Case: Messages have been queued => Flux state, otherwise Final (alive or dead)
+					if (summarizing || queued > 0) Flux(lastResultWasSuccess) else Final(lastResultWasSuccess)
+			}
+		}
+	
+	
+	// INITIAL CODE ---------------------------
+	
+	// Sets up auto-summary logic once appropriate
+	autoSummarizeAtTokensPointer.addContinuousListener { e =>
+		// Case: Auto-summary is on
+		if (e.newValue.isDefined) {
+			// Case: Auto-summary was enabled => Starts tracking the summary conditions
+			if (e.oldValue.isEmpty) {
+				lastPromptAndReplySizesPointer.addListener(testAutoSummaryListener)
+				_messageHistoryPointer.addListener(testAutoSummaryListener)
+			}
+			summarizeIfAppropriate()
+		}
+		// Case: Auto-summary was disabled => Ends tracking
+		else {
+			lastPromptAndReplySizesPointer.removeListener(testAutoSummaryListener)
+			_messageHistoryPointer.removeListener(testAutoSummaryListener)
+		}
+	}
+	
 	
 	// COMPUTED -------------------------------
 	
@@ -299,9 +364,13 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	def usesTools = tools.nonEmpty
 	
 	/**
-	  * @return Result of the last completed chat request. May contain a failure.
+	  * @return Result of the last chat request. May contain a failure and may also still be pending (if streamed).
 	  */
 	def lastResult = _lastResultPointer.value
+	/**
+	  * @return Result of the last fully completed chat request. May contain a failure.
+	  */
+	def lastCompletedResult = lastResultCompletionPointer.value.current
 	/**
 	  * @return Last successfully received reply message. May still be streaming.
 	  *         Not necessarily fully successfully parsed, however.
@@ -326,6 +395,63 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  *         Uncertain when the message history has just been manually altered.
 	  */
 	def largestReplySize = _largestReplySizePointer.value
+	
+	/**
+	  * @return Whether this interface is currently performing a summary of the current conversation history
+	  */
+	def isSummarizing = _summarizingFlag.value
+	/**
+	  * @return A future which resolves once this interface is no longer summarizing its conversation history.
+	  *         Immediately resolved if no summarization is in process.
+	  */
+	def summarizingFinishedFuture = _summarizingFlag.futureWhere { !_ }
+	
+	/**
+	  * @return A context size (token) threshold + minimum message history size (in number of messages),
+	  *         at which summarization may be automatically performed.
+	  *         None if auto-summarization is disabled.
+	  */
+	def autoSummarizeThresholds = autoSummarizeAtTokensPointer.value
+	def autoSummarizeThresholds_=(newThreshold: Option[Pair[Int]]) =
+		autoSummarizeAtTokensPointer.value = newThreshold
+	
+	/**
+	  * @return A flag that contains true while there's at least one message which has not fully resolved yet.
+	  *         When false, no messages are pending or queued.
+	  */
+	def pendingFlag = lazyPendingFlag.value
+	/**
+	  * @return Whether there is an ongoing (or queued) chat message that has not yet been fully completed.
+	  */
+	def pending = lazyPendingFlag.current match {
+		case Some(f) => f.value
+		case None => queueSize > 0 || lastReply.isStreaming
+	}
+	/**
+	  * @return Whether the messaging has completed for now (i.e. there are no queued messages nor unresolved replies)
+	  */
+	def messagingCompleted = !pending
+	/**
+	  * @return A future that resolves once all queued messages have been fully resolved
+	  *         (i.e. have been sent & their replies have been fully parsed).
+	  *         May be immediately resolved.
+	  */
+	def messagingCompletedFuture = pendingFlag.futureWhere { !_ }
+	/**
+	  * @return Whether this interface is currently idle,
+	  *         i.e. not sending or receiving any messages, nor performing a summary.
+	  */
+	def idle = statePointer.value.isFlux
+	/**
+	  * @return A future that resolves once all messages have been fully processed, and there is no summarization
+	  *         going on.
+	  *         Contains Alive if the last message succeeded and Dead if it failed.
+	  *         May be immediately resolved.
+	  */
+	def idleFuture = statePointer.findMapFuture {
+		case r: Final => Some(r)
+		case _ => None
+	}
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -396,21 +522,24 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 			}
 		}
 		
-		_push(Single(ChatMessage(message, encodedImages = images)), extraTools, allowStreaming = !noStreaming) {
-			streamingReply =>
-				replyIncoming.foreach { _(streamingReply) }
-				statePointer.value =
-					PositiveFlux -> Failure(new IllegalStateException("The reply hasn't been fully formed yet")) } {
-			completedReply =>
-				replyCompleted.foreach { _(completedReply) }
-				statisticsPromise.success(Success(completedReply.statistics))
-				statePointer.value = Alive -> Success(completedReply) } {
-			error =>
-				handleFailure.foreach { _() }
-				statisticsPromise.success(Failure(error))
-				statePointer.value = Dead -> Failure(error)
-				statePointer.lock()
-				log(error, "Messaging failed") }
+		// Waits until a previous summarization process has finished
+		summarizingFinishedFuture.foreach { _ =>
+			_push(Single(ChatMessage(message, encodedImages = images)), extraTools, allowStreaming = !noStreaming) {
+				streamingReply =>
+					replyIncoming.foreach { _(streamingReply) }
+					statePointer.value =
+						PositiveFlux -> Failure(new IllegalStateException("The reply hasn't been fully formed yet")) } {
+				completedReply =>
+					replyCompleted.foreach { _(completedReply) }
+					statisticsPromise.success(Success(completedReply.statistics))
+					statePointer.value = Alive -> Success(completedReply) } {
+				error =>
+					handleFailure.foreach { _() }
+					statisticsPromise.success(Failure(error))
+					statePointer.value = Dead -> Failure(error)
+					statePointer.lock()
+					log(error, "Messaging failed") }
+		}
 		
 		// Returns a Schrödinger
 		val reply = StreamedReplyMessage(textPointer, newTextPointer, lastUpdatedPointer, statisticsPromise.future)
@@ -436,6 +565,58 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Clears all custom system messages, so that the LLM will default to the message specified in its model file.
 	  */
 	def clearSystemMessages() = systemMessages = Empty
+	
+	/**
+	  * Summarizes the conversation so far, replacing the conversation history with the summary.
+	  * This function may be used to compress the message history, so that a longer (although less specific)
+	  * message history may be preserved.
+	  *
+	  * It is recommended to call this function only once all other processes have completed.
+	  *
+	  * @param noStreaming Whether reply streaming should be disabled for this query (default = false)
+	  * @return Returns 2 values:
+	  *             1. A Schrödinger instance representing the acquired summary reply
+	  *             1. A future that resolves into the summarized history, once the message history has been altered
+	  *
+	  *         Returns None if a summarization is already in progress.
+	  *
+	  * @see [[idleFuture]]
+	  */
+	def summarize(noStreaming: Boolean = false) = {
+		if (isSummarizing)
+			None
+		else {
+			// Requests a summary from the LLM
+			val schrodinger = push("Summarize our conversation so far", noStreaming = noStreaming)
+			_summarizingFlag.set()
+			
+			// Once the summary has been fully received, removes the summarized message history
+			val historyFuture = schrodinger.finalResultFuture.map { _.wrapped.foreach { _ =>
+				messageHistoryPointer.mutate { history => history.splitAt(history.size - 2) }
+			} }
+			historyFuture.onComplete { _ => _summarizingFlag.reset() }
+			
+			// Returns the message schrodinger and the future which completes after the message history has been updated
+			Some(schrodinger -> historyFuture)
+		}
+	}
+	
+	/**
+	  * Sets up automatic message history compressions whenever the context becomes large enough
+	  * @param contextSizeThreshold Minimum context size for the summarization to occur (in tokens).
+	  *                             Includes system message, as well as conversation history.
+	  *                             Default = Once the next request is expected to exceed 80% of the maximum context size.
+	  * @param minimumMessageCount Minimum amount of historical messages for the summarization to occur.
+	  *                            Counts both requests and replies.
+	  *                            Default = 6 = 3 requests + 3 replies.
+	  */
+	def setupAutoSummaries(contextSizeThreshold: Int = (maxContextSize * 0.8).toInt - (largestReplySize.smallestPossibleValue.getOrElse(0) max expectedReplySize),
+	                       minimumMessageCount: Int = 4) =
+		autoSummarizeThresholds = Some(Pair(contextSizeThreshold, minimumMessageCount))
+	/**
+	  * Disables the auto-summary feature, if it has been enabled.
+	  */
+	def disableAutoSummaries() = autoSummarizeThresholds = None
 	
 	/**
 	  * Registers a new tool for the LLM to utilize
@@ -603,6 +784,17 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 				// Case: Failed to acquire a response => Fails
 				case f: RequestFailure => handleFailure(f.cause)
 			}
+		}
+	}
+	
+	/**
+	  * Checks the auto-summary conditions and performs the summarization if those conditions are met.
+	  * Won't auto-summarize while messaging or summarizing.
+	  */
+	private def summarizeIfAppropriate() = {
+		autoSummarizeAtTokensPointer.value.foreach { case Pair(minContext, minMessageCount) =>
+			if (lastContextSize >= minContext && messageHistory.hasSize >= minMessageCount && idle)
+				summarize(noStreaming = true)
 		}
 	}
 	
