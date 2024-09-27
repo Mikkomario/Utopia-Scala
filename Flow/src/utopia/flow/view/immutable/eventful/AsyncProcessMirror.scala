@@ -3,6 +3,7 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.async.process.Process
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
@@ -215,8 +216,8 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 		override protected def isRestartable: Boolean = true
 		
 		override protected def runOnce(): Unit = {
-			// Expects active origin to be set when running
-			activeOriginPointer.value.foreach { origin =>
+			// As long as mappings have been prepared, continues to apply them
+			OptionsIterator.continually { activeOriginPointer.value }.foreach { origin =>
 				Try {
 					// Performs the computation
 					val result = f(origin)

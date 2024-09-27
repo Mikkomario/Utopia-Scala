@@ -144,6 +144,21 @@ object AsyncMirror
 		  * @return A copy of this value without the queued process
 		  */
 		def withoutQueue = copy(queuedOrigin = None)
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def toString = {
+			val originStr = activeOrigin match {
+				case Some(o) => s", mapping $o"
+				case None => ""
+			}
+			val queuedStr = queuedOrigin match {
+				case Some(q) => s", mapping of $q has been queued"
+				case None => ""
+			}
+			s"Currently $current$originStr$queuedStr"
+		}
 	}
 }
 

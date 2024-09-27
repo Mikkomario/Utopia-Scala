@@ -9,6 +9,7 @@ import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -597,7 +598,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		// ATTRIBUTES	-----------------------------
 		
 		// Uses a custom execution context for optimization
-		private val swapExc = new SingleThreadExecutionContext("Cursor swapper")
+		private val swapExc = new SingleThreadExecutionContext("Cursor swapper", 5.minutes)
 		
 		private val minCursorDistance = 10
 		private val mousePositionPointer = EventfulPointer(Point.origin)
@@ -622,6 +623,11 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 						AwtEventThread.blocking { component.setCursor(cursor) }
 					}
 				}
+		}
+		// Whenever detached from the component hierarchy, kills the cursor-managing thread
+		attachmentPointer.addContinuousListener { e =>
+			if (!e.newValue)
+				swapExc.stop()
 		}
 		
 		

@@ -1,16 +1,10 @@
 package utopia.reach.test.interactive
 
-import utopia.firmament.drawing.immutable.BorderDrawer
-import utopia.firmament.model.Border
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.SettableOnce
-import utopia.genesis.handling.event.mouse.MouseMoveListener
-import utopia.paradigm.color.Color
 import utopia.reach.component.input.selection.Slider
 import utopia.reach.container.wrapper.{Framing, Rotated}
-import utopia.reach.drawing.MousePositionDrawer
 import utopia.reach.window.ReachWindow
 
 /**

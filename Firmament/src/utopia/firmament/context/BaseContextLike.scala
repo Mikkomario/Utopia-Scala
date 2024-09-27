@@ -18,7 +18,7 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   * @tparam Repr This context type
-  * @tparam ColorSensitive A color sensitive version of this context
+  * @tparam ColorSensitive A color-sensitive version of this context
   */
 trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
 {
@@ -62,7 +62,7 @@ trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr]
 	
 	/**
 	  * @return Whether images and icons should be allowed to scale above their original resolution. When this is
-	  *         enabled, images will fill the desired screen space but they will be blurry.
+	  *         enabled, images will fill the desired screen space, but they will be blurry.
 	  */
 	def allowImageUpscaling: Boolean
 	

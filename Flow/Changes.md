@@ -35,6 +35,7 @@
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - **XmlReader** now doesn't include text content which was outside the read XML elements (such as tabs etc.)
+- Bugfix to **AsyncProcessMirror**, which would previously get stuck at queued mappings
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
@@ -88,6 +89,11 @@
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
 - Built with Scala v2.13.14
+- Multiple changes to **SingleThreadExecutionContext**:
+  - This execution context now supports automatic disposal of the managed thread in case it remains idle for 
+    long enough (optional feature)
+  - This interface now exposes `stop()`, with which the current executing thread may be killed
+    - This also discards all the queued tasks, but does not interrupt the currently running task
 - `.distinctWith(...)` in **IterableOnce** (via **CollectionExtensions**) now accepts an **EqualsFunction** 
   instead of a regular function
   - Use-cases should get resolved implicitly, however

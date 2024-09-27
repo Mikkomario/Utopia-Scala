@@ -23,6 +23,8 @@
   **ContextualFactory** and **GenericContextualFactory**
 - **ReachCanvas** now uses `ComponentCreationDefaults.componentLogger` 
   instead of the **Logger** passed to some constructor functions
+- **ReachCanvas** now correctly disposes the cursor-managing thread once it is removed from a visible component 
+  hierarchy. The thread is also disposed if no mouse move -event is received within 5 minutes.
 
 ## v1.3 - 28.07.2024
 This update follows changes introduced in **Genesis v4.0**, which mostly affect the component 
