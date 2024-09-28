@@ -47,7 +47,7 @@ object Switch
   * @author Mikko Hilpinen
   * @since 27.08.2024, v2.5
   */
-trait Switch extends Any with Settable with Resettable with Pointer[Boolean]
+trait Switch extends Settable with Resettable with Pointer[Boolean]
 {
 	// IMPLEMENTED  -------------------
 	

@@ -153,15 +153,18 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	// NESTED   -------------------------
 	
 	case class ContextualColorAccess(level: ColorLevel, expectSmallObjects: Boolean)
+		extends ColorAccessLike[Color, ContextualColorAccess]
 	{
+		// COMPUTED ---------------------
+		
 		/**
-		  * @return Access to light colors
+		  * @return Minimum contrast used within this setting
 		  */
-		def light = preferring(Light)
-		/**
-		  * @return Access to dark colors
-		  */
-		def dark = preferring(Dark)
+		def minimumContrast =
+			if (expectSmallObjects) contrastStandard.defaultMinimumContrast else contrastStandard.largeTextMinimumContrast
+		
+		
+		// IMPLEMENTED  -----------------
 		
 		/**
 		  * @return Access to colors when small objects need to be recognized
@@ -177,47 +180,6 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 		  * @return Access to colors where contrast is suitable for the current font settings
 		  */
 		def forText = copy(expectSmallObjects = !font.isLargeOnScreen)
-		
-		/**
-		  * @return Minimum contrast used within this setting
-		  */
-		def minimumContrast =
-			if (expectSmallObjects) contrastStandard.defaultMinimumContrast else contrastStandard.largeTextMinimumContrast
-		
-		/**
-		  * @return Gray color to use
-		  */
-		def gray = apply(Gray)
-		
-		/**
-		  * @return Primary color to use
-		  */
-		def primary = apply(Primary)
-		/**
-		  * @return Secondary color to use
-		  */
-		def secondary = apply(Secondary)
-		/**
-		  * @return Tertiary color to use
-		  */
-		def tertiary = apply(Tertiary)
-		
-		/**
-		  * @return Color to use to represent success
-		  */
-		def success = apply(Success)
-		/**
-		  * @return Color to use to represent an error situation or a failure
-		  */
-		def failure = apply(Failure)
-		/**
-		  * @return Color to use to represent a warning or danger
-		  */
-		def warning = apply(Warning)
-		/**
-		  * @return Color to use to represent additional information or notifications
-		  */
-		def info = apply(Info)
 		
 		/**
 		  * @param color A proposed set of colors

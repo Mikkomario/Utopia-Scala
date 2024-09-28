@@ -1,7 +1,8 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.model.Destiny
-import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing}
+import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, Flag}
 
 object TripleMergeMirror
 {
@@ -104,7 +105,7 @@ object TripleMergeMirror
  * @since 30.1.2021, v1.9
  */
 class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changing[O2], source3: Changing[O3],
-                                          initialValue: R, condition: Changing[Boolean] = AlwaysTrue)
+                                          initialValue: R, condition: Flag = AlwaysTrue)
                                          (merge: (R, O1, O2, O3) => R)
 	extends AbstractMayStopChanging[R]()(source1.listenerLogger)
 {
@@ -123,12 +124,18 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 	startMirroring(source3, condition) { (v, e3) => merge(v, source1.value, source2.value, e3.newValue) } { _value = _ }
 	
 	stopOnceAllSourcesStop(sources)
+	condition.onceFixedAt(false) { declareChangingStopped() }
 	
 	
 	// IMPLEMENTED  -----------------------------
 	
 	override def value = _value
-	override def destiny: Destiny = sources.map { _.destiny }.reduce { _ + _ }
+	override def destiny: Destiny = {
+		if (condition.isAlwaysFalse)
+			Sealed
+		else
+			sources.map { _.destiny }.reduce { _ + _ }.possibleToSealIf(condition.destiny.isPossibleToSeal)
+	}
 	
 	override def readOnly = this
 }

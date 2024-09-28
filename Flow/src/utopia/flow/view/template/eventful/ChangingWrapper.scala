@@ -75,14 +75,6 @@ trait ChangingWrapper[+A] extends Changing[A]
 	                                        =
 		wrapped.incrementalMergeWith(other)(initialMerge)(incrementMerge)
 	
-	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
-		wrapped.mergeWith(other)(f)
-	override def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R)
-	                                =
-		wrapped.mergeWith(first, second)(merge)
-	override def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R) =
-		wrapped.lazyMergeWith(other)(f)
-	
 	override def futureWhere(valueCondition: A => Boolean) = wrapped.futureWhere(valueCondition)
 	override def nextFutureWhere(valueCondition: A => Boolean) = wrapped.nextFutureWhere(valueCondition)
 	override def findMapFuture[B](f: A => Option[B]) = wrapped.findMapFuture(f)

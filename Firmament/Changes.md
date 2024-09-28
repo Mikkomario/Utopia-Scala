@@ -1,6 +1,7 @@
 # Utopia Firmament - List of Changes
 
 ## v1.3.1 (in development)
+Working on variable context
 ### New features
 - Added **HasGuiState** trait
 ### New methods

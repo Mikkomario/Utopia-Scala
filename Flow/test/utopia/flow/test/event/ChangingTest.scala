@@ -2,7 +2,9 @@ package utopia.flow.test.event
 
 import utopia.flow.test.TestContext._
 import utopia.flow.event.model.ChangeResult
-import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
+import utopia.flow.view.template.eventful.Flag
 
 import scala.util.Try
 
@@ -202,6 +204,100 @@ object ChangingTest extends App
 	
 	assert(Try { lp.value = 2 }.isFailure)
 	assert(!lp.trySet(2))
+	
+	// Tests merging with 4 pointers, including an active-condition
+	private val lmi1 = Pointer.eventful(1)
+	private val lmi2 = Pointer.eventful(2)
+	private val lmi3 = Pointer.eventful(3)
+	private val lmi4 = Pointer.eventful(4)
+	private val merge4ActiveFlag = ResettableFlag(initialValue = true)
+	private val merge4Lock = SettableFlag()
+	private val otherLmis = Vector(lmi2, lmi3, lmi4)
+	private var merge4Calls = 0
+	private val merge4 = lmi1.mergeWithWhile(Vector(lmi2, lmi3, lmi4), merge4ActiveFlag && !merge4Lock) { v1 =>
+		merge4Calls += 1
+		v1 + otherLmis.view.map { _.value }.sum
+	}
+	
+	assert(merge4Calls == 1, merge4Calls)
+	assert(merge4.destiny.isPossibleToSeal)
+	assert(merge4.value == 10)
+	assert(merge4Calls == 1, merge4Calls)
+	
+	lmi1.value = 10
+	lmi2.value = -2
+	
+	assert(merge4Calls == 1)
+	assert(merge4.value == 15)
+	assert(merge4Calls == 2)
+	
+	merge4ActiveFlag.reset()
+	lmi1.value = 1
+	
+	assert(merge4Calls == 2)
+	assert(merge4.value == 15)
+	assert(merge4Calls == 2)
+	
+	merge4ActiveFlag.set()
+	
+	assert(merge4Calls == 2)
+	assert(merge4.value == 6)
+	assert(merge4Calls == 3)
+	
+	lmi3.value = 10
+	lmi4.value = -4
+	merge4ActiveFlag.reset()
+	
+	assert(merge4Calls == 4)
+	assert(merge4.value == 5)
+	assert(merge4Calls == 4)
+	
+	lmi3.value = 3
+	lmi4.value = 4
+	lmi2.value = 2
+	lmi1.value = 1
+	
+	assert(merge4Calls == 4)
+	assert(merge4.value == 5)
+	
+	private var lastMerge4Value = -1
+	merge4.addContinuousListener { e => lastMerge4Value = e.newValue }
+	
+	assert(merge4.hasListeners)
+	assert(lastMerge4Value == -1)
+	assert(merge4Calls == 4)
+	assert(merge4.value == 5)
+	
+	merge4ActiveFlag.set()
+	
+	assert(merge4Calls == 5, merge4Calls)
+	assert(lastMerge4Value == 10)
+	assert(merge4.value == 10)
+	
+	lmi1.value = 10
+	lmi2.value = -2
+	
+	assert(merge4Calls == 7)
+	assert(lastMerge4Value == 15)
+	assert(merge4.value == 15)
+	assert(merge4Calls == 7)
+	
+	private var merge4Stopped = false
+	merge4.onceChangingStops { merge4Stopped = true }
+	
+	assert(!merge4Stopped)
+	
+	merge4Lock.set()
+	
+	assert(merge4Stopped)
+	assert(merge4.isFixed)
+	
+	lmi1.value = 1
+	lmi2.value = 2
+	
+	assert(merge4Calls == 7)
+	assert(lastMerge4Value == 15)
+	assert(merge4.value == 15, merge4.value)
 	
 	println("Done!")
 }

@@ -274,7 +274,7 @@ object Pointer extends PointerFactory[Pointer]
   * @author Mikko Hilpinen
   * @since 4.11.2020, v1.9
   */
-trait Pointer[A] extends Any with View[A]
+trait Pointer[A] extends View[A]
 {
 	// ABSTRACT	----------------------------
 	

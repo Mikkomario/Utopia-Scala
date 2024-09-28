@@ -59,32 +59,33 @@ trait MayStopChanging[+A] extends Changing[A]
 	protected def onceSourceStops[U](source: Changing[_])(action: => U) =
 		source.onceChangingStops { action }
 	/**
-	  * Prepares this pointer to perform an action once all of the specified source pointers have stopped.
-	  *
+	  * Prepares this pointer to perform an action once all the specified source pointers have stopped.
 	  * If no pointers are specified, performs the action immediately.
-	  *
 	  * @param sources Sources to follow
 	  * @param action Action to perform
 	  */
-	protected def onceAllSourcesStop[U](sources: Iterable[Changing[_]])(action: => U) = {
-		sources.emptyOneOrMany match {
-			// Case: Only one source pointer => Delegates to another method
+	protected def onceAllSourcesStop[U](sources: Iterable[Changing[_]])(action: => U): Unit = {
+		// Skips sources that have already stopped
+		sources.filterNot { _.isFixed }.emptyOneOrMany match {
+			// Case: Only one source pointer remains => Delegates to another method
 			case Some(Left(source)) => onceSourceStops(source)(action)
 			// Case: Multiple source pointers => Waits on all of them, but only if it is possible that all stop changing
 			case Some(Right(sources)) =>
-				if (sources.forall { _.destiny.isPossibleToSeal }) {
-					var stopCount = 0
-					sources.foreach {
-						_.onceChangingStops {
-							stopCount += 1
-							// Case: All sources stopped changing
-							if (sources hasSize stopCount)
-								action
-						}
-					}
-				}
+				if (sources.forall { _.destiny.isPossibleToSeal })
+					_onceAllSourcesStop(sources.iterator)(action)
 			// Case: No sources specified => Stops immediately
 			case None => action
+		}
+	}
+	
+	// Recursively waits until each source stops, one by one
+	// Once all have stopped (i.e. sourcesIter is empty), calls 'action'
+	private def _onceAllSourcesStop[U](sourcesIter: Iterator[Changing[_]])(action: => U): Unit = {
+		sourcesIter.next().onceChangingStops {
+			if (sourcesIter.hasNext)
+				_onceAllSourcesStop(sourcesIter)(action)
+			else
+				action
 		}
 	}
 }

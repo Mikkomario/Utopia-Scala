@@ -16,7 +16,7 @@ import utopia.paradigm.enumeration.ColorContrastStandard
   * @author Mikko Hilpinen
   * @since 27.09.2024, v1.3.1
   */
-trait BaseVariableContextLike[+Repr, +ColorSensitive] extends Any with BaseContextLike[Repr, ColorSensitive]
+trait VariableBaseContextLike[+Repr, +ColorSensitive] extends Any with BaseContextLike[Repr, ColorSensitive]
 {
 	// ABSTRACT -----------------------------
 	
@@ -52,7 +52,7 @@ trait BaseVariableContextLike[+Repr, +ColorSensitive] extends Any with BaseConte
 	/**
 	  * @return Cache that contains color scheme map results for various color roles
 	  */
-	protected def colorPointersCache: Cache[(ColorRole, ColorLevel), Changing[Color]]
+	def colorPointersCache: Cache[(ColorRole, ColorLevel), Changing[Color]]
 	
 	/**
 	  * @param p New font pointer
@@ -165,4 +165,11 @@ trait BaseVariableContextLike[+Repr, +ColorSensitive] extends Any with BaseConte
 	  * @return Copy of this context with a modified flag
 	  */
 	def mapAllowImageUpscalingFlag(f: Mutate[Flag]) = withAllowImageUpscalingFlag(f(allowImageUpscalingFlag))
+	
+	/*
+	  * @param color Targeted color role
+	  * @param shade Applied color shade
+	  * @return A pointer that contains the targeted color, according to the possibly varying color scheme
+	  */
+	// def colorPointer(color: ColorRole, shade: ColorLevel) = colorPointersCache(color -> shade)
 }

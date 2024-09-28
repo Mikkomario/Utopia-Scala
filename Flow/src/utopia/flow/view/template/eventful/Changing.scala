@@ -1,11 +1,12 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.{Identity, MaybeEmpty}
@@ -185,7 +186,7 @@ object Changing
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.9
   */
-trait Changing[+A] extends Any with View[A]
+trait Changing[+A] extends View[A]
 {
 	// ABSTRACT	---------------------
 	
@@ -838,6 +839,7 @@ trait Changing[+A] extends Any with View[A]
 		} { ChangeResult.finalValue(value) }
 	
 	/**
+	  * Merges this item with another. Optimizes listening.
 	  * @param other Another changing item
 	  * @param f A merge function
 	  * @tparam B Type of the other changing item
@@ -845,7 +847,46 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A mirror that merges the values from both of these items
 	  */
 	def mergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] =
-		divergeMerge[B, Changing[R]](other) { MergeMirror(this, other)(f) } { v2 => map { f(_, v2) } } {
+		divergeMerge[B, Changing[R]](other) {
+			OptimizedMultiMergeMirror(this, other) { f(value, other.value) } } {
+			v2 => map { f(_, v2) } } {
+			OptimizedMirror(other) { v2 => f(value, v2) } }
+	/**
+	  * Merges this item with two others. Optimizes listening.
+	  * @param first Another changing item
+	  * @param second Yet another changing item
+	  * @param merge A merge function
+	  * @tparam B Type of the second changing item
+	  * @tparam C Type of the third changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from all three of these items
+	  */
+	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
+		mergeWith(Pair(first, second)) { merge(_, first.value, second.value) }
+	/**
+	  * Merges this item with 0-n others. Optimizes listening.
+	  * @param others Other changing items
+	  * @param mergeResult A function that accepts the value of this item and merges it with values from the other items
+	  * @tparam R Merge result type
+	  * @return A mirror that merges the values of all these items
+	  */
+	def mergeWith[R](others: IterableOnce[Changing[_]])(mergeResult: A => R): Changing[R] = {
+		(Single(this) ++ others).filter { _.mayChange }.emptyOneOrMany match {
+			case None => Fixed(mergeResult(value))
+			case Some(Left(only)) => OptimizedMirror(only) { _ => mergeResult(value) }
+			case Some(Right(many)) => OptimizedMultiMergeMirror(many) { mergeResult(value) }
+		}
+	}
+	/**
+	  * @param other Another changing item
+	  * @param f A merge function
+	  * @tparam B Type of the other changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from both of these items
+	  */
+	def strongMergeWith[B, R](other: Changing[B])(f: (A, B) => R): Changing[R] =
+		divergeMerge[B, Changing[R]](other) { MergeMirror(this, other)(f) } {
+			v2 => strongMap { f(_, v2) } } {
 			Mirror(other) { v2 => f(value, v2) } }
 	/**
 	  * @param first Another changing item
@@ -856,8 +897,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from all three of these items
 	  */
-	def mergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R)
-	                      : Changing[R] =
+	def strongMergeWith[B, C, R](first: Changing[B], second: Changing[C])(merge: (A, B, C) => R): Changing[R] =
 		TripleMergeMirror.of(this, first, second)(merge)
 	/**
 	  * Creates a mirror that reflects the merged value of this and another pointer.
@@ -870,6 +910,56 @@ trait Changing[+A] extends Any with View[A]
 	  * @return A mirror that merges the values from both of these items
 	  */
 	def mergeWithWhile[B, R](other: Changing[B], condition: Flag)(f: (A, B) => R): Changing[R] =
+		mergeWithWhile(Single(other), condition) { f(_, other.value) }
+	/**
+	  * Creates a mirror that reflects the merged value of this and two other pointers.
+	  * However, this mirror is updated only while the specified condition allows it.
+	  * @param first  Another changing item
+	  * @param second Yet another changing item
+	  * @param condition Condition that must be met in order for the merging to occur.
+	  * @param merge  A merge function
+	  * @tparam B Type of the second changing item
+	  * @tparam C Type of the third changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from all three of these items
+	  */
+	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Flag)
+	                           (merge: (A, B, C) => R): Changing[R] =
+		mergeWithWhile(Pair(first, second), condition) { merge(_, first.value, second.value) }
+	/**
+	  * Creates a mirror that reflects the merged value of this and n other pointers.
+	  * However, this mirror is updated only while the specified condition allows it.
+	  * @param others Other mirrored items
+	  * @param condition Condition that must be met in order for the merging to occur.
+	  * @param mergeResult A function that accepts the value of this item and yields a merge result of all these items
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from all these items
+	  */
+	def mergeWithWhile[R](others: IterableOnce[Changing[_]], condition: Flag)(mergeResult: A => R): Changing[R] = {
+		if (condition.isAlwaysFalse)
+			Fixed(mergeResult(value))
+		else
+			(Single(this) ++ others).filter { _.mayChange }.emptyOneOrMany match {
+				case None => Fixed(mergeResult(value))
+				case Some(Left(only)) =>
+					if (only == this)
+						mapWhile(condition)(mergeResult)
+					else
+						OptimizedMirror(only, condition) { _ => mergeResult(value) }
+				case Some(Right(many)) => OptimizedMultiMergeMirror(many, condition) { mergeResult(value) }
+			}
+	}
+	/**
+	  * Creates a mirror that reflects the merged value of this and another pointer.
+	  * However, this mirror is updated only while the specified condition allows it.
+	  * @param other Another changing item
+	  * @param condition Condition that must be met in order for the merging to occur.
+	  * @param f     A merge function
+	  * @tparam B Type of the other changing item
+	  * @tparam R Type of merge result
+	  * @return A mirror that merges the values from both of these items
+	  */
+	def strongMergeWithWhile[B, R](other: Changing[B], condition: Flag)(f: (A, B) => R): Changing[R] =
 	{
 		if (condition.isAlwaysFalse)
 			Fixed(f(value, other.value))
@@ -889,7 +979,7 @@ trait Changing[+A] extends Any with View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from all three of these items
 	  */
-	def mergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Flag)
+	def strongMergeWithWhile[B, C, R](first: Changing[B], second: Changing[C], condition: Flag)
 	                           (merge: (A, B, C) => R): Changing[R] =
 	{
 		if (condition.isAlwaysFalse)

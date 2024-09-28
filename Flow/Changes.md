@@ -32,10 +32,12 @@
 - **Resettable** is now required to implement `isSet: Boolean`
 - `StdIn.selectFrom(...)` doesn't print "Found X items" anymore
 - `!` in **Regex** now doesn't use `[^...]` when the content contains special characters, such as parentheses, `|` or brackets.
+- Removed `extends Any` from **View**, **Switch**, **Changing** and **Pointer**
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - **XmlReader** now doesn't include text content which was outside the read XML elements (such as tabs etc.)
 - Bugfix to **AsyncProcessMirror**, which would previously get stuck at queued mappings
+- **TripleMergeMirror** now correctly declares changing stopped if its mirroring condition gets fixed to false
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)
 ### Deprecations
 - Deprecated **VolatileList** and **VolatileOption** in favor of `Volatile.seq` and `Volatile.optional` 
@@ -56,7 +58,10 @@
 - Added `.spanTo(...)` and `.spanFrom(...)` to numeric classes via **RangeExtensions**
 ### New methods
 - **Changing**
-  - Added a new variant of `.lazyMergeWith(...)`
+  - Added a number of new merge function variants:
+    - Merging with n pointers
+    - Separate strong merging (which matches previous mergeWith)
+    - A new variant of `.lazyMergeWith(...)`
 - **ConsoleExtensions**
   - Added `.parseDate(String)`, which provides semi-flexible date-parsing 
     often useful when dealing with user (console) input
@@ -89,6 +94,8 @@
   - Added `.log` and `.logWithMessage(=> String)`
 ### Other changes
 - Built with Scala v2.13.14
+- Merge functions in **Changing** now apply optimizations to source-pointer listening
+  - The previous implementations are available as `strongMergeWith(...)` variants
 - Multiple changes to **SingleThreadExecutionContext**:
   - This execution context now supports automatic disposal of the managed thread in case it remains idle for 
     long enough (optional feature)
@@ -99,12 +106,13 @@
   - Use-cases should get resolved implicitly, however
 - String to number conversions in **Value** now trim the string and remove any control characters, such as newlines
 - Modified **HasEnds** `toString` implementation
-- Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
 - "Create new" option in `StdIn.selectFromOrAdd(...)` is now indented
 - Internal refactoring within **ThreadPool**
+- Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - Minor refactoring in pairing functions in **CollectionExtensions**
+- Refactored `.onceAllSourcesStop(...)` in **MayStopChanging**
 
 ## v2.4 - 28.07.2024
 This is a pretty large update, mostly due to its delayed release.

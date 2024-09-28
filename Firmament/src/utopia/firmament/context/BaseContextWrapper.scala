@@ -5,6 +5,7 @@ import utopia.paradigm.color.ColorScheme
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.util.Mutate
 
 /**
   * A common traits for wrappers around the base context
@@ -55,5 +56,5 @@ trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLik
 	  * @param f A mapping function for the wrapped base context
 	  * @return A copy of this context with mapped base context
 	  */
-	def mapBase(f: BaseContext => BaseContext) = withBase(f(base))
+	def mapBase(f: Mutate[BaseContext]) = withBase(f(base))
 }
