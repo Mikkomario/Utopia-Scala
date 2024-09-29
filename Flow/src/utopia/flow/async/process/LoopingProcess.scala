@@ -193,4 +193,19 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 	  * Causes this loop to run the next iteration() function, if this loop was in waiting mode.
 	  */
 	def skipWait() = WaitUtils.notify(waitLock)
+	
+	/**
+	  * Starts this loop as a timed task, if possible
+	  * @param tasks An implicit [[TimedTasks]] instance for running this loop.
+	  *              Note: This method assumes that 'tasks' has been started already,
+	  *                    and will not explicitly start this tasks-running process.
+	  * @return Whether this loop was successfully converted into a [[TimedTask]] and assigned to 'tasks'.
+	  *         False if this loop is based on wait notifications, which are beyond the capabilities of timed tasks.
+	  */
+	def runAsTimedTask()(implicit tasks: TimedTasks) = toTimedTask match {
+		case Some(task) =>
+			tasks += task
+			true
+		case None => false
+	}
 }

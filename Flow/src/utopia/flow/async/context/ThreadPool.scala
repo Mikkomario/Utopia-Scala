@@ -4,6 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ExcEvent.{QueueCleared, TaskAccepted, TaskCompleted, TaskQueued, ThreadClosed, ThreadCreated}
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
@@ -55,9 +56,14 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	// COMPUTED --------------------------
 	
 	/**
-	  * @return Current number of active threads
+	  * @return The current number of reserved threads
 	  */
 	def currentSize = threads.value.size
+	/**
+	  * @return The current number of active threads
+	  *         (performing some task, although the task itself may be in a waiting state)
+	  */
+	def currentActiveSize = threads.value.count { _.running }
 	/**
 	  * @return Current number of queued (i.e. pending) tasks
 	  */
@@ -67,7 +73,22 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	  * @return Whether this thread-pool is currently operating at maximum capacity,
 	  *         i.e. whether maximum number of threads have been created and each is in use.
 	  */
-	def isMaxed = queue.value.nonEmpty
+	def isMaxed = {
+		if (queue.value.nonEmpty)
+			true
+		else {
+			val t = threads.value
+			t.hasSize(maxSize) && t.forall { _.running }
+		}
+	}
+	
+	/**
+	  * @return State of each thread in this pool.
+	  *         Contains one entry for each reserved thread. Each entry contains 2 values:
+	  *             1. Whether this thread is currently performing a task (true) or waiting to receive one (false)
+	  *             1. Since when has this state been active
+	  */
+	def threadStates = threads.value.map { _.state }
     
     
     // IMPLEMENTED    --------------------
@@ -238,6 +259,8 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		//      2. Time when this promise was initiated / wait was started
 		private val waitingTask = Volatile.optional[(Promise[(Runnable, Boolean)], Instant)]()
 		
+		private var _lastTaskStartTime = Now.toInstant
+		
 		
 		// INITIAL CODE    -------------------
 		
@@ -246,6 +269,16 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		
 		
 		// COMPUTED    -----------------------
+		
+		def running = waitingTask.isEmpty && ended.isNotSet
+		
+		// Returns:
+		//      1. Whether running a task (true) or waiting (false)
+		//      2. Since when
+		def state = waitingTask.value match {
+			case Some((_, since)) => false -> since
+			case None => true -> _lastTaskStartTime
+		}
 		
 		private def isEnded = ended.isSet
 		
@@ -278,10 +311,10 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 				next match {
 					// Case: Next task is available => Performs it (catches errors)
 					case Some((next, eventful)) =>
-						val taskStartTime = Now.toInstant
+						_lastTaskStartTime = Now.toInstant
 						Try { next.run() }.logWithMessage(s"Exception reached thread $name")
 						if (eventful)
-							fireEvent(TaskCompleted(name, Now - taskStartTime))
+							fireEvent(TaskCompleted(name, Now - _lastTaskStartTime))
 						
 						// Takes the next task right away, if one is available
 						nextQueueTask.foreach { case (task, eventful, queued) =>

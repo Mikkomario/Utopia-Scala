@@ -76,7 +76,7 @@
 - **Iterator** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
 - **LoopingProcess**
-  - Added `.toTimedTask`
+  - Added `.toTimedTask` and `.runAsTimedTask()`
 - **OnceFlatteningPointer**
   - Added `.tryComplete(Changing)`
 - **PairingIterator** (object)
@@ -88,6 +88,8 @@
   - A large number of new methods are now available of **Pointers** of type **Option** and of type **Seq**
 - **Seq** (**CollectionExtensions**)
   - Added `.pairedTo(...)`
+- **ThreadPool**
+  - Added multiple new methods for tracking the current thread-usage
 - **Try** (**TryExtensions**)
   - Added `.log` and `.logWithMessage(String)`
 - **TryCatch**
