@@ -67,6 +67,7 @@ object Loop
       * @param f The function that will be called regularly.
       * @param exc Implicit execution context
       * @return The loop process that was just started
+      * @see [[TimedTask.dailyAt]]
       */
     def daily[U](runTime: LocalTime)(f: => U)(implicit exc: ExecutionContext, logger: Logger) =
     {
@@ -82,6 +83,7 @@ object Loop
       * @param f The function that will be called regularly.
       * @param exc Implicit execution context
       * @return The loop process that was just started
+      * @see [[TimedTask.weeklyAt]]
       */
     def weekly[U](day: WeekDay, time: LocalTime)(f: => U)(implicit exc: ExecutionContext, logger: Logger) =
     {
