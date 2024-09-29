@@ -36,6 +36,7 @@
 ### Bugfixes
 - **PairOps**`.minMax` was bugged in the previous version, returning the items in the wrong order
 - **XmlReader** now doesn't include text content which was outside the read XML elements (such as tabs etc.)
+- `StdIn.selectFrom(...)` and `.selectFromOrAdd(...)` now correctly apply filtering
 - Bugfix to **AsyncProcessMirror**, which would previously get stuck at queued mappings
 - **TripleMergeMirror** now correctly declares changing stopped if its mirroring condition gets fixed to false
 - Removed accidental test print from `bestMatch(...)` (**CollectionExtensions**)

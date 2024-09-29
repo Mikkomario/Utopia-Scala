@@ -318,7 +318,7 @@ object ConsoleExtensions
 						else
 							""
 					}
-					if (ask(s"Do you want to $verb ${ only._2 }?$addNote", default = addNew.isEmpty))
+					if (ask(s"Do you want to $verb ${ only._2 }?$addNote", default = true))
 						Some(only._1)
 					// Also allows insertion as a secondary option, if possible
 					else
@@ -368,19 +368,14 @@ object ConsoleExtensions
 											_selectFrom(options, addNew, target, verb, maxListCount)
 										}
 										else
-											narrowed.find { _._2 ~== filter } match {
-												// Case: Specified an exact match => Selects that one
-												case Some(matchingResult) => Some(matchingResult._1)
+											narrowed.only match {
+												// Case: Specified a unique match => Selects that one (with notice)
+												case Some(only) =>
+													println(s"Selected ${ only._2 }")
+													Some(only._1)
+												// Case: Still multiple options => Lists them again
 												case None =>
-													narrowed.only match {
-														// Case: Specified a unique match => Selects that one (with notice)
-														case Some(only) =>
-															println(s"Selected ${ only._2 }")
-															Some(only._1)
-														// Case: Still multiple options => Lists them again
-														case None =>
-															_selectFrom(options, addNew, target, verb, maxListCount)
-													}
+													_selectFrom(narrowed, addNew, target, verb, maxListCount)
 											}
 								}
 						}
