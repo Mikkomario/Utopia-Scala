@@ -1,19 +1,20 @@
-package utopia.firmament.context
+package utopia.firmament.context.color
 
-import utopia.firmament.context.color.ColorAccessLike
+import utopia.firmament.context.base.StaticBaseContextLike
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.ColorRole._
-import utopia.paradigm.color.ColorShade._
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
-  * A common trait for contexts that contain container color information
+  * Common trait for static context implementations which specify a container background
   * @author Mikko Hilpinen
-  * @since 27.4.2020, Reflection v1.2
+  * @since 29.9.2024, v1.3.1
   * @tparam Repr This context type
   * @tparam Textual This context type when textual information is added
   */
-trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
+trait StaticColorContextLike[+Repr, +Textual]
+	extends StaticBaseContextLike[Repr, Repr] with ColorContextCopyable[Repr, Textual]
 {
 	// ABSTRACT	------------------------
 	
@@ -25,28 +26,6 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	  * @return Color to use in text (and icon) elements
 	  */
 	def textColor: Color
-	
-	/**
-	  * @return A copy of this context that uses the default text color
-	  *         (typically black or white, depending on the context background)
-	  */
-	def withDefaultTextColor: Repr
-	
-	/**
-	  * @return A copy of this context that is suitable for creating components that display text
-	  */
-	def forTextComponents: Textual
-	
-	/**
-	  * @param color New text color to use
-	  * @return A copy of this context with that text color being used
-	  */
-	def withTextColor(color: Color): Repr
-	/**
-	  * @param color New set of text colors to use
-	  * @return A copy of this context with that text color (set) being used
-	  */
-	def withTextColor(color: ColorSet): Repr
 	
 	
 	// COMPUTED	-------------------------
@@ -63,22 +42,15 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	  */
 	def hintTextColor = textColor.timesAlpha(0.625)
 	
-	/**
-	  * @return A copy of this context that uses a highlighted (brightened or darkened) background color
-	  */
-	def withHighlightedBackground = withBackground(background.highlighted)
 	
-	@deprecated("Please use .background instead", "v1.0")
-	def containerBackground = background
+	// IMPLEMENTED    -------------------------
 	
+	override def backgroundPointer = Fixed(background)
+	override def textColorPointer = Fixed(textColor)
+	override def hintTextColorPointer = Fixed(hintTextColor)
 	
-	// OTHER    -------------------------
+	override def colorPointer: ColorAccess[Changing[Color]] = color.map { Fixed(_) }
 	
-	/**
-	  * @param background New background color to assume
-	  * @return A copy of this context with that background color
-	  */
-	def withBackground(background: Color) = against(background)
 	/**
 	  * @param color New background color (set) to assume
 	  * @param preferredShade Preferred color shade (default = standard)
@@ -88,12 +60,6 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	def withBackground(color: ColorSet, preferredShade: ColorLevel): Repr =
 		against(color.against(background, preferredShade))
 	/**
-	  * @param color          New background color (set) to assume
-	  * @return A copy of this context with a background from the specified set,
-	  *         which is suited against the current context
-	  */
-	def withBackground(color: ColorSet): Repr = withBackground(color, Standard)
-	/**
 	  * @param role          New background color (role) to assume
 	  * @param preferredShade Preferred color shade (default = standard)
 	  * @return A copy of this context with a background from the specified color type,
@@ -101,43 +67,6 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	  */
 	def withBackground(role: ColorRole, preferredShade: ColorLevel): Repr =
 		withBackground(colors(role).against(background, preferredShade))
-	/**
-	  * @param role           New background color (role) to assume
-	  * @return A copy of this context with a background from the specified color type,
-	  *         which is suited against the current context
-	  */
-	def withBackground(role: ColorRole): Repr = withBackground(role, Standard)
-	
-	/**
-	  * @param role Color role to use
-	  * @return A copy of this context that uses text color matching that role
-	  */
-	def withTextColor(role: ColorRole): Repr = withTextColor(colors(role))
-	
-	/**
-	  * Alias for withBackgroundColor(Color)
-	  * @param color New background color to assume
-	  * @return A copy of this context with the specified background color
-	  */
-	def /(color: Color) = withBackground(color)
-	/**
-	  * @param color New background color (set) to assume
-	  * @return A copy of this context with a background from the specified set,
-	  *         which is suited against the current context
-	  */
-	def /(color: ColorSet) = withBackground(color)
-	/**
-	  * @param color New background color (role) to assume
-	  * @return A copy of this context with a background from the specified color type,
-	  *         which is suited against the current context
-	  */
-	def /(color: ColorRole) = withBackground(color)
-	/**
-	  * @param color New background color (role) to assume + preferred color shade
-	  * @return A copy of this context with a background from the specified color type,
-	  *         which is suited against the current context
-	  */
-	def /(color: (ColorRole, ColorLevel)) = withBackground(color._1, color._2)
 	
 	/**
 	  * @param f A mapping function to apply for the current background color
@@ -154,7 +83,7 @@ trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 	// NESTED   -------------------------
 	
 	case class ContextualColorAccess(level: ColorLevel, expectSmallObjects: Boolean)
-		extends ColorAccessLike[Color, ContextualColorAccess]
+		extends ColorAccess[Color] with ColorAccessLike[Color, ContextualColorAccess]
 	{
 		// COMPUTED ---------------------
 		

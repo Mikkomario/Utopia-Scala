@@ -1,6 +1,6 @@
-package utopia.firmament.context
+package utopia.firmament.context.color
 
-import utopia.paradigm.color.ColorRole.{Failure, Gray, Info, Primary, Secondary, Success, Tertiary, Warning}
+import utopia.paradigm.color.ColorRole._
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
