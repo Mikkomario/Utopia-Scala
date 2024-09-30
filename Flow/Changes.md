@@ -112,6 +112,7 @@
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
 - "Create new" option in `StdIn.selectFromOrAdd(...)` is now indented
+- Added `Always(Boolean)` for creating **AlwaysTrue** or **AlwaysFalse**
 - Internal refactoring within **ThreadPool**
 - Added new `toSeq` & `toIndexedSeq` implementations to **EmptyView**, **SingleView** & **PairView**
 - Minor refactoring in pairing functions in **CollectionExtensions**
