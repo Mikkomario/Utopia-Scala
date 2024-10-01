@@ -1,6 +1,5 @@
 package utopia.firmament.context.base
 
-import utopia.firmament.context.ColorContext
 import utopia.firmament.context.color.ColorContext2
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
@@ -13,7 +12,7 @@ import utopia.flow.view.immutable.eventful.{Always, AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme}
+import utopia.paradigm.color.{Color, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
@@ -23,6 +22,7 @@ object VariableBaseContext
 {
 	// ATTRIBUTES   -------------------------
 	
+	// TODO: The issue here is that the stackMargins pointer becomes strongly referenced...
 	private val scaledStackMarginCache =
 		WeakCache[(Margins, Changing[StackLength], SizeCategory), Changing[StackLength]] { case (margins, from, scaling) =>
 			from.map { margins.scaleStackMargin(_, scaling) }
@@ -89,11 +89,6 @@ object VariableBaseContext
 	         (implicit localizer: Localizer): VariableBaseContext =
 		apply(actorHandler, margins, colorScheme, Fixed(font), colorContrastStandard, stackMargin.map { Fixed(_) },
 			Always(allowImageUpscaling))
-	
-	private def createColorPointersCache(colorSchemePointer: Changing[ColorScheme]) =
-		WeakCache[(ColorRole, ColorLevel), Changing[Color]] { case (role, shade) =>
-			colorSchemePointer.map { _(role)(shade) }
-		}
 	
 	private def defaultStackMarginWith(margins: Margins) = StackLength(margins.verySmall, margins.medium, margins.large)
 	private def createSmallStackMarginPointer(margins: Margins,

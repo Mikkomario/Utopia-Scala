@@ -3,7 +3,7 @@ package utopia.firmament.context.base
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.immutable.eventful.{Always, Fixed}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.text.Font
 
 /**
@@ -56,10 +56,10 @@ trait StaticBaseContextLike[+Repr, +ColorSensitive] extends BaseContextCopyable[
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def fontPointer = Fixed(font)
-	override def stackMarginPointer = Fixed(stackMargin)
-	override def smallStackMarginPointer = Fixed(smallStackMargin)
-	override def allowImageUpscalingFlag = Always(allowImageUpscaling)
+	override def fontPointer: Changing[Font] = Fixed(font)
+	override def stackMarginPointer: Changing[StackLength] = Fixed(stackMargin)
+	override def smallStackMarginPointer: Changing[StackLength] = Fixed(smallStackMargin)
+	override def allowImageUpscalingFlag: Flag = Always(allowImageUpscaling)
 	
 	/**
 	  * @param size New stack margins size category to use

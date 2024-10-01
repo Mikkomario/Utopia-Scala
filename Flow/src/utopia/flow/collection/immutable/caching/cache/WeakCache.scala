@@ -32,11 +32,9 @@ class WeakCache[Key, Value <: AnyRef](request: Key => Value) extends Cache[Key, 
 	
 	override def cached(key: Key) = weakRefs.get(key).flatMap { _.get }
 	
-	override def apply(key: Key) =
-	{
+	override def apply(key: Key) = {
 		// Tries to use a cached or a weakly cached value
-		cached(key).getOrElse
-		{
+		cached(key).getOrElse {
 			// But may have to request a new value
 			val newValue = request(key)
 			weakRefs += (key -> WeakReference(newValue))
