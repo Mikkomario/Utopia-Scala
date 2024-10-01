@@ -3,8 +3,9 @@ package utopia.reflection.container.stack
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.collection.immutable.GraphEdge
-import utopia.flow.collection.mutable.{GraphNode, VolatileList}
+import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.util.Fps
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
@@ -35,7 +36,7 @@ object StackHierarchyManager
 	// Id -> Node -> Children, used for finding children
 	private val graph = mutable.HashMap[Int, Node]()
 	
-	private val validationQueue = VolatileList[ReflectionStackable]()
+	private val validationQueue = Volatile.emptySeq[ReflectionStackable]
 	
 	private var validationLoop: Option[RevalidateLoop] = None
 	
