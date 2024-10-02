@@ -9,7 +9,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.immutable.caching.cache.WeakCache
+import utopia.flow.collection.immutable.caching.cache.{WeakKeysCache, WeakValuesCache}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.util.EitherExtensions._
@@ -292,8 +292,10 @@ trait ViewImageLabelFactoryLike[+Repr]
 					case Right(imagePointer) =>
 						// Case: Variables are involved => Caches color overlay results in a separate weak cache
 						if (imagePointer.mayChange || p.mayChange) {
-							val cache = WeakCache[(Image, Color), Image] { case (img, c) => img.withColorOverlay(c) }
-							imagePointer.mergeWith(p) { (image, color) => cache(image -> color) }
+							val cache = WeakKeysCache { img: Image =>
+								WeakValuesCache { color: Color => img.withColorOverlay(color) }
+							}
+							imagePointer.mergeWith(p) { (image, color) => cache(image)(color) }
 						}
 						// Case: Static image & color => Uses a static pointer
 						else

@@ -14,6 +14,7 @@ Working on variable context
   - This property is implicitly available to all instances of **Component**
 - **Component** now contains a protected `relativizeMouseEventForChildren(...)` function.
   - Overriding this function affects how mouse events are distributed downwards.
+- Modified caching logic in highlighting **ButtonImageEffect**
 
 ## v1.3 - 28.07.2024
 For the most part, this update reflects changes in the **Genesis** module (v4.0 update). 

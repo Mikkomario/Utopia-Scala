@@ -51,7 +51,7 @@ object ButtonImageEffect
 		// Second key is button image set to apply
 		// Third key is applied intensity
 		private val caches = ColorShade.values.map { shade =>
-			shade -> WeakCache { original: ButtonImageSet =>
+			shade -> WeakCache.weakKeys { original: ButtonImageSet =>
 				// Determines the direction of color change
 				val averageLuminance = original.default.pixels.averageRelativeLuminance
 				val direction = shade match {
@@ -86,7 +86,7 @@ object ButtonImageEffect
 		// Caches generated sets in order to improve performance
 		// First key is applied adjustment size
 		// Second key is the set to modify
-		private val caches = WeakCache { adj: Adjustment =>
+		private val caches = WeakCache.weakKeys { adj: Adjustment =>
 			WeakCache { original: ButtonImageSet =>
 				// Calculates the maximum image size, which determines the canvas size for all images
 				// Default impact is -1. Focus impact is 0. Activated impact is 0.5 (total).

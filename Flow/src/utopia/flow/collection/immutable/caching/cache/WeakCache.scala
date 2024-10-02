@@ -1,47 +1,59 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import scala.collection.immutable.HashMap
+import utopia.flow.collection.CollectionExtensions._
+import scala.collection.mutable
 import scala.ref.WeakReference
 
 object WeakCache
 {
+	// OTHER    --------------------------
+	
 	/**
-	  * @param request A function for retrieving a new value when one is required
-	  * @tparam K Type of cache keys
-	  * @tparam V Type of cache values
-	  * @return A new cache
+	  * @param f A function for calculating a value for a key
+	  * @tparam K Type of used keys
+	  * @tparam V Type of cached values
+	  * @return A new weakly referencing cache
 	  */
-	def apply[K, V <: AnyRef](request: K => V) = new WeakCache[K, V](request)
+	def apply[K, V <: AnyRef](f: K => V) = new WeakCache[K, V](f)
+	
+	/**
+	  * @param f A function for calculating a value for a key
+	  * @tparam K Type of used keys
+	  * @tparam V Type of cached values
+	  * @return A new cache that weakly references the keys but strongly references the values
+	  *         (as long as the keys remain referenced)
+	  */
+	def weakKeys[K, V](f: K => V) = WeakKeysCache(f)
+	/**
+	  * @param f A function for calculating a value for a key
+	  * @tparam K Type of used keys
+	  * @tparam V Type of cached values
+	  * @return A new cache that weakly references the values but strongly references the keys
+	  */
+	def weakValues[K, V <: AnyRef](f: K => V) = WeakValuesCache[K, V](f)
 }
 
 /**
-  * This cache only weakly references its contents
+  * A [[Cache]] implementation that weakly references both keys and values
   * @author Mikko Hilpinen
-  * @since 11.11.2020, v1.9
+  * @since 01.10.2024, v2.5
+  * @see [[WeakValuesCache]]
   */
-class WeakCache[Key, Value <: AnyRef](request: Key => Value) extends Cache[Key, Value]
+class WeakCache[K, V <: AnyRef](f: K => V) extends Cache[K, V]
 {
-	// ATTRIBUTES	---------------
+	// ATTRIBUTES   -----------------------
 	
-	private var weakRefs: Map[Key, WeakReference[Value]] = HashMap()
+	private val cache = new mutable.WeakHashMap[K, WeakReference[V]]()
 	
 	
-	// IMPLEMENTED	---------------
+	// IMPLEMENTED  -----------------------
 	
-	override def cachedValues = weakRefs.values.flatMap { _.get }
+	override def cachedValues: Iterable[V] = cache.valuesIterator.flatMap { _.get }.caching
 	
-	override def cached(key: Key) = weakRefs.get(key).flatMap { _.get }
-	
-	override def apply(key: Key) =
-	{
-		// Tries to use a cached or a weakly cached value
-		cached(key).getOrElse
-		{
-			// But may have to request a new value
-			val newValue = request(key)
-			weakRefs += (key -> WeakReference(newValue))
-			newValue
-		}
+	override def cached(key: K): Option[V] = cache.get(key).flatMap { _.get }
+	override def apply(key: K): V = cached(key).getOrElse {
+		val value = f(key)
+		cache += (key -> WeakReference(value))
+		value
 	}
 }
-
