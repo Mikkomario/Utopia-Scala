@@ -55,6 +55,7 @@
   **SettableFlag** (previously **Flag**) and **ResettableFlag** without change events
   - Related to this update, added **MaybeSet** trait
 - Added **VolatileSwitch** class, which implements the features of **VolatileFlag**, but without change events
+- Added **WeakCache** (new version), and **WeakKeysCache**
 - **Loggers** are now implicitly convertible to **ScopeUsable**, allowing for scoped logging definitions
 - Added `.spanTo(...)` and `.spanFrom(...)` to numeric classes via **RangeExtensions**
 ### New methods
@@ -108,6 +109,8 @@
   instead of a regular function
   - Use-cases should get resolved implicitly, however
 - String to number conversions in **Value** now trim the string and remove any control characters, such as newlines
+- In **WeakCache**, both the keys and the values are now weakly referenced
+  - The previous implementation, where only values are weakly referenced, is now **WeakValuesCache**
 - Modified **HasEnds** `toString` implementation
 - **ListenableResettableLazy** is now covariant
 - The result type parameter in **LazyMergeMirror** is now covariant
