@@ -22,11 +22,11 @@ object VariableBaseContext
 {
 	// ATTRIBUTES   -------------------------
 	
-	// TODO: The issue here is that the stackMargins pointer becomes strongly referenced...
-	private val scaledStackMarginCache =
-		WeakCache[(Margins, Changing[StackLength], SizeCategory), Changing[StackLength]] { case (margins, from, scaling) =>
-			from.map { margins.scaleStackMargin(_, scaling) }
+	private val scaledStackMarginCache = WeakCache.weakKeys { marginPointer: Changing[StackLength] =>
+		WeakCache.weakValues[(Margins, SizeCategory), Changing[StackLength]] { case (margins, scaling) =>
+			marginPointer.map { margins.scaleStackMargin(_, scaling) }
 		}
+	}
 	
 	
 	// IMPLICIT -----------------------------
@@ -154,7 +154,7 @@ object VariableBaseContext
 		}
 		
 		override def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength] =
-			scaledStackMarginCache((margins, stackMarginPointer, scaling))
+			scaledStackMarginCache(stackMarginPointer)(margins -> scaling)
 	}
 }
 

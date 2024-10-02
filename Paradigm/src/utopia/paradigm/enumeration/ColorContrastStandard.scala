@@ -28,6 +28,12 @@ sealed trait ColorContrastStandard extends SelfComparable[ColorContrastStandard]
 	// OTHER	---------------------------
 	
 	/**
+	  * @param large Whether the viewed object or text is large (true) or small (false)
+	  * @return Minimum contrast for objects of that size
+	  */
+	def minimumContrast(large: Boolean) = if (large) largeTextMinimumContrast else defaultMinimumContrast
+	
+	/**
 	  * @param fontSize Font size
 	  * @param fontIsBold Whether the font is bold
 	  * @return The minimum color contrast requirement in this standard for text with those settings

@@ -22,6 +22,8 @@
   - Added `.opposite`
 - **Animation** (object)
   - Added a couple of utility constructors
+- **ColorContrastStandard**
+  - Added `.minimumContrast(Boolean)`
 - **Line**
   - Added `.intersectsWith(Line)`
 - **Matrix2D** (object)
