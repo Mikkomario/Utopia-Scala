@@ -1,6 +1,7 @@
 # Utopia Disciple - List of Changes
 
 ## v1.7.1 (in development)
+This small update introduces new utility functions for response-parsing.
 ### New methods
 - **ResponseParser**
   - Added multiple new methods for **ResponseParsers** of type **Either**

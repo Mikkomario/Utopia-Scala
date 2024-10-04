@@ -1,6 +1,10 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.7 (in development)
+This update focuses on the **Polygonic** trait (now named **Polygon**), refactoring many of the existing functions. 
+Specifically, the convex parts -algorithm was completely redesigned and rewritten.
+
+Besides these, added better support for angular calculations by introducing the **AngleRange** class. 
 ### Breaking changes
 - `.cutBetween(...)` in **Polygonic** now returns a **Pair** instead of a **Tuple**
 - **Polygon**`.angles` now functions differently (more according to the function's name)

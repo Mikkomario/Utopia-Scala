@@ -1,6 +1,7 @@
 # Utopia Nexus - List of Changes
 
 ## v1.9.4 (in development)
+A small update adding **RequestInterceptor** & **ResponseInterceptor** traits
 ### New features
 - Added **RequestInterceptor** & **ResponseInterceptor** traits
   - These are supported in **Nexus-for-Tomcat**'s **ApiLogic** interface

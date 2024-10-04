@@ -1,6 +1,18 @@
 # Utopia Flow - List of Changes
 
 ## v2.5 (in development)
+A larger update focusing on pointers. The main changes are:
+- Refactored **Flag** class hierarchy, adding non-eventful versions (**Settable** & **Switch**)
+- **Volatile** classes are no longer automatically eventful
+  - Also refactored the **Volatile** interfaces quite a bit 
+- Added more robust logging to **Pointers**
+  - This adds required implicit **Logger** access in most pointer constructors
+- Refactored **CollectionExtensions** by dividing it into 3 different files
+  - Unfortunately this change requires a lot of import changes in the dependent projects
+
+This update also adds some important bugfixes, most notably to XML parsing (see bugfixes section for more details).
+
+As usual, there's also a large number of utility updates and new smaller features and functions.
 ### Breaking changes
 - Moved parts of **CollectionExtensions** to different files:
   - Moved **Try**-related features to **TryExtensions**

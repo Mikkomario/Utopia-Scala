@@ -1,6 +1,7 @@
 # Utopia Exodus - List of Changes
 
 ## v4.1.7 (in development)
+A small update supporting the latest Vault changes.
 ### Other changes
 - Built with Scala v2.13.14
 - Supports Vault v1.20

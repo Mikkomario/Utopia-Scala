@@ -1,6 +1,7 @@
 # Utopia Terra - list of changes
 
 ## v1.2 (in development)
+Made it easier to support more generic world views by introducing a couple new traits.
 ### Breaking changes
 - **WorldView** now accepts 5 type parameters instead of 4
   - This addition was made in order to support covariance in lat-long to vector conversion and contravariance in 

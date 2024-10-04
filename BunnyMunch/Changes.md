@@ -1,7 +1,7 @@
 # Utopia BunnyMunch - List of Changes
 
 ## v1.0.6 (in development)
-Built with Scala v2.13.14
+A new build with Scala v2.13.14. No other changes.
 
 ## v1.0.5 - 28.07.2024
 Added support for asynchronous json-parsing.
