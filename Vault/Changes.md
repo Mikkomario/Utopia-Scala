@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.20 (in development)
+## v1.20 - 04.10.2024
 This update adds support for custom selection targets 
 (e.g. only pulling columns from a single table, while still targeting multiple tables for conditions, etc.) 
 and adds some other optimizations to selects as well.

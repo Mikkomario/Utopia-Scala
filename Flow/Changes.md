@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.5 (in development)
+## v2.5 - 04.10.2024
 A larger update focusing on pointers. The main changes are:
 - Refactored **Flag** class hierarchy, adding non-eventful versions (**Settable** & **Switch**)
 - **Volatile** classes are no longer automatically eventful

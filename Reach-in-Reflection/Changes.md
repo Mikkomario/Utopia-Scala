@@ -1,6 +1,6 @@
 # Reach in Reflection - List of Changes
 
-## v1.0.3 (in development)
+## v1.0.3 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
 
 ## v1.0.2 - 28.07.2024

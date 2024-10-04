@@ -1,6 +1,6 @@
 # Utopia BunnyMunch - List of Changes
 
-## v1.0.6 (in development)
+## v1.0.6 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 
 ## v1.0.5 - 28.07.2024

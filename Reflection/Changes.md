@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.2.1 (in development)
+## v2.2.1 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
 
 ## v2.2 - 28.07.2024

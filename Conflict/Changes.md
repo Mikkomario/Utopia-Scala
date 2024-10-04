@@ -1,6 +1,6 @@
 # Utopia Conflict - List of Changes
 
-## v1.5.1 (in development)
+## v1.5.1 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 
 ## v1.5 - 28.07.2024

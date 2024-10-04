@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.7.1 (in development)
+## v1.7.1 - 04.10.2024
 This small update introduces new utility functions for response-parsing.
 ### New methods
 - **ResponseParser**

@@ -1,6 +1,6 @@
 # Utopia Disciple - List of changes
 
-## v2.1.8 (in development)
+## v2.1.8 - 04.10.2024
 A small update accommodating changes in Vault.
 ### Other changes
 - Built with Scala v2.13.14

@@ -1,6 +1,6 @@
 # Utopia Metropolis - List of Changes
 
-## v2.2.4 (in development)
+## v2.2.4 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
 
 ## v2.2.3 - 28.07.2024
