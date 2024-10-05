@@ -14,19 +14,24 @@ which provides major benefits in terms of privacy, although requiring some compu
 
 ## Main Features
 An **Annex**-compatible interface for requesting a local LLM to generate an answer to a query
-- Supports advanced context setting, allowing you to more easily specify, what kind of content you wish to receive, 
-  especially in JSON-based use-cases
 - Supports both streamed (word-by-word) and buffered response-parsing
   - Streamed parsing is more appropriate in text-based use-cases like chatbots, enabling more responsive user-interfaces
   - Buffered parsing is simpler and also more suitable for JSON-based use-cases, where partial responses 
     are unlikely to be useful.
+- Supports advanced context setting, allowing you to more easily specify, what kind of content you wish to receive,
+  especially in JSON-based use-cases
+
+A complete chat interface with context size management, conversation history and tool support (Ollama feature).
+
+Interfaces for listing and pulling model data.
 
 ## Implementation Hints
 
 ### Classes you should be aware of
 - **OllamaClient** - The main interface for sending out requests to a (local) Ollama server
-- Various request models under utopia.echo.model.request
-  - These are divided into 2 categories: **Chat** requests and **Generate** requests, 
+- **Chat** provides you with immediate access to continuous chats
+- Various request models under `utopia.echo.model.request`
+  - These are divided into 2 categories: **ChatRequest** and **Generate** requests, 
     which match different endpoints in the Ollama API.
   - Both of these requests have 3 variants each:
     - Buffered: Only one response is received
@@ -37,4 +42,4 @@ An **Annex**-compatible interface for requesting a local LLM to generate an answ
   - For advanced queries that expect JSON responses, familiarize yourself with **ObjectSchema**, also
 - You will need at least one (implicit) **LlmDesignator** instance in order to use this interface. 
   **LlmDesignator**s are simply wrappers for targeted LLM names.
-- When using the **Chat** requests, you will need to use the **ChatMessage** data-structure.
+- When using **ChatRequests**, you will need to use the **ChatMessage** data-structure.

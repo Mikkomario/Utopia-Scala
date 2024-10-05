@@ -1,6 +1,8 @@
 # Utopia Echo - List of Changes
 
-## v1.1 (in development)
+## v1.1 - 04.10.2024
+A major update adding a number of new features, including a complete chat interface and tool support. 
+Also includes some refactoring in order to accommodate this new features and their requirements.
 ### Breaking changes
 - Refactored how requests are constructed
   - The current implementation is largely based on **GenerateParams** and **ChatParams**

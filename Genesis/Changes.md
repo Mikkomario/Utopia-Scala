@@ -1,6 +1,8 @@
 # Utopia Genesis - List of Changes
 
-## v4.1 (in development)
+## v4.1 - 04.10.2024
+This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0. 
+**Animator** is also fixed, and event filters are now easier to construct.
 ### Breaking changes
 - **KeyDownEventGenerator** no longer extends **Actor** nor **KeyStateListener**. 
   Instead of adding the generator to these handlers, one should call `.start(...)`.

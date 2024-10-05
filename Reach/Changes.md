@@ -1,11 +1,16 @@
 # Utopia Reach - List of Changes
 
-## v1.4 (in development)
+## v1.4 - 04.10.2024
+Adds mouse drag -support and fixes a memory-related bug in **ReachCanvas**. 
+Also adds **Slider** component, preliminary support for coordinate-transformations and some new utility updates.
 ### Breaking changes
 - **ReachComponentLike** now requires an abstract property `mouseDragHandler: MouseDragHandler`
   - This doesn't affect most use-cases, because **ReachComponent** and **ReachComponentWrapper** both implement this
 - **ComponentHierarchy** now requires an abstract property `coordinateTransform: Option[CoordinateTransform]`
   - In the vast majority of the use-cases, this is set to `None`
+### Bugfixes
+- **ReachCanvas** now correctly disposes the cursor-managing thread once it is removed from a visible component
+  hierarchy. The thread is also disposed if no mouse move -event is received within 5 minutes.
 ### New features
 - Components now support mouse drag events
 - Added a **Slider** component
@@ -23,8 +28,6 @@
   **ContextualFactory** and **GenericContextualFactory**
 - **ReachCanvas** now uses `ComponentCreationDefaults.componentLogger` 
   instead of the **Logger** passed to some constructor functions
-- **ReachCanvas** now correctly disposes the cursor-managing thread once it is removed from a visible component 
-  hierarchy. The thread is also disposed if no mouse move -event is received within 5 minutes.
 - Modified caching logic in **ViewImageLabel**
 
 ## v1.3 - 28.07.2024

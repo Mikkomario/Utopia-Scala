@@ -1,6 +1,12 @@
 # Utopia Vault - List of Changes
 
-## v1.20 (in development)
+## v1.20 - 04.10.2024
+This update adds support for custom selection targets 
+(e.g. only pulling columns from a single table, while still targeting multiple tables for conditions, etc.) 
+and adds some other optimizations to selects as well.
+
+This update also refactors **FilterableView**, which causes build errors in dependent code. 
+These may be resolved using **Vault Coder**'s new upgrade feature.
 ### Breaking changes
 - Multiple changes to **FilterableView**
   - **FilterableView** now extends **ViewFactory**
@@ -32,7 +38,7 @@
 - Built with Scala v2.13.14
 - When accessing data, when the applied condition is always false, skips the query altogether
   - This happens, for example, when using the in-condition with an empty set
-- Select statements which target a single table only, 
+- Select statements which target a single table only 
   don't include the name of the targeted table before every column anymore.
 - Optimized the row-reading process by adding a check for repeated row entries. 
   - Should reduce memory-usage in one-to-many joined queries. 

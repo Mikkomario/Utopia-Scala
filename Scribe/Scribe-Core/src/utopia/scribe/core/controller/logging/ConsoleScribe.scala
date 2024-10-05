@@ -1,7 +1,8 @@
 package utopia.scribe.core.controller.logging
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.parse.AutoClose._
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
@@ -88,7 +89,10 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 	// ATTRIBUTES   -------------------
 	
 	private val lastLogTimePointer = Volatile(Now.toLocalDateTime)
-	private val fileWriter = logDirectory.map { dir =>
+	// Stores writers separately. Unlike normal PrintWriters, these must not be closed.
+	// First value is standard out, the second is error
+	private lazy val writers = Pair(System.out, System.err).map { new PrintWriter(_, true) }
+	private lazy val fileWriter = logDirectory.map { dir =>
 		implicit val codec: Codec = Codec.UTF8
 		DeprecatingLazy {
 			val date = Today.toLocalDate
@@ -121,10 +125,8 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		}
 		
 		// Logs to the console
-		val out = if (severity >= Warning) System.err else System.out
-		new PrintWriter(out).consume {
-			writeWith(_, t, d, context, error, message, occurrenceDetails, severity, variantDetails)
-		}
+		writeWith(writers(if (severity >= Warning) Last else First), t, d, context, error, message, occurrenceDetails,
+			severity, variantDetails)
 		
 		// May also log to a file
 		fileWriter.foreach { lazyWriter =>

@@ -1,6 +1,8 @@
 # Utopia Annex - List of Changes
 
-## v1.9 (in development)
+## v1.9 - 04.10.2024
+This update mostly adds new utility functions for response-parsing. 
+Additionally, following the changes in Flow, there are some changes to **Schrodinger** constructors.
 ### Breaking changes
 - Most **Schrodinger** constructors now require access to an implicit **Logger** implementation, 
   because error-logging was added to their managed state pointers.
