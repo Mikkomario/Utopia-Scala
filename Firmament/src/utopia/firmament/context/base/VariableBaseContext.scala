@@ -1,6 +1,6 @@
 package utopia.firmament.context.base
 
-import utopia.firmament.context.color.ColorContext2
+import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
@@ -128,8 +128,7 @@ object VariableBaseContext
 				stackMarginPointerIsCustom = true)
 		override def withAllowImageUpscalingFlag(f: Flag): VariableBaseContext = copy(allowImageUpscalingFlag = f)
 		
-		// FIXME: Implement
-		override def against(backgroundPointer: Changing[Color]) = ???
+		override def against(backgroundPointer: Changing[Color]) = VariableColorContext(this, backgroundPointer)
 		
 		override def *(mod: Double): VariableBaseContext = {
 			if (mod == 1)
@@ -163,5 +162,4 @@ object VariableBaseContext
   * @author Mikko Hilpinen
   * @since 27.09.2024, v1.3.1
   */
-// TODO: Change second param to VariableColorContext
-trait VariableBaseContext extends BaseContext2 with VariableBaseContextLike[VariableBaseContext, ColorContext2]
+trait VariableBaseContext extends BaseContext2 with VariableBaseContextLike[VariableBaseContext, VariableColorContext]

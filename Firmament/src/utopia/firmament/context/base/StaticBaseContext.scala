@@ -1,7 +1,6 @@
 package utopia.firmament.context.base
 
-import utopia.firmament.context.ColorContext
-import utopia.firmament.context.color.ColorContext2
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
 import utopia.firmament.model.stack.StackLength
@@ -67,8 +66,7 @@ object StaticBaseContext
 		override def *(mod: Double): StaticBaseContext =
 			copy(font = font * mod, margins = margins * mod, customStackMargins = customStackMargins.map { _ * mod })
 		
-		// FIXME: Implement
-		override def against(background: Color): ColorContext2 = ???
+		override def against(background: Color) = StaticColorContext(this, background)
 	}
 }
 
@@ -78,4 +76,4 @@ object StaticBaseContext
   * @author Mikko Hilpinen
   * @since 29.09.2024, v1.3.1
   */
-trait StaticBaseContext extends BaseContext2 with StaticBaseContextLike[StaticBaseContext, ColorContext2]
+trait StaticBaseContext extends BaseContext2 with StaticBaseContextLike[StaticBaseContext, StaticColorContext]

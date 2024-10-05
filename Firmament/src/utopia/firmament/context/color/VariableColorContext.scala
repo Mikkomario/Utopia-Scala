@@ -1,7 +1,9 @@
 package utopia.firmament.context.color
 
-import utopia.firmament.context.base.{VariableBaseContext, VariableBaseContextWrapper}
+import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
 import utopia.flow.collection.immutable.caching.cache.{Cache, WeakCache}
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
@@ -72,9 +74,24 @@ object VariableColorContext
 	}
 	
 	
+	// OTHER    --------------------------
+	
+	/**
+	  * Creates a new variable color context instance
+	  * @param base Base context to wrap
+	  * @param backgroundPointer Pointer that contains the background color to apply
+	  * @return A new color context instance
+	  */
+	def apply(base: BaseContext2, backgroundPointer: Changing[Color]): VariableColorContext = {
+		val lazyTextColorP = Lazy { backgroundDefaultTextColorPointerCache(backgroundPointer) }
+		val lazyHintTextColorP = lazyTextColorP.map { hintTextColorPointerCache(_) }
+		_VariableColorContext(VariableBaseContext.from(base), backgroundPointer, lazyTextColorP, lazyHintTextColorP,
+			None)
+	}
+	
+	
 	// NESTED   --------------------------
 	
-	// TODO: May need to reset text color calculations when font changes
 	private case class _VariableColorContext(base: VariableBaseContext, backgroundPointer: Changing[Color],
 	                                         lazyTextColorPointer: View[Changing[Color]],
 	                                         lazyHintTextColorPointer: View[Changing[Color]],
@@ -92,6 +109,8 @@ object VariableColorContext
 		
 		override def forTextComponents: VariableColorContext = ???
 		
+		override def withBase(base: VariableBaseContext): VariableColorContext = copy(base = base)
+		
 		override def withDefaultTextColor: VariableColorContext = {
 			if (customTextColorPointer.isEmpty)
 				this
@@ -102,8 +121,6 @@ object VariableColorContext
 					customTextColorPointer = None)
 			}
 		}
-		
-		override def withBase(base: VariableBaseContext): VariableColorContext = copy(base = base)
 		
 		override def withBackgroundPointer(p: Changing[Color]): VariableColorContext = {
 			// Case: No modification
@@ -143,14 +160,31 @@ object VariableColorContext
 				customTextColorPointer = Some(Right(p)))
 		}
 		
-		// TODO: Consider font size changes
-		override def *(mod: Double): VariableColorContext = mapBase { _ * mod }
+		// Modifying the font may also affect text color, if the text color is based on a color set
+		override def withFontPointer(p: Changing[Font]) =
+			modifyBaseAffectingFont { _.withFontPointer(p) }
+		
+		override def *(mod: Double): VariableColorContext = modifyBaseAffectingFont { _ * mod }
 		
 		
 		// OTHER    --------------------------
 		
+		// When font changes, that may also affect text color under certain settings
+		private def modifyBaseAffectingFont(f: Mutate[VariableBaseContext]) = {
+			val newBase = f(base)
+			customTextColorPointer.flatMap { _.rightOption } match {
+				case Some(colorSetPointer) =>
+					val newLazyTextColorPointer = Lazy {
+						customTextColorFromSetPointer(colorSetPointer, fontPointer = newBase.fontPointer) }
+					copy(base = newBase, lazyTextColorPointer = newLazyTextColorPointer,
+						lazyHintTextColorPointer = newLazyTextColorPointer.map { hintTextColorPointerCache(_) })
+				case None => withBase(newBase)
+			}
+		}
+		
 		private def customTextColorFromSetPointer(colorSetPointer: Changing[ColorSet],
-		                                          backgroundPointer: Changing[Color] = this.backgroundPointer) =
+		                                          backgroundPointer: Changing[Color] = this.backgroundPointer,
+		                                          fontPointer: Changing[Font] = this.fontPointer) =
 		{
 			// Uses a slightly different logic / caching between fixed and variable color sets
 			colorSetPointer.fixedValue match {
