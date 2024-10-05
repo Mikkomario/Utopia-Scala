@@ -1,5 +1,8 @@
 # Utopia Firmament - List of Changes
 
+## v1.3.2 (in development)
+Working on variable context
+
 ## v1.3.1 - 04.10.2024
 A small update which adds component logging support, since most Flow-originating pointers now require it. 
 Also includes minor utility updates.

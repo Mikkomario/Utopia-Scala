@@ -238,7 +238,7 @@ object VariableColorContext
   * Common trait for variable (i.e. pointer-based) color context implementations.
   * Removes generic type parameters from [[VariableColorContextLike]].
   * @author Mikko Hilpinen
-  * @since 01.10.2024, v1.3.1
+  * @since 01.10.2024, v1.3.2
   */
 // FIXME: Change textual type once possible
 trait VariableColorContext

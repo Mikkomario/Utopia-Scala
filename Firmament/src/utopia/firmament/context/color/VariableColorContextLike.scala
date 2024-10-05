@@ -9,7 +9,7 @@ import utopia.paradigm.color.{Color, ColorSet}
 /**
   * Common trait for pointer-based color context implementations
   * @author Mikko Hilpinen
-  * @since 27.09.2024, v1.3.1
+  * @since 27.09.2024, v1.3.2
   */
 trait VariableColorContextLike[+Repr, +Textual]
 	extends VariableBaseContextLike[Repr, Repr] with ColorContextCopyable[Repr, Textual]

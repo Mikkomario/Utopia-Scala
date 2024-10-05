@@ -8,7 +8,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * Common trait for color context instances which provide copy functions.
   * Does not make assumptions about this context's static or variable nature.
   * @author Mikko Hilpinen
-  * @since 29.9.2024, v1.3.1
+  * @since 29.9.2024, v1.3.2
   * @tparam Repr This context type
   * @tparam Textual This context type when textual information is added
   */

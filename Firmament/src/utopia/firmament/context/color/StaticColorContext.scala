@@ -68,7 +68,7 @@ object StaticColorContext
 /**
   * Common trait for fixed color context implementations. Removes generic types from [[StaticColorContextLike]].
   * @author Mikko Hilpinen
-  * @since 01.10.2024, v1.3.1
+  * @since 01.10.2024, v1.3.2
   */
 // TODO: Change Textual type
 trait StaticColorContext

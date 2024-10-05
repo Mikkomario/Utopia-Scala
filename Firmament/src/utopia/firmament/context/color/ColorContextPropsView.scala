@@ -8,7 +8,7 @@ import utopia.paradigm.color.Color
   * Common trait for context instances which specify basic information and color,
   * but only provide read access to the properties, not assuming a static property nature.
   * @author Mikko Hilpinen
-  * @since 29.9.2024, v1.3.1
+  * @since 29.9.2024, v1.3.2
   */
 trait ColorContextPropsView extends BaseContextPropsView
 {

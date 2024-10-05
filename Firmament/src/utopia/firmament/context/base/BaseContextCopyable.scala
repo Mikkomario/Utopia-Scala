@@ -14,7 +14,7 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 /**
   * Used for creating new copies of self based on base contextual property-assignments
   * @author Mikko Hilpinen
-  * @since 29.09.2024, v1.3.1
+  * @since 29.09.2024, v1.3.2
   */
 trait BaseContextCopyable[+Repr, +ColorSensitive]
 	extends BaseContextPropsView with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]

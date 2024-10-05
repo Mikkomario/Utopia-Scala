@@ -11,7 +11,7 @@ import utopia.paradigm.color.Color
 /**
   * Common trait for pointer-based context implementations that provide access to the basic context properties
   * @author Mikko Hilpinen
-  * @since 27.09.2024, v1.3.1
+  * @since 27.09.2024, v1.3.2
   */
 trait VariableBaseContextLike[+Repr, +ColorSensitive]
 	extends BaseContextPropsView with BaseContextCopyable[Repr, ColorSensitive]

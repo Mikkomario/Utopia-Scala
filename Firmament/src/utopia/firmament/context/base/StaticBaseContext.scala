@@ -74,6 +74,6 @@ object StaticBaseContext
   * Common trait for immutable & unchanging base context implementations.
   * Removes generic type parameters from [[StaticBaseContextLike]].
   * @author Mikko Hilpinen
-  * @since 29.09.2024, v1.3.1
+  * @since 29.09.2024, v1.3.2
   */
 trait StaticBaseContext extends BaseContext2 with StaticBaseContextLike[StaticBaseContext, StaticColorContext]
