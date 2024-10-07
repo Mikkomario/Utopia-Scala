@@ -2,8 +2,7 @@ package utopia.vault.sql
 
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.Property
+import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table}
@@ -26,12 +25,10 @@ object Update
      * @param set Column value pairs that will be updated
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def columns(target: SqlTarget, set: Map[Column, Value]) =
-    {
+    def columns(target: SqlTarget, set: Map[Column, Value]) = {
         if (set.isEmpty)
             target.toSqlSegment.prepend("SELECT NULL FROM")
-        else
-        {
+        else {
             // Makes sure the specified values conform to the applicable column length limits
             val dbName = target.databaseName
             val orderedSet = set.toVector.map { case (column, rawValue) =>
@@ -42,8 +39,8 @@ object Update
                 column -> modifiedValue
             }
             target.toSqlSegment.prepend("UPDATE") +
-                SqlSegment("SET " +
-                    orderedSet.view.map { case (column, _) => column.columnNameWithTable + " = ?" }.mkString(", "),
+                SqlSegment(s"SET ${
+                    orderedSet.view.map { case (column, _) => s"${ column.columnNameWithTable } = ?" }.mkString(", ")}",
                     orderedSet.map { _._2 },
                     // Generates update events for all affected tables
                     events = Some(result => set.keySet.map { _.tableName }.toVector
@@ -59,18 +56,16 @@ object Update
      * as model keys, they will be converted to column names automatically
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, set: Map[Table, template.ModelLike[Property]]) =
-    {
+    def apply(target: SqlTarget, set: Map[Table, AnyModel]) = {
         val valueSet = set.flatMap { case (table, model) => model.properties.flatMap {
                 property => table.find(property.name).map { (_, property.value) } } }
         columns(target, valueSet)
     }
-    
     /**
      * Creates an update segment that changes multiple values in a table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, set: template.ModelLike[Property]): SqlSegment = apply(table, HashMap(table -> set))
+    def apply(table: Table, set: AnyModel): SqlSegment = apply(table, HashMap(table -> set))
     
     /**
      * Creates an update segment that changes the value of a single column in the table
@@ -94,7 +89,7 @@ object Update
      * @param set Set of changes for the table
      * @return An update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, table: Table, set: template.ModelLike[Property]): SqlSegment = apply(target, HashMap(table -> set))
+    def apply(target: SqlTarget, table: Table, set: AnyModel): SqlSegment = apply(target, HashMap(table -> set))
     
     /**
      * Creates an update segment that changes a single value in a table
@@ -104,6 +99,6 @@ object Update
      * @param value New value for the attribute
      * @return An update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, table: Table, key: String, value: Value): SqlSegment = apply(target, table,
-        Model(Single(key -> value)))
+    def apply(target: SqlTarget, table: Table, key: String, value: Value): SqlSegment =
+        apply(target, table, Model(Single(key -> value)))
 }

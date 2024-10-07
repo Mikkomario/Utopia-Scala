@@ -7,6 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
 
@@ -43,11 +44,9 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		
 		// Uses halving algorithm to find the thresholds (for example getting 0 to 100: 50, 75, 87, 93, 96, 98, 99)
 		val buffer = new VectorBuilder[(Int, Int)]()
-		while (currentMax < maxClientsPerConnection - 1)
-		{
+		while (currentMax < maxClientsPerConnection - 1) {
 			val length = (maxConnections - start) / 2
-			if (length > 0)
-			{
+			if (length > 0) {
 				buffer += (start + length -> currentMax)
 				currentMax += 1
 				start += length
@@ -116,13 +115,24 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	  * @return Function results, wrapped in a try
 	  */
 	def tryWith[B](f: Connection => B)(implicit context: ExecutionContext) = connection.tryAndLeave(f)
+	/**
+	  * Performs an operation using a database connection.
+	  * The specified function must not use the connection after it has completed
+	  * (i.e. not make asynchronous uses or form long-term references).
+	  * Catches and logs any encountered exceptions.
+	  * @param f A function for utilizing the acquired connection
+	  * @param context Implicit execution context for manging the connection
+	  * @param log Implicit logging implementation for logging any encountered exception
+	  * @tparam B Type of function result
+	  * @return The function result. None if the function threw an exception.
+	  */
+	def logging[B](f: Connection => B)(implicit context: ExecutionContext, log: Logger) = tryWith(f).log
 	
 	// Finds the first treshold that hasn't been reached and uses that connection amount
 	private def maxClientPerConnectionWhen(openConnectionCount: Int) =
 		(maxClientThresholds.find { _._1 >= openConnectionCount } getOrElse maxClientThresholds.last)._2
 	
-	private def closeUnusedConnections()(implicit context: ExecutionContext) =
-	{
+	private def closeUnusedConnections()(implicit context: ExecutionContext) = {
 		// Makes sure connection closing is active
 		timeoutCompletion.update { old =>
 			// Will not create another future if one is active already

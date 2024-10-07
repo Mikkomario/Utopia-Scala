@@ -60,6 +60,11 @@ trait ConditionElement
       *         Intended to be used for Timestamp and DateTime condition elements.
       */
     def time: ConditionElement = ConditionElement(toSqlSegment.mapSql { sql => s"TIME($sql)" })
+    /**
+      * @return A condition element that represents the length of this element's string representation.
+      *         Intended to be used with String type condition elements.
+      */
+    def length: ConditionElement = ConditionElement(toSqlSegment.mapSql { sql => s"CHAR_LENGTH($sql)" })
     
     
     // OTHER    -----------------------------
