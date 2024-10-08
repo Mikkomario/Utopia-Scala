@@ -1691,14 +1691,6 @@ object CollectionExtensions
 			else
 				None
 		}
-		/**
-		 * Finds the index of the specified item
-		 * @param item Searched item
-		 * @tparam B Item type
-		 * @return The index of specified item or none if no such index was found
-		 */
-		@deprecated("Renamed to .findIndexOf(...)", "v2.2")
-		def optionIndexOf[B >: A](item: B) = findIndexOf(item)
 		
 		/**
 		 * @param f A function that returns true for the targeted item
@@ -1714,19 +1706,24 @@ object CollectionExtensions
 		 */
 		def findLastIndexWhere(f: A => Boolean) = Some(s.lastIndexWhere(f)).filter { _ >= 0 }
 		/**
-		 * Finds the index of the first item that matches the predicate
-		 * @param find a function for finding the correct item
-		 * @return The index of the item in this seq or None if no such item was found
-		 */
-		@deprecated("Renamed to .findIndexWhere(...)", "v2.2")
-		def indexWhereOption(find: A => Boolean) = findIndexWhere(find)
+		  * Finds the first index where a specific search condition is met,
+		  * skipping n items from the beginning of this collection.
+		  * @param from Index of the first tested item
+		  * @param f A search function applied
+		  * @return Index of the first item, starting from 'from', which satisfies the specified condition 'f'.
+		  *         None if no such item was found.
+		  */
+		def findNextIndexWhere(from: Int)(f: A => Boolean) = Some(s.indexWhere(f, from)).filter { _ >= 0 }
 		/**
-		 * Finds the index of the last item that matches the predicate
-		 * @param find a function for finding the correct item
-		 * @return The index of the item in this seq or None if no such item was found
-		 */
-		@deprecated("Renamed to .findLastIndexWhere(...)", "v2.2")
-		def lastIndexWhereOption(find: A => Boolean) = findLastIndexWhere(find)
+		  * Finds the first index where a specific search condition is met,
+		  * skipping n items from the beginning of this collection.
+		  * @param from Index of the first tested item
+		  * @param f A search function applied
+		  * @return Index of the first item, starting from 'from', which satisfies the specified condition 'f'.
+		  *         None if no such item was found.
+		  */
+		def findPreviousIndexWhere(from: Int)(f: A => Boolean) =
+			Some(s.lastIndexWhere(f, from)).filter { _ >= 0 }
 		
 		/**
 		  * @param f     A mapping function

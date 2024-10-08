@@ -4,9 +4,11 @@ import utopia.flow.collection.immutable.{Pair, ViewGraphNode}
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.View
 import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table}
+import utopia.vault.sql.{Update, Where}
 
 import scala.collection.immutable.{HashMap, HashSet}
 
@@ -239,10 +241,32 @@ object References
     def referenceTree(root: Table) = toReverseLinkGraphFrom(root).toTree.map { _.value }
     
     /**
-     * Clears all reference data concerning a single database
+     * Clears all cached reference data concerning a single database
      * @param databaseName Name of the database whose references should be cleared
      */
     def clear(databaseName: String) = referenceData -= databaseName
+    
+    /**
+      * Replaces all references to an individual row to point to another row
+      * @param table Targeted table
+      * @param targetIndex Targeted row index within the targeted table
+      * @param withIndex Replacing row index within the targeted table
+      * @param connection Implicit DB connection
+      * @return Number of references that were updated
+      */
+    def replace(table: Table, targetIndex: Value, withIndex: Value)(implicit connection: Connection) = {
+        table.primaryColumn match {
+            case Some(index) =>
+                to(table, index)
+                    .map { reference =>
+                        connection(Update(reference.table, reference.column, withIndex) +
+                            Where(reference.column <=> targetIndex))
+                            .updatedRowCount
+                    }
+                    .sum
+            case None => 0
+        }
+    }
     
     private def checkIsSetup(databaseName: String) = {
         if (!referenceData.contains(databaseName))

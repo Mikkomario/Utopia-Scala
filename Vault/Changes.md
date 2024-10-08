@@ -1,5 +1,14 @@
 # Utopia Vault - List of Changes
 
+## v1.20.1 (in development)
+### New methods
+- **ConditionElement**
+  - Added `.length` for string length-based conditions
+- **ConnectionPool**
+  - Added `.logging(...)`
+- **References**
+  - Added `.replace(...)` for replacing all references made to a database row
+
 ## v1.20 - 04.10.2024
 This update adds support for custom selection targets 
 (e.g. only pulling columns from a single table, while still targeting multiple tables for conditions, etc.) 
