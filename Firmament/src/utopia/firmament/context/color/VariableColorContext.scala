@@ -89,6 +89,21 @@ object VariableColorContext
 			None)
 	}
 	
+	/**
+	  * Converts a color context instance into a variable color context instance
+	  * @param context Context instance to convert
+	  * @return A variable color context instance, based on the specified context instance
+	  */
+	def from(context: ColorContext2): VariableColorContext = context match {
+		case v: VariableColorContext => v
+		// TODO: Once possible, use .toVariableContext instead
+		case s: StaticColorContext =>
+			val textColorPointer = s.textColorPointer
+			_VariableColorContext(s, s.backgroundPointer, View.fixed(textColorPointer),
+				Lazy { s.hintTextColorPointer }, Some(Left(textColorPointer)))
+		case c => apply(c, c.backgroundPointer)
+	}
+	
 	
 	// NESTED   --------------------------
 	
