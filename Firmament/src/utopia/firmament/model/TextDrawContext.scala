@@ -1,10 +1,10 @@
 package utopia.firmament.model
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.firmament.model.stack.StackInsets
 
 object TextDrawContext
 {
@@ -62,6 +62,11 @@ case class TextDrawContext(font: Font, color: Color = Color.textBlack, alignment
 	def hasSameDimensionsAs(other: TextDrawContext) = font == other.font && insets == other.insets &&
 		betweenLinesMargin == other.betweenLinesMargin
 	
+	/**
+	  * @param color New text color to apply
+	  * @return Copy of this context with the specified text color
+	  */
+	def withColor(color: Color) = copy(color = color)
 	/**
 	  * @param allow Whether use of line breaks should be allowed
 	  * @return A copy of this context with the specified setting

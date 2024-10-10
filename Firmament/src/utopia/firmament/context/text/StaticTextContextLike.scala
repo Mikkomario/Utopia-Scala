@@ -38,6 +38,10 @@ trait StaticTextContextLike[+Repr] extends StaticColorContextLike[Repr, Repr] wi
 	  */
 	def textDrawContext = TextDrawContext(font, textColor, textAlignment, textInsets, lineSplitThreshold,
 		betweenLinesMargin.optimal, allowLineBreaks)
+	/**
+	  * @return Settings for drawing text hints
+	  */
+	def hintTextDrawContext = textDrawContext.withColor(hintTextColor)
 	
 	
 	// IMPLEMENTED  -------------------
@@ -47,6 +51,7 @@ trait StaticTextContextLike[+Repr] extends StaticColorContextLike[Repr, Repr] wi
 	override def lineSplitThresholdPointer: Option[Changing[Double]] = lineSplitThreshold.map(Fixed.apply)
 	
 	override def textDrawContextPointer: Changing[TextDrawContext] = Fixed(textDrawContext)
+	override def hintTextDrawContextPointer: Changing[TextDrawContext] = Fixed(hintTextDrawContext)
 	
 	override def mapTextInsets(f: StackInsets => StackInsets): Repr = withTextInsets(f(textInsets))
 }

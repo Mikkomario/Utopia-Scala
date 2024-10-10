@@ -54,6 +54,11 @@ trait TextContextPropsView extends ColorContextPropsView
 	  * @return A pointer that contains the currently defined text draw context
 	  */
 	def textDrawContextPointer: Changing[TextDrawContext]
+	/**
+	  * @return A pointer that contains the currently defined text draw context,
+	  *         applicable for hints.
+	  */
+	def hintTextDrawContextPointer: Changing[TextDrawContext]
 	
 	
 	// COMPUTED -------------------------------

@@ -52,6 +52,7 @@ object StaticTextContext
 		// ATTRIBUTES   ----------------------------
 		
 		override lazy val textDrawContext = super.textDrawContext
+		override lazy val hintTextDrawContext = super.hintTextDrawContext
 		
 		
 		// IMPLEMENTED  ----------------------------

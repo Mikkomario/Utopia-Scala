@@ -1,6 +1,7 @@
 package utopia.firmament.context.text
 
 import utopia.firmament.context.color.{ColorContext2, VariableColorContext, VariableColorContextWrapper}
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.firmament.model.{Margins, TextDrawContext}
 import utopia.flow.collection.immutable.caching.cache.WeakCache
@@ -9,7 +10,6 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -43,6 +43,10 @@ object VariableTextContext
 			}
 		}
 	}
+	private val hintTextDrawContextPointerCache = WeakCache.weakKeys { defaultP: Changing[TextDrawContext] =>
+		// Not the most elegant implementation (as it assumes hint text implementation), but uses fewer pointers
+		defaultP.map { _.mapColor { _.timesAlpha(0.625) } }
+	}
 	
 	
 	// OTHER    -----------------------------------
@@ -71,9 +75,10 @@ object VariableTextContext
 		val linesMargin = betweenLinesMargin.getOrElse { base.margins.verySmall.downscaling }
 		val insetsP = textInsetsPointer
 			.getOrElse { Fixed(StackInsets.symmetric(base.margins.aroundSmall, base.margins.aroundVerySmall)) }
+		val textDrawContextP = Lazy { textDrawContextPointerCache(base.fontPointer)(insetsP)(base.textColorPointer)(
+			lineSplitThresholdPointer)((alignment, linesMargin.optimal, allowLineBreaks)) }
 		_VariableTextContext(base.toVariableContext, alignment, linesMargin, insetsP, lineSplitThresholdPointer,
-			Lazy { textDrawContextPointerCache(base.fontPointer)(insetsP)(base.textColorPointer)(
-				lineSplitThresholdPointer)((alignment, linesMargin.optimal, allowLineBreaks)) },
+			textDrawContextP, textDrawContextP.map { hintTextDrawContextPointerCache(_) },
 			promptFontPointer, allowLineBreaks, allowTextShrink, textInsetsPointer.isDefined)
 	}
 	
@@ -85,6 +90,7 @@ object VariableTextContext
 	                                        textInsetsPointer: Changing[StackInsets],
 	                                        lineSplitThresholdPointer: Option[Changing[Double]],
 	                                        lazyTextDrawContextPointer: View[Changing[TextDrawContext]],
+	                                        lazyHintTextDrawContextPointer: View[Changing[TextDrawContext]],
 	                                        customPromptFontPointer: Option[Changing[Font]],
 	                                        allowLineBreaks: Boolean, allowTextShrink: Boolean,
 	                                        textInsetsAreCustom: Boolean)
@@ -96,6 +102,7 @@ object VariableTextContext
 		
 		override def promptFontPointer: Changing[Font] = customPromptFontPointer.getOrElse(fontPointer)
 		override def textDrawContextPointer: Changing[TextDrawContext] = lazyTextDrawContextPointer.value
+		override def hintTextDrawContextPointer: Changing[TextDrawContext] = lazyHintTextDrawContextPointer.value
 		
 		override def current = StaticTextContext(base.current, textAlignment, customPromptFontPointer.map { _.value },
 			if (textInsetsAreCustom) Some(textInsetsPointer.value) else None, lineSplitThresholdPointer.map { _.value },
@@ -134,14 +141,16 @@ object VariableTextContext
 						Fixed(defaultTextInsetsCache(newBase.margins))
 				}
 				val newLineThresholdPointer = lineSplitThresholdPointer.map { _.map { _ * mod } }
+				val textDrawContextP = Lazy { textDrawContextPointerCache(newBase.fontPointer)(
+					newTextInsetsPointer)(newBase.textColorPointer)(newLineThresholdPointer)(
+					(textAlignment, newBetweenLinesMargin.optimal, allowLineBreaks)) }
 				copy(
 					base = newBase,
 					betweenLinesMargin = newBetweenLinesMargin,
 					textInsetsPointer = newTextInsetsPointer,
 					lineSplitThresholdPointer = newLineThresholdPointer,
-					lazyTextDrawContextPointer = Lazy { textDrawContextPointerCache(newBase.fontPointer)(
-						newTextInsetsPointer)(newBase.textColorPointer)(newLineThresholdPointer)(
-						(textAlignment, newBetweenLinesMargin.optimal, allowLineBreaks)) },
+					lazyTextDrawContextPointer = textDrawContextP,
+					lazyHintTextDrawContextPointer = textDrawContextP.map { hintTextDrawContextPointerCache(_) },
 					customPromptFontPointer = customPromptFontPointer.map { _.map { _ * mod } })
 			}
 		}
