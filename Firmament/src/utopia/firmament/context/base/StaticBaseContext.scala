@@ -54,6 +54,11 @@ object StaticBaseContext
 		
 		override def self = this
 		
+		override def current: StaticBaseContext = this
+		override def toVariableContext: VariableBaseContext =
+			VariableBaseContext.fixed(actorHandler, colors, margins, font, contrastStandard, customStackMargins,
+				allowImageUpscaling)(localizer)
+		
 		override def withFont(font: Font): StaticBaseContext = copy(font = font)
 		override def withColorContrastStandard(standard: ColorContrastStandard): StaticBaseContext =
 			copy(contrastStandard = standard)

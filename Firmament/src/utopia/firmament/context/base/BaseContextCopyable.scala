@@ -13,6 +13,8 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
 
 /**
   * Used for creating new copies of self based on base contextual property-assignments
+  * @tparam Repr Implementing context type
+  * @tparam ColorSensitive A color-sensitive version of this context
   * @author Mikko Hilpinen
   * @since 29.09.2024, v1.3.2
   */
@@ -20,6 +22,15 @@ trait BaseContextCopyable[+Repr, +ColorSensitive]
 	extends BaseContextPropsView with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT -------------------------
+	
+	/**
+	  * @return Current state of this context as a static context instance
+	  */
+	def current: StaticBaseContext
+	/**
+	  * @return This context as a variable context instance
+	  */
+	def toVariableContext: VariableBaseContext
 	
 	/**
 	  * @param font New font to use

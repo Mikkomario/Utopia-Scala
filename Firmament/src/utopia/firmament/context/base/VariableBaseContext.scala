@@ -115,6 +115,11 @@ object VariableBaseContext
 		
 		override def self: VariableBaseContext = this
 		
+		override def current: StaticBaseContext = StaticBaseContext(actorHandler, fontPointer.value, colors, margins,
+			if (stackMarginPointerIsCustom) Some(stackMarginPointer.value) else None, contrastStandard,
+			allowImageUpscalingFlag.value)(localizer)
+		override def toVariableContext: VariableBaseContext = this
+		
 		override def smallStackMarginPointer: Changing[StackLength] = smallStackMarginPointerView.value
 		
 		override def withColorContrastStandard(standard: ColorContrastStandard): VariableBaseContext =

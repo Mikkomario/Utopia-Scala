@@ -9,6 +9,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -46,17 +47,39 @@ object VariableTextContext
 	
 	// OTHER    -----------------------------------
 	
+	/**
+	  * Creates a new text context
+	  * @param base Base context to wrap
+	  * @param alignment Text alignment to apply (default = Left)
+	  * @param promptFontPointer A pointer containing the font used in prompts. Default = None = Use regular font.
+	  * @param textInsetsPointer A pointer containing the insets placed around the text.
+	  *                          Default = None = Small horizontal insets, very small vertical insets.
+	  * @param lineSplitThresholdPointer A pointer which contains the length threshold at which automatic
+	  *                                  line-splitting should be applied.
+	  *                                  Default = None = No automatic line-splitting used.
+	  * @param betweenLinesMargin Margin placed between lines of text. Default = None = very small margins.
+	  * @param allowLineBreaks Whether components should support multiline text by default (default = true)
+	  * @param allowTextShrink Whether font size should be allowed to decrease in order to conserve space
+	  *                        (default = false)
+	  * @return A new context applying the specified settings
+	  */
 	def apply(base: ColorContext2, alignment: Alignment = Alignment.Left,
-	          lineSplitThresholdPointer: Option[Changing[Double]] = None, allowLineBreaks: Boolean = true,
-	          allowTextShrink: Boolean = false): VariableTextContext =
+	          promptFontPointer: Option[Changing[Font]] = None, textInsetsPointer: Option[Changing[StackInsets]] = None,
+	          lineSplitThresholdPointer: Option[Changing[Double]] = None, betweenLinesMargin: Option[StackLength] = None,
+	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false): VariableTextContext =
 	{
-		???
+		val linesMargin = betweenLinesMargin.getOrElse { base.margins.verySmall.downscaling }
+		val insetsP = textInsetsPointer
+			.getOrElse { Fixed(StackInsets.symmetric(base.margins.aroundSmall, base.margins.aroundVerySmall)) }
+		_VariableTextContext(base.toVariableContext, alignment, linesMargin, insetsP, lineSplitThresholdPointer,
+			Lazy { textDrawContextPointerCache(base.fontPointer)(insetsP)(base.textColorPointer)(
+				lineSplitThresholdPointer)((alignment, linesMargin.optimal, allowLineBreaks)) },
+			promptFontPointer, allowLineBreaks, allowTextShrink, textInsetsPointer.isDefined)
 	}
 	
 	
 	// NESTED   -----------------------------------
 	
-	// TODO: Continue implementation
 	private case class _VariableTextContext(base: VariableColorContext, textAlignment: Alignment,
 	                                        betweenLinesMargin: StackLength,
 	                                        textInsetsPointer: Changing[StackInsets],
@@ -73,6 +96,11 @@ object VariableTextContext
 		
 		override def promptFontPointer: Changing[Font] = customPromptFontPointer.getOrElse(fontPointer)
 		override def textDrawContextPointer: Changing[TextDrawContext] = lazyTextDrawContextPointer.value
+		
+		override def current = StaticTextContext(base.current, textAlignment, customPromptFontPointer.map { _.value },
+			if (textInsetsAreCustom) Some(textInsetsPointer.value) else None, lineSplitThresholdPointer.map { _.value },
+			Some(betweenLinesMargin), allowLineBreaks, allowTextShrink)
+		override def toVariableContext = this
 		
 		override def withDefaultPromptFont: VariableTextContext =
 			if (customPromptFontPointer.isEmpty) this else copy(customPromptFontPointer = None)
@@ -126,4 +154,5 @@ object VariableTextContext
   * @author Mikko Hilpinen
   * @since 05.10.2024, v1.3.2
   */
-trait VariableTextContext extends VariableColorContext with VariableTextContextLike[VariableTextContext]
+trait VariableTextContext
+	extends VariableColorContext with TextContext2 with VariableTextContextLike[VariableTextContext]

@@ -1,6 +1,7 @@
 package utopia.firmament.context.color
 
 import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
+import utopia.firmament.context.text.VariableTextContext
 import utopia.flow.collection.immutable.caching.cache.{Cache, WeakCache}
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
@@ -80,28 +81,60 @@ object VariableColorContext
 	  * Creates a new variable color context instance
 	  * @param base Base context to wrap
 	  * @param backgroundPointer Pointer that contains the background color to apply
+	  * @param customTextColorPointer A custom text color pointer to apply.
+	  *                                 - None (default) if default text color should be applied.
+	  *                                 - Some(Left) for a custom pointer
+	  *                                 - Some(Right) for a custom color set pointer,
+	  *                                 where the applied shade is selected based on this context
 	  * @return A new color context instance
 	  */
-	def apply(base: BaseContext2, backgroundPointer: Changing[Color]): VariableColorContext = {
-		val lazyTextColorP = Lazy { backgroundDefaultTextColorPointerCache(backgroundPointer) }
+	def apply(base: BaseContext2, backgroundPointer: Changing[Color],
+	          customTextColorPointer: Option[Either[Changing[Color], Changing[ColorSet]]] = None): VariableColorContext =
+	{
+		val lazyTextColorP = Lazy {
+			customTextColorPointer match {
+				case Some(Left(colorP)) => colorP
+				case Some(Right(colorSetP)) =>
+					customTextColorFromSetPointer(base.contrastStandard, colorSetP, backgroundPointer, base.fontPointer)
+				case None => backgroundDefaultTextColorPointerCache(backgroundPointer)
+			}
+		}
 		val lazyHintTextColorP = lazyTextColorP.map { hintTextColorPointerCache(_) }
 		_VariableColorContext(VariableBaseContext.from(base), backgroundPointer, lazyTextColorP, lazyHintTextColorP,
 			None)
 	}
+	/*
+	(base: VariableBaseContext, backgroundPointer: Changing[Color],
+	                                         lazyTextColorPointer: View[Changing[Color]],
+	                                         lazyHintTextColorPointer: View[Changing[Color]],
+	                                         customTextColorPointer: Option[Either[Changing[Color], Changing[ColorSet]]])
+	 */
 	
 	/**
 	  * Converts a color context instance into a variable color context instance
 	  * @param context Context instance to convert
 	  * @return A variable color context instance, based on the specified context instance
 	  */
+	@deprecated("Deprecated for removal. Replaced with .toVariableContext", "v1.3.2")
 	def from(context: ColorContext2): VariableColorContext = context match {
 		case v: VariableColorContext => v
-		// TODO: Once possible, use .toVariableContext instead
-		case s: StaticColorContext =>
-			val textColorPointer = s.textColorPointer
-			_VariableColorContext(s, s.backgroundPointer, View.fixed(textColorPointer),
-				Lazy { s.hintTextColorPointer }, Some(Left(textColorPointer)))
+		case s: StaticColorContext => s.toVariableContext
 		case c => apply(c, c.backgroundPointer)
+	}
+	
+	private def customTextColorFromSetPointer(contrastStandard: ColorContrastStandard,
+	                                          colorSetPointer: Changing[ColorSet],
+	                                          backgroundPointer: Changing[Color],
+	                                          fontPointer: Changing[Font]) =
+	{
+		// Uses a slightly different logic / caching between fixed and variable color sets
+		colorSetPointer.fixedValue match {
+			case Some(colorSet) =>
+				colorPointersCache(backgroundPointer)(textIsLargePointerCache(fontPointer))(contrastStandard)
+					._1(colorSet -> Standard)
+			case None =>
+				customTextColorPointerCache(colorSetPointer)((backgroundPointer, fontPointer, contrastStandard))
+		}
 	}
 	
 	
@@ -113,6 +146,11 @@ object VariableColorContext
 	                                         customTextColorPointer: Option[Either[Changing[Color], Changing[ColorSet]]])
 		extends VariableColorContext with VariableBaseContextWrapper[VariableBaseContext, VariableColorContext]
 	{
+		// ATTRIBUTES   ------------------
+		
+		override lazy val forTextComponents = VariableTextContext(this)
+		
+		
 		// IMPLEMENTED  ------------------
 		
 		override def self: VariableColorContext = this
@@ -122,7 +160,9 @@ object VariableColorContext
 		
 		override def colorPointer = new ColorPointerAccess(this)
 		
-		override def forTextComponents: VariableColorContext = ???
+		override def current = StaticColorContext(base.current, backgroundPointer.value,
+			customTextColorPointer.map { _.mapBoth { _.value } { _.value } })
+		override def toVariableContext = this
 		
 		override def withBase(base: VariableBaseContext): VariableColorContext = copy(base = base)
 		
@@ -199,17 +239,9 @@ object VariableColorContext
 		
 		private def customTextColorFromSetPointer(colorSetPointer: Changing[ColorSet],
 		                                          backgroundPointer: Changing[Color] = this.backgroundPointer,
-		                                          fontPointer: Changing[Font] = this.fontPointer) =
-		{
-			// Uses a slightly different logic / caching between fixed and variable color sets
-			colorSetPointer.fixedValue match {
-				case Some(colorSet) =>
-					colorPointersCache(backgroundPointer)(textIsLargePointerCache(fontPointer))(contrastStandard)
-						._1(colorSet -> Standard)
-				case None =>
-					customTextColorPointerCache(colorSetPointer)((backgroundPointer, fontPointer, contrastStandard))
-			}
-		}
+		                                          fontPointer: Changing[Font] = this.fontPointer): Changing[Color] =
+			VariableColorContext.customTextColorFromSetPointer(contrastStandard, colorSetPointer, backgroundPointer,
+				fontPointer)
 	}
 	
 	class ColorPointerAccess(context: VariableColorContext, preferredLevel: ColorLevel = Standard,
@@ -255,7 +287,6 @@ object VariableColorContext
   * @author Mikko Hilpinen
   * @since 01.10.2024, v1.3.2
   */
-// FIXME: Change textual type once possible
 trait VariableColorContext
 	extends VariableBaseContext with ColorContext2
-		with VariableColorContextLike[VariableColorContext, VariableColorContext]
+		with VariableColorContextLike[VariableColorContext, VariableTextContext]

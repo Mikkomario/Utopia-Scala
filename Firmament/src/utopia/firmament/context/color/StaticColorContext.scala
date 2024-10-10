@@ -1,7 +1,9 @@
 package utopia.firmament.context.color
 
-import utopia.firmament.context.base.{StaticBaseContext, StaticBaseContextWrapper}
+import utopia.firmament.context.base.{StaticBaseContext, StaticBaseContextWrapper, VariableBaseContext}
+import utopia.firmament.context.text.StaticTextContext
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorSet}
 
@@ -11,10 +13,14 @@ object StaticColorContext
 	/**
 	  * @param base Base context
 	  * @param background Background color in this context
+	  * @param textColor Custom text color to apply.
+	  *                     - None (default) if default text color should be applied
+	  *                     - Some(Left) for a custom color
+	  *                     - Some(Right) for a custom color set, where the applied shade is based on this context
 	  * @return A color context
 	  */
-	def apply(base: StaticBaseContext, background: Color): StaticColorContext =
-		_ColorContext(base, background, None)
+	def apply(base: StaticBaseContext, background: Color, textColor: Option[Either[Color, ColorSet]] = None): StaticColorContext =
+		_ColorContext(base, background, textColor)
 	
 	
 	// NESTED   ----------------------------
@@ -47,8 +53,10 @@ object StaticColorContext
 		
 		override def self = this
 		
-		// FIXME: Implement
-		override def forTextComponents = ???
+		override def forTextComponents = StaticTextContext(this)
+		override def current = this
+		override def toVariableContext =
+			VariableColorContext(base, Fixed(background), _textColor.map { _.mapBoth(Fixed.apply)(Fixed.apply) })
 		
 		override def withDefaultTextColor = if (_textColor.isDefined) copy(_textColor = None) else this
 		
@@ -70,6 +78,5 @@ object StaticColorContext
   * @author Mikko Hilpinen
   * @since 01.10.2024, v1.3.2
   */
-// TODO: Change Textual type
 trait StaticColorContext
-	extends StaticBaseContext with ColorContext2 with StaticColorContextLike[StaticColorContext, StaticColorContext]
+	extends StaticBaseContext with ColorContext2 with StaticColorContextLike[StaticColorContext, StaticTextContext]

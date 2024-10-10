@@ -12,6 +12,7 @@ import utopia.genesis.text.Font
   * @author Mikko Hilpinen
   * @since 05.10.2024, v1.3.2
   */
+// TODO: Add hintTextDrawContextPointer
 trait VariableTextContextLike[+Repr] extends VariableColorContextLike[Repr, Repr] with TextContextCopyable[Repr]
 {
 	// ABSTRACT -------------------------------

@@ -2,13 +2,13 @@ package utopia.firmament.context.text
 
 import utopia.firmament.context.color.ColorContextCopyable
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.genesis.text.Font
-import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D, LinearAlignment}
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.Middle
+import utopia.paradigm.enumeration.{Alignment, Axis2D, Direction2D, LinearAlignment}
 import utopia.paradigm.shape.template.HasDimensions
 
 /**
@@ -19,6 +19,9 @@ import utopia.paradigm.shape.template.HasDimensions
 trait TextContextCopyable[+Repr] extends ColorContextCopyable[Repr, Repr] with TextContextPropsView
 {
 	// ABSTRACT ------------------------
+	
+	override def current: StaticTextContext
+	override def toVariableContext: VariableTextContext
 	
 	/**
 	  * @return Copy of this context that uses the default prompt font

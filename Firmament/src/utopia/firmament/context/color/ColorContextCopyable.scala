@@ -16,6 +16,9 @@ trait ColorContextCopyable[+Repr, +Textual] extends ColorContextPropsView with B
 {
 	// ABSTRACT	------------------------
 	
+	override def current: StaticColorContext
+	override def toVariableContext: VariableColorContext
+	
 	/**
 	  * @return A copy of this context that uses the default text color
 	  *         (typically black or white, depending on the context background)
