@@ -11,7 +11,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 /**
   * Access to text context properties. Doesn't limit the implementation to either fixed or variable approach.
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait TextContextPropsView extends ColorContextPropsView
 {

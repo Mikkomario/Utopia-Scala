@@ -9,6 +9,7 @@ import utopia.paradigm.color.{Color, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
+@deprecated("Replaced with a new version", "v1.4")
 object BaseContext
 {
 	// OTHER    -------------------------
@@ -73,4 +74,5 @@ object BaseContext
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   */
+@deprecated("Replaced with a new version", "v1.4")
 trait BaseContext extends BaseContextLike[BaseContext, ColorContext]

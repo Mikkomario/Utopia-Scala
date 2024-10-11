@@ -40,8 +40,8 @@ object ReachWindowContext
 	
 	// NESTED   -----------------------
 	
-	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color, cursors: Option[CursorSet],
-	                                       revalidationStyle: RevalidationStyle,
+	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color,
+	                                       cursors: Option[CursorSet], revalidationStyle: RevalidationStyle,
 	                                       getAnchor: (ReachCanvas, Bounds) => Point)
 		extends ReachWindowContext
 	{
@@ -60,7 +60,8 @@ object ReachWindowContext
 		override def withWindowContext(base: WindowContext): ReachWindowContext =
 			if (base == windowContext) self else copy(windowContext = base)
 		
-		override def withContentContext(textContext: TextContext): ReachContentWindowContext = ReachContentWindowContext(this, textContext)
+		override def withContentContext(textContext: TextContext): ReachContentWindowContext =
+			ReachContentWindowContext(this, textContext)
 	}
 }
 

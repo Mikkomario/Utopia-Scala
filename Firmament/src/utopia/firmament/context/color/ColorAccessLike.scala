@@ -9,7 +9,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @tparam C Type of accessed colors
   * @tparam Repr Type of the implementing class
   * @author Mikko Hilpinen
-  * @since 27.09.2024, v1.3.2
+  * @since 27.09.2024, v1.4
   */
 trait ColorAccessLike[+C, +Repr]
 {

@@ -12,6 +12,7 @@ import utopia.flow.util.Mutate
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   */
+@deprecated("Replaced with a new version", "v1.4")
 trait BaseContextWrapper[+Repr, +ColorSensitive] extends Any with BaseContextLike[Repr, ColorSensitive]
 {
 	// ABSTRACT	------------------------

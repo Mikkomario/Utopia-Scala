@@ -161,7 +161,7 @@ object VariableTextContext
   * Common trait for pointer-based text context implementations.
   * Removes generic type parameter from [[VariableTextContextLike]].
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait VariableTextContext
 	extends VariableColorContext with TextContext2 with VariableTextContextLike[VariableTextContext]

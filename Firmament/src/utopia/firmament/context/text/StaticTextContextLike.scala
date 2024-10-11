@@ -10,7 +10,7 @@ import utopia.genesis.text.Font
 /**
   * Common trait for static text context implementations
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait StaticTextContextLike[+Repr] extends StaticColorContextLike[Repr, Repr] with TextContextCopyable[Repr]
 {

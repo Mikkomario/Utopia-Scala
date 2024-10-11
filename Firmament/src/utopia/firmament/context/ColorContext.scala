@@ -4,6 +4,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.paradigm.color.ColorShade._
 import utopia.paradigm.color.{Color, ColorSet}
 
+@deprecated("Replaced with a new version", "v1.4")
 object ColorContext
 {
 	// OTHER    ----------------------------
@@ -69,4 +70,5 @@ object ColorContext
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   */
+@deprecated("Replaced with a new version", "v1.4")
 trait ColorContext extends ColorContextLike[ColorContext, TextContext] with BaseContext

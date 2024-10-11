@@ -9,7 +9,7 @@ import utopia.genesis.text.Font
 /**
   * A trait common for basic component context implementations
   * @author Mikko Hilpinen
-  * @since 29.9.2024, v1.3.2
+  * @since 29.9.2024, v1.4
   * @tparam Repr This context type
   * @tparam ColorSensitive A color-sensitive version of this context
   */

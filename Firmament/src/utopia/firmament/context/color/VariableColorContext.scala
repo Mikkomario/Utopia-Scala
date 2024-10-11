@@ -115,7 +115,7 @@ object VariableColorContext
 	  * @param context Context instance to convert
 	  * @return A variable color context instance, based on the specified context instance
 	  */
-	@deprecated("Deprecated for removal. Replaced with .toVariableContext", "v1.3.2")
+	@deprecated("Deprecated for removal. Replaced with .toVariableContext", "v1.4")
 	def from(context: ColorContext2): VariableColorContext = context match {
 		case v: VariableColorContext => v
 		case s: StaticColorContext => s.toVariableContext
@@ -285,7 +285,7 @@ object VariableColorContext
   * Common trait for variable (i.e. pointer-based) color context implementations.
   * Removes generic type parameters from [[VariableColorContextLike]].
   * @author Mikko Hilpinen
-  * @since 01.10.2024, v1.3.2
+  * @since 01.10.2024, v1.4
   */
 trait VariableColorContext
 	extends VariableBaseContext with ColorContext2

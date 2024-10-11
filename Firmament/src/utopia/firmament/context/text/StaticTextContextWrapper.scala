@@ -7,7 +7,7 @@ import utopia.genesis.text.Font
 /**
   * Common implementations of [[StaticTextContextLike]] by wrapping another such instance
   * @author Mikko Hilpinen
-  * @since 09.10.2024, v1.3.2
+  * @since 09.10.2024, v1.4
   */
 trait StaticTextContextWrapper[Base <: StaticTextContextLike[Base], +Repr]
 	extends StaticColorContextWrapper[Base, Repr] with TextContextWrapper2[Base, Repr] with StaticTextContextLike[Repr]

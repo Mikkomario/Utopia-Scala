@@ -12,7 +12,7 @@ import utopia.paradigm.enumeration.Alignment
   * @tparam Base Wrapped context type
   * @tparam Repr Implementing type
   * @author Mikko Hilpinen
-  * @since 09.10.2024, v1.3.2
+  * @since 09.10.2024, v1.4
   */
 trait TextContextWrapper2[Base <: TextContextCopyable[Base], +Repr]
 	extends ColorContextWrapper2[Base, Repr] with TextContextCopyable[Repr]

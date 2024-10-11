@@ -1,6 +1,8 @@
 package utopia.reach.context
 
-import utopia.firmament.context.{BaseContext, TextContext, WindowContextWrapper}
+import utopia.firmament.context.WindowContextWrapper
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.flow.collection.immutable.range.Span
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -67,7 +69,7 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param textContext A text context to add to this context
 	  * @return A copy of this context with the specified textual context in place
 	  */
-	def withContentContext(textContext: TextContext): Textual
+	def withContentContext(textContext: StaticTextContext): Textual
 	
 	
 	// COMPUTED ------------------------
@@ -186,11 +188,11 @@ trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
 	  * @param context Context to use for creating window contents
 	  * @return A copy of this context that can create window content, also
 	  */
-	def withContentContext(context: BaseContext): Textual =
-		withContentContext(context.against(windowBackground).forTextComponents: TextContext)
+	def withContentContext(context: StaticBaseContext): Textual =
+		withContentContext(context.against(windowBackground).forTextComponents: StaticTextContext)
 	/**
 	  * @param textContext A text context to add to this window context
 	  * @return A context suitable for creating popup windows
 	  */
-	def ++(textContext: TextContext) = withContentContext(textContext)
+	def ++(textContext: StaticTextContext) = withContentContext(textContext)
 }

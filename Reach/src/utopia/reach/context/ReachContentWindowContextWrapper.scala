@@ -1,5 +1,5 @@
 package utopia.reach.context
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.paradigm.color.Color
 
 /**
@@ -24,12 +24,12 @@ trait ReachContentWindowContextWrapper[+Repr] extends ReachContentWindowContextL
 	
 	// IMPLEMENTED  ----------------
 	
+	override def base: StaticTextContext = contentWindowContext.base
 	override def reachWindowContext: ReachWindowContext = contentWindowContext
-	override def textContext: TextContext = contentWindowContext
 	
+	override def withBase(base: StaticTextContext): Repr = mapContentWindowContext { _.withBase(base) }
 	override def withReachWindowContext(base: ReachWindowContext): Repr =
 		mapContentWindowContext { _.withReachWindowContext(base) }
-	override def withTextContext(base: TextContext): Repr = mapContentWindowContext { _.withTextContext(base) }
 	
 	override def withWindowBackground(bg: Color) = mapContentWindowContext { _.withWindowBackground(bg) }
 	override def withBackground(background: Color) = mapContentWindowContext { _.withBackground(background) }

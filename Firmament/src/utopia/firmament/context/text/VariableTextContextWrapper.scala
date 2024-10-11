@@ -8,7 +8,7 @@ import utopia.genesis.text.Font
 /**
   * Common trait for implementations of [[VariableTextContextLike]] by wrapping another variable text context.
   * @author Mikko Hilpinen
-  * @since 09.10.2024, v1.3.2
+  * @since 09.10.2024, v1.4
   */
 trait VariableTextContextWrapper[Base <: VariableTextContextLike[Base], +Repr]
 	extends VariableColorContextWrapper[Base, Repr] with TextContextWrapper2[Base, Repr]

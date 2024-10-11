@@ -16,7 +16,7 @@ import utopia.paradigm.enumeration.ColorContrastStandard
   * @tparam Base Type of the wrapped base context
   * @tparam Repr Type of this context
   * @author Mikko Hilpinen
-  * @since 01.10.2024, v1.3.2
+  * @since 01.10.2024, v1.4
   */
 trait BaseContextWrapper2[Base <: BaseContextCopyable[Base, _], +Repr] extends BaseContextCopyable[Repr, Repr]
 {

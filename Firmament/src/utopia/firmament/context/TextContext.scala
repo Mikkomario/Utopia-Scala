@@ -7,6 +7,7 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with a new version", "v1.4")
 object TextContext
 {
 	// IMPLICIT -----------------------------
@@ -76,4 +77,5 @@ object TextContext
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   */
+@deprecated("Replaced with a new version", "v1.4")
 trait TextContext extends TextContextLike[TextContext] with ColorContext

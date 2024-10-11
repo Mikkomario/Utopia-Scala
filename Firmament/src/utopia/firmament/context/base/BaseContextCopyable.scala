@@ -16,7 +16,7 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
   * @tparam Repr Implementing context type
   * @tparam ColorSensitive A color-sensitive version of this context
   * @author Mikko Hilpinen
-  * @since 29.09.2024, v1.3.2
+  * @since 29.09.2024, v1.4
   */
 trait BaseContextCopyable[+Repr, +ColorSensitive]
 	extends BaseContextPropsView with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]

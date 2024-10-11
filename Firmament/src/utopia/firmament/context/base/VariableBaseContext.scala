@@ -165,6 +165,6 @@ object VariableBaseContext
 /**
   * Common trait for pointer-based contexts which are generally applicable
   * @author Mikko Hilpinen
-  * @since 27.09.2024, v1.3.2
+  * @since 27.09.2024, v1.4
   */
 trait VariableBaseContext extends BaseContext2 with VariableBaseContextLike[VariableBaseContext, VariableColorContext]

@@ -14,7 +14,7 @@ import utopia.paradigm.shape.template.HasDimensions
 /**
   * Common trait for text context implementations that can create copies of themselves
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait TextContextCopyable[+Repr] extends ColorContextCopyable[Repr, Repr] with TextContextPropsView
 {

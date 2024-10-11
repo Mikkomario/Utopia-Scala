@@ -92,6 +92,6 @@ object StaticTextContext
   * Common trait for static [[TextContext2]] implementations.
   * Removes generic type parameter from [[StaticTextContextLike]].
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait StaticTextContext extends StaticColorContext with TextContext2 with StaticTextContextLike[StaticTextContext]

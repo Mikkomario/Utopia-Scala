@@ -20,6 +20,7 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
   * @tparam Repr This context type
   * @tparam ColorSensitive A color-sensitive version of this context
   */
+@deprecated("Replaced with BaseContextCopyable", "v1.4")
 trait BaseContextLike[+Repr, +ColorSensitive] extends Any with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT	-------------------------

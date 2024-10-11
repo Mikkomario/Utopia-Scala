@@ -34,7 +34,7 @@ object ColorAccess
   * Common trait for color access points. Removes Repr type parameter from [[ColorAccessLike]].
   * @tparam C Type of color representations accessed
   * @author Mikko Hilpinen
-  * @since 29.09.2024, v1.3.2
+  * @since 29.09.2024, v1.4
   */
 trait ColorAccess[+C] extends ColorAccessLike[C, ColorAccess[C]]
 {

@@ -16,6 +16,7 @@ import utopia.paradigm.shape.template.HasDimensions
   * @author Mikko
   * @since 27.4.2020
   */
+@deprecated("Replaced with TextContextCopyable", "v1.4")
 trait TextContextLike[+Repr] extends ColorContextWrapper[Repr, Repr]
 {
 	// ABSTRACT	--------------------------

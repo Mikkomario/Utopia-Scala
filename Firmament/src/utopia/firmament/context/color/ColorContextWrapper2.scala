@@ -9,7 +9,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @tparam Base Wrapped color context implementation
   * @tparam Repr Type of this context implementation
   * @author Mikko Hilpinen
-  * @since 05.10.2024, v1.3.2
+  * @since 05.10.2024, v1.4
   */
 trait ColorContextWrapper2[Base <: ColorContextCopyable[Base, _], +Repr]
 	extends BaseContextWrapper2[Base, Repr] with ColorContextCopyable[Repr, Repr]

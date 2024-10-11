@@ -9,7 +9,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 /**
   * Common trait for static context implementations which specify a container background
   * @author Mikko Hilpinen
-  * @since 29.9.2024, v1.3.2
+  * @since 29.9.2024, v1.4
   * @tparam Repr This context type
   * @tparam Textual This context type when textual information is added
   */

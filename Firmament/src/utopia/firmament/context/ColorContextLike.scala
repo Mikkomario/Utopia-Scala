@@ -2,8 +2,6 @@ package utopia.firmament.context
 
 import utopia.firmament.context.color.ColorAccessLike
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.ColorRole._
-import utopia.paradigm.color.ColorShade._
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
@@ -13,6 +11,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @tparam Repr This context type
   * @tparam Textual This context type when textual information is added
   */
+@deprecated("Replaced with ColorContextCopyable", "v1.4")
 trait ColorContextLike[+Repr, +Textual] extends BaseContextWrapper[Repr, Repr]
 {
 	// ABSTRACT	------------------------
