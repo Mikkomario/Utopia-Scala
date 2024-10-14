@@ -77,13 +77,13 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Smallest context size that may be requested from the LLM, in number of tokens.
 	  * One token is about 1/2 a word.
 	  */
-	var minContextSize = 512
+	var minContextSize = 1024
 	/**
 	  * Number of tokens expected within a reply.
 	  * Used when no appropriate statistical information has been collected yet.
 	  * One token is about 1/2 a word.
 	  */
-	var expectedReplySize = 384
+	var expectedReplySize = 512
 	/**
 	  * Number of tokens added to the estimated required context size
 	  */
@@ -806,10 +806,6 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 			case None => this.expectedReplySize
 		}
 		val rawValue = usedContextSizePointer.value + messageSize + expectedReplySize + additionalContextSize
-		
-		// TODO: Remove test print
-		println(s"Calculated context size:\n\t- System + history: ${
-			usedContextSizePointer.value } tokens\n\t- Message: $messageSize tokens\n\t- Estimated reply: $expectedReplySize tokens\n\t- Result: $rawValue tokens (including a buffer of $additionalContextSize)")
 		
 		// Limits to the allowed range
 		if (rawValue >= maxContextSize)

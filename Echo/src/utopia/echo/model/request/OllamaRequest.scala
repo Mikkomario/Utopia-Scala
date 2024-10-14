@@ -51,8 +51,6 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 			"stream" -> stream,
 			"options" -> optionsModel.notEmpty)
 		val bodyModel = (baseModel ++ customProperties).withoutEmptyValues
-		// TODO: Remove test prints
-		println(s"Outgoing request body: $bodyModel")
 		Left(bodyModel)
 	}
 	

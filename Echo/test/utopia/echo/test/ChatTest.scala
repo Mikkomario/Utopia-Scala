@@ -102,13 +102,22 @@ object ChatTest extends App
 			
 			// Sets up data-listening
 			chat.usedContextSizePointer.addContinuousListener { e =>
-				println(s"Used context size: ${ e.newValue } tokens")
+				println(s"\nUsed context size: ${ e.newValue } tokens")
 			}
 			chat.largestReplySizePointer.addContinuousListener { e =>
-				println(s"Largest reply so far: ${ e.newValue } tokens")
+				println(s"\nLargest reply so far: ${ e.newValue } tokens")
 			}
 			chat.messageHistoryPointer.addContinuousListener { e =>
-				println(s"Message history: ${ e.newValue.size } messages")
+				println(s"\nMessage history: ${ e.newValue.size } messages")
+			}
+			chat.summarizingFlag.addContinuousListener { e =>
+				if (e.newValue)
+					println("Summarizing message history...")
+				else {
+					println("Message history summarized:")
+					chat.messageHistory.lastOption.foreach { message => println(message.text) }
+					println()
+				}
 			}
 			
 			chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage)
