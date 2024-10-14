@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
@@ -154,7 +154,8 @@ object Stack
       * @return A new stack
       */
     def buildWithContext(direction: Axis2D, cap: StackLength = defaultCap, layout: StackLayout = Fit,
-                         isRelated: Boolean = false)(b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
+                         isRelated: Boolean = false)(b: VectorBuilder[AwtStackable] => Unit)
+                        (implicit context: StaticBaseContext) =
         build(direction, if (isRelated) context.smallStackMargin else context.stackMargin, cap, layout)(b)
     
     /**
@@ -167,7 +168,8 @@ object Stack
       * @return A new stack
       */
     def buildRowWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
-                           (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
+                           (b: VectorBuilder[AwtStackable] => Unit)
+                           (implicit context: StaticBaseContext) =
         buildWithContext(X, cap, layout, isRelated)(b)
     
     /**
@@ -180,7 +182,8 @@ object Stack
       * @return A new stack
       */
     def buildColumnWithContext(cap: StackLength = defaultCap, layout: StackLayout = Fit, isRelated: Boolean = false)
-                              (b: VectorBuilder[AwtStackable] => Unit)(implicit context: BaseContext) =
+                              (b: VectorBuilder[AwtStackable] => Unit)
+                              (implicit context: StaticBaseContext) =
         buildWithContext(Y, cap, layout, isRelated)(b)
 }
 

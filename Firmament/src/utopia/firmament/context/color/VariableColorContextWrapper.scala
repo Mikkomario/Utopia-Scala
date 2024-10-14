@@ -2,7 +2,7 @@ package utopia.firmament.context.color
 
 import utopia.firmament.context.base.VariableBaseContextWrapper
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.{Color, ColorSet}
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
   * An implementation of [[VariableColorContext]] by wrapping such an instance
@@ -18,4 +18,8 @@ trait VariableColorContextWrapper[Base <: VariableColorContextLike[Base, Base], 
 	override def withBackgroundPointer(p: Changing[Color]): Repr = mapBase { _.withBackgroundPointer(p) }
 	override def withTextColorPointer(p: Changing[Color]): Repr = mapBase { _.withTextColorPointer(p) }
 	override def withGeneralTextColorPointer(p: Changing[ColorSet]): Repr = mapBase { _.withGeneralTextColorPointer(p) }
+	override def withGeneralBackgroundPointer(p: Changing[ColorSet], preference: ColorLevel) =
+		mapBase { _.withGeneralBackgroundPointer(p, preference) }
+	override def withBackgroundRolePointer(p: Changing[ColorRole], preference: ColorLevel) =
+		mapBase { _.withBackgroundRolePointer(p, preference) }
 }

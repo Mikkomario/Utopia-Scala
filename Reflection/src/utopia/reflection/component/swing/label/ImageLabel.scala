@@ -23,7 +23,7 @@ object ImageLabel
 	  * @return A new label
 	  */
 	def contextual(image: Image, alwaysFillsArea: Boolean = true, isLowPriority: Boolean = false)
-				  (implicit context: BaseContext) =
+				  (implicit context: StaticBaseContext) =
 		new ImageLabel(image, alwaysFillsArea, context.allowImageUpscaling, isLowPriority)
 }
 

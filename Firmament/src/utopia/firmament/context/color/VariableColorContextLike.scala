@@ -4,7 +4,8 @@ import utopia.firmament.context.base.VariableBaseContextLike
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.{Color, ColorSet}
+import utopia.paradigm.color.ColorLevel.Standard
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
   * Common trait for pointer-based color context implementations
@@ -21,6 +22,18 @@ trait VariableColorContextLike[+Repr, +Textual]
 	  * @return Copy of this context using the specified pointer
 	  */
 	def withBackgroundPointer(p: Changing[Color]): Repr
+	/**
+	  * @param p A pointer that contains the color set of the current context
+	  * @param preference The preferred color level / shade (default = standard)
+	  * @return Copy of this context which applies a background color from the specified set
+	  */
+	def withGeneralBackgroundPointer(p: Changing[ColorSet], preference: ColorLevel = Standard): Repr
+	/**
+	  * @param p A pointer that contains the color role of the current context
+	  * @param preference The preferred color level / shade (default = standard)
+	  * @return Copy of this context which applies a background color applicable to the specified color role
+	  */
+	def withBackgroundRolePointer(p: Changing[ColorRole], preference: ColorLevel = Standard): Repr
 	
 	/**
 	  * @param p A pointer that contains the current text color
@@ -37,6 +50,11 @@ trait VariableColorContextLike[+Repr, +Textual]
 	// IMPLEMENTED  -------------------------
 	
 	override def against(backgroundPointer: Changing[Color]): Repr = withBackgroundPointer(backgroundPointer)
+	
+	override def withBackground(color: ColorSet, preferredShade: ColorLevel): Repr =
+		withGeneralBackgroundPointer(Fixed(color), preferredShade)
+	override def withBackground(role: ColorRole, preferredShade: ColorLevel): Repr =
+		withBackgroundRolePointer(Fixed(role), preferredShade)
 	
 	override def withTextColor(color: Color): Repr = withTextColorPointer(Fixed(color))
 	override def withTextColor(color: ColorSet): Repr = withGeneralTextColorPointer(Fixed(color))

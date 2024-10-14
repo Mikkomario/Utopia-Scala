@@ -1,14 +1,14 @@
 package utopia.reflection.component.swing.button
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackInsets
 import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.firmament.model.stack.StackInsets
 
 object FramedImageButton
 {
@@ -22,7 +22,8 @@ object FramedImageButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(icon: SingleColorIcon, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	                            isLowPriority: Boolean = false)(implicit context: ColorContext) =
+	                            isLowPriority: Boolean = false)
+	                           (implicit context: StaticColorContext) =
 		new FramedImageButton(icon.inButton.contextual, context.background, context.buttonBorderWidth, hotKeys,
 			hotKeyChars, context.allowImageUpscaling, isLowPriority)
 	
@@ -37,7 +38,8 @@ object FramedImageButton
 	  * @return A new button
 	  */
 	def contextual[U](icon: SingleColorIcon, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	               isLowPriority: Boolean = false)(action: => U)(implicit context: ColorContext) =
+	               isLowPriority: Boolean = false)(action: => U)
+	                 (implicit context: StaticColorContext) =
 	{
 		val button = contextualWithoutAction(icon, hotKeys, hotKeyChars, isLowPriority)
 		button.registerAction { () => action }

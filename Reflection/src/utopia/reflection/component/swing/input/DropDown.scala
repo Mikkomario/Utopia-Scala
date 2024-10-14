@@ -62,7 +62,7 @@ object DropDown
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplayFunction: A => C)
-	(implicit context: TextContext, exc: ExecutionContext) =
+	(implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		// Determines background and focus colors
 		val backgroundColor = context.background
@@ -105,7 +105,7 @@ object DropDown
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
-	(implicit context: TextContext, exc: ExecutionContext) =
+	(implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		def makeDisplay(item: A) = ItemLabel.contextual(item, displayFunction)
 		contextual(noResultsView, icon, selectionPromptText, displayFunction, Fit, contentPointer,

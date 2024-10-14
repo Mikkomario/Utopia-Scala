@@ -11,9 +11,9 @@ object Prompt
 {
 	// IMPLICIT	----------------------------
 	
-	implicit def wrapLocalizedString(text: LocalizedString)(implicit context: TextContext): Prompt = contextual(text)
+	implicit def wrapLocalizedString(text: LocalizedString)(implicit context: StaticTextContext): Prompt = contextual(text)
 	
-	implicit def autoLocalizeWithContext(raw: String)(implicit context: TextContext,
+	implicit def autoLocalizeWithContext(raw: String)(implicit context: StaticTextContext,
 													  autoLocalize: String => LocalizedString): Prompt = wrapLocalizedString(raw)
 	
 	
@@ -25,7 +25,7 @@ object Prompt
 	  * @param context Component creation context (implicit)
 	  * @return A new prompt
 	  */
-	def contextual(text: LocalizedString)(implicit context: TextContext) =
+	def contextual(text: LocalizedString)(implicit context: StaticTextContext) =
 		Prompt(text, context.promptFont, context.hintTextColor)
 }
 

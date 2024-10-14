@@ -1,17 +1,17 @@
 package utopia.reflection.test.swing
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.animation.Animation
+import utopia.paradigm.color.ColorRole.Gray
 import utopia.reflection.component.swing.input.Slider
 import utopia.reflection.component.swing.label.ItemLabel
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame
-import utopia.firmament.localization.DisplayFunction
 import utopia.reflection.test.TestContext
 import utopia.reflection.util.SingleFrameSetup
-import utopia.firmament.model.stack.LengthExtensions._
-import utopia.paradigm.color.ColorRole.Gray
 
 /**
   * Tests different slider implementations
@@ -22,7 +22,7 @@ object SliderTest extends App
 {
 	import TestContext._
 	
-	implicit val context: ColorContext = baseContext.against(colorScheme(Gray).light)
+	implicit val context: StaticColorContext = baseContext.against(colorScheme(Gray).light)
 	val sliderWidth = 228.any.lowPriority
 	val defaultRange = Animation { p => p }
 	val defaultOptions = Iterator.iterate(0.0) { _ + 0.2 }.takeWhile { _ <= 1.0 }.toVector

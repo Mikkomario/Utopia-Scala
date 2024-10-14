@@ -36,7 +36,7 @@ object TextLabel
 	  * @return A new label
 	  */
 	def contextual(text: LocalizedString = LocalizedString.empty, isHint: Boolean = false)
-				  (implicit context: TextContext) =
+				  (implicit context: StaticTextContext) =
 	{
 		val label = new TextLabel(text, context.font, if (isHint) context.hintTextColor else context.textColor,
 			context.textInsets, context.textAlignment, !context.allowTextShrink)
@@ -52,7 +52,7 @@ object TextLabel
 	  * @return A new label
 	  */
 	def contextualWithBackground(backgroundColor: Color, text: LocalizedString = LocalizedString.empty,
-								 isHint: Boolean = false)(implicit context: TextContext) =
+								 isHint: Boolean = false)(implicit context: StaticTextContext) =
 	{
 		val label = contextual(text, isHint)(context.against(backgroundColor))
 		label.background = backgroundColor

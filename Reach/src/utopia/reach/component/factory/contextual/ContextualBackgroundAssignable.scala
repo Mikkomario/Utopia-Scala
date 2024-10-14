@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ColorContextLike
+import utopia.firmament.context.color.StaticColorContextLike
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorSet}
 import utopia.reach.component.factory.BackgroundAssignable
@@ -12,7 +12,7 @@ import utopia.reach.component.factory.BackgroundAssignable
   * @tparam N Type of context used by this factory (color context or lower)
   * @tparam Repr Type of this factory
   */
-trait ContextualBackgroundAssignable[+N <: ColorContextLike[_, _], +Repr]
+trait ContextualBackgroundAssignable[+N <: StaticColorContextLike[_, _], +Repr]
 	extends Any with BackgroundAssignable[Repr] with HasContext[N]
 {
 	// OTHER    ------------------------

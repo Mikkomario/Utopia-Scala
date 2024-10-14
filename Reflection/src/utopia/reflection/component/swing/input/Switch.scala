@@ -1,7 +1,8 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.{StackLength, StackSize}
@@ -44,7 +45,7 @@ object Switch
 	  * @return A new switch
 	  */
 	def contextual(width: StackLength, initialState: Boolean = false)
-				  (implicit context: ColorContext, animationContext: AnimationContext) =
+				  (implicit context: StaticColorContext, animationContext: AnimationContext) =
 	{
 		val knobColor = context.background.shade match {
 			case Light => Color.black

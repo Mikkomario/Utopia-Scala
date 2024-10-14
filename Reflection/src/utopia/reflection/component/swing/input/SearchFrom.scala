@@ -52,7 +52,7 @@ object SearchFrom
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
-	(implicit context: TextContext, exc: ExecutionContext) =
+	(implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		val backgroundColor = searchField.background
 		val highlightColor = backgroundColor.highlighted
@@ -94,7 +94,7 @@ object SearchFrom
 	 sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b, contentIsStateless: Boolean = true)
 	(makeNoResultsView: Changing[String] => AwtStackable)
 	(makeDisplay: A => C)(itemToSearchString: A => String)
-	(implicit context: TextContext, exc: ExecutionContext) =
+	(implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		val searchField = TextField.contextualForStrings(standardWidth, prompt = selectionPrompt)
 		wrapFieldWithContext(searchField, makeNoResultsView(searchField.valuePointer), displayStackLayout, searchIcon,
@@ -131,7 +131,7 @@ object SearchFrom
 	                              sameInstanceCheck: (A, A) => Boolean = (a: A, b: A) => a == b,
 	                              contentIsStateless: Boolean = true)
 								 (makeNoResultsView: Changing[String] => AwtStackable)
-								 (implicit context: TextContext, exc: ExecutionContext) =
+								 (implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
 		def itemToSearchString(item: A) = displayFunction(item).string
@@ -151,7 +151,7 @@ object SearchFrom
 	  * @return New label that adjusts itself based on changes in the search filter
 	  */
 	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
-					  (implicit context: TextContext) =
+					  (implicit context: StaticTextContext) =
 		ViewLabel.contextual(searchStringPointer,
 			new DisplayFunction[String](s => noResultsText.interpolated(Single(s))))
 }

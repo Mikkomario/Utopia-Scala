@@ -36,7 +36,7 @@ object JDropDownWrapper
 	  */
 	def contextual[A](selectText: LocalizedString, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
 					  initialChoices: Vector[A] = Vector(), maximumOptimalWidth: Option[Int] = None)
-					 (implicit context: TextContext) =
+					 (implicit context: StaticTextContext) =
 	{
 		val background = context.background
 		val highlighted = background.highlighted

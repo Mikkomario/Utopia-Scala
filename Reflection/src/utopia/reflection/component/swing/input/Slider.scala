@@ -1,7 +1,8 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
@@ -62,7 +63,7 @@ object Slider
 	                  knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                  stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
 	                  leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
-	                 (implicit context: BaseContext, animationContext: AnimationContext) =
+	                 (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 	{
 		val slider = new Slider(range, context.margins.large, targetWidth, leftColor, rightColor, knobColor,
 			colorVariationIntensity, stickyPoints, arrowMovement, leftHeightModifier, rightHeightModifier,
@@ -89,7 +90,7 @@ object Slider
 	def contextualSingleColor[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                             colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                             arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                            (implicit context: BaseContext, animationContext: AnimationContext) =
+	                            (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 		contextual(range, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
 			colorVariationIntensity, stickyPoints, arrowMovement, 1.5, initialValue = initialValue)
 	
@@ -111,7 +112,7 @@ object Slider
 	def contextualDualColor[A](range: AnyAnimation[A], targetWidth: StackLength, lessColor: Color, moreColor: Color,
 	                           colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                           arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                          (implicit context: BaseContext, animationContext: AnimationContext) =
+	                          (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 		contextual(range, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
 			colorVariationIntensity, stickyPoints, arrowMovement, 1.25, 1.25,
 			initialValue = initialValue)
@@ -133,7 +134,7 @@ object Slider
 	def contextualSingleColorKnot[A](range: AnyAnimation[A], targetWidth: StackLength, color: Color,
 	                                 colorVariationIntensity: Double = 1.0, stickyPoints: Seq[Double] = Vector(),
 	                                 arrowMovement: Double = 0.1, initialValue: Double = 0.0)
-	                                (implicit context: BaseContext, animationContext: AnimationContext) =
+	                                (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 	{
 		val backgroundColor = color.timesAlpha(0.38)
 		contextual(range, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),
@@ -160,7 +161,7 @@ object Slider
 	def contextualSelection[A](options: Seq[A], targetWidth: StackLength, leftColor: Color,
 	                           rightColor: Color, knobColor: AnyAnimation[Color], colorVariationIntensity: Double = 1.0,
 	                           leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0)
-	                          (implicit context: BaseContext, animationContext: AnimationContext) =
+	                          (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 	{
 		val range = SegmentedPath(options)
 		contextual(range, targetWidth, leftColor, rightColor, knobColor, colorVariationIntensity,
@@ -184,7 +185,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualSingleColorSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
 	                                      colorVariationIntensity: Double = 1.0)
-	                                     (implicit context: BaseContext, animationContext: AnimationContext) =
+	                                     (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 		contextualSelection(options, targetWidth, color, color.timesAlpha(0.38), Animation.fixed(color),
 			colorVariationIntensity, 1.5)
 	
@@ -205,7 +206,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualDualColorSelection[A](options: Seq[A], targetWidth: StackLength, lessColor: Color,
 	                           moreColor: Color, colorVariationIntensity: Double = 1.0)
-	                          (implicit context: BaseContext, animationContext: AnimationContext) =
+	                          (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 		contextualSelection(options, targetWidth, moreColor, lessColor, dualColorAnimation(lessColor, moreColor),
 			colorVariationIntensity, 1.25, 1.25)
 	
@@ -225,7 +226,7 @@ object Slider
 	@throws[IllegalArgumentException]
 	def contextualSingleColorKnotSelection[A](options: Seq[A], targetWidth: StackLength, color: Color,
 	                                          colorVariationIntensity: Double = 1.0)
-	                                         (implicit context: BaseContext, animationContext: AnimationContext) =
+	                                         (implicit context: StaticBaseContext, animationContext: AnimationContext) =
 	{
 		val backgroundColor = color.timesAlpha(0.38)
 		contextualSelection(options, targetWidth, backgroundColor, backgroundColor, Animation.fixed(color),

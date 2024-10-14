@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.input.SelectableWithPointers
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
@@ -31,7 +31,7 @@ object TabSelection
 {
 	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector(),
 	                  background: Option[Color] = None)
-	                 (implicit context: TextContext) =
+	                 (implicit context: StaticTextContext) =
 	{
 		val (bg, isOpaque, fieldContext) = background match {
 			case Some(bg) => (bg, true, context.against(bg))
@@ -56,7 +56,7 @@ object TabSelection
 	  * @return A new tab selection
 	  */
 	def contextualWithBackground[A](background: Color, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-									initialChoices: Seq[A] = Vector())(implicit context: TextContext) =
+									initialChoices: Seq[A] = Vector())(implicit context: StaticTextContext) =
 		contextual(displayFunction, initialChoices, Some(background))
 }
 

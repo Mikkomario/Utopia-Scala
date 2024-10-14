@@ -21,7 +21,7 @@ object ImageLabel2
 	  * @param context Component creation context
 	  * @return A new label
 	  */
-	def contextual(image: Image, isLowPriority: Boolean = false)(implicit context: BaseContext) =
+	def contextual(image: Image, isLowPriority: Boolean = false)(implicit context: StaticBaseContext) =
 		new ImageLabel2(image, context.allowImageUpscaling, isLowPriority)
 }
 

@@ -1,6 +1,6 @@
 package utopia.reflection.component.swing.button
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.image.ButtonImageSet
 import utopia.firmament.model.GuiElementStatus
 import utopia.reflection.component.swing.label.ImageLabel
@@ -36,7 +36,8 @@ object ImageButton
 	 * @return A new button
 	 */
 	def contextualWithoutAction(images: ButtonImageSet, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	                            isLowPriority: Boolean = false)(implicit context: BaseContext) =
+	                            isLowPriority: Boolean = false)
+	                           (implicit context: StaticBaseContext) =
 		new ImageButton(images, hotKeys, hotKeyChars, context.allowImageUpscaling, isLowPriority)
 	
 	/**
@@ -50,7 +51,7 @@ object ImageButton
 	  * @return A new button
 	  */
 	def contextual(images: ButtonImageSet, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set(),
-	               isLowPriority: Boolean = false)(action: => Unit)(implicit context: BaseContext) =
+	               isLowPriority: Boolean = false)(action: => Unit)(implicit context: StaticBaseContext) =
 	{
 		val button = contextualWithoutAction(images, hotKeys, hotKeyChars, isLowPriority)
 		button.registerAction { () => action }

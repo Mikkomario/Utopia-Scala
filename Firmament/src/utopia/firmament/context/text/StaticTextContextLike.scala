@@ -54,4 +54,13 @@ trait StaticTextContextLike[+Repr] extends StaticColorContextLike[Repr, Repr] wi
 	override def hintTextDrawContextPointer: Changing[TextDrawContext] = Fixed(hintTextDrawContext)
 	
 	override def mapTextInsets(f: StackInsets => StackInsets): Repr = withTextInsets(f(textInsets))
+	
+	
+	// OTHER    ----------------------
+	
+	/**
+	  * @param hint Whether drawing a hint text
+	  * @return Text draw context applicable for the specified purpose (hint (true) or default (false))
+	  */
+	def textDrawContextFor(hint: Boolean) = if (hint) hintTextDrawContext else textDrawContext
 }

@@ -1,6 +1,6 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
@@ -15,7 +15,7 @@ trait ButtonColor
 	  * @param context Context where the button is being created
 	  * @return Button color used on that background
 	  */
-	def toColor(implicit context: ColorContext): Color
+	def toColor(implicit context: StaticColorContext): Color
 }
 
 object ButtonColor
@@ -51,7 +51,7 @@ object ButtonColor
 	  */
 	case class Role(role: ColorRole, preferredShade: ColorLevel = Standard) extends ButtonColor
 	{
-		override def toColor(implicit context: ColorContext) = context.color.preferring(preferredShade)(role)
+		override def toColor(implicit context: StaticColorContext) = context.color.preferring(preferredShade)(role)
 	}
 	
 	/**
@@ -61,7 +61,7 @@ object ButtonColor
 	  */
 	case class Fixed(color: Color) extends ButtonColor
 	{
-		override def toColor(implicit context: ColorContext) = color
+		override def toColor(implicit context: StaticColorContext) = color
 	}
 	
 	/**
@@ -71,6 +71,6 @@ object ButtonColor
 	  */
 	case class CustomSet(colorSet: ColorSet) extends ButtonColor
 	{
-		override def toColor(implicit context: ColorContext) = colorSet.against(context.background)
+		override def toColor(implicit context: StaticColorContext) = colorSet.against(context.background)
 	}
 }

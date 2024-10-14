@@ -50,7 +50,7 @@ class YesNoWindow(override val standardContext: TextContext, override val title:
                   colors: Map[Boolean, ButtonColor] = Map(), override val defaultResult: Boolean = false)
                  (getButtonContext: (ButtonColor, Boolean) => TextContext) extends InteractionWindow[Boolean]
 {
-	private implicit val context: TextContext = standardContext
+	private implicit val context: StaticTextContext = standardContext
 	private implicit val languageCode: String = "en"
 	private implicit val localizer: Localizer = standardContext.localizer
 	

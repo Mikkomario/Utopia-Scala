@@ -1,6 +1,7 @@
 package utopia.reach.context
 
-import utopia.firmament.context.{TextContext, WindowContext}
+import utopia.firmament.context.WindowContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -60,7 +61,7 @@ object ReachWindowContext
 		override def withWindowContext(base: WindowContext): ReachWindowContext =
 			if (base == windowContext) self else copy(windowContext = base)
 		
-		override def withContentContext(textContext: TextContext): ReachContentWindowContext =
+		override def withContentContext(textContext: StaticTextContext): ReachContentWindowContext =
 			ReachContentWindowContext(this, textContext)
 	}
 }

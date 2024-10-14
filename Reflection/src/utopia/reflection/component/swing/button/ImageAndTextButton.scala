@@ -1,18 +1,18 @@
 package utopia.reflection.component.swing.button
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.AwtContainerRelated
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ImageAndTextButton
 {
@@ -51,7 +51,8 @@ object ImageAndTextButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
-	                            hotKeyChars: Iterable[Char] = Set())(implicit context: TextContext) =
+	                            hotKeyChars: Iterable[Char] = Set())
+	                           (implicit context: StaticTextContext) =
 		new ImageAndTextButton(images, text, context.font, context.background, context.textInsets,
 			context.buttonBorderWidth, context.textAlignment, context.textColor, hotKeys, hotKeyChars)
 	
@@ -66,7 +67,8 @@ object ImageAndTextButton
 	  * @return A new button
 	  */
 	def contextual(images: ButtonImageSet, text: LocalizedString, hotKeys: Set[Int] = Set(),
-	               hotKeyChars: Iterable[Char] = Set())(action: => Unit)(implicit context: TextContext) =
+	               hotKeyChars: Iterable[Char] = Set())(action: => Unit)
+	              (implicit context: StaticTextContext) =
 	{
 		val button = contextualWithoutAction(images, text, hotKeys, hotKeyChars)
 		button.registerAction { () => action }

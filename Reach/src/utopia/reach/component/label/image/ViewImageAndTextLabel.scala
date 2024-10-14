@@ -2,6 +2,7 @@ package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -225,11 +226,11 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 }
 
 case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy,
-                                                  contextPointer: Changing[TextContext],
+                                                  context: VariableTextContext,
                                                   settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default,
                                                   drawBackground: Boolean = false)
 	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewImageAndTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
 {
 	// COMPUTED ----------------------
 	
@@ -238,15 +239,14 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	
 	// IMPLEMENTED  ------------------
 	
-	override def withContextPointer(p: Changing[TextContext]): ContextualViewImageAndTextLabelFactory =
-		copy(contextPointer = p)
+	override def withContext(p: VariableTextContext): ContextualViewImageAndTextLabelFactory = copy(context = p)
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualViewImageAndTextLabelFactory =
-		copy(contextPointer = newContextPointer,
-			settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers), drawBackground = true)
+		copy(context = newContext, settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers),
+			drawBackground = true)
 	
 	// When (text) alignment is changed, also changes the image alignment
 	override def apply(alignment: Alignment) =

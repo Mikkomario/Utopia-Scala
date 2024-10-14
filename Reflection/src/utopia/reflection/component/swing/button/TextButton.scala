@@ -1,9 +1,11 @@
 package utopia.reflection.component.swing.button
 
 import utopia.firmament.component.text.MutableTextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -11,8 +13,6 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
 
 object TextButton
 {
@@ -49,7 +49,7 @@ object TextButton
 	  * @return A new button
 	  */
 	def contextualWithoutAction(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	                           (implicit context: TextContext): TextButton =
+	                           (implicit context: StaticTextContext): TextButton =
 	{
 		new TextButton(text, context.font, context.background, context.textColor, context.textInsets,
 			context.buttonBorderWidth, context.textAlignment, hotKeys, hotKeyChars)
@@ -65,7 +65,7 @@ object TextButton
 	  * @return The new button
 	  */
 	def contextual(text: LocalizedString, hotKeys: Set[Int] = Set(), hotKeyChars: Iterable[Char] = Set())
-	              (action: => Unit)(implicit context: TextContext): TextButton =
+	              (action: => Unit)(implicit context: StaticTextContext): TextButton =
 	{
 		val button = contextualWithoutAction(text, hotKeys, hotKeyChars)
 		button.registerAction(() => action)

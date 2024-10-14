@@ -1,6 +1,7 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.{ColorContextLike, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.StaticColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.flow.util.logging.Logger
 import utopia.paradigm.color.ColorLevel.Standard
@@ -24,7 +25,7 @@ object ContextualFactory
 	// EXTENSIONS   -------------------
 	
 	// WET WET (from GenericContextualFactory), if more occurrences appear, create a separate trait for this
-	implicit class ColorContextualDrawableFactory[N <: ColorContextLike[N, _], +F <: CustomDrawableFactory[F]]
+	implicit class ColorContextualDrawableFactory[N <: StaticColorContextLike[N, _], +F <: CustomDrawableFactory[F]]
 	(val f: ContextualFactory[N, F])
 		extends AnyVal
 	{

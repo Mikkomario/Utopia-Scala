@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.display
 
-import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackSize
@@ -34,7 +35,7 @@ object ProgressBar
 	  * @param animationContext Component creation context for animations (implicit)
 	  * @return A new progress bar
 	  */
-	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: ColorContext,
+	def contextual(stackSize: StackSize, progressPointer: Changing[Double])(implicit context: StaticColorContext,
 	                                                                        animationContext: AnimationContext) =
 		new ProgressBar(animationContext.actorHandler, stackSize, context.color.gray, context.color.secondary,
 			progressPointer, animationContext.animationDuration)

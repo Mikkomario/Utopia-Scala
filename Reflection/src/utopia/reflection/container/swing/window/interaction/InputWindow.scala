@@ -115,7 +115,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 					// Creates the notification pop-up
 					val popup =
 					{
-						implicit val context: TextContext = popupContext
+						implicit val context: StaticTextContext = popupContext
 						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asButton.contextual)
 						val popupContent = Stack.buildRowWithContext(layout = Center) { row =>
 							row += dismissButton
@@ -141,7 +141,7 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	
 	override protected def dialogContent =
 	{
-		implicit val context: TextContext = fieldLabelContext
+		implicit val context: StaticTextContext = fieldLabelContext
 		
 		// Uses one segmented group for each row group group
 		val rows = fields.map { groups =>

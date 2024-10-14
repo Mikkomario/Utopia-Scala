@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ColorContextLike
+import utopia.firmament.context.color.{StaticColorContextLike, StaticColorContextWrapper}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
@@ -10,9 +10,11 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @author Mikko Hilpinen
   * @since 13.5.2023, v1.1
   */
-trait ContextualBackgroundAssignableFactory[N <: ColorContextLike[N, _], +Repr <: CustomDrawableFactory[Repr]]
-	extends ContextualFactory[N, Repr] with ContextualBackgroundAssignable[N, Repr] with ColorContextLike[Repr, Repr]
+trait ContextualBackgroundAssignableFactory[N <: StaticColorContextLike[N, _], +Repr <: CustomDrawableFactory[Repr]]
+	extends ContextualFactory[N, Repr] with ContextualBackgroundAssignable[N, Repr]
+		with StaticColorContextWrapper[N, Repr]
 {
+	// TODO: Review these and see whether some other overrides are needed now that the context traits have been refactored
 	override def withBackground(background: Color): Repr =
 		mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
 	override def withBackground(color: ColorSet, preferredShade: ColorLevel) =

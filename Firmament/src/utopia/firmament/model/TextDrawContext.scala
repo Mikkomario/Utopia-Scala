@@ -13,7 +13,9 @@ object TextDrawContext
 	  * @param context The component creation context to use (implicit)
 	  * @return A new text draw context with settings from the component creation context
 	  */
+	@deprecated("Please use StaticTextContext.textDrawContext instead", "v1.4")
 	def contextual(implicit context: TextContext) = createContextual()
+	@deprecated("Please use StaticTextContext.hintTextDrawContext instead", "v1.4")
 	def contextualHint(implicit context: TextContext) = createContextual(isHint = true)
 	
 	/**
@@ -22,6 +24,7 @@ object TextDrawContext
 	  * @param context The component creation context to use (implicit)
 	  * @return A new text draw context with settings from the component creation context
 	  */
+	@deprecated("Please use StaticTextContext.textDrawContextFor(Boolean) instead", "v1.4")
 	def createContextual(isHint: Boolean = false)(implicit context: TextContext) =
 		TextDrawContext(context.font, if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
 			context.textInsets, context.lineSplitThreshold, context.betweenLinesMargin.optimal, context.allowLineBreaks)

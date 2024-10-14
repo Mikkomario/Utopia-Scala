@@ -7,7 +7,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @author Mikko Hilpinen
   * @since 05.10.2024, v1.4
   */
-trait StaticColorContextWrapper[Base <: StaticColorContextLike[Base, Base], +Repr]
+trait StaticColorContextWrapper[Base <: StaticColorContextLike[Base, _], +Repr]
 	extends StaticBaseContextWrapper[Base, Repr] with ColorContextWrapper2[Base, Repr]
 		with StaticColorContextLike[Repr, Repr]
 {

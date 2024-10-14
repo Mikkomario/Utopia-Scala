@@ -35,7 +35,7 @@ class MessageWindow(override val standardContext: TextContext, buttonContext: Te
 	
 	override protected def dialogContent =
 	{
-		implicit val context: TextContext = standardContext
+		implicit val context: StaticTextContext = standardContext
 		val messageView = MultiLineTextView.contextual(message, Screen.width / 3)
 		icon match {
 			case Some(icon) => Stack.buildRowWithContext(layout = Leading) { s =>

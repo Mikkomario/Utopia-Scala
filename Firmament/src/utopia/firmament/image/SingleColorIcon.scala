@@ -1,6 +1,7 @@
 package utopia.firmament.image
 
-import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.WeakCache
@@ -31,7 +32,7 @@ object SingleColorIcon
 	
 	// IMPLICIT ---------------------------
 	
-	implicit def iconToImage(icon: SingleColorIcon)(implicit context: ColorContext): Image = icon.contextual
+	implicit def iconToImage(icon: SingleColorIcon)(implicit context: StaticColorContext): Image = icon.contextual
 	
 	
 	// OTHER    ---------------------------
@@ -132,7 +133,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * @param context Implicit component creation context
 	  * @return A black or a white icon, whichever is better suited to the current context
 	  */
-	def contextual(implicit context: ColorContext) = against(context.background)
+	def contextual(implicit context: StaticColorContext) = against(context.background)
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -170,49 +171,6 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  */
 	def map(f: Image => Image) = new SingleColorIcon(f(original), standardSize)
 	
-	/**
-	  * @param color Target icon color
-	  * @return A button image set to be used in buttons without text
-	  */
-	@deprecated("Replaced with .forButton.apply(Color)")
-	def asIndividualButtonWithColor(color: Color) = {
-		val colored = asImageWithColor(color)
-		if (color.relativeLuminance < 0.6)
-			ButtonImageSet.brightening(colored)
-		else
-			ButtonImageSet.darkening(colored)
-	}
-	/**
-	  * @param shade a color shade
-	  * @return A version of this icon that matches that shade
-	  */
-	@deprecated("Replaced with .apply(ColorShade)", "v1.0")
-	def withShade(shade: ColorShade) = shade match {
-		case ColorShade.Light => white
-		case ColorShade.Dark => black
-	}
-	/**
-	  * @param color Button background color
-	  * @return Images used with specified button background
-	  */
-	@deprecated("Replaced with .forButton.against(Color)", "v1.0")
-	def forButtonWithBackground(color: Color) = inButton.against(color)
-	/**
-	  * @param iconColor New color of the icon
-	  * @return An icon image with specified color overlay
-	  */
-	@deprecated("Replaced with .apply(Color)", "v1.0")
-	def asImageWithColor(iconColor: Color) = paintedImageCache(iconColor)
-	/**
-	  * @param background Background color
-	  * @return A version of this icon (black or white) that is better against that background
-	  */
-	@deprecated("Replaced with .against(Color)", "v1.0")
-	def singleColorImageAgainst(background: Color) = background.shade match {
-		case Dark => white
-		case Light => black
-	}
-	
 	
 	// NESTED   --------------------------
 	
@@ -224,7 +182,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		  * @param context Implicit button creation context
 		  * @return A set of black or white images that may be used in a button
 		  */
-		def contextual(implicit context: ColorContext) = against(context.background)
+		def contextual(implicit context: StaticColorContext) = against(context.background)
 		
 		
 		// IMPLEMENTED  ----------------------
@@ -265,7 +223,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		  * @param context Component creation context
 		  * @return A button image set based on this icon, where only alpha values may change
 		  */
-		def contextual(implicit context: ColorContext) = against(context.background)
+		def contextual(implicit context: StaticColorContext) = against(context.background)
 		
 		
 		// IMPLEMENTED  ---------------------

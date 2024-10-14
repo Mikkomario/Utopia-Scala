@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
                     title: LocalizedString = LocalizedString.empty)
-				   (implicit context: TextContext, animationContext: AnimationContext)
+				   (implicit context: StaticTextContext, animationContext: AnimationContext)
 {
 	// ATTRIBUTES	--------------------------
 	

@@ -21,7 +21,7 @@ object RichTextElement
 	  * @return New rich text instance
 	  */
 	def contextual(text: LocalizedString, hasBackground: Boolean = false, isHint: Boolean = false)
-	              (implicit context: TextContext) =
+	              (implicit context: StaticTextContext) =
 	{
 		val background = if (hasBackground) Some(context.background) else None
 		if (isHint)

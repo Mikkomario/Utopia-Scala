@@ -1,5 +1,6 @@
 package utopia.reflection.test
 
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.{AnimationContext, BaseContext, ScrollingContext}
 import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
@@ -31,7 +32,7 @@ object TestContext
 	val margins = Margins(12)
 	
 	implicit val localizer: Localizer = NoLocalization
-	val baseContext: BaseContext = BaseContext(actorHandler, font, colorScheme, margins)
+	val baseContext: StaticBaseContext = StaticBaseContext(actorHandler, font, colorScheme, margins)
 	
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection")

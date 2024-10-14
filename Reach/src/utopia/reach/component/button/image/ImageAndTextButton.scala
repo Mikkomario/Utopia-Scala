@@ -1,5 +1,6 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
@@ -172,7 +173,7 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                                                settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ContextualImageAndTextButtonFactory]
 		with TextContextualFactory[ContextualImageAndTextButtonFactory]
@@ -181,7 +182,7 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
 	
 	override def self: ContextualImageAndTextButtonFactory = this
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	override def withSettings(settings: ImageAndTextButtonSettings): ContextualImageAndTextButtonFactory =
 		copy(settings = settings)
 	
@@ -260,14 +261,14 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
   */
 case class ImageAndTextButtonSetup(settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualImageAndTextButtonFactory]
+		with FromContextComponentFactoryFactory[StaticTextContext, ContextualImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def self: ImageAndTextButtonSetup = this
 	
 	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: TextContext): ContextualImageAndTextButtonFactory =
+	                         context: StaticTextContext): ContextualImageAndTextButtonFactory =
 		ContextualImageAndTextButtonFactory(hierarchy, context, settings)
 	override def withSettings(settings: ImageAndTextButtonSettings): ImageAndTextButtonSetup =
 		copy(settings = settings)
@@ -285,7 +286,7 @@ object ImageAndTextButton extends ImageAndTextButtonSetup()
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: TextContext,
+class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                          image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString,
                          settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
                         (action: => Unit)

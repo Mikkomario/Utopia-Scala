@@ -67,7 +67,7 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[DirectionalRotation])
-								   (implicit context: BaseContext) =
+								   (implicit context: StaticBaseContext) =
 		withRotatingImage(context.actorHandler, image, rotation)
 	
 	/**
@@ -78,7 +78,7 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithSprite(strip: Strip, animationSpeed: Fps)
-							(implicit context: BaseContext) =
+							(implicit context: StaticBaseContext) =
 		withSprite(context.actorHandler, strip, animationSpeed)
 }
 

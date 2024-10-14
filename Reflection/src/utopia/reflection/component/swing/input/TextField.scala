@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.input
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.firmament.localization.LocalizedString
@@ -148,7 +148,7 @@ object TextField
 					  prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
 					  resultFilter: Option[Regex] = None)
 					 (mapResult: Option[String] => A)
-					 (implicit context: TextContext) =
+					 (implicit context: StaticTextContext) =
 	{
 		val field = new TextField(targetWidth, context.textInsets.total / 2, context.font, document,
 			initialText, prompt.notEmpty.map { Prompt(_, context.promptFont, context.hintTextColor) }, context.textColor,
@@ -173,7 +173,7 @@ object TextField
 	def contextualForStrings(targetWidth: StackLength, initialText: String = "",
 							 prompt: LocalizedString = LocalizedString.empty, document: Document = new PlainDocument(),
 							 resultFilter: Option[Regex] = None)
-							(implicit context: TextContext) =
+							(implicit context: StaticTextContext) =
 		contextual(targetWidth, initialText, prompt, document, resultFilter) { _.getOrElse("") }
 	
 	/**
@@ -186,7 +186,7 @@ object TextField
 	  */
 	def contextualForPositiveInts(targetWidth: StackLength, initialValue: Option[Int] = None,
 	                              prompt: LocalizedString = LocalizedString.empty)
-								 (implicit context: TextContext) =
+								 (implicit context: StaticTextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.digit, 10), Some(Regex.positiveInteger)) { _.int }
 	
@@ -200,7 +200,7 @@ object TextField
 	  */
 	def contextualForInts(targetWidth: StackLength, initialValue: Option[Int] = None,
 	                      prompt: LocalizedString = LocalizedString.empty)
-						 (implicit context: TextContext) =
+						 (implicit context: StaticTextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.integerPart, 11), Some(Regex.integer)) { _.int }
 	
@@ -214,7 +214,7 @@ object TextField
 	  */
 	def contextualForPositiveDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
 									 prompt: LocalizedString = LocalizedString.empty)
-									(implicit context: TextContext) =
+									(implicit context: StaticTextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.positiveNumberPart, 24), Some(Regex.positiveNumber)) { _.double }
 	
@@ -228,7 +228,7 @@ object TextField
 	  */
 	def contextualForDoubles(targetWidth: StackLength, initialValue: Option[Double] = None,
 	                         prompt: LocalizedString = LocalizedString.empty)
-							(implicit context: TextContext) =
+							(implicit context: StaticTextContext) =
 		contextual(targetWidth, initialValue.map { _.toString } getOrElse "", prompt,
 			FilterDocument(Regex.numberPart, 24), Some(Regex.number)) { _.double }
 }

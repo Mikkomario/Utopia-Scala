@@ -30,7 +30,7 @@ object LoadingView
 	  * @return A new loading view
 	  */
 	def apply(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double)
-			 (implicit context: TextContext, animationContext: AnimationContext) =
+			 (implicit context: StaticTextContext, animationContext: AnimationContext) =
 		new LoadingView(loadingLabel, progressPointer, defaultWidth, context)
 }
 
@@ -40,7 +40,7 @@ object LoadingView
   * @since 30.8.2020, v1.2.1
   */
 class LoadingView(loadingLabel: AwtStackable, progressPointer: Changing[ProgressState], defaultWidth: Double,
-                  context: TextContext)(implicit animationContext: AnimationContext)
+                  context: StaticTextContext)(implicit animationContext: AnimationContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES	---------------------------

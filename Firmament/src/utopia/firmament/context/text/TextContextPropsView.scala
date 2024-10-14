@@ -80,4 +80,11 @@ trait TextContextPropsView extends ColorContextPropsView
 	  * @return Text alignment used along that axis
 	  */
 	def textAlignmentAlong(axis: Axis2D) = textAlignment(axis)
+	
+	/**
+	  * @param hint Whether targeting a hint text
+	  * @return Pointer that contains the applied text draw context for that purpose
+	  */
+	def textDrawContextPointerFor(hint: Boolean) =
+		if (hint) hintTextDrawContextPointer else textDrawContextPointer
 }

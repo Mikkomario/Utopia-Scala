@@ -1,6 +1,7 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -305,11 +306,11 @@ trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsL
 	def mapSettings(f: ImageAndTextLabelSettings => ImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                                               settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
 	extends TextContextualFactory[ContextualImageAndTextLabelFactory]
 		with ImageAndTextLabelSettingsWrapper[ContextualImageAndTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualImageAndTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualImageAndTextLabelFactory]
 		with FromAlignmentFactory[ContextualImageAndTextLabelFactory]
 {
 	// COMPUTED --------------------
@@ -330,7 +331,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	override def withSettings(settings: ImageAndTextLabelSettings): ContextualImageAndTextLabelFactory =
 		copy(settings = settings)
 	
-	override def withContext(newContext: TextContext) =
+	override def withContext(newContext: StaticTextContext) =
 		copy(context = newContext)
 	
 	// By default, uses opposite alignments for text and image
@@ -412,12 +413,12 @@ class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
   */
 case class ImageAndTextLabelSetup(settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
 	extends ImageAndTextLabelSettingsWrapper[ImageAndTextLabelSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualImageAndTextLabelFactory]
+		with FromContextComponentFactoryFactory[StaticTextContext, ContextualImageAndTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: TextContext): ContextualImageAndTextLabelFactory =
+	                         context: StaticTextContext): ContextualImageAndTextLabelFactory =
 		ContextualImageAndTextLabelFactory(hierarchy, context, settings.withImageAlignment(context.textAlignment.opposite))
 	
 	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelSetup =

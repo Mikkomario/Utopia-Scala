@@ -1,15 +1,15 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
+import utopia.firmament.model.stack.StackLength
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.stack.template.layout.ReflectionCollectionViewLike
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.stack.StackLength
 
 object CollectionView
 {
@@ -27,7 +27,7 @@ object CollectionView
 	def contextual[C <: AwtStackable](rowAxis: Axis2D, rowSplitThreshold: Double,
 									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false,
 									  isRelated: Boolean = false)
-	                                 (implicit context: BaseContext) =
+	                                 (implicit context: StaticBaseContext) =
 		new CollectionView[C](rowAxis, rowSplitThreshold,
 			if (isRelated) context.stackMargin else context.smallStackMargin, insideRowLayout,
 			forceEqualRowLength)

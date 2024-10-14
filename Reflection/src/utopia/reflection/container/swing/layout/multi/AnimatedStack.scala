@@ -1,7 +1,8 @@
 package utopia.reflection.container.swing.layout.multi
 
 import utopia.firmament.component.AreaOfItems
-import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
@@ -38,7 +39,7 @@ object AnimatedStack
 	def contextual[C <: AwtStackable](direction: Axis2D, items: Vector[C] = Vector(), layout: StackLayout = Fit,
 									  cap: StackLength = StackLength.fixedZero,
 									  itemsAreRelated: Boolean = false)
-	                                 (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
+	                                 (implicit ac: AnimationContext, bc: StaticBaseContext, exc: ExecutionContext) =
 	{
 		val stack = new AnimatedStack[C](ac.actorHandler, direction,
 			if (itemsAreRelated) bc.smallStackMargin else bc.stackMargin, cap, layout,
@@ -61,7 +62,7 @@ object AnimatedStack
 	  */
 	def contextualColumn[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
 											cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
-										   (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
+										   (implicit ac: AnimationContext, bc: StaticBaseContext, exc: ExecutionContext) =
 		contextual(Y, items, layout, cap, itemsAreRelated)
 	
 	/**
@@ -78,7 +79,7 @@ object AnimatedStack
 	  */
 	def contextualRow[C <: AwtStackable](items: Vector[C] = Vector(), layout: StackLayout = Fit,
 	                                     cap: StackLength = StackLength.fixedZero, itemsAreRelated: Boolean = false)
-	                                    (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
+	                                    (implicit ac: AnimationContext, bc: StaticBaseContext, exc: ExecutionContext) =
 		contextual(X, items, layout, cap, itemsAreRelated)
 }
 

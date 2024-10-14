@@ -18,8 +18,8 @@ trait VariableBackgroundRoleAssignable[+Repr] extends BackgroundAssignable[Repr]
 	/**
 	  * @param pointer A background color pointer.
 	  *                Either contains
-	  *                     Left) A pointer to the color role, plus preferred level to apply, or
-	  *                     Right) The resolved background color to apply
+	  *                     - Left: A pointer to the color role, plus preferred level to apply, or
+	  *                     - Right: The resolved background color to apply
 	  * @return Copy of this factory that places the specified background color
 	  */
 	protected def withBackgroundPointer(pointer: Either[(Changing[ColorRole], ColorLevel), Changing[Color]]): Repr

@@ -1,6 +1,6 @@
 package utopia.firmament.image
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
 /**
@@ -27,19 +27,19 @@ trait FromColorFactory[+A]
 	  * @return An item with a color from the specified set.
 	  *         The shade is selected based on context.
 	  */
-	def apply(colors: ColorSet)(implicit context: ColorContext): A = apply(colors.against(context.background))
+	def apply(colors: ColorSet)(implicit context: StaticColorContext): A = apply(colors.against(context.background))
 	/**
 	  * @param role Targeted color role
 	  * @param context Implicit color context
 	  * @return An item matching that color role with a shade suitable for the current context
 	  */
-	def apply(role: ColorRole)(implicit context: ColorContext): A = apply(context.color(role))
+	def apply(role: ColorRole)(implicit context: StaticColorContext): A = apply(context.color(role))
 	/**
 	  * @param role Targeted color role
 	  * @param preferredShade Preferred color shade (default = standard)
 	  * @param context Implicit color context
 	  * @return An item matching that color role with a shade suitable for the current context
 	  */
-	def apply(role: ColorRole, preferredShade: ColorLevel)(implicit context: ColorContext): A =
+	def apply(role: ColorRole, preferredShade: ColorLevel)(implicit context: StaticColorContext): A =
 		apply(context.color.preferring(preferredShade)(role))
 }

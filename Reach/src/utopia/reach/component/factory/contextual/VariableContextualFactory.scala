@@ -2,8 +2,6 @@ package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.template.PartOfComponentHierarchy
 
 /**
@@ -11,19 +9,15 @@ import utopia.reach.component.template.PartOfComponentHierarchy
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */
-trait VariableContextualFactory[N, +Repr] extends PartOfComponentHierarchy
+trait VariableContextualFactory[N, +Repr] extends PartOfComponentHierarchy with HasContext[N]
 {
 	// ABSTRACT --------------------------
 	
 	/**
-	  * @return Pointer that determines the context of the created components
+	  * @param context A new context to use
+	  * @return Copy of this factory that uses the specified context
 	  */
-	protected def contextPointer: Changing[N]
-	/**
-	  * @param p A new context pointer to use
-	  * @return Copy of this factory that uses the specified context pointer
-	  */
-	def withContextPointer(p: Changing[N]): Repr
+	def withContext(context: N): Repr
 	
 	
 	// COMPUTED --------------------------
@@ -37,19 +31,9 @@ trait VariableContextualFactory[N, +Repr] extends PartOfComponentHierarchy
 	// OTHER    --------------------------
 	
 	/**
-	  * @param context New (static) context to use in component creation
-	  * @return Copy of this factory that uses the specified static context
-	  */
-	def withContext(context: N): Repr = withContextPointer(Fixed(context))
-	/**
 	  * @param f A mapping function for the component creation context
 	  * @return Copy of this factory that uses a mapped context
 	  */
-	def mapContext(f: N => N) = withContextPointer(contextPointer.mapWhile(parentHierarchy.linkPointer)(f))
-	/**
-	  * @param f A mapping function that targets the current component creation context.
-	  *          Returns a variable context.
-	  * @return Copy of this factory that uses the resulting variable context.
-	  */
-	def flatMapContext(f: N => Changing[N]) = withContextPointer(contextPointer.flatMap(f))
+	// TODO: May apply a hierarchy, specific mapping condition
+	def mapContext(f: N => N) = withContext(f(context))
 }

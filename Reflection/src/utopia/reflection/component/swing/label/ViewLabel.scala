@@ -45,7 +45,7 @@ object ViewLabel
 	  * @return A new label
 	  */
 	def contextual[A](pointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-					 (implicit context: TextContext) =
+					 (implicit context: StaticTextContext) =
 	{
 		new ViewLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
 			context.textAlignment, !context.allowTextShrink)
@@ -62,7 +62,7 @@ object ViewLabel
 	  */
 	def contextualWithBackground[A](color: Color, pointer: Changing[A],
 	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-								   (implicit context: TextContext) =
+								   (implicit context: StaticTextContext) =
 	{
 		val label = contextual(pointer, displayFunction)(context.against(color))
 		label.background = color

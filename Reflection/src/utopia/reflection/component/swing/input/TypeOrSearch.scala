@@ -1,27 +1,28 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.display.{PoolWithPointer, Refreshable}
-import utopia.firmament.context.{AnimationContext, ScrollingContext, TextContext}
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.{AnimationContext, ScrollingContext}
+import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.StackLength
+import utopia.firmament.model.stack.modifier.FixedOptimalLengthModifier
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel
 import utopia.paradigm.color.ColorRole.{Gray, Primary}
 import utopia.paradigm.color.ColorShade.Light
-import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.reflection.component.swing.button.{FramedImageButton, ImageAndTextButton, ImageButton, TextButton}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
-import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{LocalizedString, Localizer}
-import utopia.firmament.model.stack.StackLength
-import utopia.firmament.model.stack.modifier.FixedOptimalLengthModifier
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +56,7 @@ object TypeOrSearch
 	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
 	          searchDelay: Duration = Duration.Zero)
 	         (optionsForInput: String => Future[Seq[String]])
-	         (implicit context: TextContext, scrollingContext: ScrollingContext,
+	         (implicit context: StaticTextContext, scrollingContext: ScrollingContext,
 	          animationContext: AnimationContext, exc: ExecutionContext, logger: Logger) =
 		new TypeOrSearch(context, optimalTextFieldWidth, addButtonText, addButtonIcon, selectButtonText,
 			selectButtonIcon, optimalSelectionAreaLength, textFieldPrompt, preferredTextFieldShade,
@@ -81,7 +82,7 @@ object TypeOrSearch
   *                        Not expected to throw.
   */
 class TypeOrSearch
-(parentContext: TextContext, optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
+(parentContext: StaticTextContext, optimalTextFieldWidth: Double, addButtonText: LocalizedString = LocalizedString.empty,
  addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
  selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
  textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
