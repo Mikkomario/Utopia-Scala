@@ -1,5 +1,10 @@
 # Utopia Echo - List of Changes
 
+## v1.1.1 (in development)
+### Other changes
+- Removed some print-lines that were left from previous tests
+- Modified **Chat** default parameters
+
 ## v1.1 - 04.10.2024
 A major update adding a number of new features, including a complete chat interface and tool support. 
 Also includes some refactoring in order to accommodate this new features and their requirements.
