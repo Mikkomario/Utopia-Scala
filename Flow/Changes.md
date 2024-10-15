@@ -2,8 +2,14 @@
 
 ## v2.5.1 (in development)
 ### New methods
+- **ModelLike**
+  - Added `.tryGet(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.findNextIndexWhere(...)` and `.findPreviousIndexWhere(...)`
+- **Try** (**TryExtensions**)
+  - Added `.mapFailure(...)`
+### Other changes
+- Minor refactoring in `ModelLike.apply(IterableOnce)`
 
 ## v2.5 - 04.10.2024
 A larger update focusing on pointers. The main changes are:

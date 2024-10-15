@@ -6,8 +6,10 @@ import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.TryExtensions._
 
 import scala.collection.mutable
+import scala.util.Try
 
 object ModelLike
 {
@@ -176,15 +178,24 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  *         If all searches resulted in empty values, a new property is generated and its value returned.
 	  */
 	def apply(propNames: IterableOnce[String]): Value = {
-		val targetsIter = propNames.iterator
+		propNames match {
+			case i: Iterable[String] =>
+				if (i.knownSize == 1)
+					apply(i.head)
+				else
+					_apply(i.iterator)
+			case i => _apply(i.iterator)
+		}
+	}
+	private def _apply(propNamesIter: Iterator[String]): Value = {
 		// Case: At least one property name is targeted
-		if (targetsIter.hasNext) {
+		if (propNamesIter.hasNext) {
 			// Returns the value of the first targeted property by default
-			val defaultTarget = targetsIter.next()
+			val defaultTarget = propNamesIter.next()
 			val defaultExisting = existing(defaultTarget)
 			// Looks for an existing property with a non-empty value
 			// Returns the first such property
-			(defaultExisting ++ targetsIter.flatMap(existing)).map { _.value }.find { _.isDefined }.getOrElse {
+			(defaultExisting ++ propNamesIter.flatMap(existing)).map { _.value }.find { _.isDefined }.getOrElse {
 				// If no existing non-empty property was found, returns the value of the initially targeted property,
 				// which is generated if it didn't exist
 				defaultExisting.getOrElse(newProperty(defaultTarget)).value
@@ -252,6 +263,26 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	  * @return The property from this model (possibly generated)
 	  */
 	def get(propName: String) = existing(propName).getOrElse { newProperty(propName) }
+	
+	/**
+	  * Attempts to retrieve a value from this model.
+	  * In case of a failure, provides an error message which indicates, which property was being accessed.
+	  * @param propName Name of the accessed property
+	  * @param altPropNames Alternative names for the accessed property
+	  * @param f A function which converts the value to the desired type,
+	  *          yielding a failure if the value could not be parsed.
+	  * @tparam A type of expected parse results
+	  * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
+	  */
+	def tryGet[A](propName: String, altPropNames: String*)(f: Value => Try[A]) = {
+		val value = apply(propName +: altPropNames)
+		f(value).mapFailure { cause =>
+			if (value.isEmpty)
+				new IllegalArgumentException(s"\"$propName\" was not specified", cause)
+			else
+				new IllegalArgumentException(s"Value of \"$propName\" could not be accepted", cause)
+		}
+	}
 	
 	/**
 	  * Whether this model contains an existing property with the specified name

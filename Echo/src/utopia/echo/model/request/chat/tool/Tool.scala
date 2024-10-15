@@ -5,6 +5,33 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.template.ModelConvertible
 
+object Tool
+{
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param name Name of this tool
+	  * @param description Description of this tool
+	  * @param parameters Parameters accepted by this tool
+	  * @param f This tool's functionality.
+	  *          Accepts model containing the specified parameters and yields a string
+	  *          (which will be forwarded to the LLM).
+	  * @return A new tool
+	  */
+	def apply(name: String, description: String = "")(parameters: ToolParameter*)(f: Model => String): Tool =
+		new _Tool(name, description, parameters, f)
+	
+	
+	// NESTED   ----------------------------
+	
+	private class _Tool(override val name: String, override val description: String,
+	                    override val parameters: Seq[ToolParameter], functionality: Model => String)
+		extends Tool
+	{
+		override def apply(args: Model): String = functionality(args)
+	}
+}
+
 /**
   * Common trait for tools which certain LLMs may use in their response-producing logic.
   * @author Mikko Hilpinen

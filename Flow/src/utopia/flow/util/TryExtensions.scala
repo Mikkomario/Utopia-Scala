@@ -146,6 +146,15 @@ object TryExtensions
 		}
 		
 		/**
+		  * @param f A mapping function applied if this is a failure
+		  * @return If this is a success, returns self. Otherwise, returns a mapped failure.
+		  */
+		def mapFailure(f: Mutate[Throwable]) = t match {
+			case s: Success[A] => s
+			case Failure(error) => Failure(f(error))
+		}
+		
+		/**
 		  * @param error A (secondary) error (call-by-name)
 		  * @tparam B Type of failure to yield
 		  * @return This if failure, otherwise a failure based on the specified error

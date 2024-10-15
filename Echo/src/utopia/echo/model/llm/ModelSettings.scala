@@ -2,12 +2,15 @@ package utopia.echo.model.llm
 
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.factory.SureFromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions
 
-object ModelSettings
+object ModelSettings extends SureFromModelFactory[ModelSettings]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -21,6 +24,18 @@ object ModelSettings
 	
 	implicit def collToSettings(settings: Iterable[(ModelParameter, Value)]): ModelSettings =
 		apply(settings.toMap)
+		
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def parseFrom(model: ModelLike[Property]): ModelSettings = {
+		val params = Pair("defined", "defaults").map { key =>
+			model(key).getModel.properties.view
+				.flatMap { p => ModelParameter.findForKey(p.name).map { _ -> p.value } }
+				.toMap
+		}
+		apply(params.first, params.second)
+	}
 }
 
 /**
@@ -33,6 +48,7 @@ object ModelSettings
   */
 case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
                          default: Map[ModelParameter, Value] = Map())
+	extends ModelConvertible
 {
 	// COMPUTED -------------------------
 	
@@ -44,6 +60,15 @@ case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
 	  * @return Copy of these settings without any default values
 	  */
 	def withoutDefaults = copy(default = Map())
+	
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def toModel: Model = {
+		Model(Pair("defined" -> defined, "defaults" -> default).map { case (key, params) =>
+			key -> Model(params.map { case (k, v) => k.key -> v })
+		})
+	}
 	
 	
 	// OTHER    -------------------------

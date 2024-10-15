@@ -11,7 +11,7 @@ import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictToken
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
 import utopia.echo.model.request.chat.ChatParams
-import utopia.echo.model.request.chat.tool.Tool
+import utopia.echo.model.request.chat.tool.{Tool, ToolFactory}
 import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.flow.async.AsyncExtensions._
@@ -20,11 +20,14 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{Mutate, NotEmpty, UncertainNumber}
@@ -36,6 +39,72 @@ import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.{Failure, Success, Try}
+
+object Chat
+{
+	// OTHER    ------------------------------
+	
+	/**
+	  * Parses a chat from a model, applying that model's state (system messages, message history, settings, etc.)
+	  * Note: Non-critical failures are logged.
+	  * @param client Client used by this chat interface
+	  * @param model Model representing chat state
+	  * @param toolFactory Factory used for defining tool functionality.
+	  *                    Default = not implemented.
+	  *                    Note: The default parameter throws if any tools have been defined!
+	  * @param exc Implicit execution context
+	  * @param log Implicit logging interface used
+	  * @param jsonParser Json parser used in response-processing
+	  * @return Parsed chat interface. Failure if the specified model didn't specify the targeted LLM.
+	  */
+	def parseFrom(client: OllamaClient, model: AnyModel, toolFactory: ToolFactory = ToolFactory.notImplemented)
+	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser) =
+	{
+		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>
+			val chat = new Chat(client, LlmDesignator(llm))
+			
+			model("maxContextSize").int.foreach { chat.maxContextSize = _ }
+			model("minContextSize").int.foreach { chat.minContextSize = _ }
+			model("expectedReplySize").int.foreach { chat.expectedReplySize = _ }
+			model("additionalContextSize").int.foreach { chat.additionalContextSize = _ }
+			
+			model("systemMessages").vector.filter { _.nonEmpty }.foreach { messages =>
+				chat.systemMessages = messages.flatMap { _.string }
+			}
+			model("messageHistory").vector.filter { _.nonEmpty }.foreach { history =>
+				// Parses the message history. Logs parsing failures.
+				chat._messageHistoryPointer.value = history.flatMap { v =>
+					v.tryModel
+						.flatMap { model =>
+							ChatMessage(model).flatMap { message =>
+								model.tryGet("size") { _.tryInt }.map { message -> _ }
+							}
+						}
+						.logWithMessage("Failed to parse a historical message")
+				}
+			}
+			chat.lastPromptAndReplySizesPointer.value = Pair(model("lastPromptSize"), model("lastReplySize")).map { v =>
+				v.int match {
+					case Some(size) => CertainNumber(size)
+					case None => UncertainNumber.zeroOrMore
+				}
+			}
+			model("settings").model.foreach { settingsModel =>
+				ModelSettings(settingsModel).logWithMessage("Failed to parse chat settings")
+					.foreach { chat.settings = _ }
+			}
+			model("tools").tryVectorWith { _.tryModel.flatMap(toolFactory.apply) }
+				.logWithMessage("Failed to parse chat tools")
+				.foreach { chat.tools = _ }
+			model("autoSummarizeAt").model.foreach { autoSummarize =>
+				chat.autoSummarizeThresholds = Some(Pair(
+					autoSummarize("tokens").getInt, autoSummarize("messages").getInt))
+			}
+			
+			chat
+		}
+	}
+}
 
 /**
   * An interface for interactive chat which supports conversation history and tools.
@@ -57,7 +126,7 @@ import scala.util.{Failure, Success, Try}
   */
 class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
           (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser)
-	extends HasSchrodingerState with HasMutableModelSettings
+	extends HasSchrodingerState with HasMutableModelSettings with ModelConvertible
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -461,6 +530,23 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	override def settings: ModelSettings = settingsPointer.value
 	override def settings_=(newSettings: ModelSettings): Unit = settingsPointer.value = newSettings
 	
+	override def toModel: Model = {
+		val lastPromptAndReplySize = lastPromptAndReplySizesPointer.value.map { _.exact }
+		Model.from(
+			"llm" -> llm.llmName, "maxContextSize" -> maxContextSize, "minContextSize" -> minContextSize,
+			"expectedReplySize" -> expectedReplySize, "additionalContextSize" -> additionalContextSize,
+			"systemMessages" -> systemMessagesPointer.value,
+			"messageHistory" -> _messageHistoryPointer.value.map { case (message, size) =>
+				message.toModel + Constant("size", size)
+			},
+			"lastPromptSize" -> lastPromptAndReplySize.first, "lastReplySize" -> lastPromptAndReplySize.second,
+			"settings" -> settings, "tools" -> tools,
+			"autoSummarizeAt" -> autoSummarizeAtTokensPointer.value.map { thresholds =>
+				Model.from("tokens" -> thresholds.first, "messages" -> thresholds.second)
+			}
+		)
+	}
+	
 	override def mapSettings(f: Mutate[ModelSettings]) = settingsPointer.update(f)
 	
 	
@@ -683,8 +769,11 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 			if (defaultSettings.contains(ContextTokens))
 				defaultSettings
 			else {
-				val estimate = contextSize(defaultSettings.get(PredictTokens).int.toRight { messages.mkString(". ") })
-				defaultSettings + (ContextTokens -> (estimate: Value))
+				val (contextTokens, replySizeLimit) = contextSize(
+					defaultSettings.get(PredictTokens).int.toRight { messages.mkString(". ") })
+				// Limits the reply to maximum context size in order to avoid overflow
+				defaultSettings ++ Pair[(ModelParameter, Value)](
+					ContextTokens -> contextTokens, PredictTokens -> replySizeLimit)
 			}
 		}
 		
@@ -808,11 +897,16 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 		val rawValue = usedContextSizePointer.value + messageSize + expectedReplySize + additionalContextSize
 		
 		// Limits to the allowed range
-		if (rawValue >= maxContextSize)
-			maxContextSize
-		else if (rawValue <= minContextSize)
-			minContextSize
-		else
-			rawValue
+		val limitedSize = {
+			if (rawValue >= maxContextSize)
+				maxContextSize
+			else if (rawValue <= minContextSize)
+				minContextSize
+			else
+				rawValue
+		}
+		
+		// Also returns the estimated maximum reply size (without overflowing this context size)
+		limitedSize -> (limitedSize - (usedContextSizePointer.value + messageSize))
 	}
 }
