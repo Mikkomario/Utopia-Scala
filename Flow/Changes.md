@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
 ## v2.5.1 (in development)
+### New features
+- Added **UntilExternalFailureIterator**
 ### New methods
 - **ModelLike**
   - Added `.tryGet(...)`
@@ -9,6 +11,7 @@
 - **Try** (**TryExtensions**)
   - Added `.mapFailure(...)`
 ### Other changes
+- `.allChildrenIterator` in Path (via **FileExtensions**) now returns the paths from top to bottom
 - Minor refactoring in `ModelLike.apply(IterableOnce)`
 
 ## v2.5 - 04.10.2024

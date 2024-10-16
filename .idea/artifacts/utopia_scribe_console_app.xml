@@ -14,8 +14,8 @@
         <element id="module-output" name="Scribe-Core" />
         <element id="module-output" name="Vault" />
       </element>
-      <element id="library" level="application" name="scala-sdk-2.13.7" />
       <element id="library" level="project" name="mariadb-java-client" />
+      <element id="library" level="application" name="scala-sdk-2.13.14" />
     </root>
   </artifact>
 </component>
