@@ -1,16 +1,20 @@
 package utopia.scribe.api.app.console
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
+import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.Connection
 
 import java.io.FileNotFoundException
-import java.nio.file.{Path, Paths}
-import scala.util.Failure
+import java.nio.file.Path
 
 /**
   * An interface for user-specified settings (json-based)
@@ -21,10 +25,22 @@ object ScribeConsoleSettings
 {
 	// ATTRIBUTES   ----------------
 	
-	private lazy val loaded = Paths.get(".").allChildrenIterator
-		.find { _.toOption.exists { p => p.fileName.toLowerCase.contains("settings") && p.fileType == "json" } }
-		.getOrElse { Failure(new FileNotFoundException("No settings.json file found")) }
-		.flatMap { JsonBunny(_).flatMap { v => Settings(v.getModel) } }
+	private lazy val loaded = {
+		// Looks recursively for a settings file
+		// Prefers a json file which mentions both "scribe" and "settings",
+		// but if such file is not found, looks for any json file containing the word "settings".
+		implicit val log: Logger = SysErrLogger
+		val settingsFileOptions = FileUtils.workingDirectory.toTree.topDownNodesBelowIterator.map { _.nav }
+			.filter { f =>
+				val (fileName, fileType) = f.fileNameAndType.toTuple
+				fileName.containsIgnoreCase("settings") && (fileType ~== "json")
+			}
+			.caching
+		settingsFileOptions.find { _.fileName.containsIgnoreCase("scribe") }.orElse { settingsFileOptions.headOption }
+			.toTry { new FileNotFoundException("No settings.json file found") }
+			// Attempts to parse the file contents, also
+			.flatMap { JsonBunny(_).flatMap { _.tryModel.flatMap(Settings.apply) } }
+	}
 	
 	
 	// COMPUTED --------------------

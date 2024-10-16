@@ -1,6 +1,13 @@
 # Utopia Echo - List of Changes
 
 ## v1.1.1 (in development)
+### New features
+- Added saving & loading to **Chat**
+- Added **ToolFactory** for loading tools from models
+- Added model conversions to **ModelSettings**
+### New methods
+- **Tool**
+  - Added a new constructor
 ### Other changes
 - Removed some print-lines that were left from previous tests
 - Modified **Chat** default parameters

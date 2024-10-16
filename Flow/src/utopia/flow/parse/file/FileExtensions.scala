@@ -3,7 +3,7 @@ package utopia.flow.parse.file
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce}
+import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce, UntilExternalFailureIterator}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
@@ -14,7 +14,7 @@ import utopia.flow.parse.string.IterateLines
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryCatch
 import utopia.flow.util.TryExtensions._
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
 
 import java.awt.Desktop
@@ -152,12 +152,12 @@ object FileExtensions
 		  */
 		def children = iterateChildren { _.toVector }
 		/**
-		  * @return An iterator that accesses all child paths within this directory.
-		  *         The iterator may terminate and return failure on read failures.
+		  * @return An iterator that accesses all child paths within this directory from top to bottom.
+		  *         Terminates and yields a failure in case a file-read failure is encountered.
 		  */
-		def allChildrenIterator = children match {
-			case Success(children) => children.iterator.flatMap { new RecursiveDirectoryIterator(_) }
-			case Failure(error) => PollableOnce(Failure(error))
+		def allChildrenIterator: Iterator[Try[Path]] = {
+			implicit val log: CollectSingleFailureLogger = new CollectSingleFailureLogger()
+			new UntilExternalFailureIterator(toTree.topDownNodesBelowIterator.map { _.nav }, log)
 		}
 		/**
 		  * @return Directories directly under this one (returns empty vector for regular files). May fail.
@@ -167,10 +167,12 @@ object FileExtensions
 		  * @return An iterator that returns all sub-directories of this directory, their sub-directories and so-on.
 		  *         Includes the regular files with each directory, also.
 		  */
-		def allSubDirectoriesIterator = children match {
-			case Success(children) =>
-				children.iterator.filter { _.isDirectory }.flatMap { new RecursiveDirectoriesIterator(_) }
-			case Failure(error) => PollableOnce(Failure(error))
+		def allSubDirectoriesIterator = {
+			children match {
+				case Success(children) =>
+					children.iterator.filter { _.isDirectory }.flatMap { new RecursiveDirectoriesIterator(_) }
+				case Failure(error) => PollableOnce(Failure(error))
+			}
 		}
 		/**
 		  * @return An iterator that returns this directory, all sub-directories under this directory,
@@ -598,8 +600,10 @@ object FileExtensions
 		  *               within this directory and its sub-directories (including the directories themselves).
 		  * @return Paths accepted by the filter
 		  */
-		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] =
+		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] = {
 			allChildrenIterator.tryFlatMap { _.map { Some(_).filter(filter) } }.map { _.toVector }
+		}
+		
 		/**
 		  * @param extension A file extension (Eg. "png"), not including the '.'
 		  * @return All files directly or indirectly under this directory that have the specified file extension / type
