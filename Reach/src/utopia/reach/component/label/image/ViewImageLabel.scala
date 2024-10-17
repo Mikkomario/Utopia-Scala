@@ -1,6 +1,7 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ViewImageDrawer
@@ -319,51 +320,52 @@ trait ViewImageLabelFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[ColorContext],
+case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableColorContext,
                                            settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                            drawBackground: Boolean = false)
 	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[ColorContext, ContextualViewImageLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableColorContext, ContextualViewImageLabelFactory]
 {
 	// IMPLEMENTED  ---------------------------
 	
 	override def self: ContextualViewImageLabelFactory = this
 	
-	override protected def allowUpscalingPointer: Changing[Boolean] = contextPointer
-		.mapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
+	override protected def allowUpscalingPointer: Changing[Boolean] = context.allowImageUpscalingFlag
 	
-	override def withContextPointer(p: Changing[ColorContext]): ContextualViewImageLabelFactory =
-		copy(contextPointer = p)
+	override def withContext(c: VariableColorContext): ContextualViewImageLabelFactory = copy(context = c)
 	override def withSettings(settings: ViewImageLabelSettings): ContextualViewImageLabelFactory =
 		copy(settings = settings)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[ColorContext],
+	override protected def withVariableBackgroundContext(newContext: VariableColorContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualViewImageLabelFactory =
-		copy(contextPointer = newContextPointer,
+		copy(context = newContext,
 			settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers), drawBackground = true)
 	
 	override def *(mod: Double): ContextualViewImageLabelFactory =
-		copy(contextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _ * mod },
-			settings = settings * mod)
+		copy(context = context * mod, settings = settings * mod)
 	
 	override def apply(imagePointer: Changing[Image]) = iconOrImagePointer(Right(imagePointer))
 	
 	
 	// OTHER    ------------------------------
 	
-	def withInsetSizePointer(sizePointer: Changing[SizeCategory]) =
-		withInsetsPointer(contextPointer.mergeWith(sizePointer) { _.scaledStackMargin(_).toInsets })
+	def withInsetSizePointer(sizePointer: Changing[SizeCategory]) = {
+		// TODO: Optimize pointer-creation here
+		withInsetsPointer(sizePointer.flatMap { context.scaledStackMarginPointer(_).map { _.toInsets } })
+	}
 	
 	def withColor(color: ColorSet): ContextualViewImageLabelFactory =
-		withColorOverlayPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.color(color) })
+		withColorOverlayPointer(context.colorPointer(color))
 	def withColor(color: ColorRole): ContextualViewImageLabelFactory =
-		withColorOverlayPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.color(color) })
+		withColorOverlayPointer(context.colorPointer(color))
+	// TODO: Again, optimize pointer-usage
 	def withColorPointer(colorPointer: Changing[ColorRole]) =
-		withColorOverlayPointer(contextPointer.mergeWith(colorPointer) { _.color(_) })
+		withColorOverlayPointer(colorPointer.flatMap(context.colorPointer.apply))
 	
 	/**
-	  * @param pointer Either Left) An icon pointer, or
-	  *                       Right) An image pointer
+	  * @param pointer Either
+	  *                     - Left: An icon pointer, or
+	  *                     - Right: An image pointer
 	  * @return A label that displays the specified icon or image
 	  */
 	def iconOrImagePointer(pointer: Either[Changing[SingleColorIcon], Changing[Image]]) = {

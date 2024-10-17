@@ -24,7 +24,6 @@ trait VariableBackgroundRoleAssignableFactory[N <: VariableColorContextLike[N, _
 	  * @param backgroundDrawer New background drawer to assign
 	  * @return Copy of this factory with background drawing enabled
 	  */
-	// TODO: Rename
 	protected def withVariableBackgroundContext(newContext: N, backgroundDrawer: CustomDrawer): Repr
 	
 	

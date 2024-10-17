@@ -1,7 +1,7 @@
 package utopia.reach.component.label.text
 
 import utopia.firmament.component.text.TextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, TextDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.factory.FramedFactory
@@ -38,11 +38,11 @@ trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with PartO
   * @author Mikko Hilpinen
   * @since 20.07.2023, v1.1
   */
-case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                                       customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextLabelFactoryLike[ContextualTextLabelFactory]
 		with TextContextualFactory[ContextualTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualTextLabelFactory]
 {
 	// COMPUTED ---------------------------------
 	
@@ -56,7 +56,7 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	
 	override def self: ContextualTextLabelFactory = this
 	
-	override def withContext(context: TextContext) = copy(context = context)
+	override def withContext(context: StaticTextContext) = copy(context = context)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualTextLabelFactory =
 		copy(customDrawers = drawers)
 	
@@ -75,7 +75,7 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString) =
-		_apply(text, TextDrawContext.createContextual(isHint)(context), context.allowTextShrink)
+		_apply(text, context.textDrawContextFor(isHint), context.allowTextShrink)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
@@ -105,7 +105,7 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
                             alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
                             customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextLabelFactoryLike[TextLabelFactory]
-		with FromContextFactory[TextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
+		with FromContextFactory[StaticTextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
 		with CustomDrawableFactory[TextLabelFactory] with BackgroundAssignable[TextLabelFactory]
 		with FromAlignmentFactory[TextLabelFactory]
 {
@@ -116,7 +116,8 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withBackground(background: Color): TextLabelFactory = withCustomDrawer(BackgroundDrawer(background))
 	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
-	override def withContext(context: TextContext) = ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
+	override def withContext(context: StaticTextContext) =
+		ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
 	
 	
 	// OTHER	--------------------------------

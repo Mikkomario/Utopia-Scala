@@ -2,6 +2,7 @@ package utopia.firmament.image
 
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.image.SingleColorIcon.colorToShadePointerCache
 import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.WeakCache
@@ -9,6 +10,7 @@ import utopia.flow.collection.template.MapAccess
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorShade.{Dark, Light}
 import utopia.paradigm.color.{Color, ColorShade, FromShadeFactory}
@@ -19,6 +21,10 @@ import scala.language.implicitConversions
 object SingleColorIcon
 {
 	// ATTRIBUTES   ------------------------
+	
+	// Caches color pointer shade-mappings in order to reduce the amount of managed pointers
+	// TODO: Might want to move this cache elsewhere
+	private val colorToShadePointerCache = WeakCache.weakKeys { colorP: Changing[Color] => colorP.map { _.shade } }
 	
 	/**
 	  * An empty icon
@@ -55,9 +61,17 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 {
 	// ATTRIBUTES	------------------------
 	
+	// Weakly caches the results of color overlay operations, since those are somewhat slow to compute
 	private val paintedImageCache = original.notEmpty match {
-		case Some(img) => WeakCache[Color, Image] { c => img.withColorOverlay(c) }
+		case Some(img) => WeakCache.weakValues[Color, Image] { c => img.withColorOverlay(c) }
 		case None => MapAccess { _: Any => original }
+	}
+	// Also weakly caches the results of color pointer mappings, in order to avoid creating unnecessary pointers
+	private val paintedImagePointerCache = {
+		if (original.isEmpty)
+			MapAccess {  _: Any => Fixed(original) }
+		else
+			WeakCache { colorP: Changing[Color] => colorP.map(paintedImageCache.apply) }
 	}
 	
 	private val _blackAndWhite = Pair(
@@ -68,6 +82,9 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.inButtonImageEffects } }
 	private val _highlightingInButtonSets = _blackAndWhite
 		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.asButtonImageEffects } }
+	
+	// Uses two more caches in order to manage pointer-mappings used in variable 'against' functions
+	private val againstShadePointerCache = WeakCache { shadeP: Changing[ColorShade] => shadeP.map(against) }
 	
 	override protected lazy val relativeToStandardSize: Double = {
 		if (standardSize.dimensions.exists { _ == 0.0 })
@@ -164,6 +181,27 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	
 	
 	// OTHER	---------------------------
+	
+	/**
+	  * @param colorPointer A pointer that contains the color overlay to apply
+	  * @return A pointer that contains this image overlaid with the specified pointer's color
+	  */
+	def apply(colorPointer: Changing[Color]) = paintedImagePointerCache(colorPointer)
+	
+	/**
+	  * @param backgroundPointer Background color pointer
+	  * @return A pointer that contains a black or white version of this icon,
+	  *         whichever is suitable against the specified background
+	  */
+	def against(backgroundPointer: Changing[Color]) =
+		againstVariableShade(colorToShadePointerCache(backgroundPointer))
+	/**
+	  * @param shadePointer A pointer that contains the background color shade
+	  * @return A pointer that contains either the black or the white version of this color,
+	  *         whichever is the more appropriate choice against that shading.
+	  */
+	def againstVariableShade(shadePointer: Changing[ColorShade]) =
+		againstShadePointerCache(shadePointer)
 	
 	/**
 	  * @param f A mapping function

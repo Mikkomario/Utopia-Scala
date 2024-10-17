@@ -1,7 +1,7 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.component.image.ImageComponent
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, ImageDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.factory.FramedFactory
@@ -283,7 +283,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
                               settings: ImageLabelSettings = ImageLabelSettings.default,
                               allowsUpscaling: Boolean = false)
 	extends ImageLabelFactoryLike[ImageLabelFactory, ViewImageLabelFactory] with BackgroundAssignable[ImageLabelFactory]
-		with FromContextFactory[ColorContext, ContextualImageLabelFactory]
+		with FromContextFactory[StaticColorContext, ContextualImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	
@@ -299,7 +299,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	
 	override def withBackground(background: Color): ImageLabelFactory = withCustomDrawer(BackgroundDrawer(background))
 	
-	override def withContext(context: ColorContext): ContextualImageLabelFactory =
+	override def withContext(context: StaticColorContext): ContextualImageLabelFactory =
 		ContextualImageLabelFactory(parentHierarchy, context, settings)
 	
 	
@@ -311,11 +311,11 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	def allowingImageUpscaling = copy(allowsUpscaling = true)
 }
 
-case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
-                                        settings: ImageLabelSettings = ImageLabelSettings.default)
+case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+                                       settings: ImageLabelSettings = ImageLabelSettings.default)
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
-		with ContextualBackgroundAssignableFactory[ColorContext, ContextualImageLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticColorContext, ContextualImageLabelFactory]
 		with ContextualFramedFactory[ContextualImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
@@ -325,12 +325,13 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	override protected def allowsUpscaling: Boolean = context.allowImageUpscaling
 	
 	override def toViewFactory: ContextualViewImageLabelFactory =
-		ContextualViewImageLabelFactory(parentHierarchy, Fixed(context), settings.toViewSettings)
+		ContextualViewImageLabelFactory(parentHierarchy, context.toVariableContext,
+			settings.toViewSettings)
 	
 	override def withSettings(settings: ImageLabelSettings): ContextualImageLabelFactory =
 		copy(settings = settings)
 	
-	override def withContext(context: ColorContext): ContextualImageLabelFactory = copy(context = context)
+	override def withContext(context: StaticColorContext): ContextualImageLabelFactory = copy(context = context)
 	
 	
 	// OTHER    --------------------------------

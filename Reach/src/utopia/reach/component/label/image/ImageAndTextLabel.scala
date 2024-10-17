@@ -437,7 +437,7 @@ object ImageAndTextLabel extends ImageAndTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: TextContext,
+class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                         image: Either[Image, SingleColorIcon], text: LocalizedString,
                         settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
                         commonInsets: StackInsets)
