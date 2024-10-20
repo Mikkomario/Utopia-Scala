@@ -12,6 +12,7 @@
   - Added `.mapFailure(...)`
 ### Other changes
 - `.allChildrenIterator` in Path (via **FileExtensions**) now returns the paths from top to bottom
+- Minor refactoring in **Duration**`.finite`
 - Minor refactoring in `ModelLike.apply(IterableOnce)`
 
 ## v2.5 - 04.10.2024

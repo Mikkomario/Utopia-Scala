@@ -269,7 +269,10 @@ object TimeExtensions
 		/**
 		  * @return A finite version of this duration. None for infinite durations.
 		  */
-		def finite = if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
+		def finite = d match {
+			case f: FiniteDuration => Some(f)
+			case d => if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
+		}
 		
 		/**
 		  * @return Describes this duration in a suitable unit and precision
