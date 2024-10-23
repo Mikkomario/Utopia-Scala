@@ -97,8 +97,8 @@ object Chat
 				.logWithMessage("Failed to parse chat tools")
 				.foreach { chat.tools = _ }
 			model("autoSummarizeAt").model.foreach { autoSummarize =>
-				chat.autoSummarizeThresholds = Some(Pair(
-					autoSummarize("tokens").getInt, autoSummarize("messages").getInt))
+				chat.autoSummarizeThresholds = Some((
+					autoSummarize("tokens").getInt, autoSummarize("messages").getInt, autoSummarize("preserve").getInt))
 			}
 			
 			chat
@@ -337,13 +337,14 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * A pointer that contains:
 	  *     1. The context size (token count) at which the conversation history will be
 	  *     automatically summarized in order to conserve space.
-	  *     1. The minimum number of messages in the message history before auto-summarization may be applied.
+	  *     1. The minimum number of messages to summarize before auto-summarization may be applied.
+	  *     1. The number of latest messages that will be preserved
 	  *
 	  * Contains None if auto-summarization is not used.
 	  *
 	  * During the auto-summarization process, no other messages are sent via this interface.
 	  */
-	val autoSummarizeAtTokensPointer = EventfulPointer.empty[Pair[Int]]
+	val autoSummarizeAtTokensPointer = EventfulPointer.empty[(Int, Int, Int)]
 	private val _summarizingFlag = ResettableFlag()
 	/**
 	  * A flag that contains true while this interface is forming a conversation summary.
@@ -476,12 +477,12 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	def summarizingFinishedFuture = _summarizingFlag.futureWhere { !_ }
 	
 	/**
-	  * @return A context size (token) threshold + minimum message history size (in number of messages),
+	  * @return A context size (token) threshold + minimum summarized message count + number of messages preserved,
 	  *         at which summarization may be automatically performed.
 	  *         None if auto-summarization is disabled.
 	  */
 	def autoSummarizeThresholds = autoSummarizeAtTokensPointer.value
-	def autoSummarizeThresholds_=(newThreshold: Option[Pair[Int]]) =
+	def autoSummarizeThresholds_=(newThreshold: Option[(Int, Int, Int)]) =
 		autoSummarizeAtTokensPointer.value = newThreshold
 	
 	/**
@@ -541,9 +542,10 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 			},
 			"lastPromptSize" -> lastPromptAndReplySize.first, "lastReplySize" -> lastPromptAndReplySize.second,
 			"settings" -> settings, "tools" -> tools,
-			"autoSummarizeAt" -> autoSummarizeAtTokensPointer.value.map { thresholds =>
-				Model.from("tokens" -> thresholds.first, "messages" -> thresholds.second)
-			}
+			"autoSummarizeAt" -> autoSummarizeAtTokensPointer.value
+				.map { case (contextSize, messageCount, preserveCount) =>
+					Model.from("tokens" -> contextSize, "messages" -> messageCount, "preserve" -> preserveCount)
+				}
 		)
 	}
 	
@@ -659,6 +661,8 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  *
 	  * It is recommended to call this function only once all other processes have completed.
 	  *
+	  * @param excludedMessageCount The number of most recent messages to exclude from this summarization process.
+	  *                             Default = 0 = summarize the whole chat history.
 	  * @param noStreaming Whether reply streaming should be disabled for this query (default = false)
 	  * @return Returns 2 values:
 	  *             1. A Schrödinger instance representing the acquired summary reply
@@ -668,17 +672,30 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  *
 	  * @see [[idleFuture]]
 	  */
-	def summarize(noStreaming: Boolean = false) = {
-		if (isSummarizing)
+	def summarize(excludedMessageCount: Int = 0, noStreaming: Boolean = false) = {
+		if (isSummarizing || excludedMessageCount >= messageHistory.size)
 			None
 		else {
+			// Extracts latest messages in order to preserve them
+			val extractedMessages = {
+				if (excludedMessageCount <= 0)
+					Empty
+				else
+					messageHistoryPointer
+						.mutate { history => history.splitAt(history.size - excludedMessageCount) }
+			}
+			
 			// Requests a summary from the LLM
 			val schrodinger = push("Summarize our conversation so far", noStreaming = noStreaming)
 			_summarizingFlag.set()
 			
 			// Once the summary has been fully received, removes the summarized message history
-			val historyFuture = schrodinger.finalResultFuture.map { _.wrapped.foreach { _ =>
-				messageHistoryPointer.mutate { history => history.splitAt(history.size - 2) }
+			// and adds back the extracted messages
+			val historyFuture = schrodinger.finalResultFuture.map { _.wrapped.map { _ =>
+				messageHistoryPointer.mutate { history =>
+					val (summarized, summary) = history.splitAt(history.size - 2)
+					summarized -> (summary ++ extractedMessages)
+				}
 			} }
 			historyFuture.onComplete { _ => _summarizingFlag.reset() }
 			
@@ -694,11 +711,15 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  *                             Default = Once the next request is expected to exceed 80% of the maximum context size.
 	  * @param minimumMessageCount Minimum amount of historical messages for the summarization to occur.
 	  *                            Counts both requests and replies.
-	  *                            Default = 6 = 3 requests + 3 replies.
+	  *                            Default = 4 = 2 requests + 2 replies.
+	  * @param keepMessageCount Number of latest messages to exclude from the summarization.
+	  *                         Includes queries & replies separately.
+	  *                         For best performance, you should specify an even number.
+	  *                         Default = 2 = the latest query & reply will be excluded.
 	  */
 	def setupAutoSummaries(contextSizeThreshold: Int = (maxContextSize * 0.8).toInt - (largestReplySize.smallestPossibleValue.getOrElse(0) max expectedReplySize),
-	                       minimumMessageCount: Int = 4) =
-		autoSummarizeThresholds = Some(Pair(contextSizeThreshold, minimumMessageCount))
+	                       minimumMessageCount: Int = 4, keepMessageCount: Int = 2) =
+		autoSummarizeThresholds = Some((contextSizeThreshold, minimumMessageCount, keepMessageCount))
 	/**
 	  * Disables the auto-summary feature, if it has been enabled.
 	  */
@@ -881,9 +902,9 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	  * Won't auto-summarize while messaging or summarizing.
 	  */
 	private def summarizeIfAppropriate() = {
-		autoSummarizeAtTokensPointer.value.foreach { case Pair(minContext, minMessageCount) =>
-			if (lastContextSize >= minContext && messageHistory.hasSize >= minMessageCount && idle)
-				summarize(noStreaming = true)
+		autoSummarizeAtTokensPointer.value.foreach { case (minContext, minMessageCount, excludeCount) =>
+			if (lastContextSize >= minContext && messageHistory.hasSize >= (minMessageCount + excludeCount) && idle)
+				summarize(excludeCount, noStreaming = true)
 		}
 	}
 	

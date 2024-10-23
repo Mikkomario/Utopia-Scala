@@ -1,8 +1,11 @@
 # Utopia Echo - List of Changes
 
-## v1.1.1 (in development)
+## v1.2 (in development)
+### Breaking changes
+- Changed **Chat**'s auto-summarization parameter syntax
 ### New features
 - Added saving & loading to **Chat**
+- **Chat**'s summarization process now supports message-exclusion
 - Added **ToolFactory** for loading tools from models
 - Added model conversions to **ModelSettings**
 ### New methods
