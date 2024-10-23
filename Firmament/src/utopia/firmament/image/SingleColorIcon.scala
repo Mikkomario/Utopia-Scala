@@ -193,7 +193,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * @return A pointer that contains a black or white version of this icon,
 	  *         whichever is suitable against the specified background
 	  */
-	def against(backgroundPointer: Changing[Color]) =
+	def against(backgroundPointer: Changing[Color]): Changing[Image] =
 		againstVariableShade(colorToShadePointerCache(backgroundPointer))
 	/**
 	  * @param shadePointer A pointer that contains the background color shade

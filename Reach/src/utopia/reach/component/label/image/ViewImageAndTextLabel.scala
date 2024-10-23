@@ -234,7 +234,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 {
 	// COMPUTED ----------------------
 	
-	private def resolveInsets = resolveVariableInsets(contextPointer, parentHierarchy)
+	private def resolveInsets = resolveInsetsIn(context)
 	
 	
 	// IMPLEMENTED  ------------------
@@ -250,8 +250,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	
 	// When (text) alignment is changed, also changes the image alignment
 	override def apply(alignment: Alignment) =
-		copy(contextPointer = contextPointer.map { _.withTextAlignment(alignment) },
-			settings = settings.withImageAlignment(alignment.opposite))
+		copy(context = context.withTextAlignment(alignment), settings = settings.withImageAlignment(alignment.opposite))
 	
 	
 	// OTHER    ---------------------
@@ -262,7 +261,8 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	  * @return Copy of this factory that places a color overlay, according to the specified pointer
 	  */
 	def withImageColorRolePointer(p: Changing[ColorRole], preferredShade: ColorLevel = Standard) =
-		withImageColorOverlayPointer(contextPointer.mergeWith(p) { _.color.preferring(preferredShade)(_) })
+		withImageColorOverlayPointer(context.colorPointer.preferring(preferredShade).forRole(p))
+	
 	/**
 	  * @param role The color role to use as image overlay color
 	  * @param preferredShade Preferred color shade to use (default = Standard)
@@ -287,9 +287,9 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	  * @return A new label
 	  */
 	def iconOrImage[A](itemPointer: Changing[A], imagePointer: Either[Changing[SingleColorIcon], Changing[Image]],
-	                          displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
+	                   displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
 	{
-		val label = new ViewImageAndTextLabel[A](parentHierarchy, contextPointer, itemPointer, imagePointer,
+		val label = new ViewImageAndTextLabel[A](parentHierarchy, context, itemPointer, imagePointer,
 			settings, resolveInsets, displayFunction)
 		if (drawBackground)
 			contextPointer.addContinuousListener { e =>
@@ -392,7 +392,7 @@ object ViewImageAndTextLabel extends ViewImageAndTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 9.11.2020, v0.1
   */
-class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                val itemPointer: Changing[A],
                                imgPointer: Either[Changing[SingleColorIcon], Changing[Image]],
                                settings: ViewImageAndTextLabelSettings,
@@ -403,17 +403,18 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, contextPoint
 	// ATTRIBUTES	-------------------------------
 	
 	override protected val wrapped = {
-		// TODO: Uses a static context here
 		// Calculates the actual insets for the image & text label
-		val textAlignment = contextPointer.value.textAlignment
+		val textAlignment = context.textAlignment
 		val imageAlignment = textAlignment.opposite
 		
 		val imageInsetsPointer = settings.imageInsetsPointer
 			.mergeWith(commonInsetsPointer) { (a, b) => (a max b) -- imageAlignment.directions }
-		val appliedContextPointer = contextPointer.mergeWith(commonInsetsPointer) { (c, insets) =>
-			c.mapTextInsets { tInsets => (tInsets max insets) -- textAlignment.directions }
-		}
+		val appliedContext = context
+			.mapTextInsetsPointer { _.mergeWith(commonInsetsPointer) { (textInsets, commonInsets) =>
+				(textInsets max commonInsets) -- textAlignment.directions
+			} }
 		
+		// TODO: Continue refactoring once Stack is OK
 		Stack.withContext(parentHierarchy, contextPointer.value)
 			.withMargin(settings.separatingMargin)
 			.withCustomDrawers(settings.customDrawers)

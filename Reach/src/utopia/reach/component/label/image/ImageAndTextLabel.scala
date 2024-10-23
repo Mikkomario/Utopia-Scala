@@ -1,6 +1,5 @@
 package utopia.reach.component.label.image
 
-import utopia.firmament.context.TextContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
@@ -18,7 +17,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory, Mixed, UnresolvedFramedFactory}
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed, UnresolvedFramedFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.TextLabel
@@ -319,7 +318,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return A factory resembling this factory, which may be used for constructing view-based labels
 	  */
 	def toViewFactory: ContextualViewImageAndTextLabelFactory =
-		ContextualViewImageAndTextLabelFactory(parentHierarchy, Fixed(context), settings.toViewSettings)
+		ContextualViewImageAndTextLabelFactory(parentHierarchy, context.toVariableContext, settings.toViewSettings)
 	
 	private def resolveInsets = resolveInsetsIn(context)
 	
@@ -398,16 +397,8 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 		mapImageSettings { _.withColor(context.color.preferring(preferredShade)(role)) }.apply(icon, text)
 }
 
-@deprecated("Deprecated for removal", "v1.2")
-class ImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualImageAndTextLabelFactory]
-{
-	override def withContext(context: TextContext) =
-		ContextualImageAndTextLabelFactory(parentHierarchy, context)
-}
-
 /**
-  * Used for defining image and text label creation settings outside of the component building process
+  * Used for defining image and text label creation settings outside the component building process
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */

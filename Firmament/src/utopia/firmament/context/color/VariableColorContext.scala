@@ -1,6 +1,7 @@
 package utopia.firmament.context.color
 
 import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
+import utopia.firmament.context.color.VariableColorContext.ColorPointerAccess
 import utopia.firmament.context.text.VariableTextContext
 import utopia.flow.collection.immutable.caching.cache.{Cache, WeakCache}
 import utopia.flow.util.EitherExtensions._
@@ -32,6 +33,10 @@ object VariableColorContext
 	private val textIsLargePointerCache =
 		WeakCache[Changing[Font], Flag] { fontPointer: Changing[Font] => fontPointer.map { _.isLargeOnScreen } }
 	
+	// 2 levels deep cache, where the keys are:
+	//      1) Color scheme
+	//      2) Color role pointer
+	// And values are color set pointers
 	private val rolePointerToSetPointerCache = WeakCache.weakKeys { colorScheme: ColorScheme =>
 		WeakCache { roleP: Changing[ColorRole] => roleP.map { colorScheme(_) } }
 	}
@@ -39,23 +44,23 @@ object VariableColorContext
 	// 4 levels deep cache system for weakly storing generated pointers
 	// Keys are:
 	//      1) Background color pointer
-	//      2) Expects small objects -flag
+	//      2) Expects large objects -flag
 	//      3) Applied color contrast standard
 	//      4) Either
 	//          4.1) Color set + preferred color level => Best contextual color pointer
 	//          4.2) Color set + preferred color level + competing colors => Best contextual color pointer
 	private val colorPointersCache = WeakCache.weakKeys { bgP: Changing[Color] =>
-		WeakCache.weakKeys { smallFlag: Changing[Boolean] =>
+		WeakCache.weakKeys { largeFlag: Changing[Boolean] =>
 			Cache { standard: ColorContrastStandard =>
 				val colorCache = WeakCache.weakValues[(ColorSet, ColorLevel), Changing[Color]] { case (color, level) =>
-					bgP.mergeWith(smallFlag) { (bg, small) =>
-						color.against(bg, level, standard.minimumContrast(large = !small))
+					bgP.mergeWith(largeFlag) { (bg, large) =>
+						color.against(bg, level, standard.minimumContrast(large = large))
 					}
 				}
 				val colorsCache = WeakCache
 					.weakValues[(ColorSet, ColorLevel, Seq[Color]), Changing[Color]] { case (color, level, others) =>
-						bgP.mergeWith(smallFlag) { (bg, small) =>
-							color.againstMany(bg +: others, level, standard.minimumContrast(large = !small))
+						bgP.mergeWith(largeFlag) { (bg, large) =>
+							color.againstMany(bg +: others, level, standard.minimumContrast(large = large))
 						}
 					}
 				(colorCache, colorsCache)
@@ -243,24 +248,24 @@ object VariableColorContext
 	}
 	
 	class ColorPointerAccess(context: VariableColorContext, preferredLevel: ColorLevel = Standard,
-	                         expectsSmallObjectsFlag: Flag = AlwaysFalse)
+	                         expectsLargeObjectsFlag: Flag = AlwaysTrue)
 		extends ColorAccess[Changing[Color]] with ColorAccessLike[Changing[Color], ColorPointerAccess]
 	{
 		// ATTRIBUTES   ------------------
 		
 		private lazy val (colorCache, colorsCache) =
-			colorPointersCache(context.backgroundPointer)(expectsSmallObjectsFlag)(context.contrastStandard)
+			colorPointersCache(context.backgroundPointer)(expectsLargeObjectsFlag)(context.contrastStandard)
 		
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def expectingSmallObjects: ColorPointerAccess = withExpectingSmallObjectsFlag(AlwaysTrue)
-		override def expectingLargeObjects: ColorPointerAccess = withExpectingSmallObjectsFlag(AlwaysFalse)
+		override def expectingSmallObjects: ColorPointerAccess = withExpectingLargeObjectsFlag(AlwaysTrue)
+		override def expectingLargeObjects: ColorPointerAccess = withExpectingLargeObjectsFlag(AlwaysFalse)
 		override def forText: ColorPointerAccess =
-			withExpectingSmallObjectsFlag(textIsLargePointerCache(context.fontPointer))
+			withExpectingLargeObjectsFlag(textIsLargePointerCache(context.fontPointer))
 		
 		override def preferring(level: ColorLevel): ColorPointerAccess =
-			new ColorPointerAccess(context, level, expectsSmallObjectsFlag)
+			new ColorPointerAccess(context, level, expectsLargeObjectsFlag)
 		
 		override def apply(color: ColorSet): Changing[Color] = colorCache(color -> preferredLevel)
 		override def apply(role: ColorRole): Changing[Color] = apply(context.colors(role))
@@ -271,13 +276,27 @@ object VariableColorContext
 		
 		// OTHER    ---------------------------
 		
-		// TODO: Add variants which accept a color set pointer or a role pointer
+		/**
+		  * @param colorSetPointer A pointer that contains the color set to apply
+		  * @return A pointer that contains version from the specified pointer's current set value,
+		  *         which is best within the current context
+		  */
+		def apply(colorSetPointer: Changing[ColorSet]) =
+			colorFromSetPointer(context.contrastStandard, colorSetPointer, context.backgroundPointer, preferredLevel,
+				expectsLargeObjectsFlag)
+		/**
+		  * @param rolePointer A pointer that contains the color role to apply
+		  * @return A pointer that contains version from the specified pointer's current color role,
+		  *         which is best within the current context
+		  */
+		def forRole(rolePointer: Changing[ColorRole]) =
+			apply(rolePointerToSetPointerCache(context.colors)(rolePointer))
 		
 		/**
-		  * @param f A flag that determines whether to expect small text or other small objects
+		  * @param f A flag that determines whether to expect larger text or other color areas
 		  * @return Copy of this color access with the specified flag applied
 		  */
-		def withExpectingSmallObjectsFlag(f: Flag) = new ColorPointerAccess(context, preferredLevel, f)
+		def withExpectingLargeObjectsFlag(f: Flag) = new ColorPointerAccess(context, preferredLevel, f)
 	}
 }
 
@@ -290,3 +309,6 @@ object VariableColorContext
 trait VariableColorContext
 	extends VariableBaseContext with ColorContext2
 		with VariableColorContextLike[VariableColorContext, VariableTextContext]
+{
+	override def colorPointer: ColorPointerAccess
+}
