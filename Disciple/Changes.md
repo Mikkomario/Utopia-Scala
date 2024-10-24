@@ -2,6 +2,8 @@
 
 ## v1.7.1 - 04.10.2024
 This small update introduces new utility functions for response-parsing.
+### Bugfixes
+- Fixed a bug in timeout combination logic, which caused timeouts to not get applied in outgoing requests
 ### New methods
 - **ResponseParser**
   - Added multiple new methods for **ResponseParsers** of type **Either**

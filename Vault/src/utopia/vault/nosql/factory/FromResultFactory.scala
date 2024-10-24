@@ -106,7 +106,6 @@ trait FromResultFactory[+A] extends HasTable
 	             joinType: JoinType = Inner)
 	            (implicit connection: Connection) =
 		apply(connection(expandedSelect(joins, joinType) + Where(where) + order.orElse(defaultOrdering)))
-	
 	/**
 	  * Finds possibly multiple instances from the database. Performs a single join, but doesn't select the columns
 	  * from the joined table.
@@ -184,12 +183,21 @@ trait FromResultFactory[+A] extends HasTable
 	  * @param joins Applied joins
 	  * @return A select statement including the specified joins
 	  */
-	protected def expandedSelect(joins: Seq[Joinable], joinType: JoinType) = {
-		if (joins.isEmpty)
-			select
-		else {
-			val appliedTarget = if (selectTarget == All) Tables(tables) else selectTarget
-			appliedTarget.toSelect(joins.foldLeft(target) { _.join(_, joinType) })
+	protected def expandedSelect(joins: Seq[Joinable] = Empty, joinType: JoinType = Inner,
+	                             additionalSelect: Option[SelectTarget] = None) =
+	{
+		if (joins.isEmpty) {
+			additionalSelect match {
+				case Some(additional) => (selectTarget + additional).toSelect(target)
+				case None => select
+			}
+		} else {
+			val base = if (selectTarget == All) Tables(tables) else selectTarget
+			val applied = additionalSelect match {
+				case Some(additional) => base + additional
+				case None => base
+			}
+			applied.toSelect(joins.foldLeft(target) { _.join(_, joinType) })
 		}
 	}
 }

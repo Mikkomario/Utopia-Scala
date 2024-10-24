@@ -119,9 +119,7 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	
 	override def toString = {
 		if (nonEmpty)
-			thresholds.map { case (timeoutType, duration) =>
-				s"$timeoutType: ${duration.description}"
-			}.mkString(", ")
+			thresholds.map { case (timeoutType, duration) => s"$timeoutType: ${duration.description}" }.mkString(", ")
 		else
 			"No timeout"
 	}
@@ -216,6 +214,6 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @return Combined timeout collection
 	  */
 	def mergeWith(other: Timeout)(select: Seq[FiniteDuration] => FiniteDuration) =
-		Timeout((thresholds.keySet & other.thresholds.keySet)
+		Timeout((thresholds.keySet ++ other.thresholds.keySet)
 			.map { key => key -> select(Pair(this, other).flatMap { _.get(key) }) }.toMap)
 }
