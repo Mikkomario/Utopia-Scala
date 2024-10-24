@@ -28,7 +28,7 @@ object FromVariableContextFactory
 }
 
 /**
-  * Common trait for factories that accept a variable context (i.e. a context pointer) and yield another object
+  * Common trait for factories that accept a variable context and yield another object
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */

@@ -104,6 +104,8 @@ object VariableTextContext
 		override def textDrawContextPointer: Changing[TextDrawContext] = lazyTextDrawContextPointer.value
 		override def hintTextDrawContextPointer: Changing[TextDrawContext] = lazyHintTextDrawContextPointer.value
 		
+		override def colorPointer = base.colorPointer
+		
 		override def current = StaticTextContext(base.current, textAlignment, customPromptFontPointer.map { _.value },
 			if (textInsetsAreCustom) Some(textInsetsPointer.value) else None, lineSplitThresholdPointer.map { _.value },
 			Some(betweenLinesMargin), allowLineBreaks, allowTextShrink)

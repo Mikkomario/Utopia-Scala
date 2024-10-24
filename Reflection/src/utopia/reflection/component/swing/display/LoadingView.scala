@@ -1,19 +1,20 @@
 package utopia.reflection.component.swing.display
 
-import utopia.firmament.context.{AnimationContext, TextContext}
+import utopia.firmament.context.AnimationContext
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.LengthExtensions.LengthNumber
+import utopia.firmament.model.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.paradigm.enumeration.Direction2D.Up
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.paradigm.enumeration.Alignment.BottomLeft
-import utopia.firmament.model.stack.LengthExtensions.LengthNumber
-import utopia.firmament.model.stack.modifier.{ExpandingLengthModifier, NoShrinkingLengthModifier}
 import utopia.reflection.util.ProgressState
 
 import scala.concurrent.ExecutionContext

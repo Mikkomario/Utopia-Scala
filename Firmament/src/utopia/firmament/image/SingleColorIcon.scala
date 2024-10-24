@@ -1,7 +1,7 @@
 package utopia.firmament.image
 
 import utopia.firmament.context.ComponentCreationDefaults
-import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.color.{ColorContextPropsView, StaticColorContext}
 import utopia.firmament.image.SingleColorIcon.colorToShadePointerCache
 import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.Pair
@@ -151,6 +151,12 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * @return A black or a white icon, whichever is better suited to the current context
 	  */
 	def contextual(implicit context: StaticColorContext) = against(context.background)
+	/**
+	  * @param context Implicit component-creation context
+	  * @return A pointer which contains either a black or a white version of this icon,
+	  *         whichever is better suited against the current (possibly changing) context background
+	  */
+	def variableContextual(implicit context: ColorContextPropsView) = against(context.backgroundPointer)
 	
 	
 	// IMPLEMENTED  -----------------------

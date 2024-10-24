@@ -1,17 +1,17 @@
 package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.text.MutableTextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.view.TextViewDrawer
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
-import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.stack.StackInsets
 
 object TextLabel
 {

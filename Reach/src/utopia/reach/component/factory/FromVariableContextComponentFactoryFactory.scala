@@ -3,6 +3,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
+@deprecated("Since the addition of variable context classes, there's no more need for this trait. Use FromContextComponentFactoryFactory (Ccff) instead", "v1.4")
 object FromVariableContextComponentFactoryFactory
 {
 	/**
@@ -18,6 +19,7 @@ object FromVariableContextComponentFactoryFactory
   * @tparam N Type of context accepted by this factory
   * @tparam CF Type of component factories produced by this factory
   */
+@deprecated("Since the addition of variable context classes, there's no more need for this trait. Use FromContextComponentFactoryFactory (Ccff) instead", "v1.4")
 trait FromVariableContextComponentFactoryFactory[-N, +CF] extends FromContextComponentFactoryFactory[N, CF]
 {
 	// ABSTRACT --------------------------

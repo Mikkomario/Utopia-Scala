@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -304,12 +304,12 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
                         margin: StackLength = StackLength.any)
 	extends StackFactoryLike[StackFactory]
-		with FromGenericContextFactory[BaseContext, ContextualStackFactory]
+		with FromGenericContextFactory[StaticBaseContext, ContextualStackFactory]
 		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def withContext[N <: BaseContext](context: N): ContextualStackFactory[N] =
+	override def withContext[N <: StaticBaseContext](context: N): ContextualStackFactory[N] =
 		ContextualStackFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings): StackFactory = copy(settings = settings)
@@ -372,12 +372,12 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                     settings: StackSettings = StackSettings.default,
-                                                     customMargin: Option[StackLength] = None,
-                                                     areRelated: Boolean = false)
+case class ContextualStackFactory[+N <: StaticBaseContext](parentHierarchy: ComponentHierarchy, context: N,
+                                                           settings: StackSettings = StackSettings.default,
+                                                           customMargin: Option[StackLength] = None,
+                                                           areRelated: Boolean = false)
 	extends StackFactoryLike[ContextualStackFactory[N]]
-		with ContextualCombiningContainerFactory[N, BaseContext, Stack, ReachComponentLike, ContextualStackFactory]
+		with ContextualCombiningContainerFactory[N, StaticBaseContext, Stack, ReachComponentLike, ContextualStackFactory]
 {
 	// COMPUTED -------------------------------
 	
@@ -398,7 +398,7 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
 	}
 	
 	override def withSettings(settings: StackSettings): ContextualStackFactory[N] = copy(settings = settings)
-	override def withContext[N2 <: BaseContext](newContext: N2): ContextualStackFactory[N2] =
+	override def withContext[N2 <: StaticBaseContext](newContext: N2): ContextualStackFactory[N2] =
 		copy(context = newContext)
 	override def withMargin(margin: StackLength) =
 		copy(customMargin = Some(margin))
@@ -477,13 +477,13 @@ case class ContextualStackFactory[+N <: BaseContext](parentHierarchy: ComponentH
   * @since 02.06.2023, v1.1
   */
 case class StackSetup(settings: StackSettings = StackSettings.default)
-	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory] with Gccff[BaseContext, ContextualStackFactory]
+	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory] with Gccff[StaticBaseContext, ContextualStackFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy, settings)
 	
-	override def withContext[N <: BaseContext](hierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
+	override def withContext[N <: StaticBaseContext](hierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
 		ContextualStackFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings) = copy(settings = settings)

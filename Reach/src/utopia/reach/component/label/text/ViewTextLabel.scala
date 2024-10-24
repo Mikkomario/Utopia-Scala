@@ -3,6 +3,7 @@ package utopia.reach.component.label.text
 import utopia.firmament.component.display.PoolWithPointer
 import utopia.firmament.component.text.TextComponent
 import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
@@ -22,13 +23,18 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 import utopia.genesis.graphics.Priority
 
-case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                           customDrawers: Seq[CustomDrawer] = Empty,
                                           isHintPointer: Changing[Boolean] = AlwaysFalse,
                                           drawBackground: Boolean = false)
-	extends VariableBackgroundRoleAssignableFactory[TextContext, ContextualViewTextLabelFactory]
+	extends VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ContextualViewTextLabelFactory]
 {
+	// ATTRIBUTES   -----------------------------
+	
+	private lazy val stylePointer = context.textDrawContextPointerFor(isHintPointer)
+	
+	
 	// COMPUTED ---------------------------------
 	
 	/**
@@ -41,21 +47,16 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  */
 	def hint = withIsHintPointer(AlwaysTrue)
 	
-	private def stylePointer = contextPointer.mergeWith(isHintPointer) { (context, isHint) =>
-		TextDrawContext.createContextual(isHint)(context)
-	}
-	
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextLabelFactory = copy(contextPointer = p)
+	override def withContext(p: VariableTextContext): ContextualViewTextLabelFactory = copy(context = p)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextLabelFactory =
 		copy(customDrawers = drawers)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualViewTextLabelFactory =
-		copy(contextPointer = newContextPointer, customDrawers = backgroundDrawer +: customDrawers,
-			drawBackground = true)
+		copy(context = newContext, customDrawers = backgroundDrawer +: customDrawers, drawBackground = true)
 	
 	
 	// OTHER	---------------------------------

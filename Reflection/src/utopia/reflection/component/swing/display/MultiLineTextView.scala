@@ -1,10 +1,13 @@
 package utopia.reflection.component.swing.display
 
 import utopia.firmament.component.text.HasMutableTextDrawContext
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.localization.{LocalString, LocalizedString}
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.firmament.model.stack.modifier.StackSizeModifier
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.StringExtensions._
@@ -17,9 +20,6 @@ import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWr
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, SwitchPanel}
-import utopia.firmament.localization.{LocalString, LocalizedString}
-import utopia.firmament.model.stack.modifier.StackSizeModifier
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 object MultiLineTextView
 {

@@ -292,10 +292,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 		val label = new ViewImageAndTextLabel[A](parentHierarchy, context, itemPointer, imagePointer,
 			settings, resolveInsets, displayFunction)
 		if (drawBackground)
-			contextPointer.addContinuousListener { e =>
-				if (e.values.isAsymmetricBy { _.background })
-					label.repaint()
-			}
+			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label
 	}
 	/**
@@ -363,21 +360,15 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
   */
 case class ViewImageAndTextLabelSetup(settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
 	extends ViewImageAndTextLabelSettingsWrapper[ViewImageAndTextLabelSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualViewImageAndTextLabelFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualViewImageAndTextLabelFactory(hierarchy, Fixed(context), settings)
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
+		ContextualViewImageAndTextLabelFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)
-	
-	
-	// OTHER    ------------------------
-	
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualViewImageAndTextLabelFactory(hierarchy, context, settings)
 }
 
 object ViewImageAndTextLabel extends ViewImageAndTextLabelSetup()
@@ -414,16 +405,17 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, context: Var
 				(textInsets max commonInsets) -- textAlignment.directions
 			} }
 		
-		// TODO: Continue refactoring once Stack is OK
-		Stack.withContext(parentHierarchy, contextPointer.value)
+		// TODO: Utilize a view stack here in order to support variable context
+		Stack.withContext(parentHierarchy, appliedContext.current)
 			.withMargin(settings.separatingMargin)
 			.withCustomDrawers(settings.customDrawers)
 			.buildPair(Mixed, textAlignment, forceFitLayout = settings.forceEqualBreadth) { factories =>
-				val imageLabel = factories(ViewImageLabel).withContextPointer(contextPointer)
+				val variableFactories = factories.withContext(appliedContext)
+				val imageLabel = variableFactories(ViewImageLabel)
 					.withSettings(settings.imageSettings)
 					.withInsetsPointer(imageInsetsPointer)
 					.iconOrImagePointer(imgPointer)
-				val textLabel = factories(ViewTextLabel).withContextPointer(appliedContextPointer)
+				val textLabel = variableFactories(ViewTextLabel)
 					.apply(itemPointer, displayFunction)
 				Pair(imageLabel, textLabel)
 			}

@@ -1,7 +1,6 @@
 package utopia.reach.component.label.image
 
-import utopia.firmament.context.ColorContext
-import utopia.firmament.context.color.VariableColorContext
+import utopia.firmament.context.color.{ColorContextPropsView, VariableColorContext}
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ViewImageDrawer
@@ -26,7 +25,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 
@@ -281,7 +280,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 	  *                The icon pointer, if present, must be companied by a context pointer.
 	  * @return A new view image label where appropriate image-altering functions have been applied
 	  */
-	protected def _imageOrIcon(pointer: Either[(Changing[SingleColorIcon], Changing[ColorContext]), Changing[Image]]) = {
+	protected def _imageOrIcon(pointer: Either[(Changing[SingleColorIcon], ColorContextPropsView), Changing[Image]]) = {
 		// Applies to color overlay, if applicable
 		val coloredPointer = colorOverlayPointer match {
 			// Case: Color overlay used
@@ -304,8 +303,8 @@ trait ViewImageLabelFactoryLike[+Repr]
 				}
 			// Case: No color overlay => If using icons, colors according to the context background
 			case None =>
-				pointer.rightOrMap { case (iconPointer, contextPointer) =>
-					iconPointer.mergeWith(contextPointer) { (icon, context) => icon.contextual(context) }
+				pointer.rightOrMap { case (iconPointer, context) =>
+					iconPointer.flatMap { _.variableContextual(context) }
 				}
 		}
 		// Applies image scaling, also
@@ -369,13 +368,10 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
 	  * @return A label that displays the specified icon or image
 	  */
 	def iconOrImagePointer(pointer: Either[Changing[SingleColorIcon], Changing[Image]]) = {
-		val label = _imageOrIcon(pointer.mapLeft { _ -> contextPointer })
+		val label = _imageOrIcon(pointer.mapLeft { _ -> context })
 		// If background drawing is enabled, repaints when background color changes
 		if (drawBackground)
-			contextPointer.addContinuousListener { e =>
-				if (e.values.isAsymmetricBy { _.background })
-					label.repaint()
-			}
+			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label
 	}
 	/**
@@ -408,7 +404,7 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
                                  settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                  allowUpscalingPointer: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
-		with FromVariableContextFactory[ColorContext, ContextualViewImageLabelFactory]
+		with FromContextFactory[VariableColorContext, ContextualViewImageLabelFactory]
 {
 	// COMPUTED ------------------------
 	
@@ -425,7 +421,7 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelFactory = copy(settings = settings)
 	override def withBackground(background: Color): ViewImageLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
-	override def withContextPointer(context: Changing[ColorContext]) =
+	override def withContext(context: VariableColorContext) =
 		ContextualViewImageLabelFactory(parentHierarchy, context, settings)
 	
 	override def *(mod: Double): ViewImageLabelFactory = withInsetsScaledBy(mod).withImageScaledBy(mod)
@@ -448,12 +444,12 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 case class ViewImageLabelSetup(settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
 	extends ViewImageLabelSettingsWrapper[ViewImageLabelSetup]
 		with Cff[ViewImageLabelFactory]
-		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualViewImageLabelFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, ContextualViewImageLabelFactory]
 {
 	override def self: ViewImageLabelSetup = this
 	override def *(mod: Double): ViewImageLabelSetup = mapSettings { _ * mod }
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[ColorContext]): ContextualViewImageLabelFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext): ContextualViewImageLabelFactory =
 		ContextualViewImageLabelFactory(hierarchy, context, settings)
 	override def withSettings(settings: ViewImageLabelSettings): ViewImageLabelSetup = copy(settings = settings)
 	override def apply(hierarchy: ComponentHierarchy) = ViewImageLabelFactory(hierarchy, settings)
