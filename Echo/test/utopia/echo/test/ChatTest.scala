@@ -7,8 +7,8 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
-import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
@@ -28,6 +28,11 @@ import scala.util.{Failure, Success}
   */
 object ChatTest extends App
 {
+	// ATTRIBUTES   -------------------
+	
+	private val multiLineIndicator = "\"\"\""
+	
+	
 	// APP CODE -----------------------
 	
 	// Prompts the user to select the LLM to use
@@ -93,7 +98,7 @@ object ChatTest extends App
 		newSystemMessage.foreach(chat.appendSystemMessage)
 		
 		// Starts the interaction loop
-		println("Welcome. Write a message to ask something. Write /clear to clear the conversation history. Write /bye to exit. Write /options to modify model parameters.")
+		println("Welcome. Write a message to ask something.")
 		println("You also have the following commands available to you:")
 		println("\t/bye or /exit - Closes this application")
 		println("\t/clear - Clears the conversation history")
@@ -102,11 +107,14 @@ object ChatTest extends App
 		println("\t/settings - Modifies chat settings")
 		println("\t/summarize - Summarizes the conversation history in order to conserve context space")
 		println("\t/save - Saves the current chat to a local file")
-		println("Note: Currently only single line messages are supported.")
+		println(s"You can write multi-line messages if you start and end the message with $multiLineIndicator.")
 		var open = true
 		while (open) {
 			println("Waiting for the next input")
-			val input = StdIn.readLine().trim
+			val input = requestMultiLineString() match {
+				case Some(input) => input.trim
+				case None => ""
+			}
 			if (input.startsWith("/bye") || input.startsWith("/exit"))
 				open = false
 			else if (input.startsWith("/clear")) {
@@ -235,9 +243,31 @@ object ChatTest extends App
 	
 	// OTHER    ----------------------------
 	
-	private def requestSystemMessage() = {
-		println("Please specify the system message to use. Empty line ends input.")
-		OptionsIterator.continually(StdIn.readNonEmptyLine()).mkString("\n").trim
-			.ifNotEmpty
+	private def requestSystemMessage() =
+		requestMultiLineString(
+			s"Please specify the system message to use. You can write multiple lines if you start and end with $multiLineIndicator.")
+	
+	private def requestMultiLineString(prompt: String = ""): Option[String] = {
+		StdIn.readNonEmptyLine(prompt).map { firstLine =>
+			// Case: Multi-line input
+			if (firstLine.startsWith(multiLineIndicator)) {
+				// Case: Single-line multi-line input => Removes the multi-line indicators
+				if (firstLine.endsWith(multiLineIndicator))
+					firstLine.drop(multiLineIndicator.length).dropRight(multiLineIndicator.length)
+				// Case: Actual multi-line input => Reads until user ends with """
+				else {
+					val moreLines = Iterator.continually { StdIn.readLine() }
+						.takeTo { _.endsWith(multiLineIndicator) }
+						.toOptimizedSeq
+					((firstLine.drop(multiLineIndicator.length) +: moreLines.dropRight(1)) :+
+						moreLines.last.dropRight(multiLineIndicator.length))
+						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty }
+							.mkString("\n")
+				}
+			}
+			// Case: Single-line input
+			else
+				firstLine
+		}
 	}
 }
