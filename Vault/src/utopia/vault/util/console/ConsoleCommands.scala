@@ -1,11 +1,12 @@
 package utopia.vault.util.console
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Single, TreeLike, ViewGraphNode}
+import utopia.flow.collection.immutable.{Empty, Pair, Single, TreeLike, ViewGraphNode}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
+import utopia.flow.view.template.Extender
 import utopia.vault.context.VaultContext
 import utopia.vault.database.References
 import utopia.vault.model.immutable.{Reference, Table}
@@ -28,23 +29,30 @@ private object ConsoleCommands
 	private object HierarchicalTable
 	{
 		// Expects a bidirectional reference graph
-		def build(graph: ViewGraphNode[(Table, Int), (Reference, Boolean)], from: Option[Table] = None): HierarchicalTable = {
+		def build(graph: ViewGraphNode[(Table, Int), (Reference, Boolean)], from: Option[Table] = None,
+		          alwaysIncludeChildren: Boolean = false): HierarchicalTable =
+		{
 			val table = graph.value._1
+			val childEdges = graph.leavingEdges.view
+				.filterNot { _._2 }.filterNot { edge => from.contains(edge._1.to.table) }
+				.toOptimizedSeq
 			
 			val parents = graph.leavingEdges.view.filter { _._2 }.map { _.end }
 				.toOptimizedSeq.sorted.map { _._1.name }
-			val primaryParent = parents.headOption.filterNot { p => from.exists { _.name == p } }
+			val primaryParent = {
+				if (childEdges.nonEmpty)
+					parents.headOption.filterNot { p => from.exists { _.name == p } }
+				else
+					None
+			}
 			val otherParents = parents.filterNot { p => from.exists { _.name == p } || primaryParent.contains(p) }
 			
 			val children = {
 				// Case: Primary parent defined elsewhere => Children won't be listed under this node
-				if (primaryParent.isEmpty)
+				if (primaryParent.isDefined && !alwaysIncludeChildren)
 					Empty
 				else
-					graph.leavingEdges.view
-						.filterNot { _._2 }.filterNot { edge => from.contains(edge._1.to.table) }
-						.toOptimizedSeq.sortBy { _.end }
-						.map { edge => build(edge.end, Some(table)) }
+					childEdges.sortBy { _.end }.map { edge => build(edge.end, Some(table), alwaysIncludeChildren) }
 			}
 			
 			HierarchicalTable(table.name, otherParents, primaryParent, children)
@@ -85,7 +93,7 @@ private object ConsoleCommands
   * @author Mikko Hilpinen
   * @since 28.10.2024, v1.20.1
   */
-class ConsoleCommands(implicit context: VaultContext)
+class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Command]]
 {
 	import ConsoleCommands._
 	
@@ -127,17 +135,22 @@ class ConsoleCommands(implicit context: VaultContext)
 							// Writes the parent tables
 							val parents = References.parentsTree(table).map { _.name }
 							if (parents.children.nonEmpty) {
-								println("Parents:")
-								parents.children.foreach { printTree(_) }
+								println("\nParents:")
+								parents.children.foreach { printTree(_, 1) }
 							}
-								
-							// Writes the table hierarchy downwards
+							
 							val tableReferenceCounts = References.referenceTree(table).allNodesIterator
 								.map { n => n.nav -> n.size }.toMap
 							val graph = References.toBiDirectionalLinkGraphFrom(table)
-								.mapValues { t => t -> tableReferenceCounts(t) }
-							println()
-							HierarchicalTable.build(graph).print()
+								.mapValues { t => t -> tableReferenceCounts.getOrElse(t, 0) }
+							val hierarchy = HierarchicalTable.build(graph, alwaysIncludeChildren = true)
+							
+							if (hierarchy.children.isEmpty)
+								println("\nNo tables depend from this one")
+							else {
+								println("\nChildren:")
+								hierarchy.children.foreach { _.print(1) }
+							}
 						
 						case _ => println(s"Table $tableName doesn't exist in database ${ context.databaseName }")
 					}
@@ -166,6 +179,8 @@ class ConsoleCommands(implicit context: VaultContext)
 					}
 			}
 	}
+	
+	override lazy val wrapped: Seq[Command] = Pair(listTables, listDependencies)
 	
 	
 	// OTHER    --------------------------

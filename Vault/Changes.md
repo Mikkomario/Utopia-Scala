@@ -13,6 +13,7 @@
 - **ManyRowModelAccess**
   - Added `.pullWithColumn(...)` and `.groupByColumn(...)`
 - **References**
+  - Added `.parentsTree(Table)` for listing references as a tree
   - Added `.replace(...)` for replacing all references made to a database row
 ### Other changes
 - **FromResultFactory**'s `.expandedSelect(...)` now supports inclusion of additional selected items 
