@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.1 (in development)
+### New features
+- Added **ConsoleCommands**, which provides some utility database commands for command line consoles
 ### New methods
 - **ConditionElement**
   - Added `.length` for string length-based conditions

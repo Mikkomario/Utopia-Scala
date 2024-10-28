@@ -239,6 +239,15 @@ object References
       *         The references in the result point from tree leaves towards the root of the tree.
      */
     def referenceTree(root: Table) = toReverseLinkGraphFrom(root).toTree.map { _.value }
+    /**
+      * Forms a tree based on table references where the root is the specified table and node children are tables
+      * referenced from the higher tables in the tree.
+      * No table is added twice to a single branch, although a table may exist in multiple branches at the same time.
+      * @param root Table that will form the reference tree root
+      * @return A reference tree where the specified table is the root and tables referenced from that table are below it.
+      *         The references in the result point from the root towards the leaves of the tree.
+      */
+    def parentsTree(root: Table) = toLinkGraphFrom(root).toTree.map { _.value }
     
     /**
      * Clears all cached reference data concerning a single database
