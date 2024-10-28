@@ -75,6 +75,7 @@ trait StreamedResponseParser[R, V] extends ResponseParser[R]
 	
 	// IMPLEMENTED  -------------------------
 	
+	// TODO: Add support for interrupting the streaming, here
 	override def apply(status: Status, headers: Headers, stream: Option[InputStream]) = {
 		stream match {
 			// Case: Streamed response => Starts parsing the stream json contents

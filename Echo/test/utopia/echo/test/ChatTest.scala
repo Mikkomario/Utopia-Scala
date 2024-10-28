@@ -225,7 +225,9 @@ object ChatTest extends App
 					Paths.get(s"Echo/data/test-output/${ fileName.endingWith(".json") }").writeJson(chat).log
 						.foreach { path => println(s"Current chat status saved to $path") }
 				}
-			else if (input.nonEmpty) {
+			else if (input.startsWith("/"))
+				println("Unrecognized command")
+			else if (input.exists { _.isLetter }) {
 				val schrodinger = chat.push(input)
 				println("\nWaiting for the response...\n")
 				schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
