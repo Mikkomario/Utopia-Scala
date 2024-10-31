@@ -1,5 +1,16 @@
 # Utopia Disciple - List of Changes
 
+## v1.8 (in development)
+### Breaking changes
+- Because response body-accessing failures are now logged, **Gateway** functions now require an implicit **Logger**
+### Other changes
+- **Gateway** now checks whether the incoming response body input stream is empty, 
+  in which case it passes `None` (instead of `Some[InputStream]`) to the utilized **ResponseParser**.
+- Response body input streams are now always buffered
+- Added logging to cases where response body can't be accessed
+  - Also added logging to cases where the response-closing fails
+  - Previously these errors were silently ignored
+
 ## v1.7.1 - 04.10.2024
 This small update introduces new utility functions for response-parsing.
 ### Bugfixes

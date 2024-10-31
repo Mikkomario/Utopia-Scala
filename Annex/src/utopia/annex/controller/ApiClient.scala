@@ -28,7 +28,7 @@ object ApiClient
 	  * Provides an interface for receiving the response in various alternative forms.
 	  * @param wrapped Wrapped request
 	  */
-	class PreparedRequest(api: ApiClient, wrapped: Request)(implicit exc: ExecutionContext)
+	class PreparedRequest(api: ApiClient, wrapped: Request)(implicit exc: ExecutionContext, log: Logger)
 	{
 		// COMPUTED -----------------------
 		

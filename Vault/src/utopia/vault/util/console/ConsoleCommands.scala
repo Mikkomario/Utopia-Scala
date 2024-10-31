@@ -34,10 +34,13 @@ private object ConsoleCommands
 		{
 			val table = graph.value._1
 			val childEdges = graph.leavingEdges.view
-				.filterNot { _._2 }.filterNot { edge => from.contains(edge._1.to.table) }
+				.filterNot { _._2 }.filterNot { edge =>
+					val childTable = edge.end.value._1
+					from.contains(childTable) || table == childTable
+				}
 				.toOptimizedSeq
 			
-			val parents = graph.leavingEdges.view.filter { _._2 }.map { _.end }
+			val parents = graph.leavingEdges.view.filter { _._2 }.map { _.end }.filter { _._1 != table }
 				.toOptimizedSeq.sorted.map { _._1.name }
 			val primaryParent = {
 				if (childEdges.nonEmpty)
@@ -77,12 +80,17 @@ private object ConsoleCommands
 		// OTHER    --------------------------
 		
 		def print(indentation: Int = 0): Unit = {
-			val otherParentsNote = if (otherParents.isEmpty) "" else s"also depends from ${ otherParents.mkString(", ") }"
+			val otherParentsNote = {
+				if (otherParents.isEmpty)
+					""
+				else
+					s"also depends from ${ otherParents.view.map { n => s"`$n`" }.mkString(", ") }"
+			}
 			val parentsNote = primaryParent match {
-				case Some(primary) => s" (see hierarchy under $primary${ otherParentsNote.prependIfNotEmpty(", ") })"
+				case Some(primary) => s" (see hierarchy under `$primary`${ otherParentsNote.prependIfNotEmpty(", ") })"
 				case None => otherParentsNote.mapIfNotEmpty { n => s" ($n)" }
 			}
-			println(s"${ "\t" * indentation }- $name$parentsNote")
+			println(s"${ "\t" * indentation }- `$name`$parentsNote")
 			children.foreach { _.print(indentation + 1) }
 		}
 	}
@@ -117,7 +125,7 @@ class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Comma
 			if (tables.isEmpty)
 				println("No tables found")
 			else
-				tables.foreach(println)
+				tables.foreach { t => println(s"- $t") }
 	}
 	
 	/**
