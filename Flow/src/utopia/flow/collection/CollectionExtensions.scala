@@ -149,7 +149,7 @@ object CollectionExtensions
 		  * @param buildFrom A buildfrom for final collection (implicit)
 		  * @tparam B    The type of steps
 		  * @tparam That The type of final collection
-		  * @return All of the steps mapped into a collection
+		  * @return All the steps mapped into a collection
 		  */
 		def foldMapLeft[B, That](start: B)(map: (B, iter.A) => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
 			val builder = buildFrom.newBuilder(coll)
@@ -174,7 +174,7 @@ object CollectionExtensions
 		  * @tparam Key    Type of key in the final map
 		  * @tparam Value  Type of individual values in the final map
 		  * @tparam Values Type of values collections in the final map
-		  * @return A multi map based on this iteration mapping
+		  * @return A multimap based on this iteration mapping
 		  */
 		@deprecated("Please use .groupMap(...) instead", "v2.4")
 		def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
@@ -186,7 +186,7 @@ object CollectionExtensions
 		  * @tparam Key    Type of key in the final map
 		  * @tparam Value  Type of individual values in the final map
 		  * @tparam Values Type of values collections in the final map
-		  * @return A multi map based on this iteration mapping
+		  * @return A multimap based on this iteration mapping
 		  */
 		@deprecated("Please use .groupMap instead", "v2.4")
 		def toMultiMap[Key, Value, Values](f: iter.A => (Key, Value))(implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] =
