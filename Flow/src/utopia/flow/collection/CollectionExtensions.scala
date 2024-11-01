@@ -557,14 +557,26 @@ object CollectionExtensions
 		  * @tparam R Type of right result item
 		  * @return Left results -> right results
 		  */
-		def splitMap[L, R](f: A => (L, R)) = {
-			val lBuilder = new VectorBuilder[L]
-			val rBuilder = new VectorBuilder[R]
-			i.iterator.map(f).foreach { case (l, r) =>
-				lBuilder += l
-				rBuilder += r
+		def splitMap[L, R](f: A => (L, R)) =
+			splitMapInto[L, R, Vector](new VectorBuilder[L](), new VectorBuilder[R]())(f)
+		/**
+		  * Maps the items in this collection into two separate collections
+		  * @param leftBuilder Builder used for building the left side collection
+		  * @param rightBuilder Builder used for building the right side collection
+		  * @param split A mapping function that produces two results (left -> right) for each item
+		  * @tparam L Type of left result item
+		  * @tparam R Type of right result item
+		  * @tparam C Type of built collections
+		  * @return Left results -> right results
+		  */
+		def splitMapInto[L, R, C[_]](leftBuilder: mutable.Builder[L, C[L]], rightBuilder: mutable.Builder[R, C[R]])
+		                            (split: A => (L, R)) =
+		{
+			i.iterator.map(split).foreach { case (l, r) =>
+				leftBuilder += l
+				rightBuilder += r
 			}
-			lBuilder.result() -> rBuilder.result()
+			leftBuilder.result() -> rightBuilder.result()
 		}
 		/**
 		  * Maps items in this collection into two groups, where an item maps to
@@ -576,14 +588,28 @@ object CollectionExtensions
 		  * @tparam R Type of right side map results
 		  * @return Left side map results, collected together + right side map results, collected together (tuple)
 		  */
-		def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) = {
-			val lBuilder = new VectorBuilder[L]()
-			val rBuilder = new VectorBuilder[R]()
-			i.iterator.map(f).foreach { case (lefts, rights) =>
-				lBuilder ++= lefts
-				rBuilder ++= rights
+		def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) =
+			splitFlatMapInto(new VectorBuilder[L], new VectorBuilder[R])(f)
+		/**
+		  * Maps items in this collection into two groups, where an item maps to
+		  * x left group items and y right group items
+		  * @param leftBuilder Builder used for constructing the left side item collection
+		  * @param rightBuilder Builder used for constructing the right side item collection
+		  * @param split A function that accepts an item in this collection and returns a tuple of collections where the
+		  *          first item is collection of left side map results and the second item is a collection of
+		  *          right side map results
+		  * @tparam L Type of left side map results
+		  * @tparam R Type of right side map results
+		  * @return Left side map results, collected together + right side map results, collected together (tuple)
+		  */
+		def splitFlatMapInto[L, R, C[_]](leftBuilder: mutable.Builder[L, C[L]], rightBuilder: mutable.Builder[R, C[R]])
+		                                (split: A => (IterableOnce[L], IterableOnce[R])) =
+		{
+			i.iterator.map(split).foreach { case (lefts, rights) =>
+				leftBuilder ++= lefts
+				rightBuilder ++= rights
 			}
-			lBuilder.result() -> rBuilder.result()
+			leftBuilder.result() -> rightBuilder.result()
 		}
 		
 		/**
@@ -611,17 +637,20 @@ object CollectionExtensions
 	implicit class RichIterableOnceTuples[A, B](val i: IterableOnce[(A, B)]) extends AnyVal
 	{
 		/**
-		 * @return Contents of this collection split into two groups (as vectors)
-		 */
-		def split = {
-			val lBuilder = new VectorBuilder[A]()
-			val rBuilder = new VectorBuilder[B]()
-			i.iterator.foreach { case (a, b) =>
-				lBuilder += a
-				rBuilder += b
-			}
-			lBuilder.result() -> rBuilder.result()
-		}
+		  * @return A vector consisting only of the left side items,
+		  *         plus a vector consisting only of right side items
+		  * @see [[splitInto]]
+		  */
+		def split = splitInto(new VectorBuilder[A], new VectorBuilder[B])
+		/**
+		  * @param leftBuilder Builder used for collecting the left side items in this collection
+		  * @param rightBuilder Builder used for collecting the right side items in this collection
+		  * @tparam C Type of collections built
+		  * @return A collection consisting only of the left side items,
+		  *         plus a collection consisting only of right side items
+		  */
+		def splitInto[C[_]](leftBuilder: mutable.Builder[A, C[A]], rightBuilder: mutable.Builder[B, C[B]]) =
+			i.splitMapInto(leftBuilder, rightBuilder)(Identity)
 	}
 	
 	implicit class PairsIterableOnce[A](val pairs: IterableOnce[Pair[A]]) extends AnyVal

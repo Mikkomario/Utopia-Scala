@@ -4,6 +4,8 @@
 ### New features
 - Added **UntilExternalFailureIterator**
 ### New methods
+- **IterableOnce**
+  - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`
 - **ModelLike**
   - Added `.tryGet(...)`
 - **Seq** (**CollectionExtensions**)
