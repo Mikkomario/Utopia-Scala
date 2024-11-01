@@ -2,6 +2,7 @@
 
 ## v2.5.1 (in development)
 ### New features
+- Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so
 - Added **UntilExternalFailureIterator**
 ### New methods
 - **IterableOnce**
