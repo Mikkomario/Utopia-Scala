@@ -75,6 +75,14 @@ trait StreamedResponseParser[R, V] extends ResponseParser[R]
 	
 	// IMPLEMENTED  -------------------------
 	
+	// TODO: Add support for interrupting the streaming, here
+	/*
+	Note (from HttpClient getContent function): If this entity belongs to an incoming HTTP message,
+	calling InputStream. close()   on the returned InputStream will try to consume the complete entity content
+	to keep the connection alive. In cases where this is undesired, e. g. when only a small part of the content
+	is relevant and consuming the complete entity content would be too inefficient, only the HTTP message from which
+	this entity was obtained should be closed (if supported).
+	 */
 	override def apply(status: Status, headers: Headers, stream: Option[InputStream]) = {
 		stream match {
 			// Case: Streamed response => Starts parsing the stream json contents

@@ -1,8 +1,13 @@
 # Utopia Echo - List of Changes
 
-## v1.1.1 (in development)
+## v1.2 (in development)
+### Breaking changes
+- Changed **Chat**'s auto-summarization parameter syntax
+### Bugfixes
+- Chat messages now automatically convert tabs to spaces
 ### New features
 - Added saving & loading to **Chat**
+- **Chat**'s summarization process now supports message-exclusion
 - Added **ToolFactory** for loading tools from models
 - Added model conversions to **ModelSettings**
 ### New methods
@@ -10,6 +15,7 @@
   - Added a new constructor
 ### Other changes
 - Removed some print-lines that were left from previous tests
+- Modified timeout settings in **OllamaClient**
 - Modified **Chat** default parameters
 
 ## v1.1 - 04.10.2024

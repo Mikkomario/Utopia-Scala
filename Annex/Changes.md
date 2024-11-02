@@ -1,5 +1,8 @@
 # Utopia Annex - List of Changes
 
+## v1.9.1 (in development)
+Supports changes made to Disciple
+
 ## v1.9 - 04.10.2024
 This update mostly adds new utility functions for response-parsing. 
 Additionally, following the changes in Flow, there are some changes to **Schrodinger** constructors.

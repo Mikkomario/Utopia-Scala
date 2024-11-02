@@ -98,14 +98,14 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		}
 		val (content, result) = fill(rowContextIterator).toTuple
 		val mainStackContent = Open.using(Stack) { rowF =>
-			content.iterator.map { rowContent =>
+			content.iterator.splitMap { rowContent =>
 				val wrappedRowComponents = new OpenComponent(Seq.from(rowContent.components),
 					rowContent.context.parentHierarchy)
 				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
 					.withCap(rowCap)(wrappedRowComponents)
 					.parent: ReachComponentLike
 				row -> rowContent
-			}.splitMap { p => p }
+			}
 		}
 		val rowsWithResults = mainStackContent.component.zip(mainStackContent.result)
 		val rowsWithIndices = rowsWithResults.map { case (c, r) => c -> r.context.rowIndex }

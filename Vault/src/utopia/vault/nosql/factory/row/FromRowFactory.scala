@@ -2,7 +2,9 @@ package utopia.vault.nosql.factory.row
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.{Column, Result, Row}
 import utopia.vault.model.template.Joinable
@@ -44,15 +46,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	
 	// IMPLEMENTED	----------------
 	
-	override def apply(result: Result): Seq[A] = {
-		// Makes sure duplicate rows are not present by only including each index (group) once
-		// (Only works when all included tables use indexing)
-		val indices = tables.flatMap { table => table.primaryColumn }
-		if (indices hasEqualSizeWith tables)
-			result.rows.distinctBy { row => indices.map(row.apply) }.flatMap(parseIfPresent)
-		else
-			result.rows.flatMap(parseIfPresent)
-	}
+	override def apply(result: Result): Seq[A] = fromUniqueRows(result.rows)(parseIfPresent)
 	
 	override def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	                  joinType: JoinType = Inner)(implicit connection: Connection) =
@@ -87,6 +81,44 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 		// Lets ErrorHandling handle the possible errors
 		case Failure(error) => ErrorHandling.modelParsePrinciple.handle(error); None
 	}
+	
+	/**
+	  * Reads accessible data from the DB. Includes additional information, besides the parsed row entries.
+	  * @param extraTarget An additional target to include in the select
+	  * @param joins Joins to apply
+	  * @param joinType Type of joins to apply (default = inner)
+	  * @param condition Search condition to apply (default = None)
+	  * @param order Ordering to apply (default = None = use default ordering)
+	  * @param parse A function for parsing the additional data from row information
+	  * @param connection Implicit DB connection
+	  * @tparam B Type of parsed additional data
+	  * @return Accessible data, including additional parsed data
+	  */
+	def getIncluding[B](extraTarget: SelectTarget, joins: Seq[Joinable], joinType: JoinType = Inner,
+	                    condition: Option[Condition] = None, order: Option[OrderBy] = None)
+	                   (parse: Row => B)(implicit connection: Connection) =
+	{
+		val rows = connection(expandedSelect(joins, joinType, Some(extraTarget)) + condition.map(Where.apply) +
+			order.orElse(defaultOrdering))
+			.rows
+		fromUniqueRows(rows) { row => parseIfPresent(row).map { _ -> parse(row) } }
+	}
+	/**
+	  * Reads accessible data from the DB. Includes an additional column outside the default selection.
+	  * @param column Column to include in the results
+	  * @param joins Joins to apply
+	  * @param joinType Type of joins to apply (default = inner)
+	  * @param condition Search condition to apply (default = None)
+	  * @param order Ordering to apply (default = None = use default ordering)
+	  * @param parse A function for parsing the column value
+	  * @param connection Implicit DB connection
+	  * @tparam B Type of parsed additional data
+	  * @return Accessible data, including additional parsed data
+	  */
+	def getWithColumn[B](column: Column, joins: Seq[Joinable], joinType: JoinType = Inner,
+	                     condition: Option[Condition] = None, order: Option[OrderBy] = None)
+	                    (parse: Value => B)(implicit connection: Connection) =
+		getIncluding(column, joins, joinType, condition, order) { row => parse(row(column)) }
 	
 	/**
 	  * Takes a number of items with this factory
@@ -275,4 +307,14 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 			case Some(condition) => find(condition, Some(orderBy))
 			case None => connection(select + orderBy + Limit(1)).rows.headOption.flatMap(parseIfPresent)
 		}
+	
+	// Makes sure duplicate rows are not present by only including each index (group) once
+	// (Only works when all included tables use indexing)
+	private def fromUniqueRows[B](rows: Seq[Row])(parse: Row => Option[B]) = {
+		val indices = tables.flatMap { table => table.primaryColumn }
+		if (indices.hasSize.of(tables))
+			rows.view.distinctBy { row => indices.map(row.apply) }.flatMap(parse).toVector
+		else
+			rows.flatMap(parse)
+	}
 }

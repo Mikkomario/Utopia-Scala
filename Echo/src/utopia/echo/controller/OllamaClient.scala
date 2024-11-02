@@ -9,7 +9,7 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
-import utopia.disciple.http.request.{Body, StringBody}
+import utopia.disciple.http.request.{Body, StringBody, Timeout}
 import utopia.disciple.http.response.ResponseParser
 import utopia.disciple.model.error.RequestFailedException
 import utopia.echo.model.llm.LlmDesignator
@@ -40,7 +40,7 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 {
 	// ATTRIBUTES   ------------------------
 	
-	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 5.minutes, minOfflineDelay = 10.seconds)
+	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 7.minutes, minOfflineDelay = 10.seconds)
 	private lazy val queue = RequestQueue(queueSystem)
 	
 	
@@ -99,7 +99,7 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	{
 		// ATTRIBUTES   -----------------------
 		
-		override protected lazy val gateway = Gateway(
+		override protected lazy val gateway = Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
 			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors)
 		
 		override lazy val valueResponseParser: ResponseParser[Response[Value]] =

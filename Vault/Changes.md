@@ -1,13 +1,23 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.1 (in development)
+### New features
+- Added **ConsoleCommands**, which provides some utility database commands for command line consoles
 ### New methods
 - **ConditionElement**
   - Added `.length` for string length-based conditions
 - **ConnectionPool**
   - Added `.logging(...)`
+- **FromRowFactory**
+  - Added `.getIncluding(...)` and `.getWithColumn(...)`
+- **ManyRowModelAccess**
+  - Added `.pullWithColumn(...)` and `.groupByColumn(...)`
 - **References**
+  - Added `.parentsTree(Table)` for listing references as a tree
   - Added `.replace(...)` for replacing all references made to a database row
+### Other changes
+- **FromResultFactory**'s `.expandedSelect(...)` now supports inclusion of additional selected items 
+  (columns, tables, etc.)
 
 ## v1.20 - 04.10.2024
 This update adds support for custom selection targets 

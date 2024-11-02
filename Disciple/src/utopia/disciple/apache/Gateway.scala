@@ -27,7 +27,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
-import java.io.OutputStream
+import java.io.{BufferedInputStream, OutputStream}
 import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
 import java.util
@@ -196,11 +196,12 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  *
 	  * @param request the request that is sent to the server
 	  * @param consumeResponse the function that handles the server response
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @tparam R Type of consume function result
 	  * @return Failure if failed to acquire a response.
-	  *         Otherwise the return value of 'consumeResponse' function.
+	  *         Otherwise, returns the value of 'consumeResponse' function.
 	  */
-	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R) = {
+	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R)(implicit log: Logger) = {
 		// Intercepts the request, if appropriate
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
 		val response = Try {
@@ -224,13 +225,36 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 			base.setConfig(config)
 			
 			// Performs the request and acquires a response, if possible
-			// TODO: Possibly add logging for response.getContent failures (which are now ignored)
 			val rawResponse = client.execute(base)
 			StreamedResponse(
 				status = statusForCode(rawResponse.getCode),
 				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
-			) { Try { Option(rawResponse.getEntity).map { _.getContent } }.toOption.flatten } {
-				rawResponse.closeQuietly() }
+			) {
+				// Acquires the response body as a stream, if possible
+				Try { Option(rawResponse.getEntity).map { _.getContent } }
+					// Logs possible encountered errors
+					.logWithMessage("Failed to open the response body").flatten
+					// Makes sure the received stream is not empty
+					.flatMap { stream =>
+						// Converts the stream into buffered format
+						val buffered = stream match {
+							case s: BufferedInputStream => s
+							case s => new BufferedInputStream(s)
+						}
+						buffered.mark(1)  // Marks the current position with a 1-byte read limit
+						
+						// Case: Empty stream => Yields None
+						if (buffered.read() == -1) {
+							buffered.closeQuietly().logWithMessage("Failed to close the response body")
+							None
+						}
+						// Case: Non-empty stream => Moves back to the beginning and yields the non-empty stream
+						else {
+							buffered.reset()
+							Some(buffered)
+						}
+					}
+			} { rawResponse.closeQuietly().logWithMessage("Failed to close the response body") }
 		}
 		
 		// Intercepts the response before passing it to the parser
@@ -245,12 +269,13 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * @param request the request that is sent to the server
 	  * @param consumeResponse the function that handles the server response
 	  * @param exc Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @tparam R Type of consume function result
 	  * @return Failure if failed to acquire a response.
 	  *         Otherwise the return value of 'consumeResponse' function.
 	  */
     def makeRequest[R](request: Request)(consumeResponse: StreamedResponse => R)
-					  (implicit exc: ExecutionContext) =
+					  (implicit exc: ExecutionContext, log: Logger) =
 	    Future { makeBlockingRequest(request)(consumeResponse) }
 	
 	/**
@@ -259,12 +284,13 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * @param request Request to send to the server
 	  * @param parser Parser which processes the incoming response, if one is acquired
 	  * @param exc Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @tparam A Type of response parse results
 	  * @return A future which resolves into either a success or a failure:
 	  *             - Success containing parsed response contents, if a response was successfully received
 	  *             - Failure, if failed to send out the request or to receive a response
 	  */
-	def apply[A](request: Request)(parser: ResponseParser[A])(implicit exc: ExecutionContext) =
+	def apply[A](request: Request)(parser: ResponseParser[A])(implicit exc: ExecutionContext, log: Logger) =
 		makeRequest(request) { _.consume(parser).wrapped }
 	
 	/**
@@ -275,7 +301,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  *         Contains a failure if the request couldn't be sent out or if no response was received.
 	  */
 	def responseFor[A](request: Request)(parser: ResponseParser[A])
-					  (implicit context: ExecutionContext) =
+					  (implicit context: ExecutionContext, log: Logger) =
 		makeRequest(request) { _.buffered(parser) }
 	
 	/**
@@ -292,9 +318,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * Performs an asynchronous request and parses the response body into a string
 	  * @param request Request to send
 	  * @param exc     Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def tryStringResponseFor(request: Request)(implicit exc: ExecutionContext) =
+	def tryStringResponseFor(request: Request)(implicit exc: ExecutionContext, log: Logger) =
 		responseFor(request)(ResponseParser.string)
 	
 	/**
@@ -312,9 +339,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * Supports json and xml content types. Other content types are read as raw strings.
 	  * @param request Request to send
 	  * @param exc     Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def tryValueResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def tryValueResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		responseFor(request)(ResponseParser.value)
 	
 	/**
@@ -332,9 +360,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * Supports json and xml content types.
 	  * @param request Request to send
 	  * @param exc     Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def tryModelResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def tryModelResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		responseFor(request)(ResponseParser.model)
 	
 	/**
@@ -354,9 +383,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * converted to values, then wrapped in a vector.
 	  * @param request Request to send
 	  * @param exc     Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def tryValueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def tryValueVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		responseFor(request)(ResponseParser.valueVector)
 	/**
 	  * Performs an asynchronous request and parses response body into a model vector (empty vector on empty responses and
@@ -375,9 +405,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * contents wrapped in a vector.
 	  * @param request Request to send
 	  * @param exc     Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def tryModelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser) =
+	def tryModelVectorResponseFor(request: Request)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
 		responseFor(request)(ResponseParser.modelVector)
 	
 	/**
@@ -385,9 +416,10 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	  * read/parse failures).
 	  * @param request Request to send
 	  * @param exc Implicit execution context
+	  * @param log A logging implementation for handling failures when opening the response body
 	  * @return Future with the buffered response
 	  */
-	def xmlResponseFor(request: Request)(implicit exc: ExecutionContext) =
+	def xmlResponseFor(request: Request)(implicit exc: ExecutionContext, log: Logger) =
 		responseFor(request)(ResponseParser.xml)
     
     // Adds parameters and body to the request base. No headers are added at this point

@@ -4,18 +4,20 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.{Chat, EstimateTokenCount}
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.request.llm.CreateModelRequest
-import utopia.echo.model.response.llm.StreamedStatus
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
-import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
+import utopia.flow.view.mutable.Pointer
 
+import java.nio.file.Paths
 import scala.io.StdIn
 import scala.util.{Failure, Success}
 
@@ -26,19 +28,28 @@ import scala.util.{Failure, Success}
   */
 object ChatTest extends App
 {
+	// ATTRIBUTES   -------------------
+	
+	private val multiLineIndicator = "\"\"\""
+	
+	
 	// APP CODE -----------------------
 	
 	// Prompts the user to select the LLM to use
-	selectModel().foreach { originalLlm =>
+	selectModel().foreach { initialLlm =>
+		val llmPointer = Pointer.eventful(initialLlm)
+		implicit def llm: LlmDesignator = llmPointer.value
+		def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
+		
 		// Sets up the system message
 		println("Looking up the model's system message...")
-		val currentSystemMessage = client.showModel(originalLlm).future.waitForResult().toTry match {
+		val currentSystemMessage = client.showModel.future.waitForResult().toTry match {
 			case Success(info) => info.systemMessage
 			case Failure(error) =>
 				log(error, "Failed to acquire model info")
 				""
 		}
-		val (newLlm, originalSystemMessage, newSystemMessage) = {
+		val (originalSystemMessage, newSystemMessage) = {
 			if (currentSystemMessage.isEmpty) {
 				println("Currently there is no system message defined")
 				val newSystemMessage = {
@@ -48,100 +59,84 @@ object ChatTest extends App
 					else
 						None
 				}
-				(originalLlm, "", newSystemMessage)
+				"" -> newSystemMessage
 			}
 			else {
 				println(s"The current system message is: $currentSystemMessage")
-				if (StdIn.ask("\nDo you want to keep this system message in effect?", default = true))
-					(originalLlm, currentSystemMessage, None)
+				if (StdIn.ask("\nDo you want to overwrite this message?"))
+					currentSystemMessage -> requestSystemMessage()
 				else
-					StdIn.readNonEmptyLine(
-							"Please specify a name for the new model version, which won't include a system message")
-						.flatMap { newModelName =>
-							println("Creating a new model...")
-							client.push(
-									CreateModelRequest.streamed.apply(newModelName, s"FROM $originalLlm\nSYSTEM \n"))
-								.future.waitForResult().toTry.log
-								.flatMap { statusStream =>
-									// Prints the model-creation status
-									statusStream.statusPointer.addContinuousListenerAndSimulateEvent("") { e =>
-										println(e.newValue)
-									}
-									statusStream.finalStatusFuture.waitForResult().log
-								}
-								.flatMap { finalStatus =>
-									if (finalStatus ~== StreamedStatus.expectedFinalStatus)
-										Some(LlmDesignator(newModelName))
-									else {
-										println(s"Expected \"${
-											StreamedStatus.expectedFinalStatus }\", received \"$finalStatus\"")
-										None
-									}
-								}
-						}
-						.map { newLlm =>
-							val newSystemMessage = {
-								if (StdIn.ask(
-									"\nDo you want to specify a new system message instead (only for this session)?",
-									default = true))
-									requestSystemMessage()
-								else
-									None
-							}
-							(newLlm, "", newSystemMessage)
-						}
-						.getOrElse {
-							println(s"Defaults back to $originalLlm")
-							(originalLlm, currentSystemMessage, None)
-						}
+					currentSystemMessage -> None
 			}
 		}
 		
-		newLlm.use { implicit llm =>
-			val chat = new Chat(client, llm)
-			
-			// Sets up data-listening
-			chat.usedContextSizePointer.addContinuousListener { e =>
-				println(s"\nUsed context size: ${ e.newValue } tokens")
+		val chat = new Chat(client, llm)
+		chat.setupAutoSummaries()
+		llmPointer.addContinuousListener { e => chat.llm = e.newValue }
+		
+		// Sets up data-listening
+		chat.usedContextSizePointer.addContinuousListener { e =>
+			println(s"\nUsed context size: ${ e.newValue } tokens")
+		}
+		chat.largestReplySizePointer.addContinuousListener { e =>
+			println(s"\nLargest reply so far: ${ e.newValue } tokens")
+		}
+		chat.messageHistoryPointer.addContinuousListener { e =>
+			println(s"\nMessage history: ${ e.newValue.size } messages")
+		}
+		chat.summarizingFlag.addContinuousListener { e =>
+			if (e.newValue)
+				println("Summarizing message history...")
+			else {
+				println("Message history summarized:")
+				chat.messageHistory.lastOption.foreach { message => println(message.text) }
+				println()
 			}
-			chat.largestReplySizePointer.addContinuousListener { e =>
-				println(s"\nLargest reply so far: ${ e.newValue } tokens")
+		}
+		
+		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage)
+		newSystemMessage.foreach(chat.appendSystemMessage)
+		
+		// Starts the interaction loop
+		println("Welcome. Write a message to ask something.")
+		println("You also have the following commands available to you:")
+		println("\t/bye or /exit - Closes this application")
+		println("\t/clear - Clears the conversation history")
+		println("\t/undo - Clears the latest query and its reply")
+		println("\t/options - Modifies LLM parameters")
+		println("\t/settings - Modifies chat settings")
+		println("\t/summarize - Summarizes the conversation history in order to conserve context space")
+		println("\t/save - Saves the current chat to a local file")
+		println(s"You can write multi-line messages if you start and end the message with $multiLineIndicator.")
+		var open = true
+		while (open) {
+			println("Waiting for the next input")
+			val input = requestMultiLineString() match {
+				case Some(input) => input.trim
+				case None => ""
 			}
-			chat.messageHistoryPointer.addContinuousListener { e =>
-				println(s"\nMessage history: ${ e.newValue.size } messages")
+			if (input.startsWith("/bye") || input.startsWith("/exit"))
+				open = false
+			else if (input.startsWith("/clear")) {
+				chat.clearMessageHistory()
+				println("Message history cleared")
 			}
-			chat.summarizingFlag.addContinuousListener { e =>
-				if (e.newValue)
-					println("Summarizing message history...")
-				else {
-					println("Message history summarized:")
-					chat.messageHistory.lastOption.foreach { message => println(message.text) }
-					println()
-				}
+			else if (input.startsWith("/undo")) {
+				val changed = chat.messageHistoryPointer.mutate { history => history.nonEmpty -> history.dropRight(2) }
+				if (changed)
+					println("The latest query & reply were removed from the chat history")
+				else
+					println("There were no messages to remove")
 			}
-			
-			chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage)
-			newSystemMessage.foreach(chat.appendSystemMessage)
-			
-			// Starts the interaction loop
-			println("Welcome. Write a message to ask something. Write /clear to clear the conversation history. Write /bye to exit. Write /options to modify model parameters.")
-			println("Note: Currently only single line messages are supported.")
-			var open = true
-			while (open) {
-				println("Waiting for the next input")
-				val input = StdIn.readLine().trim
-				if (input.startsWith("/bye"))
-					open = false
-				else if (input.startsWith("/clear")) {
-					chat.clearMessageHistory()
-					println("Message history cleared")
-				}
-				else if (input.startsWith("/options")) {
+			else if (input.startsWith("/options")) {
+				var shouldContinue = true
+				while (shouldContinue) {
+					println("\nSelect option to target. To quit modifying options, just press enter.")
 					val currentOptions = chat.options
 					StdIn.selectFrom(ModelParameter.values.map { p => p -> s"${ p.key }${
-							currentOptions(p).getString
-								.mapIfNotEmpty { v => s" (currently $v)" } }" }, maxListCount = 50)
-						.foreach { param =>
+							currentOptions(p).getString.mapIfNotEmpty { v => s" (currently $v)" } }" }, maxListCount = 50) match
+					{
+						case Some(param) =>
 							println(s"Please specify a new value for ${ param.key }.")
 							val current = currentOptions.get(param)
 							if (current.isEmpty)
@@ -159,17 +154,87 @@ object ChatTest extends App
 										println(s"${ param.key } cleared")
 									}
 							}
-						}
-				}
-				else if (input.nonEmpty) {
-					val schrodinger = chat.push(input)
-					println("\nWaiting for the response...")
-					schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
-					
-					schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
-						Wait(0.2.seconds)
-						println(s"\n\n${ reply.statistics }\n")
+						case None => shouldContinue = false
 					}
+				}
+			}
+			else if (input.startsWith("/settings")) {
+				println("Which setting do you want to modify?")
+				StdIn.selectFrom(Vector(
+					1 -> "LLM", 2 -> "Maximum context size", 3 -> "Minimum context size",
+					4 -> "Expected reply size", 5 -> "Additional context size",
+					6 -> "System message", 7 -> "Auto summary thresholds"))
+					.foreach {
+						case 1 => selectModel().foreach(llm_=)
+						case 2 =>
+							StdIn.read("Please specify the new maximum context size in tokens").int.foreach { size =>
+								chat.maxContextSize = size
+								println(s"Maximum context size set to $size")
+							}
+						case 3 =>
+							StdIn.read("Please specify the new minimum context size in tokens").int.foreach { size =>
+								chat.minContextSize = size
+								println(s"Set minimum context size to $size")
+							}
+						case 4 =>
+							StdIn.read("Please specify the expected reply size in tokens").int.foreach { size =>
+								chat.expectedReplySize = size
+								println(s"Expected reply size is now $size")
+							}
+						case 5 =>
+							StdIn.read("Please specify the additional context size to apply").int.foreach { size =>
+								chat.additionalContextSize = size
+								println(s"Additional context size set to $size")
+							}
+						case 6 =>
+							requestSystemMessage().foreach { systemMessage =>
+								println("How do you want to apply this message?")
+								StdIn.selectFrom(Vector(
+										1 -> "Overwrite the current system message",
+										2 -> "Append this to the current system message",
+										3 -> "Cancel"))
+									.foreach {
+										case 1 =>
+											chat.systemMessages = Single(systemMessage)
+											println("System message overwritten")
+										case 2 =>
+											chat.systemMessages :+= systemMessage
+											println("System message added")
+										case _ => ()
+									}
+							}
+						case 7 =>
+							StdIn.read("At which context size should auto-summarization trigger?").int.foreach { size =>
+								StdIn.read("How many messages should there least be in the chat history (counting both queries & replies separately)?")
+									.int
+									.foreach { messageCount => chat.setupAutoSummaries(size, messageCount) }
+							}
+						case _ => ()
+					}
+			}
+			else if (input.startsWith("/summarize")) {
+				println("Summarizes the chat history so far...\n")
+				chat.summarize().foreach { case (schrodinger, completion) =>
+					schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
+					completion.waitForResult().log
+					println("Summarization finished")
+				}
+			}
+			else if (input.startsWith("/save"))
+				StdIn.readNonEmptyLine("Please specify the name of the save file to generate").foreach { fileName =>
+					Paths.get(s"Echo/data/test-output/${ fileName.endingWith(".json") }").writeJson(chat).log
+						.foreach { path => println(s"Current chat status saved to $path") }
+				}
+			else if (input.startsWith("/"))
+				println("Unrecognized command")
+			else if (input.exists { _.isLetter }) {
+				val schrodinger = chat.push(input)
+				println("\nWaiting for the response...\n")
+				schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
+				
+				schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
+					Wait(0.2.seconds)
+					println(s"\n\n${ reply.statistics }\n")
 				}
 			}
 		}
@@ -180,9 +245,31 @@ object ChatTest extends App
 	
 	// OTHER    ----------------------------
 	
-	private def requestSystemMessage() = {
-		println("Please specify the system message to use. Empty line ends input.")
-		OptionsIterator.continually(StdIn.readNonEmptyLine()).mkString("\n").trim
-			.ifNotEmpty
+	private def requestSystemMessage() =
+		requestMultiLineString(
+			s"Please specify the system message to use. You can write multiple lines if you start and end with $multiLineIndicator.")
+	
+	private def requestMultiLineString(prompt: String = ""): Option[String] = {
+		StdIn.readNonEmptyLine(prompt).map { firstLine =>
+			// Case: Multi-line input
+			if (firstLine.startsWith(multiLineIndicator)) {
+				// Case: Single-line multi-line input => Removes the multi-line indicators
+				if (firstLine.endsWith(multiLineIndicator))
+					firstLine.drop(multiLineIndicator.length).dropRight(multiLineIndicator.length)
+				// Case: Actual multi-line input => Reads until user ends with """
+				else {
+					val moreLines = Iterator.continually { StdIn.readLine() }
+						.takeTo { _.endsWith(multiLineIndicator) }
+						.toOptimizedSeq
+					((firstLine.drop(multiLineIndicator.length) +: moreLines.dropRight(1)) :+
+						moreLines.last.dropRight(multiLineIndicator.length))
+						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty }
+							.mkString("\n")
+				}
+			}
+			// Case: Single-line input
+			else
+				firstLine
+		}
 	}
 }

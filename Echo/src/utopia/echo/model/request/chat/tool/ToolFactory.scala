@@ -48,7 +48,7 @@ object ToolFactory
 /**
   * A factory used for constructing tools. Used in model parsing.
   * @author Mikko Hilpinen
-  * @since 15.10.2024, v1.1.1
+  * @since 15.10.2024, v1.2
   */
 trait ToolFactory extends FromModelFactory[Tool]
 {

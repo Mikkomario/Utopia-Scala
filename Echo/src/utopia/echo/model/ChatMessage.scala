@@ -70,7 +70,7 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 	// IMPLEMENTED  ------------------------
 	
 	override def toModel: Model =
-		Model.from("role" -> senderRole.name, "content" -> text,
+		Model.from("role" -> senderRole.name, "content" -> text.replace("\t", "  "),
 				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
 			.withoutEmptyValues
 	

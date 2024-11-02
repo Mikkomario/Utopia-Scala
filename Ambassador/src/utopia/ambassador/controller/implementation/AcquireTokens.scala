@@ -29,6 +29,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
@@ -43,8 +44,10 @@ import scala.util.{Failure, Success, Try}
   * @param configurations A map-like object for acquiring correct configurations for each targeted service.
   *                       Accepts a service id and returns the applicable configurations.
   * @param jsonParser Json parser used when parsing response contents
+  * @param log A logging implementation used for handling failures in response-body parsing
   */
-class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])(implicit jsonParser: JsonParser)
+class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
+                   (implicit jsonParser: JsonParser, log: Logger)
 {
 	/**
 	  * Acquires session authentications needed to perform the specified task.
