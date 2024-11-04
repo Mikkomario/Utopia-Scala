@@ -2,7 +2,6 @@ package utopia.reach.component.label.text
 
 import utopia.firmament.component.display.PoolWithPointer
 import utopia.firmament.component.text.TextComponent
-import utopia.firmament.context.TextContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
@@ -11,17 +10,18 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.{Always, AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.Priority
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
-import utopia.genesis.graphics.Priority
 
 case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                           customDrawers: Seq[CustomDrawer] = Empty,
@@ -75,14 +75,11 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
-		val label = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer,
-			contextPointer.mapWhile(parentHierarchy.linkPointer) { _.allowTextShrink }, displayFunction, customDrawers)
+		val label = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer, Always(context.allowTextShrink),
+			displayFunction, customDrawers)
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
-			contextPointer.addContinuousListener { e =>
-				if (e.values.isAsymmetricBy { _.background })
-					label.repaint()
-			}
+			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label
 	}
 	/**
@@ -120,7 +117,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
   */
 case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty,
                                 allowsTextToShrink: Boolean = false)
-	extends FromVariableContextFactory[TextContext, ContextualViewTextLabelFactory]
+	extends FromContextFactory[VariableTextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ViewTextLabelFactory] with BackgroundAssignable[ViewTextLabelFactory]
 {
 	// COMPUTED --------------------------------
@@ -137,7 +134,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	override def withBackground(background: Color): ViewTextLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
 	
-	override def withContextPointer(context: Changing[TextContext]): ContextualViewTextLabelFactory =
+	override def withContext(context: VariableTextContext): ContextualViewTextLabelFactory =
 		ContextualViewTextLabelFactory(parentHierarchy, context, customDrawers)
 	
 	
@@ -230,12 +227,11 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 }
 
 object ViewTextLabel extends Cff[ViewTextLabelFactory]
-	with FromVariableContextComponentFactoryFactory[TextContext, ContextualViewTextLabelFactory]
+	with Ccff[VariableTextContext, ContextualViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy,
-	                                context: Changing[TextContext]): ContextualViewTextLabelFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): ContextualViewTextLabelFactory =
 		ContextualViewTextLabelFactory(hierarchy, context)
 }
 

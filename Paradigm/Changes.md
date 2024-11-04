@@ -1,5 +1,7 @@
 # Utopia Paradigm - List of Changes
 
+## v1.7.1 (in development)
+
 ## v1.7 - 04.10.2024
 This update focuses on the **Polygonic** trait (now named **Polygon**), refactoring many of the existing functions. 
 Specifically, the convex parts -algorithm was completely redesigned and rewritten.

@@ -1,7 +1,6 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
-import utopia.firmament.context.TextContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
@@ -10,7 +9,6 @@ import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Medium, Small}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
-import utopia.reach.component.factory.UnresolvedFramedFactory.sides
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.Changing
@@ -18,7 +16,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
+import utopia.reach.component.factory.UnresolvedFramedFactory.{UnresolvedStackInsets, sides}
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -290,7 +288,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	                   displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
 	{
 		val label = new ViewImageAndTextLabel[A](parentHierarchy, context, itemPointer, imagePointer,
-			settings, resolveInsets, displayFunction)
+			settings, Fixed(resolveInsets), displayFunction)
 		if (drawBackground)
 			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label

@@ -1,6 +1,7 @@
 package utopia.reach.component.button.image
 
-import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.HotKey
@@ -191,15 +192,15 @@ trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr] wit
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
                                         settings: ImageButtonSettings = ImageButtonSettings.default)
 	extends ImageButtonFactoryLike[ContextualImageButtonFactory]
 		with ColorContextualFactory[ContextualImageButtonFactory]
-		with ContextualBackgroundAssignableFactory[ColorContext, ContextualImageButtonFactory]
+		with ContextualBackgroundAssignableFactory[StaticColorContext, ContextualImageButtonFactory]
 {
 	// IMPLICIT	-----------------------------
 	
-	private implicit def c: ColorContext = context
+	private implicit def c: StaticColorContext = context
 	
 	
 	// IMPLEMENTED	-------------------------
@@ -207,7 +208,7 @@ case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, con
 	override def self: ContextualImageButtonFactory = this
 	override protected def allowsUpscaling: Boolean = context.allowImageUpscaling
 	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withContext(newContext: StaticColorContext) = copy(context = newContext)
 	override def withSettings(settings: ImageButtonSettings) = copy(settings = settings)
 	
 	
@@ -265,7 +266,7 @@ case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
                               settings: ImageButtonSettings = ImageButtonSettings.default,
                               allowsUpscaling: Boolean = false)
 	extends ImageButtonFactoryLike[ImageButtonFactory]
-		with FromContextFactory[ColorContext, ContextualImageButtonFactory]
+		with FromContextFactory[StaticColorContext, ContextualImageButtonFactory]
 {
 	// COMPUTED -------------------------------
 	
@@ -279,7 +280,7 @@ case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	
 	override def self: ImageButtonFactory = this
 	
-	override def withContext(context: ColorContext) =
+	override def withContext(context: StaticColorContext) =
 		ContextualImageButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ImageButtonSettings) = copy(settings = settings)
@@ -292,7 +293,7 @@ case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
   */
 case class ImageButtonSetup(settings: ImageButtonSettings = ImageButtonSettings.default)
 	extends ImageButtonSettingsWrapper[ImageButtonSetup] with ComponentFactoryFactory[ImageButtonFactory]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualImageButtonFactory]
+		with FromContextComponentFactoryFactory[StaticColorContext, ContextualImageButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -300,7 +301,7 @@ case class ImageButtonSetup(settings: ImageButtonSettings = ImageButtonSettings.
 	
 	override def apply(hierarchy: ComponentHierarchy) = ImageButtonFactory(hierarchy, settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticColorContext) =
 		ContextualImageButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ImageButtonSettings) = copy(settings = settings)

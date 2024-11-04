@@ -248,6 +248,8 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 			val colored = SingleColorIcon.this.apply(color)
 			ButtonImageSet(colored).lowerAlphaOnDisabled.highlighting
 		}
+		
+		// TODO: Add functions for constructing button image set pointers in variable background settings
 	}
 	
 	object IconInsideButton extends FromShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]

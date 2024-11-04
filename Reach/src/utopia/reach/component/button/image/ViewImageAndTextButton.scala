@@ -1,6 +1,7 @@
 package utopia.reach.component.button.image
 
 import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
@@ -16,7 +17,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
-import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.contextual.{ContextualFactory, VariableContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
 import utopia.reach.component.template.ReachComponentWrapper
@@ -149,21 +150,21 @@ trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButto
   * @since 31.05.2023, v1.1
   */
 case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy,
-                                                   contextPointer: Changing[TextContext],
+                                                   context: VariableTextContext,
                                                    settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
-		with VariableContextualFactory[TextContext, ContextualViewImageAndTextButtonFactory]
+		with ContextualFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
 		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory]
 {
 	// IMPLEMENTED  --------------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableTextContext) =
+		copy(context = context)
 	override def withSettings(settings: ViewImageAndTextButtonSettings) =
 		copy(settings = settings)
 	
 	override def apply(alignment: Alignment) = copy(
-		contextPointer = contextPointer.map { _.withTextAlignment(alignment) },
+		context = context.withTextAlignment(alignment),
 		settings = settings.withImageAlignment(alignment.opposite)
 	)
 	
@@ -183,7 +184,7 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
 	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	            (action: A => Unit) =
-		new ViewImageAndTextButton[A](parentHierarchy, contextPointer, contentPointer, imagesPointer, settings,
+		new ViewImageAndTextButton[A](parentHierarchy, context, contentPointer, imagesPointer, settings,
 			displayFunction)(action)
 	
 	/**
@@ -199,8 +200,12 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
 	def icon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	            displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	           (action: A => Unit) =
+	{
+		// iconPointer.map { _.inButton.conte }
 		apply[A](contentPointer, iconPointer.mergeWith(contextPointer) { _.inButton.contextual(_) },
 			displayFunction)(action)
+	}
+	
 	@deprecated("Please use .icon(...) instead", "v1.1")
 	def withIcon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
@@ -309,7 +314,7 @@ object ViewImageAndTextButton extends ViewImageAndTextButtonSetup()
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                 contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
                                 settings: ViewImageAndTextButtonSettings,
                                 displayFunction: DisplayFunction[A] = DisplayFunction.raw)
@@ -318,28 +323,26 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, contextPoin
 {
 	// ATTRIBUTES	-----------------------------
 	
-	/**
-	  * A pointer that refers to this button's main color
-	  */
-	val colorPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
-	
 	override protected val wrapped = {
 		// Adds (fixed) space for borders
-		val initialBorderWidth = contextPointer.value.buttonBorderWidth
+		val borderWidth = context.buttonBorderWidth
 		val appliedLabelSettings = settings.labelSettings
-			.mapInsets { _.map { _.mapBoth { _.more } { _ + initialBorderWidth } } }
+			.mapInsets { _.map { _.mapBoth { _.more } { _ + borderWidth } } }
 		
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
 		
-		ViewImageAndTextLabel.withContext(parentHierarchy, contextPointer).withSettings(appliedLabelSettings)
-			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer,
-				contextPointer.mapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth }))
+		ViewImageAndTextLabel.withContext(parentHierarchy, context).withSettings(appliedLabelSettings)
+			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)))
 			.apply(contentPointer, imagePointer, displayFunction)
 	}
 	
 	
 	// COMPUTED	----------------------------------
 	
+	/**
+	  * A pointer that refers to this button's main color
+	  */
+	def colorPointer = context.backgroundPointer
 	/**
 	  * @return This button's current background color
 	  */

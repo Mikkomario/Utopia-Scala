@@ -1,7 +1,7 @@
 package utopia.reach.component.button.image
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.text.StaticTextContext
-import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}

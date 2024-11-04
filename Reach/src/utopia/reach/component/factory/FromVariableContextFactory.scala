@@ -5,6 +5,7 @@ import utopia.flow.view.template.eventful.Changing
 
 import scala.language.implicitConversions
 
+@deprecated("With the introduction of variable context classes, this trait is no longer needed", "v1.4")
 object FromVariableContextFactory
 {
 	// IMPLICIT    -----------------------
@@ -32,6 +33,7 @@ object FromVariableContextFactory
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */
+@deprecated("With the introduction of variable context classes, this trait is no longer needed", "v1.4")
 trait FromVariableContextFactory[-N, +A] extends FromContextFactory[N, A]
 {
 	// ABSTRACT -------------------------

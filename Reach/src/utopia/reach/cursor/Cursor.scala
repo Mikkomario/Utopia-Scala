@@ -1,6 +1,6 @@
 package utopia.reach.cursor
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.genesis.graphics.StrokeSettings
 import utopia.genesis.image.Image
@@ -128,7 +128,7 @@ trait Cursor
 	  * @param context Current component context
 	  * @return Cursor suitable for that context
 	  */
-	def contextual(implicit context: ColorContext) = over(context.background)
+	def contextual(implicit context: StaticColorContext) = over(context.background)
 	
 	
 	// OTHER    --------------------------------
