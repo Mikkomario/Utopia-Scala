@@ -222,7 +222,8 @@ object ChatTest extends App
 			}
 			else if (input.startsWith("/save"))
 				StdIn.readNonEmptyLine("Please specify the name of the save file to generate").foreach { fileName =>
-					Paths.get(s"Echo/data/test-output/${ fileName.endingWith(".json") }").writeJson(chat).log
+					Paths.get(s"data/save-states/${ fileName.endingWith(".json") }")
+						.createParentDirectories().flatMap { _.writeJson(chat) }.log
 						.foreach { path => println(s"Current chat status saved to $path") }
 				}
 			else if (input.startsWith("/"))
