@@ -4,6 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.time.{DateRange, Today, WeekDay}
 import utopia.flow.time.TimeExtensions._
@@ -12,6 +13,7 @@ import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
 import java.time.{LocalDate, YearMonth}
+import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn
 import scala.util.Try
 
@@ -270,7 +272,7 @@ object ConsoleExtensions
 		 */
 		def selectFrom[A](options: Seq[(A, String)], target: String = "items", verb: String = "select",
 		                  maxListCount: Int = 20) =
-			_selectFrom(options, None, target, verb, maxListCount)
+			_selectFrom(options, None, target, verb, maxListCount).headOption
 		/**
 		 * Requests the user to select one of the specified options.
 		 * Allows the user to add a new value, if they so desire.
@@ -285,14 +287,27 @@ object ConsoleExtensions
 		 */
 		def selectFromOrAdd[A](options: Seq[(A, String)], target: String = "items", verb: String = "select",
 		                       maxListCount: Int = 20)(addNew: => Option[A]) =
-			_selectFrom(options, Some({ () => addNew }), target, verb, maxListCount)
+			_selectFrom(options, Some({ () => addNew.emptyOrSingle }), target, verb, maxListCount).headOption
+		
+		/**
+		  * Allows the user to select 0-n items from the specified options, using an interactive console
+		  * @param options Options available for selection
+		  * @param target A string representing the options in plural form. Default = "items".
+		  * @param verb Verb used for the action of selecting an option. Default = "select".
+		  * @param maxListCount Maximum number of items that may be listed on the console.
+		  * @tparam A Type of selected items
+		  * @return Selected items
+		  */
+		def selectMany[A](options: Seq[(A, String)], target: String = "items", verb: String = "select",
+		                  maxListCount: Int = 20) =
+			_selectFrom(options, None, target, verb, maxListCount, multiSelect = true)
 		
 		// Allows the user to select from the specified options.
 		// Option description is the second item in 'options'
 		// If 'addNew' is defined, the user is allowed to add new items
 		// Please specify 'target' in plural form
-		private def _selectFrom[A](options: Seq[(A, String)], addNew: Option[() => Option[A]],
-		                           target: String, verb: String, maxListCount: Int): Option[A] =
+		private def _selectFrom[A](options: Seq[(A, String)], addNew: Option[() => Iterable[A]],
+		                           target: String, verb: String, maxListCount: Int, multiSelect: Boolean = false): Iterable[A] =
 		{
 			options.emptyOneOrMany match {
 				// Case: No options available
@@ -303,83 +318,137 @@ object ConsoleExtensions
 							if (ask(s"No $target were found. Would you like to add a new one?"))
 								addNew()
 							else
-								None
+								Empty
 						// Case: Insert not possible => Couldn't find any item
 						case None =>
 							println(s"No $target were found.")
-							None
+							Empty
 					}
-					
+				
 				// Case: Only one option available => Asks the user whether they want to select it
 				case Some(Left(only)) =>
 					val addNote = {
 						if (addNew.isDefined)
-							"\nPlease note that if you select \"no\", you may still add a new item."
+							" (If you select \"no\", you may still add a new item)"
 						else
 							""
 					}
 					if (ask(s"Do you want to $verb ${ only._2 }?$addNote", default = true))
-						Some(only._1)
+						Single(only._1)
 					// Also allows insertion as a secondary option, if possible
 					else
-						addNew.filter { _ => ask("Do you want to add a new one instead?") }.flatMap { _() }
-						
-				// Case: Multiple options to choose from => Asks the user to filter or to select one
-				case Some(Right(options)) =>
-					val tooMany = options.hasSize > maxListCount
-					if (tooMany) {
-						println(s"There are ${options.size} $target to $verb from")
-						println("Please narrow the selection by specifying an additional filter (empty cancels)")
-						if (addNew.isDefined)
-							println("Hint: you can also add a new item by typing \"new\"")
-					}
-					else {
-						options.indices.foreach { index => println(s"\t${index + 1}: ${options(index)._2}") }
-						if (addNew.isDefined)
-							println("\t0: Create new")
-						println("Please select the correct index or narrow the selection by typing text (empty cancels)")
-					}
-					readNonEmptyLine().flatMap { filter =>
-						addNew.filter { _ => filter ~== "new" } match {
-							// Case: Selected "new" => Adds a new item
+						addNew.filter { _ => ask("Do you want to add a new one instead?") } match {
 							case Some(addNew) => addNew()
-							case None =>
-								val targetIndex = if (tooMany) None else filter.int
-								targetIndex match {
-									// Case: Selected an index
-									case Some(index) =>
-										// Case: Selected 0 => Adds a new item
-										if (index == 0 && addNew.isDefined)
-											addNew.flatMap { _() }
-										// Case: Selected another index => Picks that item, if the index is valid
-										else
-											options.lift(index - 1) match {
-												case Some(item) => Some(item._1)
-												case None =>
-													println(s"Specified index $index didn't match listed option. Please try again.")
-													_selectFrom(options, addNew, target, verb, maxListCount)
-											}
-									// Case: Specified text => Filters options
-									case None =>
-										val narrowed = options.filter { _._2.containsIgnoreCase(filter) }
-										// Case: No matches => Lists the same options again
-										if (narrowed.isEmpty) {
-											println(s"\"$filter\" didn't match any $target, please try again")
-											_selectFrom(options, addNew, target, verb, maxListCount)
-										}
-										else
-											narrowed.only match {
-												// Case: Specified a unique match => Selects that one (with notice)
-												case Some(only) =>
-													println(s"Selected ${ only._2 }")
-													Some(only._1)
-												// Case: Still multiple options => Lists them again
-												case None =>
-													_selectFrom(narrowed, addNew, target, verb, maxListCount)
-											}
-								}
+							case None => Empty
 						}
+				
+				// Case: Multiple options to choose from => Asks the user to filter or to select one
+				case Some(Right(options)) => _selectFromMany(options, addNew, target, verb, maxListCount, multiSelect)
+			}
+		}
+		private def _selectFromMany[A](options: Seq[(A, String)], addNew: Option[() => Iterable[A]],
+		                               targetsStr: String, verb: String, maxListCount: Int, multiSelect: Boolean): Iterable[A] =
+		{
+			val tooMany = options.hasSize > maxListCount
+			if (tooMany) {
+				println(s"There are ${options.size} $targetsStr to $verb from")
+				println("Please narrow the selection by specifying an additional filter (empty cancels)")
+				if (addNew.isDefined)
+					println("Hint: you can also add a new item by typing \"new\"")
+			}
+			else {
+				options.indices.foreach { index => println(s"\t${index + 1}: ${options(index)._2}") }
+				if (addNew.isDefined)
+					println("\t0: Create new")
+				println("Please select the correct index or narrow the selection by typing text (empty cancels)")
+				if (multiSelect)
+					println(s"${ verb.capitalize } multiple $targetsStr by specifying a comma-separated list. To $verb all $targetsStr, type \"all\".")
+			}
+			readNonEmptyLine() match {
+				case Some(target) =>
+					addNew.filter { _ => (target ~== "new") || (!tooMany && target == "0") } match {
+						// Case: Selected "new" => Adds a new item
+						case Some(addNew) => addNew()
+						// Case: Targeted specific items or added filters
+						case None =>
+							if (target ~== "all") {
+								println(s"Selected all ${ options.size } $target")
+								options.map { _._1 }
+							}
+							else {
+								val targets = {
+									if (multiSelect)
+										target.split(',').view.map { _.trim }.toOptimizedSeq
+									else
+										Single(target)
+								}
+								val (stringTargets, targetIndices) = targets.divideWith { t => t.int.toRight(t) }
+								val missingTargetsBuilder = new VectorBuilder[String]()
+								val indexTargeted = targetIndices.flatMap { index =>
+									// Case: Selected 0 => Adds a new item
+									if (index == 0 && addNew.isDefined)
+										addNew match {
+											case Some(addNew) => addNew()
+											case None => Empty
+										}
+									// Case: Selected another index => Picks that item, if the index is valid
+									else
+										options.lift(index - 1) match {
+											case Some(item) => Some(item._1)
+											case None =>
+												missingTargetsBuilder += index.toString
+												None
+										}
+								}
+								val stringTargetResults = stringTargets.flatMap { target =>
+									val narrowed = options.filter { _._2.containsIgnoreCase(target) }
+									// Case: No matches => Lists the same options again
+									if (narrowed.isEmpty) {
+										missingTargetsBuilder += target
+										None
+									}
+									else
+										narrowed.only match {
+											// Case: Specified a unique match => Selects that one (with notice)
+											case Some(only) =>
+												println(s"Selected ${ only._2 }")
+												Some(Right(only._1))
+											// Case: Still multiple options => Lists them again
+											case None => Some(Left(target -> narrowed))
+										}
+								}
+								
+								// Finishes the narrowed searches
+								val resolvedStringTargetResults = stringTargetResults.flatMap {
+									case Right(targeted) => Some(targeted)
+									case Left((target, narrowed)) =>
+										println(s"${targetsStr.capitalize} matching \"$target\":")
+										_selectFromMany(narrowed, addNew, target, verb, maxListCount, multiSelect)
+								}
+								// Finishes the failed searches
+								val missingTargets = missingTargetsBuilder.result()
+								val resolvedMissingTargets = {
+									if (missingTargets.isEmpty)
+										Empty
+									else {
+										println(s"No $targetsStr found for ${
+											missingTargets.view.map { _.quoted }.mkString(" or ") }")
+										println("Please try again.")
+										val otherSelected = Set.concat(indexTargeted, resolvedStringTargetResults)
+										if (otherSelected.nonEmpty)
+											_selectFrom(
+												options.filterNot { case (a, _) => otherSelected.contains(a) },
+												addNew, targetsStr, verb, maxListCount, multiSelect)
+										else
+											_selectFromMany(options, addNew, targetsStr, verb, maxListCount,
+												multiSelect)
+									}
+								}
+								
+								indexTargeted ++ resolvedStringTargetResults ++ resolvedMissingTargets
+							}
 					}
+				case None => Empty
 			}
 		}
 		

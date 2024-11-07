@@ -1,11 +1,14 @@
 package utopia.flow.test
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.parse.json.{JsonReader, JsonParser}
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
+import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import TestContext._
+
+import scala.io.StdIn
 
 /**
  * Provides a test console
@@ -36,9 +39,15 @@ object ConsoleTest extends App
 		forgottenCommandsPointer.update { _ + commandName }
 		println(s"I forgot how to $commandName...")
 	}
+	val selectManyCommand = Command.withoutArguments("select-many") {
+		val selected = StdIn.selectMany(Vector(
+			1 -> "Option 1", 2 -> "Second Option", 3 -> "Option numero tres", 4 -> "One more option"))
+		println(s"Selected options: ${ selected.mkString(", ") }")
+	}
 	
 	val activeCommandsPointer = forgottenCommandsPointer.map { forgotten =>
-		Vector(closeCommand, helloCommand, forgetCommand).filterNot { command => forgotten.contains(command.name) }
+		Vector(closeCommand, helloCommand, selectManyCommand, forgetCommand)
+			.filterNot { command => forgotten.contains(command.name) }
 	}
 	
 	println("Welcome to test console. Command to quit is 'quit' or 'exit'")

@@ -3,16 +3,12 @@ package utopia.echo.test
 import utopia.access.http.Status
 import utopia.annex.util.RequestResultExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.disciple.controller.AccessLogger
 import utopia.echo.controller.OllamaClient
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.immutable.Single
-import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
-import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import scala.concurrent.ExecutionContext
 import scala.io.StdIn
@@ -36,13 +32,13 @@ object EchoTestContext
 	implicit val exc: ExecutionContext = new ThreadPool("Echo")
 	implicit val jsonParser: JsonParser = JsonBunny
 	
-	private val accessLogger = new AccessLogger(new FileLogger("Echo/data/test-output", groupDuration = 1.seconds))
+	// private val accessLogger = new AccessLogger(new FileLogger("Echo/data/test-output", groupDuration = 1.seconds))
 	/**
 	  * Commonly utilized Ollama client interface
 	  */
-	val client = new OllamaClient(
-		requestInterceptors = Single(accessLogger),
-		responseInterceptors = Single(accessLogger))
+	val client = new OllamaClient()
+		// requestInterceptors = Single(accessLogger),
+		// responseInterceptors = Single(accessLogger))
 	
 	
 	// OTHER    ----------------------

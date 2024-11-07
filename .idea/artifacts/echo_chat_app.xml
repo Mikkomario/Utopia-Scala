@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="echo-chat-app">
+    <output-path>$PROJECT_DIR$/out/artifacts/echo_chat_app</output-path>
+    <root id="archive" name="Echo-Chat.jar">
+      <element id="module-output" name="Echo" />
+      <element id="module-test-output" name="Echo" />
+      <element id="module-output" name="Access" />
+      <element id="module-output" name="Flow" />
+      <element id="module-output" name="Annex" />
+      <element id="module-output" name="Disciple" />
+      <element id="module-output" name="BunnyMunch" />
+      <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.13.14.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.13.14.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/Disciple/lib/httpclient5-5.1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/Disciple/lib/httpcore5-5.1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.25.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/Disciple/lib/commons-codec-1.15.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

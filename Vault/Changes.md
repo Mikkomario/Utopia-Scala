@@ -1,6 +1,9 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.1 (in development)
+### Bugfixes
+- Automatically generated joins from a **ReferencePoint** may now include a join from the specified point, 
+  when the targeted table is one of the listed options
 ### New features
 - Added **ConsoleCommands**, which provides some utility database commands for command line consoles
 ### New methods
