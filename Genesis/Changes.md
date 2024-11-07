@@ -81,7 +81,7 @@ it may be wise to either collaborate to make the transition easier, or to wait f
 - This module is no longer dependent from the **Inception** module
 - Multiple new features and changes lack in-depth testing - Exercise discretion
 
-## v3.5.1 (in development)
+## v3.5.1
 ### New methods
 - **StrokeSettings**
   - Added `.toDrawSettings`

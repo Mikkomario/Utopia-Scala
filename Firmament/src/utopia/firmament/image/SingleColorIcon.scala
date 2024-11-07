@@ -55,6 +55,7 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, Reflection v1.2
   */
+// TODO: Extend FromVariableShadeFactory
 case class SingleColorIcon(original: Image, standardSize: Size)
 	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
 		with StandardSizeAdjustable[SingleColorIcon] with FromColorFactory[Image]
