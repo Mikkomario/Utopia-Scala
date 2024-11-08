@@ -28,7 +28,8 @@ import scala.concurrent.ExecutionContext
   */
 object ReachTestContext
 {
-	System.setProperty("sun.java2d.noddraw", true.toString)
+	// System.setProperty("sun.java2d.noddraw", true.toString)
+	System.setProperty("sun.awt.noerasebackground", "true")
 	ParadigmDataType.setup()
 	
 	// ATTRIBUTES   ------------------------
