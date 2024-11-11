@@ -5,7 +5,7 @@ package utopia.flow.operator.equality
   * @author Mikko Hilpinen
   * @since 7.10.2022, v2.0
   */
-trait ApproxSelfEquals[Repr] extends ApproxEquals[Repr]
+trait ApproxSelfEquals[Repr] extends Any with ApproxEquals[Repr]
 {
 	// ABSTRACT -----------------------
 	
