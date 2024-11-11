@@ -80,6 +80,7 @@ trait StaticBaseContextLike[+Repr, +ColorSensitive] extends BaseContextCopyable[
 	
 	override def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength] =
 		Fixed(scaledStackMargin(scaling))
+	override def stackMarginPointerFor(smallFlag: Flag): Changing[StackLength] = smallFlag.map(stackMarginFor)
 	
 	
 	// OTHER    -------------------------
@@ -89,4 +90,10 @@ trait StaticBaseContextLike[+Repr, +ColorSensitive] extends BaseContextCopyable[
 	  * @return Stack margin of this context, scaled to the specified size
 	  */
 	def scaledStackMargin(scaling: SizeCategory) = margins.scaleStackMargin(stackMargin, scaling)
+	
+	/**
+	  * @param small Whether targeting the smaller stack margin
+	  * @return Stack margin which matches the targeted size category
+	  */
+	def stackMarginFor(small: Boolean) = if (small) smallStackMargin else stackMargin
 }

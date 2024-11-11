@@ -3,7 +3,8 @@ package utopia.reach.window
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
-import utopia.firmament.context.{TextContext, WindowContext}
+import utopia.firmament.context.WindowContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
@@ -69,7 +70,7 @@ object ReachWindow
 	  * @return A new Reach window factory that uses the specified context
 	  */
 	def contentContextual(implicit context: ReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
-		contextual.withContentContext(context.textContext)
+		contextual.withContentContext(context)
 	
 	
 	// OTHER    ---------------------------
@@ -89,7 +90,7 @@ object ReachWindow
 	 * @return A new Reach window factory that uses the specified context
 	 */
 	def withContext(context: ReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
-		ContextualReachWindowFactory(context).withContentContext(context.textContext)
+		ContextualReachWindowFactory(context).withContentContext(context)
 	/**
 	  * @param actorHandler Actor handler to use
 	  * @param background Window background color
@@ -117,7 +118,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	
 	override def withReachWindowContext(base: ReachWindowContext): ContextualReachWindowFactory = copy(base)
 	
-	override def withContentContext(textContext: TextContext) =
+	override def withContentContext(textContext: StaticTextContext) =
 		ReachContentWindowFactory(this, context.withContentContext(textContext))
 	
 	
@@ -451,13 +452,13 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[TextContext, F],
+	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
 	                                         parent: Option[java.awt.Window] = None,
 	                                         title: LocalizedString = LocalizedString.empty,
 	                                         disableAutoBoundsUpdates: Boolean = false)
 	                                        (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
 		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { hierarchy =>
-			createContent(hierarchy.top, factory.withContext(hierarchy, textContext))
+			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}
 	
 	/**
@@ -497,7 +498,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	def anchoredToUsing[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[TextContext, F],
+	def anchoredToUsing[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
 	                                                   component: ReachComponentLike, preferredAlignment: Alignment,
 	                                                   margin: Double = 0.0,
 	                                                   title: LocalizedString = LocalizedString.empty,

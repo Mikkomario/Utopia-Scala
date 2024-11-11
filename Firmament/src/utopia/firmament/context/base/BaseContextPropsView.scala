@@ -66,6 +66,17 @@ trait BaseContextPropsView extends Any
 	  * @return Stack margin of this context, scaled to the specified size
 	  */
 	def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength]
+	/**
+	  * @param scalingPointer A pointer that contains the targeted stack margin size
+	  * @return Stack margin of this context, scaled to the specified (variable) size
+	  */
+	def scaledStackMarginPointer(scalingPointer: Changing[SizeCategory]): Changing[StackLength]
+	/**
+	  * @param smallFlag A pointer that contains true when small stack margin should be used and false when
+	  *                  the default stack margin should be used.
+	  * @return A pointer that contains either the small or the default stack margin, matching the state of 'smallFlag'.
+	  */
+	def stackMarginPointerFor(smallFlag: Flag): Changing[StackLength]
 	
 	
 	// COMPUTED -------------------------
@@ -74,4 +85,14 @@ trait BaseContextPropsView extends Any
 	  * @return Button border width to use by default
 	  */
 	def buttonBorderWidth = (margins.verySmall / 2.0).round.toInt
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param small True if targeting the small stack margin. False otherwise.
+	  * @return Stack margin pointer that matches the specified size scale.
+	  */
+	def stackMarginPointerFor(small: Boolean) =
+		if (small) smallStackMarginPointer else stackMarginPointer
 }

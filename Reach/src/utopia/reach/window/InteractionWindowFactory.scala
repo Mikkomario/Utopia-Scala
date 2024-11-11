@@ -1,6 +1,6 @@
 package utopia.reach.window
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
@@ -67,7 +67,7 @@ trait InteractionWindowFactory[A]
 	  * @param hasIcon Whether the button uses an icon
 	  * @return Context used when creating the button
 	  */
-	protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean): TextContext
+	protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean): StaticTextContext
 	
 	/**
 	  * Creates new content for a new dialog
@@ -75,7 +75,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[TextContext]): (ReachComponentLike, Seq[WindowButtonBlueprint[A]], View[Boolean])
+	protected def createContent(factories: ContextualMixed[StaticTextContext]): (ReachComponentLike, Seq[WindowButtonBlueprint[A]], View[Boolean])
 	
 	
 	// OTHER	-----------------------
@@ -248,7 +248,7 @@ trait InteractionWindowFactory[A]
 	private def actualize(factories: Mixed, blueprint: WindowButtonBlueprint[A], resultPromise: Promise[A],
 	                      defaultActionEnabled: => Boolean) =
 	{
-		implicit val context: TextContext = buttonContext(blueprint.role, blueprint.icon.nonEmpty)
+		implicit val context: StaticTextContext = buttonContext(blueprint.role, blueprint.icon.nonEmpty)
 		val enterHotkey = {
 			if (blueprint.isDefault)
 				Some(HotKey.conditional(Enter)(defaultActionEnabled))

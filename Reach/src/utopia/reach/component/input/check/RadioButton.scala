@@ -1,6 +1,7 @@
 package utopia.reach.component.input.check
 
-import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackLength
@@ -17,8 +18,8 @@ import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
@@ -173,7 +174,7 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] wit
 	protected def _apply[A](selectedValuePointer: EventfulPointer[A], value: A,
 	                        backgroundColorPointer: Changing[Color], diameter: Double,
 	                        hoverExtraRadius: Double, ringWidth: Double)
-	            (implicit colorScheme: ColorScheme) =
+	                       (implicit colorScheme: ColorScheme) =
 		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
 			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, settings)
 }
@@ -185,11 +186,11 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] wit
   * @since 21.06.2023, v1.1
   */
 case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
-                                        contextPointer: Changing[ColorContext],
+                                        context: VariableColorContext,
                                         settings: RadioButtonSettings = RadioButtonSettings.default,
                                         scaling: Double = 1.0)
 	extends RadioButtonFactoryLike[ContextualRadioButtonFactory]
-		with VariableContextualFactory[ColorContext, ContextualRadioButtonFactory]
+		with ContextualFactory[VariableColorContext, ContextualRadioButtonFactory]
 		with StandardSizeAdjustable[ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED  --------------------------
@@ -197,8 +198,7 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	override def self: ContextualRadioButtonFactory = this
 	override protected def relativeToStandardSize: Double = scaling
 	
-	override def withContextPointer(contextPointer: Changing[ColorContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableColorContext) = copy(context = context)
 	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
 	
 	override def *(mod: Double): ContextualRadioButtonFactory = copy(scaling = scaling * mod)
@@ -215,10 +215,8 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def apply[A](selectedValuePointer: EventfulPointer[A], value: A) = {
 		// Uses a static size after creation
-		val context = contextPointer.value
-		val bgPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
 		val sizeMod = ComponentCreationDefaults.radioButtonScalingFactor * scaling
-		_apply[A](selectedValuePointer, value, bgPointer,
+		_apply[A](selectedValuePointer, value, context.backgroundPointer,
 			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
 			(context.margins.medium * 0.4 * sizeMod).round.toDouble,
 			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble)(context.colors)
@@ -233,13 +231,11 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
 case class RadioButtonFactory(parentHierarchy: ComponentHierarchy,
                               settings: RadioButtonSettings = RadioButtonSettings.default)
 	extends RadioButtonFactoryLike[RadioButtonFactory]
-		with FromVariableContextFactory[ColorContext, ContextualRadioButtonFactory]
+		with FromContextFactory[VariableColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(p: Changing[ColorContext]) =
-		ContextualRadioButtonFactory(parentHierarchy, p, settings)
-	
+	override def withContext(c: VariableColorContext) = ContextualRadioButtonFactory(parentHierarchy, c, settings)
 	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
 	
 	
@@ -271,14 +267,14 @@ case class RadioButtonFactory(parentHierarchy: ComponentHierarchy,
   */
 case class RadioButtonSetup(settings: RadioButtonSettings = RadioButtonSettings.default)
 	extends RadioButtonSettingsWrapper[RadioButtonSetup] with ComponentFactoryFactory[RadioButtonFactory]
-		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualRadioButtonFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = RadioButtonFactory(hierarchy, settings)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy, p: Changing[ColorContext]) =
-		ContextualRadioButtonFactory(hierarchy, p, settings)
+	override def withContext(hierarchy: ComponentHierarchy, c: VariableColorContext) =
+		ContextualRadioButtonFactory(hierarchy, c, settings)
 	
 	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
 }

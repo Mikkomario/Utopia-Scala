@@ -1,7 +1,8 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.RowGroups
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
@@ -9,6 +10,7 @@ import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.AwtComponentRelated
@@ -18,8 +20,6 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenAnyKeyPressed
-import utopia.firmament.localization.LocalizedString
-import utopia.paradigm.shape.shape2d.vector.point.Point
 
 import scala.concurrent.ExecutionContext
 
@@ -55,13 +55,13 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	/**
 	  * @return Component creation context for the field name labels.
 	  */
-	protected def fieldLabelContext: TextContext
+	protected def fieldLabelContext: StaticTextContext
 	
 	/**
 	  * @return Component creation context for the missing or invalid value pop-up,
 	  *         includes the pop-up background color and text layout.
 	  */
-	protected def popupContext: TextContext
+	protected def popupContext: StaticTextContext
 	
 	/**
 	  * @return Execution context for asynchronous tasks

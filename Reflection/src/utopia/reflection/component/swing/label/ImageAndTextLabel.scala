@@ -2,10 +2,12 @@ package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.text.MutableStyleTextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
+import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.image.Image
@@ -16,8 +18,6 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far}
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.{StackInsets, StackLength}
 
 object ImageAndTextLabel
 {

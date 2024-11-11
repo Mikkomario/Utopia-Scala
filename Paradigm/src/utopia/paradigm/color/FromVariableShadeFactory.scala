@@ -4,13 +4,6 @@ import utopia.flow.collection.immutable.caching.cache.{Cache, WeakCache}
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
-private object FromVariableShadeFactory
-{
-	// ATTRIBUTES   ---------------------
-	
-	private val shadePointerCache = WeakCache { colorP: Changing[Color] => colorP.map { _.shade } }
-}
-
 /**
   * Common trait for factories that construct items based on shade, supporting variable (i.e. changing) shades.
   * Note: This trait introduces concrete attributes used in pointer-optimization.
@@ -22,8 +15,6 @@ private object FromVariableShadeFactory
   */
 trait FromVariableShadeFactory[+A] extends FromShadeFactory[A]
 {
-	import FromVariableShadeFactory._
-	
 	// ATTRIBUTES   ---------------------
 	
 	// Weakly caches the pointer-mappings in order to avoid creating unnecessary pointers
@@ -51,7 +42,7 @@ trait FromVariableShadeFactory[+A] extends FromShadeFactory[A]
 	def againstVariableBackground(backgroundColorPointer: Changing[Color]) =
 		backgroundColorPointer.fixedValue match {
 			case Some(fixedBg) => Fixed(against(fixedBg))
-			case None => againstPointersCache(shadePointerCache(backgroundColorPointer))
+			case None => againstPointersCache(ColorShade.ofVariableColor(backgroundColorPointer))
 		}
 	/**
 	  * @param shadePointer A pointer that contains the overall shade of the background color

@@ -1,8 +1,10 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.view.template.eventful.Changing
 
 /**
   * An enumeration for standard color shades used in various UI components
@@ -92,6 +94,8 @@ object ColorShade
 	  */
 	val values = Pair[ColorShade](Light, Dark)
 	
+	private val shadePointerCache = WeakCache { colorP: Changing[Color] => colorP.map { _.shade } }
+	
 	
 	// OTHER    ------------------------------
 	
@@ -100,6 +104,12 @@ object ColorShade
 	  * @return A color shade variant matching that luminosity level
 	  */
 	def forLuminosity(luminosity: Double): ColorShade = if (luminosity > 0.5) Light else Dark
+	
+	/**
+	  * @param colorPointer A color pointer
+	  * @return A pointer that contains that pointer's color's shade
+	  */
+	def ofVariableColor(colorPointer: Changing[Color]) = shadePointerCache(colorPointer)
 	
 	
 	// VALUES   -----------------------------

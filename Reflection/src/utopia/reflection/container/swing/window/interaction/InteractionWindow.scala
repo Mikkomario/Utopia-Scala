@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.firmament.model.stack.LengthExtensions._
@@ -37,14 +38,14 @@ trait InteractionWindow[+A]
 	/**
 	  * @return Context used when creating the dialog. Provided container background specifies the dialog background color.
 	  */
-	protected def standardContext: ColorContext
+	protected def standardContext: StaticColorContext
 	
 	/**
 	  * @param buttonColor The desired button color
 	  * @param hasIcon Whether the button uses an icon
 	  * @return Context used when creating the button
 	  */
-	protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean): TextContext
+	protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean): StaticTextContext
 	
 	/**
 	  * Buttons that are displayed on this dialog. The first button is used as the default.
@@ -121,7 +122,7 @@ trait InteractionWindow[+A]
 		
 		// Creates the buttons based on button info
 		val actualizedButtons = buttonBlueprints.map { buttonData =>
-			implicit val btnC: TextContext = buttonContext(buttonData.color, buttonData.icon.isDefined)
+			implicit val btnC: StaticTextContext = buttonContext(buttonData.color, buttonData.icon.isDefined)
 			val button = buttonData.icon match
 			{
 				case Some(icon) => ImageAndTextButton.contextualWithoutAction(icon.inButton.contextual, buttonData.text)
@@ -131,7 +132,7 @@ trait InteractionWindow[+A]
 		}
 		// Places content in a stack
 		val content = {
-			implicit val baseC: ColorContext = context
+			implicit val baseC: StaticColorContext = context
 			Stack.buildColumnWithContext() { mainStack =>
 				// Some of the buttons may be placed before the dialog content, some after
 				val (bottomButtons, topButtons) = actualizedButtons.divideBy { _._1.location.vertical == Close }.toTuple

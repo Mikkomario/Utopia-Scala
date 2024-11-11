@@ -2,7 +2,7 @@ package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.image.ImageComponent
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.drawing.view.ViewImageDrawer
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.EventfulPointer

@@ -1,6 +1,8 @@
 package utopia.reach.component.input
 
-import utopia.firmament.context.{BaseContext, ComponentCreationDefaults, TextContext}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.base.BaseContextPropsView
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.{BackgroundViewDrawer, BorderViewDrawer, TextViewDrawer}
 import utopia.firmament.image.SingleColorIcon
@@ -8,6 +10,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{Border, TextDrawContext}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.enumeration.End
@@ -22,7 +25,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.insets.Insets
-import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
@@ -37,25 +40,25 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 /**
   * A set of context variables provided when creating field contents
   * @param parentHierarchy   Component hierarchy to use
-  * @param contextPointer    Pointer that contains teh field creation context
+  * @param context    Variable field creation text context
   * @param focusListener     Focus listener to assign to the created component
   * @param promptDrawers     Custom drawers to assign for prompt drawing
   */
-case class FieldCreationContext(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+case class FieldCreationContext(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                 focusListener: FocusChangeListener, promptDrawers: Seq[CustomDrawer])
 
 /**
   * A set of context variables provided when creating an additional right side label
   * @param content           Field content
-  * @param lazyContextPointer    Pointer to the context prevalent in this area (lazy)
+  * @param lazyContext    The variable context prevalent in this area (lazy)
   * @tparam C Type of field contents
   */
-case class ExtraFieldCreationContext[C](content: C, lazyContextPointer: Lazy[Changing[TextContext]])
+case class ExtraFieldCreationContext[C](content: C, lazyContext: Lazy[VariableTextContext])
 {
 	/**
-	  * @return Pointer to the context prevalent in this area
+	  * @return Context prevalent in this area
 	  */
-	def contextPointer = lazyContextPointer.value
+	def context = lazyContext.value
 }
 
 /**
@@ -436,15 +439,14 @@ trait FieldSettingsWrapper[+Repr] extends FieldSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                   settings: FieldSettings = FieldSettings.default)
 	extends FieldSettingsWrapper[ContextualFieldFactory]
-		with VariableContextualFactory[TextContext, ContextualFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: FieldSettings) = copy(settings = settings)
 	
 	
@@ -465,7 +467,7 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, contextPo
 	                                                 (makeField: FieldCreationContext => C)
 	                                                 (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 		                                                 Option[OpenComponent[ReachComponentLike, Any]]) =
-		new Field[C](parentHierarchy, contextPointer, isEmptyPointer, settings)(makeField)(makeRightHintLabel)
+		new Field[C](parentHierarchy, context, isEmptyPointer, settings)(makeField)(makeRightHintLabel)
 	
 	/**
 	  * Creates a new field
@@ -487,23 +489,14 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, contextPo
   */
 case class FieldSetup(settings: FieldSettings = FieldSettings.default)
 	extends FieldSettingsWrapper[FieldSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualFieldFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualFieldFactory(hierarchy, Fixed(context), settings)
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
+		ContextualFieldFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: FieldSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new field factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualFieldFactory(hierarchy, context, settings)
 }
 
 object Field extends FieldSetup()
@@ -521,7 +514,7 @@ object Field extends FieldSetup()
   */
 // TODO: It would be more reasonable if isEmptyPointer was nonEmptyPointer - the problem is that the transition is hard
 class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy: ComponentHierarchy,
-                                                    contextPointer: Changing[TextContext],
+                                                    context: VariableTextContext,
                                                     isEmptyPointer: Changing[Boolean],
                                                     settings: FieldSettings = FieldSettings.default)
                                                    (makeField: FieldCreationContext => C)
@@ -533,8 +526,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	
 	private val _focusPointer = ResettableFlag()
 	
-	private lazy val uncoloredHintContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { context =>
-		context
+	private lazy val uncoloredHintContext = context
 			// Hint text is smaller and has smaller insets
 			.mapTextInsets { original =>
 				val midInsets = original.expandingHorizontallyAccordingTo(context.textAlignment)
@@ -546,7 +538,6 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 					midInsets + Insets.horizontal(focusBorderWidthFrom(context))
 			}
 			.mapFont { _ * settings.hintScaleFactor }.withShrinkingText
-	}
 	
 	// Displays an error if there is one, otherwise displays the hint (provided there is one). None if neither is used.
 	private lazy val actualHintTextPointer = settings.hintPointer.notFixedWhere { _.isEmpty } match {
@@ -576,25 +567,27 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 				custom.orElse { if (hasFocus) Some(settings.focusColorRole) else None }
 		}
 	// If a separate background color is used for this component, it depends from this component's state
-	private val innerContextPointer = {
+	private val innerContext = {
 		// TODO: Handle mouse over state (highlights one more time)
 		if (settings.fillBackground)
-			contextPointer.mergeWithWhile(_focusPointer, parentHierarchy.linkPointer) { (context, hasFocus) =>
-				context.mapBackground { _.highlightedBy(if (hasFocus) 2 else 1) }
-			}
+			context.flatMapBackground { bg => _focusPointer.map { hasFocus => bg.highlightedBy(if (hasFocus) 2 else 1) } }
 		else
-			contextPointer
+			context
 	}
 	/**
 	  * A pointer to this field's current inner background color. May vary based on state.
 	  */
 	// TODO: See if this really needs to be exposed
-	val innerBackgroundPointer = innerContextPointer.strongMap { _.background }
-	private val highlightColorPointer = highlightStatePointer.mergeWith(innerContextPointer) { (state, context) =>
-		state.map { s => context.color(s) }
+	val innerBackgroundPointer = innerContext.backgroundPointer
+	private val highlightColorPointer = {
+		// NB: Might not be the optimal implementation here
+		highlightStatePointer.flatMap {
+			case Some(role) => context.colorPointer(role).map { Some(_) }
+			case None => Fixed(None)
+		}
 	}
 	
-	private val editTextColorPointer = innerContextPointer.strongMap { _.textColor }
+	private val editTextColorPointer = innerContext.textColorPointer
 	private val contentColorPointer: Changing[Color] = highlightColorPointer
 		.mergeWith(editTextColorPointer) { (highlight, default) =>
 			highlight match {
@@ -605,26 +598,28 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	// Hint text colouring is affected by the displayed error, as well as possible highlighting
 	// The actual display color is adjusted based on context background
 	// TODO: Check whether the timesAlpha -portion is unnecessary (or harmful)
-	private lazy val hintContextPointer = uncoloredHintContextPointer
-		.mergeWith(highlightStatePointer) { (context, highlight) =>
-			highlight match {
+	private lazy val hintContext = {
+		uncoloredHintContext.flatMapTextColor { originalTextColor =>
+			lazy val defaultColorPointer = Fixed(originalTextColor.timesAlpha(0.66))
+			highlightStatePointer.flatMap {
 				// Case: Highlighting applied
-				case Some(colorRole) => context.withTextColor(colorRole)
+				case Some(highlightColor) => uncoloredHintContext.colorPointer(highlightColor)
 				// Case: Default hint color
-				case None => context.mapTextColor { _.timesAlpha(0.66) }
+				case None => defaultColorPointer
 			}
 		}
+	}
 	
 	private val borderPointer = {
 		// When using filled background style, only draws the bottom border which varies in style based state
-		if (settings.fillBackground) {
-			contentColorPointer.mergeWithWhile(_focusPointer, contextPointer, parentHierarchy.linkPointer) { (color, focus, context) =>
-				Border.bottom(if (focus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
+		if (settings.fillBackground)
+			_focusPointer.mergeWithWhile(contentColorPointer, linkedFlag) { (hasFocus, color) =>
+				Border.bottom(if (hasFocus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
 			}
-		}
+		// Otherwise, draws the border on all sides
 		else
-			contentColorPointer.mergeWithWhile(_focusPointer, contextPointer, parentHierarchy.linkPointer) { (color, focus, context) =>
-				Border.symmetric(if (focus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
+			_focusPointer.mergeWithWhile(contentColorPointer, linkedFlag) { (hasFocus, color) =>
+				Border.symmetric(if (hasFocus) focusBorderWidthFrom(context) else defaultBorderWidthFrom(context), color)
 			}
 	}
 	private val borderDrawer = BorderViewDrawer(borderPointer)
@@ -693,12 +688,9 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 		}
 		// Wraps the field component in a Framing (that applies border)
 		// Top and side inset are increased if border is drawn on all sides
-		// TODO: At this time, these insets are static. Once ViewFraming is available, use variable insets
 		val borderInsets = {
-			if (settings.fillBackground)
-				Insets.bottom(focusBorderWidthFrom(contextPointer.value))
-			else
-				Insets.symmetric(focusBorderWidthFrom(contextPointer.value))
+			val width = focusBorderWidthFrom(context)
+			if (settings.fillBackground) Insets.bottom(width) else Insets.symmetric(width)
 		}
 		// Draws background (optional) and border
 		val drawers = {
@@ -712,7 +704,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	
 	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[SingleColorIcon],
 	                               noMarginSide: Direction2D) =
-		ViewImageLabel.withContextPointer(hierarchy, innerContextPointer)
+		ViewImageLabel.withContext(hierarchy, innerContext)
 			.withSettings(settings.imageSettings).lowPriority.mapInsets { _ - noMarginSide }
 			.iconPointer(pointer)
 	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
@@ -728,27 +720,24 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 				val nameShouldBeSeparatePointer = _focusPointer.mergeWith(isEmptyPointer) { _ || !_ }
 				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 				// TODO: Name label might have wrong text color because of background highlighting - Needs a different context if so
-				val nameLabel = factories.next()(ViewTextLabel).withContextPointer(hintContextPointer)
-					.text(fieldNamePointer)
+				val nameLabel = factories.next()(ViewTextLabel).withContext(hintContext).text(fieldNamePointer)
 				
 				// When displaying only the input, accommodates name label size increase into the vertical insets
 				// While displaying both, applies only half of the main text insets at top
-				val contentContextPointer = innerContextPointer.mergeWith(nameVisibilityPointer) { (context, nameIsVisible) =>
-					val comboTextInsets = context.textInsets.mapTop { _ / 2 }
-					val newInsets = {
-						if (nameIsVisible)
-							comboTextInsets
-						else {
-							val requiredIncrease = comboTextInsets.vertical + nameLabel.stackSize.height -
-								context.textInsets.vertical
-							context.textInsets.mapVertical { _ + requiredIncrease / 2 }
-						}
+				val contentContext = innerContext.flatMapTextInsets { originalInsets =>
+					// Text insets used when the field name is displayed on top of the content
+					val comboTextInsets = originalInsets.mapTop { _ / 2 }
+					// Text insets used when only the content is displayed. Scaled so that fills the same area.
+					val aloneTextInsets = {
+						val requiredIncrease = comboTextInsets.vertical + nameLabel.stackSize.height -
+							originalInsets.vertical
+						originalInsets.mapVertical { _ + requiredIncrease / 2 }
 					}
-					context.withTextInsets(newInsets)
+					nameVisibilityPointer.map { if (_) comboTextInsets else aloneTextInsets }
 				}
-				// While only the text label is being displayed, shows the field name as a prompt. Otherwise may show
+				// While only the text label is being displayed, shows the field name as a prompt. Otherwise, may show
 				// the other specified prompt (if defined)
-				val promptStylePointer = contentContextPointer.map { TextDrawContext.contextualHint(_) }
+				val promptStylePointer = contentContext.hintTextDrawContextPointer
 				// TODO: Should most likely be variable (now uses initial style only)
 				val emptyText = measureText(LocalizedString.empty, promptStylePointer.value)
 				// Only draws the name while it is not displayed elsewhere
@@ -768,7 +757,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 				}
 				
 				val wrappedField = makeField(FieldCreationContext(factories.next().parentHierarchy,
-					contentContextPointer, FocusTracker, Single(namePromptDrawer) ++ promptDrawer))
+					contentContext, FocusTracker, Single(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items
 				Pair(ComponentCreationResult(nameLabel, nameVisibilityPointer),
@@ -783,13 +772,13 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 		if (settings.fieldNamePointer.existsFixed { _.isEmpty }) {
 			// May draw a prompt while the field is empty (or starting with the prompt text)
 			val promptDrawer = settings.promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
-				val promptStylePointer = innerContextPointer.map { TextDrawContext.contextualHint(_) }
+				val promptStylePointer = innerContext.hintTextDrawContextPointer
 				val displayedPromptPointer = promptPointer.mergeWith(promptStylePointer)(measureText)
 				TextViewDrawer(displayedPromptPointer, promptStylePointer)
 			}
 			Open { hierarchy =>
-				val field = makeField(FieldCreationContext(hierarchy, innerContextPointer, FocusTracker,
-					promptDrawer.toVector))
+				val field = makeField(FieldCreationContext(hierarchy, innerContext, FocusTracker,
+					promptDrawer.emptyOrSingle))
 				field -> field
 			}
 		}
@@ -802,10 +791,10 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
 		// The right side hint label expands to the left and not right
-		val rightContextPointer = Lazy { hintContextPointer.map { context =>
-			context.mapTextInsets { _.mapRight { _.normalPriority }.mapLeft { _.expanding } }
+		val rightContextPointer = Lazy {
+			hintContext.mapTextInsets { _.mapRight { _.normalPriority }.mapLeft { _.expanding } }
 				.withHorizontalTextAlignment(Far)
-		} }
+		}
 		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, rightContextPointer)) match {
 			case Some(rightComponent) =>
 				actualHintTextPointer match {
@@ -819,7 +808,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 								(if (settings.fillBackground) 0 else defaultBorderWidthFrom(context)))
 								.notExpanding
 						}*/
-						val hintLabel = Open.using(ViewTextLabel) { _.withContextPointer(hintContextPointer)(hintTextPointer) }
+						val hintLabel = Open.using(ViewTextLabel) { _.withContext(hintContext)(hintTextPointer) }
 						val stack = Open.using(ViewStack) {
 							_.row
 								.apply(Pair(
@@ -835,7 +824,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 			case None =>
 				// Case: No additional hint should be displayed => May display a hint label still (occasionally)
 				actualHintTextPointer.map { hintTextPointer =>
-					Open.using(ViewTextLabel) { _.withContextPointer(hintContextPointer)(hintTextPointer) }
+					Open.using(ViewTextLabel) { _.withContext(hintContext)(hintTextPointer) }
 						.withResult(hintVisibilityPointer)
 				}
 		}
@@ -847,8 +836,8 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	private def measureText(text: LocalizedString, style: TextDrawContext) =
 		MeasuredText(text.string, parentHierarchy.fontMetricsWith(style.font), allowLineBreaks = style.allowLineBreaks)
 	
-	private def focusBorderWidthFrom(context: BaseContext) = (context.margins.verySmall / 2) max 3
-	private def defaultBorderWidthFrom(context: BaseContext) = focusBorderWidthFrom(context) / 3
+	private def focusBorderWidthFrom(context: BaseContextPropsView) = (context.margins.verySmall / 2) max 3
+	private def defaultBorderWidthFrom(context: BaseContextPropsView) = focusBorderWidthFrom(context) / 3
 	
 	
 	// NESTED	-----------------------------------

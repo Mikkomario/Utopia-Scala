@@ -1,10 +1,12 @@
 package utopia.firmament.drawing.view
 
 import utopia.firmament.drawing.immutable.ImageDrawer
-import utopia.firmament.factory.FramedFactory
-import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
+import utopia.firmament.factory.VariableFramedFactory
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, FromDrawLevelFactory}
 import utopia.genesis.image.Image
@@ -35,28 +37,23 @@ object ViewImageDrawer
 	// NESTED   ---------------------------
 	
 	case class ViewImageDrawerFactory(transformationView: View[Option[Matrix2D]] = View.fixed(None),
-	                                  insetsView: View[StackInsets] = View.fixed(StackInsets.any),
+	                                  insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
 	                                  alignmentView: View[Alignment] = View.fixed(Center), drawLevel: DrawLevel = Normal,
 	                                  upscales: Boolean = false)
-		extends LinearTransformable[ViewImageDrawerFactory] with FramedFactory[ViewImageDrawerFactory]
+		extends LinearTransformable[ViewImageDrawerFactory] with VariableFramedFactory[ViewImageDrawerFactory]
 			with FromAlignmentFactory[ViewImageDrawerFactory] with FromDrawLevelFactory[ViewImageDrawerFactory]
 	{
 		// IMPLEMENTED  ---------------------------
 		
-		override def insets: StackInsets = insetsView.value
 		override def identity: ViewImageDrawerFactory = this
 		
 		override def apply(alignment: Alignment): ViewImageDrawerFactory = withAlignmentView(View.fixed(alignment))
 		override def apply(drawLevel: DrawLevel): ViewImageDrawerFactory = copy(drawLevel = drawLevel)
-		override def withInsets(insets: StackInsetsConvertible): ViewImageDrawerFactory =
-			copy(insetsView = View.fixed(insets.toInsets))
+		override def withInsetsPointer(p: Changing[StackInsets]): ViewImageDrawerFactory = copy(insetsPointer = p)
 		override def transformedWith(transformation: Matrix2D): ViewImageDrawerFactory = mapTransformation {
 			case Some(t) => Some(t * transformation)
 			case None => Some(transformation)
 		}
-		
-		override def mapInsets(f: StackInsets => StackInsetsConvertible) =
-			withInsetsView(insetsView.mapValue { f(_).toInsets })
 		
 		
 		// OTHER    ------------------------------
@@ -64,8 +61,6 @@ object ViewImageDrawer
 		def withTransformationView(v: View[Option[Matrix2D]]) = copy(transformationView = v)
 		def mapTransformation(f: Mutate[Option[Matrix2D]]) =
 			withTransformationView(transformationView.mapValue(f))
-			
-		def withInsetsView(v: View[StackInsets]) = copy(insetsView = v)
 		
 		def withAlignmentView(v: View[Alignment]) = copy(alignmentView = v)
 		
@@ -74,7 +69,7 @@ object ViewImageDrawer
 		  * @return A drawer that draws the viewed image
 		  */
 		def apply(imageView: View[Image]) =
-			new ViewImageDrawer(imageView, transformationView, insetsView, alignmentView, drawLevel, upscales)
+			new ViewImageDrawer(imageView, transformationView, insetsPointer, alignmentView, drawLevel, upscales)
 		/**
 		  * @param image The image to display
 		  * @return A drawer that draws that image

@@ -1,6 +1,9 @@
 package utopia.reflection.container.swing.window
 
-import utopia.firmament.context.{AnimationContext, TextContext}
+import utopia.firmament.context.AnimationContext
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.localization.LocalizedString
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
@@ -8,8 +11,6 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 import utopia.reflection.component.swing.display.LoadingView
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
-import utopia.firmament.model.enumeration.WindowResizePolicy.Program
-import utopia.firmament.localization.LocalizedString
 import utopia.reflection.util.ProgressState
 
 import java.time.Instant

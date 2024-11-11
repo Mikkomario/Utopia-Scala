@@ -22,9 +22,41 @@ object VariableBaseContext
 {
 	// ATTRIBUTES   -------------------------
 	
+	/**
+	  * Used for acquiring scaled stack margins. The 3 keys come int 2 levels:
+	  *     1. Stack margin pointer (variable)
+	  *     1. Applicable margins + targeted size category
+	  *
+	  * Yields a pointer that provides scaled stack margins
+	  */
 	private val scaledStackMarginCache = WeakCache.weakKeys { marginPointer: Changing[StackLength] =>
 		WeakCache.weakValues[(Margins, SizeCategory), Changing[StackLength]] { case (margins, scaling) =>
 			marginPointer.map { margins.scaleStackMargin(_, scaling) }
+		}
+	}
+	/**
+	  * Used for acquiring scaled stack margin pointer-mappings. Uses 3 keys:
+	  *     1. Scaling pointer to apply (variable)
+	  *     1. Stack margin pointer to scale
+	  *     1. Applicable margins
+	  *
+	  * Yields a mapping of these pointers, which contains the correctly scaled stack margin
+	  */
+	private val variablyScaledStackMarginCache = WeakCache.weakKeys { scalingP: Changing[SizeCategory] =>
+		WeakCache.weakKeys { marginP: Changing[StackLength] =>
+			WeakCache.weakValues { margins: Margins =>
+				marginP.mergeWith(scalingP)(margins.scaleStackMargin)
+			}
+		}
+	}
+	// Used for weakly caching stack margin pointers which depend on an "is small" -flag
+	// Keys are:
+	//      1. Is small -flag (changing)
+	//      2. Stack margin pointer
+	//      3. Small stack margin pointer
+	private val smallOrMediumStackMarginCache = WeakCache.weakKeys { smallFlag: Flag =>
+		WeakCache.weakKeys { marginP: Changing[StackLength] =>
+			WeakCache { smallMarginP: Changing[StackLength] => smallFlag.flatMap { if (_) marginP else smallMarginP } }
 		}
 	}
 	
@@ -158,7 +190,20 @@ object VariableBaseContext
 		}
 		
 		override def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength] =
-			scaledStackMarginCache(stackMarginPointer)(margins -> scaling)
+			stackMarginPointer.fixedValue match {
+				case Some(fixedMargin) => Fixed(margins.scaleStackMargin(fixedMargin, scaling))
+				case None => scaledStackMarginCache(stackMarginPointer)(margins -> scaling)
+			}
+		override def scaledStackMarginPointer(scalingPointer: Changing[SizeCategory]): Changing[StackLength] =
+			scalingPointer.fixedValue match {
+				case Some(fixedScaling) => scaledStackMarginPointer(fixedScaling)
+				case None => variablyScaledStackMarginCache(scalingPointer)(stackMarginPointer)(margins)
+			}
+		
+		override def stackMarginPointerFor(smallFlag: Flag): Changing[StackLength] = smallFlag.fixedValue match {
+			case Some(isAlwaysSmall) => stackMarginPointerFor(isAlwaysSmall)
+			case None => smallOrMediumStackMarginCache(smallFlag)(stackMarginPointer)(smallStackMarginPointer)
+		}
 	}
 }
 

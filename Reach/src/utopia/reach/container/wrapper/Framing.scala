@@ -1,15 +1,19 @@
 package utopia.reach.container.wrapper
 
 import utopia.firmament.component.container.single.FramingLike
-import utopia.firmament.context.{BaseContext, BaseContextLike}
+import utopia.firmament.context.base.{BaseContextCopyable, BaseContextPropsView}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, RoundedBackgroundDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.factory.FramedFactory
+import utopia.firmament.drawing.view.RoundedBackgroundViewDrawer
+import utopia.firmament.factory.VariableFramedFactory
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
@@ -25,23 +29,23 @@ object Framing extends Cff[FramingFactory]
 
 trait FramingFactoryLike[+Repr]
 	extends WrapperContainerFactory[Framing, ReachComponentLike] with CustomDrawableFactory[Repr]
-		with FramedFactory[Repr]
+		with VariableFramedFactory[Repr]
 {
 	// IMPLEMENTED  --------------------
 	
 	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[Framing, C, R] = {
-		val framing = new Framing(parentHierarchy, content, insets, customDrawers)
+		val framing = new Framing(parentHierarchy, content, insetsPointer, customDrawers)
 		// Closes the content
 		content.attachTo(framing)
 	}
 }
 
 case class FramingFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[BaseContext, ContextualFramingFactory]
+	extends FromGenericContextFactory[BaseContextPropsView, ContextualFramingFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def withContext[N <: BaseContext](context: N) =
+	override def withContext[N <: BaseContextPropsView](context: N) =
 		ContextualFramingFactory(parentHierarchy, context)
 	
 	
@@ -51,7 +55,12 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets The insets to place around the content in this framing
 	  * @return A new framing factory that uses the specified insets
 	  */
-	def apply(insets: StackInsetsConvertible) = InitializedFramingFactory(parentHierarchy, insets.toInsets)
+	def apply(insets: StackInsetsConvertible) = InitializedFramingFactory(parentHierarchy, Fixed(insets.toInsets))
+	/**
+	  * @param insetsPointer A pointer that contains insets to place around the content in this framing
+	  * @return A new framing factory that uses the specified insets pointer
+	  */
+	def apply(insetsPointer: Changing[StackInsets]) = InitializedFramingFactory(parentHierarchy, insetsPointer)
 	
 	/**
 	  * Creates a new framing
@@ -67,19 +76,19 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 		apply(insets).withCustomDrawers(customDrawers).apply(content)
 }
 
-case class InitializedFramingFactory(parentHierarchy: ComponentHierarchy, insets: StackInsets,
+case class InitializedFramingFactory(parentHierarchy: ComponentHierarchy, insetsPointer: Changing[StackInsets],
                                      customDrawers: Seq[CustomDrawer] = Empty)
 	extends FramingFactoryLike[InitializedFramingFactory]
 		with NonContextualWrapperContainerFactory[Framing, ReachComponentLike]
 {
-	override def withInsets(insets: StackInsetsConvertible): InitializedFramingFactory = copy(insets = insets.toInsets)
+	override def withInsetsPointer(p: Changing[StackInsets]): InitializedFramingFactory = copy(insetsPointer = p)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedFramingFactory =
 		copy(customDrawers = drawers)
 }
 
 object ContextualFramingFactory
 {
-	implicit class BackgroundSensitiveFramingFactory[NT <: BaseContext](val f: ContextualFramingFactory[_ <: BaseContextLike[_, NT]])
+	implicit class BackgroundSensitiveFramingFactory[NT <: BaseContextPropsView](val f: ContextualFramingFactory[_ <: BaseContextCopyable[_, NT]])
 		extends AnyVal
 	{
 		/**
@@ -89,23 +98,39 @@ object ContextualFramingFactory
 		  */
 		def rounded(background: Color) = {
 			// The rounding amount is based on insets
-			val drawer = f.insets.lengthsIterator.map { _.optimal }.filter { _ > 0.0 }.minOption match {
-				case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(background, minSideLength)
-				// If the insets default to 0, uses solid background drawing instead
-				case None => BackgroundDrawer(background)
+			val drawer = f.insetsPointer.fixedValue match {
+				// Case: Using static insets => Uses a static drawer, also
+				case Some(fixedInsets) =>
+					fixedInsets.lengthsIterator.map { _.optimal }.filter { _ > 0.0 }.minOption match {
+						case Some(minSideLength) => RoundedBackgroundDrawer.withRadius(background, minSideLength)
+						// If the insets default to 0, uses solid background drawing instead
+						case None => BackgroundDrawer(background)
+					}
+				// Case: Using variable insets => Uses a variable drawer
+				case None =>
+					val minSideLengthPointer = f.insetsPointer
+						.map { _.lengthsIterator.map { _.optimal }.filter { _ > 0 }.minOption.getOrElse(0.0) }
+					RoundedBackgroundViewDrawer.withRadius(View.fixed(background), minSideLengthPointer)
 			}
 			f.withCustomDrawer(drawer).mapContext { _.against(background) }
 		}
 	}
 }
 
-case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                      customDrawers: Seq[CustomDrawer] = Empty,
-                                                      customInsets: Either[SizeCategory, StackInsets] = Left(Medium))
+case class ContextualFramingFactory[N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+                                                               customDrawers: Seq[CustomDrawer] = Empty,
+                                                               customInsets: Either[Changing[SizeCategory], Changing[StackInsets]] = Left(Fixed(Medium)))
 	extends FramingFactoryLike[ContextualFramingFactory[N]]
-		with ContextualWrapperContainerFactory[N, BaseContext, Framing, ReachComponentLike, ContextualFramingFactory]
+		with ContextualWrapperContainerFactory[N, BaseContextPropsView, Framing, ReachComponentLike, ContextualFramingFactory]
 		with ContextualFramedFactory[ContextualFramingFactory[N]]
 {
+	// ATTRIBUTES   ------------------------
+	
+	override lazy val insetsPointer: Changing[StackInsets] = customInsets.rightOrMap { sizePointer =>
+		context.scaledStackMarginPointer(sizePointer).map { _.toInsets }
+	}
+	
+	
 	// COMPUTED ----------------------------
 	
 	/**
@@ -128,16 +153,17 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
 	
 	// IMPLEMENTED	------------------------
 	
-	override def withContext[N2 <: BaseContext](newContext: N2) = copy(context = newContext)
+	override def withContext[N2 <: BaseContextPropsView](newContext: N2) =
+		copy(context = newContext)
 	
-	override def insets: StackInsets = customInsets.rightOrMap(s => StackInsets.symmetric(context.scaledStackMargin(s)))
+	override def withInsetsPointer(p: Changing[StackInsets]): ContextualFramingFactory[N] =
+		copy(customInsets = Right(p))
 	
-	override def withInsets(insets: StackInsetsConvertible): ContextualFramingFactory[N] =
-		copy(customInsets = Right(insets.toInsets))
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualFramingFactory[N] =
 		copy(customDrawers = drawers)
 	
-	override def withInsets(insetSize: SizeCategory) = copy(customInsets = Left(insetSize))
+	override def withInsets(insetSize: SizeCategory) =
+		copy(customInsets = Left(Fixed(insetSize)))
 }
 
 /**
@@ -146,5 +172,16 @@ case class ContextualFramingFactory[N <: BaseContext](parentHierarchy: Component
   * @since 7.10.2020, v0.1
   */
 class Framing(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-			  override val insets: StackInsets, override val customDrawers: Seq[CustomDrawer] = Empty)
+              insetsPointer: Changing[StackInsets], override val customDrawers: Seq[CustomDrawer] = Empty)
 	extends CustomDrawReachComponent with FramingLike[ReachComponentLike]
+{
+	// INITIAL CODE -----------------------------
+	
+	// Revalidates this component when applied insets change
+	insetsPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	
+	
+	// IMPLEMENTED  -----------------------------
+	
+	override def insets: StackInsets = insetsPointer.value
+}

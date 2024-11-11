@@ -2,8 +2,11 @@ package utopia.reflection.component.swing.input
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.input.SelectableWithPointers
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.localization.LocalString._
+import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.firmament.model.Border
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
@@ -14,9 +17,6 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.JWrapper
 import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
-import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.plaf.basic.ComboPopup

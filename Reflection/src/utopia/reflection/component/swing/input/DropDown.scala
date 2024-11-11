@@ -1,8 +1,8 @@
 package utopia.reflection.component.swing.input
 
-import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.display.Refreshable
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}

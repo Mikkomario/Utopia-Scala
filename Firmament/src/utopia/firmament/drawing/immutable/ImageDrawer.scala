@@ -2,10 +2,11 @@ package utopia.firmament.drawing.immutable
 
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ViewImageDrawer.ViewImageDrawerFactory
-import utopia.firmament.factory.FramedFactory
+import utopia.firmament.factory.StaticFramedFactory
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, Drawer, FromDrawLevelFactory}
 import utopia.genesis.image.Image
@@ -54,7 +55,7 @@ object ImageDrawer
 	case class ImageDrawerFactory(transformation: Option[Matrix2D] = None, insets: StackInsets = StackInsets.any,
 	                              alignment: Alignment = Alignment.Center, drawLevel: DrawLevel = DrawLevel.default,
 	                              upscales: Boolean = false)
-		extends FromAlignmentFactory[ImageDrawerFactory] with FramedFactory[ImageDrawerFactory]
+		extends FromAlignmentFactory[ImageDrawerFactory] with StaticFramedFactory[ImageDrawerFactory]
 			with FromDrawLevelFactory[ImageDrawerFactory] with LinearTransformable[ImageDrawerFactory]
 	{
 		// COMPUTED ---------------------------
@@ -69,7 +70,7 @@ object ImageDrawer
 		  * @return Copy of this factory that supports view-based drawing
 		  */
 		def view =
-			ViewImageDrawerFactory(View.fixed(transformation), View.fixed(insets), View.fixed(alignment), drawLevel,
+			ViewImageDrawerFactory(View.fixed(transformation), Fixed(insets), View.fixed(alignment), drawLevel,
 				upscales)
 		
 		

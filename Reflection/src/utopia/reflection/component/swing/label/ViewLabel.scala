@@ -2,9 +2,11 @@ package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.display.PoolWithPointer
 import utopia.firmament.component.text.MutableStyleTextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.model.TextDrawContext
+import utopia.firmament.model.stack.StackInsets
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.view.template.eventful.Changing
@@ -13,8 +15,6 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reflection.component.swing.template.{StackableAwtComponentWrapperWrapper, SwingComponentRelated}
-import utopia.firmament.localization.DisplayFunction
-import utopia.firmament.model.stack.StackInsets
 
 object ViewLabel
 {

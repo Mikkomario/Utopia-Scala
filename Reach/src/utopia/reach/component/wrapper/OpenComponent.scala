@@ -1,6 +1,6 @@
 package utopia.reach.component.wrapper
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
@@ -355,7 +355,7 @@ object OpenComponent
 		  */
 		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
-			   (implicit context: BaseContext, canvas: ReachCanvas) =
+			   (implicit context: StaticBaseContext, canvas: ReachCanvas) =
 			Open.withContext(context).apply(Stack) { sf =>
 				val settings = StackSettings(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers)
 				val stack = sf.copy(settings = settings, areRelated = areRelated)(c)
@@ -377,7 +377,7 @@ object OpenComponent
 		  */
 		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				  customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
-				 (implicit context: BaseContext, canvas: ReachCanvas) =
+				 (implicit context: StaticBaseContext, canvas: ReachCanvas) =
 			stack(X, layout, cap, customDrawers, areRelated)
 		
 		/**
@@ -395,7 +395,7 @@ object OpenComponent
 		  */
 		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
 				customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
-			   (implicit context: BaseContext, canvas: ReachCanvas) =
+			   (implicit context: StaticBaseContext, canvas: ReachCanvas) =
 			stack(Y, layout, cap, customDrawers, areRelated)
 	}
 }

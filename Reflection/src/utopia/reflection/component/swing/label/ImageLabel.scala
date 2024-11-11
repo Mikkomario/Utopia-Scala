@@ -1,16 +1,16 @@
 package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.display.RefreshableWithPointer
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.image.Image
-import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel.Normal
-import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
-import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 
 object ImageLabel
 {

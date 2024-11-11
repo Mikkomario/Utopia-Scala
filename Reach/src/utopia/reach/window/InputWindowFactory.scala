@@ -1,7 +1,8 @@
 package utopia.reach.window
 
 import utopia.firmament.component.Window
-import utopia.firmament.context.{ColorContext, TextContext}
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -52,7 +53,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	 * @return The context to use for 1) the field name labels, if applicable, and 2) for the fields themselves
 	 */
-	protected def contentContext: (TextContext, TextContext)
+	protected def contentContext: (StaticTextContext, StaticTextContext)
 	
 	/**
 	  * @return Context for creating the warning pop-up windows
@@ -75,7 +76,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @param context Additional context item created in inputTemplate
 	  * @return Combined component
 	  */
-	protected def buildLayout(factories: ContextualMixed[TextContext],
+	protected def buildLayout(factories: ContextualMixed[StaticTextContext],
 	                          content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 	                          context: N): ReachComponentLike
 	
@@ -100,7 +101,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override protected def createContent(factories: ContextualMixed[TextContext]) = {
+	override protected def createContent(factories: ContextualMixed[StaticTextContext]) = {
 		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val (nameContext, fieldContext) = contentContext
@@ -178,7 +179,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val windowPointer = SettableOnce[Window]()
 		val window = field.createWindow(margin = context.margins.medium) { hierarchy =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).withContext(context.textContext).small.build(Stack) { stackF =>
+			Framing(hierarchy).withContext(context: StaticTextContext).small.build(Stack) { stackF =>
 				stackF.centeredRow.build(Mixed) { factories =>
 					Pair(
 						factories(ImageButton).icon(closeIcon) { windowPointer.onceSet { _.close() } },
@@ -201,7 +202,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		Delay(5.seconds) { window.close() }
 	}
 	
-	private def groupsToComponent(factories: ContextualMixed[ColorContext],
+	private def groupsToComponent(factories: ContextualMixed[StaticColorContext],
 								  groups: RowGroups[InputRowBlueprint],
 								  fieldsBuffer: VectorBuilder[(String, InputField)])
 								 (implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
@@ -241,7 +242,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 	}
 	
-	private def groupToComponent(factories: ContextualMixed[ColorContext],
+	private def groupToComponent(factories: ContextualMixed[StaticColorContext],
 								 group: RowGroup[InputRowBlueprint],
 								 segmentGroup: Option[SegmentGroup],
 								 fieldsBuffer: VectorBuilder[(String, InputField)])
@@ -268,7 +269,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		}
 	}
 	
-	private def actualizeRow(factories: ContextualMixed[ColorContext],
+	private def actualizeRow(factories: ContextualMixed[StaticColorContext],
 							 blueprint: InputRowBlueprint, segmentGroup: Option[SegmentGroup],
 							 fieldsBuilder: VectorBuilder[(String, InputField)])
 							(implicit context: FieldRowContext): (ReachComponentLike, Changing[Boolean]) =
@@ -323,7 +324,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		}
 	}
 	
-	private def createHorizontalFieldAndNameRow(factories: => ContextualMixed[ColorContext],
+	private def createHorizontalFieldAndNameRow(factories: => ContextualMixed[StaticColorContext],
 												blueprint: InputRowBlueprint,
 												fieldsBuilder: VectorBuilder[(String, InputField)])
 											   (implicit context: FieldRowContext) =
@@ -332,10 +333,10 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		createFieldAndName(factories, blueprint, fieldsBuilder, fieldNameComesFirst, expandLabel = false)
 	}
 	
-	private def createFieldAndName(factories: => ContextualMixed[ColorContext],
-								   blueprint: InputRowBlueprint,
-								   fieldsBuilder: VectorBuilder[(String, InputField)],
-								   fieldNameIsFirst: Boolean, expandLabel: Boolean)
+	private def createFieldAndName(factories: => ContextualMixed[StaticColorContext],
+	                               blueprint: InputRowBlueprint,
+	                               fieldsBuilder: VectorBuilder[(String, InputField)],
+	                               fieldNameIsFirst: Boolean, expandLabel: Boolean)
 								  (implicit context: FieldRowContext) =
 	{
 		// TODO: Possibly add a way for the blueprint to edit a) label creation context and b) label during or after
@@ -358,4 +359,4 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	}
 }
 
-private case class FieldRowContext(nameContext: TextContext, fieldContext: TextContext)
+private case class FieldRowContext(nameContext: StaticTextContext, fieldContext: StaticTextContext)

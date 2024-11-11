@@ -1,17 +1,16 @@
 package utopia.reach.component.input.check
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener
-import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
+import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.CursorDefining
@@ -19,11 +18,12 @@ import utopia.reach.container.multi.Stack
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 
 case class RadioButtonLineSetup(settings: RadioButtonSettings = RadioButtonSettings.default)
-	extends RadioButtonSettingsWrapper[RadioButtonLineSetup] with Vccff[TextContext, ContextualRadioButtonLineFactory]
+	extends RadioButtonSettingsWrapper[RadioButtonLineSetup]
+		with Ccff[VariableTextContext, ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  --------------------
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[TextContext]): ContextualRadioButtonLineFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): ContextualRadioButtonLineFactory =
 		ContextualRadioButtonLineFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: RadioButtonSettings): RadioButtonLineSetup = copy(settings = settings)
@@ -39,23 +39,23 @@ object RadioButtonLine extends RadioButtonLineSetup()
 	def apply(settings: RadioButtonSettings) = withSettings(settings)
 }
 
-case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                             settings: RadioButtonSettings = RadioButtonSettings.default,
                                             drawsBackground: Boolean = false)
 	extends RadioButtonSettingsWrapper[ContextualRadioButtonLineFactory]
-		with VariableContextualFactory[TextContext, ContextualRadioButtonLineFactory]
-		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualRadioButtonLineFactory]
+		with ContextualFactory[VariableTextContext, ContextualRadioButtonLineFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  ------------------------------------
 	
-	override def withContextPointer(p: Changing[TextContext]): ContextualRadioButtonLineFactory =
-		copy(contextPointer = p)
+	override def withContext(c: VariableTextContext): ContextualRadioButtonLineFactory =
+		copy(context = c)
 	override def withSettings(settings: RadioButtonSettings): ContextualRadioButtonLineFactory =
 		copy(settings = settings)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualRadioButtonLineFactory =
-		copy(contextPointer = newContextPointer, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
+		copy(context = newContext, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
 			drawsBackground = true)
 	
 	
@@ -72,13 +72,12 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 	 */
 	def apply[A](selectedValuePointer: EventfulPointer[A], value: A, labelText: LocalizedString) =
 	{
-		val stack = Stack(parentHierarchy).withContext(contextPointer.value).centeredRow
+		val stack = Stack(parentHierarchy).withContext(context).centeredRow
 			// The custom drawers are assigned to this whole component
 			.withCustomDrawers(customDrawers).withoutMargin
 			.build(Mixed) { factories =>
-				val radioButton = factories(RadioButton).withContextPointer(contextPointer).withoutCustomDrawers
-					.apply(selectedValuePointer, value)
-				val label = factories(ViewTextLabel).withContextPointer(contextPointer)
+				val radioButton = factories(RadioButton).withoutCustomDrawers.apply(selectedValuePointer, value)
+				val label = factories(ViewTextLabel)
 					.withIsHintPointer(settings.enabledPointer.lightMap { !_ })
 					.text(labelText)
 				// Clicking the label triggers the button
@@ -89,17 +88,14 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 				})
 				// Adds mouse functionality to the label
 				CursorDefining.defineCursorFor(label, View { if (enabledPointer.value) Interactive else Default },
-					View { contextPointer.value.background.shade })
+					View { context.backgroundPointer.value.shade })
 				
 				// Places the radio button on the left and the text field on the right
 				Pair(radioButton, label) -> radioButton
 			}
 		// Repaints the component when drawn background color changes (if applicable)
 		if (drawsBackground)
-			contextPointer.addContinuousListener { e =>
-				if (e.values.isAsymmetricBy { _.background })
-					stack.repaint()
-			}
+			context.backgroundPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => stack.repaint() }
 		stack
 	}
 }

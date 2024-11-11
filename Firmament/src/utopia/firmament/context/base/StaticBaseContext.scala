@@ -3,7 +3,10 @@ package utopia.firmament.context.base
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
+import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.immutable.caching.cache.WeakCache
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorScheme}
@@ -12,6 +15,21 @@ import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
 object StaticBaseContext
 {
+	// ATTRIBUTES   ---------------------
+	
+	/**
+	  * Caches scaled margin pointer-mappings.
+	  * The 3 keys come in 2 levels:
+	  *     1. Applied variable scaling
+	  *     1. Scaled stack margin + applicable margins
+	  */
+	private val variablyScaledStackMarginCache = WeakCache.weakKeys { scalingP: Changing[SizeCategory] =>
+		WeakCache.weakValues[(StackLength, Margins), Changing[StackLength]] { case (margin, margins) =>
+			scalingP.map { margins.scaleStackMargin(margin, _) }
+		}
+	}
+	
+	
 	// OTHER    -------------------------
 	
 	/**
@@ -58,6 +76,12 @@ object StaticBaseContext
 		override def toVariableContext: VariableBaseContext =
 			VariableBaseContext.fixed(actorHandler, colors, margins, font, contrastStandard, customStackMargins,
 				allowImageUpscaling)(localizer)
+		
+		override def scaledStackMarginPointer(scalingPointer: Changing[SizeCategory]): Changing[StackLength] =
+			scalingPointer.fixedValue match {
+				case Some(fixedScaling) => scaledStackMarginPointer(fixedScaling)
+				case None => variablyScaledStackMarginCache(scalingPointer)(stackMargin -> margins)
+			}
 		
 		override def withFont(font: Font): StaticBaseContext = copy(font = font)
 		override def withColorContrastStandard(standard: ColorContrastStandard): StaticBaseContext =

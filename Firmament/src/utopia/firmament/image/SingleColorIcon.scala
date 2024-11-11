@@ -1,8 +1,8 @@
 package utopia.firmament.image
 
 import utopia.firmament.context.ComponentCreationDefaults
-import utopia.firmament.context.color.{ColorContextPropsView, StaticColorContext}
-import utopia.firmament.image.SingleColorIcon.colorToShadePointerCache
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.factory.FromContextShadeFactory
 import utopia.firmament.model.StandardSizeAdjustable
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.WeakCache
@@ -13,7 +13,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.color.{Color, ColorShade, FromShadeFactory}
+import utopia.paradigm.color.{Color, ColorShade}
 import utopia.paradigm.shape.shape2d.vector.size.{Size, Sized}
 
 import scala.language.implicitConversions
@@ -21,10 +21,6 @@ import scala.language.implicitConversions
 object SingleColorIcon
 {
 	// ATTRIBUTES   ------------------------
-	
-	// Caches color pointer shade-mappings in order to reduce the amount of managed pointers
-	// TODO: Might want to move this cache elsewhere
-	private val colorToShadePointerCache = WeakCache.weakKeys { colorP: Changing[Color] => colorP.map { _.shade } }
 	
 	/**
 	  * An empty icon
@@ -55,9 +51,8 @@ object SingleColorIcon
   * @author Mikko Hilpinen
   * @since 4.5.2020, Reflection v1.2
   */
-// TODO: Extend FromVariableShadeFactory
 case class SingleColorIcon(original: Image, standardSize: Size)
-	extends Sized[SingleColorIcon] with FromShadeFactory[Image] with MaybeEmpty[SingleColorIcon]
+	extends FromContextShadeFactory[Image] with Sized[SingleColorIcon] with MaybeEmpty[SingleColorIcon]
 		with StandardSizeAdjustable[SingleColorIcon] with FromColorFactory[Image]
 {
 	// ATTRIBUTES	------------------------
@@ -83,9 +78,6 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.inButtonImageEffects } }
 	private val _highlightingInButtonSets = _blackAndWhite
 		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.asButtonImageEffects } }
-	
-	// Uses two more caches in order to manage pointer-mappings used in variable 'against' functions
-	private val againstShadePointerCache = WeakCache { shadeP: Changing[ColorShade] => shadeP.map(against) }
 	
 	override protected lazy val relativeToStandardSize: Double = {
 		if (standardSize.dimensions.exists { _ == 0.0 })
@@ -147,18 +139,6 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 			new SingleColorIcon(newIcon, standardSize)
 	}
 	
-	/**
-	  * @param context Implicit component creation context
-	  * @return A black or a white icon, whichever is better suited to the current context
-	  */
-	def contextual(implicit context: StaticColorContext) = against(context.background)
-	/**
-	  * @param context Implicit component-creation context
-	  * @return A pointer which contains either a black or a white version of this icon,
-	  *         whichever is better suited against the current (possibly changing) context background
-	  */
-	def variableContextual(implicit context: ColorContextPropsView) = against(context.backgroundPointer)
-	
 	
 	// IMPLEMENTED  -----------------------
 	
@@ -200,15 +180,8 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * @return A pointer that contains a black or white version of this icon,
 	  *         whichever is suitable against the specified background
 	  */
-	def against(backgroundPointer: Changing[Color]): Changing[Image] =
-		againstVariableShade(colorToShadePointerCache(backgroundPointer))
-	/**
-	  * @param shadePointer A pointer that contains the background color shade
-	  * @return A pointer that contains either the black or the white version of this color,
-	  *         whichever is the more appropriate choice against that shading.
-	  */
-	def againstVariableShade(shadePointer: Changing[ColorShade]) =
-		againstShadePointerCache(shadePointer)
+	@deprecated("Deprecated for removal. Please use againstVariableBackground instead.", "v1.4")
+	def against(backgroundPointer: Changing[Color]): Changing[Image] = againstVariableBackground(backgroundPointer)
 	
 	/**
 	  * @param f A mapping function
@@ -219,17 +192,8 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	
 	// NESTED   --------------------------
 	
-	object IconAsButton extends FromShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
+	object IconAsButton extends FromContextShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
 	{
-		// COMPUTED --------------------------
-		
-		/**
-		  * @param context Implicit button creation context
-		  * @return A set of black or white images that may be used in a button
-		  */
-		def contextual(implicit context: StaticColorContext) = against(context.background)
-		
-		
 		// IMPLEMENTED  ----------------------
 		
 		/**
@@ -249,11 +213,9 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 			val colored = SingleColorIcon.this.apply(color)
 			ButtonImageSet(colored).lowerAlphaOnDisabled.highlighting
 		}
-		
-		// TODO: Add functions for constructing button image set pointers in variable background settings
 	}
 	
-	object IconInsideButton extends FromShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
+	object IconInsideButton extends FromContextShadeFactory[ButtonImageSet] with FromColorFactory[ButtonImageSet]
 	{
 		// COMPUTED -------------------------
 		
@@ -265,12 +227,6 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 		  * @return A button-image-set based on the black version of this icon
 		  */
 		def black = apply(Dark)
-		
-		/**
-		  * @param context Component creation context
-		  * @return A button image set based on this icon, where only alpha values may change
-		  */
-		def contextual(implicit context: StaticColorContext) = against(context.background)
 		
 		
 		// IMPLEMENTED  ---------------------

@@ -1,6 +1,6 @@
 package utopia.reach.component.button.text
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
@@ -46,7 +46,7 @@ trait TextButtonFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                                        settings: ButtonSettings = ButtonSettings.default,
                                        customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[ContextualTextButtonFactory]
@@ -56,7 +56,7 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
 	
 	override def self: ContextualTextButtonFactory = this
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualTextButtonFactory =
 		copy(customDrawers = drawers)
@@ -85,11 +85,11 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
                              settings: ButtonSettings = ButtonSettings.default,
                              customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[TextButtonFactory]
-		with FromContextFactory[TextContext, ContextualTextButtonFactory]
+		with FromContextFactory[StaticTextContext, ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(context: TextContext) =
+	override def withContext(context: StaticTextContext) =
 		ContextualTextButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
@@ -129,13 +129,13 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
   */
 case class TextButtonSetup(settings: ButtonSettings = ButtonSettings.default)
 	extends ButtonSettingsWrapper[TextButtonSetup] with ComponentFactoryFactory[TextButtonFactory]
-		with FromContextComponentFactoryFactory[TextContext, ContextualTextButtonFactory]
+		with FromContextComponentFactoryFactory[StaticTextContext, ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = TextButtonFactory(hierarchy, settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticTextContext) =
 		ContextualTextButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)

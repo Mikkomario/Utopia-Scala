@@ -1,13 +1,13 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 
 object HasContext
 {
 	// EXTENSIONS    ---------------------
 	
-	class FillableFactory[+Repr](val f: CustomDrawableFactory[Repr] with HasContext[ColorContext]) extends AnyVal
+	class FillableFactory[+Repr](val f: CustomDrawableFactory[Repr] with HasContext[StaticColorContext]) extends AnyVal
 	{
 		/**
 		 * @return Copy of this factory that draws the currently specified background color

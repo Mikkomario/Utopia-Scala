@@ -1,6 +1,6 @@
 package utopia.reach.window
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Changing
@@ -24,7 +24,7 @@ object InputRowBlueprint
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
-	def using[F](factory: Ccff[TextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
+	def using[F](factory: Ccff[StaticTextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
 	             fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
 	             isScalable: Boolean = true)(createField: F => InputField) =
 		apply(key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
@@ -47,7 +47,7 @@ object InputRowBlueprint
 case class InputRowBlueprint(key: String, displayName: LocalizedString = LocalizedString.empty,
                              fieldAlignment: Alignment = Alignment.Right,
                              visibilityPointer: Changing[Boolean] = AlwaysTrue, isScalable: Boolean = true)
-                            (createField: (ComponentHierarchy, TextContext) => InputField)
+                            (createField: (ComponentHierarchy, StaticTextContext) => InputField)
 {
 	// COMPUTED	-----------------------------
 	
@@ -81,7 +81,7 @@ case class InputRowBlueprint(key: String, displayName: LocalizedString = Localiz
 	  * @param context Component creation context
 	  * @return A new managed field
 	  */
-	def apply(hierarchy: ComponentHierarchy, context: TextContext) =
+	def apply(hierarchy: ComponentHierarchy, context: StaticTextContext) =
 		createField(hierarchy, context)
 	
 	/**
@@ -90,7 +90,7 @@ case class InputRowBlueprint(key: String, displayName: LocalizedString = Localiz
 	  * @param context Component creation context (implicit)
 	  * @return A new managed field
 	  */
-	def contextual(hierarchy: ComponentHierarchy)(implicit context: TextContext) =
+	def contextual(hierarchy: ComponentHierarchy)(implicit context: StaticTextContext) =
 		apply(hierarchy, context)
 	
 	/**

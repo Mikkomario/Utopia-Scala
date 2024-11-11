@@ -1,6 +1,6 @@
 package utopia.reach.component.button.text
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
@@ -8,84 +8,50 @@ import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 
 object ViewTextButton extends Cff[ViewTextButtonFactory]
-	with FromVariableContextComponentFactoryFactory[TextContext, ContextualViewTextButtonFactory]
+	with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[TextContext]): ContextualViewTextButtonFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): ContextualViewTextButtonFactory =
 		ContextualViewTextButtonFactory(hierarchy, context)
 }
 
 class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromVariableContextFactory[TextContext, ContextualViewTextButtonFactory]
+	extends FromContextFactory[VariableTextContext, ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	-----------------------------
 	
-	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextButtonFactory =
-		ContextualViewTextButtonFactory(parentHierarchy, p)
+	override def withContext(c: VariableTextContext): ContextualViewTextButtonFactory =
+		ContextualViewTextButtonFactory(parentHierarchy, c)
 }
 
-case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                            settings: ButtonSettings = ButtonSettings.default,
                                            customDrawers: Seq[CustomDrawer] = Empty)
-	extends VariableContextualFactory[TextContext, ContextualViewTextButtonFactory]
+	extends ContextualFactory[VariableTextContext, ContextualViewTextButtonFactory]
 		with ButtonSettingsWrapper[ContextualViewTextButtonFactory]
 		with CustomDrawableFactory[ContextualViewTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------------
 	
-	override def withContextPointer(p: Changing[TextContext]): ContextualViewTextButtonFactory =
-		copy(contextPointer = p)
+	override def withContext(context: VariableTextContext): ContextualViewTextButtonFactory = copy(context = context)
 	override def withSettings(settings: ButtonSettings): ContextualViewTextButtonFactory = copy(settings = settings)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextButtonFactory =
 		copy(customDrawers = drawers)
 	
 	
 	// OTHER	----------------------------------
-	
-	/**
-	  * Creates a new button that changes its color based on a pointer value
-	  * @param contentPointer Pointer that contains the displayed button content
-	  * @param colorPointer Pointer that contains this button's background color
-	  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-	  * @param action The action performed when this button is pressed (accepts currently displayed content)
-	  * @tparam A Type of displayed content
-	  * @return A new button
-	  */
-	@deprecated("Please use other color functions together with .apply(...) instead", "v1.3")
-	def withChangingColor[A](contentPointer: Changing[A], colorPointer: Changing[Color],
-	                         displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-	                        (action: A => Unit) =
-		withContextPointer(contextPointer.mergeWith(colorPointer) { _.withBackground(_) })
-			.apply(contentPointer, displayFunction)(action)
-	
-	/**
-	  * Creates a new button that changes its color based on a pointer value
-	  * @param contentPointer Pointer that contains the displayed button content
-	  * @param rolePointer A pointer that contains this button's role
-	  * @param displayFunction A function for converting the displayed value to a localized string (default = toString)
-	  * @param action The action performed when this button is pressed (accepts currently displayed content)
-	  * @tparam A Type of displayed content
-	  * @return A new button
-	  */
-	@deprecated("Please use other role-related functions together with .apply(...) instead", "v1.3")
-	def withChangingRole[A](contentPointer: Changing[A], rolePointer: Changing[ColorRole],
-	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw)
-	                       (action: A => Unit) =
-		withContextPointer(contextPointer.mergeWith(rolePointer) { _.withBackground(_) })
-			.apply(contentPointer, displayFunction)(action)
 	
 	/**
 	  * Creates a new button
@@ -97,7 +63,7 @@ case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, 
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	            (action: A => Unit) =
-		new ViewTextButton[A](parentHierarchy, contextPointer, contentPointer, settings, displayFunction,
+		new ViewTextButton[A](parentHierarchy, context, contentPointer, settings, displayFunction,
 			customDrawers)(action)
 	
 	/**
@@ -131,7 +97,7 @@ case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, 
   * @author Mikko Hilpinen
   * @since 26.10.2020, v0.1
   */
-class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class ViewTextButton[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                         contentPointer: Changing[A], settings: ButtonSettings = ButtonSettings.default,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
@@ -140,21 +106,25 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Cha
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val colorPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }
-	private val borderWidthPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _.buttonBorderWidth.toDouble }
-	private val appliedContextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { c =>
-		if (c.buttonBorderWidth > 0) c.mapTextInsets { _ + c.buttonBorderWidth } else c
+	private val borderWidth = context.buttonBorderWidth.toDouble
+	private val appliedContext = {
+		// Adds space for the button borders to the text insets
+		if (borderWidth > 0)
+			context.mapTextInsets { _ + borderWidth }
+		else
+			context
 	}
 	
-	override protected val wrapped = ViewTextLabel.withContextPointer(parentHierarchy, appliedContextPointer)
-		.withCustomDrawers(ButtonBackgroundViewDrawer(colorPointer, statePointer, borderWidthPointer) +: additionalDrawers)
+	override protected val wrapped = ViewTextLabel.withContext(parentHierarchy, appliedContext)
+		.withCustomDrawers(
+			ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)) +: additionalDrawers)
 		.apply[A](contentPointer, displayFunction)
 	
 	
 	// INITIAL CODE	---------------------------------
 	
 	setup()
-	colorPointer.addContinuousListener { _ => repaint() }
+	colorPointer.addListenerWhile(linkedFlag) { _ => repaint() }
 	
 	
 	// COMPUTED	-------------------------------------
@@ -163,6 +133,8 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, contextPointer: Cha
 	  * @return This button's current background color
 	  */
 	def color = colorPointer.value
+	
+	private def colorPointer = context.backgroundPointer
 	
 	
 	// IMPLEMENTED	---------------------------------

@@ -1,6 +1,7 @@
 package utopia.reach.component.button.image
 
-import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.HotKey
@@ -15,8 +16,8 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings, ViewImageLabelSettingsLike}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
@@ -207,26 +208,24 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
-                                            contextPointer: Changing[ColorContext],
+case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy, context: VariableColorContext,
                                             settings: ViewImageButtonSettings = ViewImageButtonSettings.default)
 	extends ViewImageButtonFactoryLike[ContextualViewImageButtonFactory]
-		with VariableContextualFactory[ColorContext, ContextualViewImageButtonFactory]
+		with ContextualFactory[VariableColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
 	override def self: ContextualViewImageButtonFactory = this
 	
-	override protected def allowsUpscalingPointer: Changing[Boolean] =
-		contextPointer.mapWhile(parentHierarchy.linkPointer) { _.allowImageUpscaling }
+	override protected def allowsUpscalingPointer: Changing[Boolean] = context.allowImageUpscalingFlag
 	
-	override def withContextPointer(contextPointer: Changing[ColorContext]) =
-		copy(contextPointer = contextPointer)
-	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
+	override def withContext(context: VariableColorContext) =
+		copy(context = context)
+	override def withSettings(settings: ViewImageButtonSettings) =
+		copy(settings = settings)
 	
 	override def *(mod: Double): ContextualViewImageButtonFactory =
-		copy(contextPointer = contextPointer.mapWhile(parentHierarchy.linkPointer) { _ * mod },
-			settings = settings * mod)
+		copy(context = context * mod, settings = settings * mod)
 	
 	
 	// OTHER	-----------------------------
@@ -239,7 +238,7 @@ case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new button
 	  */
 	def icon[U](iconPointer: Changing[SingleColorIcon])(action: => U) =
-		apply(iconPointer.mergeWith(contextPointer) { (i, c) => ButtonImageSet(i.contextual(c)) })(action)
+		apply(iconPointer.flatMap { _.asButton.variableContextual(context) })(action)
 	/**
 	  * Creates a new button
 	  * @param icon The icon to display on this button
@@ -260,11 +259,10 @@ case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def coloredIcon[U](iconPointer: Changing[SingleColorIcon], rolePointer: Changing[ColorRole],
 	                   preferredShade: ColorLevel = Standard)
-	                  (action: => U) =
+	                  (action: => U): ViewImageButton =
 	{
-		apply[U](iconPointer.mergeWith(contextPointer, rolePointer) { (icon, context, role) =>
-			ButtonImageSet(icon(context.color.preferring(preferredShade)(role)))
-		})(action)
+		val colorPointer = context.colorPointer.preferring(preferredShade).forRole(rolePointer)
+		apply[U](iconPointer.mergeWith(colorPointer) { _.asButton(_) })(action)
 	}
 	
 	/**
@@ -323,7 +321,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
                                   settings: ViewImageButtonSettings = ViewImageButtonSettings.default,
                                   allowsUpscalingPointer: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageButtonFactoryLike[ViewImageButtonFactory]
-		with FromVariableContextFactory[ColorContext, ContextualViewImageButtonFactory]
+		with FromContextFactory[VariableColorContext, ContextualViewImageButtonFactory]
 {
 	// COMPTUTED    --------------------
 	
@@ -337,7 +335,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	
 	override def self: ViewImageButtonFactory = this
 	
-	override def withContextPointer(context: Changing[ColorContext]) =
+	override def withContext(context: VariableColorContext) =
 		ContextualViewImageButtonFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
@@ -353,7 +351,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 case class ViewImageButtonSetup(settings: ViewImageButtonSettings = ViewImageButtonSettings.default)
 	extends ViewImageButtonSettingsWrapper[ViewImageButtonSetup]
 		with ComponentFactoryFactory[ViewImageButtonFactory]
-		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualViewImageButtonFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -361,21 +359,11 @@ case class ViewImageButtonSetup(settings: ViewImageButtonSettings = ViewImageBut
 	
 	override def apply(hierarchy: ComponentHierarchy) = ViewImageButtonFactory(hierarchy, settings)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy,
-	                                context: Changing[ColorContext]): ContextualViewImageButtonFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext): ContextualViewImageButtonFactory =
 		ContextualViewImageButtonFactory(hierarchy, context, settings)
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
 	
 	override def *(mod: Double): ViewImageButtonSetup = mapSettings { _ * mod }
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new view image button factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[ColorContext]) =
-		ContextualViewImageButtonFactory(hierarchy, context, settings)
 }
 
 object ViewImageButton extends ViewImageButtonSetup()

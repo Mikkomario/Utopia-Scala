@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
-import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.context.base.{BaseContextPropsView, StaticBaseContext}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -9,8 +9,8 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.sign.Sign.Negative
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
-import utopia.flow.view.template.eventful.Flag
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
@@ -48,7 +48,7 @@ trait StackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	/**
 	  * Specifies the margin placed at each end of the created stacks
 	  */
-	def cap: StackLength
+	def capPointer: Changing[StackLength]
 	
 	/**
 	  * The axis along which the items in the stacks are placed.
@@ -61,11 +61,11 @@ trait StackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	def withAxis(axis: Axis2D): Repr
 	/**
 	  * Specifies the margin placed at each end of the created stacks
-	  * @param cap New cap to use.
-	  *            Specifies the margin placed at each end of the created stacks
+	  * @param p Pointer that contains the applied "cap" length.
+	  *          Cap is the margin placed at each end of the created stacks.
 	  * @return Copy of this factory with the specified cap
 	  */
-	def withCap(cap: StackLength): Repr
+	def withCapPointer(p: Changing[StackLength]): Repr
 	/**
 	  * Layout that determines how the components are sized perpendicular to stack axis.
 	  * E.g. for columns, this property defines horizontal component placement and width.
@@ -98,7 +98,23 @@ trait StackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	
 	// OTHER	--------------------
 	
-	def mapCap(f: StackLength => StackLength) = withCap(f(cap))
+	/**
+	  * Specifies the margin placed at each end of the created stacks
+	  * @param cap New cap to use.
+	  *            Specifies the margin placed at each end of the created stacks
+	  * @return Copy of this factory with the specified cap
+	  */
+	def withCap(cap: StackLength): Repr = withCapPointer(Fixed(cap))
+	/**
+	  * @param f A mapping function applied to this stack's cap
+	  * @return Copy of this stack with modified "cap" value(s)
+	  */
+	def mapCap(f: StackLength => StackLength) = withCapPointer(capPointer.map(f))
+	/**
+	  * @param f A mapping function applied to this stack's cap. Yields potentially variable results.
+	  * @return Copy of this stack with modified "cap" value(s)
+	  */
+	def flatMapCap(f: StackLength => Changing[StackLength]) = withCapPointer(capPointer.flatMap(f))
 }
 
 object StackSettings
@@ -114,18 +130,19 @@ object StackSettings
   *                      Y yields columns and X yields rows.
   * @param layout        Layout that determines how the components are sized perpendicular to stack axis.
   *                      E.g. for columns, this property defines horizontal component placement and width.
-  * @param cap           Specifies the margin placed at each end of the created stacks
+  * @param capPointer           Specifies the margin placed at each end of the created stacks. Variable.
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
 case class StackSettings(customDrawers: Seq[CustomDrawer] = Empty, axis: Axis2D = Axis.Y,
-                         layout: StackLayout = StackLayout.Fit, cap: StackLength = StackLength.fixedZero)
+                         layout: StackLayout = StackLayout.Fit,
+                         capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero))
 	extends StackSettingsLike[StackSettings]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withAxis(axis: Axis2D) = copy(axis = axis)
-	override def withCap(cap: StackLength) = copy(cap = cap)
+	override def withCapPointer(p: Changing[StackLength]): StackSettings = copy(capPointer = p)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 	override def withLayout(layout: StackLayout) = copy(layout = layout)
 }
@@ -162,12 +179,12 @@ trait StackSettingsWrapper[+Repr] extends StackSettingsLike[Repr]
 	// IMPLEMENTED	--------------------
 	
 	override def axis = settings.axis
-	override def cap = settings.cap
+	override def capPointer: Changing[StackLength] = settings.capPointer
 	override def customDrawers = settings.customDrawers
 	override def layout = settings.layout
 	
 	override def withAxis(axis: Axis2D) = mapSettings { _.withAxis(axis) }
-	override def withCap(cap: StackLength) = mapSettings { _.withCap(cap) }
+	override def withCapPointer(p: Changing[StackLength]): Repr = mapSettings { _.withCapPointer(p) }
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		mapSettings { _.withCustomDrawers(drawers) }
 	override def withLayout(layout: StackLayout) = mapSettings { _.withLayout(layout) }
@@ -193,15 +210,15 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	// ABSTRACT --------------------------
 	
 	/**
-	  * @return Margin to place between the items in created stacks
+	  * @return A pointer that determines the margin to place between the items in created stacks
 	  */
-	def margin: StackLength
+	def marginPointer: Changing[StackLength]
 	
 	/**
-	  * @param margin Margin to place between the items in this stack
+	  * @param p Pointer that determines the margin to place between the items in this stack
 	  * @return A copy of this factory with the specified margin
 	  */
-	def withMargin(margin: StackLength): Repr
+	def withMarginPointer(p: Changing[StackLength]): Repr
 	
 	
 	// COMPUTED --------------------------
@@ -215,13 +232,19 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	// IMPLEMENTED  ----------------------------
 	
 	override def apply[C <: ReachComponentLike, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Stack, C, R] = {
-		val stack: Stack = new _Stack(parentHierarchy, content.component, axis, layout, margin, cap,
+		val stack: Stack = new _Stack(parentHierarchy, content.component, axis, layout, marginPointer, capPointer,
 			customDrawers)
 		content attachTo stack
 	}
 	
 	
 	// OTHER    -----------------------------
+	
+	/**
+	  * @param margin Margin to place between the items in this stack
+	  * @return A copy of this factory with the specified margin
+	  */
+	def withMargin(margin: StackLength): Repr = withMarginPointer(Fixed(margin))
 	
 	/**
 	  * Creates a new stack using the specified components as segments
@@ -297,12 +320,12 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 
 /**
   * Factory class that is used for constructing stacks without using contextual information
-  * @param margin Amount of empty space between adjacent items in the created stacks
+  * @param marginPointer A pointer that determines the amount of empty space between adjacent items in the created stacks
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
 case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
-                        margin: StackLength = StackLength.any)
+                        marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends StackFactoryLike[StackFactory]
 		with FromGenericContextFactory[StaticBaseContext, ContextualStackFactory]
 		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
@@ -313,7 +336,7 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 		ContextualStackFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings): StackFactory = copy(settings = settings)
-	override def withMargin(margin: StackLength): StackFactory = copy(margin = margin)
+	override def withMarginPointer(p: Changing[StackLength]): StackFactory = copy(marginPointer = p)
 	
 	
 	// OTHER    ---------------------------
@@ -366,42 +389,45 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 
 /**
   * Factory class used for constructing stacks using contextual component creation information
-  * @param areRelated Whether the items in the created stacks should be considered closely related to each other,
+  * @param relatedFlag A pointer that contains true when the items in the created stacks should be considered closely related to each other,
   *                   resulting in a smaller margin placed between them.
   * @tparam N Type of context used and passed along by this factory
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualStackFactory[+N <: StaticBaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                           settings: StackSettings = StackSettings.default,
-                                                           customMargin: Option[StackLength] = None,
-                                                           areRelated: Boolean = false)
+case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+                                                              settings: StackSettings = StackSettings.default,
+                                                              customMarginPointer: Option[Changing[StackLength]] = None,
+                                                              relatedFlag: Flag = AlwaysFalse)
 	extends StackFactoryLike[ContextualStackFactory[N]]
 		with ContextualCombiningContainerFactory[N, StaticBaseContext, Stack, ReachComponentLike, ContextualStackFactory]
 {
+	// ATTRIBUTES   ---------------------------
+	
+	override lazy val marginPointer: Changing[StackLength] =
+		customMarginPointer.getOrElse { context.stackMarginPointerFor(relatedFlag) }
+	
+	
 	// COMPUTED -------------------------------
 	
 	/**
 	  * @return Copy of this factory that places the items close to each other
 	  */
-	def related = copy(areRelated = true)
+	def related = copy(relatedFlag = AlwaysTrue)
 	/**
 	  * @return Copy of this factory that places the items at the default distance from each other
 	  */
-	def unrelated = copy(areRelated = false)
+	def unrelated = copy(relatedFlag = AlwaysFalse)
 	
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def margin: StackLength = customMargin.getOrElse {
-		if (areRelated) context.smallStackMargin else context.stackMargin
-	}
+	override def withMarginPointer(p: Changing[StackLength]): ContextualStackFactory[N] =
+		copy(customMarginPointer = Some(p))
 	
 	override def withSettings(settings: StackSettings): ContextualStackFactory[N] = copy(settings = settings)
 	override def withContext[N2 <: StaticBaseContext](newContext: N2): ContextualStackFactory[N2] =
 		copy(context = newContext)
-	override def withMargin(margin: StackLength) =
-		copy(customMargin = Some(margin))
 	
 	
 	// OTHER    -----------------------------
@@ -410,7 +436,8 @@ case class ContextualStackFactory[+N <: StaticBaseContext](parentHierarchy: Comp
 	  * @param margin New size of margins to use (general)
 	  * @return Copy of this factory that uses the specified margin size
 	  */
-	def withMargin(margin: SizeCategory): ContextualStackFactory[N] = withMargin(context.scaledStackMargin(margin))
+	def withMargin(margin: SizeCategory): ContextualStackFactory[N] =
+		withMarginPointer(context.scaledStackMarginPointer(margin))
 	/**
 	  * @param margin Size of margins to apply. None if no margins should be added at all.
 	  * @return Copy of this factory with the specified margin size.
@@ -423,7 +450,14 @@ case class ContextualStackFactory[+N <: StaticBaseContext](parentHierarchy: Comp
 	  * @param cap New size of margins to place at each end of this stack (general)
 	  * @return Copy of this factory that uses the specified cap size
 	  */
-	def withCap(cap: SizeCategory): ContextualStackFactory[N] = withCap(context.scaledStackMargin(cap))
+	def withCap(cap: SizeCategory): ContextualStackFactory[N] = withCapPointer(context.scaledStackMarginPointer(cap))
+	
+	/**
+	  * @param relatedFlag A flag that contains true when the items in this stack are to be considered closely related,
+	  *                    resulting in a smaller margin between them.
+	  * @return Copy of this stack with the specified "are related" flag applied.
+	  */
+	def withRelatedFlag(relatedFlag: Flag) = copy(relatedFlag = relatedFlag)
 	
 	/**
 	  * Builds a segmented stack. Segmented means that the size of the contents is adjusted to match parallel
@@ -516,9 +550,23 @@ trait Stack extends CustomDrawReachComponent with StackLike[ReachComponentLike]
 
 private class _Stack(override val parentHierarchy: ComponentHierarchy,
                      override val components: Seq[ReachComponentLike], override val direction: Axis2D,
-                     override val layout: StackLayout, override val margin: StackLength,
-                     override val cap: StackLength, override val customDrawers: Seq[CustomDrawer])
+                     override val layout: StackLayout, marginPointer: Changing[StackLength],
+                     capPointer: Changing[StackLength], override val customDrawers: Seq[CustomDrawer])
 	extends Stack
 {
+	// ATTRIBUTES   ---------------------------
+	
 	override lazy val visibilityPointer: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	
+	
+	// INITIAL CODE ---------------------------
+	
+	marginPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	capPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def margin: StackLength = marginPointer.value
+	override def cap: StackLength = capPointer.value
 }

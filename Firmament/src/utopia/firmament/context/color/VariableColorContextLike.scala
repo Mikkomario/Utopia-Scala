@@ -66,6 +66,17 @@ trait VariableColorContextLike[+Repr, +Textual]
 	// OTHER   ----------------------------
 	
 	/**
+	  * @param f A function that modifies this context's background, possibly yielding variable results
+	  * @return Copy of this context with mapped background color
+	  */
+	def flatMapBackground(f: Color => Changing[Color]) = mapBackgroundPointer { _.flatMap(f) }
+	/**
+	  * @param f A function that modifies this context's text color, possibly yielding variable results
+	  * @return Copy of this context with mapped text color
+	  */
+	def flatMapTextColor(f: Color => Changing[Color]) = mapTextColorPointer { _.flatMap(f) }
+	
+	/**
 	  * @param f A mapping function applied to this context's background color pointer
 	  * @return Copy of this context with a mapped pointer
 	  */

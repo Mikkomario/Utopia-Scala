@@ -1,9 +1,9 @@
 package utopia.reflection.text
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.localization.LocalizedString
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
-import utopia.firmament.localization.LocalizedString
 
 sealed trait RichText
 {

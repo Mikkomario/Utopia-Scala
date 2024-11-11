@@ -1,7 +1,7 @@
 package utopia.reflection.component.swing.label
 
 import utopia.firmament.component.stack.ConstrainableWrapper
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackSize
 import utopia.firmament.model.stack.modifier.OverwriteSizeModifier
@@ -67,7 +67,7 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithRotatingImage(image: Image, rotation: TimedAnimation[DirectionalRotation])
-								   (implicit context: StaticBaseContext) =
+								   (implicit context: BaseContextPropsView) =
 		withRotatingImage(context.actorHandler, image, rotation)
 	
 	/**
@@ -78,7 +78,7 @@ object AnimationLabel
 	  * @return A new label
 	  */
 	def contextualWithSprite(strip: Strip, animationSpeed: Fps)
-							(implicit context: StaticBaseContext) =
+							(implicit context: BaseContextPropsView) =
 		withSprite(context.actorHandler, strip, animationSpeed)
 }
 

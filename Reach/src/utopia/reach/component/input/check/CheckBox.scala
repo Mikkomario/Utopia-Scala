@@ -1,7 +1,8 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.{ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -10,7 +11,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -153,7 +154,7 @@ trait CheckBoxFactoryLike[+Repr] extends CheckBoxSettingsWrapper[Repr] with Part
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
                                      settings: CheckBoxSettings = CheckBoxSettings.default,
                                      selectedColorRole: ColorRole = ColorRole.Secondary)
 	extends CheckBoxFactoryLike[ContextualCheckBoxFactory]
@@ -162,7 +163,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	// IMPLEMENTED  ---------------------
 	
 	override def self: ContextualCheckBoxFactory = this
-	override def withContext(context: ColorContext) = copy(context = context)
+	override def withContext(context: StaticColorContext) = copy(context = context)
 	override def withSettings(settings: CheckBoxSettings) = copy(settings = settings)
 	
 	
@@ -181,10 +182,10 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def iconsOrImages(images: Either[Pair[SingleColorIcon], Pair[Image]],
-	                  valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
+	                  valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
 	{
 		// Requires high contrast because of low alpha values
-		implicit val c: ColorContext = context.withEnhancedColorContrast
+		implicit val c: StaticColorContext = context.withEnhancedColorContrast
 		
 		// Converts the icons to images, if specified
 		val appliedImages = images.rightOrMap { icons =>
@@ -208,7 +209,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @return A new check box
 	  */
 	def icons(icons: Pair[SingleColorIcon],
-	          valuePointer: EventfulPointer[Boolean] = EventfulPointer[Boolean](false)) =
+	          valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
 		iconsOrImages(Left(icons), valuePointer)
 	/**
 	  * Creates a new check box
@@ -216,7 +217,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 	  * @param valuePointer Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def images(images: Pair[Image], valuePointer: EventfulPointer[Boolean] = EventfulPointer[Boolean](false)) =
+	def images(images: Pair[Image], valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
 		iconsOrImages(Right(images), valuePointer)
 }
 
@@ -228,13 +229,13 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
                            settings: CheckBoxSettings = CheckBoxSettings.default)
 	extends CheckBoxFactoryLike[CheckBoxFactory]
-		with FromContextFactory[ColorContext, ContextualCheckBoxFactory]
+		with FromContextFactory[StaticColorContext, ContextualCheckBoxFactory]
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(context: ColorContext) =
+	override def withContext(context: StaticColorContext) =
 		ContextualCheckBoxFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: CheckBoxSettings) = copy(settings = settings)
@@ -251,7 +252,7 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	  * @return A new check box
 	  */
 	def apply(images: Pair[Image], hoverColors: Pair[Color], hoverRadius: Double = 0.0,
-	          valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
+	          valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
 		new CheckBox(parentHierarchy, images, hoverColors, hoverRadius, settings, valuePointer)
 }
 
@@ -268,7 +269,7 @@ case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,
 	
 	override def withSettings(settings: CheckBoxSettings): FullContextualCheckBoxFactory =
 		copy(factory = factory.withSettings(settings))
-	override def withContext(newContext: ColorContext) =
+	override def withContext(newContext: StaticColorContext) =
 		copy(factory = factory.withContext(newContext))
 	
 	
@@ -279,18 +280,18 @@ case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,
 	  * @param valuePointer   Mutable pointer to currently selected value (default = new pointer)
 	  * @return A new check box
 	  */
-	def apply(valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)) =
+	def apply(valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
 		factory.iconsOrImages(images, valuePointer)
 }
 
 case class FullCheckBoxSetup(images: Either[Pair[SingleColorIcon], Pair[Image]],
                              settings: CheckBoxSettings = CheckBoxSettings.default,
                              selectedColorRole: ColorRole = Secondary)
-	extends Ccff[ColorContext, FullContextualCheckBoxFactory]
+	extends Ccff[StaticColorContext, FullContextualCheckBoxFactory]
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def withContext(parentHierarchy: ComponentHierarchy, context: ColorContext) =
+	override def withContext(parentHierarchy: ComponentHierarchy, context: StaticColorContext) =
 		FullContextualCheckBoxFactory(ContextualCheckBoxFactory(parentHierarchy, context, settings, selectedColorRole),
 			images)
 	
@@ -307,12 +308,12 @@ case class FullCheckBoxSetup(images: Either[Pair[SingleColorIcon], Pair[Image]],
   */
 case class CheckBoxSetup(settings: CheckBoxSettings = CheckBoxSettings.default)
 	extends CheckBoxSettingsWrapper[CheckBoxSetup] with ComponentFactoryFactory[CheckBoxFactory]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualCheckBoxFactory]
+		with FromContextComponentFactoryFactory[StaticColorContext, ContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = CheckBoxFactory(hierarchy, settings)
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticColorContext) =
 		ContextualCheckBoxFactory(hierarchy, context, settings)
 	override def withSettings(settings: CheckBoxSettings) = copy(settings = settings)
 	
@@ -364,7 +365,7 @@ object CheckBox extends CheckBoxSetup()
 class CheckBox(parentHierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
-               override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger))
+               override val valuePointer: EventfulPointer[Boolean] = ResettableFlag()(ComponentCreationDefaults.componentLogger))
 	extends AbstractButton(settings) with ReachComponentWrapper with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	---------------------------

@@ -15,15 +15,15 @@ trait FramedFactory[+Repr]
 	// ABSTRACT ---------------------------
 	
 	/**
-	  * @return Insets placed around the created components
-	  */
-	def insets: StackInsets
-	
-	/**
 	  * @param insets Insets to place around the created components
 	  * @return Copy of this factory that uses the specified insets
 	  */
 	def withInsets(insets: StackInsetsConvertible): Repr
+	/**
+	  * @param f A mapping function applied to insets
+	  * @return Copy of this factory with the specified insets mapping function applied
+	  */
+	def mapInsets(f: StackInsets => StackInsetsConvertible): Repr
 	
 	
 	// COMPUTED ------------------------
@@ -63,7 +63,6 @@ trait FramedFactory[+Repr]
 	
 	// OTHER    ------------------------
 	
-	def mapInsets(f: StackInsets => StackInsetsConvertible) = withInsets(f(insets))
 	def mapInsetsAlong(axis: Axis2D)(f: StackLength => StackLength) =
 		mapInsets { _.mapDimension(axis) { _.map(f) } }
 	def mapInset(side: Direction2D)(f: StackLength => StackLength) = mapInsets { _.mapSide(side)(f) }

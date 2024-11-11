@@ -53,6 +53,8 @@ trait VariableTextContextLike[+Repr] extends VariableColorContextLike[Repr, Repr
 	  */
 	def withLineSplitThresholdPointer(p: Changing[Double]): Repr = withLineSplitThresholdPointer(Some(p))
 	
+	def flatMapTextInsets(f: StackInsets => Changing[StackInsets]) = mapTextInsetsPointer { _.flatMap(f) }
+	
 	def mapPromptFontPointer(f: Mutate[Changing[Font]]) = withPromptFontPointer(f(promptFontPointer))
 	def mapTextInsetsPointer(f: Mutate[Changing[StackInsets]]) = withTextInsetsPointer(f(textInsetsPointer))
 	def mapLineSplitThresholdPointer(f: Mutate[Option[Changing[Double]]]) =

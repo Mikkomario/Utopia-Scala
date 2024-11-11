@@ -1,14 +1,14 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
+import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.Leading
 import utopia.genesis.util.Screen
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.ImageLabel
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
-import utopia.firmament.localization.LocalizedString
 
 /**
  * A very simple dialog used for displaying a message to the user
@@ -22,7 +22,7 @@ import utopia.firmament.localization.LocalizedString
  * @param buttonIcon Icon in dialog close button (optional)
  * @param icon Icon next to dialog message (optional)
  */
-class MessageWindow(override val standardContext: TextContext, buttonContext: TextContext,
+class MessageWindow(override val standardContext: StaticTextContext, buttonContext: StaticTextContext,
                     override val title: LocalizedString, message: LocalizedString, buttonText: LocalizedString,
                     buttonIcon: Option[SingleColorIcon] = None, icon: Option[SingleColorIcon] = None)
 	extends InteractionWindow[Unit]

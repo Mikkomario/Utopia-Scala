@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v1.5 (in development)
+Variable context stuff
+
 ## v1.4 - 04.10.2024
 Adds mouse drag -support and fixes a memory-related bug in **ReachCanvas**. 
 Also adds **Slider** component, preliminary support for coordinate-transformations and some new utility updates.

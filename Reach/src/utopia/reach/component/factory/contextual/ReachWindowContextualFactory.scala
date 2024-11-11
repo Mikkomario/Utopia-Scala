@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.reach.context.{ReachWindowContext, ReachWindowContextWrapper}
 
 /**
@@ -14,5 +14,6 @@ trait ReachWindowContextualFactory[+Repr]
 	override def reachWindowContext: ReachWindowContext = context
 	
 	override def withReachWindowContext(base: ReachWindowContext): Repr = withContext(base)
-	override def withContentContext(textContext: TextContext): Repr = mapContext { _.withContentContext(textContext) }
+	override def withContentContext(textContext: StaticTextContext): Repr =
+		mapContext { _.withContentContext(textContext) }
 }

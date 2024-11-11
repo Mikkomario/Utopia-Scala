@@ -60,6 +60,9 @@ trait BaseContextWrapper2[Base <: BaseContextCopyable[Base, _], +Repr] extends B
 	
 	override def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength] =
 		base.scaledStackMarginPointer(scaling)
+	override def scaledStackMarginPointer(scalingPointer: Changing[SizeCategory]): Changing[StackLength] =
+		base.scaledStackMarginPointer(scalingPointer)
+	override def stackMarginPointerFor(smallFlag: Flag): Changing[StackLength] = base.stackMarginPointerFor(smallFlag)
 	
 	
 	// OTHER    -------------------------

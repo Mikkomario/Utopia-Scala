@@ -1,6 +1,5 @@
 package utopia.reach.component.button.image
 
-import utopia.firmament.context.TextContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
@@ -17,7 +16,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
-import utopia.reach.component.factory.contextual.{ContextualFactory, VariableContextualFactory}
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
 import utopia.reach.component.template.ReachComponentWrapper
@@ -156,6 +155,11 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
 		with ContextualFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
 		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory]
 {
+	// COMPUTED ------------------------------
+	
+	private implicit def c: VariableTextContext = context
+	
+	
 	// IMPLEMENTED  --------------------------
 	
 	override def withContext(context: VariableTextContext) =
@@ -200,11 +204,7 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
 	def icon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	            displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	           (action: A => Unit) =
-	{
-		// iconPointer.map { _.inButton.conte }
-		apply[A](contentPointer, iconPointer.mergeWith(contextPointer) { _.inButton.contextual(_) },
-			displayFunction)(action)
-	}
+		apply[A](contentPointer, iconPointer.flatMap { _.inButton.variableContextual }, displayFunction)(action)
 	
 	@deprecated("Please use .icon(...) instead", "v1.1")
 	def withIcon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
@@ -285,21 +285,15 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
   */
 case class ViewImageAndTextButtonSetup(settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ViewImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualViewImageAndTextButtonFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualViewImageAndTextButtonFactory(hierarchy, Fixed(context), settings)
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
+		ContextualViewImageAndTextButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageAndTextButtonSettings) =
 		copy(settings = settings)
-	
-	
-	// OTHER    ----------------------
-	
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualViewImageAndTextButtonFactory(hierarchy, context, settings)
 }
 
 object ViewImageAndTextButton extends ViewImageAndTextButtonSetup()

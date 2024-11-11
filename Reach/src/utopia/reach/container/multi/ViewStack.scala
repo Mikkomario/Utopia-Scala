@@ -1,6 +1,6 @@
 package utopia.reach.container.multi
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -89,14 +89,13 @@ trait ViewStackFactoryLike[+Repr]
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
 		if (content.isEmpty || (axisPointer.isFixed &&
-			layoutPointer.isFixed && marginPointer.isFixed && capPointer.isFixed &&
-			content.forall { _.result.isFixed }))
+			layoutPointer.isFixed && content.forall { _.result.isFixed }))
 		{
 			// Removes content that will never be visible
 			val remainingContent = content.filter { _.result.value }
 			val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
-				cap = capPointer.value, customDrawers = customDrawers)
-			val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMargin(marginPointer.value)
+				capPointer = capPointer, customDrawers = customDrawers)
+			val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMarginPointer(marginPointer)
 			// Uses segmentation if available
 			val stack = segmentGroup match {
 				// Case: Segmentation used
@@ -180,7 +179,7 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
                             capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
                             customDrawers: Seq[CustomDrawer] = Empty, segmentGroup: Option[SegmentGroup] = None)
 	extends ViewStackFactoryLike[ViewStackFactory] with NonContextualViewContainerFactory[Stack, ReachComponentLike]
-		with FromGenericContextFactory[BaseContext, ContextualViewStackFactory]
+		with FromGenericContextFactory[BaseContextPropsView, ContextualViewStackFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
@@ -192,21 +191,21 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewStackFactory =
 		copy(customDrawers = drawers)
 	
-	override def withContext[N <: BaseContext](context: N) =
+	override def withContext[N <: BaseContextPropsView](context: N) =
 		ContextualViewStackFactory(parentHierarchy, context, axisPointer, layoutPointer, capPointer, customDrawers,
 			segmentGroup)
 }
 
-case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                         axisPointer: Changing[Axis2D] = Fixed(Y),
-                                                         layoutPointer: Changing[StackLayout] = Fixed(Fit),
-                                                         capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                                                         customDrawers: Seq[CustomDrawer] = Empty,
-                                                         segmentGroup: Option[SegmentGroup] = None,
-                                                         customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
-                                                         relatedFlag: Changing[Boolean] = AlwaysFalse)
+case class ContextualViewStackFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+                                                                  axisPointer: Changing[Axis2D] = Fixed(Y),
+                                                                  layoutPointer: Changing[StackLayout] = Fixed(Fit),
+                                                                  capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                                                                  customDrawers: Seq[CustomDrawer] = Empty,
+                                                                  segmentGroup: Option[SegmentGroup] = None,
+                                                                  customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
+                                                                  relatedFlag: Changing[Boolean] = AlwaysFalse)
 	extends ViewStackFactoryLike[ContextualViewStackFactory[N]]
-		with ContextualViewContainerFactory[N, BaseContext, Stack, ReachComponentLike, ContextualViewStackFactory]
+		with ContextualViewContainerFactory[N, BaseContextPropsView, Stack, ReachComponentLike, ContextualViewStackFactory]
 {
 	// COMPUTED --------------------------
 	
@@ -219,9 +218,9 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	// IMPLEMENTED	--------------------------------
 	
 	override protected def marginPointer: Changing[StackLength] = customMarginPointer match {
-		case Some(Left(sizePointer)) => sizePointer.map(context.scaledStackMargin)
+		case Some(Left(sizePointer)) => context.scaledStackMarginPointer(sizePointer)
 		case Some(Right(pointer)) => pointer
-		case None => relatedFlag.map { if (_) context.smallStackMargin else context.stackMargin }
+		case None => context.stackMarginPointerFor(relatedFlag)
 	}
 	
 	override def withAxisPointer(p: Changing[Axis2D]): ContextualViewStackFactory[N] = copy(axisPointer = p)
@@ -232,7 +231,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewStackFactory[N] =
 		copy(customDrawers = drawers)
 	
-	override def withContext[N2 <: BaseContext](newContext: N2) =
+	override def withContext[N2 <: BaseContextPropsView](newContext: N2) =
 		copy(context = newContext)
 	
 	
@@ -249,7 +248,7 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
 	  * @return Copy of this factory with that pointer in use
 	  */
 	def withCapSizePointer(p: Changing[SizeCategory]) =
-		copy(capPointer = p.map(context.scaledStackMargin))
+		copy(capPointer = context.scaledStackMarginPointer(p))
 	/**
 	  * @param flag A pointer that indicates whether the components
 	  *          should be placed close to each other (true) or at the default distance (false)
@@ -274,7 +273,6 @@ case class ContextualViewStackFactory[+N <: BaseContext](parentHierarchy: Compon
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-// TODO: Create a variant that works with static components
 class ViewStack(override val parentHierarchy: ComponentHierarchy,
                 componentData: Seq[(ReachComponentLike, Changing[Boolean])],
                 directionPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),

@@ -1,12 +1,12 @@
 package utopia.reflection.container.swing.window.interaction
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
-import utopia.genesis.util.Screen
-import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.firmament.localization.{LocalizedString, Localizer}
+import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
+import utopia.reflection.component.swing.display.MultiLineTextView
 
 object YesNoWindow
 {
@@ -20,9 +20,9 @@ object YesNoWindow
 	  * @param defaultResult Result generated when the user simply closes this dialog (default = false = No)
 	  * @return A new dialog ready to be displayed
 	  */
-	def apply(textContext: TextContext, title: LocalizedString, question: LocalizedString,
-			  icons: Map[Boolean, SingleColorIcon] = Map(), colors: Map[Boolean, ButtonColor] = Map(),
-			  defaultResult: Boolean = false) =
+	def apply(textContext: StaticTextContext, title: LocalizedString, question: LocalizedString,
+	          icons: Map[Boolean, SingleColorIcon] = Map(), colors: Map[Boolean, ButtonColor] = Map(),
+	          defaultResult: Boolean = false) =
 	{
 		val buttonTextAlign = if (icons.isEmpty) Center else Alignment.Left
 		new YesNoWindow(textContext, title, question, icons, colors, defaultResult)({ (color, _) =>
@@ -45,10 +45,10 @@ object YesNoWindow
   *                         whether the button shall have an icon.
   */
 // TODO: Could utilize UncertainBoolean
-class YesNoWindow(override val standardContext: TextContext, override val title: LocalizedString,
+class YesNoWindow(override val standardContext: StaticTextContext, override val title: LocalizedString,
                   val question: LocalizedString, icons: Map[Boolean, SingleColorIcon] = Map(),
                   colors: Map[Boolean, ButtonColor] = Map(), override val defaultResult: Boolean = false)
-                 (getButtonContext: (ButtonColor, Boolean) => TextContext) extends InteractionWindow[Boolean]
+                 (getButtonContext: (ButtonColor, Boolean) => StaticTextContext) extends InteractionWindow[Boolean]
 {
 	private implicit val context: StaticTextContext = standardContext
 	private implicit val languageCode: String = "en"
