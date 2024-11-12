@@ -24,10 +24,9 @@ class TimeLogger
 	  * Prints a check point, resetting time counter as well
 	  * @param description Printed description
 	  */
-	def checkPoint(description: String) =
-	{
+	def checkPoint(description: String) = {
 		val time = Now.toInstant
-		linesBuilder += (description + s" (${(time - startTime).description})")
+		linesBuilder += s"$description (${(time - startTime).description})"
 		startTime = time
 	}
 	
