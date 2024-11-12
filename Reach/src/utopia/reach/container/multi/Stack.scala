@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.StackLike
-import utopia.firmament.context.base.{BaseContextPropsView, StaticBaseContext}
+import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
@@ -327,12 +327,12 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
                         marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends StackFactoryLike[StackFactory]
-		with FromGenericContextFactory[StaticBaseContext, ContextualStackFactory]
+		with FromGenericContextFactory[BaseContextPropsView, ContextualStackFactory]
 		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def withContext[N <: StaticBaseContext](context: N): ContextualStackFactory[N] =
+	override def withContext[N <: BaseContextPropsView](context: N): ContextualStackFactory[N] =
 		ContextualStackFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings): StackFactory = copy(settings = settings)
@@ -400,7 +400,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
                                                               customMarginPointer: Option[Changing[StackLength]] = None,
                                                               relatedFlag: Flag = AlwaysFalse)
 	extends StackFactoryLike[ContextualStackFactory[N]]
-		with ContextualCombiningContainerFactory[N, StaticBaseContext, Stack, ReachComponentLike, ContextualStackFactory]
+		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Stack, ReachComponentLike, ContextualStackFactory]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -426,7 +426,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
 		copy(customMarginPointer = Some(p))
 	
 	override def withSettings(settings: StackSettings): ContextualStackFactory[N] = copy(settings = settings)
-	override def withContext[N2 <: StaticBaseContext](newContext: N2): ContextualStackFactory[N2] =
+	override def withContext[N2 <: BaseContextPropsView](newContext: N2): ContextualStackFactory[N2] =
 		copy(context = newContext)
 	
 	
@@ -511,13 +511,14 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
   * @since 02.06.2023, v1.1
   */
 case class StackSetup(settings: StackSettings = StackSettings.default)
-	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory] with Gccff[StaticBaseContext, ContextualStackFactory]
+	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory]
+		with Gccff[BaseContextPropsView, ContextualStackFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = StackFactory(hierarchy, settings)
 	
-	override def withContext[N <: StaticBaseContext](hierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
+	override def withContext[N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N): ContextualStackFactory[N] =
 		ContextualStackFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings) = copy(settings = settings)

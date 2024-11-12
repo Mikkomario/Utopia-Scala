@@ -3,6 +3,7 @@ package utopia.firmament.context.color
 import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
 import utopia.firmament.context.color.VariableColorContext.ColorPointerAccess
 import utopia.firmament.context.text.VariableTextContext
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.{Cache, WeakCache}
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
@@ -78,6 +79,27 @@ object VariableColorContext
 				setP.mergeWith(bgP, isLargeP) { (colorSet, bg, large) =>
 					colorSet.against(bg, preferredLevel, minimumContrast = standard.minimumContrast(large))
 				}
+		}
+	}
+	/**
+	  * A cache for weakly storing created color set against multiple backgrounds -pointers.
+	  * Keys are:
+	  *     1. Mapped color set pointer
+	  *     1. Additional background color -pointer
+	  *     1. Primary background color -pointer
+	  *     1. Applied color contrast standard, is large -flag and preferred color shade
+	  */
+	private val colorSetAgainstManyCache = WeakCache.weakKeys { setP: Changing[ColorSet] =>
+		WeakCache.weakKeys { otherBgP: Changing[Color] =>
+			WeakCache.weakKeys { bgP: Changing[Color] =>
+				Cache[(ColorContrastStandard, Flag, ColorLevel), Changing[Color]] {
+					case (standard, isLargeFlag, preferredLevel) =>
+						setP.mergeWith(Vector(bgP, otherBgP, isLargeFlag)) { set =>
+							set.againstMany(Pair(bgP, otherBgP).map { _.value }, preferredLevel,
+								standard.minimumContrast(isLargeFlag.value))
+						}
+				}
+			}
 		}
 	}
 	
@@ -291,6 +313,18 @@ object VariableColorContext
 		  */
 		def forRole(rolePointer: Changing[ColorRole]) =
 			apply(rolePointerToSetPointerCache(context.colors)(rolePointer))
+		
+		/**
+		  * Selects a color that's different from the variable background color, plus another variable color
+		  * @param rolePointer Targeted color role
+		  * @param competingColorPointer Another background or competing color pointer
+		  * @return A pointer that contains the most suitable version of that role's color
+		  *         in the targeted variable context
+		  */
+		def differentFromVariable(rolePointer: Changing[ColorRole], competingColorPointer: Changing[Color]) =
+			colorSetAgainstManyCache(rolePointerToSetPointerCache(context.colors)(rolePointer))(
+				competingColorPointer)(context.backgroundPointer)(
+				(context.contrastStandard, expectsLargeObjectsFlag, preferredLevel))
 		
 		/**
 		  * @param f A flag that determines whether to expect larger text or other color areas

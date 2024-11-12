@@ -1,7 +1,8 @@
 package utopia.reach.component.input.text
 
 import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
@@ -20,8 +21,8 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory
-import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.input.InputValidationResult.Default
@@ -253,10 +254,10 @@ trait TextFieldSettingsWrapper[+Repr] extends TextFieldSettingsLike[Repr]
   * @since 02.06.2023, v1.1
   */
 case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
-                                      contextPointer: Changing[TextContext],
+                                      context: VariableTextContext,
                                       settings: TextFieldSettings = TextFieldSettings.default)
 	extends TextFieldSettingsWrapper[ContextualTextFieldFactory]
-		with VariableContextualFactory[TextContext, ContextualTextFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualTextFieldFactory]
 {
 	// IMPLICIT	------------------------------------
 	
@@ -265,9 +266,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
-	
+	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: TextFieldSettings) = copy(settings = settings)
 	
 	
@@ -291,7 +290,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	             textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	             inputValidation: Option[A => InputValidationResult] = None)
 	            (parseResult: String => A) =
-		new TextField[A](parentHierarchy, contextPointer, defaultWidth, settings, textPointer,
+		new TextField[A](parentHierarchy, context, defaultWidth, settings, textPointer,
 			inputValidation)(parseResult)
 	
 	/**
@@ -539,14 +538,14 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	              markMinMax: Pair[Boolean] = Pair.twice(false))
 	             (parse: Value => Option[A]) =
 	{
-		implicit def localizer: Localizer = contextPointer.value.localizer
+		implicit def localizer: Localizer = context.localizer
 		
 		// Field width is based on minimum and maximum values and their lengths
 		val minMaxStrings = allowedRange.ends.map { _.toString }
 		val extraCharsString = String.valueOf(Vector.fill(extraInputLength)('0'))
 		val maxLength = minMaxStrings.map { _.length }.max + extraInputLength
 		// TODO: Uses a static default width, although the context is variable => May require refactoring
-		val fontMetrics = parentHierarchy.fontMetricsWith(contextPointer.value.font)
+		val fontMetrics = parentHierarchy.fontMetricsWith(context.fontPointer.value)
 		val stringWidthRange = minMaxStrings.map { s => fontMetrics.widthOf(s"$s$extraCharsString") }.minMax
 		val defaultWidth = StackLength(stringWidthRange.first, stringWidthRange.second)
 		
@@ -645,29 +644,20 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 }
 
 /**
-  * Used for defining text field creation settings outside of the component building process
+  * Used for defining text field creation settings outside the component building process
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
 case class TextFieldSetup(settings: TextFieldSettings = TextFieldSettings.default)
 	extends TextFieldSettingsWrapper[TextFieldSetup]
-		with FromVariableContextComponentFactoryFactory[TextContext, ContextualTextFieldFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualTextFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy, context: Changing[TextContext]): ContextualTextFieldFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): ContextualTextFieldFactory =
 		ContextualTextFieldFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: TextFieldSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new text field factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualTextFieldFactory(hierarchy, context, settings)
 }
 
 object TextField extends TextFieldSetup()
@@ -682,7 +672,7 @@ object TextField extends TextFieldSetup()
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class TextField[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                    defaultWidth: StackLength, settings: TextFieldSettings = TextFieldSettings.default,
                    textContentPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
                    inputValidation: Option[A => InputValidationResult] = None)
@@ -740,11 +730,10 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 			.withPromptPointer(actualPromptPointer)
 	}
 	
-	private val _wrapped = Field.withContext(parentHierarchy, contextPointer).withSettings(appliedFieldSettings)
+	private val _wrapped = Field.withContext(parentHierarchy, context).withSettings(appliedFieldSettings)
 		.apply(isEmptyPointer) { fieldContext =>
 			// Modifies the context
-			val labelContextPointer = fieldContext.contextPointer
-				.mapWhile(parentHierarchy.linkPointer) { _.withHorizontallyExpandingText }
+			val labelContext = fieldContext.context.withHorizontallyExpandingText
 			// Assigns focus listeners and prompt drawers to label settings
 			val mainFocusListener: FocusListener = {
 				// Remembers the first time this field received focus
@@ -759,18 +748,18 @@ class TextField[A](parentHierarchy: ComponentHierarchy, contextPointer: Changing
 			val appliedLabelSettings = settings.editingSettings
 				.withAdditionalFocusListeners(Pair(fieldContext.focusListener, mainFocusListener))
 				.withAdditionalCustomDrawers(fieldContext.promptDrawers)
-			EditableTextLabel.withContext(fieldContext.parentHierarchy, labelContextPointer)
+			EditableTextLabel.withContext(fieldContext.parentHierarchy, labelContext)
 				.withSettings(appliedLabelSettings)
 				.apply(textContentPointer)
 		} { fieldContext =>
 			// Case: Shows input character count at the bottom right label
 			if (settings.showsCharacterCount)
 				settings.maxLength.map { maxLength =>
-					implicit def localizer: Localizer = fieldContext.contextPointer.value.localizer
+					implicit def localizer: Localizer = fieldContext.context.localizer
 					
 					val textLengthPointer = textContentPointer.map { _.length }
 					Open.using(ViewTextLabel) {
-						_.withContextPointer(fieldContext.contextPointer).apply(
+						_.withContext(fieldContext.context).apply(
 							textLengthPointer,
 							DisplayFunction.functionToDisplayFunction[Int] { length =>
 								s"%i / %i".noLanguage.localized.interpolated(Pair(length, maxLength))

@@ -1,11 +1,10 @@
 package utopia.reach.component.label.text.selectable
 
 import utopia.firmament.component.text.TextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.SelectableTextViewDrawer
 import utopia.firmament.localization.LocalizedString
-import utopia.firmament.model.TextDrawContext
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
@@ -46,32 +45,30 @@ import scala.util.Try
   */
 // TODO: Create a password mode where text is not displayed nor copyable
 abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
-                                           contextPointer: Changing[TextContext],
-                                           textPointer: Changing[LocalizedString],
+                                           context: VariableTextContext, textPointer: Changing[LocalizedString],
                                            val selectableFlag: Flag,
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                           enabledPointer: Changing[Boolean] = AlwaysTrue)
+                                           enabledFlag: Flag = AlwaysTrue)
 	extends CustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	
+	private val disabledFlag = !enabledFlag
 	private val draggingFlag = ResettableFlag()
 	
 	override val focusId = hashCode()
-	private val stylePointer = contextPointer.mergeWith(enabledPointer) { (context, enabled) =>
-		val base = TextDrawContext.contextual(context)
-		if (enabled) base else base.mapColor { _.timesAlpha(0.66) }
-	}
+	private val stylePointer = context.textDrawContextPointerFor(disabledFlag)
 	/**
 	  * A pointer to this label's measured text information
 	  */
-	val measuredTextPointer = textPointer.mergeWith(stylePointer)(measure)
+	val measuredTextPointer = textPointer.mergeWithWhile(stylePointer, linkedFlag)(measure)
+	private val caretWidth = (context.margins.verySmall * 0.66) max 1.0
 	/**
 	  * Pointer that contains the current caret index within text
 	  */
 	protected val caretIndexPointer = EventfulPointer(measuredText.maxCaretIndex)
-	private val caretVisibilityPointer = EventfulPointer(false)
-	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityPointer) { (index, isVisible) =>
+	private val caretVisibilityFlag = ResettableFlag()
+	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityFlag) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
 	// Selected range is in caret indices
 	private val selectedRangePointer = EventfulPointer[Option[(Int, Int)]](None)
@@ -80,21 +77,20 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		// Case: Draws text selection background => Other colors are also affected
 		if (settings.drawsSelectionBackground) {
 			// Highlights using the specified highlight color
-			val selectionBgPointer = contextPointer.mergeWith(settings.highlightColorPointer) { _.color.light(_) }
+			val selectionBgPointer = context.colorPointer.light.forRole(settings.highlightColorPointer)
 			// Picks the selected text color based on the selection background
 			val selectedTextColorPointer = selectionBgPointer.map { _.shade.defaultTextColor }
 			// Determines the caret color based on selection background
-			val caretColorPointer = settings.customCaretColorPointer.getOrElse(settings.highlightColorPointer)
-				.mergeWith(selectionBgPointer, contextPointer) { (role, selectionBg, context) =>
-					context.color.differentFrom(role, selectionBg)
-				}
+			val caretColorPointer = context.colorPointer.differentFromVariable(
+				rolePointer = settings.customCaretColorPointer.getOrElse(settings.highlightColorPointer),
+				competingColorPointer = selectionBgPointer)
 			(Some(selectionBgPointer), selectedTextColorPointer, caretColorPointer)
 		}
 		// Case: Doesn't draw selection background => Highlights with colored text
 		else {
-			val selectionColorPointer = contextPointer.mergeWith(settings.highlightColorPointer) { _.color(_) }
+			val selectionColorPointer = context.colorPointer.forRole(settings.highlightColorPointer)
 			val caretColorPointer = settings.customCaretColorPointer match {
-				case Some(custom) => contextPointer.mergeWith(custom) { _.color(_) }
+				case Some(custom) => context.colorPointer.forRole(custom)
 				case None => selectionColorPointer
 			}
 			(None, selectionColorPointer, caretColorPointer)
@@ -150,8 +146,6 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	
 	private def _text = textPointer.value.string
 	
-	private def caretWidth = (contextPointer.value.margins.verySmall * 0.66) max 1.0
-	
 	
 	// IMPLEMENTED	-------------------------------
 	
@@ -161,7 +155,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	override def textDrawContext = stylePointer.value
 	
 	override def allowsFocusEnter = selectable
-	override def allowTextShrink: Boolean = contextPointer.value.allowTextShrink
+	override def allowTextShrink: Boolean = context.allowTextShrink
 	
 	override def cursorType = if (selectable) Text else Default
 	override def cursorBounds = boundsInsideTop
@@ -193,7 +187,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 	  */
 	protected def setup() = {
 		// Registers some listeners only while attached to top hierarchy
-		lazy val actorHandler = contextPointer.value.actorHandler
+		val actorHandler = context.actorHandler
 		addHierarchyListener { isAttached =>
 			if (isAttached) {
 				enableFocusHandling()
@@ -375,7 +369,7 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 			passedDuration += duration
 			if (passedDuration >= settings.caretBlinkFrequency) {
 				resetCounter()
-				caretVisibilityPointer.update { !_ }
+				caretVisibilityFlag.switch()
 			}
 		}
 		
@@ -386,11 +380,11 @@ abstract class AbstractSelectableTextLabel(override val parentHierarchy: Compone
 		
 		// Makes caret visible for the full duration / refreshes duration if already visible
 		def show() = {
-			caretVisibilityPointer.value = true
+			caretVisibilityFlag.set()
 			resetCounter()
 		}
 		
-		def hide() = caretVisibilityPointer.value = false
+		def hide() = caretVisibilityFlag.reset()
 	}
 	
 	private object KeyListener extends KeyStateListener with ClipboardOwner

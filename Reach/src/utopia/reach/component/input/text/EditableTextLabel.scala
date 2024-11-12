@@ -1,12 +1,13 @@
 package utopia.reach.component.input.text
 
-import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalString._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Tab}
@@ -14,7 +15,7 @@ import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard._
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
-import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
+import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.{AbstractSelectableTextLabel, SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
 import utopia.reach.focus.FocusListener
@@ -251,23 +252,22 @@ trait EditableTextLabelSettingsWrapper[+Repr] extends EditableTextLabelSettingsL
   * @since 01.06.2023, v1.1
   */
 case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarchy,
-                                              contextPointer: Changing[TextContext],
+                                              context: VariableTextContext,
                                               settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                                               drawsBackground: Boolean = false)
 	extends EditableTextLabelSettingsWrapper[ContextualEditableTextLabelFactory]
-		with VariableContextualFactory[TextContext, ContextualEditableTextLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualEditableTextLabelFactory]
+		with ContextualFactory[VariableTextContext, ContextualEditableTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: EditableTextLabelSettings) =
 		copy(settings = settings)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualEditableTextLabelFactory =
-		copy(contextPointer = newContextPointer, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
+		copy(context = newContext, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
 			drawsBackground = true)
 	
 	
@@ -279,7 +279,7 @@ case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return a new label
 	  */
 	def apply(textPointer: EventfulPointer[String] = EventfulPointer("")) =
-		new EditableTextLabel(parentHierarchy, contextPointer, settings, textPointer)
+		new EditableTextLabel(parentHierarchy, context, settings, textPointer)
 }
 
 /**
@@ -289,23 +289,14 @@ case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarch
   */
 case class EditableTextLabelSetup(settings: EditableTextLabelSettings = EditableTextLabelSettings.default)
 	extends EditableTextLabelSettingsWrapper[EditableTextLabelSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualEditableTextLabelFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualEditableTextLabelFactory(hierarchy, Fixed(context), settings)
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
+		ContextualEditableTextLabelFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: EditableTextLabelSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new editable text label factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualEditableTextLabelFactory(hierarchy, context, settings)
 }
 
 object EditableTextLabel extends EditableTextLabelSetup()
@@ -322,10 +313,10 @@ object EditableTextLabel extends EditableTextLabelSetup()
   */
 // TODO: Create a password mode where text is not displayed nor copyable
 // TODO: Should also support input modification (e.g. upper-casing)
-class EditableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class EditableTextLabel(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                         val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger))
-	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer,
+	extends AbstractSelectableTextLabel(parentHierarchy, context,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped },
 		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledPointer, settings.labelSettings,
 		settings.enabledPointer)
