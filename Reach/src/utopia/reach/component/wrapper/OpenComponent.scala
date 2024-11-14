@@ -7,7 +7,7 @@ import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.{StackInsetsConvertible, StackLength}
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.immutable.eventful.{Always, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -357,8 +357,9 @@ object OpenComponent
 				  customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
 			   (implicit context: StaticBaseContext, canvas: ReachCanvas) =
 			Open.withContext(context).apply(Stack) { sf =>
-				val settings = StackSettings(axis = direction, layout = layout, cap = cap, customDrawers = customDrawers)
-				val stack = sf.copy(settings = settings, areRelated = areRelated)(c)
+				val settings = StackSettings(axis = direction, layout = layout, capPointer = Fixed(cap),
+					customDrawers = customDrawers)
+				val stack = sf.copy(settings = settings, relatedFlag = Always(areRelated))(c)
 				stack.parent -> stack.result
 			}
 		

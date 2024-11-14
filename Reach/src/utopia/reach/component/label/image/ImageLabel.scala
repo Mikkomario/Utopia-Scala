@@ -4,7 +4,7 @@ import utopia.firmament.component.image.ImageComponent
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, ImageDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.factory.FramedFactory
+import utopia.firmament.factory.StaticFramedFactory
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
@@ -17,7 +17,7 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.{LinearSizeAdjustable, LinearTransformable}
-import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory, ContextualFramedFactory}
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy, ReachComponentLike}
@@ -29,7 +29,7 @@ import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponen
   * @since 31.05.2023, v1.1
   */
 trait ImageLabelSettingsLike[+Repr]
-	extends CustomDrawableFactory[Repr] with FramedFactory[Repr] with FromAlignmentFactory[Repr]
+	extends CustomDrawableFactory[Repr] with StaticFramedFactory[Repr] with FromAlignmentFactory[Repr]
 		with LinearTransformable[Repr]
 {
 	// ABSTRACT	--------------------
@@ -316,7 +316,6 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
 		with ContextualBackgroundAssignableFactory[StaticColorContext, ContextualImageLabelFactory]
-		with ContextualFramedFactory[ContextualImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	

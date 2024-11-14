@@ -2,7 +2,7 @@ package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.controller.data.{ContainerSingleSelectionManager, SelectionKeyListener}
 import utopia.firmament.drawing.mutable.{MutableCustomDrawable, MutableCustomDrawableWrapper}
@@ -29,8 +29,8 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromVariableContextComponentFactoryFactory, FromVariableContextFactory}
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
@@ -81,12 +81,12 @@ trait SelectionListSettingsLike[+Repr] extends StackSettingsLike[Repr]
 	// IMPLEMENTED	--------------------
 	
 	override def axis = stackSettings.axis
-	override def cap = stackSettings.cap
+	override def capPointer: Changing[StackLength] = stackSettings.capPointer
 	override def customDrawers = stackSettings.customDrawers
 	override def layout = stackSettings.layout
 	
 	override def withAxis(axis: Axis2D) = withStackSettings(stackSettings.withAxis(axis))
-	override def withCap(cap: StackLength) = withStackSettings(stackSettings.withCap(cap))
+	override def withCapPointer(p: Changing[StackLength]): Repr = mapStackSettings { _.withCapPointer(p) }
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withStackSettings(stackSettings.withCustomDrawers(drawers))
 	override def withLayout(layout: StackLayout) = withStackSettings(stackSettings.withLayout(layout))
@@ -233,14 +233,14 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
                                 settings: SelectionListSettings = SelectionListSettings.default,
                                 marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends SelectionListFactoryLike[SelectionListFactory]
-		with FromVariableContextFactory[ColorContext, ContextualSelectionListFactory]
+		with FromContextFactory[VariableColorContext, ContextualSelectionListFactory]
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def withContextPointer(p: Changing[ColorContext]): ContextualSelectionListFactory =
-		ContextualSelectionListFactory(parentHierarchy, p, settings)
+	override def withContext(c: VariableColorContext): ContextualSelectionListFactory =
+		ContextualSelectionListFactory(parentHierarchy, c, settings)
 	
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
 	def withMarginPointer(p: Changing[StackLength]) = copy(marginPointer = p)
@@ -281,23 +281,21 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
   * @since 02.06.2023, v1.1
   */
 case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
-                                          contextPointer: Changing[ColorContext],
+                                          context: VariableColorContext,
                                           settings: SelectionListSettings = SelectionListSettings.default,
                                           customMarginPointer: Option[Changing[StackLength]] = None)
 	extends SelectionListFactoryLike[ContextualSelectionListFactory]
-		with VariableContextualFactory[ColorContext, ContextualSelectionListFactory]
+		with ContextualFactory[VariableColorContext, ContextualSelectionListFactory]
 {
 	// ATTRIBUTES   -------------------------
 	
 	override protected lazy val marginPointer: Changing[StackLength] =
-		customMarginPointer.getOrElse(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.smallStackMargin })
+		customMarginPointer.getOrElse { context.smallStackMarginPointer }
 	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def withContextPointer(contextPointer: Changing[ColorContext]) =
-		copy(contextPointer = contextPointer)
-	
+	override def withContext(context: VariableColorContext) = copy(context = context)
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
 	override def withMarginPointer(p: Changing[StackLength]) =
 		copy(customMarginPointer = Some(p))
@@ -310,7 +308,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @return Copy of this factory that places the specified sized margin between list items.
 	  */
 	def withMargin(margin: SizeCategory) =
-		withMarginPointer(contextPointer.mapWhile(parentHierarchy.linkPointer) { _.scaledStackMargin(margin) })
+		withMarginPointer(context.scaledStackMarginPointer(margin))
 	/**
 	  * @param margin Margin size to use. None if no margin should be placed.
 	  * @return Copy of this factory that uses the specified margin between list items.
@@ -340,8 +338,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
-		_apply[A, C, P](contextPointer.value.actorHandler,
-			contextPointer.mapWhile(parentHierarchy.linkPointer) { _.background }, contentPointer,
+		_apply[A, C, P](context.actorHandler, context.backgroundPointer, contentPointer,
 			valuePointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
 }
 
@@ -353,25 +350,15 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 case class SelectionListSetup(settings: SelectionListSettings = SelectionListSettings.default)
 	extends SelectionListSettingsWrapper[SelectionListSetup]
 		with ComponentFactoryFactory[SelectionListFactory]
-		with FromVariableContextComponentFactoryFactory[ColorContext, ContextualSelectionListFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, ContextualSelectionListFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = SelectionListFactory(hierarchy, settings)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy,
-	                                context: Changing[ColorContext]): ContextualSelectionListFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext): ContextualSelectionListFactory =
 		ContextualSelectionListFactory(hierarchy, context, settings)
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new selection list factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[ColorContext]) =
-		ContextualSelectionListFactory(hierarchy, context, settings)
 }
 
 object SelectionList extends SelectionListSetup()

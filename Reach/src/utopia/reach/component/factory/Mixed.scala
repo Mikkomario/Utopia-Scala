@@ -17,6 +17,7 @@ case class Mixed(parentHierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[Any, ContextualMixed]
 {
 	override def withContext[N](context: N) = ContextualMixed(parentHierarchy, context)
+	@deprecated("Deprecated for removal. With the addition of variable context classes, this should not be necessary anymore", "v1.5")
 	def withContextPointer[N](p: Changing[N]) = VariableContextualMixed(parentHierarchy, p)
 	
 	/**
@@ -59,6 +60,7 @@ case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
 	def apply[F](ff: FromContextComponentFactoryFactory[N, F]) = ff.withContext(parentHierarchy, context)
 }
 
+@deprecated("Deprecated for removal. With the addition of variable context classes, this should not be necessary anymore", "v1.5")
 case class VariableContextualMixed[N](parentHierarchy: ComponentHierarchy, contextPointer: Changing[N])
 {
 	def withoutContext = Mixed(parentHierarchy)

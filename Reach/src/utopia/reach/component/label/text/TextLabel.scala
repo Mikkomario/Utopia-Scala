@@ -4,7 +4,7 @@ import utopia.firmament.component.text.TextComponent
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, TextDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.factory.FramedFactory
+import utopia.firmament.factory.StaticFramedFactory
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
@@ -105,9 +105,9 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
                             alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
                             customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextLabelFactoryLike[TextLabelFactory]
-		with FromContextFactory[StaticTextContext, ContextualTextLabelFactory] with FramedFactory[TextLabelFactory]
-		with CustomDrawableFactory[TextLabelFactory] with BackgroundAssignable[TextLabelFactory]
-		with FromAlignmentFactory[TextLabelFactory]
+		with FromContextFactory[StaticTextContext, ContextualTextLabelFactory]
+		with StaticFramedFactory[TextLabelFactory] with CustomDrawableFactory[TextLabelFactory]
+		with BackgroundAssignable[TextLabelFactory] with FromAlignmentFactory[TextLabelFactory]
 {
 	// IMPLEMENTED	----------------------------
 	

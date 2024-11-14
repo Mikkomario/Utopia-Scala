@@ -1,6 +1,6 @@
 package utopia.reach.window
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.WindowButtonBlueprint
 import utopia.flow.view.immutable.eventful.AlwaysTrue
@@ -25,7 +25,7 @@ trait MessageWindowFactory[A] extends InteractionWindowFactory[A]
 	/**
 	  * @return The context used in the message area
 	  */
-	protected def messageContext: TextContext
+	protected def messageContext: StaticTextContext
 	
 	/**
 	  * @return Blueprints for the buttons displayed on this window
@@ -35,9 +35,9 @@ trait MessageWindowFactory[A] extends InteractionWindowFactory[A]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override protected def createContent(factories: ContextualMixed[TextContext]) = {
+	override protected def createContent(factories: ContextualMixed[StaticTextContext]) = {
 		// The main content is simply a text label
-		val content = factories.withContext(messageContext)(TextLabel).apply(message)
+		val content = factories.withContext(messageContext).apply(TextLabel).apply(message)
 		(content, buttonBlueprints, AlwaysTrue)
 	}
 }

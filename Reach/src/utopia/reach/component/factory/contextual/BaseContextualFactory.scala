@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.{BaseContext, BaseContextWrapper}
+import utopia.firmament.context.base.{StaticBaseContext, StaticBaseContextWrapper, VariableBaseContext}
 import utopia.paradigm.color.Color
 
 /**
@@ -8,11 +8,15 @@ import utopia.paradigm.color.Color
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
-trait BaseContextualFactory[+Repr] extends ContextualFactory[BaseContext, Repr] with BaseContextWrapper[Repr, Repr]
+trait BaseContextualFactory[+Repr]
+	extends ContextualFactory[StaticBaseContext, Repr] with StaticBaseContextWrapper[StaticBaseContext, Repr]
 {
-	override def base: BaseContext = context
+	override def base = context
 	
-	override def withBase(baseContext: BaseContext): Repr = withContext(baseContext)
+	override def current: StaticBaseContext = base
+	override def toVariableContext: VariableBaseContext = base.toVariableContext
+	
+	override def withBase(baseContext: StaticBaseContext): Repr = withContext(baseContext)
 	override def against(background: Color): Repr = mapContext { _.against(background) }
 	override def *(mod: Double): Repr = mapContext { _ * mod }
 }

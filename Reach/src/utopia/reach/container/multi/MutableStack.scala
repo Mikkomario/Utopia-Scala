@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.firmament.component.container.many.MutableMultiContainer
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
@@ -18,7 +18,7 @@ import utopia.reach.component.wrapper.OpenComponent
 
 case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
                                margin: StackLength = StackLength.any)
-	extends FromContextFactory[BaseContext, ContextualMutableStackFactory]
+	extends FromContextFactory[StaticBaseContext, ContextualMutableStackFactory]
 		with StackSettingsWrapper[MutableStackFactory]
 {
 	// COMPUTED ----------------------------
@@ -33,7 +33,7 @@ case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSet
 	
 	override def withSettings(settings: StackSettings): MutableStackFactory = copy(settings = settings)
 	
-	override def withContext(context: BaseContext) = ContextualMutableStackFactory(hierarchy, context, settings)
+	override def withContext(context: StaticBaseContext) = ContextualMutableStackFactory(hierarchy, context, settings)
 	
 	
 	// OTHER	-------------------------------------
@@ -49,11 +49,14 @@ case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSet
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike]() =
-		new MutableStack[C](hierarchy, axis, layout, margin, cap)
+	def apply[C <: ReachComponentLike]() = {
+		val stack = new MutableStack[C](hierarchy, axis, layout, margin, capPointer.value)
+		capPointer.addListenerWhile(stack.linkedFlag) { e => stack.cap = e.newValue }
+		stack
+	}
 }
 
-case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context: BaseContext,
+case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context: StaticBaseContext,
                                          settings: StackSettings = StackSettings.default, areRelated: Boolean = false)
 	extends BaseContextualFactory[ContextualMutableStackFactory]
 		with StackSettingsWrapper[ContextualMutableStackFactory]
@@ -76,7 +79,7 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 	override def self: ContextualMutableStackFactory = this
 	
 	override def withSettings(settings: StackSettings): ContextualMutableStackFactory = copy(settings = settings)
-	override def withContext(newContext: BaseContext) = copy(context = newContext)
+	override def withContext(newContext: StaticBaseContext) = copy(context = newContext)
 	
 	
 	// OTHER	-----------------------------------
@@ -86,9 +89,12 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike]() =
-		new MutableStack[C](hierarchy, axis, layout,
-			if (areRelated) context.smallStackMargin else context.stackMargin, cap)
+	def apply[C <: ReachComponentLike]() = {
+		// FIXME: Doesn't support mutating cap at this time
+		val stack = new MutableStack[C](hierarchy, axis, layout,
+			if (areRelated) context.smallStackMargin else context.stackMargin, capPointer.value)
+		stack
+	}
 }
 
 object MutableStack extends Cff[MutableStackFactory]

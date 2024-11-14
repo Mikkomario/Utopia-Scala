@@ -1,6 +1,7 @@
 package utopia.reach.component.label.text.selectable
 
-import utopia.firmament.context.{ComponentCreationDefaults, TextContext}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.LocalizedString
@@ -8,7 +9,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
-import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableContextualFactory}
+import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.focus.FocusListener
@@ -206,24 +207,23 @@ trait SelectableTextLabelSettingsWrapper[+Repr] extends SelectableTextLabelSetti
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierarchy,
-                                                contextPointer: Changing[TextContext],
+case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                                 settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                                 drawsBackground: Boolean = false)
 	extends SelectableTextLabelSettingsWrapper[ContextualSelectableTextLabelFactory]
-		with VariableContextualFactory[TextContext, ContextualSelectableTextLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[TextContext, ContextualSelectableTextLabelFactory]
+		with ContextualFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
 {
 	// IMPLEMENTED  ---------------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableTextContext) =
+		copy(context = context)
 	override def withSettings(settings: SelectableTextLabelSettings) =
 		copy(settings = settings)
 	
-	override protected def withVariableBackgroundContext(newContextPointer: Changing[TextContext],
+	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
 	                                                     backgroundDrawer: CustomDrawer): ContextualSelectableTextLabelFactory =
-		copy(contextPointer = newContextPointer, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
+		copy(context = newContext, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
 			drawsBackground = true)
 	
 	
@@ -235,12 +235,9 @@ case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierar
 	  * @return A new selectable text label
 	  */
 	def apply(textPointer: Changing[LocalizedString]) = {
-		val label = new SelectableTextLabel(parentHierarchy, contextPointer, textPointer, settings)
+		val label = new SelectableTextLabel(parentHierarchy, context, textPointer, settings)
 		if (drawsBackground)
-			contextPointer.addContinuousListener { e =>
-				if (e.values.isAsymmetricBy { _.background })
-					label.repaint()
-			}
+			context.backgroundPointer.addListenerWhile(label.linkedFlag) { _ => label.repaint() }
 		label
 	}
 }
@@ -252,23 +249,14 @@ case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierar
   */
 case class SelectableTextLabelSetup(settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default)
 	extends SelectableTextLabelSettingsWrapper[SelectableTextLabelSetup]
-		with FromContextComponentFactoryFactory[TextContext, ContextualSelectableTextLabelFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
-		ContextualSelectableTextLabelFactory(hierarchy, Fixed(context), settings)
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
+		ContextualSelectableTextLabelFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: SelectableTextLabelSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new selectable text label factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualSelectableTextLabelFactory(hierarchy, context, settings)
 }
 
 object SelectableTextLabel extends SelectableTextLabelSetup()
@@ -283,9 +271,9 @@ object SelectableTextLabel extends SelectableTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 14.5.2021, v0.3
   */
-class SelectableTextLabel(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class SelectableTextLabel(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                           val textPointer: Changing[LocalizedString], settings: SelectableTextLabelSettings)
-	extends AbstractSelectableTextLabel(parentHierarchy, contextPointer, textPointer, AlwaysTrue, settings)
+	extends AbstractSelectableTextLabel(parentHierarchy, context, textPointer, AlwaysTrue, settings)
 {
 	// COMPUTED ------------------------------
 	

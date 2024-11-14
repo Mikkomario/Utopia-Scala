@@ -496,7 +496,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	}
 	
 	val customDrawers = additionalCustomDrawers :+
-		ViewImageDrawer.copy(transformationView = transformationPointer, insetsView = insetsPointer,
+		ViewImageDrawer.copy(transformationView = transformationPointer, insetsPointer = insetsPointer,
 			alignmentView = alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
 	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	

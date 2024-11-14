@@ -79,7 +79,7 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	
 	// Adds image drawing
 	addCustomDrawer(ViewImageDrawer
-		.copy(insetsView = insetsPointer, alignmentView = alignmentPointer, upscales = allowUpscaling)
+		.copy(insetsPointer = insetsPointer, alignmentView = alignmentPointer, upscales = allowUpscaling)
 		.apply(imagePointer))
 	
 	// Updates and repaints this label when values change

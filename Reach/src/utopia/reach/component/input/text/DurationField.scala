@@ -1,22 +1,22 @@
 package utopia.reach.component.input.text
 
 import utopia.firmament.component.input.InputWithPointer
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.Span
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
-import utopia.reach.component.factory.contextual.VariableContextualFactory
-import utopia.reach.component.factory.{FromVariableContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.text.DurationField.focusTransferDelay
 import utopia.reach.component.input.{FieldSettings, FieldSettingsLike}
@@ -308,16 +308,14 @@ trait DurationFieldSettingsWrapper[+Repr] extends DurationFieldSettingsLike[Repr
   * @author Mikko Hilpinen
   * @since 18.06.2023, v1.1
   */
-case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy,
-                                          contextPointer: Changing[TextContext],
+case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                           settings: DurationFieldSettings = DurationFieldSettings.default)
 	extends DurationFieldSettingsWrapper[ContextualDurationFieldFactory]
-		with VariableContextualFactory[TextContext, ContextualDurationFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualDurationFieldFactory]
 {
 	// IMPLEMENTED  ---------------------------
 	
-	override def withContextPointer(contextPointer: Changing[TextContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: DurationFieldSettings) =
 		copy(settings = settings)
 	
@@ -329,7 +327,7 @@ case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy,
 	  * @param exc Implicit execution context for delayed focus transfer events
 	  * @return A new duration input field
 	  */
-	def apply()(implicit exc: ExecutionContext) = new DurationField(parentHierarchy, contextPointer, settings)
+	def apply()(implicit exc: ExecutionContext) = new DurationField(parentHierarchy, context, settings)
 }
 
 /**
@@ -339,24 +337,14 @@ case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy,
   */
 case class DurationFieldSetup(settings: DurationFieldSettings = DurationFieldSettings.default)
 	extends DurationFieldSettingsWrapper[DurationFieldSetup]
-		with FromVariableContextComponentFactoryFactory[TextContext, ContextualDurationFieldFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ContextualDurationFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy,
-	                                context: Changing[TextContext]): ContextualDurationFieldFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
 		ContextualDurationFieldFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: DurationFieldSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new duration field factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[TextContext]) =
-		ContextualDurationFieldFactory(hierarchy, context, settings)
 }
 
 object DurationField extends DurationFieldSetup()
@@ -369,7 +357,7 @@ object DurationField extends DurationFieldSetup()
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
-class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changing[TextContext],
+class DurationField(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                     settings: DurationFieldSettings = DurationFieldSettings.default)
 				   (implicit exc: ExecutionContext)
 	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
@@ -383,16 +371,11 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 	if (settings.maxValue <= Duration.Zero)
 		throw new IllegalArgumentException("DurationField max value must be positive.")
 	
-	// TODO: This approach creates additional dependencies. Consider creating a cached margin (etc) pointers
-	private val marginPointer = {
-		if (settings.separator.isEmpty)
-			contextPointer.mapWhile(parentHierarchy.linkPointer) { _.smallStackMargin }
-		else
-			Fixed(StackLength.fixedZero)
-	}
+	private val marginPointer =
+		if (settings.separator.isEmpty) context.smallStackMarginPointer else Fixed(StackLength.fixedZero)
 	
 	// The input fields are placed in a horizontal stack and separated with ":"
-	private val (_wrapped, (fields, _valuePointer)) = ViewStack(parentHierarchy)
+	private val (_wrapped, (fields, _valuePointer)) = ViewStack(parentHierarchy).withContext(context)
 		.withMarginPointer(marginPointer).centered.row.withCustomDrawers(settings.customDrawers)
 		.build(Mixed) { factories =>
 			// Creates the input fields
@@ -438,7 +421,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 						Pair.twice(SingleColorIcon.alwaysEmpty)
 				}
 				
-				factories.next().withContextPointer(contextPointer)(TextField)
+				factories.next()(TextField)
 					.withSettings(defaultFieldSettings
 						.withFieldNamePointer(fieldNamePointer)
 						.withIconPointers(iconPointers)
@@ -515,8 +498,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 						// TODO: There is a potential bug here, as the separator field factories are pulled out of
 						//  order from the hierarchy iterator
 						val separatorFields = Vector.fill(inputFields.size - 1) {
-							factories.next()(ViewTextLabel).withContextPointer(contextPointer)
-								.hint.text(Fixed(settings.separator))
+							factories.next()(ViewTextLabel).hint.text(Fixed(settings.separator))
 						}
 						inputFields.dropRight(1).zip(separatorFields)
 							.flatMap { case (field, separator) => Pair(field, separator) } :+ inputFields.last
@@ -531,7 +513,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, contextPointer: Changin
 	
 	// COMPUTED -------------------------
 	
-	private implicit def localizer: Localizer = contextPointer.value.localizer
+	private implicit def localizer: Localizer = context.localizer
 	
 	
 	// IMPLEMENTED	-------------------------------
