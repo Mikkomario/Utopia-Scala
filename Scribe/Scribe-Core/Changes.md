@@ -1,5 +1,8 @@
 # Utopia Scribe Core - list of changes
 
+## v1.1.1 (in development)
+Latest Flow support
+
 ## v1.1 - 04.10.2024
 Accommodates changes in Flow by renaming **TryExtensions**. Also includes an important bugfix to **ConsoleScribe**.
 ### Breaking changes

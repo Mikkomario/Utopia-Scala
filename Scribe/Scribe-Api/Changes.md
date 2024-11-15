@@ -1,5 +1,8 @@
 # Utopia Scribe Api - list of changes
 
+## v1.0.4 (in development)
+Latest Flow support
+
 ## v1.0.3 - 04.10.2024
 A minor update supporting changes in Vault.
 ### Other changes

@@ -1,5 +1,8 @@
 # Utopia Genesis - List of Changes
 
+## v4.1.1 (in development)
+Latest Flow support
+
 ## v4.1 - 04.10.2024
 This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0. 
 **Animator** is also fixed, and event filters are now easier to construct.

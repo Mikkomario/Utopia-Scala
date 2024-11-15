@@ -1,5 +1,8 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.3.1 (in development)
+Support for latest Flow
+
 ## v1.3 - 04.10.2024
 Made request & response -interception a little easier to use and modified `Date` header generation logic.
 ### Breaking changes
