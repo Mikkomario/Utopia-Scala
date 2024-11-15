@@ -1,16 +1,16 @@
 package utopia.reflection.container.swing.layout.wrapper
 
-import utopia.firmament.context.BaseContextLike
-import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.paradigm.color.Color
+import utopia.firmament.context.base.BaseContextCopyable
 import utopia.firmament.drawing.immutable.RoundedBackgroundDrawer
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.model.stack.{StackInsets, StackSize}
 import utopia.genesis.graphics.DrawLevel.Normal
+import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.template.{AwtComponentRelated, SwingComponentRelated}
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.stack.template.layout.ReflectionFramingLike
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
-import utopia.firmament.model.stack.{StackInsets, StackSize}
 
 object Framing
 {
@@ -36,7 +36,7 @@ object Framing
 	  * @tparam Context1 Type of context outside this frame
 	  * @return A frame with background color and contents
 	  */
-	def fill[C <: AwtStackable, Context2, Context1 <: BaseContextLike[_, Context2]]
+	def fill[C <: AwtStackable, Context2, Context1 <: BaseContextCopyable[_, Context2]]
 	(insets: StackInsets, color: Color)(f: Context2 => C)(implicit context: Context1) =
 	{
 		val newContext = context.against(color)

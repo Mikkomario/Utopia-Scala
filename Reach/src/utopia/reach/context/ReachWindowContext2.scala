@@ -1,7 +1,7 @@
 package utopia.reach.context
 
-import utopia.firmament.context.WindowContext
 import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.window.{WindowContext2, WindowContextWrapper2}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -12,8 +12,7 @@ import utopia.reach.cursor.CursorSet
 
 import scala.language.implicitConversions
 
-@deprecated("Replaced with a new version", "v1.5")
-object ReachWindowContext
+object ReachWindowContext2
 {
 	// OTHER    -----------------------
 	
@@ -26,9 +25,9 @@ object ReachWindowContext
 	  * @param getAnchor Anchoring function (default = anchor over the focused component, or at the window center)
 	  * @return A new reach window context
 	  */
-	def apply(base: WindowContext, background: Color, cursors: Option[CursorSet] = None,
+	def apply(base: WindowContext2, background: Color, cursors: Option[CursorSet] = None,
 	          revalidationStyle: RevalidationStyle = Immediate.async,
-	          getAnchor: (ReachCanvas, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext =
+	          getAnchor: (ReachCanvas, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext2 =
 		_ReachWindowContext(base, background, cursors, revalidationStyle, getAnchor)
 	
 	/**
@@ -36,34 +35,34 @@ object ReachWindowContext
 	  * @param background Window background color
 	  * @return A Reach window context that uses the specified actor handler and default settings
 	  */
-	def apply(actorHandler: ActorHandler, background: Color): ReachWindowContext =
-		apply(WindowContext(actorHandler), background)
+	def apply(actorHandler: ActorHandler, background: Color): ReachWindowContext2 =
+		apply(WindowContext2(actorHandler), background)
 	
 	
 	// NESTED   -----------------------
 	
-	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color,
+	private case class _ReachWindowContext(windowContext: WindowContext2, windowBackground: Color,
 	                                       cursors: Option[CursorSet], revalidationStyle: RevalidationStyle,
 	                                       getAnchor: (ReachCanvas, Bounds) => Point)
-		extends ReachWindowContext
+		extends ReachWindowContext2 with WindowContextWrapper2[WindowContext2, ReachWindowContext2]
 	{
-		override def self: ReachWindowContext = this
+		override def self = this
 		
 		override def transparent =
 			super.transparent.mapWindowBackground { _.withAlpha(0.0) }
 		
-		override def withWindowBackground(bg: Color): ReachWindowContext = copy(windowBackground = bg)
-		override def withCursors(cursors: Option[CursorSet]): ReachWindowContext = copy(cursors = cursors)
-		override def withRevalidationStyle(style: RevalidationStyle): ReachWindowContext =
+		override def withWindowBackground(bg: Color) = copy(windowBackground = bg)
+		override def withCursors(cursors: Option[CursorSet]) = copy(cursors = cursors)
+		override def withRevalidationStyle(style: RevalidationStyle) =
 			copy(revalidationStyle = style)
-		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): ReachWindowContext =
+		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point) =
 			copy(getAnchor = getAnchor)
 		
-		override def withWindowContext(base: WindowContext): ReachWindowContext =
+		override def withWindowContext(base: WindowContext2) =
 			if (base == windowContext) self else copy(windowContext = base)
 		
-		override def withContentContext(textContext: StaticTextContext): ReachContentWindowContext =
-			ReachContentWindowContext(this, textContext)
+		override def withContentContext(textContext: StaticTextContext) =
+			StaticReachContentWindowContext(this, textContext)
 	}
 }
 
@@ -72,5 +71,5 @@ object ReachWindowContext
   * @author Mikko Hilpinen
   * @since 13.4.2023, v1.0
   */
-@deprecated("Replaced with a new version", "v1.5")
-trait ReachWindowContext extends ReachWindowContextLike[ReachWindowContext, ReachContentWindowContext] with WindowContext
+trait ReachWindowContext2
+	extends WindowContext2 with ReachWindowContextCopyable[ReachWindowContext2, StaticReachContentWindowContext]

@@ -1,8 +1,8 @@
 package utopia.reach.context
 
-import utopia.firmament.context.WindowContextWrapper
 import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.window.WindowContextCopyable
 import utopia.flow.collection.immutable.range.Span
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
@@ -16,34 +16,15 @@ import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
 import scala.concurrent.duration.FiniteDuration
 
 /**
-  * Common trait for context instances that provide enough information for creating ReachWindows
+  * Common trait for copyable context instances that provide information for creating ReachWindows
   * @author Mikko Hilpinen
-  * @since 13.4.2023, v1.0
+  * @since 14.11.2024, v1.5
   * @tparam Repr Concrete context implementation
+  * @tparam Textual A version of this window implementation that defines settings for textual window contents
   */
-@deprecated("Replaced with ReachWindowContextCopyable", "v1.5")
-trait ReachWindowContextLike[+Repr, +Textual] extends WindowContextWrapper[Repr]
+trait ReachWindowContextCopyable[+Repr, +Textual] extends ReachWindowContextPropsView with WindowContextCopyable[Repr]
 {
 	// ABSTRACT ------------------------
-	
-	/**
-	  * @return The background color used in created windows
-	  */
-	def windowBackground: Color
-	/**
-	  * @return Cursors used in created canvases
-	  */
-	def cursors: Option[CursorSet]
-	/**
-	  * @return Revalidation style used, which determines how revalidate() is implemented
-	  */
-	def revalidationStyle: RevalidationStyle
-	/**
-	  * @return A function that determines the window anchor position.
-	  *         Accepts a canvas instance and window bounds.
-	  *         Returns a point within or outside the bounds that serves as the window "anchor".
-	  */
-	def getAnchor: (ReachCanvas, Bounds) => Point
 	
 	/**
 	  * @param bg New background color to use

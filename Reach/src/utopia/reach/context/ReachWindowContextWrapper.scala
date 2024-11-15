@@ -12,6 +12,7 @@ import utopia.reach.cursor.CursorSet
   * @author Mikko Hilpinen
   * @since 16.4.2023, v1.0
   */
+@deprecated("Replaced with a new version", "v1.5")
 trait ReachWindowContextWrapper[+Repr, +Textual] extends ReachWindowContextLike[Repr, Textual]
 {
 	// ABSTRACT -------------------------

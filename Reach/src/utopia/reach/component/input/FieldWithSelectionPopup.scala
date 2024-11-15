@@ -3,6 +3,7 @@ package utopia.reach.component.input
 import utopia.firmament.component.Window
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.context.{ScrollingContext, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
@@ -47,7 +48,7 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{StackSettings, ViewStack}
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.context.ReachContentWindowContext
+import utopia.reach.context.{ReachContentWindowContext, VariableReachContentWindowContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -88,11 +89,11 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	/**
 	  * A function used for constructing a view to display when no options are selectable
 	  */
-	def noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]
+	def noOptionsViewConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike]
 	/**
 	  * A function used for constructing an additional selectable view to display
 	  */
-	def extraOptionConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike]
+	def extraOptionConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike]
 	/**
 	  * The location where the extra option should be placed, if one has been specified
 	  */
@@ -134,7 +135,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  *          A function used for constructing an additional selectable view to display
 	  * @return Copy of this factory with the specified extra option constructor
 	  */
-	def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr
+	def withExtraOptionConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): Repr
 	/**
 	  * The location where the extra option should be placed, if one has been specified
 	  * @param location New extra option location to use.
@@ -162,7 +163,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  *          A function used for constructing a view to display when no options are selectable
 	  * @return Copy of this factory with the specified no options view constructor
 	  */
-	def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr
+	def withNoOptionsViewConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): Repr
 	/**
 	  * Size of the margins to place between the selectable items in the pop-up.
 	  * None if no margin should be placed.
@@ -187,7 +188,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	
 	def listAxis = listStackSettings.axis
 	def listLayout = listStackSettings.layout
-	def listCap = listStackSettings.cap
+	def listCapPointer = listStackSettings.capPointer
 	def listCustomDrawers = listStackSettings.customDrawers
 	
 	/**
@@ -296,8 +297,8 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
                                            listMargin: Option[SizeCategory] = Some(SizeCategory.Small),
                                            activationKeys: Set[Key] = Set[Key](),
                                            popupContextMod: ReachContentWindowContext => ReachContentWindowContext = Identity,
-                                           noOptionsViewConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
-                                           extraOptionConstructor: Option[(ComponentHierarchy, Changing[TextContext]) => ReachComponentLike] = None,
+                                           noOptionsViewConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike] = None,
+                                           extraOptionConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike] = None,
                                            extraOptionLocation: End = End.Last)
 	extends FieldWithSelectionPopupSettingsLike[FieldWithSelectionPopupSettings]
 {
@@ -308,9 +309,9 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
 	override def withExtraOptionLocation(location: End) = copy(extraOptionLocation = location)
 	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
 	override def withListSettings(settings: SelectionListSettings) = copy(listSettings = settings)
-	override def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): FieldWithSelectionPopupSettings =
+	override def withExtraOptionConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): FieldWithSelectionPopupSettings =
 		copy(extraOptionConstructor = Some(f))
-	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): FieldWithSelectionPopupSettings =
+	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): FieldWithSelectionPopupSettings =
 		copy(noOptionsViewConstructor = Some(f))
 	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): FieldWithSelectionPopupSettings =
 		copy(popupContextMod = f)
@@ -358,9 +359,9 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 	override def withFieldSettings(settings: FieldSettings) = mapSettings { _.withFieldSettings(settings) }
 	override def withListSettings(settings: SelectionListSettings) =
 		mapSettings { _.withListSettings(settings) }
-	override def withExtraOptionConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr =
+	override def withExtraOptionConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): Repr =
 		mapSettings { _.withExtraOptionConstructor(f) }
-	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, Changing[TextContext]) => ReachComponentLike): Repr =
+	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): Repr =
 		mapSettings { _.withNoOptionsViewConstructor(f) }
 	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): Repr =
 		mapSettings { _.withPopupContextMod(f) }
@@ -483,13 +484,13 @@ object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
   */
 class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: ReachComponentLike with Refreshable[A],
 	+P <: Changing[Seq[A]]]
-(parentHierarchy: ComponentHierarchy, contextPointer: Changing[ReachContentWindowContext],
+(parentHierarchy: ComponentHierarchy, context: VariableReachContentWindowContext,
  isEmptyPointer: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: EventfulPointer[Option[A]],
  settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default,
  sameItemCheck: Option[EqualsFunction[A]] = None)
 (makeField: FieldCreationContext => C)
-(makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
+(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponentLike, Any]])
 (implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithPointerWrapper
@@ -563,7 +564,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	/**
 	  * Field wrapped by this field
 	  */
-	val field = Field.withContext(parentHierarchy, contextPointer)
+	val field = Field.withContext(parentHierarchy, context)
 		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconPointer))
 		.apply(isEmptyPointer)(makeField)(makeRightHintLabel)
 	
@@ -572,9 +573,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	  */
 	val popUpHiddenWhileFocusedFlag = popUpHiddenPointer && field.focusPointer
 	
-	private lazy val popUpContextPointer = contextPointer.mergeWith(field.innerBackgroundPointer) { (context, bg) =>
-		settings.popupContextMod(context.withBackground(bg))
-	}
+	private lazy val popUpContext = context.withBackgroundPointer(field.innerBackgroundPointer)
 	
 	
 	// INITIAL CODE	-----------------------------
@@ -647,7 +646,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 	
 	private def createPopup(): Window = {
 		// Creates the pop-up
-		implicit val windowContext: ReachContentWindowContext = popUpContextPointer.value
+		implicit val windowContext: VariableReachContentWindowContext = popUpContext
 		val popup = field.createOwnedWindow(Alignment.forDirection(settings.listAxis(Positive)), matchEdgeLength = true) { hierarchy =>
 			// The pop-up content resides in a scroll view with custom background drawing
 			ScrollView(hierarchy).withAxis(settings.listAxis)

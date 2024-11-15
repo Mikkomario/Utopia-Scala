@@ -5,6 +5,7 @@ import utopia.paradigm.color.Color
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with a new version", "v1.5")
 object ReachContentWindowContext
 {
 	// IMPLICIT -------------------------
@@ -56,5 +57,6 @@ object ReachContentWindowContext
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
+@deprecated("Replaced with a new version", "v1.5")
 trait ReachContentWindowContext
 	extends ReachContentWindowContextLike[ReachContentWindowContext] with StaticTextContext with ReachWindowContext

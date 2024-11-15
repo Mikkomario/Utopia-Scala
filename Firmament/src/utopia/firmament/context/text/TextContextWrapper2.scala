@@ -25,6 +25,7 @@ trait TextContextWrapper2[Base <: TextContextCopyable[Base], +Repr]
 	override def textInsetsPointer: Changing[StackInsets] = base.textInsetsPointer
 	override def lineSplitThresholdPointer: Option[Changing[Double]] = base.lineSplitThresholdPointer
 	override def textDrawContextPointer: Changing[TextDrawContext] = base.textDrawContextPointer
+	override def hintTextDrawContextPointer: Changing[TextDrawContext] = base.hintTextDrawContextPointer
 	
 	override def withDefaultPromptFont: Repr = mapBase { _.withDefaultPromptFont }
 	

@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.layout.multi
 
-import utopia.firmament.context.{AnimationContext, BaseContext, ComponentCreationDefaults}
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
@@ -32,7 +33,7 @@ object AnimatedCollectionView
 	  */
 	def contextual[C <: AwtStackable](rowAxis: Axis2D, initialRowSplitThreshold: Double,
 									  insideRowLayout: StackLayout = Fit, forceEqualRowLength: Boolean = false)
-									 (implicit ac: AnimationContext, bc: BaseContext, exc: ExecutionContext) =
+									 (implicit ac: AnimationContext, bc: StaticBaseContext, exc: ExecutionContext) =
 		new AnimatedCollectionView[C](ac.actorHandler, rowAxis, initialRowSplitThreshold, bc.stackMargin,
 			insideRowLayout, forceEqualRowLength, ac.animationDuration, ac.maxAnimationRefreshRate,
 			ac.useFadingInAnimations)

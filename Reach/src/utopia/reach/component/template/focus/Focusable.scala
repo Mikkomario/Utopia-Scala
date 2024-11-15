@@ -1,14 +1,14 @@
 package utopia.reach.component.template.focus
 
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.util.logging.Logger
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.ReachWindowContext2
 import utopia.reach.focus.{FocusListener, FocusRequestable}
 
 import scala.concurrent.ExecutionContext
@@ -195,7 +195,7 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	                                                  matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                                  display: Boolean = false)
 	                                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                                 (implicit context: ReachWindowContext, exc: ExecutionContext,
+	                                                 (implicit context: ReachWindowContext2, exc: ExecutionContext,
 	                                                  log: Logger): WindowCreationResult[C, R] =
 	{
 		// Always enables focus on the created windows

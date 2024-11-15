@@ -9,6 +9,7 @@ import utopia.firmament.context.text.{StaticTextContext, StaticTextContextWrappe
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
+@deprecated("Replaced with ReachContentWindowContextCopyable", "v1.5")
 trait ReachContentWindowContextLike[+Repr]
 	extends StaticTextContextWrapper[StaticTextContext, Repr] with ReachWindowContextWrapper[Repr, Repr]
 {

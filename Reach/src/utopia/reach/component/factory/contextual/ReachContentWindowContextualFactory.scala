@@ -1,7 +1,7 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.text.{StaticTextContext, VariableTextContext}
-import utopia.reach.context.{ReachContentWindowContext, ReachContentWindowContextWrapper}
+import utopia.firmament.context.text.StaticTextContext
+import utopia.reach.context.{ReachContentWindowContextWrapper2, StaticReachContentWindowContext}
 
 /**
   * Common trait for factories which wrap and use a popup creation context
@@ -9,13 +9,15 @@ import utopia.reach.context.{ReachContentWindowContext, ReachContentWindowContex
   * @since 17.4.2023, v1.0
   */
 trait ReachContentWindowContextualFactory[+Repr]
-	extends ContextualFactory[ReachContentWindowContext, Repr] with ReachContentWindowContextWrapper[Repr]
+	extends ContextualFactory[StaticReachContentWindowContext, Repr]
+		with ReachContentWindowContextWrapper2[StaticReachContentWindowContext, Repr]
 {
-	override def current: StaticTextContext = context
-	override def toVariableContext: VariableTextContext = context.toVariableContext
+	override def base: StaticReachContentWindowContext = context
+	override def current = windowContext
+	override def toVariableContext = windowContext.toVariableContext
 	
-	override def contentWindowContext: ReachContentWindowContext = context
-	override def withContentWindowContext(base: ReachContentWindowContext): Repr = withContext(base)
+	override def withBase(base: StaticReachContentWindowContext): Repr = withContext(base)
+	override def withContentContext(textContext: StaticTextContext): Repr = mapBase { _.withContentContext(textContext) }
 	
 	override def *(mod: Double): Repr = mapContext { _ * mod }
 }

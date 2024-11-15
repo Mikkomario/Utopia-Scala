@@ -4,7 +4,8 @@ import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window.minIconSize
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
-import utopia.firmament.context.{ComponentCreationDefaults, WindowContext}
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.window.WindowContext2
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
@@ -182,7 +183,7 @@ object Window
 	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center,
 	               maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	               disableAutoBoundsUpdates: Boolean = false)
-	              (implicit context: WindowContext, exc: ExecutionContext, logger: Logger) =
+	              (implicit context: WindowContext2, exc: ExecutionContext, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
 			context.screenBorderMargins, getAnchor, context.icon, maxInitializationWaitDuration,
 			!context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,

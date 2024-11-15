@@ -1,15 +1,14 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.Stackable
-import utopia.genesis.graphics.DrawLevel
-import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.graphics.{Drawer, Priority}
+import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
+import utopia.genesis.graphics.{DrawLevel, Drawer, Priority}
 import utopia.genesis.handling.event.mouse.{MouseDragEvent, MouseDragHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -21,7 +20,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
-import utopia.reach.context.ReachWindowContext
+import utopia.reach.context.ReachWindowContext2
 import utopia.reach.window.ReachWindow
 
 import scala.concurrent.ExecutionContext
@@ -350,7 +349,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	                                             matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                             display: Boolean = false)
 	                                            (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,
+	                                            (implicit context: ReachWindowContext2, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{
 		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title,

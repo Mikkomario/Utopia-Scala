@@ -7,6 +7,7 @@ import utopia.paradigm.color.Color
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
+@deprecated("Replaced with a new version", "v1.5")
 trait ReachContentWindowContextWrapper[+Repr] extends ReachContentWindowContextLike[Repr]
 {
 	// ABSTRACT ---------------------

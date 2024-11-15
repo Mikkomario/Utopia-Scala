@@ -3,8 +3,8 @@ package utopia.reach.window
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
-import utopia.firmament.context.WindowContext
 import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.window.WindowContext2
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
@@ -15,6 +15,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.Volatile
@@ -32,7 +33,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
-import utopia.reach.context.{ReachContentWindowContext, ReachWindowContext, ReachWindowContextWrapper}
+import utopia.reach.context.{ReachWindowContext2, ReachWindowContextWrapper2, StaticReachContentWindowContext}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -49,7 +50,7 @@ object ReachWindow
 	// IMPLICIT ---------------------------
 	
 	implicit def autoFactory(f: ReachWindow.type)
-	                        (implicit c: ReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	                        (implicit c: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
 		f.contentContextual
 	
 	
@@ -61,7 +62,7 @@ object ReachWindow
 	  * @param log Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def contextual(implicit context: ReachWindowContext, exc: ExecutionContext, log: Logger) =
+	def contextual(implicit context: ReachWindowContext2, exc: ExecutionContext, log: Logger) =
 		withContext(context)
 	/**
 	  * @param context Implicit popup window creation context
@@ -69,7 +70,7 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def contentContextual(implicit context: ReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	def contentContextual(implicit context: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
 		contextual.withContentContext(context)
 	
 	
@@ -81,7 +82,7 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def withContext(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger) =
+	def withContext(context: ReachWindowContext2)(implicit exc: ExecutionContext, log: Logger) =
 		ContextualReachWindowFactory(context)
 	/**
 	 * @param context Window creation context
@@ -89,7 +90,7 @@ object ReachWindow
 	 * @param log     Implicit logging execution
 	 * @return A new Reach window factory that uses the specified context
 	 */
-	def withContext(context: ReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	def withContext(context: StaticReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
 		ContextualReachWindowFactory(context).withContentContext(context)
 	/**
 	  * @param actorHandler Actor handler to use
@@ -99,24 +100,23 @@ object ReachWindow
 	  * @return A new reach window factory that uses the default context
 	  */
 	def apply(actorHandler: ActorHandler, background: Color)(implicit exc: ExecutionContext, log: Logger) =
-		withContext(ReachWindowContext(WindowContext(actorHandler), background))
+		withContext(ReachWindowContext2(WindowContext2(actorHandler), background))
 }
 
-case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger)
-	extends ReachWindowContextWrapper[ContextualReachWindowFactory, ReachContentWindowFactory]
+case class ContextualReachWindowFactory(context: ReachWindowContext2)(implicit exc: ExecutionContext, log: Logger)
+	extends ReachWindowContextWrapper2[ReachWindowContext2, ContextualReachWindowFactory, ReachContentWindowFactory]
 {
 	// ATTRIBUTES   ---------------
 	
-	private implicit val c: ReachWindowContext = context
+	private implicit val c: ReachWindowContext2 = context
 	
 	
 	// IMPLEMENTED  ---------------
 	
 	override def self: ContextualReachWindowFactory = this
 	
-	override def reachWindowContext: ReachWindowContext = context
-	
-	override def withReachWindowContext(base: ReachWindowContext): ContextualReachWindowFactory = copy(base)
+	override def windowContext: ReachWindowContext2 = context
+	override def withWindowContext(base: ReachWindowContext2): ContextualReachWindowFactory = copy(context = base)
 	
 	override def withContentContext(textContext: StaticTextContext) =
 		ReachContentWindowFactory(this, context.withContentContext(textContext))
@@ -124,9 +124,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	
 	// OTHER    ------------------
 	
-	def withContext(context: ReachWindowContext) = copy(context)
-	
-	def mapContext(f: ReachWindowContext => ReachWindowContext) = withContext(f(context))
+	def withContext(context: ReachWindowContext2) = copy(context)
+	def mapContext(f: Mutate[ReachWindowContext2]) = withContext(f(context))
 	
 	/**
 	  * Creates a new reach window instance
@@ -198,7 +197,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  *                           Please note that this alignment may be reversed in case there is not enough space
 	  *                           on that side.
 	  *
-	  *                           Bi-directional alignments, such as TopLeft will place the window next to the component
+	  *                           Bidirectional alignments, such as TopLeft will place the window next to the component
 	  *                           diagonally (so that they won't share any edge together).
 	  * @param margin             Margin placed between the owner component and the window, when possible
 	  *                           (ignored if preferredAlignment=Center).
@@ -416,14 +415,14 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 }
 
 case class ReachContentWindowFactory(private val windowFactory: ContextualReachWindowFactory,
-                                     context: ReachContentWindowContext)
+                                     context: StaticReachContentWindowContext)
 	extends ReachContentWindowContextualFactory[ReachContentWindowFactory]
 {
 	// IMPLEMENTED  ----------------------
 	
 	override def self: ReachContentWindowFactory = this
 	
-	override def withContext(context: ReachContentWindowContext): ReachContentWindowFactory =
+	override def withContext(context: StaticReachContentWindowContext): ReachContentWindowFactory =
 		copy(windowFactory = windowFactory.withContext(context), context = context)
 	
 	
@@ -472,7 +471,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  *                           Please note that this alignment may be reversed in case there is not enough space
 	  *                           on that side.
 	  *
-	  *                           Bi-directional alignments, such as TopLeft will place the window next to the component
+	  *                           Bidirectional alignments, such as TopLeft will place the window next to the component
 	  *                           diagonally (so that they won't share any edge together).
 	  * @param margin             Margin placed between the owner component and the window, when possible
 	  *                           (ignored if preferredAlignment=Center).
