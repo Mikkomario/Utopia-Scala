@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ColorContextLike
+import utopia.firmament.context.color.StaticColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.paradigm.color.Color
 
@@ -8,11 +8,12 @@ object GenericContextualFactory
 {
 	// EXTENSIONS	------------------------
 	
+	// TODO: This class doesn't implement automatic repaint. Consider removing or replacing this at some point.
 	// Works for all context types except base context
 	// The base context version is too hard for the compiler to understand (at 5.5.2023)
-	implicit class GenericColorContextualFactory[N <: ColorContextLike[N, _], Top >: N,
+	implicit class GenericColorContextualFactory[N <: StaticColorContextLike[N, _], Top >: N,
 		F[N2 <: Top] <: CustomDrawableFactory[F[N2]]](val f: GenericContextualFactory[N, Top, F])
-		extends AnyVal with ContextualBackgroundAssignable[N, F[N]]
+		extends AnyVal with StaticContextualBackgroundAssignable[N, F[N]]
 	{
 		// IMPLEMENTED  -----------------------
 		

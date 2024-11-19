@@ -1,6 +1,6 @@
 package utopia.reach.component.label.empty
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.{ColorContext2, ColorContextPropsView}
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
@@ -8,10 +8,9 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualVariableBackgroundAssignable}
+import utopia.reach.component.factory.contextual.{ContextualFactory, ContextualVariableBackgroundAssignable}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
@@ -131,14 +130,14 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Rep
 case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
                                  settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ViewEmptyLabelFactory]
-		with FromContextFactory[ColorContext, ContextualViewEmptyLabelFactory]
+		with FromContextFactory[ColorContext2, ContextualViewEmptyLabelFactory]
 {
 	// IMPLEMENTED  ------------------------------
 	
 	override protected def withSettings(settings: ViewEmptyLabelSettings): ViewEmptyLabelFactory =
 		copy(settings = settings)
 	
-	override def withContext(context: ColorContext) =
+	override def withContext(context: ColorContext2) =
 		ContextualViewEmptyLabelFactory(parentHierarchy, context, settings)
 	
 	
@@ -183,11 +182,11 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 		withBackground(backgroundPointer).apply(stackSizePointer)
 }
 
-case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext2,
                                            settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ContextualViewEmptyLabelFactory]
-		with ColorContextualFactory[ContextualViewEmptyLabelFactory]
-		with ContextualVariableBackgroundAssignable[ColorContext, ContextualViewEmptyLabelFactory]
+		with ContextualFactory[ColorContext2, ContextualViewEmptyLabelFactory]
+		with ContextualVariableBackgroundAssignable[ColorContextPropsView, ContextualViewEmptyLabelFactory]
 {
 	// COMPUTED -----------------------------------
 	
@@ -199,8 +198,6 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 	
 	
 	// IMPLEMENTED  -------------------------------
-	
-	override def self: ContextualViewEmptyLabelFactory = this
 	
 	override protected def withSettings(settings: ViewEmptyLabelSettings): ContextualViewEmptyLabelFactory =
 		copy(settings = settings)
@@ -220,22 +217,7 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 		mapSettings { _.copy(drawersPointer = drawersPointer) }
 	override protected def withBackground(background: Either[Color, Changing[Color]]): ContextualViewEmptyLabelFactory =
 		mapSettings { _.copy(backgroundPointer = Some(background)) }
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
-	
-	
-	// OTHER    -----------------------------------
-	
-	/**
-	 * Creates a new label with changing background color
-	 * @param rolePointer Pointer to background color role
-	 * @param stackSizePointer Pointer to this label's stack size
-	 * @param preferredShade Preferred color shade to use
-	 * @return A new label
-	 */
-	@deprecated("Please use .withBackgroundRole(Changing).apply(Changing) instead", "v1.1")
-	def withBackgroundForRole(rolePointer: Changing[ColorRole], stackSizePointer: Changing[StackSize],
-	                          preferredShade: ColorLevel = Standard) =
-		withBackgroundRole(rolePointer).apply(stackSizePointer)
+	override def withContext(newContext: ColorContext2) = copy(context = newContext)
 }
 
 /**

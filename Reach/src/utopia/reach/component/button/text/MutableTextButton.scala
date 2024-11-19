@@ -1,7 +1,7 @@
 package utopia.reach.component.button.text
 
 import utopia.firmament.component.text.MutableTextComponent
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.localization.LocalizedString
@@ -32,11 +32,11 @@ object MutableTextButton extends Cff[MutableTextButtonFactory]
 }
 
 class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualMutableTextButtonFactory]
+	extends FromContextFactory[StaticTextContext, ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext(context: TextContext) = ContextualMutableTextButtonFactory(parentHierarchy, context)
+	override def withContext(context: StaticTextContext) = ContextualMutableTextButtonFactory(parentHierarchy, context)
 	
 	
 	// OTHER	-----------------------------------
@@ -93,14 +93,15 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarchy, context: TextContext)
+case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext)
 	extends TextContextualFactory[ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
 	override def self: ContextualMutableTextButtonFactory = this
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: StaticTextContext) =
+		copy(context = newContext)
 	
 	
 	// OTHER	------------------------------------

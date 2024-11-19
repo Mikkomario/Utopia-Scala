@@ -1,15 +1,15 @@
 package utopia.reach.component.input.selection
 
-import Slider.SliderColors
 import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
-import utopia.firmament.model.enumeration.GuiElementState
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.{GuiElementState, SizeCategory}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.filter.{AcceptAll, Filter}
@@ -22,6 +22,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
+import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.animation.{Animator, AnimatorInstruction}
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
@@ -32,9 +33,6 @@ import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonSt
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.Axis.X
-import utopia.firmament.model.enumeration.SizeCategory
-import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
-import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -44,6 +42,7 @@ import utopia.paradigm.transform.Adjustment
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.input.selection.Slider.SliderColors
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{CustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
 import utopia.reach.focus.FocusListener
@@ -302,7 +301,7 @@ trait SliderSettingsWrapper[+Repr] extends SliderSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.4
   */
-case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
                                    settings: SliderSettings = SliderSettings.default,
                                    customColors: Option[SliderColors] = None)
 	extends SliderSettingsWrapper[ContextualSliderFactory]
@@ -317,7 +316,7 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
 	
 	override def self = this
 	
-	override def withContext(context: ColorContext) = copy(context = context)
+	override def withContext(context: StaticColorContext) = copy(context = context)
 	override def withSettings(settings: SliderSettings) = copy(settings = settings)
 	
 	
@@ -419,11 +418,11 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
   */
 case class SliderSetup(settings: SliderSettings = SliderSettings.default)
 	extends SliderSettingsWrapper[SliderSetup]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualSliderFactory]
+		with FromContextComponentFactoryFactory[StaticColorContext, ContextualSliderFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticColorContext) =
 		ContextualSliderFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: SliderSettings) = copy(settings = settings)

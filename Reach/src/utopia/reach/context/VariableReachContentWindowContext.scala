@@ -20,7 +20,7 @@ object VariableReachContentWindowContext
 	
 	private case class _Context(windowContext: ReachWindowContext2, base: VariableTextContext)
 		extends VariableReachContentWindowContext
-			with ReachWindowContextWrapper2[ReachWindowContext2, VariableReachContentWindowContext, VariableReachContentWindowContext]
+			with ReachWindowContextWrapper2[ReachWindowContext2, VariableReachContentWindowContext, StaticReachContentWindowContext]
 			with VariableTextContextWrapper[VariableTextContext, VariableReachContentWindowContext]
 	{
 		override def self: VariableReachContentWindowContext = this
@@ -45,4 +45,5 @@ object VariableReachContentWindowContext
   */
 trait VariableReachContentWindowContext
 	extends VariableTextContext with VariableTextContextLike[VariableReachContentWindowContext]
-		with ReachContentWindowContext2 with ReachContentWindowContextCopyable[VariableReachContentWindowContext]
+		with ReachContentWindowContext2
+		with ReachContentWindowContextCopyable[VariableReachContentWindowContext, StaticReachContentWindowContext]

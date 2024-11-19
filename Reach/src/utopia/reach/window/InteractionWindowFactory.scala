@@ -21,7 +21,7 @@ import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
 import utopia.reach.component.wrapper.WindowCreationResult
 import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
-import utopia.reach.context.ReachContentWindowContext
+import utopia.reach.context.StaticReachContentWindowContext
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -42,7 +42,7 @@ trait InteractionWindowFactory[A]
 	  * @return Context used when creating windows.
 	 *         Defines the default settings to use for the content as well.
 	  */
-	protected def windowContext: ReachContentWindowContext
+	protected def windowContext: StaticReachContentWindowContext
 	/**
 	  * @return Execution context used for performing asynchronous tasks
 	  */
@@ -110,7 +110,7 @@ trait InteractionWindowFactory[A]
 	  *         as an additional result
 	  */
 	def display(parentWindow: Option[java.awt.Window] = None): WindowCreationResult[ReachComponentLike, Future[A]] = {
-		implicit val wc: ReachContentWindowContext = windowContext
+		implicit val wc: StaticReachContentWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
 		implicit val log: Logger = this.log
 		

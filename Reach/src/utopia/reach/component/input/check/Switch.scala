@@ -1,7 +1,8 @@
 package utopia.reach.component.input.check
 
 import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.context.{AnimationContext, ColorContext, ComponentCreationDefaults}
+import utopia.firmament.context.color.StaticColorContext
+import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.HotKey
@@ -189,7 +190,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
                                    settings: SwitchSettings = SwitchSettings.default,
                                    colorRole: ColorRole = ColorRole.Secondary)
 	extends SwitchFactoryLike[ContextualSwitchFactory] with ColorContextualFactory[ContextualSwitchFactory]
@@ -198,7 +199,7 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
 	
 	override def self: ContextualSwitchFactory = this
 	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withContext(newContext: StaticColorContext) = copy(context = newContext)
 	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
 	
 	
@@ -234,13 +235,13 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
   */
 case class SwitchFactory(parentHierarchy: ComponentHierarchy,
                          settings: SwitchSettings = SwitchSettings.default)
-	extends SwitchFactoryLike[SwitchFactory] with FromContextFactory[ColorContext, ContextualSwitchFactory]
+	extends SwitchFactoryLike[SwitchFactory] with FromContextFactory[StaticColorContext, ContextualSwitchFactory]
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(context: ColorContext) = ContextualSwitchFactory(parentHierarchy, context, settings)
+	override def withContext(context: StaticColorContext) = ContextualSwitchFactory(parentHierarchy, context, settings)
 	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
 	
 	
@@ -276,13 +277,13 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
   */
 case class SwitchSetup(settings: SwitchSettings = SwitchSettings.default)
 	extends SwitchSettingsWrapper[SwitchSetup] with ComponentFactoryFactory[SwitchFactory]
-		with FromContextComponentFactoryFactory[ColorContext, ContextualSwitchFactory]
+		with FromContextComponentFactoryFactory[StaticColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = SwitchFactory(hierarchy, settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ColorContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticColorContext) =
 		ContextualSwitchFactory(hierarchy, context, settings)
 	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
 }

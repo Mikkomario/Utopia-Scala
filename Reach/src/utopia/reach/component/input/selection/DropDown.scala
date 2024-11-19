@@ -1,7 +1,8 @@
 package utopia.reach.component.input.selection
 
 import utopia.firmament.component.display.Refreshable
-import utopia.firmament.context.{ScrollingContext, TextContext}
+import utopia.firmament.context.ScrollingContext
+import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.localization.{DisplayFunction, LocalizedString}
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
@@ -16,8 +17,8 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.color.ColorShade
-import utopia.reach.component.factory.FromVariableContextComponentFactoryFactory.Vccff
-import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.FieldFocusMouseListener.visibilityChangeThreshold
 import utopia.reach.component.input.{FieldWithSelectionPopup, FieldWithSelectionPopupSettings, FieldWithSelectionPopupSettingsWrapper}
@@ -25,19 +26,19 @@ import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
-import utopia.reach.context.ReachContentWindowContext
+import utopia.reach.context.VariableReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
 import scala.concurrent.ExecutionContext
 
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetup]
-		with Vccff[ReachContentWindowContext, ContextualDropDownFactory]
+		with Ccff[VariableReachContentWindowContext, ContextualDropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetup = copy(settings = settings)
 	
-	override def withContextPointer(hierarchy: ComponentHierarchy,
-	                                context: Changing[ReachContentWindowContext]): ContextualDropDownFactory =
+	override def withContext(hierarchy: ComponentHierarchy,
+	                         context: VariableReachContentWindowContext): ContextualDropDownFactory =
 		ContextualDropDownFactory(hierarchy, context, settings)
 }
 
@@ -49,13 +50,12 @@ case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSe
 object DropDown extends DropDownSetup()
 
 case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
-                                     contextPointer: Changing[ReachContentWindowContext],
+                                     context: VariableReachContentWindowContext,
                                      settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
-	extends VariableContextualFactory[ReachContentWindowContext, ContextualDropDownFactory]
+	extends ContextualFactory[VariableReachContentWindowContext, ContextualDropDownFactory]
 		with FieldWithSelectionPopupSettingsWrapper[ContextualDropDownFactory]
 {
-	override def withContextPointer(p: Changing[ReachContentWindowContext]): ContextualDropDownFactory =
-		copy(contextPointer = p)
+	override def withContext(p: VariableReachContentWindowContext): ContextualDropDownFactory = copy(context = p)
 	override def withSettings(settings: FieldWithSelectionPopupSettings): ContextualDropDownFactory =
 		copy(settings = settings)
 	
@@ -87,7 +87,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
-	(makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => C)
+	(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => C)
 	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
@@ -98,12 +98,12 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 		}
 		val appliedSettings = settings.withPromptPointer(actualPromptPointer)
 			.withAdditionalActivationKeys(Set(Space, RightArrow, DownArrow))
-		val field = FieldWithSelectionPopup.withContext(parentHierarchy, contextPointer).withSettings(appliedSettings)
+		val field = FieldWithSelectionPopup.withContext(parentHierarchy, context).withSettings(appliedSettings)
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				sameItemCheck)
 				{ fieldContext =>
 					val label = ViewTextLabel
-						.withContextPointer(fieldContext.parentHierarchy, fieldContext.contextPointer)
+						.withContext(fieldContext.parentHierarchy, fieldContext.context)
 						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
 						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
 						.apply(valuePointer, displayFunction)
@@ -154,10 +154,15 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 			case None => LocalizedString.empty
 		}
 		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, mainDisplayFunction,
-			sameItemCheck) { (hierarchy, context, firstItem) =>
-			// TODO: At this time, uses static context here (modify when possible)
-			MutableViewTextLabel(hierarchy).withContext(context.value.withTextExpandingToRight)
-				.apply(firstItem, displayFunction)
+			sameItemCheck) {
+			(hierarchy, context, firstItem) =>
+				val labelContext = context.withTextExpandingToRight
+				// TODO: At this time, uses static context here (modify when possible)
+				val label = MutableViewTextLabel(hierarchy).withContext(labelContext.current)
+					.apply(firstItem, displayFunction)
+				labelContext.textDrawContextPointer
+					.addListenerWhile(label.linkedFlag) { e => label.textDrawContext = e.newValue }
+				label
 		}
 	}
 	

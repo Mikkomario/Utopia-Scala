@@ -62,4 +62,5 @@ object StaticReachContentWindowContext
   */
 trait StaticReachContentWindowContext
 	extends StaticTextContext with StaticTextContextLike[StaticReachContentWindowContext]
-		with ReachContentWindowContext2 with ReachContentWindowContextCopyable[StaticReachContentWindowContext]
+		with ReachContentWindowContext2
+		with ReachContentWindowContextCopyable[StaticReachContentWindowContext, StaticReachContentWindowContext]

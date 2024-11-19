@@ -1,6 +1,6 @@
 package utopia.reach.component.label.empty
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.stack.StackSize
@@ -8,8 +8,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.CustomDrawReachComponent
 
@@ -19,11 +19,11 @@ object EmptyLabel extends Cff[EmptyLabelFactory]
 }
 
 class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[ColorContext, ContextualEmptyLabelFactory]
+	extends FromContextFactory[StaticColorContext, ContextualEmptyLabelFactory]
 {
 	// IMPLEMENTED  --------------------------------
 	
-	override def withContext(context: ColorContext) = ContextualEmptyLabelFactory(parentHierarchy, context)
+	override def withContext(context: StaticColorContext) = ContextualEmptyLabelFactory(parentHierarchy, context)
 	
 	
 	// OTHER    ------------------------------------
@@ -48,10 +48,10 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 		apply(stackSize, BackgroundDrawer(color) +: customDrawers)
 }
 
-case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                        customDrawers: Seq[CustomDrawer] = Empty)
 	extends ColorContextualFactory[ContextualEmptyLabelFactory]
-		with ContextualBackgroundAssignableFactory[ColorContext, ContextualEmptyLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticColorContext, ContextualEmptyLabelFactory]
 		with CustomDrawableFactory[ContextualEmptyLabelFactory]
 {
 	// COMPUTED ------------------------------------
@@ -67,7 +67,7 @@ case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: C
 	
 	override def self: ContextualEmptyLabelFactory = this
 	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withContext(newContext: StaticColorContext) = copy(context = newContext)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualEmptyLabelFactory =
 		copy(customDrawers = drawers)
 	

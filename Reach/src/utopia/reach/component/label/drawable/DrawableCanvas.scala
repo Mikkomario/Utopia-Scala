@@ -1,6 +1,6 @@
 package utopia.reach.component.label.drawable
 
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.BaseContext2
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Identity
@@ -21,8 +21,8 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
-import utopia.reach.component.factory.contextual.BaseContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
 
@@ -174,16 +174,14 @@ trait DrawableCanvasFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 25.02.2024, v1.3
   */
-case class ContextualDrawableCanvasFactory(parentHierarchy: ComponentHierarchy, context: BaseContext,
+case class ContextualDrawableCanvasFactory(parentHierarchy: ComponentHierarchy, context: BaseContext2,
                                            settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasFactoryLike[ContextualDrawableCanvasFactory]
-		with BaseContextualFactory[ContextualDrawableCanvasFactory]
+		with ContextualFactory[BaseContext2, ContextualDrawableCanvasFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def self = this
-	
-	override def withContext(context: BaseContext) = copy(context = context)
+	override def withContext(context: BaseContext2) = copy(context = context)
 	override def withSettings(settings: DrawableCanvasSettings) =
 		copy(settings = settings)
 	
@@ -203,11 +201,11 @@ case class ContextualDrawableCanvasFactory(parentHierarchy: ComponentHierarchy, 
 case class DrawableCanvasFactory(parentHierarchy: ComponentHierarchy,
                                  settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasFactoryLike[DrawableCanvasFactory]
-		with FromContextFactory[BaseContext, ContextualDrawableCanvasFactory]
+		with FromContextFactory[BaseContext2, ContextualDrawableCanvasFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(context: BaseContext) =
+	override def withContext(context: BaseContext2) =
 		ContextualDrawableCanvasFactory(parentHierarchy, context, settings)
 	
 	override def withSettings(settings: DrawableCanvasSettings) = copy(settings = settings)
@@ -224,13 +222,13 @@ case class DrawableCanvasFactory(parentHierarchy: ComponentHierarchy,
 case class DrawableCanvasSetup(settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasSettingsWrapper[DrawableCanvasSetup]
 		with ComponentFactoryFactory[DrawableCanvasFactory]
-		with FromContextComponentFactoryFactory[BaseContext, ContextualDrawableCanvasFactory]
+		with FromContextComponentFactoryFactory[BaseContext2, ContextualDrawableCanvasFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def apply(hierarchy: ComponentHierarchy) = DrawableCanvasFactory(hierarchy, settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: BaseContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: BaseContext2) =
 		ContextualDrawableCanvasFactory(hierarchy, context, settings)
 	override def withSettings(settings: DrawableCanvasSettings) = copy(settings = settings)
 }

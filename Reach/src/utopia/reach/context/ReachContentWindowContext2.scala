@@ -11,4 +11,5 @@ import scala.language.implicitConversions
   * @since 17.4.2023, v1.0
   */
 trait ReachContentWindowContext2
-	extends ReachWindowContext2 with TextContext2 with ReachContentWindowContextCopyable[ReachContentWindowContext2]
+	extends ReachWindowContext2 with TextContext2
+		with ReachContentWindowContextCopyable[ReachContentWindowContext2, StaticReachContentWindowContext]

@@ -14,7 +14,7 @@ import utopia.reach.component.factory.VariableBackgroundRoleAssignable
   * @since 31.5.2023, v1.1
   */
 trait VariableBackgroundRoleAssignableFactory[N <: VariableColorContextLike[N, _], +Repr]
-	extends VariableBackgroundRoleAssignable[Repr] with VariableContextualFactory[N, Repr]
+	extends VariableBackgroundRoleAssignable[Repr] with ContextualFactory[N, Repr]
 {
 	// ABSTRACT ------------------------------
 	

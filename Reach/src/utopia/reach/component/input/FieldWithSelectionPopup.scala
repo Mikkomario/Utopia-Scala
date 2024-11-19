@@ -3,8 +3,8 @@ package utopia.reach.component.input
 import utopia.firmament.component.Window
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.component.input.SelectionWithPointers
+import utopia.firmament.context.ScrollingContext
 import utopia.firmament.context.text.VariableTextContext
-import utopia.firmament.context.{ScrollingContext, TextContext}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -23,8 +23,8 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -36,7 +36,7 @@ import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListe
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
-import utopia.reach.component.factory.contextual.VariableContextualFactory
+import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.FieldWithSelectionPopup.ignoreFocusAfterCloseDuration
@@ -48,7 +48,7 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{StackSettings, ViewStack}
 import utopia.reach.container.wrapper.CachingViewSwapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
-import utopia.reach.context.{ReachContentWindowContext, VariableReachContentWindowContext}
+import utopia.reach.context.VariableReachContentWindowContext
 
 import scala.concurrent.ExecutionContext
 
@@ -85,7 +85,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	/**
 	  * @return A function used for modifying the pop-up context from that accepted by this factory
 	  */
-	def popupContextMod: ReachContentWindowContext => ReachContentWindowContext
+	def popupContextMod: Mutate[VariableReachContentWindowContext]
 	/**
 	  * A function used for constructing a view to display when no options are selectable
 	  */
@@ -128,7 +128,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	  * @param f A function used for modifying the pop-up context from that accepted by this factory
 	  * @return Copy of this factory that uses the specified modifying function
 	  */
-	def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): Repr
+	def withPopupContextMod(f: Mutate[VariableReachContentWindowContext]): Repr
 	/**
 	  * A function used for constructing an additional selectable view to display
 	  * @param f New extra option constructor to use.
@@ -296,7 +296,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
                                            expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
                                            listMargin: Option[SizeCategory] = Some(SizeCategory.Small),
                                            activationKeys: Set[Key] = Set[Key](),
-                                           popupContextMod: ReachContentWindowContext => ReachContentWindowContext = Identity,
+                                           popupContextMod: Mutate[VariableReachContentWindowContext] = Identity,
                                            noOptionsViewConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike] = None,
                                            extraOptionConstructor: Option[(ComponentHierarchy, VariableTextContext) => ReachComponentLike] = None,
                                            extraOptionLocation: End = End.Last)
@@ -313,7 +313,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
 		copy(extraOptionConstructor = Some(f))
 	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): FieldWithSelectionPopupSettings =
 		copy(noOptionsViewConstructor = Some(f))
-	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): FieldWithSelectionPopupSettings =
+	override def withPopupContextMod(f: Mutate[VariableReachContentWindowContext]): FieldWithSelectionPopupSettings =
 		copy(popupContextMod = f)
 	override def withListMargin(margin: Option[SizeCategory]) = copy(listMargin = margin)
 }
@@ -348,7 +348,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 	override def fieldSettings = settings.fieldSettings
 	override def listSettings = settings.listSettings
 	override def noOptionsViewConstructor = settings.noOptionsViewConstructor
-	override def popupContextMod: ReachContentWindowContext => ReachContentWindowContext = settings.popupContextMod
+	override def popupContextMod: Mutate[VariableReachContentWindowContext] = settings.popupContextMod
 	override def listMargin: Option[SizeCategory] = settings.listMargin
 	
 	override def withListMargin(margin: Option[SizeCategory]): Repr = mapSettings { _.withListMargin(margin) }
@@ -363,7 +363,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 		mapSettings { _.withExtraOptionConstructor(f) }
 	override def withNoOptionsViewConstructor(f: (ComponentHierarchy, VariableTextContext) => ReachComponentLike): Repr =
 		mapSettings { _.withNoOptionsViewConstructor(f) }
-	override def withPopupContextMod(f: ReachContentWindowContext => ReachContentWindowContext): Repr =
+	override def withPopupContextMod(f: Mutate[VariableReachContentWindowContext]): Repr =
 		mapSettings { _.withPopupContextMod(f) }
 	
 	
@@ -380,15 +380,15 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
   * @since 02.06.2023, v1.1
   */
 case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy,
-                                                    contextPointer: Changing[ReachContentWindowContext],
+                                                    context: VariableReachContentWindowContext,
                                                     settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[ContextualFieldWithSelectionPopupFactory]
-		with VariableContextualFactory[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+		with ContextualFactory[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContextPointer(contextPointer: Changing[ReachContentWindowContext]) =
-		copy(contextPointer = contextPointer)
+	override def withContext(context: VariableReachContentWindowContext) =
+		copy(context = context)
 	override def withSettings(settings: FieldWithSelectionPopupSettings) =
 		copy(settings = settings)
 	
@@ -427,11 +427,11 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
 	                              sameItemCheck: Option[EqualsFunction[A]] = None)
 	                             (makeField: FieldCreationContext => C)
-	                             (makeDisplay: (ComponentHierarchy, Changing[TextContext], A) => D)
+	                             (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 	                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 										 Option[OpenComponent[ReachComponentLike, Any]])
 	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
-		new FieldWithSelectionPopup[A, C, D, P](parentHierarchy, contextPointer, isEmptyPointer, contentPointer,
+		new FieldWithSelectionPopup[A, C, D, P](parentHierarchy, context, isEmptyPointer, contentPointer,
 			valuePointer, settings, sameItemCheck)(makeField)(makeDisplay)(makeRightHintLabel)
 }
 
@@ -442,23 +442,15 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
   */
 case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupSetup]
-		with FromContextComponentFactoryFactory[ReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+		with FromContextComponentFactoryFactory[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(hierarchy: ComponentHierarchy, context: ReachContentWindowContext) =
-		ContextualFieldWithSelectionPopupFactory(hierarchy, Fixed(context), settings)
-	
-	override def withSettings(settings: FieldWithSelectionPopupSettings) = copy(settings = settings)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * @return A new field with selection popup factory that uses the specified (variable) context
-	  */
-	def withContext(hierarchy: ComponentHierarchy, context: Changing[ReachContentWindowContext]) =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableReachContentWindowContext) =
 		ContextualFieldWithSelectionPopupFactory(hierarchy, context, settings)
+	
+	override def withSettings(settings: FieldWithSelectionPopupSettings) =
+		copy(settings = settings)
 }
 
 object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
@@ -650,7 +642,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 		val popup = field.createOwnedWindow(Alignment.forDirection(settings.listAxis(Positive)), matchEdgeLength = true) { hierarchy =>
 			// The pop-up content resides in a scroll view with custom background drawing
 			ScrollView(hierarchy).withAxis(settings.listAxis)
-				.withScrollBarMargin(windowContext.margins.small, settings.listCap.optimal)
+				// TODO: Applies fixed cap where it maybe variable
+				.withScrollBarMargin(windowContext.margins.small, settings.listCapPointer.value.optimal)
 				.limitedToContentSize
 				.withCustomDrawer(BackgroundViewDrawer(field.innerBackgroundPointer))
 				.build(Mixed) { factories =>
@@ -658,10 +651,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 					//  1) Main content + additional view, or
 					//  2) Main content only
 					def makeOptionsList(factory: SelectionListFactory) =
-						factory.withContextPointer(popUpContextPointer).withSettings(settings.listSettings)
+						factory.withContext(popUpContext).withSettings(settings.listSettings)
 							.withMargin(settings.listMargin)
 							.apply(contentPointer, valuePointer, sameItemCheck) { (hierarchy, item) =>
-							makeDisplay(hierarchy, popUpContextPointer, item)
+							makeDisplay(hierarchy, popUpContext, item)
 						}
 					def makeMainContent(factories: Mixed) = {
 						// The main content is either:
@@ -674,7 +667,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 									.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
 										// Case: No options -view constructor
 										if (isEmpty)
-											makeNoOptionsView(factories.parentHierarchy, popUpContextPointer)
+											makeNoOptionsView(factories.parentHierarchy, popUpContext)
 										// Case: List constructor
 										else
 											makeOptionsList(factories(SelectionList))
@@ -700,7 +693,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 									settings.extraOptionLocation.opposite))
 								val additional = makeAdditionalOption(
 									topAndBottomFactories(settings.extraOptionLocation).parentHierarchy,
-									popUpContextPointer)
+									popUpContext)
 								if (settings.extraOptionLocation == First)
 									Pair(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
 								else

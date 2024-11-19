@@ -7,10 +7,12 @@ import utopia.firmament.context.text.TextContextWrapper2
   * @author Mikko Hilpinen
   * @since 17.4.2023, v1.0
   */
-trait ReachContentWindowContextWrapper2[Base <: ReachContentWindowContextCopyable[Base], +Repr]
+trait ReachContentWindowContextWrapper2[Base <: ReachContentWindowContextCopyable[Base, _], +Repr]
 	extends ReachWindowContextWrapper2[Base, Repr, Repr] with TextContextWrapper2[Base, Repr]
-		with ReachContentWindowContextCopyable[Repr]
+		with ReachContentWindowContextCopyable[Repr, Repr]
 {
+	override def actorHandler = super[TextContextWrapper2].actorHandler
+	
 	override def windowContext = base
 	override def withWindowContext(base: Base): Repr = withBase(base)
 }

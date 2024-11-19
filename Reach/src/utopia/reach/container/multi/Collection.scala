@@ -156,6 +156,7 @@ case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: A
 			outerMargin, splitThreshold, customDrawers)
 }
 
+// TODO: Either limit to static context or add support for variable (inner) margins
 case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
                                                           primaryAxis: Axis2D = X,
                                                           insideRowLayout: StackLayout = Fit,

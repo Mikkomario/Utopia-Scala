@@ -2,7 +2,7 @@ package utopia.reach.component.label.text
 
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.text.{MutableStyleTextComponent, TextComponent}
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
@@ -16,8 +16,8 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.factory.FromContextFactory
+import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 
@@ -27,13 +27,13 @@ object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 }
 
 class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[TextContext, ContextualMutableViewTextLabelFactory]
+	extends FromContextFactory[StaticTextContext, ContextualMutableViewTextLabelFactory]
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def withContext(context: TextContext) =
+	override def withContext(context: StaticTextContext) =
 		ContextualMutableViewTextLabelFactory(this, context)
 	
 	
@@ -85,10 +85,10 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
-case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLabelFactory, context: TextContext,
+case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLabelFactory, context: StaticTextContext,
                                                  customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextContextualFactory[ContextualMutableViewTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualMutableViewTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualMutableViewTextLabelFactory]
 		with CustomDrawableFactory[ContextualMutableViewTextLabelFactory]
 {
 	// COMPUTED ---------------------------
@@ -106,7 +106,8 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualMutableViewTextLabelFactory =
 		copy(customDrawers = drawers)
 	
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: StaticTextContext) =
+		copy(context = newContext)
 	
 	
 	// OTHER	--------------------------------------

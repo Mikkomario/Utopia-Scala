@@ -1,7 +1,7 @@
 package utopia.reach.component.label.text
 
 import utopia.firmament.component.text.{MutableTextComponent, TextComponent}
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
@@ -15,16 +15,16 @@ import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignable
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.MutableCustomDrawReachComponent
 
-object MutableTextLabel extends Ccff[TextContext, ContextualMutableTextLabelFactory]
+object MutableTextLabel extends Ccff[StaticTextContext, ContextualMutableTextLabelFactory]
 {
-	override def withContext(hierarchy: ComponentHierarchy, context: TextContext) =
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticTextContext) =
 		ContextualMutableTextLabelFactory(hierarchy, context)
 }
 
-case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: TextContext,
+case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
                                              customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextContextualFactory[ContextualMutableTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[TextContext, ContextualMutableTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualMutableTextLabelFactory]
 		with CustomDrawableFactory[ContextualMutableTextLabelFactory]
 {
 	// COMPUTED --------------------------------------
@@ -41,7 +41,7 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
 	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualMutableTextLabelFactory =
 		copy(customDrawers = drawers)
-	override def withContext(newContext: TextContext) = copy(context = newContext)
+	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	
 	
 	// OTHER	--------------------------------------
@@ -52,7 +52,7 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString) = {
-		val label = new MutableTextLabel(parentHierarchy, text, TextDrawContext.createContextual(isHint)(context),
+		val label = new MutableTextLabel(parentHierarchy, text, context.textDrawContextFor(isHint),
 			context.allowTextShrink)
 		customDrawers.foreach(label.addCustomDrawer)
 		label

@@ -28,7 +28,7 @@ import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenCompon
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
-import utopia.reach.context.ReachContentWindowContext
+import utopia.reach.context.StaticReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
 
 import scala.collection.immutable.VectorBuilder
@@ -58,7 +58,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	/**
 	  * @return Context for creating the warning pop-up windows
 	  */
-	protected def warningPopupContext: ReachContentWindowContext
+	protected def warningPopupContext: StaticReachContentWindowContext
 	
 	/**
 	  * @return Input creation blueprints and the context to use in subsequent creation method calls
@@ -172,7 +172,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	protected def showWarningFor(field: RowField, message: LocalizedString): Unit = {
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
-		implicit val context: ReachContentWindowContext = warningPopupContext.nonFocusable
+		implicit val context: StaticReachContentWindowContext = warningPopupContext.nonFocusable
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up

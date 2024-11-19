@@ -8,8 +8,8 @@ import utopia.firmament.context.text.TextContextCopyable
   * @author Mikko Hilpinen
   * @since 14.11.2024, v1.5
   */
-trait ReachContentWindowContextCopyable[+Repr]
-	extends ReachWindowContextCopyable[Repr, Repr] with TextContextCopyable[Repr] with ReachContentWindowPropsView
+trait ReachContentWindowContextCopyable[+Repr, +Textual]
+	extends ReachWindowContextCopyable[Repr, Textual] with TextContextCopyable[Repr] with ReachContentWindowPropsView
 {
 	override def current: StaticReachContentWindowContext
 	override def toVariableContext: VariableReachContentWindowContext
