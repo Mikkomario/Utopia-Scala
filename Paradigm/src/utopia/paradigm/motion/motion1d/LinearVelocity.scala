@@ -86,7 +86,12 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	
 	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
 	
-	override def toString = s"$perMilliSecond/ms"
+	override def toString = {
+		if (duration.finite.forall { _ == Duration.Zero })
+			s"invalid velocity of $amount / ${ duration.description }"
+		else
+			s"$perMilliSecond/ms"
+	}
 	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
 	override def toModel = duration.finite match {
 		case Some(duration) => Model.from("amount" -> amount, "duration" -> duration)

@@ -64,7 +64,7 @@ trait Change[+A, +Repr <: Change[A, _]] extends LinearSizeAdjustable[Repr]
 	  */
 	def in(duration: Duration) = {
 		if (this.duration == Duration.Zero)
-			throw new IllegalStateException(s"Duration of $this is zero => Can't calculate distances")
+			throw new IllegalStateException("Can't calculate distance for changes with zero duration")
 		this * (duration / this.duration)
 	}
 }

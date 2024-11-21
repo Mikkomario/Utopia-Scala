@@ -1,5 +1,9 @@
 # Utopia Manuscript - List of changes
 
+## v1.0.2 (in development)
+### Bugfixes
+- **SheetWithNameResembling** **SheetTarget** would previously yield non-matching results - fixed
+
 ## v1.0.1 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
 
