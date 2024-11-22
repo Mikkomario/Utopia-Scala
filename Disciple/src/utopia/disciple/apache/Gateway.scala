@@ -22,12 +22,13 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
-import java.io.{BufferedInputStream, OutputStream}
+import java.io.OutputStream
 import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
 import java.util
@@ -235,25 +236,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 					// Logs possible encountered errors
 					.logWithMessage("Failed to open the response body").flatten
 					// Makes sure the received stream is not empty
-					.flatMap { stream =>
-						// Converts the stream into buffered format
-						val buffered = stream match {
-							case s: BufferedInputStream => s
-							case s => new BufferedInputStream(s)
-						}
-						buffered.mark(1)  // Marks the current position with a 1-byte read limit
-						
-						// Case: Empty stream => Yields None
-						if (buffered.read() == -1) {
-							buffered.closeQuietly().logWithMessage("Failed to close the response body")
-							None
-						}
-						// Case: Non-empty stream => Moves back to the beginning and yields the non-empty stream
-						else {
-							buffered.reset()
-							Some(buffered)
-						}
-					}
+					.flatMap { _.notEmpty }
 			} { rawResponse.closeQuietly().logWithMessage("Failed to close the response body") }
 		}
 		

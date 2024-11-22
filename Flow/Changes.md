@@ -12,6 +12,8 @@
   - Added `.tryGet(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.findNextIndexWhere(...)` and `.findPreviousIndexWhere(...)`
+- **InputStream** (**StreamExtensions**)
+  - Added `.buffered` and `.notEmpty`
 - **Try** (**TryExtensions**)
   - Added `.mapFailure(...)`
 ### Other changes
