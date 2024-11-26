@@ -1,8 +1,8 @@
 package utopia.flow.test.collection
 
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.mutable.iterator.{PollableOnce, RepeatOneForeverIterator}
 
 /**
  * Tests iterator -related functions
@@ -56,6 +56,18 @@ object IteratorTest extends App
 	assert(mappedIter3.next() == -3)
 	
 	assert((1 to 3).iterator.pairedFrom(0).toVector == Vector(Pair(0, 1), Pair(1, 2), Pair(2, 3)))
+	
+	var foreverValueCalls = 0
+	val forever = RepeatOneForeverIterator {
+		foreverValueCalls += 1
+		1
+	}
+	assert(forever.hasNext)
+	assert(foreverValueCalls == 0)
+	assert(forever.next() == 1)
+	assert(foreverValueCalls == 1)
+	assert(forever.next() == 1)
+	assert(foreverValueCalls == 1)
 	
 	println("Success!")
 }
