@@ -1,7 +1,7 @@
 package utopia.flow.view.immutable.caching
 
 import utopia.flow.collection.immutable.caching.iterable.LazySeq
-import utopia.flow.collection.mutable.iterator.LazyInitIterator
+import utopia.flow.collection.mutable.iterator.{LazyInitIterator, RepeatOneForeverIterator}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
@@ -71,7 +71,6 @@ object Lazy
 		// IMPLEMENTED	-------------------------
 		
 		override def isInitialized = initialized
-		
 		override def nonInitialized = !initialized
 		
 		override def current = if (initialized) Some(_value) else None
@@ -81,6 +80,7 @@ object Lazy
 				initialized = true
 			_value
 		}
+		override def valueIterator = RepeatOneForeverIterator(value)
 		
 		override def mapValue[B](f: A => B) = Lazy { f(value) }
 	}
