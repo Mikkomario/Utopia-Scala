@@ -5,6 +5,7 @@
 - Added **TimeUnit** enumeration, which is an advanced version of Java's enumeration with the same name
 - Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so
 - Added **UntilExternalFailureIterator**
+- Added **RepeatOneForeverIterator**
 ### New methods
 - **IterableOnce**
   - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`
