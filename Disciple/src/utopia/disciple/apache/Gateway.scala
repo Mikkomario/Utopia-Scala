@@ -1,6 +1,6 @@
 package utopia.disciple.apache
 
-import org.apache.hc.client5.http.classic.methods.{HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut}
+import org.apache.hc.client5.http.classic.methods._
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
@@ -228,7 +228,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 			// Performs the request and acquires a response, if possible
 			val rawResponse = client.execute(base)
 			StreamedResponse(
-				status = statusForCode(rawResponse.getCode),
+				status = Status(rawResponse.getCode),
 				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
 			) {
 				// Acquires the response body as a stream, if possible
@@ -462,8 +462,6 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
 	}
-	
-	private def statusForCode(code: Int) = Status.values.find { _.code == code }.getOrElse(new Status("Other", code))
 	
 	
 	// IMPLICIT CASTS    ------------------------

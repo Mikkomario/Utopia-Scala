@@ -5,6 +5,7 @@ import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.logging.{Logger, NoOpLogger}
 
 import scala.util.{Failure, Success, Try}
 
@@ -88,14 +89,31 @@ object ResponseParseExtensions
 		  *         the response status and the response body parsing success or failure
 		  */
 		def unwrapToResponse(parseFailureStatus: => Status)(extractErrorMessage: A => String) =
+			unwrapToResponseLogging(parseFailureStatus)(extractErrorMessage)(NoOpLogger)
+		/**
+		 * Converts this parser to an Annex-compatible response parser.
+		 * Converts response body parse failures to failed responses. Logs encountered failures.
+		 * @param parseFailureStatus Status to assign for response-parsing failures
+		 * @param extractErrorMessage A function which extracts an error message from the response body value.
+		 *                            Only called for failure responses (4XX-5XX) which contain a successful value.
+		 * @param log Implicit logging implementation used for recording the encountered errors
+		 * @return Copy of this parser which converts the result into a success or a failure response based on
+		 *         the response status and the response body parsing success or failure
+		 */
+		def unwrapToResponseLogging(parseFailureStatus: => Status)(extractErrorMessage: A => String)
+		                           (implicit log: Logger) =
 			p.mapToResponseOrFail[A] { r =>
 				r.wrapped match {
 					case Success(body) => Right(body)
-					case Failure(error) => Left(parseFailureStatus -> error.getMessage)
+					case Failure(error) =>
+						log(error, "Failed to parse a successful response")
+						Left(parseFailureStatus -> error.getMessage)
 				}
 			} {
 				case Success(body) => extractErrorMessage(body)
-				case Failure(error) => error.getMessage
+				case Failure(error) =>
+					log(error, "A failed request")
+					error.getMessage
 			}
 		
 		/**

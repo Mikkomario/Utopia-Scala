@@ -26,7 +26,7 @@ object StreamExtensions
 		  * @return None if this stream was empty, in which case this stream was also closed.
 		  *         Some if this stream contains at least 1 byte.
 		  */
-		def notEmpty = {
+		def notEmpty: Option[BufferedInputStream] = {
 			val b = buffered
 			b.mark(1)  // Marks the current position with a 1-byte read limit
 			
@@ -38,7 +38,7 @@ object StreamExtensions
 			// Case: Non-empty stream => Moves back to the beginning and yields the non-empty stream
 			else {
 				b.reset()
-				Some(buffered)
+				Some(b)
 			}
 		}
 	}

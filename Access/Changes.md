@@ -1,5 +1,13 @@
 # Utopia Access - List of Changes
 
+## v1.5.3 (in development)
+### New methods
+- **Status**
+  - Added `.apply(Int)` that finds or constructs a **Status** instance
+### Other changes
+- `Status.values` & `.introduce(...)` no longer throw if `.setup()` has not been called, 
+  but instead call it themselves, if necessary
+
 ## v1.5.2 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 
