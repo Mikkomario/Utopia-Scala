@@ -1,6 +1,7 @@
 package utopia.manuscript.excel
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.manuscript.excel.SheetTarget.OrTarget
@@ -18,7 +19,7 @@ trait SheetTarget
 	// ABSTRACT ------------------------
 	
 	/**
-	  * Finds the targeted spread-sheet from the specified list
+	  * Finds the targeted spreadsheet from the specified list
 	  * @param sheetNames An ordered list of sheet names
 	  * @return 0-based index of the sheet to target
 	  */
@@ -193,7 +194,9 @@ object SheetTarget
 		}
 		
 		@tailrec
-		private def findSimilar(options: Seq[(String, Int)], maxVariance: Int): Seq[(String, Int)] = {
+		private def findSimilar(options: Seq[(String, Int)], maxVariance: Int,
+		                        foundResults: Boolean = false): Seq[(String, Int)] =
+		{
 			// Performs the next level of filtering using the specified max variance setting
 			val filtered = {
 				if (maxVariance <= 0)
@@ -201,18 +204,23 @@ object SheetTarget
 				else
 					options.filter { _._1.isSimilarTo(name, allowedVariance) }
 			}
-			// Case: Filtered too much => Returns the unfiltered version (which still yields results)
-			if (filtered.isEmpty)
-				options
+			// Case: Filtered too much => Returns the unfiltered version (if it still yields results)
+			if (filtered.isEmpty) {
+				if (foundResults) options else Empty
+			}
 			// Case: Can't filter further => Returns the fully filtered list
 			else if (maxVariance <= 0 || filtered.hasSize(1))
 				filtered
 			// Case: May filter further => Performs the next round of filtering
 			else
-				findSimilar(filtered, maxVariance - 1)
+				findSimilar(filtered, maxVariance - 1, foundResults = true)
 		}
 	}
 	
+	/**
+	  * A sheet target which selects a spreadsheet that contains the specified string (case-insensitive).
+	  * @param string Searched string
+	  */
 	case class SheetContaining(string: String) extends SheetTarget
 	{
 		override def apply(sheetNames: Seq[String]): Try[Int] =

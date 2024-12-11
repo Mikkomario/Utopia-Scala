@@ -2,6 +2,10 @@
 
 ## v1.7.1 (in development)
 Latest Flow support
+### Bugfixes
+- Attempting to calculate a value for a **Change** with duration of zero would previously cause a 
+  **StackOverFlowException** in situations where the **Change**'s `.toString` involved such value calculations.
+  - For example, such a case would be with **LinearVelocity**
 
 ## v1.7 - 04.10.2024
 This update focuses on the **Polygonic** trait (now named **Polygon**), refactoring many of the existing functions. 

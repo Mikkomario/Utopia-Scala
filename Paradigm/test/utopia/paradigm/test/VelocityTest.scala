@@ -3,11 +3,13 @@ package utopia.paradigm.test
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.measurement.DistanceUnit.KiloMeter
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
+import utopia.paradigm.measurement.DistanceExtensions._
 
 import java.util.concurrent.TimeUnit
 
@@ -113,8 +115,12 @@ object VelocityTest extends App
 	println(acc)
 	println(acc.amount)
 	println(acc.duration.description)
-	println(Velocity2D(Vector2D.zero, 1.seconds) +
-		LinearAcceleration(LinearVelocity(-2000, 1.seconds), 1.seconds)(20.millis))
+	
+	// Tests kilometers per hour -conversion
+	val meters = 582.m
+	val time = 2.minutes
+	val kmh = meters.toUnit(KiloMeter) / time.toPreciseHours
+	assert(kmh == 17.46)
 	
 	println("Success!")
 }

@@ -4,6 +4,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.DaysType
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.{HasSign, Sign, SignOrZero}
 
 import java.time.{LocalDate, Period}
 import java.util.concurrent.TimeUnit
@@ -48,8 +49,13 @@ object Days
   * @author Mikko Hilpinen
   * @since 27.6.2021, v1.10
   */
-case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible
+case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible with HasSign
 {
+	// ATTRIBUTES   -------------------------
+	
+	override lazy val sign: SignOrZero = Sign.of(length)
+	
+	
 	// COMPUTED -----------------------------
 	
 	/**
@@ -77,7 +83,6 @@ case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible
 	override def self = this
 	
 	override def toString = if (length == 1) "a day" else s"$length days"
-	
 	override implicit def toValue: Value = new Value(Some(this), DaysType)
 	
 	override def compareTo(o: Days) = length.compareTo(o.length)

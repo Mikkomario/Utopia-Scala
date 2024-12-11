@@ -96,7 +96,7 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	/**
 	  * The length of this range as a time period
 	  */
-	lazy val period = end - start
+	lazy val length = end - start
 	
 	
 	// COMPUTED ---------------------------
@@ -124,6 +124,9 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	  * @return Whether this date range represents a single date
 	  */
 	def isSingleDate = nonEmpty && head == last
+	
+	@deprecated("Deprecated for removal. Please use .length instead", "v2.5.1")
+	def period = length
 	
 	
 	// IMPLEMENTED ------------------------
@@ -161,6 +164,17 @@ case class DateRange(override val start: LocalDate, override val end: LocalDate)
 	
 	
 	// OTHER    ------------------------
+	
+	/**
+	 * @param newStart New starting date (inclusive)
+	 * @return Copy of this date range with the specified starting date
+	 */
+	def withStart(newStart: LocalDate) = copy(start = newStart)
+	/**
+	 * @param newEnd New ending date (exclusive)
+	 * @return Copy of this date range with the specified ending date
+	 */
+	def withEnd(newEnd: LocalDate) = copy(end = newEnd)
 	
 	/**
 	  * @param other Another date range

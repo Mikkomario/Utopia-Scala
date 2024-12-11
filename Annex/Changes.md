@@ -2,6 +2,9 @@
 
 ## v1.9.1 (in development)
 Supports changes made to Disciple
+### New methods
+- **ResponseParser** (**ResponseParseExtensions**)
+  - Added `.unwrapToResponseLogging(...)`
 
 ## v1.9 - 04.10.2024
 This update mostly adds new utility functions for response-parsing. 

@@ -1,10 +1,13 @@
 # Utopia Flow - List of Changes
 
 ## v2.5.1 (in development)
+### Deprecations
+- Renamed **DateRange**'s `.period` to `.length`
 ### New features
 - Added **TimeUnit** enumeration, which is an advanced version of Java's enumeration with the same name
 - Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so
 - Added **UntilExternalFailureIterator**
+- Added **RepeatOneForeverIterator**
 ### New methods
 - **IterableOnce**
   - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`
@@ -12,6 +15,8 @@
   - Added `.tryGet(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.findNextIndexWhere(...)` and `.findPreviousIndexWhere(...)`
+- **InputStream** (**StreamExtensions**)
+  - Added `.buffered` and `.notEmpty`
 - **Try** (**TryExtensions**)
   - Added `.mapFailure(...)`
 ### Other changes
@@ -20,6 +25,7 @@
   - Added better handling for Inf & MinusInf duration values
   - Rewrote number to duration conversions
 - `.allChildrenIterator` in Path (via **FileExtensions**) now returns the paths from top to bottom
+- **Days** now extends **HasSign**
 - Minor refactoring in **Duration**`.finite`
 - Minor refactoring in `ModelLike.apply(IterableOnce)`
 

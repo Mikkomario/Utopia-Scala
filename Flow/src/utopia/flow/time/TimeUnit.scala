@@ -236,7 +236,7 @@ object TimeUnit
 	  */
 	case object Hour extends TimeUnit
 	{
-		override val toSecondsModifier: Double = 360
+		override val toSecondsModifier: Double = 3600
 		override def toJava: (Int, JTimeUnit) = 1 -> concurrent.TimeUnit.HOURS
 		
 		override def toString = "hours"
