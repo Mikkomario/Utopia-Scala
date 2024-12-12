@@ -3,7 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.component.container.many.MultiContainer
 import utopia.firmament.component.stack.{HasStackSize, StackSizeCalculating}
 import utopia.firmament.component.{DelayedBoundsUpdate, HasMutableBounds}
-import utopia.firmament.context.BaseContext
+import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.controller.Stacker
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
@@ -11,7 +11,11 @@ import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.util.Mutate
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -72,8 +76,8 @@ trait CollectionFactoryLike[+Repr]
 	def primaryAxis: Axis2D
 	def insideRowLayout: StackLayout
 	def betweenRowsLayout: StackLayout
-	def innerMargin: StackLength
-	def outerMargin: StackLength
+	def innerMarginPointer: Changing[StackLength]
+	def outerMarginPointer: Changing[StackLength]
 	def splitThreshold: Option[Double]
 	
 	/**
@@ -94,15 +98,15 @@ trait CollectionFactoryLike[+Repr]
 	  */
 	def withBetweenRowsLayout(layout: StackLayout): Repr
 	/**
-	  * @param margin Margin placed between the items in this collection
-	  * @return Copy of this factory with the specified margin
+	  * @param p A pointer that indicates the margin to place between items within this collection
+	  * @return Copy of this factory using the specified pointer
 	  */
-	def withInnerMargin(margin: StackLength): Repr
+	def withInnerMarginPointer(p: Changing[StackLength]): Repr
 	/**
-	  * @param margin Margin placed at the edges of this collection
-	  * @return Copy of this factory with the specified margin
+	  * @param p A pointer that indicates the margin to place around this collection
+	  * @return Copy of this factory using the specified pointer
 	  */
-	def withOuterMargin(margin: StackLength): Repr
+	def withOuterMarginPointer(p: Changing[StackLength]): Repr
 	/**
 	  * @param threshold Threshold after which this collection prepares to split contents to a new line
 	  * @return Copy of this factory with that threshold in place
@@ -126,49 +130,74 @@ trait CollectionFactoryLike[+Repr]
 	
 	override def apply[C <: ReachComponentLike, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
 		val collection: Collection = new _Collection(parentHierarchy, content.component,
-			primaryAxis, insideRowLayout, betweenRowsLayout, innerMargin, outerMargin, splitThreshold,
+			primaryAxis, insideRowLayout, betweenRowsLayout, innerMarginPointer, outerMarginPointer, splitThreshold,
 			customDrawers)
 		content attachTo collection
 	}
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	  * @param margin Margin placed between the items in this collection
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withInnerMargin(margin: StackLength): Repr = withInnerMarginPointer(Fixed(margin))
+	/**
+	  * @param margin Margin placed at the edges of this collection
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withOuterMargin(margin: StackLength): Repr = withOuterMarginPointer(Fixed(margin))
+	
+	def mapInnerMarginPointer(f: Mutate[Changing[StackLength]]) = withInnerMarginPointer(f(innerMarginPointer))
+	def mapOuterMarginPointer(f: Mutate[Changing[StackLength]]) = withOuterMarginPointer(f(outerMarginPointer))
+	
+	def mapInnerMargin(f: Mutate[StackLength]) = mapInnerMarginPointer { _.map(f) }
+	def mapOuterMargin(f: Mutate[StackLength]) = mapOuterMarginPointer { _.map(f) }
 }
 
 case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: Axis2D = X,
                              insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
-                             innerMargin: StackLength = StackLength.any,
-                             outerMargin: StackLength = StackLength.fixedZero,
+                             innerMarginPointer: Changing[StackLength] = Fixed(StackLength.any),
+                             outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
                              splitThreshold: Option[Double] = None, customDrawers: Seq[CustomDrawer] = Empty)
 	extends CollectionFactoryLike[CollectionFactory]
 		with NonContextualCombiningContainerFactory[Collection, ReachComponentLike]
-		with FromGenericContextFactory[BaseContext, ContextualCollectionFactory]
+		with FromGenericContextFactory[BaseContextPropsView, ContextualCollectionFactory]
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def withPrimaryAxis(axis: Axis2D): CollectionFactory = copy(primaryAxis = axis)
 	override def withInsideRowLayout(layout: StackLayout): CollectionFactory = copy(insideRowLayout = layout)
 	override def withBetweenRowsLayout(layout: StackLayout): CollectionFactory = copy(betweenRowsLayout = layout)
-	override def withInnerMargin(margin: StackLength): CollectionFactory = copy(innerMargin = margin)
-	override def withOuterMargin(margin: StackLength): CollectionFactory = copy(outerMargin = margin)
+	override def withInnerMarginPointer(p: Changing[StackLength]): CollectionFactory = copy(innerMarginPointer = p)
+	override def withOuterMarginPointer(p: Changing[StackLength]): CollectionFactory = copy(outerMarginPointer = p)
 	override def withSplitThreshold(threshold: Double): CollectionFactory = copy(splitThreshold = Some(threshold))
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): CollectionFactory = copy(customDrawers = drawers)
 	
-	override def withContext[N <: BaseContext](context: N): ContextualCollectionFactory[N] =
+	override def withContext[N <: BaseContextPropsView](context: N): ContextualCollectionFactory[N] =
 		ContextualCollectionFactory[N](parentHierarchy, context, primaryAxis, insideRowLayout, betweenRowsLayout,
-			outerMargin, splitThreshold, customDrawers)
+			outerMarginPointer, splitThreshold, customDrawers)
 }
 
-// TODO: Either limit to static context or add support for variable (inner) margins
-case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: ComponentHierarchy, context: N,
-                                                          primaryAxis: Axis2D = X,
-                                                          insideRowLayout: StackLayout = Fit,
-                                                          betweenRowsLayout: StackLayout = Leading,
-                                                          outerMargin: StackLength = StackLength.fixedZero,
-                                                          splitThreshold: Option[Double] = None,
-                                                          customDrawers: Seq[CustomDrawer] = Empty,
-                                                          customInnerMargin: Option[StackLength] = None,
-                                                          areRelated: Boolean = false)
+case class ContextualCollectionFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+                                                                   primaryAxis: Axis2D = X,
+                                                                   insideRowLayout: StackLayout = Fit,
+                                                                   betweenRowsLayout: StackLayout = Leading,
+                                                                   outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                                                                   splitThreshold: Option[Double] = None,
+                                                                   customDrawers: Seq[CustomDrawer] = Empty,
+                                                                   customInnerMarginPointer: Option[Changing[StackLength]] = None,
+                                                                   areRelated: Boolean = false)
 	extends CollectionFactoryLike[ContextualCollectionFactory[N]]
-		with ContextualCombiningContainerFactory[N, BaseContext, Collection, ReachComponentLike, ContextualCollectionFactory]
+		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Collection, ReachComponentLike, ContextualCollectionFactory]
 {
+	// ATTRIBUTES   ----------------------
+	
+	override lazy val innerMarginPointer: Changing[StackLength] = customInnerMarginPointer
+		.getOrElse { if (areRelated) context.smallStackMarginPointer else context.stackMarginPointer }
+	
+	
 	// COMPUTED --------------------------
 	
 	/**
@@ -179,19 +208,18 @@ case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: Compo
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def withContext[N2 <: BaseContext](newContext: N2): ContextualCollectionFactory[N2] =
+	override def withContext[N2 <: BaseContextPropsView](newContext: N2): ContextualCollectionFactory[N2] =
 		copy(context = newContext)
 	
-	override def innerMargin: StackLength =
-		customInnerMargin.getOrElse { if (areRelated) context.smallStackMargin else context.stackMargin }
+	override def withInnerMarginPointer(p: Changing[StackLength]): ContextualCollectionFactory[N] =
+		copy(customInnerMarginPointer = Some(p))
+	override def withOuterMarginPointer(p: Changing[StackLength]): ContextualCollectionFactory[N] =
+		copy(outerMarginPointer = p)
 	override def withPrimaryAxis(axis: Axis2D): ContextualCollectionFactory[N] = copy(primaryAxis = axis)
 	override def withInsideRowLayout(layout: StackLayout): ContextualCollectionFactory[N] =
 		copy(insideRowLayout = layout)
 	override def withBetweenRowsLayout(layout: StackLayout): ContextualCollectionFactory[N] =
 		copy(betweenRowsLayout = layout)
-	override def withInnerMargin(margin: StackLength): ContextualCollectionFactory[N] =
-		copy(customInnerMargin = Some(margin))
-	override def withOuterMargin(margin: StackLength): ContextualCollectionFactory[N] = copy(outerMargin = margin)
 	override def withSplitThreshold(threshold: Double): ContextualCollectionFactory[N] =
 		copy(splitThreshold = Some(threshold))
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualCollectionFactory[N] =
@@ -205,13 +233,13 @@ case class ContextualCollectionFactory[+N <: BaseContext](parentHierarchy: Compo
 	  * @return Copy of this factory with the specified margin
 	  */
 	def withInnerMargin(margin: SizeCategory): ContextualCollectionFactory[N] =
-		withInnerMargin(context.margins.around(margin))
+		withInnerMarginPointer(context.scaledStackMarginPointer(margin))
 	/**
 	  * @param margin Margin to place at the edges of this collection (general)
 	  * @return Copy of this factory with the specified margin
 	  */
 	def withOuterMargin(margin: SizeCategory) =
-		copy(outerMargin = context.margins.around(margin))
+		copy(outerMarginPointer = context.scaledStackMarginPointer(margin))
 }
 
 /**
@@ -241,11 +269,11 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 	/**
 	  * @return Margin between the items within this collection
 	  */
-	def innerMargin: StackLength
+	def innerMarginPointer: Changing[StackLength]
 	/**
 	  * @return Margin placed at the edges of this collection
 	  */
-	def outerMargin: StackLength
+	def outerMarginPointer: Changing[StackLength]
 	
 	/**
 	  * @return A length threshold, after which the content is split to a new line.
@@ -272,6 +300,8 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 		if (components.isEmpty)
 			StackSize.any
 		else {
+			val innerMargin = innerMarginPointer.value
+			val outerMargin = outerMarginPointer.value
 			val componentSizes = components.map { _.stackSize }
 			splitThreshold match {
 				// Case: A split threshold has been specified => Calculates size for X rows
@@ -307,6 +337,9 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 		if (componentsWithSizes.nonEmpty) {
 			val maxLength = mySize(primaryAxis)
 			val maxBreadth = mySize(secondaryAxis)
+			val margins = Pair(innerMarginPointer, outerMarginPointer).map { _.value }
+			val innerMargin = margins.first
+			val outerMargin = margins.second
 			// Finds which layout to use, based on how many rows may be fit into this collection's current state
 			val layouts = layoutPriorities.lazyMap { case (lengthOfItem, lengthOfMargin) =>
 				val layout = buildRows(componentsWithSizes, lengthOfMargin(innerMargin),
@@ -317,41 +350,58 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 			}
 			// Case: Optimal layout is achievable => Uses that
 			if (layouts.head._2 <= maxBreadth)
-				actualizeLayout(mySize, layouts.head._1)
+				actualizeLayout(mySize, layouts.head._1, margins)
 			// Case: Not even the minimal layout is possible => Minimizes layout
 			else if (layouts.last._2 >= maxBreadth)
-				actualizeLayout(mySize, layouts.last._1, removeMargins = true)
+				actualizeLayout(mySize, layouts.last._1, margins.map { _.noMin })
 			// Case: The fitting layout is somewhere between these two extremes => Finds and uses the best one that fits
 			else
-				layouts.find { _._2 <= maxBreadth }.foreach { case (layout, _) => actualizeLayout(mySize, layout) }
+				layouts.find { _._2 <= maxBreadth }
+					.foreach { case (layout, _) => actualizeLayout(mySize, layout, margins) }
 		}
 	}
 	
 	
 	// OTHER    --------------------------
 	
+	/**
+	  * Sets up automated component layout changes that are triggered whenever the margin pointer values change
+	  */
+	protected def setupMarginListeners() = {
+		val pointers = Pair(innerMarginPointer, outerMarginPointer)
+		if (pointers.exists { _.mayChange }) {
+			lazy val revalidateListener = ChangeListener.onAnyChange { revalidate() }
+			linkedFlag.addListener { e =>
+				if (e.newValue)
+					pointers.foreach { _.addListener(revalidateListener) }
+				else
+					pointers.foreach { _.removeListener(revalidateListener) }
+			}
+		}
+	}
+	
 	private def actualizeLayout(area: Size, layout: Seq[Seq[(ReachComponentLike, StackSize)]],
-	                            removeMargins: Boolean = false) =
+	                            margins: Pair[StackLength]) =
 	{
-		val actualInnerMargin = if (removeMargins) innerMargin.noMin else innerMargin
-		val actualOuterMargin = if (removeMargins) outerMargin.noMin else outerMargin
+		val innerMargin = margins.first
+		val outerMargin = margins.second
 		// Places the rows first
 		val rowWrappers = layout.map { row =>
-			val stackSize = Stacker.calculateStackSize(row.map { _._2 }, primaryAxis,
-				actualInnerMargin, actualOuterMargin, insideRowLayout)
+			val stackSize = Stacker.calculateStackSize(row.map { _._2 }, primaryAxis, innerMargin, outerMargin,
+				insideRowLayout)
 			new StackBoundsWrapper(stackSize)
 		}
 		val simulatedStackSize = Stacker.calculateStackSize(rowWrappers.map { _.stackSize }, secondaryAxis,
-			actualInnerMargin, actualOuterMargin, betweenRowsLayout)
+			innerMargin, outerMargin, betweenRowsLayout)
 		Stacker.apply(rowWrappers, Bounds(Point.origin, area), simulatedStackSize(secondaryAxis).optimal,
-			secondaryAxis, actualInnerMargin, actualOuterMargin, betweenRowsLayout)
+			secondaryAxis, innerMargin, outerMargin, betweenRowsLayout)
 		
 		// Then places the components within the rows
 		// The bounds updates are delayed
 		layout.iterator.zip(rowWrappers).flatMap { case (row, rowWrapper) =>
 			val itemWrappers = row.map { case (component, stackSize) => new DelayedBoundsUpdate(component, stackSize) }
 			Stacker(itemWrappers, rowWrapper.bounds, rowWrapper.stackSize(primaryAxis).optimal,
-				primaryAxis, actualInnerMargin, actualOuterMargin, insideRowLayout)
+				primaryAxis, innerMargin, outerMargin, insideRowLayout)
 			itemWrappers
 		}.foreach { _() }
 	}
@@ -392,6 +442,12 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 private class _Collection(override val parentHierarchy: ComponentHierarchy,
                           override val components: Seq[ReachComponentLike], override val primaryAxis: Axis2D,
                           override val insideRowLayout: StackLayout, override val betweenRowsLayout: StackLayout,
-                          override val innerMargin: StackLength, override val outerMargin: StackLength,
+                          override val innerMarginPointer: Changing[StackLength],
+                          override val outerMarginPointer: Changing[StackLength],
                           override val splitThreshold: Option[Double], override val customDrawers: Seq[CustomDrawer])
 	extends CustomDrawReachComponent with Collection
+{
+	// INITIAL CODE ----------------------------
+	
+	setupMarginListeners()
+}

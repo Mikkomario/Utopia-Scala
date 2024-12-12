@@ -27,6 +27,9 @@ object VariableReachContentWindowContext
 		override def current = StaticReachContentWindowContext(windowContext, base.current)
 		override def toVariableContext = this
 		
+		override def actorHandler = super[VariableTextContextWrapper].actorHandler
+		override def colorPointer = base.colorPointer
+		
 		override def withWindowContext(base: ReachWindowContext2): VariableReachContentWindowContext =
 			copy(windowContext = base)
 		override def withBase(base: VariableTextContext): VariableReachContentWindowContext = copy(base = base)

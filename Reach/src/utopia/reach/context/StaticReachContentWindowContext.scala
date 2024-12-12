@@ -37,6 +37,11 @@ object StaticReachContentWindowContext
 	{
 		override def self = this
 		
+		override def actorHandler = super[StaticTextContextWrapper].actorHandler
+		override def backgroundPointer = super[StaticTextContextWrapper].backgroundPointer
+		override def textColorPointer = super[StaticTextContextWrapper].textColorPointer
+		override def hintTextColorPointer = super[StaticTextContextWrapper].hintTextColorPointer
+		
 		override def current = this
 		override def toVariableContext = VariableReachContentWindowContext(windowContext, base.toVariableContext)
 		

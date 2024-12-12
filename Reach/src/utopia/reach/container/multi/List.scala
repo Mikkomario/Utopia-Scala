@@ -1,6 +1,6 @@
 package utopia.reach.container.multi
 
-import utopia.firmament.context.ColorContext
+import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
@@ -54,13 +54,13 @@ object List extends Cff[ListFactory]
 }
 
 class ListFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[ColorContext, ContextualListFactory]
+	extends FromContextFactory[StaticColorContext, ContextualListFactory]
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
 	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
-	override def withContext(context: ColorContext) = ContextualListFactory(this, context)
+	override def withContext(context: StaticColorContext) = ContextualListFactory(this, context)
 	
 	/**
 	  * Creates a new list with content
@@ -156,12 +156,12 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualListFactory(factory: ListFactory, context: ColorContext)
+case class ContextualListFactory(factory: ListFactory, context: StaticColorContext)
 	extends ColorContextualFactory[ContextualListFactory]
 {
 	override def self: ContextualListFactory = this
 	
-	override def withContext(newContext: ColorContext) = copy(context = newContext)
+	override def withContext(newContext: StaticColorContext) = copy(context = newContext)
 	
 	/**
 	  * Creates a new list with content
