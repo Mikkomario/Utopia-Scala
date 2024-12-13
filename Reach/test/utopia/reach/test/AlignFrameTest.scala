@@ -30,7 +30,7 @@ object AlignFrameTest extends App
 	))
 	
 	val window = ReachWindow.contentContextual.withResizeLogic(User).using(AlignFrame) { (_, frameF) =>
-		frameF.center.build(ViewImageAndTextLabel) {
+		frameF.center.variable.build(ViewImageAndTextLabel) {
 			_.withBackground(Secondary).icon(contentPointer, imgPointer,
 				DisplayFunction.noLocalization { i: Any => s"Label $i" })
 		}

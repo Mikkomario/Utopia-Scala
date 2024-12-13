@@ -1,5 +1,6 @@
 package utopia.firmament.context.base
 
+import utopia.firmament.context.DualFormContext
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
@@ -19,18 +20,10 @@ import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
   * @since 29.09.2024, v1.4
   */
 trait BaseContextCopyable[+Repr, +ColorSensitive]
-	extends BaseContextPropsView with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
+	extends BaseContextPropsView with DualFormContext[StaticBaseContext, VariableBaseContext]
+		with ScopeUsable[Repr] with LinearSizeAdjustable[Repr]
 {
 	// ABSTRACT -------------------------
-	
-	/**
-	  * @return Current state of this context as a static context instance
-	  */
-	def current: StaticBaseContext
-	/**
-	  * @return This context as a variable context instance
-	  */
-	def toVariableContext: VariableBaseContext
 	
 	/**
 	  * @param font New font to use

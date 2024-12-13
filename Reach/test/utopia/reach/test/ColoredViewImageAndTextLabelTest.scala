@@ -35,7 +35,7 @@ object ColoredViewImageAndTextLabelTest extends App
 	val imagePointer = indexPointer.map { options(_)._1 }
 	
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
-		framingF.build(ViewImageAndTextLabel) { labelF =>
+		framingF.variable.build(ViewImageAndTextLabel) { labelF =>
 			val f = labelF.withBackground(Color.yellow)
 			println(f.customDrawers)
 			val label = f.mapContext { _.withTextExpandingToRight }

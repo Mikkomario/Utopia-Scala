@@ -1,4 +1,4 @@
-package utopia.reach.component.factory.contextual
+package utopia.firmament.context
 
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}

@@ -39,7 +39,7 @@ object DropDownTest extends App
 	val window = ReachWindow.contentContextual.withWindowBackground(colors.gray.light)
 		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
 			framingF.build(Stack) { stackF =>
-				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.build(baseDdf) { ddF =>
+				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.variable.build(baseDdf) { ddF =>
 					val selectedCategoryPointer = EventfulPointer[Option[String]](None)
 					val selectedItemPointer = EventfulPointer[Option[String]](None)
 					
@@ -56,7 +56,7 @@ object DropDownTest extends App
 								case None => "Select category first"
 							})
 							.withNoOptionsViewConstructor { (hierarchy, context) =>
-									ViewTextLabel(hierarchy).withContextPointer(context).hint
+									ViewTextLabel(hierarchy).withContext(context).hint
 										.text("Please select a category first")
 							}
 							.simple(

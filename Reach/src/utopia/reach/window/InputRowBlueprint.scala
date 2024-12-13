@@ -1,16 +1,31 @@
 package utopia.reach.window
 
-import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.text.{StaticTextContext, VariableTextContext}
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.Flag.wrap
-import utopia.paradigm.enumeration.{Alignment, HorizontalDirection}
+import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory, HorizontalDirection}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
 object InputRowBlueprint
 {
+	// OTHER    -----------------------------
+	
+	/**
+	  * Creates a factory for constructing an input row blueprint
+	  * @param key Unique key used for this row
+	  * @param displayName Field name displayed on this row (default = empty = no name displayed)
+	  * @param fieldAlignment Alignment used when placing the field component (relative to the field name) (default = right)
+	  * @param visibilityFlag A pointer to this row's visibility state (default = always visible)
+	  * @param scalable Whether the field can be scaled horizontally (default = true)
+	  * @return A new input row blueprint factory
+	  */
+	def apply(key: String, displayName: LocalizedString  = LocalizedString.empty,
+	          fieldAlignment: Alignment = Alignment.Right, visibilityFlag: Flag = AlwaysTrue, scalable: Boolean = true) =
+		InputRowBlueprintFactory(key, displayName, fieldAlignment, visibilityFlag, scalable)
+	
 	/**
 	  * Creates a new input row blueprint utilizing a component creation factory
 	  * @param factory A factory used for creating the field components
@@ -24,12 +39,75 @@ object InputRowBlueprint
 	  * @tparam F Type of contextual component factory version
 	  * @return A new input row blueprint
 	  */
+	@deprecated("Deprecated for removal. Please use .apply(...).using(...) instead", "v1.5")
 	def using[F](factory: Ccff[StaticTextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
 	             fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
 	             isScalable: Boolean = true)(createField: F => InputField) =
 		apply(key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
 			createField(factory.withContext(hierarchy, context))
 		}
+		
+		
+	// NESTED   -------------------------------
+	
+	case class InputRowBlueprintFactory(key: String, displayName: LocalizedString = LocalizedString.empty,
+	                                    fieldAlignment: Alignment = Alignment.Right,
+	                                    visibilityFlag: Flag = AlwaysTrue, isScalable: Boolean = false)
+		extends FromAlignmentFactory[InputRowBlueprintFactory]
+	{
+		// COMPUTED ----------------------------
+		
+		/**
+		  * @return Copy of this factory that constructs horizontally scalable fields
+		  */
+		def scalable = copy(isScalable = true)
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def apply(alignment: Alignment): InputRowBlueprintFactory = copy(fieldAlignment = alignment)
+		
+		
+		// OTHER    ----------------------------
+		
+		/**
+		  * @param displayName Name to display for the constructed field
+		  * @return Copy of this factory that includes the specified field name
+		  */
+		def withName(displayName: LocalizedString) = copy(displayName = displayName)
+		/**
+		  * @param flag A flag that contains true while this field should be displayed
+		  * @return Copy of this factory that utilizes the specified visibility flag
+		  */
+		def withVisibilityFlag(flag: Flag) = copy(visibilityFlag = flag)
+		
+		/**
+		  * @param createField A function for creating the input field.
+		  *                    Accepts component creation hierarchy, and the component context.
+		  * @return A new input row blueprint utilizing the specified constructor
+		  */
+		def apply(createField: (ComponentHierarchy, StaticTextContext) => InputField) =
+			new InputRowBlueprint(key, displayName, fieldAlignment, visibilityFlag, isScalable)(createField)
+		/**
+		  * @param factory Component factory to utilize in field construction
+		  * @param createField A function that accepts an initialized component creation factory and
+		  *                    yields the input field to place on this row
+		  * @tparam F Type of the initialized factory used
+		  * @return A new input row blueprint using the specified constructor
+		  */
+		def using[F](factory: Ccff[StaticTextContext, F])(createField: F => InputField) =
+			apply { (hierarchy, context) => createField(factory.withContext(hierarchy, context)) }
+		/**
+		  * @param factory Component factory to utilize in field construction.
+		  *                This factory expects a variable context instance.
+		  * @param createField A function that accepts an initialized component creation factory and
+		  *                    yields the input field to place on this row
+		  * @tparam F Type of the initialized factory used
+		  * @return A new input row blueprint using the specified constructor
+		  */
+		def usingVariable[F](factory: Ccff[VariableTextContext, F])(createField: F => InputField) =
+			apply { (hierarchy, context) => createField(factory.withContext(hierarchy, context.toVariableContext)) }
+	}
 }
 
 /**
@@ -44,10 +122,11 @@ object InputRowBlueprint
   * @param createField A function for creating a new managed field when component creation context is known.
   *                    Accepts component creation hierarchy and context.
   */
-case class InputRowBlueprint(key: String, displayName: LocalizedString = LocalizedString.empty,
-                             fieldAlignment: Alignment = Alignment.Right,
-                             visibilityPointer: Changing[Boolean] = AlwaysTrue, isScalable: Boolean = true)
-                            (createField: (ComponentHierarchy, StaticTextContext) => InputField)
+// TODO: Rename visibilityPointer to visibilityFlag and change type to Flag
+class InputRowBlueprint(val key: String, val displayName: LocalizedString = LocalizedString.empty,
+                        val fieldAlignment: Alignment = Alignment.Right,
+                        val visibilityPointer: Changing[Boolean] = AlwaysTrue, val isScalable: Boolean = true)
+                       (createField: (ComponentHierarchy, StaticTextContext) => InputField)
 {
 	// COMPUTED	-----------------------------
 	

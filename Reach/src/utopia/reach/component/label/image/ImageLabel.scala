@@ -4,7 +4,7 @@ import utopia.firmament.component.image.ImageComponent
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, ImageDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.factory.StaticFramedFactory
+import utopia.firmament.factory.{StaticContextualFramedFactory, StaticFramedFactory}
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
@@ -314,6 +314,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
                                        settings: ImageLabelSettings = ImageLabelSettings.default)
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
+		with StaticContextualFramedFactory[ContextualImageLabelFactory]
 		with ColorContextualFactory[ContextualImageLabelFactory]
 		with ContextualBackgroundAssignableFactory[StaticColorContext, ContextualImageLabelFactory]
 {

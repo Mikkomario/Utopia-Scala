@@ -1,5 +1,6 @@
 package utopia.firmament.context.color
 
+import utopia.firmament.context.DualFormContext
 import utopia.firmament.context.base.BaseContextCopyable
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
@@ -12,12 +13,11 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @tparam Repr This context type
   * @tparam Textual This context type when textual information is added
   */
-trait ColorContextCopyable[+Repr, +Textual] extends ColorContextPropsView with BaseContextCopyable[Repr, Repr]
+trait ColorContextCopyable[+Repr, +Textual]
+	extends ColorContextPropsView with BaseContextCopyable[Repr, Repr]
+		with DualFormContext[StaticColorContext, VariableColorContext]
 {
 	// ABSTRACT	------------------------
-	
-	override def current: StaticColorContext
-	override def toVariableContext: VariableColorContext
 	
 	/**
 	  * @return A copy of this context that uses the default text color

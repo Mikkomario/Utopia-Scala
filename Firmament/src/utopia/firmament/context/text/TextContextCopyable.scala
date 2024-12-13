@@ -1,5 +1,6 @@
 package utopia.firmament.context.text
 
+import utopia.firmament.context.DualFormContext
 import utopia.firmament.context.color.ColorContextCopyable
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.LengthExtensions._
@@ -16,12 +17,11 @@ import utopia.paradigm.shape.template.HasDimensions
   * @author Mikko Hilpinen
   * @since 05.10.2024, v1.4
   */
-trait TextContextCopyable[+Repr] extends ColorContextCopyable[Repr, Repr] with TextContextPropsView
+trait TextContextCopyable[+Repr]
+	extends ColorContextCopyable[Repr, Repr] with TextContextPropsView
+		with DualFormContext[StaticTextContext, VariableTextContext]
 {
 	// ABSTRACT ------------------------
-	
-	override def current: StaticTextContext
-	override def toVariableContext: VariableTextContext
 	
 	/**
 	  * @return Copy of this context that uses the default prompt font

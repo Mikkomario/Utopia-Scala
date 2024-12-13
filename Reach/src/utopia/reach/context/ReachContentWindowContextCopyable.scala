@@ -1,5 +1,6 @@
 package utopia.reach.context
 
+import utopia.firmament.context.DualFormContext
 import utopia.firmament.context.text.TextContextCopyable
 
 /**
@@ -10,7 +11,4 @@ import utopia.firmament.context.text.TextContextCopyable
   */
 trait ReachContentWindowContextCopyable[+Repr, +Textual]
 	extends ReachWindowContextCopyable[Repr, Textual] with TextContextCopyable[Repr] with ReachContentWindowPropsView
-{
-	override def current: StaticReachContentWindowContext
-	override def toVariableContext: VariableReachContentWindowContext
-}
+		with DualFormContext[StaticReachContentWindowContext, VariableReachContentWindowContext]

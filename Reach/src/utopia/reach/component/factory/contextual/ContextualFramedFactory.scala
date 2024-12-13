@@ -1,5 +1,6 @@
 package utopia.reach.component.factory.contextual
 
+import utopia.firmament.context.HasContext
 import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.factory.VariableFramedFactory
 import utopia.firmament.model.enumeration.SizeCategory

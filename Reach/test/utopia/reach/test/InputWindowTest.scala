@@ -1,6 +1,6 @@
 package utopia.reach.test
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.ImageCache
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
@@ -20,6 +20,7 @@ import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ContextualMixed
@@ -30,11 +31,10 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
-import utopia.reach.context.ReachContentWindowContext
 import utopia.reach.focus.FocusRequestable
+import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
-import ReachTestContext._
 
 /**
   * Tests input window creation
@@ -56,25 +56,26 @@ object InputWindowTest extends App
 		private val defaultFieldWidth = 5.cm.toScreenPixels.any
 		private val fieldBackground = colors.primary.light
 		
+		override protected lazy val windowContext =
+			ReachTestContext.windowContext.withWindowBackground(colors.primary)
+		override protected lazy val contentContext = {
+			val base = windowContext.against(fieldBackground)
+			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
+		}
+		override protected lazy val warningPopupContext =
+			windowContext.borderless.nonResizable
+				.withContentContext(baseContext.against(colors.failure).forTextComponents)
+		
 		override protected lazy val closeIcon = icons("close.png")
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override protected def windowContext =
-			ReachTestContext.windowContext.withWindowBackground(colors.primary)
-		override protected def contentContext: (TextContext, TextContext) = {
-			val base = windowContext.textContext.against(fieldBackground)
-			base.forTextComponents.mapFont { _ * 0.8 } -> base.forTextComponents.singleLine
-		}
-		override protected def warningPopupContext: ReachContentWindowContext =
-			windowContext.borderless.nonResizable.withContentContext(baseContext.against(colors.failure).forTextComponents)
-		
 		override implicit protected def log: Logger = ReachTestContext.log
 		
 		override protected def inputTemplate = {
 			val nameErrorPointer = EventfulPointer(LocalizedString.empty)
-			val firstNameField = InputRowBlueprint.using(TextField, "firstName", fieldAlignment = Alignment.Center) { fieldF =>
+			val firstNameField = InputRowBlueprint("firstName").center.usingVariable(TextField) { fieldF =>
 				val textPointer = EventfulPointer[String]("")
 				val displayErrorPointer = nameErrorPointer.mergeWith(textPointer) { (error, text) =>
 					if (text.isEmpty) error else LocalizedString.empty
@@ -91,22 +92,23 @@ object InputWindowTest extends App
 				}
 			}
 			
-			val lastNameField = InputRowBlueprint.using(TextField, "lastName", fieldAlignment = Alignment.Center) {
+			val lastNameField = InputRowBlueprint("lastName").center.usingVariable(TextField) {
 				_.withFieldName("Last Name").withHint("Optional").string(defaultFieldWidth) }
 				
-			val sexField = InputRowBlueprint.using(RadioButtonGroup, "isMale", "Sex",
-				Alignment.BottomLeft) { _(Vector[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
+			val sexField = InputRowBlueprint("isMale", "Sex", BottomLeft)
+				.usingVariable(RadioButtonGroup) {
+					_(Pair[(Boolean, LocalizedString)](true -> "Male", false -> "Female")) }
 			
-			val durationField = InputRowBlueprint.using(DurationField, "durationSeconds",
-				"Login Duration") { _.withMaxValue(24.hours).apply().convertWith { _.toSeconds }
+			val durationField = InputRowBlueprint("durationSeconds", "Login Duration")
+				.usingVariable(DurationField) { _.withMaxValue(24.hours).apply().convertWith { _.toSeconds }
 			}
-			val acceptTermsField = InputRowBlueprint.using(CheckBox, "accept",
-				"I accept the terms and conditions of use", fieldAlignment = Alignment.Left,
-				isScalable = false) {
+			val acceptTermsField = InputRowBlueprint("accept", "I accept the terms and conditions of use",
+				fieldAlignment = Alignment.Left, scalable = false)
+				.using(CheckBox) {
 					_.icons(Pair(unselectedBoxIcon, selectedBoxIcon)).validateWith {
 						if (_) LocalizedString.empty else "You must accept the terms and conditions to continue"
 					}
-			}
+				}
 			Vector(RowGroups(RowGroup(firstNameField, lastNameField),
 				RowGroup.singleRow(sexField), RowGroup.singleRow(durationField)),
 				RowGroups.singleRow(acceptTermsField)) -> ()
@@ -115,7 +117,7 @@ object InputWindowTest extends App
 			// Vector() -> ()
 		}
 		
-		override protected def buildLayout(factories: ContextualMixed[TextContext],
+		override protected def buildLayout(factories: ContextualMixed[StaticTextContext],
 		                                   content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
 		                                   context: Unit) =
 		{
@@ -153,7 +155,7 @@ object InputWindowTest extends App
 		override protected def executionContext = exc
 		
 		override protected def buttonContext(buttonColor: ColorRole, hasIcon: Boolean) = {
-			val base = windowContext.textContext
+			val base = windowContext
 			if (hasIcon)
 				base.withTextAlignment(Alignment.Left)
 					.mapTextInsets { _.mapLeft { _ * 0.5 }.mapRight { _ * 1.5 }.expandingToRight }

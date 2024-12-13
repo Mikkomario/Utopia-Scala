@@ -45,9 +45,10 @@ object ImageViewStackTest extends App
 		stackF.row.centered.build(Mixed) { factories =>
 			Vector(
 				// The first label is static, but sometimes disappears
-				factories.next()(ImageLabel).withBackground(Color.green).withColor(Secondary).withInsets(Medium).apply(icon1) -> pointer1,
+				factories.next()(ImageLabel).withBackground(Color.green).withColor(Secondary).withInsets(Medium)
+					.apply(icon1) -> pointer1,
 				// The second label switches between two icons, disappearing based on pointer value
-				factories.next()(ViewImageLabel).withBackground(Color.cyan)
+				factories.next().variable(ViewImageLabel).withBackground(Color.cyan)
 					.apply(pointer3.map { if (_) icon2 else icon3 }) -> pointer2
 			)
 		}

@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.ComponentCreationDefaults
+import utopia.firmament.context.{ComponentCreationDefaults, HasContext}
 import utopia.firmament.context.color.StaticColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.flow.util.logging.Logger

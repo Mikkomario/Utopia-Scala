@@ -5,7 +5,7 @@ import utopia.firmament.image.ButtonImageEffect.ChangeSize
 import utopia.firmament.image.SingleColorIcon
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.{SettableFlag, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{ResettableFlag, SettableFlag}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.transform.Adjustment
@@ -35,7 +35,7 @@ object ColoredImageButtonTest extends App
 	private val onIcon = SingleColorIcon(Image.readFrom(iconsDir/"check-box-selected.png").get)
 	
 	private val window = ReachWindow.contentContextual.using(Stack) { (_, stackF) =>
-		stackF.centeredRow.build(ViewImageButton) { buttonF =>
+		stackF.centeredRow.variable.build(ViewImageButton) { buttonF =>
 			val closeButton = buttonF.coloredIcon(
 				Fixed(SingleColorIcon(Image.readFrom(iconsDir/"close.png").get)),
 				colorP) {

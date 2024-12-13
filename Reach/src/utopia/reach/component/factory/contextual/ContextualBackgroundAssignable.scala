@@ -1,5 +1,6 @@
 package utopia.reach.component.factory.contextual
 
+import utopia.firmament.context.HasContext
 import utopia.firmament.context.base.BaseContextPropsView
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole, ColorSet}
