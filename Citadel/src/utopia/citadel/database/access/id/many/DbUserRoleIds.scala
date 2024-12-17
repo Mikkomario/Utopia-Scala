@@ -5,7 +5,7 @@ import utopia.citadel.database.model.organization.UserRoleRightModel
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.column.ManyIntIdAccess
-import utopia.vault.sql.{SelectDistinct, Where}
+import utopia.vault.sql.{Select, Where}
 
 /**
   * Used for accessing multiple user roles at once
@@ -50,7 +50,7 @@ object DbUserRoleIds extends ManyIntIdAccess
 	def allowingOnlyTasksWithIds(taskIds: Set[Int])(implicit connection: Connection) =
 	{
 		// Only includes roles that have only tasks within "allowed tasks" list
-		val excludedRoleIds = connection(SelectDistinct(UserRoleRightModel.table, UserRoleRightModel.roleIdAttName) +
+		val excludedRoleIds = connection(Select.distinct(UserRoleRightModel.table, UserRoleRightModel.roleIdAttName) +
 			Where.not(UserRoleRightModel.taskIdColumn.in(taskIds))).rowIntValues
 		
 		all.toSet -- excludedRoleIds

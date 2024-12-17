@@ -10,6 +10,7 @@
 ### New methods
 - **ConditionElement**
   - Added `.length` for string length-based conditions
+  - Added `.in(IntSet, Int)` for generating conditions with a limited number of targeted elements
 - **ConnectionPool**
   - Added `.logging(...)`
 - **FromRowFactory**
