@@ -4,6 +4,7 @@ import utopia.flow.view.template.Extender
 import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
 import utopia.logos.model.stored.text.{StoredWord, WordPlacement}
+import utopia.logos.model.template.Placed
 import utopia.vault.model.template.HasId
 
 object StatedWord
@@ -37,7 +38,7 @@ object StatedWord
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrapper[StoredWord, StatedWord]
+trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrapper[StoredWord, StatedWord] with Placed
 {
 	// ABSTRACT	--------------------
 	
@@ -60,5 +61,9 @@ trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrap
 	
 	override def wrapped = word.data
 	override protected def wrappedFactory = word
+	
+	override def orderIndex: Int = useCase.orderIndex
+	
+	override def toString = word.toString
 }
 
