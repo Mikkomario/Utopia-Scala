@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.StackSize
@@ -12,6 +12,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.image.{ImageLabel, ViewImageLabel}
 import utopia.reach.container.multi.ViewStack
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import java.awt.event.KeyEvent
@@ -48,7 +49,7 @@ object ImageViewStackTest extends App
 				factories.next()(ImageLabel).withBackground(Color.green).withColor(Secondary).withInsets(Medium)
 					.apply(icon1) -> pointer1,
 				// The second label switches between two icons, disappearing based on pointer value
-				factories.next().variable(ViewImageLabel).withBackground(Color.cyan)
+				factories.next()(ViewImageLabel).withBackground(Color.cyan)
 					.apply(pointer3.map { if (_) icon2 else icon3 }) -> pointer2
 			)
 		}

@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.image.ButtonImageEffect.ChangeSize
@@ -11,6 +11,7 @@ import utopia.paradigm.color.ColorRole
 import utopia.paradigm.transform.Adjustment
 import utopia.reach.component.button.image.ViewImageButton
 import utopia.reach.container.multi.Stack
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import java.nio.file.Path
@@ -35,7 +36,7 @@ object ColoredImageButtonTest extends App
 	private val onIcon = SingleColorIcon(Image.readFrom(iconsDir/"check-box-selected.png").get)
 	
 	private val window = ReachWindow.contentContextual.using(Stack) { (_, stackF) =>
-		stackF.centeredRow.variable.build(ViewImageButton) { buttonF =>
+		stackF.centeredRow.build(ViewImageButton) { buttonF =>
 			val closeButton = buttonF.coloredIcon(
 				Fixed(SingleColorIcon(Image.readFrom(iconsDir/"close.png").get)),
 				colorP) {

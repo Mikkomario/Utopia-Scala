@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.DisplayFunction
@@ -11,6 +11,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.image.ViewImageAndTextLabel
 import utopia.reach.container.wrapper.AlignFrame
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import java.nio.file.Paths
@@ -30,7 +31,7 @@ object AlignFrameTest extends App
 	))
 	
 	val window = ReachWindow.contentContextual.withResizeLogic(User).using(AlignFrame) { (_, frameF) =>
-		frameF.center.variable.build(ViewImageAndTextLabel) {
+		frameF.center.build(ViewImageAndTextLabel) {
 			_.withBackground(Secondary).icon(contentPointer, imgPointer,
 				DisplayFunction.noLocalization { i: Any => s"Label $i" })
 		}

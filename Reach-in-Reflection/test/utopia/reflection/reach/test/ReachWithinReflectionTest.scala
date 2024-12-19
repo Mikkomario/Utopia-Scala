@@ -29,7 +29,7 @@ object ReachWithinReflectionTest extends App
 	val textPointer = EventfulPointer[String]("")
 	val background = colorScheme.gray.light
 	val canvas = ReflectionReachCanvas(Color.black.withAlpha(0.0), cursors) { hierarchy =>
-		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents)
+		TextField.withContext(hierarchy, baseContext.against(background).forTextComponents.toVariableContext)
 			.withFieldName("Test Field")
 			.string(320.any, textPointer = textPointer)
 	}

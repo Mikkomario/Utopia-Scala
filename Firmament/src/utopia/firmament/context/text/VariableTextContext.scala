@@ -114,19 +114,72 @@ object VariableTextContext
 		override def withDefaultPromptFont: VariableTextContext =
 			if (customPromptFontPointer.isEmpty) this else copy(customPromptFontPointer = None)
 		
-		override def withBase(base: VariableColorContext): VariableTextContext = copy(base = base)
+		override def withBase(base: VariableColorContext): VariableTextContext = {
+			// Makes sure the text draw context reflects this change
+			val (tdcp, hintTdcp) = {
+				if (base.fontPointer != fontPointer || base.textColorPointer != textColorPointer) {
+					val tdcp = newLazyTextDrawContextPointer(fontP = base.fontPointer, colorP = base.textColorPointer)
+					tdcp -> tdcp.map(hintTextDrawContextPointerCache.apply)
+				}
+				else
+					lazyTextDrawContextPointer -> lazyHintTextDrawContextPointer
+			}
+			copy(base = base, lazyTextDrawContextPointer = tdcp, lazyHintTextDrawContextPointer = hintTdcp)
+		}
 		
 		override def withPromptFontPointer(p: Changing[Font]): VariableTextContext =
 			copy(customPromptFontPointer = Some(p))
-		override def withTextInsetsPointer(p: Changing[StackInsets]): VariableTextContext =
-			copy(textInsetsPointer = p, textInsetsAreCustom = true)
-		override def withLineSplitThresholdPointer(p: Option[Changing[Double]]): VariableTextContext =
-			copy(lineSplitThresholdPointer = p)
+		override def withTextInsetsPointer(p: Changing[StackInsets]): VariableTextContext = {
+			if (textInsetsPointer == p)
+				this
+			else {
+				// Updates the text draw context, also
+				val tdcp = newLazyTextDrawContextPointer(insetsP = p)
+				copy(textInsetsPointer = p, textInsetsAreCustom = true, lazyTextDrawContextPointer = tdcp,
+					lazyHintTextDrawContextPointer = tdcp.map(hintTextDrawContextPointerCache.apply))
+			}
+		}
+		override def withLineSplitThresholdPointer(p: Option[Changing[Double]]): VariableTextContext = {
+			if (lineSplitThresholdPointer == p)
+				this
+			else {
+				// Updates the text draw context, also
+				val tdcp = newLazyTextDrawContextPointer(splitThresholdP = p)
+				copy(lineSplitThresholdPointer = p, lazyTextDrawContextPointer = tdcp,
+					lazyHintTextDrawContextPointer = tdcp.map(hintTextDrawContextPointerCache.apply))
+			}
+		}
 		
-		override def withTextAlignment(alignment: Alignment): VariableTextContext = copy(textAlignment = alignment)
-		override def withMarginBetweenLines(margin: StackLength): VariableTextContext = copy(betweenLinesMargin = margin)
-		override def withAllowLineBreaks(allowLineBreaks: Boolean): VariableTextContext =
-			copy(allowLineBreaks = allowLineBreaks)
+		override def withTextAlignment(alignment: Alignment): VariableTextContext = {
+			if (textAlignment == alignment)
+				this
+			else {
+				// Updates the text draw context
+				val tdcp = newLazyTextDrawContextPointer(alignment = alignment)
+				copy(textAlignment = alignment, lazyTextDrawContextPointer = tdcp,
+					lazyHintTextDrawContextPointer = tdcp.map(hintTextDrawContextPointerCache.apply))
+			}
+		}
+		override def withMarginBetweenLines(margin: StackLength): VariableTextContext = {
+			if (betweenLinesMargin == margin)
+				this
+			else if (betweenLinesMargin.optimal == margin.optimal)
+				copy(betweenLinesMargin = margin)
+			else {
+				val tdcp = newLazyTextDrawContextPointer(betweenLines = margin.optimal)
+				copy(betweenLinesMargin = margin, lazyTextDrawContextPointer = tdcp,
+					lazyHintTextDrawContextPointer = tdcp.map(hintTextDrawContextPointerCache.apply))
+			}
+		}
+		override def withAllowLineBreaks(allowLineBreaks: Boolean): VariableTextContext = {
+			if (this.allowLineBreaks == allowLineBreaks)
+				this
+			else {
+				val tdcp = newLazyTextDrawContextPointer(lineBreaks = allowLineBreaks)
+				copy(allowLineBreaks = allowLineBreaks, lazyTextDrawContextPointer = tdcp,
+					lazyHintTextDrawContextPointer = tdcp.map(hintTextDrawContextPointerCache.apply))
+			}
+		}
 		override def withAllowTextShrink(allowTextShrink: Boolean): VariableTextContext =
 			copy(allowTextShrink = allowTextShrink)
 		
@@ -156,6 +209,19 @@ object VariableTextContext
 					customPromptFontPointer = customPromptFontPointer.map { _.map { _ * mod } })
 			}
 		}
+		
+		
+		// OTHER    -----------------------------
+		
+		private def newLazyTextDrawContextPointer(fontP: Changing[Font] = fontPointer,
+		                                          insetsP: Changing[StackInsets] = textInsetsPointer,
+		                                          colorP: Changing[Color] = textColorPointer,
+		                                          splitThresholdP: Option[Changing[Double]] = lineSplitThresholdPointer,
+		                                          alignment: Alignment = textAlignment,
+		                                          betweenLines: Double = betweenLinesMargin.optimal,
+		                                          lineBreaks: Boolean = allowLineBreaks) =
+			Lazy { textDrawContextPointerCache(fontP)(insetsP)(colorP)(splitThresholdP)((
+				alignment, betweenLines, lineBreaks)) }
 	}
 }
 

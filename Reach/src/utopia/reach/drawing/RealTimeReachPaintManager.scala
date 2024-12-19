@@ -5,7 +5,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.{Drawer, PaintManager, Priority}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorShade}
@@ -30,6 +32,9 @@ object RealTimeReachPaintManager
 	  * @param background Background color for filling the painted area (optional, call-by-name)
 	  * @param maxQueueSize The maximum amount of paint updates that can be queued before the whole component
 	  *                     is repainted instead (default = 30)
+	  * @param delayPaintingWhile A flag that contains true while painting should be delayed.
+	  *                           This may be the case, for example, during component size changes.
+	  *                           Default = never delay.
 	  * @param disableDoubleBuffering Whether double buffering should be disabled during draw operations.
 	  *                               This is to make the drawing process faster (default = true)
 	  * @param syncAfterDraw Whether display syncing should be activated after a single draw event has completed.
@@ -37,8 +42,10 @@ object RealTimeReachPaintManager
 	  * @return A new paint manager
 	  */
 	def apply(component: ReachComponentLike, background: => Option[Color] = None,
-	          maxQueueSize: Int = 30, disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true) =
-		new RealTimeReachPaintManager(component, background, maxQueueSize, disableDoubleBuffering, syncAfterDraw)
+	          maxQueueSize: Int = 30, delayPaintingWhile: Flag = AlwaysFalse,
+	          disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true) =
+		new RealTimeReachPaintManager(component, background, maxQueueSize, delayPaintingWhile,
+			disableDoubleBuffering, syncAfterDraw)
 }
 
 /**
@@ -49,7 +56,8 @@ object RealTimeReachPaintManager
   */
 // TODO: Add a position modifier (call by name) that affects all draw operations
 //  (used for moving window contents while still keeping component position as (0,0))
-class RealTimeReachPaintManager(component: ReachComponentLike, background: => Option[Color] = None, maxQueueSize: Int = 30,
+class RealTimeReachPaintManager(component: ReachComponentLike, background: => Option[Color] = None,
+                                maxQueueSize: Int = 30, delayPaintingFlag: Flag = AlwaysFalse,
                                 disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
 	extends PaintManager
 {
@@ -81,11 +89,8 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	
 	// IMPLEMENTED	---------------------------------
 	
-	override def paintWith(drawer: Drawer) = {
-		// Checks whether component size changed. Invalidates buffer if so.
-		checkForSizeChanges()
-		flatten().drawWith(drawer, component.position)
-	}
+	// Ensures the buffer is up-to-date and then paints the component
+	override def paintWith(drawer: Drawer) = buffer().drawWith(drawer, component.position)
 	
 	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match {
 		case Some(region) =>
@@ -191,13 +196,20 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	def averageShadeOf(area: Bounds) = ColorShade.forLuminosity(flatten().averageRelativeLuminanceOf(area))
 	
 	/**
+	  * Buffers the currently queued paint events
+	  * @return Buffered component image
+	  */
+	def buffer() = {
+		checkForSizeChanges()
+		flatten()
+	}
+	/**
 	  * @return Resets the buffer, so that the next draw operation will completely redraw the component contents
 	  */
 	def resetBuffer() = bufferPointer.clear()
 	
 	// Checks whether component size has changed since the last draw. Invalidates the drawn buffer if so.
-	private def checkForSizeChanges() =
-	{
+	private def checkForSizeChanges() = {
 		val currentSize = component.size
 		val sizeWasChanged = bufferSizePointer.mutate { old => (old != currentSize) -> currentSize }
 		if (sizeWasChanged)
@@ -315,19 +327,22 @@ class RealTimeReachPaintManager(component: ReachComponentLike, background: => Op
 	}
 	
 	private def paint(f: Drawer => Unit) = {
-		// Painting is performed in the AWT event thread
-		AwtEventThread.async {
-			if (disableDoubleBuffering) {
-				// Suppresses double buffering for the duration of the paint operation (optional)
-				val repaintManager = RepaintManager.currentManager(jComponent)
-				val wasDoubleBuffered = repaintManager.isDoubleBufferingEnabled
-				
-				repaintManager.setDoubleBufferingEnabled(false)
-				draw(f)
-				repaintManager.setDoubleBufferingEnabled(wasDoubleBuffered)
+		// Painting may be delayed
+		delayPaintingFlag.onceNotSet {
+			// Painting is performed in the AWT event thread
+			AwtEventThread.async {
+				if (disableDoubleBuffering) {
+					// Suppresses double buffering for the duration of the paint operation (optional)
+					val repaintManager = RepaintManager.currentManager(jComponent)
+					val wasDoubleBuffered = repaintManager.isDoubleBufferingEnabled
+					
+					repaintManager.setDoubleBufferingEnabled(false)
+					draw(f)
+					repaintManager.setDoubleBufferingEnabled(wasDoubleBuffered)
+				}
+				else
+					draw(f)
 			}
-			else
-				draw(f)
 		}
 	}
 	

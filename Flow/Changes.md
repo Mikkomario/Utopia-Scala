@@ -8,6 +8,7 @@
 - Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so
 - Added **UntilExternalFailureIterator**
 - Added **RepeatOneForeverIterator**
+- Added **LazilyInitializedChanging** that provides lazy **Changing** wrapping
 ### New methods
 - **IterableOnce**
   - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`

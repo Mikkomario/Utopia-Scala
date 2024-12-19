@@ -2,6 +2,7 @@
 
 ## v1.5 (in development)
 Variable context stuff
+Remember updates to the canvas painting (delays & window size preparations)
 
 ## v1.4 - 04.10.2024
 Adds mouse drag -support and fixes a memory-related bug in **ReachCanvas**. 

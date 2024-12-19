@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.image.SingleColorIcon
@@ -11,6 +11,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
 import utopia.reach.component.label.image.ViewImageAndTextLabel
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import java.nio.file.Paths
@@ -35,7 +36,7 @@ object ColoredViewImageAndTextLabelTest extends App
 	val imagePointer = indexPointer.map { options(_)._1 }
 	
 	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
-		framingF.variable.build(ViewImageAndTextLabel) { labelF =>
+		framingF.build(ViewImageAndTextLabel) { labelF =>
 			val f = labelF.withBackground(Color.yellow)
 			println(f.customDrawers)
 			val label = f.mapContext { _.withTextExpandingToRight }

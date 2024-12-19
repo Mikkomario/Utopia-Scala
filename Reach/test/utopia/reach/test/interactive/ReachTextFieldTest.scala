@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
@@ -14,6 +14,7 @@ import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

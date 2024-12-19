@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.Color
@@ -11,6 +11,7 @@ import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.layered.LayerPositioning.AlignedToSide
 import utopia.reach.container.layered.Layers
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

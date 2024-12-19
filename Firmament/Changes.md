@@ -2,6 +2,9 @@
 
 ## v1.4 (in development)
 Working on variable context
+### New methods
+- **AwtEventThread**
+  - Added `.later(...)`, which invokes `SwingUtilities.invokeLater(Runnable)`
 
 ## v1.3.1 - 04.10.2024
 A small update which adds component logging support, since most Flow-originating pointers now require it. 

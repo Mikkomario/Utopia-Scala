@@ -180,7 +180,9 @@ case class ContextualReachWindowFactory(context: ReachWindowContext2)(implicit e
 		
 		// Creates the window
 		val window = Window.contextual(canvas.parent.component, canvas.parent, parent, title,
-			context.getAnchor(canvas, _), disableAutoBoundsUpdates = disableAutoBoundsUpdates)
+			getAnchor = context.getAnchor(canvas, _),
+			prepareForSizeChange = Some(canvas.parent.prepareForWindowSizeChange),
+			disableAutoBoundsUpdates = disableAutoBoundsUpdates)
 		windowPointer.set(window)
 		
 		// Returns the canvas and the window
@@ -351,7 +353,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext2)(implicit e
 		// Resets cached stack sizes in order to make sure the sizes are set correctly
 		canvas.resetCachedSize()
 		window.resetCachedSize()
-		// TODO: Size optimization may fails sometimes, as the window has a minimum size (low priority bug)
+		// TODO: Size optimization may fail sometimes, as the window has a minimum size (low priority bug)
 		val windowSizeChanged = AwtEventThread.blocking {
 			// Optimizes window bounds based on up-to-date sizes
 			window.optimizeBounds()
@@ -451,7 +453,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
+	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticReachContentWindowContext, F],
 	                                         parent: Option[java.awt.Window] = None,
 	                                         title: LocalizedString = LocalizedString.empty,
 	                                         disableAutoBoundsUpdates: Boolean = false)

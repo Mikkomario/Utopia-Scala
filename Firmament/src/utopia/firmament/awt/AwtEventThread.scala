@@ -111,6 +111,14 @@ object AwtEventThread
 		else
 			_future(operation).waitFor().get
 	}
+	/**
+	  * Performs the specified operation as the last operation in the AWT event thread.
+	  * Unlike other functions in this interface, this method will never be run immediately
+	  * (unless maybe when the event thread is completely empty).
+	  * @param operation Operation to perform
+	  * @tparam U Arbitrary result type
+	  */
+	def later[U](operation: => U) = SwingUtilities.invokeLater { () => operation }
 	
 	private def _future[A](operation: => A) = {
 		val completionPromise = Promise[A]()

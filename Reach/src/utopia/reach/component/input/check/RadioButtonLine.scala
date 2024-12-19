@@ -95,7 +95,9 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 			}
 		// Repaints the component when drawn background color changes (if applicable)
 		if (drawsBackground)
-			context.backgroundPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => stack.repaint() }
+			context.backgroundPointer.addListenerWhile(parentHierarchy.linkPointer) { _ =>
+				stack.repaint()
+			}
 		stack
 	}
 }

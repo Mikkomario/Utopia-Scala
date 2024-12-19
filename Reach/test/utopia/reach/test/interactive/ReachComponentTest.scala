@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.component.Window
 import utopia.firmament.image.SingleColorIcon
@@ -19,6 +19,7 @@ import utopia.reach.component.label.text.{MutableTextLabel, TextLabel}
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusListener
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
@@ -50,7 +51,7 @@ object ReachComponentTest extends App
 					// Column (Centered)
 					stackF.centered.build(Mixed) { factories =>
 						// 1: Editable text label
-						val editableLabel = factories.variable(EditableTextLabel)
+						val editableLabel = factories(EditableTextLabel)
 							.withFocusListener(focusReporter("Label"))(EventfulPointer("Type Here"))
 						// 2: Button Row
 						val buttonStack = factories(Stack).related.row.build(Mixed) { factories =>

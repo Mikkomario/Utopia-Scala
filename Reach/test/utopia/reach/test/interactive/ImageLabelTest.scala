@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.image.Image
@@ -6,6 +6,7 @@ import utopia.paradigm.angular.Rotation
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.image.ImageLabel
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
@@ -26,5 +27,6 @@ object ImageLabelTest extends App
 	}
 	
 	window.display(centerOnParent = true)
+	window.setToCloseOnEsc()
 	start()
 }

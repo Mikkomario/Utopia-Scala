@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.enumeration.SizeCategory.Large
 import utopia.firmament.model.stack.StackSize
@@ -7,6 +7,7 @@ import utopia.genesis.util.Screen
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.container.multi.Collection
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import scala.util.Random
@@ -31,6 +32,7 @@ object ReachCollectionTest extends App
 		}
 	}
 	
+	window.setToCloseOnEsc()
 	window.setToExitOnClose()
 	window.display(centerOnParent = true)
 	start()

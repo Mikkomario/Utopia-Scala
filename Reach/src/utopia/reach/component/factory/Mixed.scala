@@ -28,7 +28,7 @@ case class Mixed(parentHierarchy: ComponentHierarchy)
 	def apply[F](factoryFactory: ComponentFactoryFactory[F]) = factoryFactory(parentHierarchy)
 }
 
-case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
+case class ContextualMixed[+N](parentHierarchy: ComponentHierarchy, context: N)
 	extends GenericContextualFactory[N, Any, ContextualMixed]
 {
 	// COMPUTED	-------------------------------
@@ -47,17 +47,19 @@ case class ContextualMixed[N](parentHierarchy: ComponentHierarchy, context: N)
 	// OTHER	-------------------------------
 	
 	/**
-	  * @param factoryFactory A component factory factory
+	  * @param factoryFactory A component factory -factory
+	  * @tparam N2 Type of context accepted by the specified factory
 	  * @tparam F Type of component factory
 	  * @return A specific type of component factory that uses this same hierarchy and context
 	  */
-	def generic[F[X <: N]](factoryFactory: Gccff[N, F]) = factoryFactory.withContext(parentHierarchy, context)
+	def generic[N2 >: N, F[X <: N2]](factoryFactory: Gccff[N2, F]): F[N2] =
+		factoryFactory.withContext(parentHierarchy, context)
 	/**
-	  * @param ff A component factory factory
+	  * @param ff A component factory -factory
 	  * @tparam F Type of contextual component factory
 	  * @return A contextual component factory from the specified factory that uses the context from this item
 	  */
-	def apply[F](ff: FromContextComponentFactoryFactory[N, F]) = ff.withContext(parentHierarchy, context)
+	def apply[F](ff: FromContextComponentFactoryFactory[N, F]): F = ff.withContext(parentHierarchy, context)
 }
 
 @deprecated("Deprecated for removal. With the addition of variable context classes, this should not be necessary anymore", "v1.5")

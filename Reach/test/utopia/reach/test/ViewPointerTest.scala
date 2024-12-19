@@ -22,13 +22,7 @@ object ViewPointerTest extends App
 	private val colorPointer = counterPointer.map[Color] { i => Hsl(Angle.circles((i % 10) / 10.0)) }
 	
 	private val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
-		framingF.build(ViewTextLabel) { labelF =>
-			labelF
-				.flatMapContext { c =>
-					colorPointer.mapWhile(labelF.parentHierarchy.linkPointer) { col => c.withTextColor(col) }
-				}
-				.apply(counterPointer)
-		}.toTuple
+		framingF.build(ViewTextLabel) { _.mapContext { _.withTextColorPointer(colorPointer) }(counterPointer) }.toTuple
 	}
 	
 	window.setToCloseOnEsc()

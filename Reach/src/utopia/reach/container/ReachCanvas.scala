@@ -7,13 +7,15 @@ import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.operator.Identity
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
@@ -302,29 +304,17 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	private val layoutUpdateQueue = Volatile.seq[Seq[ReachComponentLike]]()
 	private val updateFinishedQueue = Volatile.seq[() => Unit]()
 	
-	override val focusManager = new ReachFocusManager(CustomDrawPanel)
-	private val painterPointer = contentPointer.map { _.map { c =>
-		RealTimeReachPaintManager(c, Some(backgroundPointer.value).filter { _.alpha > 0 },
-			disableDoubleBuffering = !enableAwtDoubleBuffering)
-	} }
-	override val cursorManager = cursors.map { new ReachCursorManager(_) }
-	private val cursorSwapper = cursorManager.map { new CursorSwapper(_) }
-	/**
-	 * The drag and drop -manager used by this canvas
-	 */
-	lazy val dragAndDropManager = DragAndDropManager(this)
-	
 	/**
 	  * A pointer that contains the up-to-date bounds of this canvas
 	  */
 	val boundsPointer = EventfulPointer(Bounds.zero)
 	// Uses an immutable version of the position and size pointer locally, exposes mutable versions publicly
-	private val _positionPointer = boundsPointer.map { _.position }
+	private val _positionPointer = boundsPointer.strongMap { _.position }
 	/**
 	  * A pointer that contains the up-to-date position of this canvas' top-left corner
 	  */
 	lazy val positionPointer = IndirectPointer(_positionPointer) { position = _ }
-	private val _sizePointer = boundsPointer.map { _.size }
+	private val _sizePointer = boundsPointer.strongMap { _.size }
 	/**
 	  * A pointer that contains the up-to-date size of this canvas
 	  */
@@ -337,6 +327,42 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		case Right(c) => Right(c.mergeWith(_positionPointer) { _ + _ })
 		case Left(v) => Left(View { v.value + position })
 	}
+	
+	/**
+	  * Contains the bounds updating -flag of the containing window.
+	  * Updated when preparing for a window bounds update.
+	  */
+	private val windowUpdatingFlagPointer = EventfulPointer[Flag](AlwaysFalse)
+	/**
+	  * Contains true while the parent window's bounds are being updated,
+	  * assuming that this canvas is being notified of said updates.
+	  */
+	private val windowUpdatingFlag: Flag = windowUpdatingFlagPointer.flatMap(Identity)
+	private val windowNotUpdatingFlag = !windowUpdatingFlag
+	/**
+	  * Set to true whenever the position of the wrapped component is being updated.
+	  * Managed manually.
+	  */
+	private val componentPositionUpdatingFlag = ResettableFlag()
+	/**
+	  * Set to true whenever the size of the wrapped component is being updated.
+	  * Managed manually.
+	  */
+	private val componentSizeUpdatingFlag = ResettableFlag()
+	private val drawingShouldBeDelayedFlag = windowUpdatingFlag ||
+		(componentPositionUpdatingFlag || componentSizeUpdatingFlag)
+	
+	override val focusManager = new ReachFocusManager(CustomDrawPanel)
+	private val painterPointer = contentPointer.map { _.map { c =>
+		RealTimeReachPaintManager(c, Some(backgroundPointer.value).filter { _.alpha > 0 },
+			delayPaintingWhile = drawingShouldBeDelayedFlag, disableDoubleBuffering = !enableAwtDoubleBuffering)
+	} }
+	override val cursorManager = cursors.map { new ReachCursorManager(_) }
+	private val cursorSwapper = cursorManager.map { new CursorSwapper(_) }
+	/**
+	  * The drag and drop -manager used by this canvas
+	  */
+	lazy val dragAndDropManager = DragAndDropManager(this)
 	
 	override val mouseButtonHandler = MouseButtonStateHandler()
 	override val mouseMoveHandler = MouseMoveHandler()
@@ -358,14 +384,29 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	// When bounds get updated, updates the underlying component, also
-	_positionPointer.addContinuousListener { e => AwtEventThread.async { component.setLocation(e.newValue.toAwtPoint) } }
-	_sizePointer.addContinuousListener { e => AwtEventThread.async { component.setSize(e.newValue.toDimension) } }
+	_positionPointer.addListenerWhile(windowNotUpdatingFlag) { e =>
+		componentPositionUpdatingFlag.set()
+		AwtEventThread.async {
+			component.setLocation(e.newValue.toAwtPoint)
+			componentPositionUpdatingFlag.reset()
+		}
+		Continue
+	}
+	_sizePointer.addListenerWhile(windowNotUpdatingFlag) { e =>
+		componentSizeUpdatingFlag.set()
+		AwtEventThread.async {
+			component.setSize(e.newValue.toDimension)
+			componentSizeUpdatingFlag.reset()
+		}
+	}
 	
 	// Updates component background when appropriate
 	backgroundPointer.addContinuousListener { e =>
-		component.setBackground(e.newValue.toAwt)
-		component.setOpaque(e.newValue.alpha >= 1.0)
-		repaint()
+		AwtEventThread.async {
+			component.setBackground(e.newValue.toAwt)
+			component.setOpaque(e.newValue.alpha >= 1.0)
+			repaint()
+		}
 	}
 	
 	attachmentPointer.addContinuousListener { event =>
@@ -515,6 +556,26 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	def revalidate() = revalidateImplementation(this)
 	
 	/**
+	  * Prepares this canvas for an upcoming window size update
+	  * @param predictedWindowSize The predicted new window size
+	  * @param processingFlag Flag that is set to false once the window size update process completes
+	  */
+	def prepareForWindowSizeChange(predictedWindowSize: Size, processingFlag: Flag) = {
+		// Makes sure this canvas tracks the correct window updating -flag
+		windowUpdatingFlagPointer.value = processingFlag
+		// Updates canvas size to match the future window size
+		// (Note: the actual AWT component bounds are not updated until window bounds update finishes)
+		if (size != predictedWindowSize) {
+			componentSizeUpdatingFlag.set()
+			size = predictedWindowSize
+		}
+		// Updates component layout and prepares painting
+		// in order to optimize the initial draw speed after window resize
+		updateLayout()
+		currentPainter.foreach { _.buffer() }
+	}
+	
+	/**
 	  * Calculates the default window anchor position.
 	  * The anchor is placed at the center of the focused component by default.
 	  * If no component is in focus, a specific point within the window will be used instead.
@@ -524,7 +585,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	  * @param windowBounds Bounds of the resizing window (call-by-name)
 	  * @param defaultAlignment Alignment to use when no component is in focus.
 	  *                         E.g. When Left alignment is used, the window will expand to the right,
-	  *                         when BottomRight aligment is used, the window will expand up and left.
+	  *                         when BottomRight alignment is used, the window will expand up and left.
 	  *                         Default = Center = Window will attempt to expand equally on both / all sides.
 	  *
 	  * @return The anchor point to use at this time

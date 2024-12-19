@@ -1,12 +1,13 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
-import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.model.Border
+import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.cursor.DragTo
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

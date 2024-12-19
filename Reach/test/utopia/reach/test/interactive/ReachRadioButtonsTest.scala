@@ -1,9 +1,10 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

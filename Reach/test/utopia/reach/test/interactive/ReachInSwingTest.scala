@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
@@ -14,6 +14,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.AlignFrame
 import utopia.reach.drawing.MousePositionDrawer
+import utopia.reach.test.{ReachTestContext, TestCursors}
 
 import javax.swing.{JFrame, JPanel, WindowConstants}
 
@@ -24,7 +25,7 @@ import javax.swing.{JFrame, JPanel, WindowConstants}
   *     - A window with a yellow window, opening at the center of the screen
   *     - A black label at the center of an orange label, reading "test"
   *     - Whenever you type a character, that should modify the displayed text
-  *     - Whenver you click the label, that should change window color
+  *     - Whenever you click the label, that should change window color
   *
   * @author Mikko Hilpinen
   * @since 27.7.2023, v1.1

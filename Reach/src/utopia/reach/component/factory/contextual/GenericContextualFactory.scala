@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.{DualFormContext, HasContext}
+import utopia.firmament.context.HasContext
 import utopia.firmament.context.color.StaticColorContextLike
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.paradigm.color.Color
@@ -8,24 +8,6 @@ import utopia.paradigm.color.Color
 object GenericContextualFactory
 {
 	// EXTENSIONS	------------------------
-	
-	// Allows easier conversions between static and variable contexts
-	implicit class GenericDualFormContextualFactory[+N <: DualFormContext[NS, NV], NS <: Top, NV <: Top, Top, +Repr[N2 <: Top]]
-	(val f: GenericContextualFactory[N, Top, Repr])
-		extends AnyVal
-	{
-		/**
-		  * @return Copy of this factory utilizing the current context's "snapshot".
-		  *         If this factory is using / wrapping a variable context instance,
-		  *         the returned factory only uses the current state of that context,
-		  *         captured as a static context instance.
-		  */
-		def withCurrentContext = f.mapContext { _.current }
-		/**
-		  * @return Copy of this factory which supports variable context components.
-		  */
-		def variable = f.mapContext { _.toVariableContext }
-	}
 	
 	// TODO: This class doesn't implement automatic repaint. Consider removing or replacing this at some point.
 	// Works for all context types except base context

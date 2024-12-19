@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
@@ -6,6 +6,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
@@ -22,6 +23,8 @@ object ReachFramingTest extends App
 		framingF.expandingToRight.build(ViewTextLabel) { _.withBackground(Secondary)(pointer) }
 	}
 	
+	window.setToCloseOnEsc()
+	window.setToExitOnClose()
 	window.display(centerOnParent = true)
 	start()
 	

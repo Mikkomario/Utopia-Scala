@@ -44,6 +44,7 @@ object SliderTest extends App
 	}
 	
 	window.setToExitOnClose()
+	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
 	start()
 }

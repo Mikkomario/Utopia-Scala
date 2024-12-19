@@ -217,7 +217,7 @@ object VariableColorContext
 						val colorP = Lazy { backgroundDefaultTextColorPointerCache(p) }
 						colorP -> colorP.map { hintTextColorPointerCache(_) }
 				}
-				copy(backgroundPointer = backgroundPointer, lazyTextColorPointer = newLazyTextColorP,
+				copy(backgroundPointer = p, lazyTextColorPointer = newLazyTextColorP,
 					lazyHintTextColorPointer = newLazyHintColorP)
 			}
 		}

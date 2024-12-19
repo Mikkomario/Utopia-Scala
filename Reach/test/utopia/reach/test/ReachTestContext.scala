@@ -58,7 +58,7 @@ object ReachTestContext
 	val margins = Margins((cm * 0.5).round.toInt)
 	val baseContext = StaticBaseContext(actorHandler, font, colors, margins)
 	implicit val windowContext: StaticReachContentWindowContext =
-		ReachWindowContext2(WindowContext2(actorHandler), colors.primary.light)
+		ReachWindowContext2(WindowContext2(actorHandler, borderless = true), colors.primary.light)
 			.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 			.withContentContext(baseContext)
 	

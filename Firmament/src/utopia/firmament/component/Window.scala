@@ -11,6 +11,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
@@ -22,6 +23,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableFlag}
+import utopia.flow.view.template.eventful.Flag
 import utopia.flow.view.template.eventful.Flag._
 import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
@@ -95,6 +97,19 @@ object Window
 	  *                                      Default = the default specified in the Window object,
 	  *                                      which by default is 0.1 seconds.
 	  *                                      A warning is logged if this threshold is reached.
+	  * @param prepareForSizeChange A function called before each window size change.
+	  *                             If specified, accepts 2 values:
+	  *                                 1. The predicted new size of this window
+	  *                                 1. A flag that contains true as long
+	  *                                    as the window size update process is still pending
+	  *                                    (i.e. while the new size has not been fully applied).
+	  *
+	  *                            This function is called before the size change actually occurs,
+	  *                            giving time to prepare for the upcoming change.
+	  *                            Note: the size property of this window might not yet reflect this new value.
+	  *
+	  *                            None (default) if no preparation is performed.
+	  *
 	  * @param borderless          Whether this window is 'undecorated', i.e. has no OS headers or borders.
 	  *                            Set to true if you implement your own header,
 	  *                            or if you're creating a temporary pop-up window.
@@ -132,6 +147,7 @@ object Window
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
 	          getAnchor: Bounds => Point = _.center, icon: Image = ComponentCreationDefaults.windowIcon,
 	          maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
+	          prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
 	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
 	          ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
 	          disableAutoBoundsUpdates: Boolean = false)
@@ -142,8 +158,8 @@ object Window
 			case None => Right(new JFrame(title.string))
 		}
 		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins, getAnchor, icon,
-			maxInitializationWaitDuration, !borderless, fullScreen, !disableFocus, !ignoreScreenInsets,
-			enableTransparency, disableAutoBoundsUpdates)
+			maxInitializationWaitDuration, prepareForSizeChange, !borderless, fullScreen, !disableFocus,
+			!ignoreScreenInsets, enableTransparency, disableAutoBoundsUpdates)
 	}
 	
 	/**
@@ -158,6 +174,19 @@ object Window
 	  * @param getAnchor           A function for determining the so-called anchor position within this window's bounds on screen.
 	  *                            When this window is resized, the anchor position is not moved if at all possible.
 	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
+	  * @param prepareForSizeChange A function called before each window size change.
+	  *                             If specified, accepts 2 values:
+	  *                                 1. The predicted new size of this window
+	  *                                 1. A flag that contains true as long
+	  *                                    as the window size update process is still pending
+	  *                                    (i.e. while the new size has not been fully applied).
+	  *
+	  *                             This function is called before the size change actually occurs,
+	  *                             giving time to prepare for the upcoming change.
+	  *                             Note: the size property of this window might not yet reflect this new value.
+	  *
+	  *                             None (default) if no preparation is performed.
+	  *
 	  * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
 	  *                                      during the initialization process.
 	  *                                      The initialization occurs within the AWT event thread and by default
@@ -181,11 +210,12 @@ object Window
 	  */
 	def contextual(container: java.awt.Container, content: Stackable, parent: Option[java.awt.Window] = None,
 	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center,
+	               prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
 	               maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	               disableAutoBoundsUpdates: Boolean = false)
 	              (implicit context: WindowContext2, exc: ExecutionContext, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
-			context.screenBorderMargins, getAnchor, context.icon, maxInitializationWaitDuration,
+			context.screenBorderMargins, getAnchor, context.icon, maxInitializationWaitDuration, prepareForSizeChange,
 			!context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,
 			!context.screenInsetsEnabled, context.transparencyEnabled, disableAutoBoundsUpdates)
 }
@@ -194,7 +224,7 @@ object Window
   * Wraps an awt window, providing an interface for it.
   * Please note that this class doesn't handle component revalidation.
   * I.e. when the size of the content needs to be adjusted, this window will not recognize it by default.
-  * Please call [[resetCachedSize()]], [[optimizeBounds()]] and [[updateLayout()]] when you wish to "revalidate"
+  * Please call [[resetCachedSize]], [[optimizeBounds]] and [[updateLayout]] when you wish to "revalidate"
   * this window's layout.
   *
   * @author Mikko Hilpinen
@@ -219,6 +249,19 @@ object Window
   *                  Default = center = The center of this window will remain in the same place upon resize, if possible.
   * @param initialIcon Icon displayed on this window, initially.
   *                    Default = common default (see [[ComponentCreationDefaults]])
+  * @param prepareForSizeChange A function called before each window size change.
+  *                             If specified, accepts 2 values:
+  *                                 1. The predicted new size of this window
+  *                                 1. A flag that contains true as long
+  *                                    as the window size update process is still pending
+  *                                    (i.e. while the new size has not been fully applied).
+  *
+  *                             This function is called before the size change actually occurs,
+  *                             giving time to prepare for the upcoming change.
+  *                             Note: the size property of this window might not yet reflect this new value.
+  *
+  *                             None (default) if no preparation is performed.
+  *
   * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
   *                                      during the initialization process.
   *                                      The initialization occurs within the AWT event thread and by default
@@ -262,6 +305,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
              screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
              initialIcon: Image = ComponentCreationDefaults.windowIcon,
              maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
+             prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
              val hasBorders: Boolean = true, isFullScreen: Boolean = false, val isFocusable: Boolean = true,
              respectScreenInsets: Boolean = true, enableTransparency: Boolean = false,
              disableAutoBoundsUpdates: Boolean = false)
@@ -309,9 +353,20 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// Tracks situations where position and/or size are yet to update because the updates are performed within
 	// the AWT event thread
-	// BoundLocks contains unique instances for each pending position/size/bounds event
-	private val boundLocks = Volatile.eventful(Set[AnyRef]())
-	private val boundsUpdatingFlag = boundLocks.lightMap { _.nonEmpty }
+	private val pendingPositionUpdatesPointer = Volatile.eventful.emptySeq[Point]
+	private val pendingSizeUpdatesPointer = Volatile.eventful.emptySeq[Size]
+	/**
+	  * A flag that is set during window position updates
+	  */
+	val positionUpdatingFlag: Flag = pendingPositionUpdatesPointer.map { _.nonEmpty }
+	/**
+	  * A flag that is set during window size updates
+	  */
+	val sizeUpdatingFlag: Flag = pendingSizeUpdatesPointer.map { _.nonEmpty }
+	/**
+	  * A flag that is set during window bounds updates
+	  */
+	val boundsUpdatingFlag = positionUpdatingFlag || sizeUpdatingFlag
 	
 	/**
 	  * A flag that contains true whenever this window is fully visible
@@ -421,6 +476,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		parent += handler
 		handler
 	}
+	
+	override lazy val children: Seq[Component] = Single(content)
 	
 	
 	// INITIAL CODE ----------------
@@ -545,6 +602,14 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 					s"Warning: Window initialization process took more than ${
 						maxInitializationWaitDuration.description}. The process will be completed in another thread.")
 		}
+	
+	// May set up preparations for window size changes
+	prepareForSizeChange.foreach { prepare =>
+		pendingSizeUpdatesPointer.addListenerWhile(fullyVisibleFlag) { change =>
+			if (change.oldValue.isEmpty)
+				change.newValue.lastOption.foreach { prepare(_, sizeUpdatingFlag) }
+		}
+	}
 	
 	
 	// COMPUTED    ----------------
@@ -722,20 +787,18 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	override def position = _positionPointer.value
 	override def position_=(newPosition: Point) = {
 		if (newPosition != position) {
-			val lock = startBoundsUpdate()
+			startPositionUpdate(newPosition)
 			pendingAnchor.clear()
 			_positionPointer.value = newPosition
-			AwtEventThread.async {
-				component.setLocation(newPosition.toAwtPoint)
-				completeBoundsUpdate(lock)
-			}
+			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
+			queuePositionUpdateFinish(newPosition)
 		}
 	}
 	
 	override def size = _sizePointer.value
 	override def size_=(newSize: Size) = {
 		if (newSize != size) {
-			val lock = startBoundsUpdate()
+			startSizeUpdate(newSize)
 			// Remembers the anchor position for repositioning
 			if (isFullyVisible)
 				pendingAnchor.setOne(absoluteAnchorPosition)
@@ -744,27 +807,29 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			AwtEventThread.async {
 				component.setPreferredSize(dims)
 				component.setSize(dims)
-				completeBoundsUpdate(lock)
 			}
+			queueSizeUpdateFinish(newSize)
 		}
 	}
 	
 	override def bounds: Bounds = _boundsPointer.value
 	override def bounds_=(b: Bounds): Unit = {
 		if (b != bounds) {
-			val lock = startBoundsUpdate()
+			startPositionUpdate(b.position)
+			startSizeUpdate(b.size)
 			pendingAnchor.clear()
 			_sizePointer.value = b.size
 			_positionPointer.value = b.position
 			AwtEventThread.async {
 				component.setPreferredSize(b.size.toDimension)
 				component.setBounds(b.toAwt)
-				completeBoundsUpdate(lock)
+			}
+			AwtEventThread.later {
+				finishPositionUpdate(b.position)
+				finishSizeUpdate(b.size)
 			}
 		}
 	}
-	
-	override def children: Seq[Component] = Single(content)
 	
 	override def calculatedStackSize = {
 		val availableScreenSize = if (respectScreenInsets) screenSize - screenInsets.total else screenSize
@@ -931,7 +996,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * Checks this window's bounds against the current stackSize.
 	  * For optimal results, the stackSize of this window and the main contents should be up-to-date
-	  * (see [[resetCachedSize()]]).
+	  * (see [[resetCachedSize]]).
 	  *
 	  * @param dictateSize Whether this window should dictate the resulting size.
 	  *
@@ -945,16 +1010,32 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * @return Whether the size of this window changes as a result of this function.
 	  *         The result might not be immediate (it is performed on the AWT event thread)
 	  */
+	// TODO: inform the component of the incoming resize, so that it can (for example) prepare painting
 	def optimizeBounds(dictateSize: Boolean = resizeLogic.allowsProgramResize) = {
 		val sizeAtStart = size
 		// Case: Full screen => Sets optimal size and moves to top-left
 		if (isFullScreen) {
 			val newBounds = Bounds(if (respectScreenInsets) screenInsets.toPoint else Point.origin, stackSize.optimal)
 				.round
+			val newPosition = newBounds.position
+			val newSize = newBounds.size
+			
+			// Enters "updating bounds" -mode
+			startPositionUpdate(newPosition)
+			startSizeUpdate(newSize)
+			
 			// Prevents the user from making this window too small
 			if (resizeLogic.allowsUserResize)
 				AwtEventThread.async { component.setMinimumSize(stackSize.min.toDimension) }
+				
 			bounds = newBounds
+			
+			// Makes sure the "updating bounds" -mode finishes
+			AwtEventThread.later {
+				finishPositionUpdate(newPosition)
+				finishSizeUpdate(newSize)
+			}
+			
 			sizeAtStart != newBounds.size
 		}
 		// Case: Windowed mode => Either dictates the new size or just makes sure its within limits
@@ -967,7 +1048,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				// Case: Only optimizes =>
 				// Checks whether the current size follows the limits placed by the stack size and modifies if necessary
 				else
-					size.mergeWith(stackSize) { (current, limit) =>
+					size
+						.mergeWith(stackSize) { (current, limit) =>
 						// Checks min
 						if (current < limit.min)
 							limit.min
@@ -983,6 +1065,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 							}
 					}
 			}.round
+			
+			// Goes into "bounds updating" mode
+			startSizeUpdate(newSize)
+			
 			// Prevents the user from resizing too much
 			if (resizeLogic.allowsUserResize) {
 				AwtEventThread.async {
@@ -995,6 +1081,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				}
 			}
 			size = newSize
+			// Makes sure the bounds update finishes (in case window size didn't actually change)
+			queueSizeUpdateFinish(newSize)
+			
 			sizeAtStart != newSize
 		}
 	}
@@ -1023,23 +1112,45 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 	}
 	
-	// Marks that some variant of setBounds is pending
-	// Returns the lock to release
-	private def startBoundsUpdate() = {
-		val lock = new AnyRef()
-		boundLocks.update { _ + lock }
-		lock
+	// WET WET
+	private def startPositionUpdate(newPosition: Point) =
+		pendingPositionUpdatesPointer.update { queued =>
+			if (queued.lastOption.contains(newPosition)) queued else queued :+ newPosition
+		}
+	private def finishPositionUpdate(newPosition: Point) =
+		pendingPositionUpdatesPointer.update { updates =>
+			updates.findIndexOf(newPosition) match {
+				case Some(updateIndex) => updates.drop(updateIndex + 1)
+				case None => updates
+			}
+		}
+	private def queuePositionUpdateFinish(newPosition: Point) =
+		AwtEventThread.later { finishPositionUpdate(newPosition) }
+	
+	private def startSizeUpdate(newSize: Size) =
+		pendingSizeUpdatesPointer.update { queued =>
+			if (queued.lastOption.contains(newSize)) queued else queued :+ newSize
+		}
+	private def finishSizeUpdate(newSize: Size) = pendingSizeUpdatesPointer.update { updates =>
+		updates.findIndexOf(newSize) match {
+			case Some(updateIndex) => updates.drop(updateIndex + 1)
+			case None => updates
+		}
 	}
-	private def completeBoundsUpdate(lock: AnyRef) = boundLocks.update { _ - lock }
+	private def queueSizeUpdateFinish(newSize: Size) = AwtEventThread.later { finishSizeUpdate(newSize) }
 	
 	private def centerOn(component: java.awt.Component) = {
 		if (isNotFullScreen) {
-			val lock = startBoundsUpdate()
-			pendingAnchor.clear()
-			AwtEventThread.async {
-				this.component.setLocationRelativeTo(component)
-				completeBoundsUpdate(lock)
+			val estimatedNewPosition = {
+				if (component == null)
+					(Screen.size / 2 - size / 2).toPoint.floor
+				else
+					(Bounds.fromAwt(component.getBounds).center - size / 2).floor
 			}
+			startPositionUpdate(estimatedNewPosition)
+			pendingAnchor.clear()
+			AwtEventThread.async { this.component.setLocationRelativeTo(component) }
+			queuePositionUpdateFinish(estimatedNewPosition)
 		}
 	}
 	
@@ -1087,8 +1198,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		override def componentShown(e: ComponentEvent) = _visibleFlag.set()
 		override def componentHidden(e: ComponentEvent) = _visibleFlag.reset()
 		
-		override def componentMoved(e: ComponentEvent) = _positionPointer.value = Point.of(component.getLocation)
+		override def componentMoved(e: ComponentEvent) = {
+			// Updates the position pointer
+			val newPosition = Point.of(component.getLocation)
+			_positionPointer.value = newPosition
+			
+			// Clears the pending update that (may have) caused this change
+			finishPositionUpdate(newPosition)
+		}
 		override def componentResized(e: ComponentEvent) = {
+			// Updates the size pointer
 			val newSize = Size(component.getSize)
 			_sizePointer.value = newSize
 			
@@ -1104,6 +1223,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				// Makes sure screen borders are respected, also.
 				positionWithinScreen(position - (newAnchor - anchor))
 			}
+			
+			// Clears the pending update that (may have) caused this change
+			finishSizeUpdate(newSize)
 		}
 	}
 	private object WindowStateListener extends WindowAdapter

@@ -62,9 +62,11 @@ object StaticTextContext
 		override def promptFont: Font = customPromptFont.getOrElse(font)
 		
 		override def current = this
-		override def toVariableContext = VariableTextContext(base, textAlignment, customPromptFont.map(Fixed.apply),
-			Some(Fixed(textInsets)), lineSplitThreshold.map(Fixed.apply), Some(betweenLinesMargin),
-			allowLineBreaks, allowTextShrink)
+		override def toVariableContext = {
+			VariableTextContext(base, textAlignment, customPromptFont.map(Fixed.apply),
+				Some(Fixed(textInsets)), lineSplitThreshold.map(Fixed.apply), Some(betweenLinesMargin),
+				allowLineBreaks, allowTextShrink)
+		}
 		
 		override def withDefaultPromptFont =
 			if (customPromptFont.isEmpty) this else copy(customPromptFont = None)

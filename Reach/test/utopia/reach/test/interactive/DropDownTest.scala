@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
@@ -13,7 +13,7 @@ import utopia.reach.component.input.selection.DropDown
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
-import utopia.reach.context.ReachContentWindowContext.apply
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
@@ -39,7 +39,7 @@ object DropDownTest extends App
 	val window = ReachWindow.contentContextual.withWindowBackground(colors.gray.light)
 		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
 			framingF.build(Stack) { stackF =>
-				stackF.mapContext { _.forTextComponents.borderless.nonResizable }.related.variable.build(baseDdf) { ddF =>
+				stackF.related.mapContext { _.forTextComponents.borderless.nonResizable }.build(baseDdf) { ddF =>
 					val selectedCategoryPointer = EventfulPointer[Option[String]](None)
 					val selectedItemPointer = EventfulPointer[Option[String]](None)
 					

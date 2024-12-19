@@ -47,7 +47,7 @@ object SelectionListTest extends App
 						// Selection list
 						val list = listF.apply(contentPointer, valuePointer,
 							alternativeKeyCondition = true) { (hierarchy, item: Int) =>
-							MutableViewTextLabel(hierarchy).withContext(listF.contextPointer.value)
+							MutableViewTextLabel(hierarchy).withContext(listF.context.current)
 								.mapTextInsets { _.mapRight { i => i + margins.large }.expandingToRight }
 								.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))
 								.apply(item, DisplayFunction.interpolating("Label %s"))

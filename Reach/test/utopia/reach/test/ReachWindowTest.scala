@@ -19,7 +19,7 @@ object ReachWindowTest extends App
 	
 	val textPointer = EventfulPointer("Text")
 	
-	val window = ReachWindow.withResizeLogic(User)
+	val window = ReachWindow.withResizeLogic(User)//.borderless
 		.withWindowBackground(colors.primary.default).muchLarger
 		.withTextInsetsScaledBy(4).withoutShrinkingText.withLineSplitThreshold(Screen.width / 3.0)
 		.using(ViewTextLabel, title = "Test") { (_, f) =>
