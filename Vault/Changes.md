@@ -5,11 +5,14 @@
 - Automatically generated joins from a **ReferencePoint** may now include a join from the specified point, 
   when the targeted table is one of the listed options
 - **NullDeprecatableView**`.deprecate()` now includes the whole access target, not only the primary table
+- **FromRowFactory** would previously consider distinct rows as duplicates in situations 
+  where row primary keys were not included in the used select statement.
 ### New features
 - Added **ConsoleCommands**, which provides some utility database commands for command line consoles
 ### New methods
 - **ConditionElement**
   - Added `.length` for string length-based conditions
+  - Added `.in(IntSet, Int)` for generating conditions with a limited number of targeted elements
 - **ConnectionPool**
   - Added `.logging(...)`
 - **FromRowFactory**

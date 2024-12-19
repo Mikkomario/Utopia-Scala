@@ -99,8 +99,8 @@ case class Row(columnData: Map[Table, Model], otherData: Model = Model.empty)
     /**
      * Finds the index of the row in the specified table
      */
-    def indexForTable(table: Table) = table.primaryColumn.map { column => apply(table)(column.name) }
-        .getOrElse(Value.empty)
+    def indexForTable(table: Table) =
+        table.primaryColumn.map { column => apply(table)(column.name) }.getOrElse(Value.empty)
     
     /**
       * Checks whether this row contains any data for the specified table

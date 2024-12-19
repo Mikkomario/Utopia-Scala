@@ -312,8 +312,8 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	// (Only works when all included tables use indexing)
 	private def fromUniqueRows[B](rows: Seq[Row])(parse: Row => Option[B]) = {
 		val indices = tables.flatMap { table => table.primaryColumn }
-		if (indices.hasSize.of(tables))
-			rows.view.distinctBy { row => indices.map(row.apply) }.flatMap(parse).toVector
+		if (indices.hasSize.of(tables) && rows.view.take(4).exists { row => indices.forall { row(_).isDefined } })
+			rows.view.distinctBy { row => indices.map(row.apply) }.flatMap(parse).toOptimizedSeq
 		else
 			rows.flatMap(parse)
 	}

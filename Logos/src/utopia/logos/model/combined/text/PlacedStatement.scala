@@ -18,6 +18,9 @@ object PlacedStatement
 	// NESTED   -----------------------
 	
 	private case class _PlacedStatement(statement: StoredStatement, placement: TextPlacement) extends PlacedStatement
+	{
+		override protected def wrap(factory: StoredStatement): PlacedStatement = copy(statement = factory)
+	}
 }
 
 /**
@@ -25,4 +28,6 @@ object PlacedStatement
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait PlacedStatement extends PlacedStatementLike[PlacedStatement, TextPlacement, TextPlacementData]
+trait PlacedStatement
+	extends CombinedStatement[PlacedStatement]
+		with PlacedStatementLike[PlacedStatement, TextPlacement, TextPlacementData]

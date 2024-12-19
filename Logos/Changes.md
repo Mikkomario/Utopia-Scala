@@ -1,5 +1,13 @@
 # Utopia Logos - List of Changes
 
+## v0.3.1 (in development)
+### New features
+- Added **DetailedStatement** class
+- Added **CombinedStatement** trait
+### Other changes
+- **StatedWord** now extends **Placed**
+- **PlacedStatement** now extends **CombinedStatement**
+
 ## v0.3 - 04.10.2024
 A major refactoring update with the aim of standardizing the model and package structure. 
 This update focuses especially on the generic statement-linking traits.
