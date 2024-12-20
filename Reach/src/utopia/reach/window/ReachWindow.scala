@@ -4,7 +4,7 @@ import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.context.text.StaticTextContext
-import utopia.firmament.context.window.WindowContext2
+import utopia.firmament.context.window.WindowContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
@@ -33,7 +33,7 @@ import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
-import utopia.reach.context.{ReachWindowContext2, ReachWindowContextWrapper2, StaticReachContentWindowContext}
+import utopia.reach.context.{ReachWindowContext, ReachWindowContextWrapper, StaticReachContentWindowContext}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -62,7 +62,7 @@ object ReachWindow
 	  * @param log Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def contextual(implicit context: ReachWindowContext2, exc: ExecutionContext, log: Logger) =
+	def contextual(implicit context: ReachWindowContext, exc: ExecutionContext, log: Logger) =
 		withContext(context)
 	/**
 	  * @param context Implicit popup window creation context
@@ -82,7 +82,7 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def withContext(context: ReachWindowContext2)(implicit exc: ExecutionContext, log: Logger) =
+	def withContext(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger) =
 		ContextualReachWindowFactory(context)
 	/**
 	 * @param context Window creation context
@@ -100,23 +100,23 @@ object ReachWindow
 	  * @return A new reach window factory that uses the default context
 	  */
 	def apply(actorHandler: ActorHandler, background: Color)(implicit exc: ExecutionContext, log: Logger) =
-		withContext(ReachWindowContext2(WindowContext2(actorHandler), background))
+		withContext(ReachWindowContext(WindowContext(actorHandler), background))
 }
 
-case class ContextualReachWindowFactory(context: ReachWindowContext2)(implicit exc: ExecutionContext, log: Logger)
-	extends ReachWindowContextWrapper2[ReachWindowContext2, ContextualReachWindowFactory, ReachContentWindowFactory]
+case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger)
+	extends ReachWindowContextWrapper[ReachWindowContext, ContextualReachWindowFactory, ReachContentWindowFactory]
 {
 	// ATTRIBUTES   ---------------
 	
-	private implicit val c: ReachWindowContext2 = context
+	private implicit val c: ReachWindowContext = context
 	
 	
 	// IMPLEMENTED  ---------------
 	
 	override def self: ContextualReachWindowFactory = this
 	
-	override def windowContext: ReachWindowContext2 = context
-	override def withWindowContext(base: ReachWindowContext2): ContextualReachWindowFactory = copy(context = base)
+	override def windowContext: ReachWindowContext = context
+	override def withWindowContext(base: ReachWindowContext): ContextualReachWindowFactory = copy(context = base)
 	
 	override def withContentContext(textContext: StaticTextContext) =
 		ReachContentWindowFactory(this, context.withContentContext(textContext))
@@ -124,8 +124,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext2)(implicit e
 	
 	// OTHER    ------------------
 	
-	def withContext(context: ReachWindowContext2) = copy(context)
-	def mapContext(f: Mutate[ReachWindowContext2]) = withContext(f(context))
+	def withContext(context: ReachWindowContext) = copy(context)
+	def mapContext(f: Mutate[ReachWindowContext]) = withContext(f(context))
 	
 	/**
 	  * Creates a new reach window instance

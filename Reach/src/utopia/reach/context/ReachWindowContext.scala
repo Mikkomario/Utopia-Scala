@@ -1,7 +1,7 @@
 package utopia.reach.context
 
-import utopia.firmament.context.WindowContext
 import utopia.firmament.context.text.StaticTextContext
+import utopia.firmament.context.window.{WindowContext, WindowContextWrapper}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -12,7 +12,6 @@ import utopia.reach.cursor.CursorSet
 
 import scala.language.implicitConversions
 
-@deprecated("Replaced with a new version", "v1.5")
 object ReachWindowContext
 {
 	// OTHER    -----------------------
@@ -45,25 +44,25 @@ object ReachWindowContext
 	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color,
 	                                       cursors: Option[CursorSet], revalidationStyle: RevalidationStyle,
 	                                       getAnchor: (ReachCanvas, Bounds) => Point)
-		extends ReachWindowContext
+		extends ReachWindowContext with WindowContextWrapper[WindowContext, ReachWindowContext]
 	{
-		override def self: ReachWindowContext = this
+		override def self = this
 		
 		override def transparent =
 			super.transparent.mapWindowBackground { _.withAlpha(0.0) }
 		
-		override def withWindowBackground(bg: Color): ReachWindowContext = copy(windowBackground = bg)
-		override def withCursors(cursors: Option[CursorSet]): ReachWindowContext = copy(cursors = cursors)
-		override def withRevalidationStyle(style: RevalidationStyle): ReachWindowContext =
+		override def withWindowBackground(bg: Color) = copy(windowBackground = bg)
+		override def withCursors(cursors: Option[CursorSet]) = copy(cursors = cursors)
+		override def withRevalidationStyle(style: RevalidationStyle) =
 			copy(revalidationStyle = style)
-		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): ReachWindowContext =
+		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point) =
 			copy(getAnchor = getAnchor)
 		
-		override def withWindowContext(base: WindowContext): ReachWindowContext =
+		override def withWindowContext(base: WindowContext) =
 			if (base == windowContext) self else copy(windowContext = base)
 		
-		override def withContentContext(textContext: StaticTextContext): ReachContentWindowContext =
-			ReachContentWindowContext(this, textContext)
+		override def withContentContext(textContext: StaticTextContext) =
+			StaticReachContentWindowContext(this, textContext)
 	}
 }
 
@@ -72,5 +71,5 @@ object ReachWindowContext
   * @author Mikko Hilpinen
   * @since 13.4.2023, v1.0
   */
-@deprecated("Replaced with a new version", "v1.5")
-trait ReachWindowContext extends ReachWindowContextLike[ReachWindowContext, ReachContentWindowContext] with WindowContext
+trait ReachWindowContext
+	extends WindowContext with ReachWindowContextCopyable[ReachWindowContext, StaticReachContentWindowContext]

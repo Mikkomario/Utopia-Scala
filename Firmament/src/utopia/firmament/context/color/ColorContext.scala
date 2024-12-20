@@ -1,7 +1,7 @@
 package utopia.firmament.context.color
 
-import utopia.firmament.context.base.BaseContext2
-import utopia.firmament.context.text.TextContext2
+import utopia.firmament.context.base.BaseContext
+import utopia.firmament.context.text.TextContext
 
 /**
   * Common trait for context instances which specify a background color (view),
@@ -9,4 +9,4 @@ import utopia.firmament.context.text.TextContext2
   * @author Mikko Hilpinen
   * @since 27.4.2020, Reflection v1.2
   */
-trait ColorContext2 extends BaseContext2 with ColorContextCopyable[ColorContext2, TextContext2]
+trait ColorContext extends BaseContext with ColorContextCopyable[ColorContext, TextContext]

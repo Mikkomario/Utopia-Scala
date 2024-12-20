@@ -1,6 +1,6 @@
 package utopia.firmament.context.text
 
-import utopia.firmament.context.color.ColorContextWrapper2
+import utopia.firmament.context.color.ColorContextWrapper
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.view.template.eventful.Changing
@@ -14,8 +14,8 @@ import utopia.paradigm.enumeration.Alignment
   * @author Mikko Hilpinen
   * @since 09.10.2024, v1.4
   */
-trait TextContextWrapper2[Base <: TextContextCopyable[Base], +Repr]
-	extends ColorContextWrapper2[Base, Repr] with TextContextCopyable[Repr]
+trait TextContextWrapper[Base <: TextContextCopyable[Base], +Repr]
+	extends ColorContextWrapper[Base, Repr] with TextContextCopyable[Repr]
 {
 	override def textAlignment: Alignment = base.textAlignment
 	override def betweenLinesMargin: StackLength = base.betweenLinesMargin

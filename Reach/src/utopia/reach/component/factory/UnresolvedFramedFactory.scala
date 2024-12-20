@@ -1,6 +1,6 @@
 package utopia.reach.component.factory
 
-import utopia.firmament.context.base.BaseContext2
+import utopia.firmament.context.base.BaseContext
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.util.EitherExtensions._
@@ -79,7 +79,7 @@ trait UnresolvedFramedFactory[+Repr]
 	  * @param context Context in which the insets are resolved (implicit)
 	  * @return Resolved insets
 	  */
-	def resolveInsetsIn(implicit context: BaseContext2) =
+	def resolveInsetsIn(implicit context: BaseContext) =
 		StackInsets.withSides(insets.sides.view.mapValues { _.rightOrMap { context.margins.around(_) } }.toMap)
 	
 	
@@ -93,7 +93,7 @@ trait UnresolvedFramedFactory[+Repr]
 	  * @return A pointer that resolves into the applied insets, based on the applicable context
 	  */
 	@deprecated("Deprecated for removal. Please use .resolveInsetsIn", "v1.4")
-	def resolveVariableInsets(contextPointer: Changing[BaseContext2], hierarchy: => ComponentHierarchy) = {
+	def resolveVariableInsets(contextPointer: Changing[BaseContext], hierarchy: => ComponentHierarchy) = {
 		val i = insets
 		if (i.lengthsIterator.forall { _.isRight })
 			Fixed(StackInsets.withSides(i.sides.view.mapValues { _.toOption.get }.toMap))

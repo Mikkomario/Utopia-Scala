@@ -1,6 +1,6 @@
 package utopia.firmament.context.text
 
-import utopia.firmament.context.color.{ColorContext2, VariableColorContext, VariableColorContextWrapper}
+import utopia.firmament.context.color.{ColorContext, VariableColorContext, VariableColorContextWrapper}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.firmament.model.{Margins, TextDrawContext}
@@ -67,7 +67,7 @@ object VariableTextContext
 	  *                        (default = false)
 	  * @return A new context applying the specified settings
 	  */
-	def apply(base: ColorContext2, alignment: Alignment = Alignment.Left,
+	def apply(base: ColorContext, alignment: Alignment = Alignment.Left,
 	          promptFontPointer: Option[Changing[Font]] = None, textInsetsPointer: Option[Changing[StackInsets]] = None,
 	          lineSplitThresholdPointer: Option[Changing[Double]] = None, betweenLinesMargin: Option[StackLength] = None,
 	          allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false): VariableTextContext =
@@ -232,4 +232,4 @@ object VariableTextContext
   * @since 05.10.2024, v1.4
   */
 trait VariableTextContext
-	extends VariableColorContext with TextContext2 with VariableTextContextLike[VariableTextContext]
+	extends VariableColorContext with TextContext with VariableTextContextLike[VariableTextContext]

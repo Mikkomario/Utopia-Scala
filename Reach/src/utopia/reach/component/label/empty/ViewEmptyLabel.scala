@@ -1,6 +1,6 @@
 package utopia.reach.component.label.empty
 
-import utopia.firmament.context.color.{ColorContext2, ColorContextPropsView}
+import utopia.firmament.context.color.{ColorContext, ColorContextPropsView}
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
@@ -130,14 +130,14 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Rep
 case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
                                  settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ViewEmptyLabelFactory]
-		with FromContextFactory[ColorContext2, ContextualViewEmptyLabelFactory]
+		with FromContextFactory[ColorContext, ContextualViewEmptyLabelFactory]
 {
 	// IMPLEMENTED  ------------------------------
 	
 	override protected def withSettings(settings: ViewEmptyLabelSettings): ViewEmptyLabelFactory =
 		copy(settings = settings)
 	
-	override def withContext(context: ColorContext2) =
+	override def withContext(context: ColorContext) =
 		ContextualViewEmptyLabelFactory(parentHierarchy, context, settings)
 	
 	
@@ -182,10 +182,10 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 		withBackground(backgroundPointer).apply(stackSizePointer)
 }
 
-case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext2,
+case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
                                            settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ContextualViewEmptyLabelFactory]
-		with ContextualFactory[ColorContext2, ContextualViewEmptyLabelFactory]
+		with ContextualFactory[ColorContext, ContextualViewEmptyLabelFactory]
 		with ContextualVariableBackgroundAssignable[ColorContextPropsView, ContextualViewEmptyLabelFactory]
 {
 	// COMPUTED -----------------------------------
@@ -217,7 +217,7 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 		mapSettings { _.copy(drawersPointer = drawersPointer) }
 	override protected def withBackground(background: Either[Color, Changing[Color]]): ContextualViewEmptyLabelFactory =
 		mapSettings { _.copy(backgroundPointer = Some(background)) }
-	override def withContext(newContext: ColorContext2) = copy(context = newContext)
+	override def withContext(newContext: ColorContext) = copy(context = newContext)
 }
 
 /**

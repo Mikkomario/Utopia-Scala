@@ -1,7 +1,7 @@
 package utopia.reach.test
 
 import utopia.firmament.context.base.StaticBaseContext
-import utopia.firmament.context.window.WindowContext2
+import utopia.firmament.context.window.WindowContext
 import utopia.firmament.context.{AnimationContext, ScrollingContext}
 import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
@@ -19,7 +19,7 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.transform.Adjustment
-import utopia.reach.context.{ReachWindowContext2, StaticReachContentWindowContext}
+import utopia.reach.context.{ReachWindowContext, StaticReachContentWindowContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -58,7 +58,7 @@ object ReachTestContext
 	val margins = Margins((cm * 0.5).round.toInt)
 	val baseContext = StaticBaseContext(actorHandler, font, colors, margins)
 	implicit val windowContext: StaticReachContentWindowContext =
-		ReachWindowContext2(WindowContext2(actorHandler, borderless = true), colors.primary.light)
+		ReachWindowContext(WindowContext(actorHandler, borderless = true), colors.primary.light)
 			.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
 			.withContentContext(baseContext)
 	

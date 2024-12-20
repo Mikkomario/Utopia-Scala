@@ -105,4 +105,4 @@ object StaticBaseContext
   * @author Mikko Hilpinen
   * @since 29.09.2024, v1.4
   */
-trait StaticBaseContext extends BaseContext2 with StaticBaseContextLike[StaticBaseContext, StaticColorContext]
+trait StaticBaseContext extends BaseContext with StaticBaseContextLike[StaticBaseContext, StaticColorContext]

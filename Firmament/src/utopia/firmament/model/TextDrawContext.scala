@@ -1,6 +1,6 @@
 package utopia.firmament.model
 
-import utopia.firmament.context.TextContext
+import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -14,9 +14,9 @@ object TextDrawContext
 	  * @return A new text draw context with settings from the component creation context
 	  */
 	@deprecated("Please use StaticTextContext.textDrawContext instead", "v1.4")
-	def contextual(implicit context: TextContext) = createContextual()
+	def contextual(implicit context: StaticTextContext) = context.textDrawContext
 	@deprecated("Please use StaticTextContext.hintTextDrawContext instead", "v1.4")
-	def contextualHint(implicit context: TextContext) = createContextual(isHint = true)
+	def contextualHint(implicit context: StaticTextContext) = context.hintTextDrawContext
 	
 	/**
 	  * Creates a new text draw context utilizing a component creation context
@@ -25,9 +25,8 @@ object TextDrawContext
 	  * @return A new text draw context with settings from the component creation context
 	  */
 	@deprecated("Please use StaticTextContext.textDrawContextFor(Boolean) instead", "v1.4")
-	def createContextual(isHint: Boolean = false)(implicit context: TextContext) =
-		TextDrawContext(context.font, if (isHint) context.hintTextColor else context.textColor, context.textAlignment,
-			context.textInsets, context.lineSplitThreshold, context.betweenLinesMargin.optimal, context.allowLineBreaks)
+	def createContextual(isHint: Boolean = false)(implicit context: StaticTextContext) =
+		context.textDrawContextFor(isHint)
 }
 
 /**

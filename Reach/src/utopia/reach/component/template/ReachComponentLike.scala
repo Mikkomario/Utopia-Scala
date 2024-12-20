@@ -20,7 +20,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
-import utopia.reach.context.ReachWindowContext2
+import utopia.reach.context.ReachWindowContext
 import utopia.reach.window.ReachWindow
 
 import scala.concurrent.ExecutionContext
@@ -349,7 +349,7 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 	                                             matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                             display: Boolean = false)
 	                                            (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                            (implicit context: ReachWindowContext2, exc: ExecutionContext,
+	                                            (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{
 		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title,

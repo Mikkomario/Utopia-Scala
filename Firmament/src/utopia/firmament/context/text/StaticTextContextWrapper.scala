@@ -10,7 +10,7 @@ import utopia.genesis.text.Font
   * @since 09.10.2024, v1.4
   */
 trait StaticTextContextWrapper[Base <: StaticTextContextLike[Base], +Repr]
-	extends StaticColorContextWrapper[Base, Repr] with TextContextWrapper2[Base, Repr] with StaticTextContextLike[Repr]
+	extends StaticColorContextWrapper[Base, Repr] with TextContextWrapper[Base, Repr] with StaticTextContextLike[Repr]
 {
 	override def promptFont: Font = base.promptFont
 	override def textInsets: StackInsets = base.textInsets

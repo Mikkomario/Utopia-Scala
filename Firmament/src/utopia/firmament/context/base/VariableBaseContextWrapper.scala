@@ -11,7 +11,7 @@ import utopia.genesis.text.Font
   * @since 01.10.2024, v1.4
   */
 trait VariableBaseContextWrapper[Base <: VariableBaseContextLike[Base, _], +Repr]
-	extends BaseContextWrapper2[Base, Repr] with VariableBaseContextLike[Repr, Repr]
+	extends BaseContextWrapper[Base, Repr] with VariableBaseContextLike[Repr, Repr]
 {
 	override def withFontPointer(p: Changing[Font]): Repr = mapBase { _.withFontPointer(p) }
 	override def withStackMarginPointer(p: Changing[StackLength]): Repr = mapBase { _.withStackMarginPointer(p) }

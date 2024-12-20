@@ -12,7 +12,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @since 05.10.2024, v1.4
   */
 trait VariableColorContextWrapper[Base <: VariableColorContextLike[Base, Base], +Repr]
-	extends VariableBaseContextWrapper[Base, Repr] with ColorContextWrapper2[Base, Repr]
+	extends VariableBaseContextWrapper[Base, Repr] with ColorContextWrapper[Base, Repr]
 		with VariableColorContextLike[Repr, Repr]
 {
 	override def withBackgroundPointer(p: Changing[Color]): Repr = mapBase { _.withBackgroundPointer(p) }

@@ -79,4 +79,4 @@ object StaticColorContext
   * @since 01.10.2024, v1.4
   */
 trait StaticColorContext
-	extends StaticBaseContext with ColorContext2 with StaticColorContextLike[StaticColorContext, StaticTextContext]
+	extends StaticBaseContext with ColorContext with StaticColorContextLike[StaticColorContext, StaticTextContext]

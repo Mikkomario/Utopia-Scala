@@ -1,7 +1,7 @@
 package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.text.StaticTextContext
-import utopia.reach.context.{ReachContentWindowContextWrapper2, StaticReachContentWindowContext}
+import utopia.reach.context.{ReachContentWindowContextWrapper, StaticReachContentWindowContext}
 
 /**
   * Common trait for factories which wrap and use a popup creation context
@@ -10,7 +10,7 @@ import utopia.reach.context.{ReachContentWindowContextWrapper2, StaticReachConte
   */
 trait ReachContentWindowContextualFactory[+Repr]
 	extends ContextualFactory[StaticReachContentWindowContext, Repr]
-		with ReachContentWindowContextWrapper2[StaticReachContentWindowContext, Repr]
+		with ReachContentWindowContextWrapper[StaticReachContentWindowContext, Repr]
 {
 	override def base: StaticReachContentWindowContext = context
 	override def current = windowContext

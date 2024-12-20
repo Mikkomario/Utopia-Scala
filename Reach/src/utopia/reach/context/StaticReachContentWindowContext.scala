@@ -14,7 +14,7 @@ object StaticReachContentWindowContext
 	  * @return A Pop-up creation context that uses the specified text context and default settings
 	  */
 	implicit def apply(textContext: StaticTextContext): StaticReachContentWindowContext =
-		apply(ReachWindowContext2(textContext.actorHandler, textContext.background).borderless.windowed, textContext)
+		apply(ReachWindowContext(textContext.actorHandler, textContext.background).borderless.windowed, textContext)
 	
 	
 	// OTHER    -------------------------
@@ -24,16 +24,16 @@ object StaticReachContentWindowContext
 	  * @param text Text context to wrap
 	  * @return A new pop-up context
 	  */
-	def apply(window: ReachWindowContext2, text: StaticTextContext): StaticReachContentWindowContext =
+	def apply(window: ReachWindowContext, text: StaticTextContext): StaticReachContentWindowContext =
 		_ReachContentWindowContext(window, text)
 	
 	
 	// NESTED   -------------------------
 	
-	private case class _ReachContentWindowContext(windowContext: ReachWindowContext2, base: StaticTextContext)
+	private case class _ReachContentWindowContext(windowContext: ReachWindowContext, base: StaticTextContext)
 		extends StaticReachContentWindowContext
 			with StaticTextContextWrapper[StaticTextContext, StaticReachContentWindowContext]
-			with ReachWindowContextWrapper2[ReachWindowContext2, StaticReachContentWindowContext, StaticReachContentWindowContext]
+			with ReachWindowContextWrapper[ReachWindowContext, StaticReachContentWindowContext, StaticReachContentWindowContext]
 	{
 		override def self = this
 		
@@ -46,7 +46,7 @@ object StaticReachContentWindowContext
 		override def toVariableContext = VariableReachContentWindowContext(windowContext, base.toVariableContext)
 		
 		override def withBase(base: StaticTextContext) = copy(base = base)
-		override def withWindowContext(base: ReachWindowContext2): StaticReachContentWindowContext =
+		override def withWindowContext(base: ReachWindowContext): StaticReachContentWindowContext =
 			copy(windowContext = base)
 		override def withContentContext(textContext: StaticTextContext): StaticReachContentWindowContext =
 			copy(base = textContext)
@@ -67,5 +67,5 @@ object StaticReachContentWindowContext
   */
 trait StaticReachContentWindowContext
 	extends StaticTextContext with StaticTextContextLike[StaticReachContentWindowContext]
-		with ReachContentWindowContext2
+		with ReachContentWindowContext
 		with ReachContentWindowContextCopyable[StaticReachContentWindowContext, StaticReachContentWindowContext]

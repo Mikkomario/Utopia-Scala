@@ -11,7 +11,7 @@ import utopia.genesis.text.Font
   * @since 09.10.2024, v1.4
   */
 trait VariableTextContextWrapper[Base <: VariableTextContextLike[Base], +Repr]
-	extends VariableColorContextWrapper[Base, Repr] with TextContextWrapper2[Base, Repr]
+	extends VariableColorContextWrapper[Base, Repr] with TextContextWrapper[Base, Repr]
 		with VariableTextContextLike[Repr]
 {
 	override def withPromptFontPointer(p: Changing[Font]): Repr = mapBase { _.withPromptFontPointer(p) }

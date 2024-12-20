@@ -1,5 +1,7 @@
-package utopia.firmament.context
+package utopia.firmament.context.window
+
 import utopia.firmament.model.enumeration.WindowResizePolicy
+import utopia.flow.util.Mutate
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.insets.Insets
@@ -9,21 +11,20 @@ import utopia.paradigm.shape.shape2d.insets.Insets
   * @author Mikko Hilpinen
   * @since 13.4.2023, v1.0
   */
-@deprecated("Replaced with a new version", "v1.4")
-trait WindowContextWrapper[+Repr] extends WindowContextLike[Repr]
+trait WindowContextWrapper[Base <: WindowContextCopyable[Base], +Repr] extends WindowContextCopyable[Repr]
 {
 	// ABSTRACT ----------------------
 	
 	/**
 	  * @return The wrapped window context
 	  */
-	def windowContext: WindowContext
+	def windowContext: Base
 	
 	/**
 	  * @param base A new window context to wrap
 	  * @return A copy of this context, wrapping the specified window context
 	  */
-	def withWindowContext(base: WindowContext): Repr
+	def withWindowContext(base: Base): Repr
 	
 	
 	// IMPLEMENTED  -----------------
@@ -55,5 +56,5 @@ trait WindowContextWrapper[+Repr] extends WindowContextLike[Repr]
 	  * @param f A function for mapping the wrapped window context
 	  * @return A copy of this context with mapped window context
 	  */
-	def mapWindowContext(f: WindowContext => WindowContext) = withWindowContext(f(windowContext))
+	def mapWindowContext(f: Mutate[Base]) = withWindowContext(f(windowContext))
 }

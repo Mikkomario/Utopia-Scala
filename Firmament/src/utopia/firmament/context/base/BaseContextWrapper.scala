@@ -18,7 +18,7 @@ import utopia.paradigm.enumeration.ColorContrastStandard
   * @author Mikko Hilpinen
   * @since 01.10.2024, v1.4
   */
-trait BaseContextWrapper2[Base <: BaseContextCopyable[Base, _], +Repr] extends BaseContextCopyable[Repr, Repr]
+trait BaseContextWrapper[Base <: BaseContextCopyable[Base, _], +Repr] extends BaseContextCopyable[Repr, Repr]
 {
 	// ABSTRACT -------------------------
 	

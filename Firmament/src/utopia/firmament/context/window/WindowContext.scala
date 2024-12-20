@@ -1,12 +1,12 @@
-package utopia.firmament.context
+package utopia.firmament.context.window
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.insets.Insets
 
-@deprecated("Replaced with a new version", "v1.4")
 object WindowContext
 {
 	// OTHER    ------------------------
@@ -55,16 +55,16 @@ object WindowContext
 	                                  transparencyEnabled: Boolean)
 		extends WindowContext
 	{
-		override def self: WindowContext = this
+		override def self = this
 		
-		override def withResizeLogic(logic: WindowResizePolicy): WindowContext = copy(windowResizeLogic = logic)
-		override def withScreenBorderMargins(margins: Insets): WindowContext = copy(screenBorderMargins = margins)
-		override def withIcon(icon: Image): WindowContext = copy(icon = icon)
-		override def withWindowBordersEnabled(enabled: Boolean): WindowContext = copy(windowBordersEnabled = enabled)
-		override def withFullScreenEnabled(enabled: Boolean): WindowContext = copy(fullScreenEnabled = enabled)
-		override def withFocusEnabled(enabled: Boolean): WindowContext = copy(focusEnabled = enabled)
-		override def withScreenInsetsEnabled(enabled: Boolean): WindowContext = copy(screenInsetsEnabled = enabled)
-		override def withTransparencyEnabled(enabled: Boolean): WindowContext = copy(transparencyEnabled = enabled)
+		override def withResizeLogic(logic: WindowResizePolicy) = copy(windowResizeLogic = logic)
+		override def withScreenBorderMargins(margins: Insets) = copy(screenBorderMargins = margins)
+		override def withIcon(icon: Image) = copy(icon = icon)
+		override def withWindowBordersEnabled(enabled: Boolean) = copy(windowBordersEnabled = enabled)
+		override def withFullScreenEnabled(enabled: Boolean) = copy(fullScreenEnabled = enabled)
+		override def withFocusEnabled(enabled: Boolean) = copy(focusEnabled = enabled)
+		override def withScreenInsetsEnabled(enabled: Boolean) = copy(screenInsetsEnabled = enabled)
+		override def withTransparencyEnabled(enabled: Boolean) = copy(transparencyEnabled = enabled)
 	}
 }
 
@@ -73,8 +73,7 @@ object WindowContext
   * @author Mikko Hilpinen
   * @since 12.4.2023, v1.0
   */
-@deprecated("Replaced with a new version", "v1.4")
-trait WindowContext extends WindowContextLike[WindowContext]
+trait WindowContext extends WindowContextCopyable[WindowContext]
 {
 	// COMPUTED ---------------------
 	

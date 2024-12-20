@@ -1,7 +1,7 @@
 package utopia.firmament.context.color
 
 import utopia.firmament.context.ColorAccessLike
-import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
+import utopia.firmament.context.base.{BaseContext, VariableBaseContext, VariableBaseContextWrapper}
 import utopia.firmament.context.color.VariableColorContext.ColorPointerAccess
 import utopia.firmament.context.text.VariableTextContext
 import utopia.flow.collection.immutable.Pair
@@ -118,7 +118,7 @@ object VariableColorContext
 	  *                                 where the applied shade is selected based on this context
 	  * @return A new color context instance
 	  */
-	def apply(base: BaseContext2, backgroundPointer: Changing[Color],
+	def apply(base: BaseContext, backgroundPointer: Changing[Color],
 	          customTextColorPointer: Option[Either[Changing[Color], Changing[ColorSet]]] = None): VariableColorContext =
 	{
 		val lazyTextColorP = Lazy {
@@ -140,7 +140,7 @@ object VariableColorContext
 	  * @return A variable color context instance, based on the specified context instance
 	  */
 	@deprecated("Deprecated for removal. Replaced with .toVariableContext", "v1.4")
-	def from(context: ColorContext2): VariableColorContext = context match {
+	def from(context: ColorContext): VariableColorContext = context match {
 		case v: VariableColorContext => v
 		case s: StaticColorContext => s.toVariableContext
 		case c => apply(c, c.backgroundPointer)
@@ -342,7 +342,7 @@ object VariableColorContext
   * @since 01.10.2024, v1.4
   */
 trait VariableColorContext
-	extends VariableBaseContext with ColorContext2
+	extends VariableBaseContext with ColorContext
 		with VariableColorContextLike[VariableColorContext, VariableTextContext]
 {
 	override def colorPointer: ColorPointerAccess

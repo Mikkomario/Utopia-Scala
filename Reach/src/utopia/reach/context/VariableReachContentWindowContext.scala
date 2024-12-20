@@ -11,16 +11,16 @@ object VariableReachContentWindowContext
 	  * @param contentContext Context to use for creating the window contents
 	  * @return A new window context
 	  */
-	def apply(windowContext: ReachWindowContext2,
+	def apply(windowContext: ReachWindowContext,
 	          contentContext: VariableTextContext): VariableReachContentWindowContext =
 		_Context(windowContext, contentContext)
 	
 	
 	// NESTED   -------------------------------
 	
-	private case class _Context(windowContext: ReachWindowContext2, base: VariableTextContext)
+	private case class _Context(windowContext: ReachWindowContext, base: VariableTextContext)
 		extends VariableReachContentWindowContext
-			with ReachWindowContextWrapper2[ReachWindowContext2, VariableReachContentWindowContext, StaticReachContentWindowContext]
+			with ReachWindowContextWrapper[ReachWindowContext, VariableReachContentWindowContext, StaticReachContentWindowContext]
 			with VariableTextContextWrapper[VariableTextContext, VariableReachContentWindowContext]
 	{
 		override def self: VariableReachContentWindowContext = this
@@ -30,7 +30,7 @@ object VariableReachContentWindowContext
 		override def actorHandler = super[VariableTextContextWrapper].actorHandler
 		override def colorPointer = base.colorPointer
 		
-		override def withWindowContext(base: ReachWindowContext2): VariableReachContentWindowContext =
+		override def withWindowContext(base: ReachWindowContext): VariableReachContentWindowContext =
 			copy(windowContext = base)
 		override def withBase(base: VariableTextContext): VariableReachContentWindowContext = copy(base = base)
 		override def withContentContext(textContext: StaticTextContext) =
@@ -48,5 +48,5 @@ object VariableReachContentWindowContext
   */
 trait VariableReachContentWindowContext
 	extends VariableTextContext with VariableTextContextLike[VariableReachContentWindowContext]
-		with ReachContentWindowContext2
+		with ReachContentWindowContext
 		with ReachContentWindowContextCopyable[VariableReachContentWindowContext, StaticReachContentWindowContext]

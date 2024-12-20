@@ -1,6 +1,6 @@
 package utopia.firmament.context.color
 
-import utopia.firmament.context.base.BaseContextWrapper2
+import utopia.firmament.context.base.BaseContextWrapper
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
 
@@ -11,8 +11,8 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @author Mikko Hilpinen
   * @since 05.10.2024, v1.4
   */
-trait ColorContextWrapper2[Base <: ColorContextCopyable[Base, _], +Repr]
-	extends BaseContextWrapper2[Base, Repr] with ColorContextCopyable[Repr, Repr]
+trait ColorContextWrapper[Base <: ColorContextCopyable[Base, _], +Repr]
+	extends BaseContextWrapper[Base, Repr] with ColorContextCopyable[Repr, Repr]
 {
 	// IMPLEMENTED  -----------------------------
 	

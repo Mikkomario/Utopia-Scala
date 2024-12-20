@@ -68,7 +68,7 @@ object VariableBaseContext
 	  * @param context A context instance
 	  * @return A variable base context instance
 	  */
-	implicit def from(context: BaseContext2): VariableBaseContext = context match {
+	implicit def from(context: BaseContext): VariableBaseContext = context match {
 		case v: VariableBaseContext => v
 		case c =>
 			apply(c.actorHandler, c.margins, c.colors, c.fontPointer, c.contrastStandard, Some(c.stackMarginPointer),
@@ -212,4 +212,4 @@ object VariableBaseContext
   * @author Mikko Hilpinen
   * @since 27.09.2024, v1.4
   */
-trait VariableBaseContext extends BaseContext2 with VariableBaseContextLike[VariableBaseContext, VariableColorContext]
+trait VariableBaseContext extends BaseContext with VariableBaseContextLike[VariableBaseContext, VariableColorContext]

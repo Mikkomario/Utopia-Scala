@@ -1,7 +1,7 @@
 package utopia.reflection.test
 
 import utopia.firmament.context.base.StaticBaseContext
-import utopia.firmament.context.{AnimationContext, BaseContext, ScrollingContext}
+import utopia.firmament.context.{AnimationContext, ScrollingContext}
 import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
