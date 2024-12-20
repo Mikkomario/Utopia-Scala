@@ -1,5 +1,6 @@
 package utopia.firmament.context.color
 
+import utopia.firmament.context.ColorAccessLike
 import utopia.firmament.context.base.StaticBaseContextLike
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing

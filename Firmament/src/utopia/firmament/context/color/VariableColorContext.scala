@@ -1,5 +1,6 @@
 package utopia.firmament.context.color
 
+import utopia.firmament.context.ColorAccessLike
 import utopia.firmament.context.base.{BaseContext2, VariableBaseContext, VariableBaseContextWrapper}
 import utopia.firmament.context.color.VariableColorContext.ColorPointerAccess
 import utopia.firmament.context.text.VariableTextContext

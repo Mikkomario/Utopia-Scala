@@ -1,4 +1,4 @@
-package utopia.firmament.context.color
+package utopia.firmament.context
 
 import utopia.paradigm.color.ColorRole._
 import utopia.paradigm.color.ColorShade.{Dark, Light}

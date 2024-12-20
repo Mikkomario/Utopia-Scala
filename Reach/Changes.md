@@ -1,8 +1,15 @@
 # Utopia Reach - List of Changes
 
 ## v1.5 (in development)
-Variable context stuff
-Remember updates to the canvas painting (delays & window size preparations)
+### Breaking changes
+- All component factories now support the new context variations (i.e. either a static or a variable context)
+- **Stack** and **Collection** margins are now pointer-based and not always static
+- Similarly, **Framing** now supports variable insets
+### New features
+- **RealTimeReachPaintManager** now supports delayed painting
+### Other changes
+- **ReachCanvas** now attempts to minimize screen flickering on window resize by performing the layout updates 
+  and buffered painting **before** the window size changes.
 
 ## v1.4 - 04.10.2024
 Adds mouse drag -support and fixes a memory-related bug in **ReachCanvas**. 

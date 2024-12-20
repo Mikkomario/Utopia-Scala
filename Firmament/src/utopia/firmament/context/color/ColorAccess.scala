@@ -1,5 +1,6 @@
 package utopia.firmament.context.color
 
+import utopia.firmament.context.ColorAccessLike
 import utopia.firmament.context.color.ColorAccess.MappingColorAccess
 import utopia.flow.util.Mutate
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}

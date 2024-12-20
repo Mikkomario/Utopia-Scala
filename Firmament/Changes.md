@@ -2,9 +2,31 @@
 
 ## v1.4 (in development)
 Working on variable context
+### Breaking changes
+- All context classes, except for **WindowContext** now have a static and a variable version
+  - Variable context classes replace use cases where context pointers were used, previously
+  - In most situations, you will need to replace the usage of a context class (e.g. **TextContext**) with its 
+    static variant (in this case, **StaticTextContext**). In cases where pointers were used, those should/must 
+    be replaced with variable context classes. E.g. **Changing ColorContext** is replaced with **VariableColorContext**.
+- Divided **FramedFactory** into 3 versions:
+  - **FramedFactory**, which doesn't specify whether the implementation is static or uses pointers
+  - **StaticFramedFactory**, which matches the previous **FramedFactory** implementation
+  - **VariableFramedFactory**, which supports pointers
+  - These also have contextual variants
+- **ViewImageDrawer** now has `insetsPointer: Changing` instead of `insetsView: View`
+### New features
+- **Window** now supports preparation before size changes
+  - This is utilized by passing a `prepareForSizeChange` -property in the constructor
+- Added **HasContext** trait from **Reach**
 ### New methods
 - **AwtEventThread**
   - Added `.later(...)`, which invokes `SwingUtilities.invokeLater(Runnable)`
+- **TextDrawContext**
+  - Added `.withColor(Color)`
+- **Window**
+  - Added `.boundsUpdatingFlag`
+### Other changes
+- **SingleColorIcon** (and its variants) now has more context support functions
 
 ## v1.3.1 - 04.10.2024
 A small update which adds component logging support, since most Flow-originating pointers now require it. 
