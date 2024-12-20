@@ -9,6 +9,7 @@ Working on variable context
     static variant (in this case, **StaticTextContext**). In cases where pointers were used, those should/must 
     be replaced with variable context classes. E.g. **Changing ColorContext** is replaced with **VariableColorContext**.
   - Removed all -Like context variants. These are replaced with -Copyable variants.
+  - Moved most context classes to separate sub-packages: `base`, `color`, `text` and `window`
 - Divided **FramedFactory** into 3 versions:
   - **FramedFactory**, which doesn't specify whether the implementation is static or uses pointers
   - **StaticFramedFactory**, which matches the previous **FramedFactory** implementation
