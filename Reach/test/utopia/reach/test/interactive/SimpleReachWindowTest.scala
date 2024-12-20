@@ -1,7 +1,8 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.reach.component.label.empty.EmptyLabel
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
@@ -18,6 +19,7 @@ object SimpleReachWindowTest extends App
 		labelF(StackSize(StackLength(142, 245.9), StackLength(116, 189)))
 	}
 	
+	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
 	start()
 }

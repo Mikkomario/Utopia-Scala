@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
@@ -11,6 +11,7 @@ import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.text.{TextLabel, ViewTextLabel}
 import utopia.reach.container.multi.{SegmentGroup, Stack}
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

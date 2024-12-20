@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.localization.LocalString._
 import utopia.flow.async.process.Loop
@@ -7,6 +7,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

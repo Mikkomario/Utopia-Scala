@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
@@ -7,6 +7,7 @@ import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.{Color, Hsl}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.wrapper.Framing
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

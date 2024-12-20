@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.DisplayFunction
@@ -15,6 +15,7 @@ import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollView
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 import scala.util.Random

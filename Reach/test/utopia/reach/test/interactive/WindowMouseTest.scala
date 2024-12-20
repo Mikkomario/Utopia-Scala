@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.view.mutable.eventful.SettableOnce
@@ -8,6 +8,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.component.template.ReachComponentLike
 import utopia.reach.drawing.MousePositionDrawer
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

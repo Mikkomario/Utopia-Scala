@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.drawing.immutable.BackgroundDrawer
@@ -17,6 +17,7 @@ import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.ScrollArea
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**

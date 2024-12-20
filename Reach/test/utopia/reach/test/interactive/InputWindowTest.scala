@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.ImageCache
@@ -32,6 +32,7 @@ import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
+import utopia.reach.test.ReachTestContext
 import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.InputField._
 import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}

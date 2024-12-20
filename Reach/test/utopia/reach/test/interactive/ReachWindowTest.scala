@@ -1,4 +1,4 @@
-package utopia.reach.test
+package utopia.reach.test.interactive
 
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
@@ -6,6 +6,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.util.Screen
 import utopia.reach.component.label.text.ViewTextLabel
+import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow
 
 /**
