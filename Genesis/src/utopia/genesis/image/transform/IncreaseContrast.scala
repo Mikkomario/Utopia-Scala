@@ -1,5 +1,7 @@
 package utopia.genesis.image.transform
 
+import utopia.flow.collection.CollectionExtensions._
+
 object IncreaseContrast extends IncreaseContrast(1)
 
 /**
@@ -12,16 +14,7 @@ sealed class IncreaseContrast private(val iterations: Double) extends RgbTransfo
 	// IMPLEMENTED	------------------
 	
 	override def apply(originalRatio: Double) =
-	{
-		var x = originalRatio
-		var iterationsLeft = iterations
-		while (iterationsLeft > 0)
-		{
-			x = applyOnce(x)
-			iterationsLeft -= 1
-		}
-		x
-	}
+		Iterator.iterate(originalRatio)(applyOnce).take((iterations + 1).ceil.toInt).last
 	
 	// OPERATORS	-------------------
 	

@@ -132,7 +132,7 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 	  * @return A full size version of this icon where icon size matches the source resolution
 	  */
 	def fullSize = {
-		val newIcon = original.withOriginalSize
+		val newIcon = original.fullSized
 		if (original == newIcon)
 			this
 		else

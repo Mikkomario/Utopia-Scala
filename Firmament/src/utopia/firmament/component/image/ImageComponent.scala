@@ -4,7 +4,6 @@ import utopia.firmament.component.Component
 import utopia.firmament.component.stack.CachingStackable
 import utopia.firmament.drawing.template.CustomDrawable
 import utopia.firmament.model.stack.{StackInsets, StackSize}
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
 /**
@@ -22,11 +21,12 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 	  */
 	def visualImageSize: Size
 	/**
-	  * @return Currently applied image scaling (on image level).
-	  *         No additional transformation has been applied to this value.
-	  *         This simply refers to the drawn image's default scaling relative to its source resolution.
+	  * @return Maximum scaling that may be applied on this component.
+	  *         Oftentimes you may want to limit the scaling based on image source resolution,
+	  *         in order to ensure that the image doesn't get too blurry
+	  *         or so that this component doesn't expand beyond image borders (+insets).
 	  */
-	def imageScaling: Vector2D
+	def maxScaling: Double
 	/**
 	  * @return Insets placed around the image
 	  */
@@ -50,7 +50,7 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 		// Applies the maximum size
 		val raw = {
 			if (allowUpscaling)
-				StackSize.downscaling(imageSize.ceil, imageSize / imageScaling)
+				StackSize.downscaling(imageSize.ceil, imageSize * maxScaling)
 			else
 				StackSize.downscaling(imageSize.ceil)
 		}

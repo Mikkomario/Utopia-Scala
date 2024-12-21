@@ -47,7 +47,7 @@ object MutableImage
 // TODO: Extend HasMutableSize (NB: Changes preserveShape default values!)
 class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2D = Vector2D.identity,
 				   initialAlpha: Double = 1.0, initialOrigin: Option[Point] = None)
-	extends ImageLike
+	extends ConcreteImageView
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -98,6 +98,8 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	
 	// TODO: Not optimized
 	override def shade: ColorShade = pixels.averageShade
+	
+	override def toConcreteImage: ConcreteImage = immutableCopy
 	
 	override def sourceResolution = source match {
 		case Some(s) => Size(s.getWidth, s.getHeight)
@@ -353,7 +355,7 @@ class MutableImage(initialSource: Option[BufferedImage], initialScaling: Vector2
 	  * @param overlayPosition The position where the overlay image's origin will be placed
 	  *                        (relative to this image's origin). Default = (0,0) = Image origins will overlap.
 	  */
-	def overlay(image: Image, overlayPosition: Point = Point.origin) = {
+	def overlay(image: Image, overlayPosition: Point = Point.origin): Unit = {
 		if (image.nonEmpty)
 			source match {
 				case Some(target) =>

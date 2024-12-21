@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, Drawer, FromDrawLevelFactory}
-import utopia.genesis.image.Image
+import utopia.genesis.image.{ConcreteImage, ImageView}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -42,10 +42,10 @@ object ImageDrawer
 	  * @return A drawer that draws the specified image with default settings
 	  */
 	// Once the deprecated apply version is removed, this function may also be removed
-	def apply(image: Image) = factory(image)
+	def apply(image: ConcreteImage) = factory(image)
 	
 	@deprecated("Please use the factory approach instead", "v1.3")
-	def apply(image: Image, insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
+	def apply(image: ConcreteImage, insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Center,
 	          drawLevel: DrawLevel = Normal, useUpscaling: Boolean = true) =
 		ImageDrawerFactory(None, insets, alignment, drawLevel, useUpscaling)(image)
 	
@@ -96,12 +96,13 @@ object ImageDrawer
 		  * @param image The image to draw
 		  * @return A drawer that draws that image, respecting the settings within this factory
 		  */
-		def apply(image: Image): ImageDrawer =
+		def apply(image: ImageView): ImageDrawer =
 			_ImageDrawer(image, transformation, insets, alignment, drawLevel, upscales)
 	}
 	
-	private case class _ImageDrawer(image: Image, transformation: Option[Matrix2D], insets: StackInsets,
-	                                alignment: Alignment, drawLevel: DrawLevel, useUpscaling: Boolean)
+	private case class _ImageDrawer(override val image: ImageView, override val transformation: Option[Matrix2D],
+	                                override val insets: StackInsets, override val alignment: Alignment,
+	                                override val drawLevel: DrawLevel, override val useUpscaling: Boolean)
 		extends ImageDrawer
 }
 
@@ -115,9 +116,9 @@ trait ImageDrawer extends CustomDrawer
 	// ABSTRACT	----------------------------
 	
 	/**
-	  * @return The image being drawn by this drawer
+	  * @return The image to draw
 	  */
-	def image: Image
+	def image: ImageView
 	/**
 	  * @return A transformation applied to the image when drawn
 	  */
@@ -143,6 +144,7 @@ trait ImageDrawer extends CustomDrawer
 	
 	override def draw(drawer: Drawer, bounds: Bounds) = {
 		// Calculates the sizes for the transformed image state
+		val image = this.image
 		val rawBounds = image.bounds
 		val imageBounds = transformation match {
 			case Some(t) => (rawBounds * t).bounds
@@ -161,10 +163,8 @@ trait ImageDrawer extends CustomDrawer
 			else {
 				// Limits up-scaling to maximum insets
 				val targetSize = bounds.size - insets.mapToInsets { l => l.max.getOrElse(l.optimal) }.total
-				// Limits the scaling to the original image resolution (unless already scaled above that)
-				val maxScaling = (Vector2D.identity / image.scaling).minDimension
 				// Will never downscale (otherwise could because of the increased insets)
-				((targetSize / imageBounds.size).minDimension min maxScaling) max 1.0
+				((targetSize / imageBounds.size).minDimension min image.maxScaling) max 1.0
 			}
 		}
 		

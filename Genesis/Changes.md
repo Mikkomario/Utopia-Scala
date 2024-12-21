@@ -1,7 +1,23 @@
 # Utopia Genesis - List of Changes
 
-## v4.1.1 (in development)
-Latest Flow support
+## v4.2 (in development)
+### Breaking changes
+- Replaced **ImageLike** implementation. The previous implementation is now named **ConcreteImageView**.
+- The previous **Image** implementation is now named **ConcreteImage**
+  - The **Image** is now a trait and contains most of the features from the previous **Image** class, 
+    except for properties related to scaling and source resolution.
+    - In most cases, you will still be able to use the **Image** trait as before, however, 
+      instead of `.scaling`, you may need to use `.maxScaling` and instead of `.withOriginalSize`, 
+      you may need to use `.fullSized`, for example.
+- **Image**`.blurred` and `.sharpened` no longer accept parameters. 
+  - The previous parameter-supporting implementations are available as `.blurredBy(Double)` and `.sharpenedBy(Double)`
+### New features
+- Added multiple image-related traits:
+  - Added **ImageFactory** for easier construction of different types of images / image wrappers
+  - The new **ImageLike** implementation and **Image** trait allow for custom images that still provide the same interface
+### Other changes
+- Added new traits for representing images: **ImageView** and **ConcreteImageView**
+- `.op` in **ConvolveTransform** is now public
 
 ## v4.1 - 04.10.2024
 This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0. 
@@ -18,6 +34,11 @@ This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0.
 ### New methods
 - **AnimatorInstructor** (object)
   - Added `.fixed(...)` constructor
+- **ImageLike**
+  - Added `.empty`
+  - Added `.fullSized`
+  - Added `.mutatePixels(...)` that resembles `.mapPixels(...)`, but also allows for changed origin, 
+    as well as shade computation optimization
 ### Other changes
 - Built with Scala v2.13.14
 - Event filters are now possible to chain due to new implicit extensions in each event companion object

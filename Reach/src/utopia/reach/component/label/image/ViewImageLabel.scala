@@ -20,7 +20,6 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -505,7 +504,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	
 	// Reacts to changes in the pointers
 	localImagePointer.addListener { change =>
-		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
+		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling })
 			repaint()
 		else
 			revalidate()
@@ -527,7 +526,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	// IMPLEMENTED	---------------------------------
 	
 	override def visualImageSize: Size = visualImageSizePointer.value
-	override def imageScaling: Vector2D = localImagePointer.value.scaling
+	override def maxScaling: Double = localImagePointer.value.maxScaling
 	
 	override def insets = insetsPointer.value
 	override def allowUpscaling: Boolean = allowUpscalingPointer.value

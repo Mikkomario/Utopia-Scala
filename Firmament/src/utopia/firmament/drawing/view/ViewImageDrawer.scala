@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, FromDrawLevelFactory}
-import utopia.genesis.image.Image
+import utopia.genesis.image.ImageView
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.Matrix2D
@@ -68,13 +68,13 @@ object ViewImageDrawer
 		  * @param imageView A view that contains the image to display
 		  * @return A drawer that draws the viewed image
 		  */
-		def apply(imageView: View[Image]) =
+		def apply(imageView: View[ImageView]) =
 			new ViewImageDrawer(imageView, transformationView, insetsPointer, alignmentView, drawLevel, upscales)
 		/**
 		  * @param image The image to display
 		  * @return A drawer that draws that image
 		  */
-		def apply(image: Image): ViewImageDrawer = apply(View.fixed(image))
+		def apply(image: ImageView): ViewImageDrawer = apply(View.fixed(image))
 	}
 }
 
@@ -83,13 +83,13 @@ object ViewImageDrawer
   * @author Mikko Hilpinen
   * @since 23/02/2024, v1.3
   */
-class ViewImageDrawer(imageView: View[Image], transformationView: View[Option[Matrix2D]] = View.fixed(None),
+class ViewImageDrawer(imageView: View[ImageView], transformationView: View[Option[Matrix2D]] = View.fixed(None),
                       insetsView: View[StackInsets] = View.fixed(StackInsets.any),
                       alignmentView: View[Alignment] = View.fixed(Center), override val drawLevel: DrawLevel = Normal,
                       override val useUpscaling: Boolean = false)
 	extends ImageDrawer
 {
-	override def image: Image = imageView.value
+	override def image: ImageView = imageView.value
 	override def transformation: Option[Matrix2D] = transformationView.value
 	override def insets: StackInsets = insetsView.value
 	override def alignment: Alignment = alignmentView.value

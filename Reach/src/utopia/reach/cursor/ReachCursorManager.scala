@@ -47,9 +47,9 @@ class ReachCursorManager(val cursors: CursorSet)(implicit exc: ExecutionContext)
 			case Success(targetSize) => image.fittingWithin(targetSize).paintedToCanvas(targetSize)
 			case Failure(_) =>
 				if (image.alpha >= 1)
-					image
+					image.toConcreteImage
 				else
-					image.mapEachPixel { _.timesAlpha(image.alpha) }
+					image.mapEachPixel { _.timesAlpha(image.alpha) }.toConcreteImage
 		}
 		correctedImage.toAwt match {
 			case Some(awtImage) =>

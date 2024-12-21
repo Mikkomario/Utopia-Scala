@@ -15,6 +15,7 @@ Working on variable context
   - **StaticFramedFactory**, which matches the previous **FramedFactory** implementation
   - **VariableFramedFactory**, which supports pointers
   - These also have contextual variants
+- **ImageComponent** now requires `maxScaling: Double` instead of `imageScaling: Double`
 - **ViewImageDrawer** now has `insetsPointer: Changing` instead of `insetsView: View`
 ### New features
 - **Window** now supports preparation before size changes
@@ -29,6 +30,8 @@ Working on variable context
   - Added `.boundsUpdatingFlag`
 ### Other changes
 - **SingleColorIcon** (and its variants) now has more context support functions
+- **ImageDrawer** and its variants now support **ImageView** instead of only **Image**
+- Removed previously deprecated **ImageDrawerLike** and **ImageViewDrawer** classes
 
 ## v1.3.1 - 04.10.2024
 A small update which adds component logging support, since most Flow-originating pointers now require it. 

@@ -7,7 +7,6 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -84,7 +83,7 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	
 	// Updates and repaints this label when values change
 	imagePointer.addContinuousListener { change =>
-		if (change.equalsBy { _.size } && change.equalsBy { _.sourceResolution })
+		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling })
 			repaint()
 		else
 			revalidate()
@@ -109,7 +108,7 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	// IMPLEMENTED	--------------------------
 	
 	override def visualImageSize: Size = visualImageSizePointer.value
-	override def imageScaling: Vector2D = image.scaling
+	override def maxScaling: Double = image.maxScaling
 	
 	override def insets = insetsPointer.value
 	def insets_=(newInsets: StackInsets) = insetsPointer.value = newInsets

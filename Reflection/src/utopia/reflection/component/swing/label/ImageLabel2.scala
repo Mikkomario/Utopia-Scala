@@ -8,7 +8,6 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.template.layout.stack.{CachingReflectionStackable, ReflectionStackLeaf}
 
@@ -91,7 +90,8 @@ class ImageLabel2(initialImage: Image, override val allowUpscaling: Boolean = fa
 	// IMPLEMENTED	-----------------
 	
 	override def visualImageSize: Size = visualImageSizePointer.value
-	override def imageScaling: Vector2D = image.scaling
+	
+	override def maxScaling = image.maxScaling
 	override def insets: StackInsets = StackInsets.any
 	
 	override protected def updateVisibility(visible: Boolean) = super[Label].visible_=(visible)

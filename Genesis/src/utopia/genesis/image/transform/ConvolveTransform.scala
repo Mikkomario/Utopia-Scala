@@ -14,7 +14,10 @@ class ConvolveTransform(kernel: Array[Float], kernelSize: Size) extends ImageTra
 {
 	// ATTRIBUTES	-----------------
 	
-	private val op = new ConvolveOp(new Kernel(kernelSize.width.toInt, kernelSize.height.toInt, kernel),
+	/**
+	  * The operation applied to a buffered (AWT) image in this transform
+	  */
+	val op = new ConvolveOp(new Kernel(kernelSize.width.toInt, kernelSize.height.toInt, kernel),
 		ConvolveOp.EDGE_NO_OP, null)
 	
 	

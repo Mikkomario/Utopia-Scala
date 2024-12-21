@@ -1,5 +1,6 @@
 package utopia.genesis.image
 
+import utopia.flow.util.Mutate
 import utopia.paradigm.animation.Animation
 import utopia.genesis.util.Fps
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -11,7 +12,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
   * @author Mikko Hilpinen
   * @since 15.6.2019, v2.1+
   */
-case class Strip(images: Vector[Image]) extends Animation[Image]
+case class Strip(images: Seq[ConcreteImage]) extends Animation[Image]
 {
 	// ATTRIBUTES	-------------------
 	
@@ -92,22 +93,21 @@ case class Strip(images: Vector[Image]) extends Animation[Image]
 	  * @param f A mapping function
 	  * @return A mapped copy of this strip
 	  */
-	def map(f: Image => Image) = copy(images = images.map(f))
+	def map(f: Mutate[ConcreteImage]) = copy(images = images.map(f))
 	
 	/**
 	  * Performs a mapping function on the images in this strip
 	  * @param f A mapping function. May return multiple images.
 	  * @return A mapped copy of this strip
 	  */
-	def flatMap(f: Image => IterableOnce[Image]) = copy(images = images.flatMap(f))
+	def flatMap(f: Image => IterableOnce[ConcreteImage]) = copy(images = images.flatMap(f))
 	
 	/**
 	  * Finds a specific image from this strip
 	  * @param index The image index (0 is the first image)
 	  * @return An image from the specified index
 	  */
-	def apply(index: Int) =
-	{
+	def apply(index: Int) = {
 		if (index >= 0)
 			images(index % length)
 		else

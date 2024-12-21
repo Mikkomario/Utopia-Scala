@@ -5,14 +5,14 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.flow.view.mutable.Pointer
 import utopia.genesis.graphics.DrawLevel
 import utopia.genesis.graphics.DrawLevel.Normal
-import utopia.genesis.image.Image
+import utopia.genesis.image.ImageView
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.Matrix2D
 
 object MutableImageDrawer
 {
-	def apply(image: Image, transformation: Option[Matrix2D] = None, insets: StackInsets = StackInsets.any,
+	def apply(image: ImageView, transformation: Option[Matrix2D] = None, insets: StackInsets = StackInsets.any,
 	          alignment: Alignment = Center, drawLevel: DrawLevel = Normal, upscales: Boolean) =
 		new MutableImageDrawer(Pointer(image), Pointer(transformation), Pointer(insets), Pointer(alignment), drawLevel,
 			upscales)
@@ -23,7 +23,7 @@ object MutableImageDrawer
   * @author Mikko Hilpinen
   * @since 25.3.2020, Reflection v1
   */
-class MutableImageDrawer(imagePointer: Pointer[Image],
+class MutableImageDrawer(imagePointer: Pointer[ImageView],
                          transformationPointer: Pointer[Option[Matrix2D]] = Pointer.empty,
                          insetsPointer: Pointer[StackInsets] = Pointer(StackInsets.any),
                          alignmentPointer: Pointer[Alignment] = Pointer(Center),
@@ -31,10 +31,10 @@ class MutableImageDrawer(imagePointer: Pointer[Image],
                          override val useUpscaling: Boolean = true)
 	extends ImageDrawer
 {
-	// ATTRIBUTES	---------------------------
+	// IMPLEMENTED  ---------------------------
 	
-	override def image: Image = imagePointer.value
-	def image_=(img: Image) = imagePointer.value = img
+	override def image: ImageView = imagePointer.value
+	def image_=(img: ImageView) = imagePointer.value = img
 	
 	override def transformation: Option[Matrix2D] = transformationPointer.value
 	def transformation_=(t: Option[Matrix2D]) = transformationPointer.value = t

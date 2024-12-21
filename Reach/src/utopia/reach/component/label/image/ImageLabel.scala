@@ -10,11 +10,10 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, ImageView}
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.{LinearSizeAdjustable, LinearTransformable}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
@@ -251,7 +250,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	// NESTED   --------------------------------------
 	
 	// A static image label implementation
-	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, image: Image,
+	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, image: ImageView,
 	                          transformation: Option[Matrix2D] = None,
 	                          override val insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 	                          additionalCustomDrawers: Seq[CustomDrawer] = Empty, override val allowUpscaling: Boolean = true,
@@ -262,7 +261,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 		
 		override val customDrawers = ImageDrawer
 			.copy(insets = insets, alignment = alignment, transformation = transformation, upscales = allowUpscaling)
-			.apply(image * imageScaling) +:
+			.apply(image) +:
 			additionalCustomDrawers
 		
 		override val visualImageSize: Size = transformation match {
@@ -275,7 +274,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 		
 		override def updateLayout() = ()
 		
-		override def imageScaling: Vector2D = image.scaling
+		override def maxScaling: Double = image.maxScaling
 	}
 }
 
