@@ -45,6 +45,17 @@ trait VariableColorContextLike[+Repr, +Textual]
 	  * @return Copy of this context using text colors from the specified pointer
 	  */
 	def withGeneralTextColorPointer(p: Changing[ColorSet]): Repr
+	/**
+	  * @param p A pointer that contains the text color role to apply
+	  * @return Copy of this context using color matching the specified role pointer's values
+	  */
+	def withTextColorRolePointer(p: Changing[ColorRole]): Repr
+	/**
+	  * @param p A pointer that contains the text color role to apply.
+	  *          Contains None when default text color (i.e. black or white) should be applied instead.
+	  * @return Copy of this context using color matching the specified role pointer's values
+	  */
+	def withPossibleTextColorRolePointer(p: Changing[Option[ColorRole]]): Repr
 	
 	
 	// IMPLEMENTED  -------------------------

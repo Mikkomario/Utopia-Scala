@@ -40,7 +40,7 @@ object VariableColorContext
 	//      2) Color role pointer
 	// And values are color set pointers
 	private val rolePointerToSetPointerCache = WeakCache.weakKeys { colorScheme: ColorScheme =>
-		WeakCache { roleP: Changing[ColorRole] => roleP.map { colorScheme(_) } }
+		WeakCache.weakKeys { roleP: Changing[ColorRole] => roleP.map { colorScheme(_) } }
 	}
 	
 	// 4 levels deep cache system for weakly storing generated pointers
@@ -69,11 +69,14 @@ object VariableColorContext
 			}
 		}
 	}
-	// 2 levels deep cache for custom color set pointer mappings
-	// Keys are:
-	//      1) Custom color set pointer
-	//      2) Background color pointer + is large flag + color contrast standard + preferred shade
-	// NB: Only use this with variable custom color set pointers
+	/**
+	  * 2 levels deep cache for custom color set pointer mappings.
+	  * Keys are:
+	  *     1. Custom color set pointer
+	  *     1. Background color pointer + is large flag + color contrast standard + preferred shade
+	  *
+	  * NB: Only use this with variable custom color set pointers
+	  */
 	private val colorSetMappingPointerCache = WeakCache.weakKeys { setP: Changing[ColorSet] =>
 		Cache[(Changing[Color], Flag, ColorContrastStandard, ColorLevel), Changing[Color]] {
 			case (bgP, isLargeP, standard, preferredLevel) =>
@@ -99,6 +102,36 @@ object VariableColorContext
 							set.againstMany(Pair(bgP, otherBgP).map { _.value }, preferredLevel,
 								standard.minimumContrast(isLargeFlag.value))
 						}
+				}
+			}
+		}
+	}
+	/**
+	  * 4 level deep cache for determining a text color based on an optional color role.
+	  * The keys are:
+	  *     1. Color role pointer to map
+	  *     1. Font pointer, which determines text size and therefore the required color contrast
+	  *     1. Background color pointer
+	  *     1. Color contrast standard + applied color scheme
+	  *
+	  * It is recommended to use this cache only for variable role pointers
+	  */
+	// 1. Color role
+	private val textRoleToColorCache = WeakCache.weakKeys { roleP: Changing[Option[ColorRole]] =>
+		// 2. Font / is large
+		WeakCache.weakKeys { fontP: Changing[Font] =>
+			lazy val isLargeFlag = textIsLargePointerCache(fontP)
+			// 3. Background
+			WeakCache.weakKeys { bgP: Changing[Color] =>
+				// 4. Contrast standard & color scheme
+				Cache[(ColorContrastStandard, ColorScheme), Changing[Color]]{ case (standard, colors) =>
+					roleP.mergeWith(bgP, isLargeFlag) { (role, bg, large) =>
+						role match {
+							case Some(role) =>
+								colors(role).against(bg, minimumContrast = standard.minimumContrast(large))
+							case None => bg.shade.opposite.defaultTextColor
+						}
+					}
 				}
 			}
 		}
@@ -237,6 +270,10 @@ object VariableColorContext
 				lazyHintTextColorPointer = lazyPointer.map { hintTextColorPointerCache(_) },
 				customTextColorPointer = Some(Right(p)))
 		}
+		override def withTextColorRolePointer(p: Changing[ColorRole]): VariableColorContext =
+			withGeneralTextColorPointer(rolePointerToSetPointerCache(colors)(p))
+		override def withPossibleTextColorRolePointer(p: Changing[Option[ColorRole]]): VariableColorContext =
+			withTextColorPointer(textRoleToColorCache(p)(fontPointer)(backgroundPointer)(contrastStandard -> colors))
 		
 		// Modifying the font may also affect text color, if the text color is based on a color set
 		override def withFontPointer(p: Changing[Font]) =

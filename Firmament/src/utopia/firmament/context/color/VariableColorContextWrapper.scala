@@ -16,10 +16,14 @@ trait VariableColorContextWrapper[Base <: VariableColorContextLike[Base, Base], 
 		with VariableColorContextLike[Repr, Repr]
 {
 	override def withBackgroundPointer(p: Changing[Color]): Repr = mapBase { _.withBackgroundPointer(p) }
-	override def withTextColorPointer(p: Changing[Color]): Repr = mapBase { _.withTextColorPointer(p) }
-	override def withGeneralTextColorPointer(p: Changing[ColorSet]): Repr = mapBase { _.withGeneralTextColorPointer(p) }
 	override def withGeneralBackgroundPointer(p: Changing[ColorSet], preference: ColorLevel) =
 		mapBase { _.withGeneralBackgroundPointer(p, preference) }
 	override def withBackgroundRolePointer(p: Changing[ColorRole], preference: ColorLevel) =
 		mapBase { _.withBackgroundRolePointer(p, preference) }
+	
+	override def withTextColorPointer(p: Changing[Color]): Repr = mapBase { _.withTextColorPointer(p) }
+	override def withGeneralTextColorPointer(p: Changing[ColorSet]): Repr = mapBase { _.withGeneralTextColorPointer(p) }
+	override def withTextColorRolePointer(p: Changing[ColorRole]): Repr = mapBase { _.withTextColorRolePointer(p) }
+	override def withPossibleTextColorRolePointer(p: Changing[Option[ColorRole]]): Repr =
+		mapBase { _.withPossibleTextColorRolePointer(p) }
 }

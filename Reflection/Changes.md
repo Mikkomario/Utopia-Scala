@@ -1,7 +1,7 @@
 # Utopia Reflection - List of Changes
 
 ## v2.2.2 (in development)
-Latest Flow support
+Supports latest Flow, Genesis and Firmament
 
 ## v2.2.1 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
