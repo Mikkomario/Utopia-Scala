@@ -17,6 +17,7 @@
 - Added multiple image-related traits:
   - Added **ImageFactory** for easier construction of different types of images / image wrappers
   - The new **ImageLike** implementation and **Image** trait allow for custom images that still provide the same interface
+  - Added **ImageWrapper** which facilitates custom image type creation
 ### New methods
 - **Image** (object)
   - Added `.scaleByCombining(Seq[Image])`
