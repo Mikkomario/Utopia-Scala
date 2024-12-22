@@ -8,6 +8,7 @@
 - All component factories now support the new context variations (i.e. either a static or a variable context)
 - **Stack** and **Collection** margins are now pointer-based and not always static
 - Similarly, **Framing** now supports variable insets
+- Renamed **InputRowBlueprints**'s `isScalable` parameter to `scalable` and `visibilityPointer` to `visibilityFlag`
 ### Bugfixes
 - Possible bugfix to image label's `imageScaling` property application
 ### New features
