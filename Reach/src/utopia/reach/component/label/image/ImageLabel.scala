@@ -274,7 +274,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 		
 		override def updateLayout() = ()
 		
-		override def maxScaling: Double = image.maxScaling
+		override def maxScaling = image.maxScaling
 	}
 }
 

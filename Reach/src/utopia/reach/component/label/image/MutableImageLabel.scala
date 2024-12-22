@@ -108,7 +108,7 @@ class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initia
 	// IMPLEMENTED	--------------------------
 	
 	override def visualImageSize: Size = visualImageSizePointer.value
-	override def maxScaling: Double = image.maxScaling
+	override def maxScaling = image.maxScaling
 	
 	override def insets = insetsPointer.value
 	def insets_=(newInsets: StackInsets) = insetsPointer.value = newInsets

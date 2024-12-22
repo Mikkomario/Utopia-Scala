@@ -25,8 +25,10 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 	  *         Oftentimes you may want to limit the scaling based on image source resolution,
 	  *         in order to ensure that the image doesn't get too blurry
 	  *         or so that this component doesn't expand beyond image borders (+insets).
+	  *
+	  *         None if no maximum scaling can or should be applied.
 	  */
-	def maxScaling: Double
+	def maxScaling: Option[Double]
 	/**
 	  * @return Insets placed around the image
 	  */
@@ -49,9 +51,12 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 		val imageSize = visualImageSize
 		// Applies the maximum size
 		val raw = {
-			if (allowUpscaling)
-				StackSize.downscaling(imageSize.ceil, imageSize * maxScaling)
-			else
+			if (allowUpscaling) {
+				maxScaling match {
+					case Some(max) => StackSize.downscaling(imageSize.ceil, (imageSize * max).ceil)
+					case None => StackSize.any(imageSize.ceil)
+				}
+			} else
 				StackSize.downscaling(imageSize.ceil)
 		}
 		// Determines the correct priority to use

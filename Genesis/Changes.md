@@ -12,9 +12,19 @@
 - **Image**`.blurred` and `.sharpened` no longer accept parameters. 
   - The previous parameter-supporting implementations are available as `.blurredBy(Double)` and `.sharpenedBy(Double)`
 ### New features
+- Added **CompositeScalingImage** class which dynamically switches between multiple different sized images 
+  for different display sizes
 - Added multiple image-related traits:
   - Added **ImageFactory** for easier construction of different types of images / image wrappers
   - The new **ImageLike** implementation and **Image** trait allow for custom images that still provide the same interface
+### New methods
+- **Image** (object)
+  - Added `.scaleByCombining(Seq[Image])`
+- **ImageLike**
+  - Added `.empty`
+  - Added `.fullSized`
+  - Added `.mutatePixels(...)` that resembles `.mapPixels(...)`, but also allows for changed origin,
+    as well as shade computation optimization
 ### Other changes
 - Added new traits for representing images: **ImageView** and **ConcreteImageView**
 - `.op` in **ConvolveTransform** is now public
@@ -34,11 +44,6 @@ This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0.
 ### New methods
 - **AnimatorInstructor** (object)
   - Added `.fixed(...)` constructor
-- **ImageLike**
-  - Added `.empty`
-  - Added `.fullSized`
-  - Added `.mutatePixels(...)` that resembles `.mapPixels(...)`, but also allows for changed origin, 
-    as well as shade computation optimization
 ### Other changes
 - Built with Scala v2.13.14
 - Event filters are now possible to chain due to new implicit extensions in each event companion object

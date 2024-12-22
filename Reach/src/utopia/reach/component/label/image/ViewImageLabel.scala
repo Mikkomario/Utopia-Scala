@@ -526,7 +526,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	// IMPLEMENTED	---------------------------------
 	
 	override def visualImageSize: Size = visualImageSizePointer.value
-	override def maxScaling: Double = localImagePointer.value.maxScaling
+	override def maxScaling = localImagePointer.value.maxScaling
 	
 	override def insets = insetsPointer.value
 	override def allowUpscaling: Boolean = allowUpscalingPointer.value

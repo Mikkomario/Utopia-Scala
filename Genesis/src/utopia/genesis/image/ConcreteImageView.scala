@@ -61,7 +61,12 @@ trait ConcreteImageView extends ImageView
 	
 	override def specifiesOrigin: Boolean = specifiedOrigin.isDefined
 	
-	override def maxScaling: Double = (Vector2D.identity / scaling).minDimension max 1.0
+	override def maxScaling: Option[Double] = {
+		if (scaling.isZero)
+			None
+		else
+			Some((1 / scaling.dimensions.view.filterNot { _ == 0.0 }.max) max 1.0)
+	}
 	
 	override def toImage: ConcreteImage = toConcreteImage
 	

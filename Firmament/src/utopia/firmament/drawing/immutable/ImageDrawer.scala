@@ -163,8 +163,14 @@ trait ImageDrawer extends CustomDrawer
 			else {
 				// Limits up-scaling to maximum insets
 				val targetSize = bounds.size - insets.mapToInsets { l => l.max.getOrElse(l.optimal) }.total
+				val defaultScaling = (targetSize / imageBounds.size).minDimension
+				val limitedScaling = image.maxScaling match {
+					case Some(max) => defaultScaling min max
+					case None => defaultScaling
+				}
+				
 				// Will never downscale (otherwise could because of the increased insets)
-				((targetSize / imageBounds.size).minDimension min image.maxScaling) max 1.0
+				limitedScaling max 1.0
 			}
 		}
 		

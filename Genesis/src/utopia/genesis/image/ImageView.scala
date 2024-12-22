@@ -57,8 +57,10 @@ trait ImageView extends HasSize
 	  * @return Maximum scaling, relative to this image's current state,
 	  *         that may be applied without causing this image to get blurred
 	  *         (i.e. without scaling it beyond its original size).
+	  *
+	  *         None if no maximum scaling may be calculated or applied.
 	  */
-	def maxScaling: Double
+	def maxScaling: Option[Double]
 	
 	/**
 	  * @return Pixel data for this image.

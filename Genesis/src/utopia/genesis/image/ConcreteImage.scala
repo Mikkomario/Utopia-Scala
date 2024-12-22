@@ -64,6 +64,7 @@ class ConcreteImage private(override protected val source: Option[BufferedImage]
 	  * The size of the original image
 	  */
 	override val sourceResolution = source.map { s => Size(s.getWidth, s.getHeight) }.getOrElse(Size.zero)
+	override lazy val sourceResolutionOrigin = super.sourceResolutionOrigin
 	/**
 	  * @return The size of this image in pixels
 	  */
@@ -72,6 +73,7 @@ class ConcreteImage private(override protected val source: Option[BufferedImage]
 	  * The bounds of this image when origin and size are both counted
 	  */
 	override lazy val bounds = Bounds(-origin, size)
+	override lazy val maxScaling = super.maxScaling
 	
 	
 	// COMPUTED	--------------------
