@@ -129,11 +129,18 @@ object ColumnLengthRules
 			// Checks whether the file specifies a database name already
 			val limits = {
 				// Case: Database names are specified within the file => These overwrite the specified DB name
-				if (model.propertiesIterator.nextOption().exists { _.value.model.isDefined })
+				if (model.propertiesIterator.nextOption()
+					.exists { _.value.model.exists { _.propertiesIterator.nextOption()
+						.exists { _.value.model.isDefined } } })
+				{
+					println("DB names were specified")
 					model.properties.flatMap { dbAtt => loadFromDbModel(dbAtt.name, dbAtt.value.getModel) }
+				}
 				// Case: Database names not specified => Continues with the specified database name
-				else
+				else {
+					println("DB names were not specified")
 					loadFromDbModel(databaseName, json.getModel)
+				}
 			}
 			specifics ++= DeepMap(limits)
 		}

@@ -17,8 +17,7 @@ object LengthRuleImportTest extends App
 	implicit val jsonParser: JsonParser = JsonReader
 	implicit val cPool: ConnectionPool = new ConnectionPool()
 	
-	
 	ColumnLengthRules
-		.loadFrom("Citadel/data/length-rules/citadel-length-rules-v2.1.json", "test").get
-	println(ColumnLengthRules.apply("test", "description"))
+		.loadFrom("Logos/data/length-rules/logos-length-rules-v0.3.json", "test").get
+	println(ColumnLengthRules.apply("test", "word"))
 }

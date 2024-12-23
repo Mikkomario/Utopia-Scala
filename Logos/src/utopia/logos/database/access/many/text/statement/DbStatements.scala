@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.text.statement
 
+import com.vdurmont.emoji.EmojiParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.EitherExtensions._
@@ -28,7 +29,8 @@ object DbStatements
 	  * @return Stored statements, where each entry is either right, if it existed already, or left,
 	  * if it was newly inserted
 	  */
-	def store(text: String)(implicit connection: Connection): Seq[Sided[StoredStatement]] = store(Statement.allFrom(text))
+	def store(text: String)(implicit connection: Connection): Seq[Sided[StoredStatement]] =
+		store(Statement.allFrom(EmojiParser.parseToAliases(text)))
 	/**
 	  * Stores the specified text to the database as a sequence of statements.
 	  * Avoids inserting duplicate entries.

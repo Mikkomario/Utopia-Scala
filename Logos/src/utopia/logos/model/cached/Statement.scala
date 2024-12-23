@@ -1,6 +1,7 @@
 package utopia.logos.model.cached
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
@@ -32,18 +33,19 @@ object Statement
 	 */
 	def allFrom(text: String) = {
 		// Separates between links, delimiters and words
-		val parts = StoredLink.regex.divide(text).flatMap {
+		val parts = Link.regex.divide(text).flatMap {
 			case Left(text) =>
 				// Trims words and filters out empty strings
 				Delimiter.anyDelimiterRegex.divide(text).flatMap {
-					case Left(text) => text.trim.notEmpty.map { _ -> _word }
+					case Left(text) =>
+						wordSplitRegex.split(text).view.map { _.trim }.filter { _.nonEmpty }.map { _ -> _word }
 					case Right(delimiter) => delimiter.notEmpty.map { _ -> _delimiter }
 				}
 			case Right(link) => Some(link -> _link)
 		}
 		
 		// Groups words and links to delimiter-separated groups
-		val statementsBuilder = new VectorBuilder[Statement]()
+		val statementsBuilder = OptimizedIndexedSeq.newBuilder[Statement]
 		var nextStartIndex = 0
 		while (nextStartIndex < parts.size) {
 			// Finds the next delimiter

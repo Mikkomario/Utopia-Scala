@@ -19,7 +19,7 @@ class LazyEmailHeadersView(getSender: => String, getSubject: => String, getMessa
 {
 	// ATTRIBUTES   ---------------------------------
 	
-	override lazy val sender = getSender
+	override lazy val sender: EmailAddress = getSender
 	override lazy val recipients = getRecipients
 	override lazy val subject = getSubject
 	override lazy val replyTo = geReplyTo.getOrElse(sender)

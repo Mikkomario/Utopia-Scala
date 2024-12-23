@@ -57,6 +57,7 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	  * @param text Targeted text
 	  * @return Copy of this access point that only includes words where text is within the specified value set
 	  */
+	// FIXME: Fails when emojis are involved
 	def matchingWords(text: Iterable[String]) = filter(model.text.column.in(text))
 	
 	/**

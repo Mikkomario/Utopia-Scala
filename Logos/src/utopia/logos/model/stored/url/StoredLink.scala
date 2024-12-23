@@ -1,28 +1,20 @@
 package utopia.logos.model.stored.url
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.url.link.DbSingleLink
+import utopia.logos.model.cached.Link
 import utopia.logos.model.factory.url.LinkFactoryWrapper
 import utopia.logos.model.partial.url.LinkData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object StoredLink extends StoredFromModelFactory[LinkData, StoredLink]
 {
-	// ATTRIBUTES	--------------------
+	// COMPUTED ------------------------
 	
-	private lazy val questionMarkRegex = Regex.escape('?')
-	private lazy val pathCharacterRegex = 
-		(Regex.letterOrDigit || Regex.anyOf("-._~:/#[]@!$&'()*+,;%=")).withinParentheses
-	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParentheses
-	/**
-	  * A regular expression that matches to the parameters -part of a link
-	  */
-	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParentheses
-	/**
-	  * A regular expression that matches to links
-	  */
-	lazy val regex = Domain.regex + pathCharacterRegex.anyTimes + paramPartRegex.noneOrOnce
+	@deprecated("Moved to Link", "v0.3")
+	def paramPartRegex = Link.paramPartRegex
+	@deprecated("Moved to Link", "v0.3")
+	def regex = Link.regex
 	
 	
 	// IMPLEMENTED	--------------------

@@ -120,8 +120,8 @@ object ColumnLengthRule
 								val defaultStr = column.defaultValue.notEmpty match {
 									case Some(defaultValue) =>
 										defaultValue.dataType match {
-											case StringType => s" '$defaultValue'"
-											case _ => defaultValue.toString
+											case StringType => s" DEFAULT '$defaultValue'"
+											case _ => s" DEFAULT $defaultValue"
 										}
 									case None => ""
 								}
