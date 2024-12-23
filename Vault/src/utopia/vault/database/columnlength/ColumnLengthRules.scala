@@ -1,5 +1,6 @@
 package utopia.vault.database.columnlength
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.DeepMap
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -112,17 +113,28 @@ object ColumnLengthRules
 	  * The column properties should have values such as "throw", "crop",
 	  * "expand" or "expand to X" where X is the maximum allowed length.
 	  * @param path Path to the json file to read
-	  * @param databaseName Name of the database to which to apply these rules
+	  * @param databaseName Name of the database to which to apply these rules.
+	 *                     Call-by-name; Not called if the file itself specifies database names.
 	  * @param jsonParser Json parser to use
 	  * @param exc Implicit execution context (used when handling connections opened during rule handling)
 	  * @param connectionPool Implicit connection pool (used for expanding column lengths when needed)
 	  * @return Success or failure, based on json parse result
 	  */
-	def loadFrom(path: Path, databaseName: String)
+	def loadFrom(path: Path, databaseName: => String)
 	            (implicit jsonParser: JsonParser, exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		jsonParser(path).map { json =>
-			val limits = loadFromDbModel(databaseName, json.getModel)
+			val model = json.getModel
+			
+			// Checks whether the file specifies a database name already
+			val limits = {
+				// Case: Database names are specified within the file => These overwrite the specified DB name
+				if (model.propertiesIterator.nextOption().exists { _.value.model.isDefined })
+					model.properties.flatMap { dbAtt => loadFromDbModel(dbAtt.name, dbAtt.value.getModel) }
+				// Case: Database names not specified => Continues with the specified database name
+				else
+					loadFromDbModel(databaseName, json.getModel)
+			}
 			specifics ++= DeepMap(limits)
 		}
 	}

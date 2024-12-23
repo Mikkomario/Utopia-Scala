@@ -28,8 +28,7 @@ class Tables(connectionPool: ConnectionPool)(implicit exc: ExecutionContext)
 	 * @param newConversionMethod A new method for column name conversion. Takes the database-originated column name
 	 *                            as parameter and returns the column attribute name used in the code.
 	 */
-	def columnNameConversion_=(newConversionMethod: Iterable[String] => Map[String, String]) =
-	{
+	def columnNameConversion_=(newConversionMethod: Iterable[String] => Map[String, String]) = {
 		// Has to clear all existing data to use the new method
 		_columnNameConversion = newConversionMethod
 		dbs.keys.foreach(References.clear)

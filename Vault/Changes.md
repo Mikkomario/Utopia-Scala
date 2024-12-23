@@ -9,6 +9,7 @@
   where row primary keys were not included in the used select statement.
 ### New features
 - Added **ConsoleCommands**, which provides some utility database commands for command line consoles
+- `ColumLengthRules.apply(Path, String)` now also supports length rule files which specify database names
 ### New methods
 - **ConditionElement**
   - Added `.length` for string length-based conditions
