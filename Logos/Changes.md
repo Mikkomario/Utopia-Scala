@@ -4,6 +4,7 @@
 ### New features
 - Added **DetailedStatement** class
 - Added **CombinedStatement** trait
+- Added emoji filtering to statement storing logic
 ### Other changes
 - **StatedWord** now extends **Placed**
 - **PlacedStatement** now extends **CombinedStatement**

@@ -2,6 +2,7 @@
 
 ## v1.20.1 (in development)
 ### Bugfixes
+- Previously column length altering logic would fail with columns that have default values
 - Automatically generated joins from a **ReferencePoint** may now include a join from the specified point, 
   when the targeted table is one of the listed options
 - **NullDeprecatableView**`.deprecate()` now includes the whole access target, not only the primary table
