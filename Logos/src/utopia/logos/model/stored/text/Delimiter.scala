@@ -11,27 +11,18 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 {
 	// ATTRIBUTES	--------------------
 	
-	private lazy val commaRegex = Regex.escape(',')
-	private lazy val periodRegex = Regex.escape('.')
-	private lazy val startingParenthesisRegex = Regex.escape('(')
-	private lazy val endingParenthesisRegex = Regex.escape(')')
-	private lazy val exclamationRegex = Regex.escape('!')
-	private lazy val questionRegex = Regex.escape('?')
-	private lazy val colonRegex = Regex.escape(':')
 	private lazy val dashRegex = Regex.escape('-')
 	private lazy val quotationRegex = Regex("\\\"")
 	
 	private lazy val spacedDelimiterRegex =
-		((commaRegex || periodRegex || exclamationRegex || questionRegex ||
-			colonRegex || endingParenthesisRegex).withinParentheses.oneOrMoreTimes +
+		(Regex.anyOf(",.!?:;)]").oneOrMoreTimes +
 			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
 	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParentheses
 	
 	/**
 	  * A regular expression that finds delimiters from text
 	  */
-	lazy val anyDelimiterRegex =
-		(startingParenthesisRegex || endingParenthesisRegex || quotationRegex || spacedDelimiterRegex ||
+	lazy val anyDelimiterRegex = (Regex.anyOf("()<>{}[]") || quotationRegex || spacedDelimiterRegex ||
 			surroundedDashRegex || Regex.newLine).withinParentheses + Regex.newLine.anyTimes
 			
 	

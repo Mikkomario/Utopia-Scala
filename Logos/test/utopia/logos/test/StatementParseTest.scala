@@ -10,7 +10,7 @@ import utopia.logos.model.cached.Statement
  */
 object StatementParseTest extends App
 {
-	private val statements = Statement.allFrom("Huom: Yrityksen perustiedot ovat muuttuneet. Katso uudet tiedot osoitteesta: https://test.com/uutiset [22.4.2024]. (Lisätiedot tarvittaessa).")
+	private val statements = Statement.allFrom("Huom: Yrityksen perustiedot ovat muuttuneet. Katso uudet tiedot osoitteesta: https://test.com/uutiset [22.4.2024]. (Lisätiedot tarvittaessa). {\"prop\": \"value\" }")
 	statements.foreach { s =>
 		println()
 		println(s.words.mkString(" + "))

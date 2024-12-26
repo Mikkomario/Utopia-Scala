@@ -8,6 +8,7 @@
 ### Other changes
 - **StatedWord** now extends **Placed**
 - **PlacedStatement** now extends **CombinedStatement**
+- Updated delimiters to be more inclusive 
 
 ## v0.3 - 04.10.2024
 A major refactoring update with the aim of standardizing the model and package structure. 
