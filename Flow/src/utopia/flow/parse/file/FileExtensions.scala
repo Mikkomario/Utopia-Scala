@@ -545,8 +545,10 @@ object FileExtensions
 			// Case: One or both files don't exist => Non-existing files are considered equal
 			else if (notExists)
 				Try { other.notExists }
+			else if (other.notExists)
+				Success(false)
 			// Case: Normalized paths are equal => Won't compare contents
-			else if (p.toRealPath() == other.toRealPath())
+			else if (Try { p.toRealPath() == other.toRealPath() }.getOrElse(false))
 				Success(true)
 			// Case: Paths are different => Checks whether the file contents are equal
 			else

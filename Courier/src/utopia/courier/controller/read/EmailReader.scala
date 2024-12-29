@@ -383,6 +383,7 @@ class EmailReader[A](settings: ReadSettings,
 			queuedFailures.foreach { log(_) }
 		}
 		
+		//noinspection ConvertibleToMethodValue
 		private def queueMessageDeletion(folder: Folder, message: Message): Unit = {
 			// Case: Iteration has already completed =>
 			//       Immediately deletes the messages (requires folder-opening & closing)
@@ -471,6 +472,7 @@ class EmailReader[A](settings: ReadSettings,
 		
 		private def queue(error: Throwable) = queuedFailures :+= error
 		
+		//noinspection ConvertibleToMethodValue
 		// Returns whether any failures were encountered
 		private def unqueueDeletions() = {
 			deletionQueuePointer.mutate { queue =>
@@ -516,26 +518,7 @@ class EmailReader[A](settings: ReadSettings,
 		{
 			// Case: Next message items could be successfully acquired => Processes message content
 			case Success((message, builder)) =>
-				// Reads the message content. If the primary content read fails,
-				// attempts to get around it by wrapping the message in another instance
-				// (Unable to load BODYSTRUCTURE exception workaround)
-				val content = Try { message.getContent } match {
-					// Case: Access succeeded => continues normally
-					case success: Success[AnyRef] => success
-					// Case: Initial access failed => Attempts the workaround if applicable
-					case failure: Failure[AnyRef] =>
-						message match {
-							// Case: MimeMessage => Tries the workaround
-							case mimeMessage: MimeMessage =>
-								// If the workaround fails also, refers back to the original exception
-								Try { new MimeMessage(mimeMessage).getContent }.orElse(failure)
-							// Case: Not a MimeMessage => Workaround doesn't apply
-							case _ => failure
-						}
-				}
-				val result = content
-					.flatMap { processContent(_, builder) }
-					.flatMap { _ => builder.result() }
+				val result = processMessageContent(message, builder).flatMap { _ => builder.result() }
 				// May delete the message afterwards
 				// Remembers the result
 				// Ignores deletion failures
@@ -551,6 +534,27 @@ class EmailReader[A](settings: ReadSettings,
 		
 		
 		// OTHER    --------------------------------
+		
+		private def processMessageContent(message: Message, builder: FromEmailBuilder[A]): Try[Unit] = {
+			// Reads the message content. If the primary content read fails,
+			// attempts to get around it by wrapping the message in another instance
+			// (Unable to load BODYSTRUCTURE exception workaround)
+			val content = Try { message.getContent } match {
+				// Case: Access succeeded => continues normally
+				case success: Success[AnyRef] => success
+				// Case: Initial access failed => Attempts the workaround if applicable
+				case failure: Failure[AnyRef] =>
+					message match {
+						// Case: MimeMessage => Tries the workaround
+						case mimeMessage: MimeMessage =>
+							// If the workaround fails also, refers back to the original exception
+							Try { new MimeMessage(mimeMessage).getContent }.orElse(failure)
+						// Case: Not a MimeMessage => Workaround doesn't apply
+						case _ => failure
+					}
+			}
+			content.flatMap { processContent(_, builder) }
+		}
 		
 		private def processContent(content: AnyRef, builder: FromEmailBuilder[A]): Try[Unit] = {
 			if (content == null)
@@ -581,6 +585,12 @@ class EmailReader[A](settings: ReadSettings,
 										processContent(part.getContent, builder)
 								}.flatten
 							} }
+					// Case: Wrapped message => Processes the message content recursively
+					case message: Message => processMessageContent(message, builder)
+					// Case: Unrecognized message content => Fails
+					case _ =>
+						Failure(new IllegalArgumentException(
+							s"Unrecognized message type: ${ content.getClass.getName }"))
 				}
 		}
 	}

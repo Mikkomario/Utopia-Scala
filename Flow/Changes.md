@@ -3,6 +3,8 @@
 ## v2.5.1 (in development)
 ### Deprecations
 - Renamed **DateRange**'s `.period` to `.length`
+### Bugfixes
+- Previously **Path**`.hasSameContentAs(Path)` would throw if the other path was non-existent
 ### New features
 - Added **TimeUnit** enumeration, which is an advanced version of Java's enumeration with the same name
 - Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so

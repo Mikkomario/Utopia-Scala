@@ -1,5 +1,9 @@
 # Utopia Courier - List of Changes
 
+## v1.1.3 (in development)
+### Bugfixes
+- Added support for nested messages
+
 ## v1.1.2 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 
