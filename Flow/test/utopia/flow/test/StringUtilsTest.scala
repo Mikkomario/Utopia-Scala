@@ -76,5 +76,7 @@ object StringUtilsTest extends App
 	println(StringUtils.asciiTableFrom[String](Vector("ABC", "Test", "2-line\nString"), Vector("Str", "Length", "Letter"),
 		Identity, _.length.toString, _.head.toString))
 	
+	println()
+	
 	println("Success!")
 }

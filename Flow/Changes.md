@@ -18,6 +18,8 @@
   - Added `.findNextIndexWhere(...)` and `.findPreviousIndexWhere(...)`
 - **InputStream** (**StreamExtensions**)
   - Added `.buffered` and `.notEmpty`
+- **String** (**StringExtensions**)
+  - Added `.splitToLinesIterator(Int)`
 - **Try** (**TryExtensions**)
   - Added `.mapFailure(...)`
 ### Other changes
