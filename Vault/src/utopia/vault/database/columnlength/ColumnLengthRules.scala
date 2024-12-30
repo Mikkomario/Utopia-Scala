@@ -132,15 +132,10 @@ object ColumnLengthRules
 				if (model.propertiesIterator.nextOption()
 					.exists { _.value.model.exists { _.propertiesIterator.nextOption()
 						.exists { _.value.model.isDefined } } })
-				{
-					println("DB names were specified")
 					model.properties.flatMap { dbAtt => loadFromDbModel(dbAtt.name, dbAtt.value.getModel) }
-				}
 				// Case: Database names not specified => Continues with the specified database name
-				else {
-					println("DB names were not specified")
+				else
 					loadFromDbModel(databaseName, json.getModel)
-				}
 			}
 			specifics ++= DeepMap(limits)
 		}

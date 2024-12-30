@@ -609,7 +609,7 @@ class EmailReader[A](settings: ReadSettings,
 			source.next().flatMap { case (message, deletionFlag) =>
 				Try {
 					// Reads the header information (lazily)
-					def subject = message.getSubject
+					def subject = Option(message.getSubject).getOrElse("")
 					def sentTime = message.getSentDate.toInstant
 					def sender = Option(message.getFrom) match {
 						case Some(senders) => senders.mkString(", ")
