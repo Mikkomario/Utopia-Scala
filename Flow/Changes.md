@@ -12,7 +12,9 @@
 - Added **RepeatOneForeverIterator**
 - Added **LazilyInitializedChanging** that provides lazy **Changing** wrapping
 ### New methods
-- **IterableOnce**
+- **Iterable** (**AsyncExtensions**)
+  - Added a new `.mapParallel(...)` variant
+- **IterableOnce** (**CollectionExtensions**)
   - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`
 - **ModelLike**
   - Added `.tryGet(...)`

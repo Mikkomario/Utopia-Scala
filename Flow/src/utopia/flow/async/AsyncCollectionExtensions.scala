@@ -85,23 +85,47 @@ object AsyncCollectionExtensions
 		def mapParallel[B, To](maxWidth: Int)(f: iter.A => B)
 		                      (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext): To =
 		{
-			// Won't set up the mapping process if the original collection is empty
-			if (ops.isEmpty)
-				bf.fromSpecific(coll)(Iterator.empty)
 			// Covers the single-threaded use-case
-			else if (maxWidth <= 1)
+			if (maxWidth <= 1)
 				bf.fromSpecific(coll)(ops.map(f))
 			else {
 				// Also, if the original collection is small enough, simplifies the process by not limiting thread use
 				val knownSize = ops.knownSize
-				if (knownSize == 1)
+				if (knownSize == 0)
+					bf.fromSpecific(coll)(Iterator.empty)
+				else if (knownSize == 1)
 					bf.fromSpecific(coll)(Iterator.single(f(ops.head)))
 				else if (knownSize >= 0 && knownSize <= maxWidth)
 					mapAllParallel(f)
 				else {
 					// Prepares the queue for parallel processing
 					implicit val log: Logger = SysErrLogger
-					val queue = new ActionQueue(maxWidth)
+					mapParallel(new ActionQueue(maxWidth))(f)
+				}
+			}
+		}
+		/**
+		  * Maps this collection in parallel using multiple threads
+		  * @param queue Action queue which limits the number of parallel processes
+		  * @param f A mapping function
+		  * @param bf Implicit build-from for the resulting collection
+		  * @param log Implicit logging implementation used for handling failures thrown by 'f'
+		  * @tparam B Type of mapping results
+		  * @tparam To Type of the resulting collection
+		  * @return A mapped copy of this collection
+		  */
+		def mapParallel[B, To](queue: ActionQueue)(f: iter.A => B)
+		                      (implicit bf: BuildFrom[Repr, B, To], log: Logger): To =
+		{
+			if (queue.maxWidth <= 1)
+				bf.fromSpecific(coll)(ops.map(f))
+			else {
+				val knownSize = ops.knownSize
+				if (knownSize == 0)
+					bf.fromSpecific(coll)(Iterator.empty)
+				else if (knownSize == 1)
+					bf.fromSpecific(coll)(Iterator.single(f(ops.head)))
+				else {
 					val builder = bf.newBuilder(coll)
 					ops
 						// Maps by starting as many actions as is possible in parallel
@@ -117,7 +141,7 @@ object AsyncCollectionExtensions
 								// Case: Mapping succeeded => Adds the item to success results
 								case Success(res) => builder += res
 								// Case: Mapping failed => Records a failure
-								case Failure(error) => exc.reportFailure(error)
+								case Failure(error) => log(error)
 							}
 						}
 					builder.result()
