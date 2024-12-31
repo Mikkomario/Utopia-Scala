@@ -15,6 +15,7 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 04.05.2024, v2.4
   */
+@deprecated("Deprecated for removal. These were moved to CollectionExtensions, since both could not be imported at the same time", "v2.5.1")
 object AsyncCollectionExtensions
 {
 	class AsyncIterableOnceOps[Repr, I <: IsIterableOnce[Repr]](coll: Repr, iter: I)
@@ -100,7 +101,7 @@ object AsyncCollectionExtensions
 				else {
 					// Prepares the queue for parallel processing
 					implicit val log: Logger = SysErrLogger
-					mapParallel(new ActionQueue(maxWidth))(f)
+					mapParallelUsing(new ActionQueue(maxWidth))(f)
 				}
 			}
 		}
@@ -114,8 +115,8 @@ object AsyncCollectionExtensions
 		  * @tparam To Type of the resulting collection
 		  * @return A mapped copy of this collection
 		  */
-		def mapParallel[B, To](queue: ActionQueue)(f: iter.A => B)
-		                      (implicit bf: BuildFrom[Repr, B, To], log: Logger): To =
+		def mapParallelUsing[B, To](queue: ActionQueue)(f: iter.A => B)
+		                           (implicit bf: BuildFrom[Repr, B, To], log: Logger): To =
 		{
 			if (queue.maxWidth <= 1)
 				bf.fromSpecific(coll)(ops.map(f))
@@ -152,7 +153,7 @@ object AsyncCollectionExtensions
 		/**
 		  * Maps all items in this collection in parallel with each other, utilizing multiple threads.
 		  * This function is more appropriate for small-size collection. For larger collections,
-		  * consider using [[mapParallel]] instead.
+		  * consider using [[mapParallelUsing]] instead.
 		  * @param f A mapping function. Called asynchronously. Not expected to throw.
 		  * @param bf Implicit build-from for the resulting collection
 		  * @param exc Implicit execution context

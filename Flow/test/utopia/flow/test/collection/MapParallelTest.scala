@@ -1,10 +1,12 @@
 package utopia.flow.test.collection
 
 import utopia.flow.test.TestContext._
-import utopia.flow.async.AsyncCollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.async.process.Wait
 import utopia.flow.time.Now
+
+import scala.util.Random
 
 /**
   * Tests parallel mapping
@@ -13,22 +15,21 @@ import utopia.flow.time.Now
   */
 object MapParallelTest extends App
 {
-	println("Starting mapping. Estimated completion in 10 seconds...")
+	println("Starting mapping. Estimated completion in around 25 seconds...")
 	val startTime = Now.toInstant
-	val result = (0 until 100).toVector.mapParallel(5) { i =>
-		Wait(0.5.seconds)
+	val result = (0 until 10000).toVector.mapParallel(20) { i =>
+		Wait((Random.nextDouble() * 0.1).seconds)
 		i
 	}
 	val duration = Now - startTime
-	
-	assert(result.size == 100)
-	assert(result.head == 0)
-	assert(result.last == 99)
-	
 	println(s"Processing took ${ duration.description }")
 	
-	assert(duration > 5.seconds)
-	assert(duration < 15.seconds)
+	assert(result.size == 10000)
+	assert(result.head == 0)
+	assert(result.last == 9999)
+	
+	assert(duration > 15.seconds)
+	assert(duration < 40.seconds)
 	
 	println("Success")
 }
