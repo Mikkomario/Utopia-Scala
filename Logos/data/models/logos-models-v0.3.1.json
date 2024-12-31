@@ -1,0 +1,266 @@
+{
+  "project": "Logos",
+  "version": "v0.3.1",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.logos",
+  "enums": [
+    {
+      "name": "DisplayStyle",
+      "doc": "Represents a style chosen for displaying words, such as underlining or bold text. An open enumeration, meaning that sub-modules may introduce their own values.",
+      "default": "Default",
+      "values": [
+        {
+          "name": "Default",
+          "doc": "The default style with no modifications on how the text should be displayed."
+        }
+      ]
+    }
+  ],
+  "classes": {
+    "text": [
+      {
+        "name": "TextPlacement",
+        "generic": true,
+        "access": "placement",
+        "doc": "Places some type of text to some location within another text",
+        "props": [
+          {
+            "name": "parentId",
+            "type": "Int",
+            "doc": "Id of the text where the placed text appears",
+            "with": "withinText"
+          },
+          {
+            "name": "placedId",
+            "type": "Int",
+            "doc": "Id of the text that is placed within the parent text",
+            "with": "placing",
+            "in": "placingTexts"
+          },
+          {
+            "name": "orderIndex",
+            "name_plural": "orderIndices",
+            "type": "Int(tiny)",
+            "length_rule": "Expand",
+            "doc": "0-based index that indicates the specific location of the placed text",
+            "default": 0,
+            "with": "at",
+            "in": "atIndices"
+          }
+        ]
+      },
+      {
+        "name": "Word",
+        "prefix": "Stored",
+        "doc": "Represents an individual word used in a text document. Case-sensitive.",
+        "combo": {
+          "name": "StatedWord",
+          "child": "WordPlacement",
+          "child_alias": "useCase",
+          "is_always_linked": true,
+          "doc": "Represents a word used in a specific statement"
+        },
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(16-64)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "Text representation of this word",
+            "with": "matching",
+            "in": "matchingWords"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Delimiter", 
+        "doc": "Represents a character sequence used to separate two statements or parts of a statement",
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(2-16)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "The characters that form this delimiter",
+            "with": "matching",
+            "in": "matchingDelimiters"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Statement",
+        "prefix": "Stored",
+        "has_many_combos": true,
+        "doc": "Represents an individual statement made within some text. Consecutive statements form whole texts.",
+        "props": [
+          {
+            "ref": "delimiter",
+            "type": "Option[Int]",
+            "doc": "Id of the delimiter that terminates this sentence. None if this sentence is not terminated with any character.",
+            "with": "endingWith",
+            "in": "endingWithDelimiters"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this statement was first made"
+          }
+        ]
+      },
+      {
+        "name": "StatementPlacement",
+        "access": "statement.placement",
+        "generic": true,
+        "parent": "TextPlacement",
+        "doc": "Common trait for models which are used for placing statements within various texts",
+        "props": [
+          {
+            "parent": "placedId",
+            "name": "statementId",
+            "ref": "statement",
+            "with": "placingStatement",
+            "in": "placingStatements",
+            "doc": "Id of the statement which appears within the linked text"
+          }
+        ]
+      },
+      {
+        "name": "WordPlacement",
+        "access": "word.placement",
+        "extends": "TextPlacement",
+        "doc": "Records when a word is used in a statement",
+        "combo_index": ["statementId", "orderIndex"],
+        "props": [
+          {
+            "name": "statementId",
+            "extends": "parentId",
+            "ref": "statement",
+            "doc": "Id of the statement where the referenced word appears",
+            "with": "withinStatement",
+            "in": "withinStatements"
+          },
+          {
+            "name": "wordId",
+            "extends": "placedId",
+            "ref": "word",
+            "doc": "Id of the word that appears in the described statement",
+            "with": "placingWord",
+            "in": "placingWords"
+          },
+          {
+            "name": "style",
+            "type": "Enum[DisplayStyle]",
+            "doc": "Style in which this word is used in this context"
+          }
+        ]
+      }
+    ],
+    "url": [
+      {
+        "name": "Domain",
+        "doc": "Represents the address of an internet service",
+        "props": [
+          {
+            "name": "url",
+            "type": "NonEmptyString(12-255)",
+            "allow_crop": true,
+            "index": true,
+            "doc": "Full http(s) address of this domain in string format. Includes protocol, domain name and possible port number.",
+            "with": "withUrl"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "RequestPath",
+        "access": "path",
+        "doc": "Represents a specific http(s) request url path part, not including any query parameters",
+        "combo": {
+          "name": "DetailedRequestPath",
+          "child": "Domain",
+          "is_always_linked": true,
+          "doc": "Includes textual domain information in a request path"
+        },
+        "combo_index": ["domainId", "path"],
+        "props": [
+          {
+            "ref": "domain",
+            "doc": "Id of the domain part of this url",
+            "with": "withinDomain"
+          },
+          {
+            "name": "path",
+            "type": "String(12-1024)",
+            "allow_crop": true,
+            "doc": "Part of this url that comes after the domain part. Doesn't include any query parameters, nor the initial forward slash."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Link",
+        "prefix": "Stored",
+        "doc": "Represents a link for a specific http(s) request",
+        "has_combos": true,
+        "props": [
+          {
+            "name": "pathId",
+            "ref": "request_path",
+            "doc": "Id of the targeted internet address, including the specific sub-path",
+            "with": "withPath"
+          },
+          {
+            "name": "queryParameters",
+            "name_plural": "queryParameters",
+            "type": "Model(255-2048)",
+            "doc": "Specified request parameters in model format"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "LinkPlacement",
+        "extends": "TextPlacement",
+        "access": "link.placement",
+        "doc": "Places a link within a statement",
+        "combo_index": ["statementId", "orderIndex"],
+        "props": [
+          {
+            "extends": "parentId",
+            "name": "statementId",
+            "ref": "statement",
+            "doc": "Id of the statement where the specified link is referenced",
+            "with": "withinStatement",
+            "in": "withinStatements"
+          },
+          {
+            "extends": "placedId",
+            "name": "linkId",
+            "ref": "link",
+            "doc": "Referenced / placed link",
+            "with": "placingLink",
+            "in": "placingLinks"
+          }
+        ]
+      }
+    ]
+  }
+}

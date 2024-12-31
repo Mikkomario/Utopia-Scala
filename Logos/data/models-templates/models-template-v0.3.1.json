@@ -1,0 +1,60 @@
+{
+  "project": "",
+  "version": "v1.0",
+  "author": "",
+  "package": "",
+  "classes": {
+    "text": [
+      {
+        "name": "TextPlacement",
+        "generic": true,
+        "from": "utopia.logos",
+        "access": "placement",
+        "doc": "Places some type of text to some location within another text",
+        "props": [
+          {
+            "name": "parentId",
+            "type": "Int",
+            "doc": "Id of the text where the placed text appears",
+            "with": "withinText"
+          },
+          {
+            "name": "placedId",
+            "type": "Int",
+            "doc": "Id of the text that is placed within the parent text",
+            "with": "placing",
+            "in": "placingTexts"
+          },
+          {
+            "name": "orderIndex",
+            "name_plural": "orderIndices",
+            "type": "Int(tiny)",
+            "length_rule": "Expand",
+            "doc": "0-based index that indicates the specific location of the placed text",
+            "default": 0,
+            "with": "at",
+            "in": "atIndices"
+          }
+        ]
+      },
+      {
+        "name": "StatementPlacement",
+        "generic": true,
+        "from": "utopia.logos",
+        "parent": "TextPlacement",
+        "access": "statement.placement",
+        "doc": "Common trait for models which are used for placing statements within various texts",
+        "props": [
+          {
+            "parent": "placedId",
+            "name": "statementId",
+            "ref": "statement",
+            "with": "placingStatement",
+            "in": "placingStatements",
+            "doc": "Id of the statement which appears within the linked text"
+          }
+        ]
+      }
+    ]
+  }
+}
