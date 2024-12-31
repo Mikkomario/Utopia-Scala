@@ -7,7 +7,7 @@ import utopia.logos.database.props.text.StatementPlacementDbProps
   * models
   * @tparam A Type of read instances
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbFactoryLike[+A] extends TextPlacementDbFactoryLike[A]
 {

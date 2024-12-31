@@ -8,6 +8,7 @@ import utopia.logos.database.access.many.url.link.placement.DbLinkPlacements
 import utopia.logos.database.factory.text.StatementDbFactory
 import utopia.logos.database.storable.text.{StatementDbModel, WordPlacementDbModel}
 import utopia.logos.database.storable.url.LinkPlacementDbModel
+import utopia.logos.model.cached.PreparedWordOrLinkPlacement
 import utopia.logos.model.partial.text.{StatementData, WordPlacementData}
 import utopia.logos.model.partial.url.LinkPlacementData
 import utopia.logos.model.stored.text.StoredStatement
@@ -56,49 +57,50 @@ object DbStatement extends SingleRowModelAccess[StoredStatement] with Unconditio
 	
 	/**
 	  * Stores a statement to the database. Avoids inserting duplicate entries.
-	  * @param wordIds Ids of the words that form this statement
+	  * @param words Words that form this statement
 	  * @param delimiterId Id of the delimiter that ends this statement.
-	  * None if this statement doesn't end with a delimiter.
+	 *                    None if this statement doesn't end with a delimiter.
 	  * @param connection Implicit DB connection
 	  * @return Existing (right) or inserted (left) statement
 	  */
-	def store(wordIds: Seq[(Int, Boolean)], delimiterId: Option[Int])(implicit connection: Connection) = {
+	def store(words: Seq[PreparedWordOrLinkPlacement], delimiterId: Option[Int])
+	         (implicit connection: Connection) =
+	{
 		// Case: Empty statement => Pulls or inserts
-		if (wordIds.isEmpty)
+		if (words.isEmpty)
 			DbStatements.endingWith(delimiterId).pullEmpty.headOption
 				.toRight { model.insert(StatementData(delimiterId)) }
 		// Case: Non-empty statement => Finds potential matches
 		else {
-			val (firstWordId, firstWordIsLink) = wordIds.head
+			val firstWord = words.head
 			val initialMatchIds = DbStatements.endingWith(delimiterId)
-				.findStartingWith(firstWordId, isLink = firstWordIsLink)
+				.findStartingWith(firstWord.id, Some(firstWord.style), isLink = firstWord.isLink)
 				.map { _.id }.toSet
 			// Reduces the number of potential matches by including more words
-			val remainingMatchIds = wordIds.zipWithIndex.tail
-				.foldLeft(initialMatchIds) { case (potentialStatementIds, ((wordId, isLink), wordIndex)) =>
+			val remainingMatchIds = words.zipWithIndex.tail
+				.foldLeft(initialMatchIds) { case (potentialStatementIds, (word, wordIndex)) =>
 					if (potentialStatementIds.isEmpty)
 						potentialStatementIds
-					else if (isLink)
+					else if (word.isLink)
 						DbLinkPlacements
-							.withinStatements(potentialStatementIds).placingLink(wordId).at(wordIndex)
+							.withinStatements(potentialStatementIds).placingLink(word.id).at(wordIndex)
 							.statementIds.toSet
 					else
 						DbWordPlacements.withinStatements(potentialStatementIds)
-							.placingWordAtPosition(wordId, wordIndex)
+							.placingWordAtPosition(word.id, wordIndex).withStyle(word.style)
 							.statementIds.toSet
 				}
 			NotEmpty(remainingMatchIds)
 				// Only accepts statements of specific length
-				.flatMap { remaining => DbStatements(remaining).findShorterThan(wordIds.size + 1).headOption }
+				.flatMap { remaining => DbStatements(remaining).findShorterThan(words.size + 1).headOption }
 				// If no such statement exists, inserts it
 				.toRight {
 					val statement = model.insert(StatementData(delimiterId))
-					val (linkData, wordData) = wordIds.zipWithIndex.divideWith { case ((wordId, isLink),
-					index) =>
-						if (isLink)
-							Left(LinkPlacementData(statement.id, wordId, index))
+					val (linkData, wordData) = words.zipWithIndex.divideWith { case (word, index) =>
+						if (word.isLink)
+							Left(LinkPlacementData(statement.id, word.id, index))
 						else
-							Right(WordPlacementData(statement.id, wordId, index))
+							Right(WordPlacementData(statement.id, word.id, index, word.style))
 					}
 					linkLinkModel.insert(linkData)
 					wordLinkModel.insert(wordData)

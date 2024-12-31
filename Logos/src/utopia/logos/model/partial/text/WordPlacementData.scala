@@ -36,8 +36,7 @@ object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int = 0, 
-	style: DisplayStyle = Default) 
+case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int = 0, style: DisplayStyle = Default)
 	extends WordPlacementFactory[WordPlacementData] with TextPlacementData 
 		with TextPlacementDataLike[WordPlacementData]
 {

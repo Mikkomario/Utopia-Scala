@@ -5,7 +5,7 @@ package utopia.logos.model.factory.text
   * individual properties
   * @tparam A Type of constructed instances
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementFactory[+A] extends TextPlacementFactory[A]
 {

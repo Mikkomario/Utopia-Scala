@@ -12,7 +12,7 @@ import utopia.logos.model.template.Placed
  *      - Included delimiter
  *
  * @author Mikko Hilpinen
- * @since 17.12.2024, v0.3.1
+ * @since 17.12.2024, v0.4
  */
 case class DetailedStatement(statement: StoredStatement, words: Seq[StatedWord] = Empty,
                              links: Seq[DetailedLinkPlacement] = Empty, delimiter: Option[Delimiter] = None)

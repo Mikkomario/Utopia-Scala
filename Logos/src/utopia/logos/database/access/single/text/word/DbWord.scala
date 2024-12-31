@@ -41,6 +41,7 @@ object DbWord extends SingleRowModelAccess[StoredWord] with UnconditionalView wi
 	  * @param word Targeted word
 	  * @return Access to that word in the DB
 	  */
+	@deprecated("Doesn't necessarily take into account possible variations in casing", "v0.4")
 	def matching(word: String) = new DbSpecificWord(word)
 	
 	/**

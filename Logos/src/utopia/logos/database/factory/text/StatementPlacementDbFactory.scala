@@ -53,7 +53,7 @@ object StatementPlacementDbFactory
   * Common trait for factories which parse statement placement data from database-originated 
   * models
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbFactory extends StatementPlacementDbFactoryLike[StatementPlacement]
 

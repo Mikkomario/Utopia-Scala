@@ -6,7 +6,7 @@ package utopia.logos.model.factory.text
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementFactoryWrapper[A <: StatementPlacementFactory[A], +Repr] 
 	extends StatementPlacementFactory[Repr] with TextPlacementFactoryWrapper[A, Repr]

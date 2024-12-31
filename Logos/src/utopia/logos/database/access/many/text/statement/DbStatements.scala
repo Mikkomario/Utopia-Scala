@@ -8,7 +8,7 @@ import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
 import utopia.logos.database.access.many.url.link.DbLinks
 import utopia.logos.database.access.single.text.statement.DbStatement
-import utopia.logos.model.cached.Statement
+import utopia.logos.model.cached.{PreparedWordOrLinkPlacement, Statement}
 import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
@@ -36,8 +36,9 @@ object DbStatements
 	  * Avoids inserting duplicate entries.
 	  * @param statementData Statement texts to store
 	  * @param connection Implicit DB connection
-	  * @return Stored statements, where each entry is either right, if it existed already, or left,
-	  * if it was newly inserted
+	  * @return Stored statements, where each entry is either right,
+	 *         if it existed already, or left, if it was newly inserted.
+	 *         There are as many returned statements as there are entries in 'statementData'
 	  */
 	def store(statementData: Seq[Statement])(implicit connection: Connection) = {
 		// Stores the delimiters first
@@ -45,20 +46,24 @@ object DbStatements
 		
 		// Next stores the words, the links and the statements
 		// First element is words, second is links
-		val wordsAndLinks = Pair.tupleToPair(statementData.splitFlatMap { _.wordsAndLinks }).map { _.toSet }
-		val wordMap = DbWords.store(wordsAndLinks.first)
-		val linkMap = DbLinks.store(wordsAndLinks.second)
+		val wordMap = DbWords.store(statementData.view.flatMap { _.standardizedWords.map { _._1 } }.toSet)
+		val linkMap = DbLinks.store(statementData.view.flatMap { _.links }.toSet)
 			.merge { _ ++ _ }.map { l => l.toString.toLowerCase -> l.id }.toMap
 		
 		statementData.map { statement =>
-			val wordIds = statement.words.flatMap { word =>
-				val result = if (word.isLink) linkMap.get(word.text.toLowerCase) else wordMap.get(word.text)
+			val words = statement.words.flatMap { word =>
+				val result = {
+					if (word.isLink)
+						linkMap.get(word.text.toLowerCase).map(PreparedWordOrLinkPlacement.link)
+					else
+						wordMap.get(word.standardizedText).map { PreparedWordOrLinkPlacement(_, word.style) }
+				}
 				if (result.isEmpty)
 					println(s"Warning: Failed to match $word with options: ${
 						(if (word.isLink) linkMap else wordMap).keys.mkString(", ")}")
-				result.map { _ -> word.isLink }
+				result
 			}
-			DbStatement.store(wordIds, delimiterMap.get(statement.delimiter))
+			DbStatement.store(words, delimiterMap.get(statement.delimiter))
 		}
 	}
 }

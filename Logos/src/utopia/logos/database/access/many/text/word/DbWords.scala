@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.text.word
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.logos.database.storable.text.WordDbModel
 import utopia.logos.model.partial.text.WordData
 import utopia.vault.database.Connection
@@ -31,7 +32,7 @@ object DbWords extends ManyWordsAccess with UnconditionalView with ViewManyByInt
 				existingWordIds
 			else
 				existingWordIds ++
-					WordDbModel.insert(newWords.toVector.map { WordData(_) }).map { w => w.text -> w.id }
+					WordDbModel.insert(newWords.view.map { WordData(_) }.toOptimizedSeq).map { w => w.text -> w.id }
 		}
 	}
 }

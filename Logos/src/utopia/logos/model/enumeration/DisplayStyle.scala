@@ -1,6 +1,7 @@
 package utopia.logos.model.enumeration
 
-import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
@@ -23,6 +24,13 @@ trait DisplayStyle extends ValueConvertible with OpenEnumerationValue[Int]
 	  */
 	def id: Int
 	
+	/**
+	 * Applies this display style to the specified word
+	 * @param word A word to style (in a standard format)
+	 * @return A correctly styled copy of the specified word
+	 */
+	def apply(word: String): String
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -33,9 +41,14 @@ trait DisplayStyle extends ValueConvertible with OpenEnumerationValue[Int]
 
 object DisplayStyle extends OpenEnumeration[DisplayStyle, Int]
 {
+	// ATTRIBUTES   ----------------
+	
+	private var identifyFunctions: Seq[String => Option[(DisplayStyle, String)]] = Empty
+	
+	
 	// INITIAL CODE ----------------
 	
-	introduce(Single(default))
+	introduce(Vector(Default, Capitalized, AllCaps))
 	
 	
 	// COMPUTED	--------------------
@@ -78,6 +91,36 @@ object DisplayStyle extends OpenEnumeration[DisplayStyle, Int]
 	  */
 	def fromValue(value: Value) = findForValue(value).getOrElse(default)
 	
+	/**
+	 * @param word A word
+	 * @return Display style of that word, plus a standard form version of that word
+	 */
+	def of(word: String) = identifyFunctions.findMap { _(word) }.getOrElse { _of(word) }
+	/**
+	 * @param word A word
+	 * @return Display style of that word, from the 3 standard options,
+	 *         plus a standardized version of the specified word
+	 */
+	private def _of(word: String): (DisplayStyle, String) = {
+		val letters = word.filter { _.isLetter }
+		if (letters.isEmpty)
+			Default -> word
+		else if (letters.forall { _.isUpper })
+			AllCaps -> word.toLowerCase
+		else if (letters.head.isUpper)
+			Capitalized -> s"${ word.head.toLower }${ word.tail }"
+		else
+			Default -> word
+	}
+	
+	/**
+	 * Introduces logic for determining word display styles
+	 * @param identifyStyle A function which accepts a word and yields it's style, plus a standardized version of it.
+	 *                      Yields None in situations where other / default identify functions should be used instead.
+	 */
+	def addIdentifyLogic(identifyStyle: String => Option[(DisplayStyle, String)]) =
+		identifyFunctions = identifyStyle +: identifyFunctions
+	
 	
 	// NESTED	--------------------
 	
@@ -90,6 +133,41 @@ object DisplayStyle extends OpenEnumeration[DisplayStyle, Int]
 		// ATTRIBUTES	--------------------
 		
 		override val id = 1
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def apply(word: String): String = word
+	}
+	
+	/**
+	 * A display style where the starting letter is in upper-casing
+	 */
+	case object Capitalized extends DisplayStyle
+	{
+		// ATTRIBUTES   --------------------
+		
+		override val id: Int = 2
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def apply(word: String): String = word.capitalize
+		
+	}
+	/**
+	 * A display style where a word is written in upper-case letters only
+	 */
+	case object AllCaps extends DisplayStyle
+	{
+		// ATTRIBUTES   -------------------
+		
+		override val id: Int = 3
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def apply(word: String): String = word.toUpperCase
 	}
 }
 

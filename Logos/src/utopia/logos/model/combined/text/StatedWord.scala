@@ -64,6 +64,6 @@ trait StatedWord extends Extender[WordData] with HasId[Int] with WordFactoryWrap
 	
 	override def orderIndex: Int = useCase.orderIndex
 	
-	override def toString = word.toString
+	override def toString = useCase.style(word.text)
 }
 

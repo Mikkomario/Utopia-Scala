@@ -8,7 +8,7 @@ import utopia.logos.model.partial.text.{StatementPlacementDataLike, TextPlacemen
   * @tparam Data Type of the wrapped data
   * @tparam Repr Implementing type
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StoredStatementPlacementLike[Data <: StatementPlacementDataLike[Data], +Repr <: TextPlacementData] 
 	extends StatementPlacementFactoryWrapper[Data, Repr] with StatementPlacementDataLike[Repr] 

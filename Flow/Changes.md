@@ -28,6 +28,7 @@
   - Added `.splitToLinesIterator(Int)`
 - **Try** (**TryExtensions**)
   - Added `.mapFailure(...)`
+  - Added `.catching(Seq[Throwable])`
 ### Other changes
 - Internal refactoring in **TimeExtensions**
   - Modified conversions between different duration types

@@ -26,7 +26,7 @@ object StatementPlacementDbModelFactory
 	  * @param statementPlacementDbProps Properties which specify how the database interactions are 
 	  *                                  performed
 	  * @author Mikko Hilpinen
-	  * @since 30.12.2024, v0.3.1
+	  * @since 30.12.2024, v0.4
 	  */
 	case class StatementPlacementDbModelFactoryImpl(table: Table, statementPlacementDbProps: StatementPlacementDbProps)
 		extends StatementPlacementDbModelFactory with StatementPlacementDbPropsWrapper
@@ -79,7 +79,7 @@ object StatementPlacementDbModelFactory
 	  * @param dbProps Configurations of the interacted database properties
 	  * @param id      statement placement database id
 	  * @author Mikko Hilpinen
-	  * @since 30.12.2024, v0.3.1
+	  * @since 30.12.2024, v0.4
 	  */
 	private case class _StatementPlacementDbModel(table: Table, dbProps: StatementPlacementDbProps,
 	                                              id: Option[Int] = None, parentId: Option[Int] = None,
@@ -117,7 +117,7 @@ object StatementPlacementDbModelFactory
 /**
   * Common trait for factories yielding statement placement database models
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbModelFactory 
 	extends StatementPlacementDbModelFactoryLike[StatementPlacementDbModel, StatementPlacement, StatementPlacementData] 

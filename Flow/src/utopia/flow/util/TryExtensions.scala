@@ -133,6 +133,15 @@ object TryExtensions
 		}
 		
 		/**
+		 * @param failures Additional failures to attach to this Try.
+		 *                 Call-by-name, only called if this is a success.
+		 * @return Copy of this try catching the specified failures
+		 */
+		def catching(failures: => Seq[Throwable]): TryCatch[A] = t match {
+			case Success(v) => TryCatch.Success(v, failures)
+			case Failure(error) => TryCatch.Failure(error)
+		}
+		/**
 		  * Maps the value of this Try, if successful.
 		  * @param f A mapping function that accepts a successfully acquired value and returns a
 		  *          TryCatch instance.

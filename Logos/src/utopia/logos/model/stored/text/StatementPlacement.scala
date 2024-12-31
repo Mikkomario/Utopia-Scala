@@ -47,7 +47,7 @@ object StatementPlacement extends StoredFromModelFactory[StatementPlacementData,
 /**
   * Represents a statement placement that has already been stored in the database
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacement 
 	extends StoredStatementPlacementLike[StatementPlacementData, StatementPlacement] 

@@ -1,10 +1,27 @@
 # Utopia Logos - List of Changes
 
-## v0.3.1 (in development)
+## v0.4 (in development)
+### Breaking changes
+- Words are now stored in a standardized format. 
+  **WordPlacement**'s `displayStyle` is then used to properly stylize these words in each use-case.
+  - **DbStatement**'s `.store(...)` now accepts instances of **PreparedWordOrLinkPlacement** instead of 
+    **(String, Boolean)**
+### Deprecations
+- Deprecated `DbWord.matching(String)`, as that did not account for different capitalization entries
+- Deprecated **Statement**`.wordsAndLinks`
 ### New features
 - Added **DetailedStatement** class
 - Added **CombinedStatement** trait
 - Added emoji filtering to statement storing logic
+- Added 2 new display styles: **Capitalized** and **AllCaps**
+### New methods
+- **DisplayStyle**
+  - Added `.addIdentifyLogic(...)` for automated display style identification for custom display styles
+  - Added `.of(String)`
+- **Statement**
+  - Added `.standardizedWords` and `.links`
+- **WordOrLink**
+  - Added `.style` and `.standardizedText`
 ### Other changes
 - **StatedWord** now extends **Placed**
 - **PlacedStatement** now extends **CombinedStatement**

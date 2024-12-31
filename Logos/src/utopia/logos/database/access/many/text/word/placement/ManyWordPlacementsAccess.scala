@@ -91,6 +91,12 @@ trait ManyWordPlacementsAccess
 		filter(model.withWordId(wordId).withOrderIndex(position).toCondition)
 	
 	/**
+	 * @param style Targeted display style
+	 * @return Access to placements applying the specified display style
+	 */
+	def withStyle(style: DisplayStyle) = filter(model.style <=> style)
+	
+	/**
 	  * @param statementId statement id to target
 	  * @return Copy of this access point that only includes word placements with the specified statement id
 	  */

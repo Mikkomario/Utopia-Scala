@@ -19,7 +19,7 @@ object StatementPlacementDbModel
 /**
   * Common trait for database interaction models dealing with statement placements
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbModel 
 	extends StatementPlacementDbModelLike[StatementPlacementDbModel] with TextPlacementDbModel

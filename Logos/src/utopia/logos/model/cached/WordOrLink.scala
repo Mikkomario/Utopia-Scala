@@ -1,6 +1,7 @@
 package utopia.logos.model.cached
 
 import utopia.flow.util.Mutate
+import utopia.logos.model.enumeration.DisplayStyle
 
 object WordOrLink
 {
@@ -23,6 +24,11 @@ object WordOrLink
  */
 case class WordOrLink(text: String, isLink: Boolean)
 {
+	// ATTRIBUTES   --------------------
+	
+	lazy val (style, standardizedText) = if (isLink) DisplayStyle.default -> text else DisplayStyle.of(text)
+	
+	
 	// COMPUTED ------------------------
 	
 	/**

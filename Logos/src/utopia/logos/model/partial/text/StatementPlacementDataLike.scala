@@ -6,7 +6,7 @@ import utopia.logos.model.factory.text.StatementPlacementFactory
   * Common trait for classes which provide read and copy access to statement placement properties
   * @tparam Repr Implementing data class or data wrapper class
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDataLike[+Repr <: TextPlacementData] 
 	extends HasStatementPlacementProps with StatementPlacementFactory[Repr] with TextPlacementDataLike[Repr] 

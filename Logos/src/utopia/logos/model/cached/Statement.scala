@@ -6,9 +6,6 @@ import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 import utopia.logos.model.stored.text.Delimiter
-import utopia.logos.model.stored.url.StoredLink
-
-import scala.collection.immutable.VectorBuilder
 
 object Statement
 {
@@ -91,14 +88,25 @@ case class Statement(words: Seq[WordOrLink], delimiter: String = "")
 	
 	override lazy val toString = s"${words.mkString(" ")}$delimiter"
 	
+	/**
+	 * Words that appear within this statement, in their standard forms, coupled with their local display styles
+	 */
+	lazy val standardizedWords =
+		words.flatMap { word => if (word.isWord) Some(word.standardizedText -> word.style) else None }
+	/**
+	 * Links that appear within this statement, as text
+	 */
+	lazy val links = words.flatMap { word => if (word.isLink) Some(word.text) else None }
+	
 	
 	// COMPUTED ---------------------------
 	
 	/**
 	 * @return A pair containing:
-	 *              1) The words within this statement, and
-	 *              2) The links within this statement
+	 *              1. The words within this statement
+	 *              1. The links within this statement
 	 */
+	@deprecated("Deprecated for removal. Please use .standardizedWords and .links instead", "v0.4")
 	def wordsAndLinks = words.divideBy { _.isLink }.map { _.map { _.text } }
 	
 	
@@ -109,5 +117,6 @@ case class Statement(words: Seq[WordOrLink], delimiter: String = "")
 	 * @param f A word text mutating function
 	 * @return A mutated copy of this statement text
 	 */
-	def mapWordText(f: Mutate[String]) = copy(words = words.map { _.mapText(f) }.filterNot { _.text.isEmpty })
+	def mapWordText(f: Mutate[String]) =
+		copy(words = words.view.map { _.mapText(f) }.filterNot { _.text.isEmpty }.toOptimizedSeq)
 }

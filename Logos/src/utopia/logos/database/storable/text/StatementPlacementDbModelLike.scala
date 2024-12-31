@@ -8,7 +8,7 @@ import utopia.logos.model.factory.text.StatementPlacementFactory
   * database
   * @tparam Repr Type of this DB model
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbModelLike[+Repr] 
 	extends TextPlacementDbModelLike[Repr] with StatementPlacementFactory[Repr]

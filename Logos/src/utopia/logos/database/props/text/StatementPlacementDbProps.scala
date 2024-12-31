@@ -53,7 +53,7 @@ object StatementPlacementDbProps
 /**
   * Common trait for classes which provide access to statement placement database properties
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbProps extends TextPlacementDbProps with HasIdProperty
 {

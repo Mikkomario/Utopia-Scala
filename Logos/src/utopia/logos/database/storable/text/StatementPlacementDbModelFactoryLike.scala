@@ -9,7 +9,7 @@ import utopia.vault.model.immutable.Storable
   * @tparam A Type of read instances
   * @tparam Data Supported data-part type
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementDbModelFactoryLike[+DbModel <: Storable, +A, -Data] 
 	extends TextPlacementDbModelFactoryLike[DbModel, A, Data] with StatementPlacementFactory[DbModel]

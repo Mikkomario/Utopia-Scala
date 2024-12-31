@@ -64,7 +64,7 @@ object StatementPlacementData extends FromModelFactoryWithSchema[StatementPlacem
 /**
   * Common trait for models which are used for placing statements within various texts
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait StatementPlacementData 
 	extends StatementPlacementDataLike[StatementPlacementData] with TextPlacementData 

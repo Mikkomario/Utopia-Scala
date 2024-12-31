@@ -10,7 +10,7 @@ import utopia.vault.model.template.HasId
  * Common trait for combinations where the primary part is a (stored) statement
  * @tparam Repr Implementing (concrete) type
  * @author Mikko Hilpinen
- * @since 17.12.2024, v0.3.1
+ * @since 17.12.2024, v0.4
  */
 trait CombinedStatement[+Repr]
 	extends Extender[StatementData] with HasId[Int] with StatementFactoryWrapper[StoredStatement, Repr]

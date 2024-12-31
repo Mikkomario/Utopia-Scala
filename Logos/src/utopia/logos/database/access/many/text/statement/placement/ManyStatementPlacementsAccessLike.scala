@@ -12,7 +12,7 @@ import utopia.vault.database.Connection
   * @tparam A Type of read (statement placements -like) instances
   * @tparam Repr Type of this access point
   * @author Mikko Hilpinen
-  * @since 30.12.2024, v0.3.1
+  * @since 30.12.2024, v0.4
   */
 trait ManyStatementPlacementsAccessLike[+A, +Repr] extends ManyTextPlacementsAccessLike[A, Repr]
 {
