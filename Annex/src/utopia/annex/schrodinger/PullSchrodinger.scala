@@ -1,7 +1,7 @@
 package utopia.annex.schrodinger
 
 import utopia.annex.model.manifest.SchrodingerState
-import utopia.annex.model.manifest.SchrodingerState.{Final, Flux, PositiveFlux}
+import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Final, Flux, PositiveFlux}
 import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -26,9 +26,9 @@ object PullSchrodinger
 	/**
 	  * Wraps a pointer
 	  * @param pointer A pointer that contains 3 elements:
-	  *                 1) Current manifest (any result)
-	  *                 2) Current result (placeholder until a result is acquired)
-	  *                 3) State (final or flux)
+	  *                     1. Current manifest (any result)
+	  *                     1. Current result (placeholder until a result is acquired)
+	  *                     1. State (final or flux)
 	  * @tparam L Type of locally cached items (spirits)
 	  * @tparam R Type of remotely read items (instances)
 	  * @return A new schrödinger
@@ -43,6 +43,28 @@ object PullSchrodinger
 	  */
 	def resolved[A](result: Try[A]) = wrap(Fixed(result, result, Final(result.isSuccess)))
 	/**
+	  * Creates a schrödinger that has already resolved into either a success or a failure.
+	  * Supports local results, also. These are used as placeholder manifests in case of failure results, if possible.
+	  * @param local Locally available result
+	  * @param remoteResult Remote result
+	  * @param localize A function for converting the remote result into its local representation
+	  * @tparam L Type of locally available values
+	  * @tparam R Type of remote values
+	  * @return A new schrödinger that has already resolved
+	  */
+	def resolved[L, R](local: Option[L], remoteResult: Try[R])(localize: R => L) = {
+		val state = remoteResult match {
+			case Success(remote) => (Success(localize(remote)), Success(remote), Alive)
+			case Failure(error) =>
+				val manifest = local match {
+					case Some(local) => Success(local)
+					case None => Failure(error)
+				}
+				(manifest, Failure(error), Dead)
+		}
+		wrap(Fixed(state))
+	}
+	/**
 	  * Creates a schrödinger that has already resolved successfully
 	  * @param item The pulled item
 	  * @tparam A Type of the pulled item
@@ -56,6 +78,21 @@ object PullSchrodinger
 	  * @return A new failed schrödinger
 	  */
 	def failed[A](cause: Throwable) = resolved[A](Failure(cause))
+	/**
+	  * Creates a schrödinger that has already failed
+	  * @param cause Cause of failure
+	  * @param local Locally available contents. These will be used as manifest, if available.
+	  * @tparam L Type of locally available data
+	  * @tparam R Type of remote data
+	  * @return A new schrödinger
+	  */
+	def failed[L, R](cause: Throwable, local: Option[L]) = {
+		val manifest = local match {
+			case Some(local) => Success(local)
+			case None => Failure(cause)
+		}
+		wrap[L, R](Fixed(manifest, Failure(cause), Dead))
+	}
 	
 	/**
 	  * Pulls a local and a remote instance.

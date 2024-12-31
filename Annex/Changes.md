@@ -3,6 +3,8 @@
 ## v1.9.1 (in development)
 Supports changes made to Disciple
 ### New methods
+- **PullSchrodinger**
+  - Added new `.resolved(...)` and `.failed(...)` variants which support local values
 - **ResponseParser** (**ResponseParseExtensions**)
   - Added `.unwrapToResponseLogging(...)`
 
