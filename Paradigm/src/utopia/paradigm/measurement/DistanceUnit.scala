@@ -7,6 +7,7 @@ import MetricScale._
  * @author Mikko Hilpinen
  * @since Genesis 24.6.2020, v2.3
  */
+// TODO: Add support for point units
 sealed trait DistanceUnit
 {
 	import DistanceUnit._
