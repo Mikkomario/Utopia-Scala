@@ -6,11 +6,13 @@
 - [Utopia Paradigm](https://github.com/Mikkomario/Utopia-Scala/tree/master/Paradigm)
 
 ## Required External Libraries
-This library uses [Apache POI](https://poi.apache.org/) adn Apache POI ooxml libraries.  
+This library uses [Apache POI](https://poi.apache.org/) and Apache POI ooxml libraries.  
 These are available at Maven under: `org.apache.poi:poi` and `org.apache.poi:poi-ooxml`. 
 In development, version 5.2.5 was used.
 
 Apache POI is available under the [Apache 2.0 license](https://poi.apache.org/legal.html).
+
+TODO: Include descriptions of pdfbox & commons-logging
 
 ## Main features
 This module is aimed to make Excel-parsing easier, while utilizing **Flow**'s soft typing interface.  
