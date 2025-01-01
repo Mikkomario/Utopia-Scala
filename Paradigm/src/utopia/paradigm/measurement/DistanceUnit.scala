@@ -1,15 +1,24 @@
 package utopia.paradigm.measurement
 
 import MetricScale._
+import utopia.flow.collection.immutable.{Graph, Pair}
 
 /**
  * An enumeration for standard distance units
  * @author Mikko Hilpinen
  * @since Genesis 24.6.2020, v2.3
  */
-sealed trait DistanceUnit
+sealed abstract class DistanceUnit
 {
+	// IMPORTS  ------------------------------
+	
 	import DistanceUnit._
+	
+	
+	// ATTRIBUTES   --------------------------
+	
+	private lazy val node = conversionGraph.node(this)
+	
 	
 	// ABSTRACT ------------------------------
 	
@@ -17,12 +26,6 @@ sealed trait DistanceUnit
 	  * @return The abbreviation used for this unit
 	  */
 	def abbreviation: String
-	
-	/**
-	 * @param targetUnit Another unit
-	 * @return A modifier that must be applied to a number when converting from this unit to the other unit
-	 */
-	def conversionModifierTo(targetUnit: DistanceUnit): Double
 	
 	
 	// COMPUTED -----------------------------
@@ -38,17 +41,33 @@ sealed trait DistanceUnit
 	 */
 	def toMm = conversionModifierTo(MilliMeter)
 	/**
+	  * @return A modifier from this unit to millimeters
+	  */
+	def toMilliMeters = toMm
+	/**
 	 * @return a modifier from this unit to centimeters
 	 */
 	def toCm = conversionModifierTo(CentiMeter)
+	/**
+	  * @return a modifier from this unit to centimeters
+	  */
+	def toCentiMeters = toCm
 	/**
 	 * @return A modifier from this unit to meters
 	 */
 	def toM = conversionModifierTo(Meter)
 	/**
+	  * @return A modifier from this unit to meters
+	  */
+	def toMeters = toM
+	/**
 	 * @return A modifier from this unit to kilometers
 	 */
 	def toKm = conversionModifierTo(KiloMeter)
+	/**
+	  * @return A modifier from this unit to kilometers
+	  */
+	def toKiloMeters = toKm
 	
 	/**
 	 * @return A modifier from this unit to inches
@@ -59,6 +78,11 @@ sealed trait DistanceUnit
 	 */
 	def toFeet = conversionModifierTo(Feet)
 	
+	/**
+	  * @return A modifier from this unit to typographic points
+	  */
+	def toPoints = conversionModifierTo(Dtp)
+	
 	
 	// IMPLEMENTED  ---------------------
 	
@@ -66,6 +90,23 @@ sealed trait DistanceUnit
 	
 	
 	// OTHER    -------------------------
+	
+	/**
+	  * @param amount Number of these units of distance
+	  * @return A distance matching the specified amount of this unit
+	  */
+	def apply(amount: Double) = Distance(amount, this)
+	
+	/**
+	  * @param targetUnit Another unit
+	  * @return A modifier that must be applied to a number when converting from this unit to the other unit
+	  */
+	def conversionModifierTo(targetUnit: DistanceUnit): Double = {
+		if (targetUnit == this)
+			1.0
+		else
+			node.shortestRoutesToOne { _.value == targetUnit }.get.anyRoute.view.map { _.value }.product
+	}
 	
 	/**
 	  * @param originUnit A unit
@@ -80,13 +121,51 @@ sealed trait DistanceUnit
 
 object DistanceUnit
 {
-	// TODO: Add a graph-based algorithm for unit conversions
+	// ATTRIBUTES   ---------------------
+	
+	/**
+	  * All registered distance units
+	  */
+	val values = MeterUnit.values ++ Vector(Inch, Feet, Mile, NauticalMile, Dtp)
+	
+	/**
+	  * A graph that may be utilized in unit conversions.
+	  * Edges apply scaling modifiers assuming that the end node is the targeted (i.e. conversion result) unit.
+	  */
+	private val conversionGraph = Graph[DistanceUnit, Double](Set(
+		(MegaMeter, KiloMeter, 1000.0),
+		(MegaMeter, Meter, 1000000.0),
+		(KiloMeter, Meter, 1000.0),
+		(Meter, DeciMeter, 10.0),
+		(Meter, CentiMeter, 100.0),
+		(Meter, MilliMeter, 1000.0),
+		(Meter, Feet, 3.2808399),
+		(DeciMeter, CentiMeter, 10.0),
+		(DeciMeter, MilliMeter, 100.0),
+		(CentiMeter, MilliMeter, 10.0),
+		(MilliMeter, MicroMeter, 1000.0),
+		(NauticalMile, Mile, 1.15077945),
+		(NauticalMile, KiloMeter, 1.852),
+		(NauticalMile, Meter, 1852.0),
+		(Mile, Feet, 5280.0),
+		(Mile, KiloMeter, 1.609344),
+		(Feet, Inch, 12.0),
+		(Inch, CentiMeter, 2.54),
+		(Inch, Dtp, 72.0),
+		(Dtp, MilliMeter, 0.3528)
+	).flatMap { case (from, to, mod) => Pair((from, mod, to), (to, 1.0 / mod, from)) })
+	
 	
 	// NESTED   -------------------------
 	
 	object MeterUnit extends MetricUnitFactory[MeterUnit]
 	{
 		// ATTRIBUTES   -----------------
+		
+		/**
+		  * All registered meter unit values
+		  */
+		val values = Vector[MeterUnit](MicroMeter, MilliMeter, CentiMeter, DeciMeter, Meter, KiloMeter, MegaMeter)
 		
 		private lazy val scaleMap = Map[MetricScale, MeterUnit](
 			Default -> Meter,
@@ -103,24 +182,26 @@ object DistanceUnit
 		
 		override def apply(scale: MetricScale): MeterUnit = scaleMap(scale)
 	}
-	
-	sealed trait MeterUnit extends DistanceUnit with MetricUnit[MeterUnit]
+	sealed abstract class MeterUnit extends DistanceUnit with MetricUnit[MeterUnit]
 	{
+		// ATTRIBUTES   -----------------
+		
+		override protected val factory: MetricUnitFactory[MeterUnit] = MeterUnit
+		
+		override lazy val abbreviation: String = s"${scale.prefix}m"
+		
+		
 		// IMPLEMENTED  -----------------
 		
 		override def self: MeterUnit = this
-		override def abbreviation: String = s"${scale.prefix}m"
-		
-		override protected def factory: MetricUnitFactory[MeterUnit] = MeterUnit
 		
 		
 		// OTHER    ---------------------
 		
-		/**
-		  * @param targetUnit Another unit
-		  * @return Modifier that needs to be applied to this unit in order to produce a value in the specified unit
-		  */
-		protected def _conversionModifierTo(targetUnit: MeterUnit) = scale.modifierTo(targetUnit.scale)
+		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
+			case metric: MeterUnit => scale.modifierTo(metric.scale)
+			case u => super.conversionModifierTo(u)
+		}
 	}
 	
 	
@@ -131,97 +212,49 @@ object DistanceUnit
 	  */
 	case object MicroMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Micro
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit): Double = targetUnit match {
-			case MicroMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case _ => toCm * CentiMeter.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Micro
 	}
 	/**
 	 * Millimeter length unit (1/1000 of a meter)
 	 */
 	case object MilliMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Milli
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit): Double = targetUnit match {
-			case MilliMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case _ => toCm * CentiMeter.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Milli
 	}
 	/**
 	 * Centimeter length unit (1/100 of a meter)
 	 */
 	case object CentiMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Centi
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit): Double = targetUnit match {
-			case CentiMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case NauticalMile => toM * Meter.conversionModifierTo(KiloMeter)
-			case Inch => 1 / 2.54
-			case _ => toInch * Inch.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Centi
 	}
 	/**
 	  * Decimeter length unit (1/10 of a meter)
 	  */
 	case object DeciMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Deci
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit): Double = targetUnit match {
-			case DeciMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case _ => toCm * CentiMeter.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Deci
 	}
 	/**
 	 * Meter length unit (standard metric length)
 	 */
 	case object Meter extends MeterUnit
 	{
-		override def scale: MetricScale = Default
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case Meter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case Feet => 3.2808399
-			case NauticalMile => toKm * KiloMeter.conversionModifierTo(NauticalMile)
-			case _ => toFeet * Feet.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Default
 	}
 	/**
 	 * Kilometer length unit (1000 meters)
 	 */
 	case object KiloMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Kilo
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case KiloMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case Mile => 0.621371192
-			case NauticalMile => 0.539956803
-			case _ => toM * Meter.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Kilo
 	}
 	/**
 	  * Kilometer length unit (1 000 000 meters)
 	  */
 	case object MegaMeter extends MeterUnit
 	{
-		override def scale: MetricScale = Mega
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case MegaMeter => 1.0
-			case u: MeterUnit => _conversionModifierTo(u)
-			case _ => toKm * KiloMeter.conversionModifierTo(targetUnit)
-		}
+		override val scale: MetricScale = Mega
 	}
 	
 	/**
@@ -230,14 +263,6 @@ object DistanceUnit
 	case object Inch extends DistanceUnit
 	{
 		override val abbreviation: String = "in"
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case Inch => 1.0
-			case Feet => 0.0833333333
-			case Mile => toFeet * Feet.conversionModifierTo(targetUnit)
-			case CentiMeter => 2.54
-			case _ => toCm * CentiMeter.conversionModifierTo(targetUnit)
-		}
 	}
 	/**
 	 * Feet length unit (standard imperial length unit)
@@ -245,29 +270,13 @@ object DistanceUnit
 	case object Feet extends DistanceUnit
 	{
 		override val abbreviation: String = "ft"
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case Feet => 1.0
-			case Inch => 12.0
-			case Mile => 0.000189393939
-			case Meter => 0.3048
-			case _ => toM * Meter.conversionModifierTo(targetUnit)
-		}
 	}
 	/**
 	 * Mile length unit
 	 */
 	case object Mile extends DistanceUnit
 	{
-		override def abbreviation: String = "mi"
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case Mile => 1.0
-			case Feet => 5280.0
-			case KiloMeter => 1.609344
-			case NauticalMile => 0.868976242
-			case _ => toFeet * Feet.conversionModifierTo(targetUnit)
-		}
+		override val abbreviation: String = "mi"
 	}
 	
 	/**
@@ -276,13 +285,15 @@ object DistanceUnit
 	case object NauticalMile extends DistanceUnit
 	{
 		override val abbreviation: String = "NM"
-		
-		override def conversionModifierTo(targetUnit: DistanceUnit) = targetUnit match {
-			case NauticalMile => 1.0
-			case Meter => 1852.0
-			case KiloMeter => 1.852
-			case Mile => 1.15077945
-			case _ => toM * Meter.conversionModifierTo(targetUnit)
-		}
+	}
+	
+	/**
+	  * Distance unit used in typography, known as "point".
+	  * One point is 1/72 inches, or 0.3528 millimeters.
+	  * This distance is often used with fonts and related measurements.
+	  */
+	case object Dtp extends DistanceUnit
+	{
+		override val abbreviation: String = "pt"
 	}
 }

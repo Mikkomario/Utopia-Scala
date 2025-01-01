@@ -1,10 +1,12 @@
 package utopia.paradigm.measurement
 
 import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
-import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Feet, Inch, KiloMeter, Meter, MeterUnit, MilliMeter}
+import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Dtp, Feet, Inch, KiloMeter, Meter, MeterUnit, Mile, MilliMeter, NauticalMile}
+import utopia.paradigm.transform.LinearSizeAdjustable
 
 object Distance
 {
@@ -40,7 +42,7 @@ object Distance
 	def ofKilometers(km: Double) = Distance(km, KiloMeter)
 	
 	/**
-	 * @param inches Amount of inhes
+	 * @param inches Amount of inches
 	 * @return A distance
 	 */
 	def ofInches(inches: Double) = Distance(inches, Inch)
@@ -49,6 +51,22 @@ object Distance
 	 * @return a distance
 	 */
 	def ofFeet(feet: Double) = Distance(feet, Feet)
+	/**
+	  * @param miles Amount of miles
+	  * @return A distance
+	  */
+	def ofMiles(miles: Double) = Distance(miles, Mile)
+	/**
+	  * @param nauticalMiles Amount of nautical miles
+	  * @return A distance
+	  */
+	def ofNauticalMiles(nauticalMiles: Double) = Distance(nauticalMiles, NauticalMile)
+	
+	/**
+	  * @param points Amount of typographic points
+	  * @return A distance
+	  */
+	def ofPoints(points: Double) = Distance(points, Dtp)
 	
 	/**
 	 * @param pixels Amount of pixels
@@ -57,6 +75,41 @@ object Distance
 	 */
 	def ofPixels(pixels: Double)(implicit ppi: Ppi) =
 		if (ppi.value == 0) ofInches(0) else ofInches(pixels / ppi.value)
+		
+	
+	// NESTED   ---------------------
+	
+	/**
+	  * A numeric implementation for distances, assuming a specific unit of measurement
+	  * @param unit Assumed unit of measurement
+	  */
+	case class DistanceIsNumericIn(unit: DistanceUnit) extends Numeric[Distance]
+	{
+		override def plus(x: Distance, y: Distance): Distance = x + y
+		override def minus(x: Distance, y: Distance): Distance = x - y
+		override def times(x: Distance, y: Distance): Distance = x * y
+		
+		override def negate(x: Distance): Distance = -x
+		
+		override def fromInt(x: Int): Distance = Distance(x, unit)
+		override def parseString(str: String): Option[Distance] = {
+			val unitStartIndex = str.lastIndexWhere { _.isLetter }
+			if (unitStartIndex >= 0)
+				str.take(unitStartIndex).toDoubleOption.flatMap { amount =>
+					val unitStr = str.drop(unitStartIndex)
+					DistanceUnit.values.find { _.abbreviation ~== unitStr }.map { Distance(amount, _) }
+				}
+			else
+				str.toDoubleOption.map { Distance(_, unit) }
+		}
+		
+		override def toInt(x: Distance): Int = toDouble(x).toInt
+		override def toLong(x: Distance): Long = toDouble(x).toLong
+		override def toFloat(x: Distance): Float = toDouble(x).toFloat
+		override def toDouble(x: Distance): Double = x.toUnit(unit)
+		
+		override def compare(x: Distance, y: Distance): Int = x.compareTo(y)
+	}
 }
 
 /**
@@ -66,6 +119,7 @@ object Distance
  */
 case class Distance(amount: Double, unit: DistanceUnit)
 	extends SelfComparable[Distance] with SignedOrZero[Distance] with MayBeAboutZero[Distance, Distance]
+		with LinearSizeAdjustable[Distance] with Combinable[Distance, Distance]
 {
 	// COMPUTED ---------------------
 	
@@ -88,6 +142,10 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	 */
 	def toM = toUnit(Meter)
 	/**
+	  * @return This distance in meters
+	  */
+	def toMeters = toM
+	/**
 	 * @return This distance in inches
 	 */
 	def toInches = toUnit(Inch)
@@ -95,6 +153,14 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	 * @return This distance in feet
 	 */
 	def toFeet = toUnit(Feet)
+	/**
+	  * @return This distance in miles
+	  */
+	def toMiles = toUnit(Mile)
+	/**
+	  * @return This distance in typographic points
+	  */
+	def toPoints = toUnit(Dtp)
 	
 	
 	// IMPLEMENTED  -----------------
@@ -104,6 +170,11 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	override def sign: SignOrZero = Sign.of(amount)
 	override def zero: Distance = Distance.zero
 	override def isAboutZero: Boolean = amount ~== 0.0
+	
+	/**
+	  * @return A negative copy of this distance
+	  */
+	override def unary_- = copy(amount = -amount)
 	
 	override def toString = unit match {
 		case _: MeterUnit =>
@@ -123,6 +194,22 @@ case class Distance(amount: Double, unit: DistanceUnit)
 			0
 	}
 	
+	/**
+	  * @param other Another instance
+	  * @return A combination of these distances
+	  */
+	override def +(other: Distance) = copy(amount = amount + other.toUnit(unit))
+	/**
+	  * @param mod A modifier
+	  * @return A multiplied copy of this distance
+	  */
+	override def *(mod: Double) = copy(amount = amount * mod)
+	/**
+	  * @param div A divider
+	  * @return A divided copy of this instance
+	  */
+	override def /(div: Double) = copy(amount = amount / div)
+	
 	
 	// OTHER    ---------------------
 	
@@ -133,32 +220,10 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	def toUnit(targetUnit: DistanceUnit) = amount * unit.conversionModifierTo(targetUnit)
 	
 	/**
-	 * @return A negative copy of this distance
-	 */
-	def unary_- = copy(amount = -amount)
-	
-	/**
-	 * @param other Another instance
-	 * @return A combination of these distances
-	 */
-	def +(other: Distance) = copy(amount = amount + other.toUnit(unit))
-	/**
 	 * @param other Another instance
 	 * @return A subtraction of these instances
 	 */
 	def -(other: Distance) = this + (-other)
-	
-	/**
-	 * @param mod A modifier
-	 * @return A multiplied copy of this distance
-	 */
-	def *(mod: Double) = copy(amount = amount * mod)
-	
-	/**
-	 * @param div A divider
-	 * @return A divided copy of this instance
-	 */
-	def /(div: Double) = copy(amount = amount / div)
 	/**
 	 * @param other Another distance
 	 * @return Ratio between these two distances

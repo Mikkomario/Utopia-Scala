@@ -1,9 +1,10 @@
 package utopia.paradigm.measurement
 
-import utopia.flow.operator.{HasExtremes, Steppable}
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.{HasExtremes, Steppable}
+import utopia.flow.util.StringExtensions._
 
 /**
   * An enumeration for different 10-based size units in the metric system
@@ -84,6 +85,28 @@ object MetricScale extends HasExtremes[MetricScale]
 	def appropriateFor(value: Double) =
 		values.reverseIterator.find { value >= _.multiplier }.getOrElse(min)
 	
+	/**
+	  * @param abbreviation A unit abbreviation, e.g. Km.
+	  *                     Note: Not a full string, like "kilometer or micrometer"
+	  * @return Metric scale mentioned within the specified abbreviation.
+	  *         Default if no other scale is mentioned.
+	  */
+	def forAbbreviation(abbreviation: String) =
+		values.find { s => s != Default && abbreviation.startsWithIgnoreCase(s.prefix) }
+			.getOrElse(Default)
+	/**
+	  * Finds the scale part from the specified string
+	  * @param unitString A string representing a scale, plus some unit
+	  * @return Scale that was mentioned, plus the remaining part of the unit string
+	  */
+	def from(unitString: String) =
+		values.find { s => s != Default && unitString.startsWithIgnoreCase(s.toString) } match {
+			case Some(scale) => scale -> unitString.drop(scale.toString.length)
+			case None =>
+				val scale = forAbbreviation(unitString)
+				scale -> unitString.drop(scale.prefix.length)
+		}
+	
 	
 	// VALUES   ---------------------------
 	
@@ -92,10 +115,10 @@ object MetricScale extends HasExtremes[MetricScale]
 	  */
 	case object Default extends MetricScale
 	{
-		override def multiplier: Double = 1.0
-		override def prefix: String = ""
+		override val multiplier: Double = 1.0
+		override val prefix: String = ""
 		
-		override protected def index: Int = 4
+		override protected val index: Int = 4
 	}
 	
 	/**
@@ -103,40 +126,40 @@ object MetricScale extends HasExtremes[MetricScale]
 	  */
 	case object Deci extends MetricScale
 	{
-		override def multiplier: Double = 0.1
-		override def prefix: String = "d"
+		override val multiplier: Double = 0.1
+		override val prefix: String = "d"
 		
-		override protected def index: Int = 3
+		override protected val index: Int = 3
 	}
 	/**
 	  * A smaller unit that represents 1/100
 	  */
 	case object Centi extends MetricScale
 	{
-		override def multiplier: Double = 0.01
-		override def prefix: String = "c"
+		override val multiplier: Double = 0.01
+		override val prefix: String = "c"
 		
-		override protected def index: Int = 2
+		override protected val index: Int = 2
 	}
 	/**
 	  * A smaller unit that represents 1/1000
 	  */
 	case object Milli extends MetricScale
 	{
-		override def multiplier: Double = 0.001
-		override def prefix: String = "m"
+		override val multiplier: Double = 0.001
+		override val prefix: String = "m"
 		
-		override protected def index: Int = 1
+		override protected val index: Int = 1
 	}
 	/**
 	  * A very small unit that represents 1/1000/1000
 	  */
 	case object Micro extends MetricScale
 	{
-		override def multiplier: Double = 0.000001
-		override def prefix: String = "μ"
+		override val multiplier: Double = 0.000001
+		override val prefix: String = "μ"
 		
-		override protected def index: Int = 0
+		override protected val index: Int = 0
 	}
 	
 	/**
@@ -144,19 +167,19 @@ object MetricScale extends HasExtremes[MetricScale]
 	  */
 	case object Kilo extends MetricScale
 	{
-		override def multiplier: Double = 1000
-		override def prefix: String = "k"
+		override val multiplier: Double = 1000
+		override val prefix: String = "k"
 		
-		override protected def index: Int = 5
+		override protected val index: Int = 5
 	}
 	/**
 	  * A unit that represents a million of something
 	  */
 	case object Mega extends MetricScale
 	{
-		override def multiplier: Double = 1000000
-		override def prefix: String = "M"
+		override val multiplier: Double = 1000000
+		override val prefix: String = "M"
 		
-		override protected def index: Int = 6
+		override protected val index: Int = 6
 	}
 }

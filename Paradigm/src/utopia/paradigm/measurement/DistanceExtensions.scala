@@ -29,6 +29,10 @@ object DistanceExtensions
 		 */
 		def m(implicit n: Numeric[A]) = Distance.ofMeters(double)
 		/**
+		  * @return This amount of meters
+		  */
+		def meters(implicit n: Numeric[A]) = Distance.ofMeters(double)
+		/**
 		  * @return This amount of kilometers
 		  */
 		def km(implicit n: Numeric[A]) = Distance.ofKilometers(double)
@@ -37,11 +41,27 @@ object DistanceExtensions
 		 * @return This amount of inches
 		 */
 		def inches(implicit n: Numeric[A]) = Distance.ofInches(double)
-		
 		/**
 		 * @return This amount of feet
 		 */
 		def feet(implicit n: Numeric[A]) = Distance.ofFeet(double)
+		/**
+		  * @return This amount of miles
+		  */
+		def miles(implicit n: Numeric[A]) = Distance.ofMiles(double)
+		/**
+		  * @return This amount of nautical miles
+		  */
+		def nauticalMiles(implicit n: Numeric[A]) = Distance.ofNauticalMiles(double)
+		
+		/**
+		  * @return This amount of typographic points
+		  */
+		def pt(implicit n: Numeric[A]) = Distance.ofPoints(double)
+		/**
+		  * @return This amount of typographic points
+		  */
+		def points(implicit n: Numeric[A]) = Distance.ofPoints(double)
 		
 		/**
 		  * @param n Implicit numeric interface

@@ -7,7 +7,28 @@ Latest Flow support
   **StackOverFlowException** in situations where the **Change**'s `.toString` involved such value calculations.
   - For example, such a case would be with **LinearVelocity**
 ### New features
+- Added **Dtp** - a typographic point - as a new **DistanceUnit**
+- Added **DistanceIsNumericIn** for situations where you need **Numeric** support with **Distance**
 - Added **FromVariableShadeFactory**
+### New methods
+- **Distance**
+  - Object
+    - Added `.ofMiles(Double)`, `.ofNauticalMiles(Double)` and `.ofPoints(Double)`
+  - Instance
+    - Added `.toMeters`, `.toMiles` and `.toPoints`
+    - Distance now extends **LinearSizeAdjustable**
+- **DistanceUnit**
+  - Object
+    - Added `.values`
+  - Instance
+    - Added `.toMilliMeters`, `.toCentiMeters`, `.toMeters`, `.toKiloMeters` and `.toPoints`
+    - Added `.apply(Double): Distance`
+- **MeterUnit** (object)
+  - Added `.values`
+- **MetricScale** (object)
+  - Added `.forAbbreviation(String)` and `.from(String)`
+### Other changes
+- **Distance** now extends **Combinable**
 
 ## v1.7 - 04.10.2024
 This update focuses on the **Polygonic** trait (now named **Polygon**), refactoring many of the existing functions. 
