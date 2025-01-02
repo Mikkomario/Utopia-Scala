@@ -299,7 +299,7 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	  */
 	def zip[B](other: Dimensions[B]) =
 		new Dimensions(Lazy { (zeroValue, other.zeroValue) },
-			values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue).toVector)
+			values.iterator.zipPad(other.values.iterator, zeroValue, other.zeroValue).toOptimizedSeq)
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
@@ -309,7 +309,7 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	def pairWith[B >: A](other: Dimensions[B]) =
 		new Dimensions(Lazy { Pair(zeroValue, other.zeroValue) },
 			values.iterator.zipPad(other.iterator, zeroValue, other.zeroValue)
-				.map { case (a, b) => Pair(a, b) }.toVector)
+				.map { case (a, b) => Pair(a, b) }.toOptimizedSeq)
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
@@ -321,9 +321,8 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	def mergeWith[B, C >: A](other: HasDimensions[B])(merge: (A, B) => C) = {
 		val d2 = other.dimensions
 		new Dimensions(lazyZeroValue, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
-			.map { case (a, b) => merge(a, b) }.toVector)
+			.map { case (a, b) => merge(a, b) }.toOptimizedSeq)
 	}
-	
 	/**
 	  * Combines these dimensions with other dimensions
 	  * @param other Other set of dimensions
@@ -335,8 +334,9 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	  */
 	def mergeWith[B, C](other: HasDimensions[B], zero: => C)(merge: (A, B) => C) = {
 		val d2 = other.dimensions
-		new Dimensions(Lazy { zero }, values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
-			.map { case (a, b) => merge(a, b) }.toVector)
+		new Dimensions(Lazy { zero },
+			values.iterator.zipPad(d2.values.iterator, zeroValue, d2.zeroValue)
+				.map { case (a, b) => merge(a, b) }.toOptimizedSeq)
 	}
 	
 	/**

@@ -3,6 +3,7 @@ package utopia.paradigm.measurement
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Dtp, Feet, Inch, KiloMeter, Meter, MeterUnit, Mile, MilliMeter, NauticalMile}
@@ -16,6 +17,11 @@ object Distance
 	 * A distance of 0m
 	 */
 	val zero = apply(0.0, Meter)
+	
+	/**
+	  * An equality function that checks for approximate distance equality
+	  */
+	implicit val approxEquals: EqualsFunction[Distance] = (d1, d2) => d1.amount ~== d2.toUnit(d1.unit)
 	
 	
 	// OTHER    ---------------------
@@ -83,11 +89,12 @@ object Distance
 	  * A numeric implementation for distances, assuming a specific unit of measurement
 	  * @param unit Assumed unit of measurement
 	  */
-	case class DistanceIsNumericIn(unit: DistanceUnit) extends Numeric[Distance]
+	case class DistanceIsFractionalIn(unit: DistanceUnit) extends Fractional[Distance]
 	{
 		override def plus(x: Distance, y: Distance): Distance = x + y
 		override def minus(x: Distance, y: Distance): Distance = x - y
 		override def times(x: Distance, y: Distance): Distance = x * y
+		override def div(x: Distance, y: Distance): Distance = Distance(x/y, x.unit)
 		
 		override def negate(x: Distance): Distance = -x
 		
