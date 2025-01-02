@@ -1,8 +1,9 @@
 package utopia.paradigm.shape.template.vector
 
 import utopia.flow.collection.immutable.caching.cache.Cache
+import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.measurement.{Distance, DistanceUnit}
-import utopia.paradigm.shape.template.{Dimensions, FromDimensionsFactory, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
 
 import scala.language.implicitConversions
 
@@ -21,7 +22,8 @@ object DistanceVectorFactoryFactory
   * @author Mikko Hilpinen
   * @since 01.01.2025, v1.7.1
   */
-abstract class DistanceVectorFactoryFactory[+V] extends FromDimensionsFactory[Distance, V]
+abstract class DistanceVectorFactoryFactory[+V]
+	extends FromDimensionsFactory[Distance, V] with DimensionalFactory[Distance, V]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -46,8 +48,19 @@ abstract class DistanceVectorFactoryFactory[+V] extends FromDimensionsFactory[Di
 	
 	// IMPLEMENTED  -------------------------
 	
+	override def newBuilder: DimensionalBuilder[Distance, V] = Dimensions.distance.newBuilder.mapResult(apply)
+	
 	override def apply(dimensions: Dimensions[Distance]): V = apply(dimensions, dimensions.x.unit)
+	override def apply(values: IndexedSeq[Distance]): V = apply(Dimensions.distance(values))
+	override def apply(values: Map[Axis, Distance]): V = {
+		if (values.isEmpty)
+			empty
+		else
+			apply(Dimensions.distance(values), values.valuesIterator.next().unit)
+	}
+	
 	override def from(other: HasDimensions[Distance]): V = from(other, other.dimensions.x.unit)
+	override def from(values: IterableOnce[Distance]): V = apply(Dimensions.distance.from(values))
 	
 	
 	// OTHER    -----------------------------

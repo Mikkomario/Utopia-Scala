@@ -23,7 +23,7 @@ object Insets extends SidesFactory[Double, Insets]
     /**
       * A set of insets where each side is 0
       */
-    val zero = new Insets(HashMap())
+    val zero = new Insets(Map())
     
     
     // IMPLEMENTED  ------------------------
@@ -57,7 +57,10 @@ case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Dou
 {
     // ATTRIBUTES   --------------
     
+    override protected val zeroLength = 0.0
     lazy override val dimensions = super.dimensions
+    
+    override lazy val total: Size = Size(totalAlong(X), totalAlong(Y))
     
     
 	// COMPUTED    ---------------
@@ -75,7 +78,7 @@ case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Dou
     /**
       * @return A non-negative version of these insets
       */
-    def positive = Insets(sides.map { case (k, v) => k -> (v max 0) })
+    def positive = Insets(sides.filter { _._2 > 0 })
     /**
       * @return Copy of these insets where every value is rounded to the nearest integer
       */
@@ -88,10 +91,6 @@ case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Dou
     // IMPLEMENTED  --------------
     
     override def self = this
-    
-    override protected def zeroLength = 0.0
-    
-    override def total: Size = Size(totalAlong(X), totalAlong(Y))
     
     override protected def join(a: Double, b: Double): Double = a + b
     override protected def subtract(from: Double, amount: Double): Double = from - amount

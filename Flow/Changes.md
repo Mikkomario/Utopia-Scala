@@ -4,6 +4,7 @@
 ### Deprecations
 - Moved **AsyncCollectionExtensions** features to **CollectionExtensions** 
   because some compilers couldn't handle cases where both were imported
+- Renamed **SignedOrZero**'s `.minZero` to `.atLeastZero` and `.maxZero` to `.atMostZero`
 - Renamed **DateRange**'s `.period` to `.length`
 ### Bugfixes
 - Previously **Path**`.hasSameContentAs(Path)` would throw if the other path was non-existent

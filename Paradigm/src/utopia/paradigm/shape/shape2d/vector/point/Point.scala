@@ -66,7 +66,7 @@ object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
 }
 
 /**
-* A point represents a coordinate pair in a 2 dimensional space
+* A point represents a coordinate pair in a 2-dimensional space
 * @author Mikko Hilpinen
 * @since Genesis 20.11.2018
 **/

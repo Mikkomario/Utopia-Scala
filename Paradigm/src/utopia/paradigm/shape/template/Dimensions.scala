@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.template
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.MayBeZero
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -8,6 +9,7 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
+import utopia.paradigm.measurement.{Distance, DistanceUnit}
 import utopia.paradigm.shape.shape1d.Dimension
 
 import scala.annotation.unchecked.uncheckedVariance
@@ -32,6 +34,17 @@ object Dimensions
 	  */
 	val int = apply(0)
 	
+	private val distanceFactoryCache = Cache { unit: DistanceUnit => new DistanceDimensionsFromDoublesFactory(unit) }
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	  * @return A factory for constructing distance-based dimensions (not predefining any distance unit)
+	  * @see [[in]]
+	  */
+	def distance = DistanceDimensionsFactory
+	
 	
 	// IMPLICIT -----------------------
 	
@@ -47,6 +60,13 @@ object Dimensions
 	  * @return A factory for building dimension sets
 	  */
 	def apply[A](zero: A) = new DimensionsFactory[A](zero)
+	
+	/**
+	  * @param unit A unit of distance
+	  * @return A factory for building dimension sets in / defaulting to that distance unit
+	  * @see [[distance]]
+	  */
+	def in(unit: DistanceUnit) = distanceFactoryCache(unit)
 	
 	
 	// NESTED   -----------------------
@@ -119,6 +139,61 @@ object Dimensions
 			else
 				apply(Vector.fill(axis.index)(zero) :+ value)
 		}
+	}
+	
+	object DistanceDimensionsFactory extends DimensionalFactory[Distance, Dimensions[Distance]]
+	{
+		// IMPLEMENTED  ---------------------
+		
+		override def newBuilder: DimensionalBuilder[Distance, Dimensions[Distance]] =
+			new DimensionsBuilder[Distance](Lazy.initialized(Distance.zero))
+		
+		override def apply(values: IndexedSeq[Distance]): Dimensions[Distance] = {
+			new Dimensions[Distance](Lazy {
+				values.headOption match {
+					case Some(x) => Distance(0.0, x.unit)
+					case None => Distance.zero
+				}
+			}, values)
+		}
+		override def apply(values: Map[Axis, Distance]): Dimensions[Distance] = {
+			if (values.isEmpty)
+				empty
+			else {
+				val zero = Lazy { Distance(0.0, values.valuesIterator.next().unit) }
+				new Dimensions[Distance](zero,
+					Axis.values.take(values.keysIterator.map { _.index }.max + 1).map { values.getOrElse(_, zero.value) })
+			}
+		}
+		
+		override def from(values: IterableOnce[Distance]): Dimensions[Distance] = values match {
+			case d: Dimensions[Distance] => d
+			case i => apply(OptimizedIndexedSeq.from(i))
+		}
+	}
+	
+	class DistanceDimensionsFromDoublesFactory(unit: DistanceUnit)
+		extends DimensionsWrapperFactory[Double, Dimensions[Distance]]
+	{
+		// ATTRIBUTES   ---------------------
+		
+		override val zeroDimension: Double = 0.0
+		private val lazyZeroValue = Lazy { Distance(0.0, unit) }
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def newBuilder: DimensionalBuilder[Double, Dimensions[Distance]] =
+			double.newBuilder.mapResult { d => apply(d.dimensions) }
+		
+		override def apply(dimensions: Dimensions[Double]): Dimensions[Distance] =
+			new Dimensions[Distance](lazyZeroValue, dimensions.values.map { Distance(_, unit) })
+		override def apply(values: IndexedSeq[Double]): Dimensions[Distance] =
+			new Dimensions[Distance](lazyZeroValue, values.map { Distance(_, unit) })
+		
+		override def from(other: HasDimensions[Double]): Dimensions[Distance] = apply(other.dimensions)
+		override def from(values: IterableOnce[Double]): Dimensions[Distance] =
+			new Dimensions(lazyZeroValue, values.iterator.map { Distance(_, unit) }.toOptimizedSeq)
 	}
 }
 

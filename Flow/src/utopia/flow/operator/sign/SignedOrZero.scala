@@ -31,11 +31,24 @@ trait SignedOrZero[+Repr] extends Any with Signed[Repr] with MayBeZero[Repr]
 	  * @return A copy of this item that's at least zero.
 	  *         I.e. if this item is below zero, returns zero. Otherwise returns this.
 	  */
+	def atLeastZero = if (sign.isNegative) zero else self
+	/**
+	  * @return A copy of this item that's at most zero.
+	  *         I.e. if this item is above zero, returns zero. Otherwise returns this.
+	  */
+	def atMostZero = if (sign.isPositive) zero else self
+	
+	/**
+	  * @return A copy of this item that's at least zero.
+	  *         I.e. if this item is below zero, returns zero. Otherwise returns this.
+	  */
+	@deprecated("Please use .atLeastZero instead", "v2.5.1")
 	def minZero = if (sign.isNegative) zero else self
 	/**
 	  * @return A copy of this item that's at most zero.
 	  *         I.e. if this item is above zero, returns zero. Otherwise returns this.
 	  */
+	@deprecated("Please use .atMostZero instead", "v2.5.1")
 	def maxZero = if (sign.isPositive) zero else self
 	
 	
