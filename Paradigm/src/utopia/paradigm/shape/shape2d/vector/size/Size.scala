@@ -8,6 +8,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConv
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.sign.SignedOrZero
 import utopia.paradigm.generic.ParadigmDataType.SizeType
+import utopia.paradigm.measurement.DistanceUnit
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
@@ -91,6 +92,12 @@ class Size private(override val dimensions: Dimensions[Double])
     
     override def toValue = new Value(Some(this), SizeType)
     def toModel = Model.from("width" -> width, "height" -> height)
+    
+    /**
+      * @param unit A unit in which these measurements are given
+      * @return A real world size based on this one
+      */
+    override def in(unit: DistanceUnit) = RealSize(unit).fromDoublesFactory(dimensions)
     
     
     // OTHER    -----------------------------

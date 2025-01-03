@@ -126,7 +126,7 @@ object DistanceUnit
 	/**
 	  * All registered distance units
 	  */
-	val values = MeterUnit.values ++ Vector(Inch, Feet, Mile, NauticalMile, Dtp)
+	lazy val values = MeterUnit.values ++ Vector(Inch, Feet, Mile, NauticalMile, Dtp)
 	
 	/**
 	  * A graph that may be utilized in unit conversions.
@@ -165,7 +165,7 @@ object DistanceUnit
 		/**
 		  * All registered meter unit values
 		  */
-		val values = Vector[MeterUnit](MicroMeter, MilliMeter, CentiMeter, DeciMeter, Meter, KiloMeter, MegaMeter)
+		lazy val values = Vector[MeterUnit](MicroMeter, MilliMeter, CentiMeter, DeciMeter, Meter, KiloMeter, MegaMeter)
 		
 		private lazy val scaleMap = Map[MetricScale, MeterUnit](
 			Default -> Meter,

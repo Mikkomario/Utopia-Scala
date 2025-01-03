@@ -4,6 +4,7 @@ import utopia.flow.operator.equality.{EqualsExtensions, EqualsFunction}
 import utopia.flow.operator.HasLength
 import utopia.flow.operator.combine.LinearScalable
 import utopia.paradigm.enumeration.Axis
+import utopia.paradigm.measurement.DistanceUnit
 import utopia.paradigm.shape.shape1d.vector.Vector1D
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -132,4 +133,10 @@ trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength]
 	@deprecated("Replaced with mergeWith", "v1.2")
 	def combineWithDimensions(dimensions: Iterable[Double])(merge: (Double, Double) => Double) =
 		mergeWith(Dimensions.from(dimensions))(merge)
+	
+	/**
+	  * @param unit Unit of distance in which these measurements are given
+	  * @return A copy of this vector with real world lengths
+	  */
+	def in(unit: DistanceUnit) = DistanceVector(unit).fromDoubles(this)
 }

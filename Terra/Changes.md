@@ -1,5 +1,8 @@
 # Utopia Terra - list of changes
 
+## v1.2.1 (in development)
+Adding hidden height calculations
+
 ## v1.2 - 04.10.2024
 Made it easier to support more generic world views by introducing a couple new traits.
 ### Breaking changes

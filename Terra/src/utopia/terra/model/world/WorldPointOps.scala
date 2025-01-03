@@ -2,6 +2,7 @@ package utopia.terra.model.world
 
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
+import utopia.flow.util.Mutate
 import utopia.paradigm.measurement.Distance
 import utopia.terra.controller.coordinate.world.VectorDistanceConversion
 import utopia.terra.model.CompassTravel
@@ -76,25 +77,31 @@ trait WorldPointOps[+V, P, VI <: Reversible[VI], +Aerial, +T]
 	// OTHER    -----------------------
 	
 	/**
+	  * @param f A mapping function applied to this point's altitude
+	  * @return Copy of this point with mapped altitude
+	  */
+	def mapAltitude(f: Mutate[WorldDistance]) = withAltitude(f(altitude))
+	
+	/**
 	  * @param altitudeGain Amount of altitude gained
 	  * @return Copy of this point after the specified altitude gain
 	  */
-	def soarBy(altitudeGain: Distance) = withAltitude(altitude.distance + altitudeGain)
+	def soarBy(altitudeGain: Distance) = mapAltitude { _ + altitudeGain }
 	/**
 	  * @param altitudeGain Amount of altitude gained (in vector coordinates)
 	  * @return Copy of this point after the specified altitude gain
 	  */
-	def soarBy(altitudeGain: Double) = withAltitude(altitude.vectorLength + altitudeGain)
+	def soarBy(altitudeGain: Double) = mapAltitude { _ + altitudeGain }
 	/**
 	  * @param altitudeLoss Amount of altitude lost
 	  * @return Copy of this point after the specified loss of altitude
 	  */
-	def descendBy(altitudeLoss: Distance) = withAltitude(altitude.distance - altitudeLoss)
+	def descendBy(altitudeLoss: Distance) = mapAltitude { _ - altitudeLoss }
 	/**
 	  * @param altitudeLoss Amount of altitude lost (in vector coordinates)
 	  * @return Copy of this point after the specified loss of altitude
 	  */
-	def descendBy(altitudeLoss: Double) = withAltitude(altitude.vectorLength - altitudeLoss)
+	def descendBy(altitudeLoss: Double) = mapAltitude { _ - altitudeLoss }
 	
 	/**
 	  * @param rotation Amount of rotational travel to apply

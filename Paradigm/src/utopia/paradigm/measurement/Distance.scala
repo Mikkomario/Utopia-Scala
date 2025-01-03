@@ -9,6 +9,8 @@ import utopia.flow.operator.sign.{Sign, SignOrZero, SignedOrZero}
 import utopia.paradigm.measurement.DistanceUnit.{CentiMeter, Dtp, Feet, Inch, KiloMeter, Meter, MeterUnit, Mile, MilliMeter, NauticalMile}
 import utopia.paradigm.transform.LinearSizeAdjustable
 
+import scala.util.{Failure, Success, Try}
+
 object Distance
 {
 	// ATTRIBUTES   -----------------
@@ -81,6 +83,26 @@ object Distance
 	 */
 	def ofPixels(pixels: Double)(implicit ppi: Ppi) =
 		if (ppi.value == 0) ofInches(0) else ofInches(pixels / ppi.value)
+	
+	/**
+	  * Parses a distance from a string
+	  * @param str A string combining amount and unit. E.g. "3.2km".
+	  * @param defaultUnit Unit that will be assigned if no other unit has been specified
+	  * @return Distance parsed from the specified string.
+	  */
+	def parse(str: String, defaultUnit: => DistanceUnit) = {
+		val unitStartIndex = str.lastIndexWhere { _.isDigit } + 1
+		if (unitStartIndex < str.length)
+			Try { str.take(unitStartIndex).trim.toDouble }.flatMap { amount =>
+				val unitStr = str.drop(unitStartIndex).trim
+				DistanceUnit.values.find { _.abbreviation ~== unitStr } match {
+					case Some(unit) => Success(Distance(amount, unit))
+					case None => Failure(new IllegalArgumentException(s"Unrecognized distance unit '$unitStr'"))
+				}
+			}
+		else
+			Try { str.toDouble }.map { Distance(_, defaultUnit) }
+	}
 		
 	
 	// NESTED   ---------------------
@@ -102,8 +124,8 @@ object Distance
 		override def parseString(str: String): Option[Distance] = {
 			val unitStartIndex = str.lastIndexWhere { _.isLetter }
 			if (unitStartIndex >= 0)
-				str.take(unitStartIndex).toDoubleOption.flatMap { amount =>
-					val unitStr = str.drop(unitStartIndex)
+				str.take(unitStartIndex).trim.toDoubleOption.flatMap { amount =>
+					val unitStr = str.drop(unitStartIndex).trim
 					DistanceUnit.values.find { _.abbreviation ~== unitStr }.map { Distance(amount, _) }
 				}
 			else

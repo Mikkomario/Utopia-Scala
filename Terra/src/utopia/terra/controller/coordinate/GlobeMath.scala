@@ -1,13 +1,16 @@
 package utopia.terra.controller.coordinate
 
 import utopia.flow.collection.immutable.Pair
-import utopia.paradigm.angular.Rotation
+import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.measurement.Distance
 import utopia.paradigm.measurement.DistanceUnit.{KiloMeter, Meter}
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
-import utopia.terra.controller.coordinate.world.VectorDistanceConversion
+import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.terra.controller.coordinate.world.{SphericalEarth, VectorDistanceConversion}
 import utopia.terra.model.angular.{LatLong, NorthSouthRotation}
 import utopia.terra.model.world.WorldDistance
+import utopia.terra.model.world.sphere.SpherePoint
 
 /**
  * Contains constants relating to geometric mathematics concerning the Earth.
@@ -113,5 +116,71 @@ object GlobeMath
 		val c = 2 * atan2(sqrt(k), sqrt(1 - k))
 		
 		radius * c
+	}
+	
+	/**
+	  * Calculates, how much of a viewed target should be hidden behind a physical horizon on a spherical earth
+	  * @param observer The observer's location. Note: This should be at the height of the observer's eyes / lenses.
+	  * @param targetLowestPoint Location of the viewed object's lowest point.
+	  *                          E.g. If viewing an object over the sea, this point should be at altitude 0.
+	  * @param targetHeight The height of the observed object
+	  * @return Returns 2 values:
+	  *             1. Height of the portion of the viewed object,
+	  *                which is not visible because it's blocked by the physical horizon.
+	  *                Note: This may be higher than the target height.
+	  *             1. Height of the viewed object's area which remains visible.
+	  *                If the object is completely blocked by the physical horizon, this value is 0.
+	  */
+	def calculateHiddenHeight(observer: SpherePoint, targetLowestPoint: SpherePoint, targetHeight: Distance) = {
+		// First, we form a triangle between B (observer), T (target) and O (origin),
+		// and calculate the angle at the origin's corner:
+		//      cos(a) = (O dot T) / (|O|*|T|)
+		//      a = acos((O dot T) / (|O|*|T|))
+		//
+		// Where a is the angle at origin O.
+		val target = targetLowestPoint.soarBy(targetHeight)
+		val lenObserver = observer.vector.length
+		val lenTarget = target.vector.length
+		val mainAngle = Angle.radians(math.acos(observer.vector.dot(target.vector) / (lenObserver * lenTarget)))
+		
+		// We form a simplified coordinate system, where the observer lies at X=0, and both points are at the Z=0 plane.
+		// positive Y direction is towards the observer, in this case
+		val observerV = Vector2D(0, lenObserver)
+		// We can resolve the target coordinates using the main angle a (X is based on cos and Y is based on sin)
+		// Xt = cos(Pi/2-a)*|T|
+		// Yt = sin(Pi/2-a)*|T|
+		// We use .lenDir to get this same effect
+		val compositeMainAngle = (Angle.quarter - mainAngle).toAngle
+		val targetV = Vector2D.lenDir(lenTarget, compositeMainAngle)
+		
+		// We calculate the highest horizon point H,
+		// which lies exactly at the middle of the observer and the target on the ground level
+		// That is, relative to the Y axis, it lies at a/2 angle (so relative to X it's Pi/2-a/2)
+		val horizonV = Vector2D.lenDir(SphericalEarth.globeVectorRadius, (Angle.quarter - mainAngle/2).toAngle)
+		
+		// Next we calculate the intersection between a line drawn from the observer to the horizon
+		// (representing the lowest visible line-of-sight over the horizon)
+		// and the target
+		Line(observerV.toPoint, horizonV.toPoint)
+			.intersection(Line(Point.origin, targetV.toPoint), onlyPointsInSegment = false) match
+		{
+			case Some(hiddenPoint) =>
+				// Calculates how high this (hidden) intersection point is, relative to the target's lowest point
+				val targetLowestHeight = targetLowestPoint.vector.length
+				val hiddenVectorHeight = (hiddenPoint.length - targetLowestHeight) max 0.0
+				val hiddenHeight = SphericalEarth.distanceOf(hiddenVectorHeight)
+				val visibleHeight = (targetHeight - hiddenHeight) max Distance.zero
+				
+				// Also calculates how far the visible horizon should be on the ground level
+				// This is simply the arc length of the horizon angle (a/2)
+				/*
+				val horizonDistance = SphericalEarth.distanceOf(
+					(mainAngle/2).toShortestRotation.arcLengthOver(SphericalEarth.globeVectorRadius))
+				*/
+				(hiddenHeight, visibleHeight)
+			
+			// Special case: The observer is looking directly up or down
+			case None => (Distance.zero, targetHeight)
+		}
 	}
 }
