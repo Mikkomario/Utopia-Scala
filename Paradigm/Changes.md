@@ -14,6 +14,7 @@ Working on distance vectors
 - **Distance**
   - Object
     - Added `.ofMiles(Double)`, `.ofNauticalMiles(Double)` and `.ofPoints(Double)`
+    - Added `.parse(String, DistanceUnit)`
   - Instance
     - Added `.toMeters`, `.toMiles` and `.toPoints`
     - Distance now extends **LinearSizeAdjustable**
@@ -29,6 +30,7 @@ Working on distance vectors
   - Added `.forAbbreviation(String)` and `.from(String)`
 ### Other changes
 - **Distance** now extends **Combinable**
+- Added rounding to **Distance**'s `.toString` implementation
 - **Dimensions** now better utilizes **OptimizedIndexedSeq**
 
 ## v1.7 - 04.10.2024

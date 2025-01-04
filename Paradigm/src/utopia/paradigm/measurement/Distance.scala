@@ -208,7 +208,7 @@ case class Distance(amount: Double, unit: DistanceUnit)
 	override def toString = unit match {
 		case _: MeterUnit =>
 			val targetUnit = MeterUnit.appropriateFor(toM)
-			s"${toUnit(targetUnit)} $targetUnit"
+			s"${(toUnit(targetUnit) * 100).round / 100.0} $targetUnit"
 		case u => s"$amount $u"
 	}
 	

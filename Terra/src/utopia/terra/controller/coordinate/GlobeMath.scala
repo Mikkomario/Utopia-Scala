@@ -124,12 +124,7 @@ object GlobeMath
 	  * @param targetLowestPoint Location of the viewed object's lowest point.
 	  *                          E.g. If viewing an object over the sea, this point should be at altitude 0.
 	  * @param targetHeight The height of the observed object
-	  * @return Returns 2 values:
-	  *             1. Height of the portion of the viewed object,
-	  *                which is not visible because it's blocked by the physical horizon.
-	  *                Note: This may be higher than the target height.
-	  *             1. Height of the viewed object's area which remains visible.
-	  *                If the object is completely blocked by the physical horizon, this value is 0.
+	  * @return Returns various results, including how much of the target should be hidden behind the curve
 	  */
 	def calculateHiddenHeight(observer: SpherePoint, targetLowestPoint: SpherePoint, targetHeight: Distance) = {
 		// First, we form a triangle between B (observer), T (target) and O (origin),
@@ -153,15 +148,36 @@ object GlobeMath
 		val compositeMainAngle = (Angle.quarter - mainAngle).toAngle
 		val targetV = Vector2D.lenDir(lenTarget, compositeMainAngle)
 		
-		// We calculate the highest horizon point H,
-		// which lies exactly at the middle of the observer and the target on the ground level
-		// That is, relative to the Y axis, it lies at a/2 angle (so relative to X it's Pi/2-a/2)
-		val horizonV = Vector2D.lenDir(SphericalEarth.globeVectorRadius, (Angle.quarter - mainAngle/2).toAngle)
+		// Next we calculate the direction of the line-of-sight to the physical horizon,
+		// which is a tangent along the earth, reaching O
+		//      cos(dH) = R/|O|
+		//      dH = acos(R/|O|)
+		//      b = Pi/2 - dH
+		//      b = Pi/2 - acos(R/|O|)
+		//      dOH = b - Pi/2
+		//      dOH = (Pi/2 - dH) - Pi/2
+		//      dOH = -dH
+		//
+		// Here, dH is angle from origin to horizon H
+		//       b is angle from observer O to horizon H (within the triangle)
+		//       dOH is the direction of the line-of-sight in the X-Y coordinate system
+		val directionToHorizon = Angle.radians(math.acos(SphericalEarth.globeVectorRadius/lenObserver))
+		val lineOfSightDirection = -directionToHorizon
+		val unitLineOfSight = Line.fromVector(observerV.toPoint, Vector2D.lenDir(1.0, lineOfSightDirection))
+		
+		// Also calculates how far the visible horizon should be on the ground level
+		// This is simply the arc length of the horizon angle (dH)
+		val horizonDistance = SphericalEarth.distanceOf(
+			directionToHorizon.toShortestRotation.arcLengthOver(SphericalEarth.globeVectorRadius)).abs
+		
+		// Also calculates the distance between the observer and the target, along the sphere surface
+		val targetDistance = SphericalEarth
+			.distanceOf(mainAngle.toShortestRotation.arcLengthOver(SphericalEarth.globeVectorRadius))
 		
 		// Next we calculate the intersection between a line drawn from the observer to the horizon
 		// (representing the lowest visible line-of-sight over the horizon)
 		// and the target
-		Line(observerV.toPoint, horizonV.toPoint)
+		val (hidden, visible) = unitLineOfSight
 			.intersection(Line(Point.origin, targetV.toPoint), onlyPointsInSegment = false) match
 		{
 			case Some(hiddenPoint) =>
@@ -171,16 +187,33 @@ object GlobeMath
 				val hiddenHeight = SphericalEarth.distanceOf(hiddenVectorHeight)
 				val visibleHeight = (targetHeight - hiddenHeight) max Distance.zero
 				
-				// Also calculates how far the visible horizon should be on the ground level
-				// This is simply the arc length of the horizon angle (a/2)
-				/*
-				val horizonDistance = SphericalEarth.distanceOf(
-					(mainAngle/2).toShortestRotation.arcLengthOver(SphericalEarth.globeVectorRadius))
-				*/
 				(hiddenHeight, visibleHeight)
 			
 			// Special case: The observer is looking directly up or down
 			case None => (Distance.zero, targetHeight)
 		}
+		
+		HiddenHeightResults(observerV,
+			Line.fromVector(targetV.toPoint, targetV.withLength(-SphericalEarth.vectorLengthOf(targetHeight))),
+			Vector2D.lenDir(SphericalEarth.globeVectorRadius, directionToHorizon), hidden, visible,
+			horizonDistance, targetDistance)
 	}
+	
+	
+	// NESTED   -----------------------------
+	
+	/**
+	  * Combines information about target hidden height -calculation
+	  * @param observer A vector representing the observer's position
+	  * @param target A line representing the target's vertical area, from the lowest to the highest point
+	  * @param horizon A point where the observer's line of sight meets the horizon
+	  * @param hiddenLength Amount of target that's hidden behind the earth's curvature
+	  * @param visibleLength Amount of target that's visible above the earth's curvature
+	  * @param distanceToHorizon Distance between the observer and the visible horizon,
+	  *                          along the earth's surface at sea level.
+	  * @param distanceToTarget Distance between the observer and the viewed target,
+	  *                         along the earth's surface at sea level.
+	  */
+	case class HiddenHeightResults(observer: Vector2D, target: Line, horizon: Vector2D, hiddenLength: Distance,
+	                               visibleLength: Distance, distanceToHorizon: Distance, distanceToTarget: Distance)
 }

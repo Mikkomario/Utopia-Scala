@@ -41,16 +41,21 @@ object HiddenHeightCalculator extends App
 								.foreach { targetAltitude =>
 									requestDistance("Finally, how high is the viewed object?", targetAltitude.unit)
 										.foreach { targetHeight =>
-											val (hidden, visible) = GlobeMath.calculateHiddenHeight(
-												SpherePoint(observerCoordinates, observerAltitude),
-												SpherePoint(targetCoordinates, targetAltitude), targetHeight)
+											val results = GlobeMath
+												.calculateHiddenHeight(
+													SpherePoint(observerCoordinates, observerAltitude),
+													SpherePoint(targetCoordinates, targetAltitude), targetHeight)
 											
 											println()
-											if (visible.isNegativeOrZero)
+											if (results.visibleLength.isNegativeOrZero)
 												println(s"The viewed object should be completely hidden, it's highest point ${
-													hidden - targetHeight } under the horizon.")
+													results.hiddenLength - targetHeight } under the horizon.")
 											else
-												println(s"$hidden of the viewed object should be hidden, $visible should remain visible")
+												println(s"${ results.hiddenLength } of the viewed object should be hidden, ${
+													results.visibleLength } should remain visible")
+												
+											println(s"The horizon should visibly appear at ${ results.distanceToHorizon }")
+											println(s"The target distance (along sea level) is ${ results.distanceToTarget }")
 												
 											println(s"\nNote: All calculations assume a perfectly spherical Earth with a radius of ${
 												SphericalEarth.globeRadius.distance }")
