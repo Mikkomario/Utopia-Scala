@@ -73,6 +73,12 @@ object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[
 class Vector2D private(override val dimensions: Dimensions[Double])
 	extends DoubleVectorLike[Vector2D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
+	// ATTRIBUTES   ---------------------------
+	
+	override lazy val length = super.length
+	override lazy val direction = super.direction
+	
+	
 	// COMPUTED   -----------------------------
 	
 	/**

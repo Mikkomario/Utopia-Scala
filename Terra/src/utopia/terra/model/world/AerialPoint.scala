@@ -20,4 +20,6 @@ trait AerialPoint[+V, P, VI <: Reversible[VI], +Surface, +T] extends WorldPointO
 	 * @return A surface-level point that matches this aerial point (without altitude information)
 	 */
 	def toSurfacePoint: Surface
+	
+	override def toString = s"$latLong at $altitude altitude"
 }

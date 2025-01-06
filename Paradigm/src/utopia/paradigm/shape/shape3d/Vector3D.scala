@@ -152,6 +152,11 @@ object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[
 class Vector3D private(override val dimensions: Dimensions[Double])
 	extends DoubleVectorLike[Vector3D] with DoubleVector with ValueConvertible with ModelConvertible with EqualsBy
 {
+	// ATTRIBUTES   --------------------
+	
+	override lazy val length = super.length
+	
+	
     // COMPUTED PROPERTIES    ----------
 	
 	/**

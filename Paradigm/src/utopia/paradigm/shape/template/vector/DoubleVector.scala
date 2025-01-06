@@ -24,6 +24,13 @@ object DoubleVector extends DoubleVectorFactory[DoubleVector]
 	
 	private case class _DoubleVector(dimensions: Dimensions[Double]) extends DoubleVector
 	{
+		// ATTRIBUTES   ---------------------------
+		
+		override lazy val length = super.length
+		
+		
+		// IMPLEMENTED    -------------------------
+		
 		override def self = this
 		override protected def factory = DoubleVector
 	}

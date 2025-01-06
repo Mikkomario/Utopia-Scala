@@ -263,20 +263,21 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	  * The length of the cross product of these two vectors. |a||b|sin(a, b)
 	  */
 	// = |a||b|sin(a, b)e, |e| = 1 (in this we skip the e)
-	def crossProductLength[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) =
-		length * other.length * angleDifference[V](other).sine
+	def crossProductLength(other: HasDoubleDimensions with HasLength) =
+		length * other.length * angleDifference(other).sine
 	/**
-	  * Calculates the directional difference between these two vectors. The difference is
-	  * absolute (always positive) and doesn't specify the direction of the difference.
-	  */
-	def angleDifference[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) = {
-		// This vector is used as the 'x'-axis, while a perpendicular vector is used as the 'y'-axis
-		// The other vector is then measured against these axes
-		val x = other.projectedOver(DoubleVector(dimensions.map(n.toDouble)))
-		val y = other - x
-		
-		Angle.radians(math.atan2(y.length, x.length).abs)
+	 * Calculates the directional difference between these two vectors. The difference is
+	 * absolute (always positive) and doesn't specify the direction of the difference.
+	 */
+	def angleDifference(other: HasDoubleDimensions with HasLength) = {
+		val myLen = length
+		lazy val theirLen = other.length
+		if (myLen == 0.0 || theirLen == 0.0)
+			Angle.zero
+		else
+			Angle.radians(math.acos(doubleDot(other) / (myLen * theirLen)))
 	}
+	
 	/**
 	  * @param other Another vector
 	  * @return The distance between the points represented by these two vectors
@@ -286,8 +287,10 @@ trait NumericVectorLike[D, +Repr <: HasDimensions[D] with HasLength, +FromDouble
 	/**
 	  * Checks whether this vector is parallel with another vector (has same or opposite direction)
 	  */
-	def isParallelWith[V <: VectorProjectable[V] with Reversible[V] with Combinable[V, HasLength] with HasLength](other: V) =
-		crossProductLength[V](other) ~== 0.0
+	def isParallelWith(other: HasDoubleDimensions with HasLength) = {
+		val angleDiff = angleDifference(other)
+		angleDiff.isAboutZero || (angleDiff ~== Angle.half)
+	}
 	/**
 	  * @param axis Target axis
 	  * @return Whether this vector is parallel to the specified axis

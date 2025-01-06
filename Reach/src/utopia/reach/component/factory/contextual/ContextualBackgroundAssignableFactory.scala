@@ -15,6 +15,8 @@ trait ContextualBackgroundAssignableFactory[N <: StaticColorContextLike[N, _], +
 	extends ContextualFactory[N, Repr] with StaticContextualBackgroundAssignable[N, Repr]
 		with StaticColorContextWrapper[N, Repr]
 {
+	// IMPLEMENTED  -------------------------
+	
 	override def withBackground(background: Color) =
 		mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
 	

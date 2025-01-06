@@ -41,6 +41,10 @@ object HiddenHeightCalculator extends App
 								.foreach { targetAltitude =>
 									requestDistance("Finally, how high is the viewed object?", targetAltitude.unit)
 										.foreach { targetHeight =>
+											println("\nInputs:")
+											println(s"\t- Observer: $observerCoordinates at $observerAltitude altitude")
+											println(s"\t- Target: $targetCoordinates at $targetAltitude altitude, height $targetHeight")
+											
 											val results = GlobeMath
 												.calculateHiddenHeight(
 													SpherePoint(observerCoordinates, observerAltitude),

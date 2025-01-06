@@ -16,7 +16,6 @@ object SegmentGroup
 	  * @return A segmented group that produces rows
 	  */
 	def rows = new SegmentGroup()
-	
 	/**
 	  * @return A segmented group that produces columns
 	  */
@@ -27,7 +26,6 @@ object SegmentGroup
 	  * @return A new segmented group that produces rows
 	  */
 	def rowsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(layouts = layouts)
-	
 	/**
 	  * @param first First segment layout
 	  * @param second Second segment layout
@@ -36,13 +34,11 @@ object SegmentGroup
 	  */
 	def rowsWithLayouts(first: StackLayout, second: StackLayout, more: StackLayout*): SegmentGroup =
 		rowsWithLayouts(Pair(first, second) ++ more)
-	
 	/**
 	  * @param layouts Layouts to use in column segments (ordered)
 	  * @return A new segmented group that produces columns
 	  */
 	def columnsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(Y, layouts)
-	
 	/**
 	  * @param first First segment layout
 	  * @param second Second segment layout

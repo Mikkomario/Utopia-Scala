@@ -4,6 +4,8 @@
 ### New features
 - Added `.calculateHiddenHeight(...)` function to **GlobeMath**, 
   which calculates how much of a viewed object should be hidden behind a physical horizon.
+### Other changes
+- Added `.toString` implementation to **AerialPoint**
 
 ## v1.2 - 04.10.2024
 Made it easier to support more generic world views by introducing a couple new traits.

@@ -6,6 +6,7 @@ Working on distance vectors
 - Attempting to calculate a value for a **Change** with duration of zero would previously cause a 
   **StackOverFlowException** in situations where the **Change**'s `.toString` involved such value calculations.
   - For example, such a case would be with **LinearVelocity**
+- Very long parallel vectors would previously yield false with `.isParallelWith`
 ### New features
 - Added **Dtp** - a typographic point - as a new **DistanceUnit**
 - Added **DistanceIsNumericIn** for situations where you need **Numeric** support with **Distance**
@@ -29,8 +30,11 @@ Working on distance vectors
 - **MetricScale** (object)
   - Added `.forAbbreviation(String)` and `.from(String)`
 ### Other changes
+- **Angle** now extends **MayBeAboutZero**
 - **Distance** now extends **Combinable**
 - Added rounding to **Distance**'s `.toString` implementation
+- Rewrote **NumericVectorLike**'s `.angleDifference(...)` and `.isParallelWith(...)` implementations
+  - Note: The parameter type was adjusted to reflect this, which may be a breaking change under some (rare) circumstances
 - **Dimensions** now better utilizes **OptimizedIndexedSeq**
 
 ## v1.7 - 04.10.2024

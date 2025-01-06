@@ -136,7 +136,7 @@ object GlobeMath
 		val target = targetLowestPoint.soarBy(targetHeight)
 		val lenObserver = observer.vector.length
 		val lenTarget = target.vector.length
-		val mainAngle = Angle.radians(math.acos(observer.vector.dot(target.vector) / (lenObserver * lenTarget)))
+		val mainAngle = observer.vector.angleDifference(target.vector)
 		
 		// We form a simplified coordinate system, where the observer lies at X=0, and both points are at the Z=0 plane.
 		// positive Y direction is towards the observer, in this case
