@@ -1,7 +1,6 @@
 # Utopia Firmament - List of Changes
 
 ## v1.4 (in development)
-Working on variable context
 ### Breaking changes
 - All context classes, except for **WindowContext** now have a static and a variable version
   - Variable context classes replace use cases where context pointers were used, previously

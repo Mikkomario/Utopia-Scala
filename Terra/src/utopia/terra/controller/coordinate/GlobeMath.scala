@@ -150,25 +150,24 @@ object GlobeMath
 		
 		// Next we calculate the direction of the line-of-sight to the physical horizon,
 		// which is a tangent along the earth, reaching O
-		//      cos(dH) = R/|O|
-		//      dH = acos(R/|O|)
-		//      b = Pi/2 - dH
-		//      b = Pi/2 - acos(R/|O|)
-		//      dOH = b - Pi/2
-		//      dOH = (Pi/2 - dH) - Pi/2
-		//      dOH = -dH
+		//      cos(ddH) = R/|O|
+		//      ddH = acos(R/|O|)
+		//      dH = dO - ddH
+		//      dOH = Pi/2 - (Pi/2 - ddH) = ddH
 		//
-		// Here, dH is angle from origin to horizon H
-		//       b is angle from observer O to horizon H (within the triangle)
-		//       dOH is the direction of the line-of-sight in the X-Y coordinate system
-		val directionToHorizon = Angle.radians(math.acos(SphericalEarth.globeVectorRadius/lenObserver))
-		val lineOfSightDirection = -directionToHorizon
-		val unitLineOfSight = Line.fromVector(observerV.toPoint, Vector2D.lenDir(1.0, lineOfSightDirection))
+		// Here, ddH is the angle between observer and horizon, from origin
+		//       dH is the angle from origin to horizon
+		//       dOH is the direction of the line-of-sight in the X-Y coordinate system (from observer)
+		val observerHorizonAngleDifference = Rotation.counterclockwise
+			.radians(math.acos(SphericalEarth.globeVectorRadius/lenObserver))
+		val directionToHorizon = Angle.quarter + observerHorizonAngleDifference
+		val unitLineOfSight = Line
+			.fromVector(observerV.toPoint, Vector2D.lenDir(1.0, observerHorizonAngleDifference.toAngle))
 		
 		// Also calculates how far the visible horizon should be on the ground level
 		// This is simply the arc length of the horizon angle (dH)
 		val horizonDistance = SphericalEarth.distanceOf(
-			directionToHorizon.toShortestRotation.arcLengthOver(SphericalEarth.globeVectorRadius)).abs
+			observerHorizonAngleDifference.arcLengthOver(SphericalEarth.globeVectorRadius)).abs
 		
 		// Also calculates the distance between the observer and the target, along the sphere surface
 		val targetDistance = SphericalEarth

@@ -25,6 +25,8 @@ Working on distance vectors
   - Instance
     - Added `.toMilliMeters`, `.toCentiMeters`, `.toMeters`, `.toKiloMeters` and `.toPoints`
     - Added `.apply(Double): Distance`
+- **Line**
+  - Added `.mapVector(...)`
 - **MeterUnit** (object)
   - Added `.values`
 - **MetricScale** (object)

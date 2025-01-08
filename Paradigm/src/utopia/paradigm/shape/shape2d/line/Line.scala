@@ -138,6 +138,12 @@ case class Line(override val ends: Pair[Point])
     // OTHER METHODS    ----------------
     
     /**
+     * @param f A mapping function applied to this line's vector form
+     * @return Copy of this line with the same starting point, but modified path / end point
+     */
+    def mapVector(f: Vector2D => HasDoubleDimensions) = factory.fromVector(start, f(vector))
+    
+    /**
       * Tests whether these two lines intersect with each other
       * @param other Another line
       * @return Whether these lines intersect with each other

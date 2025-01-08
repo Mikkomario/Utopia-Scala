@@ -3,7 +3,6 @@ package utopia.paradigm.shape.shape2d.line
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.operator.HasLength
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.FromDimensionsFactory
 import utopia.paradigm.shape.template.vector.NumericVectorLike
 
