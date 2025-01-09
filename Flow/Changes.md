@@ -14,6 +14,7 @@
 - Added **UntilExternalFailureIterator**
 - Added **RepeatOneForeverIterator**
 - Added **LazilyInitializedChanging** that provides lazy **Changing** wrapping
+- Added **DividingMirror** that supports pointer-splitting
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapParallelUsing(ActionQueue)(...)`

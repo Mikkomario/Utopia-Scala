@@ -839,6 +839,19 @@ trait Changing[+A] extends View[A]
 		} { ChangeResult.finalValue(value) }
 	
 	/**
+	  * Divides this changing item into 2
+	  * @param initialLeft Initially assigned left side value. Called if this is right.
+	  * @param initialRight Initially assigned right side value. Called if this is left.
+	  * @param f A function which divides this item's value into either a left side, or a right side value.
+	  * @tparam O Type of accepted origin values
+	  * @tparam L Type of left side results
+	  * @tparam R Type of right side results
+	  * @return A mirror which provides access to the divided pointers
+	  */
+	def divide[O >: A, L, R](initialLeft: => L, initialRight: => R)(f: O => Either[L, R]) =
+		DividingMirror[O, L, R](this, initialLeft, initialRight)(f)
+	
+	/**
 	  * Merges this item with another. Optimizes listening.
 	  * @param other Another changing item
 	  * @param f A merge function
