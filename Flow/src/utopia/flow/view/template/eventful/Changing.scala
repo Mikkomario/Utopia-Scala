@@ -1,12 +1,12 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.{Identity, MaybeEmpty}
@@ -843,13 +843,12 @@ trait Changing[+A] extends View[A]
 	  * @param initialLeft Initially assigned left side value. Called if this is right.
 	  * @param initialRight Initially assigned right side value. Called if this is left.
 	  * @param f A function which divides this item's value into either a left side, or a right side value.
-	  * @tparam O Type of accepted origin values
 	  * @tparam L Type of left side results
 	  * @tparam R Type of right side results
 	  * @return A mirror which provides access to the divided pointers
 	  */
-	def divide[O >: A, L, R](initialLeft: => L, initialRight: => R)(f: O => Either[L, R]) =
-		DividingMirror[O, L, R](this, initialLeft, initialRight)(f)
+	def divide[L, R](initialLeft: => L, initialRight: => R)(f: A => Either[L, R]) =
+		DividingMirror[A, L, R](this, initialLeft, initialRight)(f)
 	
 	/**
 	  * Merges this item with another. Optimizes listening.

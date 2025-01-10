@@ -1,10 +1,15 @@
 package utopia.flow.test.event
 
-import utopia.flow.test.TestContext._
 import utopia.flow.event.model.ChangeResult
+import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.{DoubleType, StringType}
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.test.TestContext._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
-import utopia.flow.view.template.eventful.Flag
 
 import scala.util.Try
 
@@ -298,6 +303,42 @@ object ChangingTest extends App
 	assert(merge4Calls == 7)
 	assert(lastMerge4Value == 15)
 	assert(merge4.value == 15, merge4.value)
+	
+	// Tests pointer-division
+	private val dp = LockablePointer(1: Value)
+	private val divided = dp.divide(0.0, "") { v =>
+		v.castTo(DoubleType, StringType).mapBoth { _.getDouble } { _.getString }
+	}
+	
+	assert(divided.left.value == 1.0)
+	assert(divided.right.value == "")
+	assert(divided.lastUpdatedSide == First)
+	assert(divided.lastUpdated == Left(divided.left))
+	
+	assert(divided.left.destiny == MaySeal)
+	assert(divided.right.destiny == MaySeal)
+	assert(divided.lastUpdatedPointerPointer.destiny == MaySeal)
+	
+	dp.value = "test"
+	
+	assert(divided.left.value == 1.0)
+	assert(divided.right.value == "test")
+	assert(divided.lastUpdatedSide == Last)
+	assert(divided.lastUpdated == Right(divided.right))
+	
+	dp.value = 3.0
+	
+	assert(divided.left.value == 3.0)
+	assert(divided.right.value == "test")
+	assert(divided.lastUpdatedSide == First)
+	assert(divided.lastUpdated == Left(divided.left))
+	
+	dp.lock()
+	
+	assert(divided.left.destiny == Sealed)
+	assert(divided.right.destiny == Sealed)
+	assert(divided.lastUpdatedSidePointer.destiny == Sealed)
+	assert(divided.lastUpdatedPointerPointer.destiny == Sealed)
 	
 	println("Done!")
 }
