@@ -46,7 +46,7 @@ import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWra
 import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{StackSettings, ViewStack}
-import utopia.reach.container.wrapper.CachingViewSwapper
+import utopia.reach.container.wrapper.Swapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
 import utopia.reach.context.VariableReachContentWindowContext
 
@@ -663,8 +663,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 						settings.noOptionsViewConstructor match {
 							// Case: No options -view used => Switches between the two views
 							case Some(makeNoOptionsView) =>
-								factories(CachingViewSwapper).build(Mixed)
-									.generic(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
+								factories(Swapper).build(Mixed)
+									.apply(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
 										// Case: No options -view constructor
 										if (isEmpty)
 											makeNoOptionsView(factories.parentHierarchy, popUpContext)
@@ -672,7 +672,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponentLike with Focusable, D <: Re
 										else
 											makeOptionsList(factories(SelectionList))
 									}
-							// Case: No no options -view used => Always displays the selection list
+							// Case: No no-options -view used => Always displays the selection list
 							case None => makeOptionsList(factories(SelectionList))
 						}
 					}

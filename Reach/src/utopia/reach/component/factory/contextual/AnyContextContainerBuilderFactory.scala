@@ -11,7 +11,7 @@ import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.
   * @tparam B Type of builder produced
   * @tparam Repr Implementation of this trait
   */
-trait AnyContextContainerBuilderFactory[N, +CF, +B[BN, BF[X]], +Repr[X]]
+trait AnyContextContainerBuilderFactory[N, +CF, +B[_, _[_]], +Repr[_]]
 	extends GenericContextualFactory[N, Any, Repr]
 {
 	// ABSTRACT	---------------------------------
@@ -27,5 +27,5 @@ trait AnyContextContainerBuilderFactory[N, +CF, +B[BN, BF[X]], +Repr[X]]
 	  * @tparam F Type of desired content factory
 	  * @return A new builder
 	  */
-	def build[F[X]](contentFactory: Gccff[N, F]): B[N, F]
+	def build[F[_]](contentFactory: Gccff[N, F]): B[N, F]
 }

@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable.caching.cache
 
 import utopia.flow.collection.template.MapAccess
+import utopia.flow.view.mutable.caching.ClearableCache
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
@@ -10,6 +11,10 @@ object Cache
 {
 	// COMPUTED -------------------------
 	
+	/**
+	  * @return Access to clearable cache constructors
+	  */
+	def clearable = ClearableCache
 	/**
 	  * Access to weak cache constructors
 	  */

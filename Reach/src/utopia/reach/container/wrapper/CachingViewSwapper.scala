@@ -15,6 +15,7 @@ import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponent
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 
+@deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
 object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 {
 	// IMPLEMENTED	-------------------------
@@ -32,6 +33,7 @@ object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 	}
 }
 
+@deprecated("Deprecated for removal. Replaced with SwapperFactory", "v1.5")
 class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[Any, ContextualCachingViewSwapperFactory]
 {
@@ -87,6 +89,7 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 		new CachingViewSwapperBuilder[F](this, contentFactory)
 }
 
+@deprecated("Deprecated for removal. Replaced with ContextualSwapperFactory", "v1.5")
 case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFactory, context: N)
 	extends AnyContextContainerBuilderFactory[N, CachingViewSwapperFactory, ContextualViewSwapperBuilder,
 		ContextualCachingViewSwapperFactory]
@@ -100,6 +103,7 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 		new ContextualViewSwapperBuilder[N, F](factory, context, contentFactory)
 }
 
+@deprecated("Deprecated for removal. Replaced with SwapperBuilder", "v1.5")
 class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentFactory: ComponentFactoryFactory[F])
 {
 	private implicit val canvas: ReachCanvas = factory.canvas
@@ -132,6 +136,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
+@deprecated("Deprecated for removal. Replaced with ContextualSwapperBuilder", "v1.5")
 class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory, context: N, contentFactory: Gccff[N, F])
 {
 	private implicit val canvas: ReachCanvas = factory.canvas
@@ -179,6 +184,7 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
   * @tparam C Type of wrapped component
   * @tparam P Type of value pointer used
   */
+@deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
 class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: Changing[A]]
 (override val parentHierarchy: ComponentHierarchy, override val valuePointer: P,
  override val customDrawers: Seq[CustomDrawer] = Empty)(makeContent: A => OpenComponent[C, _])

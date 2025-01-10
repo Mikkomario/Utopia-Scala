@@ -9,9 +9,13 @@
 - **Stack** and **Collection** margins are now pointer-based and not always static
 - Similarly, **Framing** now supports variable insets
 - Renamed **InputRowBlueprints**'s `isScalable` parameter to `scalable` and `visibilityPointer` to `visibilityFlag`
+### Deprecations
+- Deprecated **CachingViewSwapper** in favor of the new **Swapper**, which performs the same function
 ### Bugfixes
 - Possible bugfix to image label's `imageScaling` property application
 ### New features
+- Added new **Swapper** container based on the previous **CachingViewSwapper** implementation
+  - In this implementation, caching is optional (although on by default)
 - **RealTimeReachPaintManager** now supports delayed painting
 ### Other changes
 - **ReachCanvas** now attempts to minimize screen flickering on window resize by performing the layout updates 
