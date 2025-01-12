@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="httpclient" type="repository">
+    <properties maven-id="org.apache.httpcomponents.client5:httpclient5:5.1.2" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/commons-codec-1.15.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.1.2-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.1.2-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.1.2-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.25-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/commons-codec-1.15-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>
