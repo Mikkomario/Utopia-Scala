@@ -11,12 +11,15 @@
 - Added **ToolFactory** for loading tools from models
 - Added model conversions to **ModelSettings**
 ### New methods
+- **Chat**
+  - Added `.copy`
 - **Tool**
   - Added a new constructor
 ### Other changes
 - Removed some print-lines that were left from previous tests
 - Modified timeout settings in **OllamaClient**
 - Modified **Chat** default parameters
+- **Chat** now extends **ScopeUsable**
 
 ## v1.1 - 04.10.2024
 A major update adding a number of new features, including a complete chat interface and tool support. 

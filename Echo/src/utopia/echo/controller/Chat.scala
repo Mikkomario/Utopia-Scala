@@ -23,6 +23,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.operator.ScopeUsable
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
@@ -126,7 +127,7 @@ object Chat
   */
 class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
           (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser)
-	extends HasSchrodingerState with HasMutableModelSettings with ModelConvertible
+	extends HasSchrodingerState with HasMutableModelSettings with ModelConvertible with ScopeUsable[Chat]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -523,9 +524,36 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 		case _ => None
 	}
 	
+	/**
+	 * @return A copy of this chat at its current state
+	 */
+	def copy = {
+		val copy = new Chat(ollama, llm)
+		
+		copy.maxContextSize = maxContextSize
+		copy.minContextSize = minContextSize
+		copy.expectedReplySize = expectedReplySize
+		copy.additionalContextSize = additionalContextSize
+		
+		copy._messageHistoryPointer.value = _messageHistoryPointer.value
+		copy.systemMessagesPointer.value = systemMessagesPointer.value
+		copy._lastResultPointer.value = _lastResultPointer.value
+		copy.settingsPointer.value = settingsPointer.value
+		copy.toolsPointer.value = toolsPointer.value
+		copy.defaultSystemMessageTokensPointer.value = defaultSystemMessageTokensPointer.value
+		copy.lastPromptAndReplySizesPointer.value = lastPromptAndReplySizesPointer.value
+		copy._largestReplySizePointer.value = _largestReplySizePointer.value
+		copy._historyTokensPointer.value = _historyTokensPointer.value
+		copy.autoSummarizeAtTokensPointer.value = autoSummarizeAtTokensPointer.value
+		copy._summarizingFlag.value = _summarizingFlag.value
+		
+		copy
+	}
+	
 	
 	// IMPLEMENTED  ---------------------------
 	
+	override def self: Chat = this
 	override def state: SchrodingerState = statePointer.value
 	
 	override def settings: ModelSettings = settingsPointer.value
