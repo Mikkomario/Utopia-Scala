@@ -1,5 +1,9 @@
 # Utopia Conflict - List of Changes
 
+## v1.5.2 (in development)
+### Other changes
+- Changed some deprecated **Polygonic** references to **Polygon** references
+
 ## v1.5.1 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 

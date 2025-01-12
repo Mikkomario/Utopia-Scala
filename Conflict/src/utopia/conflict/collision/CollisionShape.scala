@@ -1,13 +1,13 @@
 package utopia.conflict.collision
 
-import utopia.paradigm.shape.shape2d._
 import utopia.conflict.collision.Extensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.paradigm.shape.shape2d._
 import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape2d.area.polygon.Polygonic
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.paradigm.transform.Transformable
 import utopia.paradigm.shape.shape3d.Matrix3D
+import utopia.paradigm.transform.Transformable
 
 object CollisionShape
 {
@@ -24,7 +24,7 @@ object CollisionShape
     /**
      * Wraps a polygon into a collision shape
      */
-    def apply(polygon: Polygonic) = new CollisionShape(polygon.convexParts, Vector(), 12)
+    def apply(polygon: Polygon) = new CollisionShape(polygon.convexParts, Vector(), 12)
     
     /**
      * Wraps a circle into a collision shape with the specified precision
@@ -47,7 +47,7 @@ object CollisionShape
  * @param circleToPolygonEdges the amount of edges used when approximating a circle or an ellipsoid 
  * with a polygon
  */
-case class CollisionShape(convexPolygons: Seq[Polygonic], circles: Seq[Circle], circleToPolygonEdges: Int)
+case class CollisionShape(convexPolygons: Seq[Polygon], circles: Seq[Circle], circleToPolygonEdges: Int)
     extends Transformable[CollisionShape]
 {
     // ATTRIBUTES    -------------------------

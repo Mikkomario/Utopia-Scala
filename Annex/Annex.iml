@@ -12,7 +12,7 @@
     <orderEntry type="module" module-name="Access" />
     <orderEntry type="module" module-name="Disciple" />
     <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="library" name="apache.httpcomponents.client5.httpclient5" level="project" />
+    <orderEntry type="library" name="httpclient" level="project" />
     <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
   </component>
 </module>

@@ -1,12 +1,12 @@
 package utopia.conflict.collision
 
 import utopia.paradigm.angular.Angle
-import utopia.paradigm.shape.shape2d.area.polygon.{Polygon, Polygonic}
+import utopia.paradigm.shape.shape2d.area.Circle
+import utopia.paradigm.shape.shape2d.area.polygon.Polygon
+import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 import scala.math.Ordering.Double.TotalOrdering
-import utopia.paradigm.shape.shape2d.area.Circle
-import utopia.paradigm.shape.shape2d.line.Line
 
 /**
  * This object contains extensions that are used in the conflict project
@@ -37,13 +37,13 @@ object Extensions
                 Angle.radians(math.Pi * 2 * i / edgeAmount))).toVector)
     }
     
-    implicit class CollisionPolygon(val p: Polygonic) extends AnyVal
+    implicit class CollisionPolygon(val p: Polygon) extends AnyVal
     {
         /**
           * Checks if there's collision between these two polygon instances. Returns collision data if
           * there is collision
           */
-        def checkCollisionWith(other: Polygonic) =
+        def checkCollisionWith(other: Polygon) =
         {
             if (p.isConvex && other.isConvex)
                 checkCollisionWithConvex(other)
@@ -60,7 +60,7 @@ object Extensions
           * Checks if there's collision between the two polygon instances. Returns collision data if
           * there is collision. <b>Only works with convex polygons</b>
           */
-        def checkCollisionWithConvex(other: Polygonic) = {
+        def checkCollisionWithConvex(other: Polygon) = {
             // Uses collision axes from both polygons, doesn't need to repeat parallel axes
             val mtv = p.collisionMtvWith(other)
             mtv.map { mtv => new Collision(mtv, collisionPoints(other, mtv)) }
@@ -90,7 +90,7 @@ object Extensions
           * @param collisionNormal A normal for the collision plane, usually the minimum translation
           * vector for this polygon
           */
-        def collisionPoints(other: Polygonic, collisionNormal: Vector2D) =
+        def collisionPoints(other: Polygon, collisionNormal: Vector2D) =
         {
             val c: CollisionPolygon = other
             edgeCollisionClip(c.collisionEdge(-collisionNormal), collisionNormal)

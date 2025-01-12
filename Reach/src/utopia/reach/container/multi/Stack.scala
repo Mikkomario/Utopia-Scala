@@ -506,7 +506,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
 }
 
 /**
-  * Used for defining stack creation settings outside of the component building process
+  * Used for defining stack creation settings outside the component building process
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */

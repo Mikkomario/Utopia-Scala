@@ -3,93 +3,259 @@ package utopia.reach.container.multi
 import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Trailing}
+import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.Changing
 import utopia.flow.view.template.eventful.Flag.wrap
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.{Axis, Axis2D}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
 import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
 
-object ViewStack extends Cff[ViewStackFactory]
+/**
+  * Common trait for view stack factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+trait ViewStackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 {
-	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy)
-}
-
-trait ViewStackFactoryLike[+Repr]
-	extends ViewContainerFactory[Stack, ReachComponentLike] with CustomDrawableFactory[Repr]
-{
-	// ABSTRACT ---------------------------
-	
-	protected def axisPointer: Changing[Axis2D]
-	protected def layoutPointer: Changing[StackLayout]
-	protected def marginPointer: Changing[StackLength]
-	protected def capPointer: Changing[StackLength]
-	
-	protected def segmentGroup: Option[SegmentGroup]
+	// ABSTRACT	--------------------
 	
 	/**
-	  * @param p Pointer that contains the axis to use on this stack
-	  * @return A copy of this factory that uses the specified pointer
+	  * A pointer that determines the axis along which the items in the stacks are placed.
+	  * Y yields columns and X yields rows.
+	  */
+	def axisPointer: Changing[Axis2D]
+	/**
+	  * A pointer that determines how the components are sized perpendicular to the stack axis.
+	  * E.g. for columns, defines horizontal component placement and width.
+	  */
+	def layoutPointer: Changing[StackLayout]
+	/**
+	  * A pointer that specifies the margin placed at each end of the created stacks
+	  */
+	def capPointer: Changing[StackLength]
+	/**
+	  * A segment group in which all the created components will be placed. Used to align the
+	  * components with those of other stacks.
+	  * None if segmentation is not used.
+	  */
+	def segmentGroup: Option[SegmentGroup]
+	
+	/**
+	  * A pointer that determines the axis along which the items in the stacks are placed.
+	  * Y yields columns and X yields rows.
+	  * @param p New axis pointer to use.
+	  *          A pointer that determines the axis along which the items in the stacks are placed.
+	  *          Y yields columns and X yields rows.
+	  * @return Copy of this factory with the specified axis pointer
 	  */
 	def withAxisPointer(p: Changing[Axis2D]): Repr
 	/**
-	  * @param p Pointer that contains the layout to use on this stack
-	  * @return A copy of this factory that uses the specified pointer
+	  * A pointer that specifies the margin placed at each end of the created stacks
+	  * @param p New cap pointer to use.
+	  *          A pointer that specifies the margin placed at each end of the created stacks
+	  * @return Copy of this factory with the specified cap pointer
+	  */
+	def withCapPointer(p: Changing[StackLength]): Repr
+	/**
+	  * A pointer that determines how the components are sized perpendicular to the stack axis.
+	  * E.g. for columns, defines horizontal component placement and width.
+	  * @param p New layout pointer to use.
+	  *          A pointer that determines how the components are sized perpendicular to the stack
+	  *          axis.
+	  *          E.g. for columns, defines horizontal component placement and width.
+	  * @return Copy of this factory with the specified layout pointer
 	  */
 	def withLayoutPointer(p: Changing[StackLayout]): Repr
 	/**
-	  * @param p Pointer that contains the margin to place between items inside this stack
-	  * @return A copy of this factory that uses the specified pointer
+	  * A segment group in which all the created components will be placed. Used to align the
+	  * components with those of other stacks.
+	  * None if segmentation is not used.
+	  * @param group New segment group to use.
+	  *              A segment group in which all the created components will be placed. Used to
+	  *              align the components with those of other stacks.
+	  *              None if segmentation is not used.
+	  * @return Copy of this factory with the specified segment group
 	  */
-	def withMarginPointer(p: Changing[StackLength]): Repr
-	/**
-	  * @param p Pointer that contains the margin to place at each end of this stack
-	  * @return A copy of this factory that uses the specified pointer
-	  */
-	def withCapPointer(p: Changing[StackLength]): Repr
+	def withSegmentGroup(group: Option[SegmentGroup]): Repr
 	
 	
-	// COMPUTED ---------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this factory that builds rows
+	  * Copy of this factory that builds rows
 	  */
 	def row = withAxis(X)
 	
 	/**
-	  * @return Copy of this factory where items are centered
+	  * Copy of this factory where items are centered
 	  */
 	def centered = withLayout(Center)
 	def leading = withLayout(Leading)
 	def trailing = withLayout(Trailing)
 	
+	
+	// OTHER	--------------------
+	
 	/**
-	  * @return Copy of this factory that doesn't allow for any stack margins
+	  * @param axis Axis along which the items are placed.
+	  *             X for horizontal rows, Y for vertical columns.
+	  * @return Copy of this factory that uses the specified axis
+	  */
+	def withAxis(axis: Axis2D) = withAxisPointer(Fixed(axis))
+	/**
+	  * @param cap Margin to place at each end of this stack
+	  * @return Copy of this factory with the specified cap
+	  */
+	def withCap(cap: StackLength) = withCapPointer(Fixed(cap))
+	/**
+	  * @param layout Layout to use on this stack
+	  * @return Copy of this factory with the specified layout
+	  */
+	def withLayout(layout: StackLayout) = withLayoutPointer(Fixed(layout))
+	/**
+	  * A segment group in which all the created components will be placed. Used to align the
+	  * components with those of other stacks.
+	  * None if segmentation is not used.
+	  * @param group New segment group to use.
+	  *              A segment group in which all the created components will be placed.
+	  *              Used to align the components with those of other stacks.
+	  * @return Copy of this factory with the specified segment group
+	  */
+	def withSegmentGroup(group: SegmentGroup): Repr = withSegmentGroup(Some(group))
+	
+	def mapAxisPointer(f: Mutate[Changing[Axis2D]]) = withAxisPointer(f(axisPointer))
+	def mapCapPointer(f: Mutate[Changing[StackLength]]) = withCapPointer(f(capPointer))
+	def mapLayoutPointer(f: Mutate[Changing[StackLayout]]) = withLayoutPointer(f(layoutPointer))
+}
+
+object ViewStackSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+/**
+  * Combined settings used when constructing view stacks
+  * @param customDrawers Custom drawers to assign to created components
+  * @param axisPointer   A pointer that determines the axis along which the items in the stacks
+  *                      are placed.
+  *                      Y yields columns and X yields rows.
+  * @param layoutPointer A pointer that determines how the components are sized perpendicular to
+  *                      the stack axis.
+  *                      E.g. for columns, defines horizontal component placement and width.
+  * @param capPointer    A pointer that specifies the margin placed at each end of the created
+  *                      stacks
+  * @param segmentGroup  A segment group in which all the created components will be placed. Used
+  *                      to align the components with those of other stacks.
+  *                      None if segmentation is not used.
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+case class ViewStackSettings(customDrawers: Seq[CustomDrawer] = Empty, axisPointer: Changing[Axis2D] = Fixed(Axis.Y),
+                             layoutPointer: Changing[StackLayout] = Fixed(StackLayout.Fit),
+                             capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
+                             segmentGroup: Option[SegmentGroup] = None)
+	extends ViewStackSettingsLike[ViewStackSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withAxisPointer(p: Changing[Axis2D]) = copy(axisPointer = p)
+	override def withCapPointer(p: Changing[StackLength]) = copy(capPointer = p)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withLayoutPointer(p: Changing[StackLayout]) = copy(layoutPointer = p)
+	override def withSegmentGroup(group: Option[SegmentGroup]) = copy(segmentGroup = group)
+}
+
+/**
+  * Common trait for factories that wrap a view stack settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+trait ViewStackSettingsWrapper[+Repr] extends ViewStackSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: ViewStackSettings
+	
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: ViewStackSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def axisPointer = settings.axisPointer
+	override def capPointer = settings.capPointer
+	override def customDrawers = settings.customDrawers
+	override def layoutPointer = settings.layoutPointer
+	override def segmentGroup = settings.segmentGroup
+	
+	override def withAxisPointer(p: Changing[Axis2D]) = mapSettings { _.withAxisPointer(p) }
+	override def withCapPointer(p: Changing[StackLength]) = mapSettings { _.withCapPointer(p) }
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = mapSettings { _.withCustomDrawers(drawers) }
+	override def withLayoutPointer(p: Changing[StackLayout]) = mapSettings { _.withLayoutPointer(p) }
+	override def withSegmentGroup(group: Option[SegmentGroup]) = mapSettings { _.withSegmentGroup(group) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: ViewStackSettings => ViewStackSettings) = withSettings(f(settings))
+}
+
+/**
+  * Common trait for factories that are used for constructing view stacks
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+trait ViewStackFactoryLike[+Repr]
+	extends ViewStackSettingsWrapper[Repr] with ViewContainerFactory[Stack, ReachComponentLike]
+		with PartOfComponentHierarchy
+{
+	// ABSTRACT	--------------------
+	
+	protected def marginPointer: Changing[StackLength]
+	
+	/**
+	  * @param p Pointer that contains the margin to place between items inside this stack
+	  * @return A copy of this factory that uses the specified pointer
+	  */
+	def withMarginPointer(p: Changing[StackLength]): Repr
+	
+	
+	// COMPUTED ------------------------
+	
+	/**
+	  * Copy of this factory that doesn't allow for any stack margins
 	  */
 	def withoutMargin = withMargin(StackLength.fixedZero)
 	
 	
-	// IMPLEMENTED  -----------------------
+	// IMPLEMENTED	--------------------
 	
 	override def apply[C <: ReachComponentLike, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Stack, C, R] =
 	{
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
-		if (content.isEmpty || (axisPointer.isFixed &&
-			layoutPointer.isFixed && content.forall { _.result.isFixed }))
+		if (content.isEmpty || (axisPointer.isFixed && layoutPointer.isFixed && content.forall { _.result.isFixed }))
 		{
 			// Removes content that will never be visible
 			val remainingContent = content.filter { _.result.value }
@@ -108,7 +274,8 @@ trait ViewStackFactoryLike[+Repr]
 							val commonHierarchy = content.head.hierarchy
 							content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
 							new OpenComponent(content.map { _.component }, commonHierarchy)
-						case None => new OpenComponent(Empty: Seq[C], new SeedHierarchyBlock(parentHierarchy.top))
+						case None => new OpenComponent(Empty: Seq[C],
+							new SeedHierarchyBlock(parentHierarchy.top))
 					}
 					stackF(mergedContent)
 			}
@@ -122,19 +289,19 @@ trait ViewStackFactoryLike[+Repr]
 				case Some(group) =>
 					// WET WET
 					// Wraps the components into segments before placing them in this stack
-					val wrappers = Open.many { hierarchies =>
-						group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
-					}.component
-					val stack = new ViewStack(parentHierarchy, wrappers.map { _.componentAndResult },
-						axisPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+					val wrappers = Open
+						.many { hierarchies => group.wrap(content) { hierarchies.next() }.map { _.parentAndResult } }
+						.component
+					val stack = new ViewStack(parentHierarchy, wrappers.map { _.componentAndResult }, settings,
+						marginPointer)
 					wrappers.foreach { open => open.attachTo(stack, open.result) }
 					// Still returns the components as the children and not the wrappers
 					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
+				
 				// Case: No segmentation used
 				case None =>
 					val components = content.map { _.componentAndResult }
-					val stack = new ViewStack(parentHierarchy, components,
-						axisPointer, layoutPointer, marginPointer, capPointer, customDrawers)
+					val stack = new ViewStack(parentHierarchy, components, settings, marginPointer)
 					content.foreach { open => open.attachTo(stack, open.result) }
 					ComponentWrapResult(stack, components, content.result)
 			}
@@ -142,29 +309,13 @@ trait ViewStackFactoryLike[+Repr]
 	}
 	
 	
-	// OTHER    ----------------------------------
+	// OTHER	--------------------
 	
-	/**
-	  * @param axis Axis along which the items are placed.
-	  *             X for horizontal rows, Y for vertical columns.
-	  * @return Copy of this factory that uses the specified axis
-	  */
-	def withAxis(axis: Axis2D) = withAxisPointer(Fixed(axis))
-	/**
-	  * @param layout Layout to use on this stack
-	  * @return Copy of this factory with the specified layout
-	  */
-	def withLayout(layout: StackLayout) = withLayoutPointer(Fixed(layout))
 	/**
 	  * @param margin Margins to place between each item in this stack
 	  * @return Copy of this factory with the specified margin
 	  */
 	def withMargin(margin: StackLength) = withMarginPointer(Fixed(margin))
-	/**
-	  * @param cap Margin to place at each end of this stack
-	  * @return Copy of this factory with the specified cap
-	  */
-	def withCap(cap: StackLength) = withCapPointer(Fixed(cap))
 	
 	/**
 	  * @param f A mapping function applied to stack margins
@@ -173,88 +324,97 @@ trait ViewStackFactoryLike[+Repr]
 	def mapMargin(f: StackLength => StackLength) = withMarginPointer(marginPointer.map(f))
 }
 
-case class ViewStackFactory(parentHierarchy: ComponentHierarchy,
-                            axisPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
-                            marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-                            capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                            customDrawers: Seq[CustomDrawer] = Empty, segmentGroup: Option[SegmentGroup] = None)
-	extends ViewStackFactoryLike[ViewStackFactory] with NonContextualViewContainerFactory[Stack, ReachComponentLike]
+/**
+  * Factory class that is used for constructing view stacks without using contextual information
+  * @param marginPointer A pointer that determines the amount of empty space between adjacent
+  *                      items in the created stacks
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+case class ViewStackFactory(parentHierarchy: ComponentHierarchy, settings: ViewStackSettings = ViewStackSettings.default,
+                            marginPointer: Changing[StackLength] = Fixed(StackLength.any))
+	extends ViewStackFactoryLike[ViewStackFactory]
 		with FromGenericContextFactory[BaseContextPropsView, ContextualViewStackFactory]
+		with NonContextualViewContainerFactory[Stack, ReachComponentLike]
 {
-	// IMPLEMENTED	------------------------------
-	
-	override def withAxisPointer(p: Changing[Axis2D]): ViewStackFactory = copy(axisPointer = p)
-	override def withLayoutPointer(p: Changing[StackLayout]): ViewStackFactory = copy(layoutPointer = p)
-	override def withMarginPointer(p: Changing[StackLength]): ViewStackFactory = copy(marginPointer = p)
-	override def withCapPointer(p: Changing[StackLength]): ViewStackFactory = copy(capPointer = p)
-	
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewStackFactory =
-		copy(customDrawers = drawers)
+	// IMPLEMENTED	--------------------
 	
 	override def withContext[N <: BaseContextPropsView](context: N) =
-		ContextualViewStackFactory(parentHierarchy, context, axisPointer, layoutPointer, capPointer, customDrawers,
-			segmentGroup)
+		ContextualViewStackFactory(parentHierarchy, context, settings,
+			customMarginPointer = {
+				// Case: Using the default margin pointer => Won't forward it
+				if (marginPointer.fixedValue.contains(StackLength.any))
+					None
+				// Case: Using a customized margin pointer => Specifies it as the custom margin pointer
+				else
+					Some(Right(marginPointer))
+			})
+	/**
+	  * @param p A pointer that determines the amount of empty space between adjacent items in the
+	  *          created stacks
+	  * @return Copy of this factory with the specified margin pointer
+	  */
+	override def withMarginPointer(p: Changing[StackLength]): ViewStackFactory = copy(marginPointer = p)
+	override def withSettings(settings: ViewStackSettings) = copy(settings = settings)
 }
 
+/**
+  * Factory class used for constructing view stacks using contextual component creation
+  * information
+  * @param relatedFlag A pointer flag that signals whether the items in the created stacks should
+  *                    be considered closely related to each other, resulting in a smaller margin
+  *                    placed between them.
+  * @tparam N Type of context used and passed along by this factory
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
 case class ContextualViewStackFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
-                                                                  axisPointer: Changing[Axis2D] = Fixed(Y),
-                                                                  layoutPointer: Changing[StackLayout] = Fixed(Fit),
-                                                                  capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                                                                  customDrawers: Seq[CustomDrawer] = Empty,
-                                                                  segmentGroup: Option[SegmentGroup] = None,
+                                                                  settings: ViewStackSettings = ViewStackSettings.default,
                                                                   customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
-                                                                  relatedFlag: Changing[Boolean] = AlwaysFalse)
+                                                                  relatedFlag: Flag = AlwaysFalse)
 	extends ViewStackFactoryLike[ContextualViewStackFactory[N]]
 		with ContextualViewContainerFactory[N, BaseContextPropsView, Stack, ReachComponentLike, ContextualViewStackFactory]
 {
-	// COMPUTED --------------------------
+	// ATTRIBUTES   ----------------
+	
+	override protected lazy val marginPointer: Changing[StackLength] = {
+		customMarginPointer match {
+			case Some(Left(sizePointer)) => context.scaledStackMarginPointer(sizePointer)
+			case Some(Right(pointer)) => pointer
+			case None => context.stackMarginPointerFor(relatedFlag)
+		}
+	}
+	
+	
+	// COMPUTED	--------------------
 	
 	/**
-	  * @return Copy of this factory that places the items close to each other
+	  * Copy of this factory that places the items close to each other
 	  */
 	def related = withRelatedFlag(AlwaysTrue)
 	
 	
-	// IMPLEMENTED	--------------------------------
+	// IMPLEMENTED	--------------------
 	
-	override protected def marginPointer: Changing[StackLength] = customMarginPointer match {
-		case Some(Left(sizePointer)) => context.scaledStackMarginPointer(sizePointer)
-		case Some(Right(pointer)) => pointer
-		case None => context.stackMarginPointerFor(relatedFlag)
-	}
-	
-	override def withAxisPointer(p: Changing[Axis2D]): ContextualViewStackFactory[N] = copy(axisPointer = p)
-	override def withLayoutPointer(p: Changing[StackLayout]): ContextualViewStackFactory[N] = copy(layoutPointer = p)
+	override def withContext[N2 <: BaseContextPropsView](context: N2) = copy(context = context)
+	override def withSettings(settings: ViewStackSettings) = copy(settings = settings)
 	override def withMarginPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] =
 		copy(customMarginPointer = Some(Right(p)))
-	override def withCapPointer(p: Changing[StackLength]): ContextualViewStackFactory[N] = copy(capPointer = p)
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewStackFactory[N] =
-		copy(customDrawers = drawers)
-	
-	override def withContext[N2 <: BaseContextPropsView](newContext: N2) =
-		copy(context = newContext)
 	
 	
-	// OTHER    ---------------------------------
+	// OTHER	--------------------
 	
 	/**
-	  * @param p A pointer for margin sizes (general)
-	  * @return Copy of this factory with that pointer in use
+	  * @param cap Cap to place at each end of this stack
+	  * @return Copy of this factory with that cap margin
 	  */
-	def withMarginSizePointer(p: Changing[SizeCategory]) =
-		copy(customMarginPointer = Some(Left(p)))
+	def withCap(cap: SizeCategory) = withCapSizePointer(Fixed(cap))
 	/**
 	  * @param p A pointer for stack cap sizes (general)
 	  * @return Copy of this factory with that pointer in use
 	  */
 	def withCapSizePointer(p: Changing[SizeCategory]) =
-		copy(capPointer = context.scaledStackMarginPointer(p))
-	/**
-	  * @param flag A pointer that indicates whether the components
-	  *          should be placed close to each other (true) or at the default distance (false)
-	  * @return Copy of this factory with that pointer in use
-	  */
-	def withRelatedFlag(flag: Changing[Boolean]) = copy(relatedFlag = flag)
+		withCapPointer(context.scaledStackMarginPointer(p))
 	
 	/**
 	  * @param margin Margin to place between items (general)
@@ -262,23 +422,53 @@ case class ContextualViewStackFactory[+N <: BaseContextPropsView](parentHierarch
 	  */
 	def withMargin(margin: SizeCategory) = withMarginSizePointer(Fixed(margin))
 	/**
-	  * @param cap Cap to place at each end of this stack
-	  * @return Copy of this factory with that cap margin
+	  * @param p A pointer for margin sizes (general)
+	  * @return Copy of this factory with that pointer in use
 	  */
-	def withCap(cap: SizeCategory) = withCapSizePointer(Fixed(cap))
+	def withMarginSizePointer(p: Changing[SizeCategory]) = copy(customMarginPointer = Some(Left(p)))
+	
+	/**
+	  * @param relatedFlag A pointer flag that signals whether the items in the created stacks should
+	  *                    be considered closely related to each other, resulting in a smaller margin
+	  *                    placed between them.
+	  * @return Copy of this factory with the specified related flag
+	  */
+	def withRelatedFlag(relatedFlag: Flag) = copy(relatedFlag = relatedFlag)
 }
 
+/**
+  * Used for defining view stack creation settings outside the component building process
+  * @author Mikko Hilpinen
+  * @since 12.01.2025, v1.5
+  */
+case class ViewStackSetup(settings: ViewStackSettings = ViewStackSettings.default)
+	extends ViewStackSettingsWrapper[ViewStackSetup] with ComponentFactoryFactory[ViewStackFactory]
+		with FromGenericContextComponentFactoryFactory[BaseContextPropsView, ContextualViewStackFactory]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = ViewStackFactory(hierarchy, settings)
+	
+	override def withContext[N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N) =
+		ContextualViewStackFactory(hierarchy, context, settings)
+	
+	override def withSettings(settings: ViewStackSettings) = copy(settings = settings)
+}
+
+object ViewStack extends ViewStackSetup()
+{
+	// OTHER	--------------------
+	
+	def apply(settings: ViewStackSettings) = withSettings(settings)
+}
 /**
   * A pointer-based stack that adds and removes items based on activation pointer events
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
 class ViewStack(override val parentHierarchy: ComponentHierarchy,
-                componentData: Seq[(ReachComponentLike, Changing[Boolean])],
-                directionPointer: Changing[Axis2D] = Fixed(Y), layoutPointer: Changing[StackLayout] = Fixed(Fit),
-                marginPointer: Changing[StackLength] = Fixed(StackLength.any),
-                capPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                override val customDrawers: Seq[CustomDrawer] = Empty)
+                componentData: Seq[(ReachComponentLike, Changing[Boolean])], settings: ViewStackSettings,
+                marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends Stack
 {
 	// ATTRIBUTES	-------------------------------
@@ -316,21 +506,19 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy,
 	// Updates components list when component pointers get updated
 	componentData.map { _._2 }.foreach { _.addListenerWhile(parentHierarchy.linkPointer)(resetActiveComponentsOnChange) }
 	// Revalidates this component on other layout changes
-	directionPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
-	layoutPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	settings.axisPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	settings.layoutPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
 	marginPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
-	capPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	settings.capPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
 	
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def direction = directionPointer.value
-	
-	override def layout = layoutPointer.value
-	
+	override def direction = settings.axisPointer.value
+	override def layout = settings.layoutPointer.value
 	override def margin = marginPointer.value
-	
-	override def cap = capPointer.value
+	override def cap = settings.capPointer.value
+	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	
 	override def components = activeComponentsCache.value
 }

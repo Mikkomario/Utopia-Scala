@@ -9,6 +9,8 @@
 - **Stack** and **Collection** margins are now pointer-based and not always static
 - Similarly, **Framing** now supports variable insets
 - Renamed **InputRowBlueprints**'s `isScalable` parameter to `scalable` and `visibilityPointer` to `visibilityFlag`
+- Rewrote **ViewStack** factory classes using **Reach Coder**
+  - Existing use-case code should still work for the most part, however
 ### Deprecations
 - Deprecated **CachingViewSwapper** in favor of the new **Swapper**, which performs the same function
 ### Bugfixes
