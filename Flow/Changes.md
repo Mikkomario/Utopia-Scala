@@ -4,6 +4,7 @@
 ### Deprecations
 - Moved **AsyncCollectionExtensions** features to **CollectionExtensions** 
   because some compilers couldn't handle cases where both were imported
+- In TryCatch, renamed `.logToOption` to `.log` and `.logToOptionWithMessage(String)` to `.logWithMessage(String)`
 - Renamed **SignedOrZero**'s `.minZero` to `.atLeastZero` and `.maxZero` to `.atMostZero`
 - Renamed **DateRange**'s `.period` to `.length`
 ### Bugfixes
