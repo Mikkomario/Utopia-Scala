@@ -1,16 +1,10 @@
 package utopia.echo.model.response.generate
 
-import utopia.annex.model.manifest.SchrodingerState.Alive
-import utopia.echo.model.response.ResponseStatistics
-import utopia.flow.async.TryFuture
+import utopia.echo.model.response.{BufferedOllamaResponse, BufferedOllamaResponseLike, ResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
-import scala.concurrent.Future
-import scala.util.Try
 
 object BufferedReply
 {
@@ -42,18 +36,10 @@ object BufferedReply
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   */
-case class BufferedReply(text: String, statistics: ResponseStatistics, lastUpdated: Instant = Now) extends Reply
+case class BufferedReply(text: String, statistics: ResponseStatistics, lastUpdated: Instant = Now)
+	extends BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedReply] with Reply
 {
 	// IMPLEMENTED  -----------------------
 	
-	override def isBuffered: Boolean = true
-	
-	override def future: Future[Try[BufferedReply]] = TryFuture.success(this)
-	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
-	
-	override def textPointer: Changing[String] = Fixed(text)
-	override def newTextPointer: Changing[String] = Fixed(text)
-	override def lastUpdatedPointer: Changing[Instant] = Fixed(lastUpdated)
-	
-	override def state = Alive
+	override def self: BufferedReply = this
 }

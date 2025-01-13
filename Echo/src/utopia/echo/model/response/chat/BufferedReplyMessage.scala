@@ -1,21 +1,14 @@
 package utopia.echo.model.response.chat
 
-import utopia.annex.model.manifest.SchrodingerState
-import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.Assistant
-import utopia.echo.model.response.ResponseStatistics
-import utopia.flow.async.TryFuture
+import utopia.echo.model.response.{BufferedOllamaResponse, BufferedOllamaResponseLike, ResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
-import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.Extender
-import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
-import scala.concurrent.Future
-import scala.util.Try
 
 object BufferedReplyMessage
 {
@@ -49,21 +42,12 @@ object BufferedReplyMessage
   * @since 20.07.2024, v1.0
   */
 case class BufferedReplyMessage(message: ChatMessage, statistics: ResponseStatistics, lastUpdated: Instant = Now)
-	extends Extender[ChatMessage] with ReplyMessage
+	extends Extender[ChatMessage] with BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedReplyMessage]
+		with ReplyMessage
 {
+	override def self: BufferedReplyMessage = this
 	override def wrapped: ChatMessage = message
 	
 	override def text: String = message.text
-	override def textPointer: Changing[String] = Fixed(text)
-	override def newTextPointer: Changing[String] = Fixed(text)
-	
 	override def senderRole: ChatRole = message.senderRole
-	
-	override def lastUpdatedPointer: Changing[Instant] = Fixed(lastUpdated)
-	
-	override def isBuffered: Boolean = true
-	override def future: Future[Try[BufferedReplyMessage]] = TryFuture.success(this)
-	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
-	
-	override def state: SchrodingerState = Alive
 }

@@ -10,6 +10,7 @@
 - **Chat**'s summarization process now supports message-exclusion
 - Added **ToolFactory** for loading tools from models
 - Added model conversions to **ModelSettings**
+- Added **BufferedOllamaResponse** and **BufferedOllamaResponseLike** traits, which support json extraction
 ### New methods
 - **Chat**
   - Added `.copy`
