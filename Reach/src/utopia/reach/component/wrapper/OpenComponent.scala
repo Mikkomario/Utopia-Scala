@@ -67,7 +67,7 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  *         additional creation result.
 	  */
 	def many[C <: ReachComponentLike, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
-					  (implicit canvas: ReachCanvas) =
+	                                        (implicit canvas: ReachCanvas) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
 		// Collects all created component hierarchies

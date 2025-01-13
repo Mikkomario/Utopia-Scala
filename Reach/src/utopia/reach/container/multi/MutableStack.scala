@@ -5,6 +5,7 @@ import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
@@ -175,12 +176,10 @@ class MutableStack[C <: ReachComponentLike](override val parentHierarchy: Compon
 	}
 	override protected def add(components: IterableOnce[OpenComponent[C, _]], index: Int) = {
 		// Needs to buffer the components (iterating multiple times)
-		val newComps = components.iterator.filterNot { c => contains(c.component) }.toVector
+		val newComps = components.iterator.filterNot { c => contains(c.component) }.toOptimizedSeq
 		if (newComps.nonEmpty) {
 			_componentsPointer.update { old => old.take(index) ++ newComps.map { _.component } ++ old.drop(index) }
-			newComps.foreach { c =>
-				updatePointerFor(c)
-			}
+			newComps.foreach(updatePointerFor)
 			revalidate()
 		}
 	}

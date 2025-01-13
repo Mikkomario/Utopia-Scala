@@ -2,13 +2,23 @@ package utopia.conflict.handling
 
 import utopia.conflict.collision.CollisionShape
 import utopia.flow.collection.template.factory.FromCollectionFactory
+import utopia.flow.util.logging.Logger
 import utopia.genesis.handling.template.Handleable
 
-object CollisionTargetHandler extends FromCollectionFactory[CanCollideWith, CollisionTargetHandler]
+import scala.annotation.unused
+
+object CollisionTargetHandler
 {
-    // IMPLEMENTED  ------------------------
+    // COMPUTED ----------------------------
     
-    override def from(items: IterableOnce[CanCollideWith]): CollisionTargetHandler = apply(items)
+    def factory(implicit log: Logger) = new CollisionTargetHandlerFactory()
+    
+    
+    // IMPLICIT ----------------------------
+    
+    implicit def objectToFactory(@unused o: CollisionTargetHandler.type)
+                                (implicit log: Logger): CollisionTargetHandlerFactory =
+        factory
     
     
     // OTHER    ----------------------------
@@ -17,7 +27,16 @@ object CollisionTargetHandler extends FromCollectionFactory[CanCollideWith, Coll
       * @param items Initially assigned collision targets
       * @return A collision target handler
       */
-    def apply(items: IterableOnce[CanCollideWith]) = new CollisionTargetHandler(items)
+    def apply(items: IterableOnce[CanCollideWith])(implicit log: Logger) = new CollisionTargetHandler(items)
+    
+    
+    // NESTED   ----------------------------
+    
+    class CollisionTargetHandlerFactory(implicit log: Logger)
+        extends FromCollectionFactory[CanCollideWith, CollisionTargetHandler]
+    {
+        override def from(items: IterableOnce[CanCollideWith]): CollisionTargetHandler = CollisionTargetHandler(items)
+    }
 }
 
 /**
@@ -30,7 +49,7 @@ object CollisionTargetHandler extends FromCollectionFactory[CanCollideWith, Coll
  * @author Mikko Hilpinen
  * @since 4.8.2017
  */
-class CollisionTargetHandler(initialItems: IterableOnce[CanCollideWith])
+class CollisionTargetHandler(initialItems: IterableOnce[CanCollideWith])(implicit log: Logger)
     extends CollisionPartyHandler[CanCollideWith](initialItems)
 {
     // IMPLEMENTED  ----------------------

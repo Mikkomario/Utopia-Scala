@@ -11,6 +11,8 @@
       you may need to use `.fullSized`, for example.
 - **Image**`.blurred` and `.sharpened` no longer accept parameters. 
   - The previous parameter-supporting implementations are available as `.blurredBy(Double)` and `.sharpenedBy(Double)`
+- All **AbstractHandler** implementations now require access to an implicit **Logger** instance
+  - Because of this, also **Repositioner**, **Transformer** and **KeyDownEventGenerator** require **Logger** access
 ### New features
 - Added **CompositeScalingImage** class which dynamically switches between multiple different sized images 
   for different display sizes
@@ -26,9 +28,15 @@
   - Added `.fullSized`
   - Added `.mutatePixels(...)` that resembles `.mapPixels(...)`, but also allows for changed origin,
     as well as shade computation optimization
+- **KeyboardEvents**
+  - Added `.specifyLogger(Logger)`
+- **CommonMouseEvents**
+  - Added `.specifyLogger(Logger)`
 ### Other changes
 - Added new traits for representing images: **ImageView** and **ConcreteImageView**
 - `.op` in **ConvolveTransform** is now public
+- In **KeyboardEvents**, `.specifyExecutionContext(...)` and `.setupKeyDownEvents(...)` no longer require / use
+  implicit **Logger** access
 
 ## v4.1 - 04.10.2024
 This update focuses on fixing **KeyDownEventGenerator** class, added in v4.0. 

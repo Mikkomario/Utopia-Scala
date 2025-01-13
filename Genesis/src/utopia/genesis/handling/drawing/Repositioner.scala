@@ -1,6 +1,7 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.graphics.Priority.Low
@@ -18,6 +19,7 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
 class Repositioner(override protected val wrapped: Drawable,
                    targetPointer: Either[(Changing[Point], Changing[Size]), Changing[Bounds]],
                    resizeLogic: ScalePreservingShape = Fit)
+                  (implicit log: Logger)
 	extends TransformingDrawableWrapper
 {
 	// ATTRIBUTES   --------------------

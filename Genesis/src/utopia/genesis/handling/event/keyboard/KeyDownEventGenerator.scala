@@ -19,13 +19,14 @@ import scala.concurrent.duration.FiniteDuration
 object KeyDownEventGenerator
 {
 	/**
-	 * @param actorHandler An actor handler that will deliver action events to this generator
-	 * @param keyStateHandler A key-state event handler that will inform this generator of keyboard state changes
-	 * @param activeCondition A condition that must be met in order for key-down events to be generated or fired
-	 * @return A new functioning key-down event generator
-	 */
+	  * @param actorHandler    An actor handler that will deliver action events to this generator
+	  * @param keyStateHandler A key-state event handler that will inform this generator of keyboard state changes
+	  * @param activeCondition A condition that must be met in order for key-down events to be generated or fired
+	  * @return A new functioning key-down event generator
+	  */
 	@deprecated("Please use .start(...) instead", "v4.0.1")
-	def apply(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: Flag = AlwaysTrue) =
+	def apply(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler,
+	          activeCondition: Flag = AlwaysTrue): KeyDownEventGenerator =
 		start(actorHandler, keyStateHandler, activeCondition)(SysErrLogger)
 	
 	/**
@@ -37,10 +38,24 @@ object KeyDownEventGenerator
 	def start(actorHandler: ActorHandler, keyStateHandler: KeyStateHandler, activeCondition: Flag = AlwaysTrue)
 	         (implicit log: Logger) =
 	{
-		val generator = new KeyDownEventGenerator(KeyDownHandler.conditional(activeCondition)())
+		val generator = inactive(KeyDownHandler.conditional(activeCondition)())
 		generator.start(actorHandler, keyStateHandler)
 		generator
 	}
+	
+	/**
+	  * Creates a new **inactive** event generator.
+	  * @param log Implicit logging implementation
+	  * @return A new inactive event generator
+	  */
+	def inactive()(implicit log: Logger): KeyDownEventGenerator = inactive(KeyDownHandler())
+	/**
+	  * Creates a new **inactive** event generator.
+	  * @param handler Key down -handler to which the generated events will be delivered
+	  * @param log Implicit logging implementation
+	  * @return A new inactive event generator
+	  */
+	def inactive(handler: KeyDownHandler)(implicit log: Logger) = new KeyDownEventGenerator(handler)
 }
 
 /**
@@ -52,7 +67,7 @@ object KeyDownEventGenerator
  * @author Mikko Hilpinen
  * @since 29/03/2024, v4.0
  */
-class KeyDownEventGenerator(val handler: KeyDownHandler = KeyDownHandler())(implicit log: Logger)
+class KeyDownEventGenerator(val handler: KeyDownHandler)(implicit log: Logger)
 {
 	// ATTRIBUTES   --------------------------
 	

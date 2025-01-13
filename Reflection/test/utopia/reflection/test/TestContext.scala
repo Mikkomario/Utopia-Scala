@@ -24,6 +24,8 @@ object TestContext
 {
 	ParadigmDataType.setup()
 	
+	implicit val logger: Logger = SysErrLogger
+	
 	val actorHandler = ActorHandler()
 	val colorScheme = ColorScheme.default ++
 		ColorScheme.twoTone(ColorSet.fromHexes("#212121", "#484848", "#000000").get,
@@ -34,7 +36,6 @@ object TestContext
 	implicit val localizer: Localizer = NoLocalization
 	val baseContext: StaticBaseContext = StaticBaseContext(actorHandler, font, colorScheme, margins)
 	
-	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
 	KeyboardEvents.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)

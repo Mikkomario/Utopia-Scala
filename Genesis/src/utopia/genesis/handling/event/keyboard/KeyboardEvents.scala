@@ -2,7 +2,8 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
+import utopia.flow.view.mutable.Pointer
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyLocation.Standard
 import utopia.genesis.handling.template.{Handleable, Handlers}
@@ -21,6 +22,9 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 object KeyboardEvents extends mutable.Growable[Handleable]
 {
 	// ATTRIBUTES	------------------
+	
+	private val logP = Pointer[Logger](SysErrLogger)
+	private implicit val log: DelegatingLogger = DelegatingLogger(logP)
 	
 	private lazy val keyStateHandler = KeyStateHandler()
 	// This handler version will only receive events from AWT, not generated events
@@ -89,11 +93,17 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	// OTHER	--------------------
 	
 	/**
+	  * Specifies a logging implementation to use in handlers, event generation, etc.
+	  * Note: Overrides the effects of any previous call to this function.
+	  * @param logger Logging implementation to use
+	  */
+	def specifyLogger(logger: Logger) = logP.value = logger
+	
+	/**
 	  * Sets up the execution context that is used for distributing keyboard events
 	  * @param context An execution context used when distributing keyboard events
 	  */
-	def specifyExecutionContext(context: ExecutionContext)(implicit log: Logger) =
-		eventQueue = Some(new ActionQueue()(context, log))
+	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context, log))
 	
 	/**
 	 * Sets up the key-down event generation, unless it has been set up already.
@@ -104,11 +114,9 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	 *                             Set to infinite in order to disable continuous key typed -events.
 	 *                             Default = 0.8 seconds.
 	 * @param multiTypeInterval Time interval between generated key typed -events. Default = 0.2 seconds
-	  * @param log Implicit logging implementation used in pointer-related error-handling
 	 */
 	def setupKeyDownEvents(actorHandler: ActorHandler, beforeMultiTypeDelay: Duration = 0.8.seconds,
-	                       multiTypeInterval: FiniteDuration = 0.2.seconds)
-	                      (implicit log: Logger): Unit =
+	                       multiTypeInterval: FiniteDuration = 0.2.seconds): Unit =
 	{
 		if (!keyDownStarted) {
 			keyDownStarted = true

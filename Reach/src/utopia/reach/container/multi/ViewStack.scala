@@ -1,16 +1,19 @@
 package utopia.reach.container.multi
 
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.X
@@ -19,8 +22,8 @@ import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericConte
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentLike}
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
-import utopia.reach.component.wrapper.{ComponentWrapResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
+import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
 
 /**
   * Common trait for view stack factories and settings
@@ -255,31 +258,9 @@ trait ViewStackFactoryLike[+Repr]
 	{
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
-		if (content.isEmpty || (axisPointer.isFixed && layoutPointer.isFixed && content.forall { _.result.isFixed }))
-		{
-			// Removes content that will never be visible
-			val remainingContent = content.filter { _.result.value }
-			val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
-				capPointer = capPointer, customDrawers = customDrawers)
-			val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMarginPointer(marginPointer)
-			// Uses segmentation if available
-			val stack = segmentGroup match {
-				// Case: Segmentation used
-				case Some(group) => stackF.segmented(content, group)
-				// Case: No segmentation used
-				case None =>
-					// Merges the content under a single OpenComponent & ComponentHierarchy instance
-					val mergedContent = NotEmpty(remainingContent) match {
-						case Some(content) =>
-							val commonHierarchy = content.head.hierarchy
-							content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
-							new OpenComponent(content.map { _.component }, commonHierarchy)
-						case None => new OpenComponent(Empty: Seq[C],
-							new SeedHierarchyBlock(parentHierarchy.top))
-					}
-					stackF(mergedContent)
-			}
-			stack.mapChild { _.map { _ -> AlwaysTrue } }.withResult(content.result)
+		if (content.isEmpty || (axisPointer.isFixed && layoutPointer.isFixed && content.forall { _.result.isFixed })) {
+			val stack = fixed(content, content.filter { _.result.value })
+			stack.mapChild { _.map { c => c -> AlwaysTrue } }.withResult(content.result)
 		}
 		// Case: Values include changing values => Creates a view stack
 		else {
@@ -292,19 +273,80 @@ trait ViewStackFactoryLike[+Repr]
 					val wrappers = Open
 						.many { hierarchies => group.wrap(content) { hierarchies.next() }.map { _.parentAndResult } }
 						.component
-					val stack = new ViewStack(parentHierarchy, wrappers.map { _.componentAndResult }, settings,
-						marginPointer)
-					wrappers.foreach { open => open.attachTo(stack, open.result) }
+					val stack = fromVisiblePointers(wrappers)
 					// Still returns the components as the children and not the wrappers
 					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
 				
 				// Case: No segmentation used
 				case None =>
-					val components = content.map { _.componentAndResult }
-					val stack = new ViewStack(parentHierarchy, components, settings, marginPointer)
-					content.foreach { open => open.attachTo(stack, open.result) }
-					ComponentWrapResult(stack, components, content.result)
+					val stack = fromVisiblePointers(content)
+					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
 			}
+		}
+	}
+	
+	override def pointer(content: Changing[SeparateOpenComponents[ReachComponentLike, _]]): Stack =
+	{
+		content.fixedValue match {
+			// Case: Displayed content doesn't change
+			case Some(staticContent) =>
+				// Case: Layout doesn't change either => Creates a regular stack
+				if (axisPointer.isFixed && layoutPointer.isFixed) {
+					val stack = fixed(staticContent, staticContent).parent
+					stack
+				}
+				// Case: Layout changes, however => Creates a simplified ViewStack
+				else
+					segmentGroup match {
+						// Case: Segmentation is applied
+						case Some(segmentGroup) =>
+							// Wraps the components in segments
+							val wrapped = Open { hierarchy =>
+								val wrapResult = segmentGroup.wrapUnderSingle(hierarchy, staticContent)
+								wrapResult.map { _.parent }
+							}
+							// The specified group defines the direction of this stack
+							val stack = new ViewStack(parentHierarchy, Fixed(wrapped),
+								settings.withAxis(segmentGroup.rowDirection), marginPointer)
+								
+							stack
+							
+						// Case: No segmentation is applied
+						case None =>
+							val stack = new ViewStack(parentHierarchy, Fixed(staticContent.map { _.component }), settings,
+								marginPointer)
+							
+							// Attaches the components to this new stack using a single hierarchy block
+							val mergedContent = merge(staticContent)
+							mergedContent.hierarchy.complete(stack)
+							
+							stack
+					}
+					
+			// Case: Displayed content changes
+			case None =>
+				// Creates the stack
+				val componentsP = content.map { _.map { _.component } }
+				val stack = new ViewStack(parentHierarchy, componentsP, settings, marginPointer)
+				
+				// Adds attachment management
+				// Tracks visible components as hashcodes
+				val visibleHashesP = componentsP.map { _.view.map { _.hashCode() }.toSet }
+				// For each encountered component (hashcode), creates a new link pointer
+				val attachmentPointers =
+					Cache[Int, Flag] { componentHash => visibleHashesP.map { _.contains(componentHash) } }
+				
+				// When new components are introduced, makes sure they get attached to this stack
+				content.addListenerWhile(parentHierarchy.linkPointer) { change =>
+					change.newValue.foreach { open =>
+						val hash = open.component.hashCode()
+						// Case: Not previously attached => Creates a new link pointer and attaches the component
+						if (!attachmentPointers.isValueCached(hash))
+							open.hierarchy.complete(stack, attachmentPointers(hash))
+					}
+				}
+				
+				stack
 		}
 	}
 	
@@ -316,12 +358,66 @@ trait ViewStackFactoryLike[+Repr]
 	  * @return Copy of this factory with the specified margin
 	  */
 	def withMargin(margin: StackLength) = withMarginPointer(Fixed(margin))
-	
 	/**
 	  * @param f A mapping function applied to stack margins
 	  * @return Copy of this factory with mapped margin pointer
 	  */
 	def mapMargin(f: StackLength => StackLength) = withMarginPointer(marginPointer.map(f))
+	
+	private def fromVisiblePointers[C <: ReachComponentLike, R](content: SwitchableOpenComponents[C, R]) = {
+		// Adds visible components -tracking
+		val components = content.map { _.componentAndResult }
+		val visibleContentP =
+			CopyOnDemand { components.view.filter { _._2.value }.map { _._1 }.toOptimizedSeq }(
+				ComponentCreationDefaults.componentLogger)
+		
+		components.foreach { case (_, visibleFlag) =>
+			visibleFlag.addListenerWhile(parentHierarchy.linkPointer) { _ => visibleContentP.update() }
+		}
+		
+		new ViewStack(parentHierarchy, visibleContentP, settings, marginPointer)
+	}
+	
+	/**
+	  * Creates a fixed stack with this factory's settings.
+	  * Assumes that content, axis and layout are all static.
+	  * @param fullContent All content, including invisible items (called if segmentation is applied)
+	  * @param visibleContent Visible content (called if segmentation is not applied)
+	  * @return Component wrap result of the created stack
+	  */
+	private def fixed[C <: ReachComponentLike](fullContent: => SeparateOpenComponents[C, _],
+	                                           visibleContent: => SeparateOpenComponents[C, _]) =
+	{
+		val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
+			capPointer = capPointer, customDrawers = customDrawers)
+		val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMarginPointer(marginPointer)
+		// Uses segmentation if available
+		segmentGroup match {
+			// Case: Segmentation used
+			case Some(group) => stackF.segmented(fullContent, group)
+			// Case: No segmentation used
+			//       => Merges the content under a single OpenComponent & ComponentHierarchy instance
+			case None => stackF(merge(visibleContent))
+		}
+	}
+	/**
+	  * Merges a number of separate open components under a single component hierarchy.
+	  * This may be used for components which are displayed consistently.
+	  * @param components Separated components in open format
+	  * @tparam C Type of the components
+	  * @return A combination of the specified components under a single component hierarchy
+	  */
+	private def merge[C](components: SeparateOpenComponents[C, _]): OpenComponent[Seq[C], Unit] = {
+		NotEmpty(components) match {
+			case Some(content) =>
+				val commonHierarchy = content.head.hierarchy
+				content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
+				new OpenComponent(ComponentCreationResult(content.map { _.component }), commonHierarchy)
+			
+			case None =>
+				new OpenComponent(ComponentCreationResult(Empty: Seq[C]), new SeedHierarchyBlock(parentHierarchy.top))
+		}
+	}
 }
 
 /**
@@ -466,45 +562,30 @@ object ViewStack extends ViewStackSetup()
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-class ViewStack(override val parentHierarchy: ComponentHierarchy,
-                componentData: Seq[(ReachComponentLike, Changing[Boolean])], settings: ViewStackSettings,
-                marginPointer: Changing[StackLength] = Fixed(StackLength.any))
+class ViewStack(override val parentHierarchy: ComponentHierarchy, componentsP: Changing[Seq[ReachComponentLike]],
+                 settings: ViewStackSettings, marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends Stack
 {
 	// ATTRIBUTES	-------------------------------
 	
-	// TODO: Reset cached stack sizes of added components, because they may have been updated previously
-	private val activeComponentsCache = ResettableLazy {
-		componentData.flatMap { case (component, pointer) =>
-			if (pointer.value) Some(component) else None
-		}
-	}
-	
 	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
-	private lazy val resetActiveComponentsOnChange = ChangeListener.onAnyChange {
-		activeComponentsCache.reset()
-		revalidate()
-	}
 	
 	/**
 	  * A pointer to this stack's visibility state.
 	  * This stack is visible while there is one or more components visible inside.
 	  */
-	override lazy val visibilityPointer = {
-		val pointers = componentData.map { _._2 }
-		if (pointers.isEmpty)
-			AlwaysFalse
-		else if (pointers.exists { _.isAlwaysTrue })
-			AlwaysTrue
-		else
-			pointers.reduce { _ || _ }
-	}
+	override lazy val visibilityPointer = componentsP.map { _.nonEmpty }
 	
 	
 	// INITIAL CODE	-------------------------------
 	
-	// Updates components list when component pointers get updated
-	componentData.map { _._2 }.foreach { _.addListenerWhile(parentHierarchy.linkPointer)(resetActiveComponentsOnChange) }
+	// When displayed components change, revalidates
+	componentsP.addListener { change =>
+		// Also resets the stack sizes of added components
+		change.added.foreach { _.resetEveryCachedStackSize() }
+		revalidate()
+	}
+	
 	// Revalidates this component on other layout changes
 	settings.axisPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
 	settings.layoutPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
@@ -520,5 +601,5 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy,
 	override def cap = settings.capPointer.value
 	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	
-	override def components = activeComponentsCache.value
+	override def components = componentsP.value
 }

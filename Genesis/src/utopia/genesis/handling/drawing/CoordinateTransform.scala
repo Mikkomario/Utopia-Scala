@@ -1,8 +1,7 @@
 package utopia.genesis.handling.drawing
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.util.Use
-import utopia.flow.util.logging.SysErrLogger
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
@@ -60,7 +59,7 @@ trait CoordinateTransform
 	/**
 	  * A mouse handler class that uses this coordinate transformation to deliver transformed mouse events
 	  */
-	protected class TransformedMouseHandler
+	protected class TransformedMouseHandler(implicit log: Logger)
 		extends MouseMoveListener with MouseWheelListener with MouseDragListener with MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------

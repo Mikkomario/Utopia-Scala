@@ -1,12 +1,13 @@
 package utopia.flow.util.logging
 
 import utopia.flow.operator.ScopeUsable
+import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
 
 object Logger
 {
-	// OTHER    ---------------------------
+	// IMPLICIT    ------------------------
 	
 	/**
 	  * Converts a function into a logger
@@ -16,6 +17,16 @@ object Logger
 	implicit def apply(f: (Option[Throwable], String) => Unit): Logger = new LoggerFunction(f)
 	
 	implicit def scopeUsableLogger(l: Logger): ScopeUsable[Logger] = ScopeUsable(l)
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Creates a lazily initialized logger
+	  * @param delegate A function that yields the logger. Called lazily, once the first log entry is required.
+	  * @return A lazily initialized logger
+	  */
+	def delegateLazilyTo(delegate: => Logger) = DelegatingLogger(View(delegate))
 	
 	
 	// NESTED   ---------------------------

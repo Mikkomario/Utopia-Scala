@@ -1,6 +1,7 @@
 package utopia.flow.test.event
 
-import utopia.flow.event.model.ChangeResult
+import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.event.model.{ChangeEvent, ChangeResult}
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -20,6 +21,12 @@ import scala.util.Try
   */
 object ChangingTest extends App
 {
+	// Tests advanced change event functions
+	val ce = ChangeEvent[IndexedSeq[Int]](Pair(1, 2), Vector(2, 3, 4))
+	
+	assert(ce.added == Pair(3,4))
+	assert(ce.removed == Single(1))
+	
 	// Tests listening
 	val o7 = EventfulPointer(1)
 	var lastO7EventValue = -1

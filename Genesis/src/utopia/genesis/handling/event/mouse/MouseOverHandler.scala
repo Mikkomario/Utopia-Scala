@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.Actor
@@ -17,22 +18,22 @@ import scala.language.implicitConversions
 
 object MouseOverHandler
 {
-	// ATTRIBUTES   ------------------------
+	// COMPUTED   ------------------------
 	
 	/**
 	  * A factory for constructing these handlers
 	  */
-	val factory = MouseOverHandlerFactory()
+	def factory(implicit log: Logger) = MouseOverHandlerFactory()
 	
 	
 	// IMPLICIT ---------------------------
 	
-	implicit def objectToFactory(@unused o: MouseOverHandler.type): MouseOverHandlerFactory = factory
+	implicit def objectToFactory(@unused o: MouseOverHandler.type)(implicit log: Logger): MouseOverHandlerFactory = factory
 	
 	
 	// NESTED   ---------------------------
 	
-	case class MouseOverHandlerFactory(override val condition: Flag = AlwaysTrue)
+	case class MouseOverHandlerFactory(override val condition: Flag = AlwaysTrue)(implicit log: Logger)
 		extends HandlerFactory[MouseOverListener, MouseOverHandler, MouseOverHandlerFactory]
 	{
 		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
@@ -49,6 +50,7 @@ object MouseOverHandler
   */
 class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Empty,
                        additionalCondition: Changing[Boolean] = AlwaysTrue)
+                      (implicit log: Logger)
 	extends DeepHandler[MouseOverListener](initialListeners, additionalCondition) with Actor with MouseMoveListener
 {
 	// ATTRIBUTES   ----------------------

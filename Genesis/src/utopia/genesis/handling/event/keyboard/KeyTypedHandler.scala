@@ -2,6 +2,7 @@ package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.EventHandler
@@ -12,22 +13,22 @@ import scala.language.implicitConversions
 
 object KeyTypedHandler
 {
-	// ATTRIBUTES   ------------------------
+	// COMPUTED   ------------------------
 	
 	/**
 	  * A factory for constructing these handlers
 	  */
-	val factory = KeyTypedHandlerFactory()
+	def factory(implicit log: Logger) = KeyTypedHandlerFactory()
 	
 	
 	// IMPLICIT ---------------------------
 	
-	implicit def objectToFactory(@unused o: KeyTypedHandler.type): KeyTypedHandlerFactory = factory
+	implicit def objectToFactory(@unused o: KeyTypedHandler.type)(implicit log: Logger): KeyTypedHandlerFactory = factory
 	
 	
 	// NESTED   ---------------------------
 	
-	case class KeyTypedHandlerFactory(override val condition: Flag = AlwaysTrue)
+	case class KeyTypedHandlerFactory(override val condition: Flag = AlwaysTrue)(implicit log: Logger)
 		extends HandlerFactory[KeyTypedListener, KeyTypedHandler, KeyTypedHandlerFactory]
 	{
 		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
@@ -44,6 +45,7 @@ object KeyTypedHandler
   */
 class KeyTypedHandler(initialListeners: IterableOnce[KeyTypedListener] = Empty,
                       additionalCondition: Changing[Boolean] = AlwaysTrue)
+                     (implicit log: Logger)
 	extends DeepHandler[KeyTypedListener](initialListeners, additionalCondition)
 		with EventHandler[KeyTypedListener, KeyTypedEvent] with KeyTypedListener
 {

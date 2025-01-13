@@ -15,7 +15,7 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
   * @author Mikko Hilpinen
   * @since 21/02/2024, v4.0
   */
-class Transformer(override protected val wrapped: Drawable, transformPointer: Changing[Matrix3D])
+class Transformer(override protected val wrapped: Drawable, transformPointer: Changing[Matrix3D])(implicit log: Logger)
 	extends TransformingDrawableWrapper
 {
 	// ATTRIBUTES   -----------------------

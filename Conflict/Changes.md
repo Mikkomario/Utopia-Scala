@@ -1,6 +1,9 @@
 # Utopia Conflict - List of Changes
 
-## v1.5.2 (in development)
+## v1.6 (in development)
+### Breaking changes
+- **CollisionHandler**, **CollisionPartyHandler** and **CollisionTargetHandler** 
+  now require access to an implicit **Logger**
 ### Other changes
 - Changed some deprecated **Polygonic** references to **Polygon** references
 

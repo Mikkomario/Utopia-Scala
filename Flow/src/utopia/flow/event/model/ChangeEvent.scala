@@ -2,8 +2,14 @@ package utopia.flow.event.model
 
 import utopia.flow.collection.immutable.Pair
 
+import scala.collection.BuildFrom
+import scala.collection.generic.IsIterableOnce
+import scala.language.implicitConversions
+
 object ChangeEvent
 {
+	// OTHER    -------------------------
+	
 	/**
 	  * Creates a new change event
 	  * @param oldValue The value before this change occurred
@@ -12,6 +18,36 @@ object ChangeEvent
 	  * @return A new change event
 	  */
 	def apply[A](oldValue: A, newValue: A): ChangeEvent[A] = apply(Pair(oldValue, newValue))
+	
+	
+	// EXTENSIONS   ---------------------
+	
+	class CollectionChangeEvent[Coll, I <: IsIterableOnce[Coll]](e: ChangeEvent[Coll], iter: I)
+	{
+		private lazy val oldOps = iter(e.oldValue)
+		private lazy val newOps = iter(e.newValue)
+		
+		/**
+		  * @param buildFrom Implicit build-from for constructing the resulting collection
+		  * @return Items which were added in this update
+		  */
+		def added(implicit buildFrom: BuildFrom[Coll, iter.A, Coll]) = {
+			val oldValues = Set.from(oldOps)
+			buildFrom.fromSpecific(e.newValue)(newOps.iterator.filterNot(oldValues.contains))
+		}
+		/**
+		  * @param buildFrom Implicit build-from for constructing the resulting collection
+		  * @return Items which were removed in this update
+		  */
+		def removed(implicit buildFrom: BuildFrom[Coll, iter.A, Coll]) = {
+			val newValues = Set.from(newOps)
+			buildFrom.fromSpecific(e.oldValue)(oldOps.iterator.filterNot(newValues.contains))
+		}
+	}
+	
+	implicit def collectionChangeOps[Coll](event: ChangeEvent[Coll])
+	                                      (implicit iter: IsIterableOnce[Coll]): CollectionChangeEvent[Coll, iter.type] =
+		new CollectionChangeEvent(event, iter)
 }
 
 /**

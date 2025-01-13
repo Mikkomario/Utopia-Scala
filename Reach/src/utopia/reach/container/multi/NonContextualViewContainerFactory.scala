@@ -32,4 +32,20 @@ trait NonContextualViewContainerFactory[+Container, -Top <: ReachComponentLike]
 	def build[F, C <: Top, R](contentFactory: Cff[F])
 	                         (fill: Iterator[F] => SwitchableCreations[C, R]): SwitchableComponentsWrapResult[Container, C, R] =
 		apply(Open.manyUsing[F, C, Changing[Boolean], R](contentFactory)(fill)(parentHierarchy.top))
+	
+	/**
+	  * Builds a new container which reflects the contents of a multi-value pointer.
+	  * This is best used in combination with view-based components.
+	  * @param pointer Pointer whose value is reflected in the container contents
+	  * @param contentFactory A factory used for constructing the individual components
+	  * @param construct A function that accepts
+	  *                  1) an initialized component-creation factory and
+	  *                  2) a pointer that contains the value to display on that component,
+	  *                  and yields a new component
+	  * @tparam A Type of values displayed on individual components
+	  * @tparam F Type of component factories to use
+	  * @return A new container
+	  */
+	def mapPointer[A, F](pointer: Changing[Seq[A]], contentFactory: Cff[F])(construct: (F, Changing[A]) => Top): Container =
+		_mapPointer(pointer) { p => Open.using(contentFactory) { construct(_, p) } }
 }

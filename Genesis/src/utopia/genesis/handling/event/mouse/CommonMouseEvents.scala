@@ -1,7 +1,9 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.template.{Handleable, Handlers}
@@ -17,6 +19,9 @@ import scala.collection.mutable
 object CommonMouseEvents extends mutable.Growable[Handleable]
 {
 	// ATTRIBUTES	--------------------------------
+	
+	private val logP = Pointer[Logger](SysErrLogger)
+	private implicit val log: Logger = DelegatingLogger(logP)
 	
 	private var generators = Set[MouseEventGenerator]()
 	private var _buttonStates = MouseButtonStates.default
@@ -59,6 +64,12 @@ object CommonMouseEvents extends mutable.Growable[Handleable]
 	
 	
 	// OTHER	------------------------------------
+	
+	/**
+	  * Specifies the logging implementation to use in the managed handlers
+	  * @param logger Logging implementation to utilize
+	  */
+	def specifyLogger(logger: Logger) = logP.value = logger
 	
 	/**
 	  * Registers a new event generator to be used for generating global mouse events

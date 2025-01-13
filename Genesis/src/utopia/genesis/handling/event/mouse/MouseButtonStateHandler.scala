@@ -2,6 +2,7 @@ package utopia.genesis.handling.event.mouse
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.{ConsumableEventHandler, ConsumeChoice}
@@ -12,22 +13,22 @@ import scala.language.implicitConversions
 
 object MouseButtonStateHandler
 {
-	// ATTRIBUTES   ------------------------
+	// COMPUTED   ------------------------
 	
 	/**
 	  * A factory for constructing these handlers
 	  */
-	val factory = MouseButtonStateHandlerFactory()
+	def factory(implicit log: Logger) = MouseButtonStateHandlerFactory()
 	
 	
 	// IMPLICIT ---------------------------
 	
-	implicit def objectToFactory(@unused o: MouseButtonStateHandler.type): MouseButtonStateHandlerFactory = factory
+	implicit def objectToFactory(@unused o: MouseButtonStateHandler.type)(implicit log: Logger): MouseButtonStateHandlerFactory = factory
 	
 	
 	// NESTED   ---------------------------
 	
-	case class MouseButtonStateHandlerFactory(override val condition: Flag = AlwaysTrue)
+	case class MouseButtonStateHandlerFactory(override val condition: Flag = AlwaysTrue)(implicit log: Logger)
 		extends HandlerFactory[MouseButtonStateListener, MouseButtonStateHandler, MouseButtonStateHandlerFactory]
 	{
 		override def usingCondition(newCondition: Flag) = copy(condition = newCondition)
@@ -44,6 +45,7 @@ object MouseButtonStateHandler
   */
 class MouseButtonStateHandler(initialListeners: IterableOnce[MouseButtonStateListener] = Empty,
                               additionalCondition: Changing[Boolean] = AlwaysTrue)
+                             (implicit log: Logger)
 	extends DeepHandler[MouseButtonStateListener](initialListeners, additionalCondition)
 		with ConsumableEventHandler[MouseButtonStateListener, MouseButtonStateEvent] with MouseButtonStateListener
 {

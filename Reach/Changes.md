@@ -11,6 +11,8 @@
 - Renamed **InputRowBlueprints**'s `isScalable` parameter to `scalable` and `visibilityPointer` to `visibilityFlag`
 - Rewrote **ViewStack** factory classes using **Reach Coder**
   - Existing use-case code should still work for the most part, however
+  - **ViewStack** implementation logic was also partially rewritten
+- **ViewContainerFactory** now requires the implementation of an abstract `.pointer(...)` function
 ### Deprecations
 - Deprecated **CachingViewSwapper** in favor of the new **Swapper**, which performs the same function
 ### Bugfixes
@@ -18,11 +20,14 @@
 ### New features
 - Added new **Swapper** container based on the previous **CachingViewSwapper** implementation
   - In this implementation, caching is optional (although on by default)
+- **ViewStack** now supports a wider range of constructors & use-cases, including `.mapPointer(...)` function, 
+  which manages a **Changing Seq**
 - **RealTimeReachPaintManager** now supports delayed painting
 ### Other changes
 - **ReachCanvas** now attempts to minimize screen flickering on window resize by performing the layout updates 
   and buffered painting **before** the window size changes.
 - Removed **SimpleFilledBuilderFactory** that was deprecated in v1.1
+- Minor refactoring within **MutableStack**
 
 ## v1.4 - 04.10.2024
 Adds mouse drag -support and fixes a memory-related bug in **ReachCanvas**. 

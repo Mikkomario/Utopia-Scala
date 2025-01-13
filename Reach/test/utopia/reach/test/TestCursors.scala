@@ -21,5 +21,5 @@ object TestCursors
 		Default -> (cursorsDirectory/"cursor-arrow.png", Point(7, 4)),
 		Interactive -> (cursorsDirectory/"cursor-hand.png", Point(9, 1)),
 		Text -> (cursorsDirectory/"cursor-text.png", Point(12, 12))
-	), drawEdgesFor = Set(Default, Interactive, Text)).logToOption(SysErrLogger)
+	), drawEdgesFor = Set(Default, Interactive, Text)).log(SysErrLogger)
 }

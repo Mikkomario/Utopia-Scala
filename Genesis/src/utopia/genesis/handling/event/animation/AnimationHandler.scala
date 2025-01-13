@@ -2,6 +2,7 @@ package utopia.genesis.handling.event.animation
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.EventHandler
@@ -13,22 +14,23 @@ import scala.language.implicitConversions
 
 object AnimationHandler
 {
-	// ATTRIBUTES   ----------------------
+	// COMPUTED   ----------------------
 	
 	/**
 	  * A factory used for constructing these handlers
 	  */
-	val factory = AnimationHandlerFactory()
+	def factory(implicit log: Logger) = AnimationHandlerFactory()
 	
 	
 	// IMPLICIT --------------------------
 	
-	implicit def objectToFactory(@unused o: AnimationHandler.type): AnimationHandlerFactory = factory
+	implicit def objectToFactory(@unused o: AnimationHandler.type)(implicit log: Logger): AnimationHandlerFactory =
+		factory
 	
 	
 	// NESTED   --------------------------
 	
-	case class AnimationHandlerFactory(override val condition: Flag = AlwaysTrue)
+	case class AnimationHandlerFactory(override val condition: Flag = AlwaysTrue)(implicit log: Logger)
 		extends HandlerFactory[AnimationListener, AnimationHandler, AnimationHandlerFactory]
 	{
 		// IMPLEMENTED  ------------------
@@ -47,6 +49,7 @@ object AnimationHandler
   */
 class AnimationHandler(initialListeners: IterableOnce[AnimationListener] = Empty,
                        additionalCondition: Flag = AlwaysTrue)
+                      (implicit log: Logger)
 	extends DeepHandler[AnimationListener](initialListeners, additionalCondition)
 		with EventHandler[AnimationListener, AnimationEvent] with AnimationListener
 {

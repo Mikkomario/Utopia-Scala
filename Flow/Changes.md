@@ -18,12 +18,17 @@
 - Added **LazilyInitializedChanging** that provides lazy **Changing** wrapping
 - Added **DividingMirror** that supports pointer-splitting
 - Added **LoggingPointerFactory** trait for facilitating custom pointer-creation
+- Added **DelegatingLogger** for constructing lazily initialized or switchable loggers
 - Added **ClearableCache**
 ### New methods
+- **ChangeEvent**
+  - Added `.added` and `.removed` functions for change events which contain collections
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapParallelUsing(ActionQueue)(...)`
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.splitMapInto(...)`, `.splitFlatMapInto(...)` and `.splitInto(...)`
+- **Logger** (object)
+  - Added `.delegatingLazilyTo(...)`
 - **ModelLike**
   - Added `.tryGet(...)`
 - **Seq** (**CollectionExtensions**)

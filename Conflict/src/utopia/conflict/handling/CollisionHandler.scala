@@ -3,6 +3,7 @@ package utopia.conflict.handling
 import utopia.conflict.collision.{Collision, CollisionShape}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.template.factory.FromCollectionFactory
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.Handleable
@@ -18,12 +19,12 @@ object CollisionHandler
       * @param targets A handler that manages collision targets
       * @return A factory for constructing a collision handler that checks for collisions with those targets
       */
-    def against(targets: CollisionTargetHandler) = new CollisionHandlerFactory(targets)
+    def against(targets: CollisionTargetHandler)(implicit log: Logger) = new CollisionHandlerFactory(targets)
     
     
     // NESTED   -------------------------
     
-    class CollisionHandlerFactory(targetHandler: CollisionTargetHandler)
+    class CollisionHandlerFactory(targetHandler: CollisionTargetHandler)(implicit log: Logger)
         extends FromCollectionFactory[CollisionListener, CollisionHandler]
     {
         // IMPLEMENTED  -----------------
@@ -44,6 +45,7 @@ object CollisionHandler
  * @since 4.8.2017
  */
 class CollisionHandler(targetHandler: CollisionTargetHandler, initialListeners: IterableOnce[CollisionListener] = Empty)
+                      (implicit log: Logger)
     extends CollisionPartyHandler[CollisionListener](initialListeners) with Actor
 {
     // ATTRIBUTES   --------------------

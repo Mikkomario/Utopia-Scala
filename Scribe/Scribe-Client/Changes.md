@@ -1,5 +1,10 @@
 # Utopia Scribe Client - list of changes
 
+## v1.0.4 (in development)
+Responding to changes in Flow v2.5.1
+### Other changes
+- Fixed a deprecation warning, reflecting **Flow** changes
+
 ## v1.0.3 - 04.10.2024
 Built with Scala v2.13.14. No other changes.
 

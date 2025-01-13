@@ -274,7 +274,7 @@ object MasterScribe
 			override def handle(requestModel: Model, queue: PersistingRequestQueue): Unit = {
 				// Parses the issues from the request model
 				// Logs possible parsing errors, whether critical or non-critical
-				parseIssuesFrom(requestModel).logToOption.filter { _.nonEmpty }.foreach { issues =>
+				parseIssuesFrom(requestModel).log.filter { _.nonEmpty }.foreach { issues =>
 					// Sends the issues to the server, logs possible failures
 					queue.push(new PostIssuesRequest(issues)).foreach { handlePostResult(issues, _) }
 				}
