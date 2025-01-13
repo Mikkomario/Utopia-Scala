@@ -1,35 +1,18 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.util.TryExtensions._
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.{Pointer, PointerFactory}
+import utopia.flow.view.mutable.{LoggingPointerFactory, Pointer}
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
-import scala.annotation.unused
-import scala.language.implicitConversions
 import scala.util.Try
 
-object EventfulPointer
+object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
 {
-	// COMPUTED -----------------------
-	
-	/**
-	  * @param log Implicit logging implementation for handling failures thrown by event listeners
-	  * @return Factory for constructing eventful pointers
-	  */
-	def factory(implicit log: Logger): PointerFactory[EventfulPointer] = new EventfulPointerFactory()
-	
-	
-	// IMPLICIT -----------------------
-	
-	implicit def objectToFactory(@unused o: EventfulPointer.type)(implicit log: Logger): PointerFactory[EventfulPointer] =
-		factory
-	
-	
-	// OTHER    -----------------------
+	// IMPLEMENTED    -----------------------
 	
 	/**
 	  * Creates a new mutable pointer
@@ -38,15 +21,11 @@ object EventfulPointer
 	  * @tparam A Type of values held within this pointer
 	  * @return A new pointer
 	  */
-	def apply[A](initialValue: A)(implicit log: Logger): EventfulPointer[A] = new _EventfulPointer[A](initialValue)
+	override def apply[A](initialValue: A)(implicit log: Logger): EventfulPointer[A] =
+		new _EventfulPointer[A](initialValue)
 	
 	
 	// NESTED   -----------------------
-	
-	private class EventfulPointerFactory(implicit log: Logger) extends PointerFactory[EventfulPointer]
-	{
-		override def apply[A](initialValue: A): EventfulPointer[A] = EventfulPointer(initialValue)
-	}
 	
 	private class _EventfulPointer[A](initialValue: A)(implicit log: Logger)
 		extends AbstractChanging[A] with EventfulPointer[A]

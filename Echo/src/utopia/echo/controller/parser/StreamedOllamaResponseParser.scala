@@ -3,6 +3,7 @@ package utopia.echo.controller.parser
 import utopia.echo.model.response.{OllamaResponseLike, ResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.Changing
 
@@ -55,17 +56,21 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 		// ATTRIBUTES   ----------------
 		
 		// Prepares a pointer to store the read reply text
-		// TODO: May need Volatile features here
-		private val newTextPointer = LockablePointer("")
-		private val textPointer = LockablePointer("")
-		private val lastUpdatedPointer = new LockablePointer[Instant](Now)
+		private val newTextPointer = Volatile.lockable("")
+		private val textPointer = Volatile.lockable("")
+		private val lastUpdatedPointer = Volatile.lockable[Instant](Now)
 		
 		
 		// IMPLEMENTED  ----------------
 		
 		override def updateStatus(response: Model): Unit = {
 			val newText = textFromResponse(response)
-			newTextPointer.value = textFromResponse(response)
+			// Checks for edge cases, where the new addition is identical to the latest one
+			// In these cases, clears the new text -value first, so that a change event will be generated
+			// This is not needed if nobody is listening to the new text -pointer
+			if (newTextPointer.hasListeners && newText == newTextPointer.value)
+				newTextPointer.value = ""
+			newTextPointer.value = newText
 			// Appends the read text to the text pointer
 			textPointer.update { _ + newText }
 			lastUpdatedPointer.value = response("created_at").getInstant

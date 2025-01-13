@@ -5,6 +5,8 @@
 - Changed **Chat**'s auto-summarization parameter syntax
 ### Bugfixes
 - Chat messages now automatically convert tabs to spaces
+- `newTextPointer` in **OllamaResponse** implementations now correctly fires change events 
+  even when receiving a similar text update twice in a row (e.g. when encountering a paragraph change).
 ### New features
 - Added saving & loading to **Chat**
 - **Chat**'s summarization process now supports message-exclusion
@@ -21,6 +23,7 @@
 - Modified timeout settings in **OllamaClient**
 - Modified **Chat** default parameters
 - **Chat** now extends **ScopeUsable**
+- **StreamedOllamaResponseParser** now utilizes volatile pointers
 
 ## v1.1 - 04.10.2024
 A major update adding a number of new features, including a complete chat interface and tool support. 

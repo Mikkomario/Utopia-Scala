@@ -1,38 +1,20 @@
 package utopia.flow.view.mutable.async
 
-import utopia.flow.util.TryExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.PointerFactory
+import utopia.flow.view.mutable.LoggingPointerFactory
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
-import scala.annotation.unused
-import scala.language.implicitConversions
 import scala.util.Try
 
-object EventfulVolatile
+object EventfulVolatile extends LoggingPointerFactory[EventfulVolatile]
 {
-	// COMPUTED ----------------------
-	
-	/**
-	  * @param log Implicit logging implementation for handling errors thrown by assigned listeners
-	  * @return A factory for constructing Volatile pointers that fire change events
-	  */
-	def factory(implicit log: Logger): PointerFactory[EventfulVolatile] = new EventfulVolatileFactory()
-	
-	
-	// IMPLICIT ----------------------
-	
-	// Implicitly converts this object into a factory when logging is available
-	implicit def objectToFactory(@unused o: EventfulVolatile.type)
-	                            (implicit log: Logger): PointerFactory[EventfulVolatile] = factory
-	
-	
-	// OTHER    ----------------------
+	// IMPLEMENTED    ----------------------
 	
 	/**
 	  * @param initialValue Initial value to assign to this pointer
@@ -40,15 +22,10 @@ object EventfulVolatile
 	  * @tparam A Type of values held within this container
 	  * @return A new pointer
 	  */
-	def apply[A](initialValue: A)(implicit log: Logger): EventfulVolatile[A] = new _EventfulVolatile[A](initialValue)
+	override def apply[A](initialValue: A)(implicit log: Logger): EventfulVolatile[A] = new _EventfulVolatile[A](initialValue)
 	
 	
 	// NESTED   ----------------------
-	
-	private class EventfulVolatileFactory(implicit log: Logger) extends PointerFactory[EventfulVolatile]
-	{
-		override def apply[A](initialValue: A): EventfulVolatile[A] = EventfulVolatile(initialValue)
-	}
 	
 	private class _EventfulVolatile[A](initialValue: A)(implicit log: Logger) extends EventfulVolatile[A]
 	{

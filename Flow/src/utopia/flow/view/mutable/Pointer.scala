@@ -11,6 +11,53 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
+object LoggingPointerFactory
+{
+	// IMPLICIT -----------------------
+	
+	// When a logger is implicitly available, LoggingPointerFactories may be used as pointer factories
+	implicit def implicitLoggerAccess[P[_]](f: LoggingPointerFactory[P])(implicit logger: Logger): PointerFactory[P] =
+		f.factory
+}
+/**
+ * Common trait for pointer factory interfaces which require access to a [[Logger]] implementation.
+ * @tparam P Type of pointers constructed
+ * @since 13.1.2025, v2.5.1
+ */
+trait LoggingPointerFactory[+P[_]]
+{
+	// ABSTRACT    ---------------------
+	
+	/**
+	 * Creates a new pointer
+	 * @param initialValue Initial value to assign to this pointer
+	 * @param log Implicit logging implementation for handling failures thrown by event listeners
+	 * @tparam A Type of values held within this pointer
+	 * @return A new pointer
+	 */
+	def apply[A](initialValue: A)(implicit log: Logger): P[A]
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	 * @param log Implicit logging implementation for handling failures thrown by event listeners
+	 * @return Factory for constructing new pointers
+	 */
+	def factory(implicit log: Logger): PointerFactory[P] = new FactoryWithLogger()
+	
+	
+	// NESTED   -----------------------
+	
+	private class FactoryWithLogger(implicit log: Logger) extends PointerFactory[P]
+	{
+		override def apply[A](initialValue: A): P[A] = LoggingPointerFactory.this(initialValue)
+	}
+}
+/**
+ * Common trait for factories which construct new pointers
+ * @tparam P Type of pointers constructed
+ */
 trait PointerFactory[+P[_]]
 {
 	// ABSTRACT ----------------------------
@@ -268,7 +315,6 @@ object Pointer extends PointerFactory[Pointer]
 	
 	private class _Pointer[A](override var value: A) extends Pointer[A]
 }
-
 /**
   * A common trait for wrapper classes which allow direct mutation and replacement of the wrapped value
   * @author Mikko Hilpinen

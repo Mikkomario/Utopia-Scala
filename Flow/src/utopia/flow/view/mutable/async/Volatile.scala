@@ -12,6 +12,10 @@ object Volatile extends PointerFactory[Volatile]
       * @return Factory for volatile containers that generate change events
       */
     def eventful = EventfulVolatile
+    /**
+     * @return Factory for lockable (eventful) volatile containers
+     */
+    def lockable = LockableVolatile
     
     /**
       * @return A new volatile switch
@@ -25,14 +29,14 @@ object Volatile extends PointerFactory[Volatile]
     def flag(implicit log: Logger) = VolatileFlag()
     
     
-    // OTHER    -------------------
+    // IMPLEMENTED    --------------
     
     /**
       * @param initialValue Value to assign to this container, initially
       * @tparam A Type of values in this container
       * @return A new volatile container
       */
-    def apply[A](initialValue: A): Volatile[A] = new _Volatile[A](initialValue)
+    override def apply[A](initialValue: A): Volatile[A] = new _Volatile[A](initialValue)
     
     
     // NESTED   -------------------
@@ -57,7 +61,7 @@ object Volatile extends PointerFactory[Volatile]
 
 /**
 * Common trait for volatile containers, meaning containers which ensure safe access and mutation of a value
-  * in a multi-threaded environment.
+  * in a multithreaded environment.
   * @author Mikko Hilpinen
 * @since 27.3.2019
 **/
@@ -123,8 +127,6 @@ trait Volatile[A] extends Pointer[A]
       * @return the result of the operation
      */
     def lockWhile[U](operation: A => U) = this.synchronized { operation(value) }
-    @deprecated("Renamed to .lockWhile(...)", "v2.5")
-    def lock[U](operation: A => U) = lockWhile(operation)
     
     /**
       * Updates a value in this container. Returns the state before the update.

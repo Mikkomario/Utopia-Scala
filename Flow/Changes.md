@@ -14,8 +14,10 @@
 - Added **LazilyUpdating** class, which performs lazy incremental updates regularly or when requested to do so
 - Added **UntilExternalFailureIterator**
 - Added **RepeatOneForeverIterator**
+- Added **LockableVolatile** class
 - Added **LazilyInitializedChanging** that provides lazy **Changing** wrapping
 - Added **DividingMirror** that supports pointer-splitting
+- Added **LoggingPointerFactory** trait for facilitating custom pointer-creation
 - Added **ClearableCache**
 ### New methods
 - **Iterable** (**CollectionExtensions**)
@@ -34,6 +36,7 @@
   - Added `.mapFailure(...)`
   - Added `.catching(Seq[Throwable])`
 ### Other changes
+- **LockablePointer** is now a trait instead of a class
 - Internal refactoring in **TimeExtensions**
   - Modified conversions between different duration types
   - Added better handling for Inf & MinusInf duration values
