@@ -10,6 +10,7 @@ import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
 
 import scala.util.Try
@@ -28,18 +29,22 @@ object ChangingTest extends App
 	assert(ce.removed == Single(1))
 	
 	// Tests listening
-	val o7 = EventfulPointer(1)
-	var lastO7EventValue = -1
-	
-	o7.addListenerAndSimulateEvent(-1) { e => lastO7EventValue = e.newValue }
-	
-	assert(lastO7EventValue == 1)
-	
-	o7.value = 55
-	assert(lastO7EventValue == 55)
-	
-	o7.value = -2
-	assert(lastO7EventValue == -2)
+	def testListening(p: EventfulPointer[Int]) = {
+		var lastValue = -1
+		
+		p.addListenerAndSimulateEvent(-1) { e => lastValue = e.newValue }
+		assert(lastValue == 1)
+		
+		p.value = 55
+		assert(lastValue == 55)
+		
+		p.value = -2
+		assert(lastValue == -2)
+	}
+	testListening(EventfulPointer(1))
+	testListening(EventfulVolatile(1))
+	testListening(LockablePointer(1))
+	testListening(LockableVolatile(1))
 	
 	// Tests mapping
 	val origin = EventfulPointer(1)
@@ -183,39 +188,52 @@ object ChangingTest extends App
 	assert(lmm.value == -5)
 	
 	// Tests pointer locking / lockable pointer
-	// Also tests withState mapping
-	val lp = LockablePointer(0)
-	val lps = lp.withState
-	var locked = false
-	var lastStateValue = ChangeResult.temporal(0)
-	lp.onceChangingStops { locked = true }
-	lps.addListener { e => lastStateValue = e.newValue }
-	
-	assert(lp.value == 0)
-	assert(lp.mayChange)
-	assert(lastStateValue == ChangeResult.temporal(0))
-	assert(lps.value == ChangeResult.temporal(0))
-	assert(!locked)
-	
-	println("Changes value from 0 to 1")
-	lp.value = 1
-	
-	assert(lp.value == 1)
-	assert(lp.mayChange)
-	assert(lastStateValue == ChangeResult.temporal(1))
-	assert(lps.value == ChangeResult.temporal(1))
-	
-	println("Locks the pointer")
-	lp.lock()
-	
-	assert(locked)
-	assert(lp.isFixed)
-	assert(lp.value == 1)
-	assert(lastStateValue == ChangeResult.finalValue(1))
-	assert(lps.value == ChangeResult.finalValue(1))
-	
-	assert(Try { lp.value = 2 }.isFailure)
-	assert(!lp.trySet(2))
+	def testLockable(lp: LockablePointer[Int]) = {
+		// Also tests withState mapping
+		val lps = lp.withState
+		var locked = false
+		var lastValue = 0
+		var lastStateValue = ChangeResult.temporal(0)
+		lp.onceChangingStops { locked = true }
+		lp.addListener { e =>
+			println(s"Updating 'lastValue' with $e")
+			lastValue = e.newValue
+		}
+		lps.addListener { e => lastStateValue = e.newValue }
+		
+		assert(lp.value == 0)
+		assert(lp.mayChange)
+		assert(lastValue == 0)
+		assert(lastStateValue == ChangeResult.temporal(0))
+		assert(lps.value == ChangeResult.temporal(0))
+		assert(!locked)
+		
+		println("Changes value from 0 to 1")
+		lp.value = 1
+		
+		assert(lp.value == 1)
+		assert(lp.mayChange)
+		assert(lastValue == 1, lastValue)
+		assert(lastStateValue == ChangeResult.temporal(1), lastStateValue)
+		assert(lps.value == ChangeResult.temporal(1))
+		
+		println("Locks the pointer")
+		lp.lock()
+		
+		assert(locked)
+		assert(lp.isFixed)
+		assert(lp.value == 1)
+		assert(lastValue == 1)
+		assert(lastStateValue == ChangeResult.finalValue(1))
+		assert(lps.value == ChangeResult.finalValue(1))
+		
+		assert(Try { lp.value = 2 }.isFailure)
+		assert(!lp.trySet(2))
+		assert(lp.value == 1)
+		assert(lastValue == 1)
+	}
+	testLockable(LockablePointer(0))
+	testLockable(LockableVolatile(0))
 	
 	// Tests merging with 4 pointers, including an active-condition
 	private val lmi1 = Pointer.eventful(1)
