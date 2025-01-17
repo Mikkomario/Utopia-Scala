@@ -25,6 +25,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 {
 	// ATTRIBUTES	-----------------------------
 	
+	// TODO: This needs an update (sometimes components are a few pixels higher or lower)
 	// Orders points from top to bottom, left to right
 	private implicit val focusOrdering: Ordering[Point] =
 		new CombinedOrdering[Point](Pair(Ordering.by[Point, Double] { _.y }, Ordering.by[Point, Double] { _.x }))

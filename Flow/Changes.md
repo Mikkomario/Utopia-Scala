@@ -23,6 +23,8 @@
 ### New methods
 - **ChangeEvent**
   - Added `.added` and `.removed` functions for change events which contain collections
+- **Command**
+  - Added `.aliasOrName`
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapParallelUsing(ActionQueue)(...)`
 - **IterableOnce** (**CollectionExtensions**)
@@ -35,6 +37,8 @@
   - Added `.findNextIndexWhere(...)` and `.findPreviousIndexWhere(...)`
 - **InputStream** (**StreamExtensions**)
   - Added `.buffered` and `.notEmpty`
+- **Seq** (**CollectionExtensions**)
+  - Added `.takeRandom(Int)` and `.dropRandom(Int)`
 - **String** (**StringExtensions**)
   - Added `.splitToLinesIterator(Int)`
 - **Try** (**TryExtensions**)

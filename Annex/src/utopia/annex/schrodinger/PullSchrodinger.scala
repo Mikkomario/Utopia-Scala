@@ -101,6 +101,7 @@ object PullSchrodinger
 	  * Typically used in situations where locally cached data may act as a placeholder until server results arrive.
 	  * @param local        Locally cached data. None if no local data is available (which is an impermanent failure case).
 	  * @param resultFuture A future that will contain the server response, if successful
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param localize     A function that converts a remotely read instance into its local variant
 	  * @param exc          Implicit execution context
 	  * @tparam L Type of locally cached items (spirits)
@@ -109,10 +110,10 @@ object PullSchrodinger
 	  *         Dead if no item could be read from the server response
 	  *         (whether the request itself was successful or not)
 	  */
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[R]])
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[R]], expectancy: Flux = PositiveFlux)
 	                (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
 		_apply(local.toTry { new NoSuchElementException("No local data") }, pendingResultFailure, resultFuture,
-			Flux(local.isDefined))(localize)
+			expectancy)(localize)
 	
 	/**
 	  * Pulls a local and a remote instance.
@@ -122,6 +123,7 @@ object PullSchrodinger
 	  * @param local        Locally cached data. None if no local data is available (which is an impermanent failure case).
 	  * @param resultFuture A future that will contain the server response, if successful
 	  * @param parser       A parser used for parsing items from a server response
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param localize     A function that converts a remotely read instance into its local variant
 	  * @param exc          Implicit execution context
 	  * @tparam L Type of locally cached items (spirits)
@@ -130,9 +132,10 @@ object PullSchrodinger
 	  *         Dead if no item could be read from the server response
 	  *         (whether the request itself was successful or not)
 	  */
-	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
+	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
+	                       expectancy: Flux = PositiveFlux)
 	                      (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
-		apply(local, resultFuture.map { _.parsingOneWith(parser) })(localize)
+		apply(local, resultFuture.map { _.parsingOneWith(parser) }, expectancy)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
@@ -146,19 +149,20 @@ object PullSchrodinger
 	  * This is typically used when data is expected to exist either locally or remotely and local data,
 	  * if present, is considered accurate enough to represent the final state.
 	  * @param local       Local pull results (Some or None)
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param makeRequest A function that starts the remote pull. Yields a request result.
 	  * @param exc         Implicit execution context
 	  * @tparam A Type of pull results, when acquired
 	  * @return A new schrödinger, either based on local data (final) or remote pull (flux)
 	  */
-	def any[A](local: Option[A])(makeRequest: => Future[RequestResult[A]])
+	def any[A](local: Option[A], expectancy: => Flux = PositiveFlux)(makeRequest: => Future[RequestResult[A]])
 	           (implicit exc: ExecutionContext, log: Logger) =
 	{
 		local match {
 			// Case: Local results found => Skips the remote search
 			case Some(found) => successful(found)
 			// Case: No local results => Performs the remote search
-			case None => apply(local, makeRequest)(Identity)
+			case None => apply(local, makeRequest, expectancy)(Identity)
 		}
 	}
 	
@@ -170,14 +174,16 @@ object PullSchrodinger
 	  * if present, is considered accurate enough to represent the final state.
 	  * @param local       Local pull results (Some or None)
 	  * @param parser      Parser used for parsing remote pull results
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param makeRequest A function that starts the remote pull. Yields a request result.
 	  * @param exc         Implicit execution context
 	  * @tparam A Type of pull results, when acquired
 	  * @return A new schrödinger, either based on local data (final) or remote pull (flux)
 	  */
-	def parseAny[A](local: Option[A], parser: => FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
+	def parseAny[A](local: Option[A], parser: => FromModelFactory[A], expectancy: => Flux = PositiveFlux)
+	               (makeRequest: => Future[RequestResult[Value]])
 	               (implicit exc: ExecutionContext, log: Logger) =
-		any(local) { makeRequest.map { _.parsingOneWith(parser) } }
+		any(local, expectancy) { makeRequest.map { _.parsingOneWith(parser) } }
 	
 	@deprecated("Deprecated for removal. Please use .parseAny(...) instead", "v1.8")
 	def any[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
@@ -189,14 +195,16 @@ object PullSchrodinger
 	  * Expects the request to succeed and to yield exactly one instance.
 	  * This is typically used when no data has been cached locally, or when local data is not appropriate to be used.
 	  * @param resultFuture A future that will contain the server response, if successful
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param exc          Implicit execution context
 	  * @tparam A Type of the read item, when successful
 	  * @return A new schrödinger that contains a failure until server results arrive.
 	  *         Once the results arrive, contains parsing results
 	  *         (failure if request or parsing failed, or if no items were found, success otherwise)
 	  */
-	def remote[A](resultFuture: Future[RequestResult[A]])(implicit exc: ExecutionContext, log: Logger) =
-		_apply(pendingResultFailure, pendingResultFailure, resultFuture, PositiveFlux)(Identity)
+	def remote[A](resultFuture: Future[RequestResult[A]], expectancy: Flux = PositiveFlux)
+	             (implicit exc: ExecutionContext, log: Logger) =
+		_apply(pendingResultFailure, pendingResultFailure, resultFuture, expectancy)(Identity)
 	
 	/**
 	  * Creates a schrödinger that wraps a remote pull request (single instance).
@@ -204,15 +212,17 @@ object PullSchrodinger
 	  * This is typically used when no data has been cached locally, or when local data is not appropriate to be used.
 	  * @param resultFuture A future that will contain the server response, if successful
 	  * @param parser       A parser used for parsing items from a server response
+	  * @param expectancy The applied flux state during the request period (default = positive)
 	  * @param exc          Implicit execution context
 	  * @tparam A Type of the read item, when successful
 	  * @return A new schrödinger that contains a failure until server results arrive.
 	  *         Once the results arrive, contains parsing results
 	  *         (failure if request or parsing failed, or if no items were found, success otherwise)
 	  */
-	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
+	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
+	                   expectancy: Flux = PositiveFlux)
 	                  (implicit exc: ExecutionContext, log: Logger) =
-		remote(resultFuture.map { _.parsingOneWith(parser) })
+		remote(resultFuture.map { _.parsingOneWith(parser) }, expectancy)
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
 	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])

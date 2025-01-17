@@ -5,7 +5,7 @@ import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Pair.PairIsIterable
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
-import utopia.flow.collection.immutable.{Empty, IntSet, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.immutable._
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -1934,6 +1934,57 @@ object CollectionExtensions
 		  */
 		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
 			maxOptionIndexBy(f)(order.reverse)
+		
+		/**
+		 * @param count Number of items to take
+		 * @return Randomly selected set of up to 'count' items from this collection
+		 */
+		def takeRandom(count: Int) = {
+			lazy val size = s.size
+			if (count <= 0)
+				s.empty
+			else if (count >= size)
+				s
+			else if (count > size / 2)
+				_dropRandom(size - count)
+			else
+				_takeRandom(count)
+		}
+		/**
+		 * @param count Number of items to drop
+		 * @return Copy of this collection with up to 'count' randomly selected items removed
+		 */
+		def dropRandom(count: Int) = {
+			lazy val size = s.size
+			if (count <= 0)
+				s
+			else if (count >= size)
+				s.empty
+			else if (count > size / 2)
+				_takeRandom(size - count)
+			else
+				_dropRandom(count)
+		}
+		private def _takeRandom(count: Int) = {
+			val size = s.size
+			val indicesToInclude = mutable.Set[Int]()
+			while (indicesToInclude.size < count) {
+				indicesToInclude += Random.nextInt(size)
+			}
+			val valuesView = indicesToInclude.view.map(s.apply)
+			if (size > 2)
+				valuesView.toVector
+			else
+				valuesView.toOptimizedSeq
+		}
+		private def _dropRandom(count: Int) = {
+			val size = s.size
+			val indicesToExclude = mutable.Set[Int]()
+			while (indicesToExclude.size < count) {
+				indicesToExclude += Random.nextInt(size)
+			}
+			s.view.zipWithIndex.filterNot { case (_, i) => indicesToExclude.contains(i) }.map { _._1 }.toOptimizedSeq
+		}
 	}
 	
 	implicit class RichIndexedSeq[A](val s: IndexedSeq[A]) extends AnyVal

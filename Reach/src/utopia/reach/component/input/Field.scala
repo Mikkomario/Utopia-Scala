@@ -634,6 +634,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
 				ViewStack(parentHierarchy)
 					.withoutMargin(Pair(framedMainArea.withResult(AlwaysTrue), openHintArea)).parent
+			
 			// Case: Only main area used => uses framing only
 			case None => makeContentFraming(Framing(parentHierarchy), openMainArea).parent
 		}
@@ -766,7 +767,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 		}
 	}
 	
-	// Returns input area + editable label
+	// Returns input area
 	private def makeInputArea() = {
 		// Input part may contain a name label, if enabled
 		if (settings.fieldNamePointer.existsFixed { _.isEmpty }) {

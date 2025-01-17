@@ -16,6 +16,8 @@
   - These also have contextual variants
 - **ImageComponent** now requires `maxScaling: Double` instead of `imageScaling: Double`
 - **ViewImageDrawer** now has `insetsPointer: Changing` instead of `insetsView: View`
+### Bugfixes
+- **SingleColorIcon** no longer assumes that the original image is black
 ### New features
 - **Window** now supports preparation before size changes
   - This is utilized by passing a `prepareForSizeChange` -property in the constructor

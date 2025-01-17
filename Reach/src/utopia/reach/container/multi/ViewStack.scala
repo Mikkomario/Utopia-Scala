@@ -318,7 +318,7 @@ trait ViewStackFactoryLike[+Repr]
 							
 							// Attaches the components to this new stack using a single hierarchy block
 							val mergedContent = merge(staticContent)
-							mergedContent.hierarchy.complete(stack)
+							mergedContent.attachTo(stack)
 							
 							stack
 					}
@@ -342,7 +342,7 @@ trait ViewStackFactoryLike[+Repr]
 						val hash = open.component.hashCode()
 						// Case: Not previously attached => Creates a new link pointer and attaches the component
 						if (!attachmentPointers.isValueCached(hash))
-							open.hierarchy.complete(stack, attachmentPointers(hash))
+							open.attachTo(stack, attachmentPointers(hash))
 					}
 				}
 				
@@ -375,7 +375,10 @@ trait ViewStackFactoryLike[+Repr]
 			visibleFlag.addListenerWhile(parentHierarchy.linkPointer) { _ => visibleContentP.update() }
 		}
 		
-		new ViewStack(parentHierarchy, visibleContentP, settings, marginPointer)
+		val stack = new ViewStack(parentHierarchy, visibleContentP, settings, marginPointer)
+		content.foreach { open => open.attachTo(stack, open.result) }
+		
+		stack
 	}
 	
 	/**

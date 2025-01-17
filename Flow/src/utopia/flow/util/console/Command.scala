@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.console.Command.whiteSpacesOutsideQuotationsRegex
+import utopia.flow.util.StringExtensions._
 
 object Command
 {
@@ -56,6 +57,14 @@ class Command(val name: String, val alias: String = "",
              (execute: CommandArguments => Unit)
 	extends ArgumentMatchable
 {
+	// ATTRIBUTES   --------------------------
+	
+	/**
+	 * If this command has an alias, returns the alias. Otherwise returns the name.
+	 */
+	lazy val aliasOrName = alias.nonEmptyOrElse(name)
+	
+	
 	// COMPUTED ------------------------------
 	
 	/**

@@ -78,5 +78,8 @@ object StringUtilsTest extends App
 	
 	println()
 	
+	println("This is a long string that needs to be split to multiple lines. \n\nAlso, this string contains line breaks.\nSome."
+		.splitToLinesIterator(20).mkString("\n"))
+	
 	println("Success!")
 }

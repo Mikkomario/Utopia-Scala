@@ -70,10 +70,15 @@ case class SingleColorIcon(original: Image, standardSize: Size)
 			WeakCache { colorP: Changing[Color] => colorP.map(paintedImageCache.apply) }
 	}
 	
-	private val _blackAndWhite = Pair(
-		Lazy { original.mapIfNotEmpty { _.withAlpha(0.88) } },
-		Lazy { original.mapIfNotEmpty { _.withColorOverlay(Color.white) } }
-	)
+	private val _blackAndWhite = {
+		val originalColor = original.pixels.iterator.find { _.alpha > 0 }
+		Pair(
+			Lazy { original.mapIfNotEmpty { i =>
+				(if (originalColor.contains(Color.black)) i else i.withColorOverlay(Color.black)).withAlpha(0.88) } },
+			Lazy { original.mapIfNotEmpty { i =>
+				if (originalColor.contains(Color.white)) i else i.withColorOverlay(Color.white) } }
+		)
+	}
 	private val _inButtonSets = _blackAndWhite
 		.map { _.map { ButtonImageSet(_) ++ ComponentCreationDefaults.inButtonImageEffects } }
 	private val _highlightingInButtonSets = _blackAndWhite

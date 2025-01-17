@@ -7,6 +7,8 @@ Supports changes made to Disciple
   - Added new `.resolved(...)` and `.failed(...)` variants which support local values
 - **ResponseParser** (**ResponseParseExtensions**)
   - Added `.unwrapToResponseLogging(...)`
+### Other changes
+- Added `expectation: Flux` parameter to **PullSchrodinger**'s constructors
 
 ## v1.9 - 04.10.2024
 This update mostly adds new utility functions for response-parsing. 

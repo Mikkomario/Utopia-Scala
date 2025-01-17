@@ -359,6 +359,16 @@ trait ReachComponentLike extends Stackable with PartOfComponentHierarchy
 		window
 	}
 	
+	/**
+	  * Prints this component's hierarchy to the System.out.
+	  * Intended for debugging purposes.
+	  * @param indentation Amount of indentation to add before every line of text (default = 0)
+	  */
+	def debugPrintHierarchy(indentation: Int = 0): Unit = {
+		println(s"${ "\t" * indentation }${ getClass.getSimpleName } (${ parentHierarchy.isLinked })")
+		children.foreach { _.debugPrintHierarchy(indentation + 1) }
+	}
+	
 	// Expects the clip zone to be completely inside this component's bounds
 	private def coversAllOf(clipZone: Bounds): Boolean = {
 		if (opaque)

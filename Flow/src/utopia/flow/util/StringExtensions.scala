@@ -449,7 +449,7 @@ object StringExtensions
 			val length = str.length
 			// Case: This string already fits a single line
 			if (length <= maxCharactersPerLine)
-				Iterator.single(s)
+				Iterator.single(str)
 			// Case: Splitting is necessary
 			else {
 				// Checks all places where this string may be split
@@ -470,7 +470,7 @@ object StringExtensions
 								}
 					}
 					// Converts the selected split intervals to lines
-					.map { _._1 }.pairedTo(length).map { range => s.substring(range.first, range.second) }
+					.map { _._1 }.pairedTo(length).map { range => str.substring(range.first, range.second) }
 			}
 		}
 		

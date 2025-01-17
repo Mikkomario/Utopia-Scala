@@ -4,8 +4,10 @@ import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
@@ -47,6 +49,7 @@ object ReachTextFieldTest extends App
 					rowF.related.row.trailing.build(Mixed) { row =>
 						val field = makeField(row(TextField))
 						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
+						field.linkedFlag.addListener { e => println(s"Field linked $e") }
 						Vector(field, summary)
 					}.parent
 				}
@@ -77,6 +80,8 @@ object ReachTextFieldTest extends App
 		}
 	}
 	
+	// window.canvas.focusManager.
+	
 	// Displays the window
 	window.boundsPointer.addContinuousListenerAndSimulateEvent(Bounds.zero) { e =>
 		println(s"${Now.toLocalTime}: ${e.newValue}")
@@ -85,4 +90,6 @@ object ReachTextFieldTest extends App
 	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
 	start()
+	
+	Delay(3.seconds) { window.content.debugPrintHierarchy() }
 }

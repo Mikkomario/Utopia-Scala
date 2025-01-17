@@ -23,6 +23,10 @@
 - **ViewStack** now supports a wider range of constructors & use-cases, including `.mapPointer(...)` function, 
   which manages a **Changing Seq**
 - **RealTimeReachPaintManager** now supports delayed painting
+- Added **HierarchyConnectionVisualizer** custom drawer for debugging hierarchy attachment errors
+### New methods
+- **ReachComponentLike**
+  - Added `.debugPrintHierarchy(Int)`
 ### Other changes
 - **ReachCanvas** now attempts to minimize screen flickering on window resize by performing the layout updates 
   and buffered painting **before** the window size changes.
