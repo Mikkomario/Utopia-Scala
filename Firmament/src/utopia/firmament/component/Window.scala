@@ -2,7 +2,7 @@ package utopia.firmament.component
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
-import utopia.firmament.component.Window.minIconSize
+import utopia.firmament.component.Window.{locationAdjustment, minIconSize}
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.window.WindowContext
@@ -35,8 +35,10 @@ import utopia.genesis.image.Image
 import utopia.genesis.text.Font
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
@@ -65,6 +67,14 @@ object Window
 	  * By default, this value is zero and no warnings will be fired.
 	  */
 	var maxInitializationWaitDurationDefault: Duration = Duration.Zero
+	
+	/**
+	  * Stores here the location adjustment that must be applied for every call to setLocation and setBounds
+	  * in order to correct for Java and/or OS -caused errors.
+	  *
+	  * This value is set after the first window becomes visible, after which it is used among all created windows.
+	  */
+	private var locationAdjustment: Option[Vector2D] = None
 	
 	
 	// OTHER    ----------------------------
@@ -588,6 +598,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			// Starts key listening (if used)
 			KeyboardEvents ++= keyStateHandlerPointer.current
 			
+			// Schedules to set up the location adjustment -value, unless set already
+			if (locationAdjustment.isEmpty)
+				Delay(0.5.seconds) {
+					val testPosition = position + X(1)
+					position = testPosition
+					positionUpdatingFlag.onceNotSet {
+						locationAdjustment = Some((testPosition - position).toVector2D)
+					}
+				}
+			
 			// Quits event listening once this window closes
 			closeFuture.onComplete { _ =>
 				CommonMouseEvents.removeGenerator(mouseEventGenerator)
@@ -797,7 +817,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			startPositionUpdate(roundedNewPosition)
 			pendingAnchor.clear()
 			_positionPointer.value = newPosition
-			AwtEventThread.async { component.setLocation(roundedNewPosition.toAwtPoint) }
+			AwtEventThread.async {
+				component.setLocation((roundedNewPosition + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
+			}
 			queuePositionUpdateFinish(roundedNewPosition)
 		}
 	}
@@ -824,11 +846,39 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	override def bounds: Bounds = _boundsPointer.value
 	override def bounds_=(b: Bounds): Unit = {
+		// Applies the bounds as rounded
 		val roundBounds = b.round
-		if (roundBounds.size == roundSizePointer.value && roundBounds.position == roundPositionPointer.value) {
+		// Case: Size is preserved
+		if (roundBounds.size == roundSizePointer.value) {
 			_sizePointer.value = b.size
-			_positionPointer.value = b.position
+			// Case: Position is also preserved => No visual change
+			if (roundBounds.position == roundPositionPointer.value)
+				_positionPointer.value = b.position
+			// Case: Moving this window
+			else {
+				startPositionUpdate(roundBounds.position)
+				pendingAnchor.clear()
+				_positionPointer.value = b.position
+				AwtEventThread.async {
+					component.setLocation(
+						(roundBounds.position + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
+				}
+				queuePositionUpdateFinish(roundBounds.position)
+			}
 		}
+		// Case: Size changes while position is preserved
+		else if (roundBounds.position == roundPositionPointer.value) {
+			_positionPointer.value = b.position
+			startSizeUpdate(roundBounds.size)
+			_sizePointer.value = b.size
+			AwtEventThread.async {
+				val newDimensions = roundBounds.size.toDimension
+				component.setPreferredSize(newDimensions)
+				component.setSize(newDimensions)
+			}
+			queueSizeUpdateFinish(roundBounds.size)
+		}
+		// Case: Both size and position change
 		else {
 			startPositionUpdate(roundBounds.position)
 			startSizeUpdate(roundBounds.size)
@@ -837,9 +887,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			_positionPointer.value = b.position
 			AwtEventThread.async {
 				component.setPreferredSize(roundBounds.size.toDimension)
-				component.setBounds(roundBounds.toAwt)
+				component.setBounds((roundBounds + locationAdjustment.getOrElse(Vector2D.zero)).toAwt)
 			}
-			AwtEventThread.later {
+			Delay(0.2.seconds) {
 				finishPositionUpdate(roundBounds.position)
 				finishSizeUpdate(roundBounds.size)
 			}
@@ -1164,19 +1214,22 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}
 	
 	// WET WET
-	private def startPositionUpdate(newPosition: Point) =
+	private def startPositionUpdate(newPosition: Point) = {
 		pendingPositionUpdatesPointer.update { queued =>
 			if (queued.lastOption.contains(newPosition)) queued else queued :+ newPosition
 		}
-	private def finishPositionUpdate(newPosition: Point) =
+	}
+	private def finishPositionUpdate(newPosition: Point) = {
 		pendingPositionUpdatesPointer.update { updates =>
 			updates.findIndexOf(newPosition) match {
 				case Some(updateIndex) => updates.drop(updateIndex + 1)
 				case None => updates
 			}
 		}
+	}
+	
 	private def queuePositionUpdateFinish(newPosition: Point) =
-		AwtEventThread.later { finishPositionUpdate(newPosition) }
+		Delay(0.2.seconds) { finishPositionUpdate(newPosition) }
 	
 	private def startSizeUpdate(newSize: Size) =
 		pendingSizeUpdatesPointer.update { queued =>
@@ -1188,7 +1241,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			case None => updates
 		}
 	}
-	private def queueSizeUpdateFinish(newSize: Size) = AwtEventThread.later { finishSizeUpdate(newSize) }
+	private def queueSizeUpdateFinish(newSize: Size) = Delay(0.2.seconds) { finishSizeUpdate(newSize) }
 	
 	private def centerOn(component: java.awt.Component) = {
 		if (isNotFullScreen) {

@@ -51,4 +51,28 @@ object PointerViewStackTest extends App
 	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
 	start()
+	
+	/*
+	Delay(2.seconds) { AwtEventThread.async {
+		println(s"${ window.component.getInsets }")
+		println(window.bounds)
+		println(window.canvas.bounds)
+		println(window.component.getSize)
+		println(window.canvas.component.getSize)
+		println(window.component.getWidth)
+		println(window.component.getHeight)
+		
+		println(Toolkit.getDefaultToolkit.getScreenInsets(window.component.getGraphicsConfiguration))
+	} }*/
+	/*
+	window.positionPointer.addListener { e => println(s"P = ${ e.newValue }") }
+	KeyboardEvents += KeyStateListener.pressed.arrow(Down) { _ =>
+		println(s"\n${ window.component.getLocation } / ${ window.position }")
+		val newPos = window.position + Vector2D(20, -37)
+		println(s"Setting position to $newPos")
+		AwtEventThread.later { window.component.setLocation(newPos.toAwtPoint) }
+		Delay(0.5.seconds) {
+			println(s"${ window.component.getLocation } / ${ window.position }")
+		}
+	}*/
 }
