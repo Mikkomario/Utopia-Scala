@@ -1034,23 +1034,36 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			val newPosition = newBounds.position
 			val newSize = newBounds.size
 			
-			// Enters "updating bounds" -mode
-			startPositionUpdate(newPosition)
-			startSizeUpdate(newSize)
-			
-			// Prevents the user from making this window too small
-			if (resizeLogic.allowsUserResize)
-				AwtEventThread.async { component.setMinimumSize(stackSize.min.toDimension) }
-				
-			bounds = newBounds
-			
-			// Makes sure the "updating bounds" -mode finishes
-			AwtEventThread.later {
-				finishPositionUpdate(newPosition)
-				finishSizeUpdate(newSize)
+			// Case: No size or position change
+			if (newSize == roundSizePointer.value && newPosition == roundPositionPointer.value)
+				false
+			// Case: Bounds change
+			else {
+				// Case: Minimum size feature utilized => Checks whether window minimum size needs an update
+				if (resizeLogic.allowsUserResize) {
+					val newMinSize = stackSize.min.toDimension
+					// Case: No update required => Applies a standard bounds update
+					if (newMinSize.equals(component.getMinimumSize))
+						bounds = newBounds
+					// Case: Minimum size updates => Makes sure this window is in "bounds updating" -mode while doing so
+					else {
+						// Enters "updating bounds" -mode
+						startSizeUpdate(newSize)
+						
+						// Prevents the user from making this window too small
+						AwtEventThread.async { component.setMinimumSize(newMinSize) }
+						bounds = newBounds
+						
+						// Makes sure the "updating bounds" -mode finishes
+						AwtEventThread.later { finishSizeUpdate(newSize) }
+					}
+				}
+				// Case: Minimum size feature not applicable => Applies a standard bounds update
+				else
+					bounds = newBounds
+					
+				sizeAtStart != newBounds.size
 			}
-			
-			sizeAtStart != newBounds.size
 		}
 		// Case: Windowed mode => Either dictates the new size or just makes sure it's within limits
 		else {
@@ -1080,25 +1093,49 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 					}
 			}.round
 			
-			// Goes into "bounds updating" mode
-			startSizeUpdate(newSize)
-			
-			// Prevents the user from resizing too much
-			if (resizeLogic.allowsUserResize) {
-				AwtEventThread.async {
-					component.setMinimumSize(stackSize.min.toDimension)
-					val maxDimension = stackSize.max match {
+			// Case: No size change
+			if (newSize == roundSizePointer.value)
+				false
+			// Case: Size changes
+			else {
+				// Case: Possibly needs to modify minimum & maximum sizes
+				if (resizeLogic.allowsUserResize) {
+					val newMinSize = stackSize.min.toDimension
+					val newMaxDimension = stackSize.max match {
 						case Some(max) => max.toDimension
 						case None => null
 					}
-					component.setMaximumSize(maxDimension)
+					lazy val maxSizeIsEqual = {
+						if (newMaxDimension == null)
+							component.getMaximumSize == null
+						else
+							newMaxDimension.equals(component.getMaximumSize)
+					}
+					// Case: Minimum & maximum sizes won't change => Applies a standard size change
+					if (newMinSize.equals(component.getMinimumSize) && maxSizeIsEqual)
+						size = newSize
+					// Case: Minimum and/or maximum size changes => Applies a custom size change
+					else {
+						// Goes into "size updating" mode
+						startSizeUpdate(newSize)
+						
+						// Prevents the user from resizing too much
+						AwtEventThread.async {
+							component.setMinimumSize(newMinSize)
+							component.setMaximumSize(newMaxDimension)
+						}
+						size = newSize
+						
+						// Makes sure the bounds update finishes (in case window size didn't actually change)
+						queueSizeUpdateFinish(newSize)
+					}
 				}
+				// Case: Min & max size not applicable => Applies a standard size change
+				else
+					size = newSize
+					
+				sizeAtStart != newSize
 			}
-			size = newSize
-			// Makes sure the bounds update finishes (in case window size didn't actually change)
-			queueSizeUpdateFinish(newSize)
-			
-			sizeAtStart != newSize
 		}
 	}
 	
