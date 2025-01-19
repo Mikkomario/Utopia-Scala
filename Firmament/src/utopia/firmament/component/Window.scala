@@ -343,9 +343,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// Stores position and size in pointers, which are only updated on window events
 	private val _positionPointer = EventfulPointer(Point.origin)
+	private lazy val roundPositionPointer = _positionPointer.map { _.round }
 	// Pre-initializes the window size based on container size.
 	// Won't take into account the window insets. Actual size is initialized after pack() in the AWT event thread
 	private val _sizePointer = EventfulPointer(Size(container.getSize))
+	private lazy val roundSizePointer = _sizePointer.map { _.round }
 	
 	// Stores calculated anchor, which is used in repositioning after size changes
 	// This pointer is cleared after the anchor has been resolved / actuated
@@ -786,47 +788,60 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	override def position = _positionPointer.value
 	override def position_=(newPosition: Point) = {
-		if (newPosition != position) {
-			startPositionUpdate(newPosition)
+		val roundedNewPosition = newPosition.round
+		// Case: Assigning equal or an insignificantly different value => Only updates the precise position pointer
+		if (roundedNewPosition == roundPositionPointer.value)
+			_positionPointer.value = newPosition
+		// Case: Assigning a different value => Affects window position
+		else {
+			startPositionUpdate(roundedNewPosition)
 			pendingAnchor.clear()
 			_positionPointer.value = newPosition
-			AwtEventThread.async { component.setLocation(newPosition.toAwtPoint) }
-			queuePositionUpdateFinish(newPosition)
+			AwtEventThread.async { component.setLocation(roundedNewPosition.toAwtPoint) }
+			queuePositionUpdateFinish(roundedNewPosition)
 		}
 	}
 	
 	override def size = _sizePointer.value
 	override def size_=(newSize: Size) = {
-		if (newSize != size) {
-			startSizeUpdate(newSize)
+		val roundedNewSize = newSize.round
+		if (roundedNewSize == roundSizePointer.value)
+			_sizePointer.value = newSize
+		else {
+			startSizeUpdate(roundedNewSize)
 			// Remembers the anchor position for repositioning
 			if (isFullyVisible)
 				pendingAnchor.setOne(absoluteAnchorPosition)
 			_sizePointer.value = newSize
-			val dims = newSize.toDimension
+			val dims = roundedNewSize.toDimension
 			AwtEventThread.async {
 				component.setPreferredSize(dims)
 				component.setSize(dims)
 			}
-			queueSizeUpdateFinish(newSize)
+			queueSizeUpdateFinish(roundedNewSize)
 		}
 	}
 	
 	override def bounds: Bounds = _boundsPointer.value
 	override def bounds_=(b: Bounds): Unit = {
-		if (b != bounds) {
-			startPositionUpdate(b.position)
-			startSizeUpdate(b.size)
+		val roundBounds = b.round
+		if (roundBounds.size == roundSizePointer.value && roundBounds.position == roundPositionPointer.value) {
+			_sizePointer.value = b.size
+			_positionPointer.value = b.position
+		}
+		else {
+			startPositionUpdate(roundBounds.position)
+			startSizeUpdate(roundBounds.size)
 			pendingAnchor.clear()
 			_sizePointer.value = b.size
 			_positionPointer.value = b.position
 			AwtEventThread.async {
-				component.setPreferredSize(b.size.toDimension)
-				component.setBounds(b.toAwt)
+				component.setPreferredSize(roundBounds.size.toDimension)
+				component.setBounds(roundBounds.toAwt)
 			}
 			AwtEventThread.later {
-				finishPositionUpdate(b.position)
-				finishSizeUpdate(b.size)
+				finishPositionUpdate(roundBounds.position)
+				finishSizeUpdate(roundBounds.size)
 			}
 		}
 	}
@@ -1010,9 +1025,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * @return Whether the size of this window changes as a result of this function.
 	  *         The result might not be immediate (it is performed on the AWT event thread)
 	  */
-	// TODO: inform the component of the incoming resize, so that it can (for example) prepare painting
 	def optimizeBounds(dictateSize: Boolean = resizeLogic.allowsProgramResize) = {
-		val sizeAtStart = size
+		val sizeAtStart = roundSizePointer.value
 		// Case: Full screen => Sets optimal size and moves to top-left
 		if (isFullScreen) {
 			val newBounds = Bounds(if (respectScreenInsets) screenInsets.toPoint else Point.origin, stackSize.optimal)
@@ -1038,7 +1052,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			
 			sizeAtStart != newBounds.size
 		}
-		// Case: Windowed mode => Either dictates the new size or just makes sure its within limits
+		// Case: Windowed mode => Either dictates the new size or just makes sure it's within limits
 		else {
 			// Updates the size of this window
 			val newSize = {
