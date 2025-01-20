@@ -35,7 +35,7 @@ object ViewStackTest extends App
 		// Framing
 		framingF.build(ViewStack) { stackF =>
 			// Stack
-			stackF.mapContext { _.withTextExpandingToRight }.row.build(TextLabel) { labelFactories =>
+			stackF.mapContext { _.withTextExpandingToRight }.build(TextLabel) { labelFactories =>
 				// 1-9 Labels
 				(1 to 9).map { i =>
 					labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->

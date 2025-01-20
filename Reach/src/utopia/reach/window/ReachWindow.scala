@@ -313,6 +313,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	}
 	
 	// Creates an appropriate revalidation implementation
+	// TODO: Possibly manage a flag that is set to true while revalidating, so that the canvas may delay painting
 	private def revalidate(window: => Window, canvas: => Stackable, style: RevalidationStyle)
 	                      (implicit exc: ExecutionContext, log: Logger): () => Unit =
 	{
@@ -353,7 +354,6 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		// Resets cached stack sizes in order to make sure the sizes are set correctly
 		canvas.resetCachedSize()
 		window.resetCachedSize()
-		// TODO: Size optimization may fail sometimes, as the window has a minimum size (low priority bug)
 		val windowSizeChanged = AwtEventThread.blocking {
 			// Optimizes window bounds based on up-to-date sizes
 			window.optimizeBounds()
@@ -361,6 +361,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		// Updates the component layout form top to bottom (only for visible windows)
 		//      The update is skipped if the window size was altered,
 		//      because Window size changes automatically trigger layout updates
+		// TODO: Known bug: If the OS or something rejects the size update, layouts won't get updated
 		if (!windowSizeChanged && window.isFullyVisible) {
 			window.updateLayout()
 			canvas.updateLayout()

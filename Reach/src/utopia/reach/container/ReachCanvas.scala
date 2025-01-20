@@ -16,7 +16,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
-import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
 import utopia.flow.view.mutable.{Resettable, Switch}
@@ -338,24 +338,14 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	  * assuming that this canvas is being notified of said updates.
 	  */
 	private val windowUpdatingFlag: Flag = windowUpdatingFlagPointer.flatMap(Identity)
-	private val windowNotUpdatingFlag = !windowUpdatingFlag
-	/**
-	  * Set to true whenever the position of the wrapped component is being updated.
-	  * Managed manually.
-	  */
-	private val componentPositionUpdatingFlag = ResettableFlag()
-	/**
-	  * Set to true whenever the size of the wrapped component is being updated.
-	  * Managed manually.
-	  */
-	private val componentSizeUpdatingFlag = ResettableFlag()
-	private val drawingShouldBeDelayedFlag = windowUpdatingFlag ||
-		(componentPositionUpdatingFlag || componentSizeUpdatingFlag)
+	
+	private val revalidatingFlag = VolatileFlag()
 	
 	override val focusManager = new ReachFocusManager(CustomDrawPanel)
 	private val painterPointer = contentPointer.map { _.map { c =>
 		RealTimeReachPaintManager(c, Some(backgroundPointer.value).filter { _.alpha > 0 },
-			delayPaintingWhile = drawingShouldBeDelayedFlag, disableDoubleBuffering = !enableAwtDoubleBuffering)
+			delayPaintingWhile = windowUpdatingFlag || revalidatingFlag,
+			disableDoubleBuffering = !enableAwtDoubleBuffering)
 	} }
 	override val cursorManager = cursors.map { new ReachCursorManager(_) }
 	private val cursorSwapper = cursorManager.map { new CursorSwapper(_) }
@@ -384,19 +374,15 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	}
 	
 	// When bounds get updated, updates the underlying component, also
-	_positionPointer.addListenerWhile(windowNotUpdatingFlag) { e =>
-		componentPositionUpdatingFlag.set()
+	_positionPointer.addListener { e =>
 		AwtEventThread.async {
 			component.setLocation(e.newValue.toAwtPoint)
-			componentPositionUpdatingFlag.reset()
 		}
 		Continue
 	}
-	_sizePointer.addListenerWhile(windowNotUpdatingFlag) { e =>
-		componentSizeUpdatingFlag.set()
+	_sizePointer.addListener { e =>
 		AwtEventThread.async {
 			component.setSize(e.newValue.toDimension)
-			componentSizeUpdatingFlag.reset()
 		}
 	}
 	
@@ -414,7 +400,6 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		// makes sure to update immediate content layout and repaint this component
 		if (event.newValue) {
 			currentPainter.foreach { _.resetBuffer() }
-			// TODO: Do we need to reset every stack size or just the top level?
 			currentContent.foreach { _.resetEveryCachedStackSize() }
 			layoutUpdateQueue.clear()
 			updateWholeLayout(size)
@@ -502,6 +487,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	override def resetCachedSize() = currentContent.foreach { _.resetCachedSize() }
 	
 	override def updateLayout(): Unit = {
+		revalidatingFlag.reset()
 		// Updates content size and layout
 		updateLayout(layoutUpdateQueue.popAll().toSet, size)
 		// Performs the queued tasks
@@ -553,7 +539,10 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	  * Requests this canvas' content hierarchy to be revalidated.
 	  * Should cause resetCachedStackSize() and updateLayout() to be called, but not necessarily immediately.
 	  */
-	def revalidate() = revalidateImplementation(this)
+	def revalidate() = {
+		revalidatingFlag.set()
+		revalidateImplementation(this)
+	}
 	
 	/**
 	  * Prepares this canvas for an upcoming window size update
@@ -566,7 +555,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 		// Updates canvas size to match the future window size
 		// (Note: the actual AWT component bounds are not updated until window bounds update finishes)
 		if (size != predictedWindowSize) {
-			componentSizeUpdatingFlag.set()
+			// componentSizeUpdatingFlag.set()
 			size = predictedWindowSize
 		}
 		// Updates component layout and prepares painting

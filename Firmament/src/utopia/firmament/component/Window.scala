@@ -12,7 +12,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
@@ -813,15 +813,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		if (roundedNewPosition == roundPositionPointer.value)
 			_positionPointer.value = newPosition
 		// Case: Assigning a different value => Affects window position
-		else {
-			startPositionUpdate(roundedNewPosition)
-			pendingAnchor.clear()
-			_positionPointer.value = newPosition
-			AwtEventThread.async {
-				component.setLocation((roundedNewPosition + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
-			}
-			queuePositionUpdateFinish(roundedNewPosition)
-		}
+		else
+			_setPosition(newPosition, roundedNewPosition)
 	}
 	
 	override def size = _sizePointer.value
@@ -829,19 +822,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		val roundedNewSize = newSize.round
 		if (roundedNewSize == roundSizePointer.value)
 			_sizePointer.value = newSize
-		else {
-			startSizeUpdate(roundedNewSize)
-			// Remembers the anchor position for repositioning
-			if (isFullyVisible)
-				pendingAnchor.setOne(absoluteAnchorPosition)
-			_sizePointer.value = newSize
-			val dims = roundedNewSize.toDimension
-			AwtEventThread.async {
-				component.setPreferredSize(dims)
-				component.setSize(dims)
-			}
-			queueSizeUpdateFinish(roundedNewSize)
-		}
+		else
+			_setSize(newSize, roundedNewSize)
 	}
 	
 	override def bounds: Bounds = _boundsPointer.value
@@ -855,28 +837,13 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			if (roundBounds.position == roundPositionPointer.value)
 				_positionPointer.value = b.position
 			// Case: Moving this window
-			else {
-				startPositionUpdate(roundBounds.position)
-				pendingAnchor.clear()
-				_positionPointer.value = b.position
-				AwtEventThread.async {
-					component.setLocation(
-						(roundBounds.position + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
-				}
-				queuePositionUpdateFinish(roundBounds.position)
-			}
+			else
+				_setPosition(b.position, roundBounds.position)
 		}
 		// Case: Size changes while position is preserved
 		else if (roundBounds.position == roundPositionPointer.value) {
 			_positionPointer.value = b.position
-			startSizeUpdate(roundBounds.size)
-			_sizePointer.value = b.size
-			AwtEventThread.async {
-				val newDimensions = roundBounds.size.toDimension
-				component.setPreferredSize(newDimensions)
-				component.setSize(newDimensions)
-			}
-			queueSizeUpdateFinish(roundBounds.size)
+			_setSize(b.size, roundBounds.size)
 		}
 		// Case: Both size and position change
 		else {
@@ -1165,20 +1132,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 					if (newMinSize.equals(component.getMinimumSize) && maxSizeIsEqual)
 						size = newSize
 					// Case: Minimum and/or maximum size changes => Applies a custom size change
-					else {
-						// Goes into "size updating" mode
-						startSizeUpdate(newSize)
-						
-						// Prevents the user from resizing too much
-						AwtEventThread.async {
-							component.setMinimumSize(newMinSize)
-							component.setMaximumSize(newMaxDimension)
-						}
-						size = newSize
-						
-						// Makes sure the bounds update finishes (in case window size didn't actually change)
-						queueSizeUpdateFinish(newSize)
-					}
+					else
+						_setSize(newSize, newSize, Some(Pair(newMinSize, newMaxDimension)))
 				}
 				// Case: Min & max size not applicable => Applies a standard size change
 				else
@@ -1211,6 +1166,38 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				component.toFront()
 				component.repaint()
 			}
+	}
+	
+	private def _setPosition(newPosition: Point, roundedNewPosition: Point) = {
+		startPositionUpdate(roundedNewPosition)
+		pendingAnchor.clear()
+		_positionPointer.value = newPosition
+		AwtEventThread.async {
+			component.setLocation((roundedNewPosition + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
+		}
+		queuePositionUpdateFinish(roundedNewPosition)
+	}
+	private def _setSize(newSize: Size, roundedNewSize: Size, minAndMaxSize: Option[Pair[java.awt.Dimension]] = None) =
+	{
+		// Remembers the anchor position for repositioning
+		if (isFullyVisible) {
+			val anchor = absoluteAnchorPosition
+			pendingAnchor.setOne(anchor)
+		}
+		startSizeUpdate(roundedNewSize)
+		
+		_sizePointer.value = newSize
+		
+		val dims = roundedNewSize.toDimension
+		AwtEventThread.async {
+			minAndMaxSize.foreach { minAndMax =>
+				component.setMinimumSize(minAndMax.first)
+				component.setMaximumSize(minAndMax.second)
+			}
+			component.setPreferredSize(dims)
+			component.setSize(dims)
+		}
+		queueSizeUpdateFinish(roundedNewSize)
 	}
 	
 	// WET WET
@@ -1320,16 +1307,19 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				updateLayout()
 				content.updateLayout()
 			}
+			
+			// Clears the pending update that (may have) caused this change
+			finishSizeUpdate(newSize)
+			
 			// Repositions based on anchoring, if queued
 			pendingAnchor.pop().foreach { anchor =>
 				val newAnchor = absoluteAnchorPosition
 				// Moves this window so that the anchors overlap.
 				// Makes sure screen borders are respected, also.
-				positionWithinScreen(position - (newAnchor - anchor))
+				val adjustment = newAnchor - anchor
+				if (adjustment.nonZero)
+					positionWithinScreen(position - adjustment)
 			}
-			
-			// Clears the pending update that (may have) caused this change
-			finishSizeUpdate(newSize)
 		}
 	}
 	private object WindowStateListener extends WindowAdapter

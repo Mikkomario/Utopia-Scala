@@ -7,7 +7,8 @@ import utopia.firmament.localization.{Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.WindowResizePolicy.UserAndProgram
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.range.{NumericSpan, Span}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
@@ -19,6 +20,7 @@ import utopia.paradigm.generic.ParadigmDataType
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.transform.Adjustment
+import utopia.reach.container.RevalidationStyle.Delayed
 import utopia.reach.context.{ReachWindowContext, StaticReachContentWindowContext}
 
 import scala.concurrent.ExecutionContext
@@ -60,6 +62,7 @@ object ReachTestContext
 	implicit val windowContext: StaticReachContentWindowContext =
 		ReachWindowContext(WindowContext(actorHandler), colors.primary.light)
 			.withResizeLogic(UserAndProgram).withCursors(TestCursors.cursors)
+			.withRevalidationStyle(Delayed(Span(0.05.seconds, 0.15.seconds)))
 			.withContentContext(baseContext)
 	
 	private val actionLoop = new ActionLoop(actorHandler, NumericSpan(5, 60).mapTo(Fps.apply))

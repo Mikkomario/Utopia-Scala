@@ -38,7 +38,7 @@ object ReachTextFieldTest extends App
 	import ReachTestContext._
 	
 	// Creates the components
-	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
+	val window = ReachWindow.contentContextual.borderless.using(Framing) { (_, framingF) =>
 		// Framing
 		framingF.build(Stack) { stackF =>
 			// Stack (Y)
@@ -83,13 +83,8 @@ object ReachTextFieldTest extends App
 	// window.canvas.focusManager.
 	
 	// Displays the window
-	window.boundsPointer.addContinuousListenerAndSimulateEvent(Bounds.zero) { e =>
-		println(s"${Now.toLocalTime}: ${e.newValue}")
-	}
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
 	start()
-	
-	Delay(3.seconds) { window.content.debugPrintHierarchy() }
 }
