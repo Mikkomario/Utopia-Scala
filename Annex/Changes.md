@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.9.1 (in development)
+## v1.9.1 - 23.01.2025
 This small update introduces new customization / constructors for **PullSchrodinger**s.
 ### New methods
 - **PullSchrodinger**

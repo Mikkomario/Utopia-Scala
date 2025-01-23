@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.2.2 (in development)
+## v2.2.2 - 23.01.2025
 This update merely adds support for the latest **Flow**, **Genesis** and **Firmament** versions.
 
 ## v2.2.1 - 04.10.2024

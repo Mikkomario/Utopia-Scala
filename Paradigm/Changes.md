@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.7.1 (in development)
+## v1.7.1 - 23.01.2025
 This update focuses on the **Distance** class, adding 2D vector representations with real life distance units.
 ### Bugfixes
 - Attempting to calculate a value for a **Change** with duration of zero would previously cause a 

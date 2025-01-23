@@ -1,6 +1,6 @@
 # Utopia Genesis - List of Changes
 
-## v4.2 (in development)
+## v4.2 - 23.01.2025
 This update largely modifies how the **Image** interface is implemented. 
 However, breaking changes are relatively few, as the outer interface remains mostly the same (although extended).
 

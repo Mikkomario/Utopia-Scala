@@ -1,6 +1,6 @@
 # Utopia Courier - List of Changes
 
-## v1.1.3 (in development)
+## v1.1.3 - 23.01.2025
 This small update fixes some more rarely occurring bugs / issues.
 ### Bugfixes
 - Added support for nested messages

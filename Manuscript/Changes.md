@@ -1,6 +1,6 @@
 # Utopia Manuscript - List of changes
 
-## v1.0.2 (in development)
+## v1.0.2 - 23.01.2025
 A small update fixing a bug in sheet-targeting.
 ### Bugfixes
 - **SheetWithNameResembling** **SheetTarget** would previously yield non-matching results - fixed

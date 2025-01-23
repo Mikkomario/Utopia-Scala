@@ -1,6 +1,6 @@
 # Utopia Echo - List of Changes
 
-## v1.2 (in development)
+## v1.2 - 23.01.2025
 This update adds saving & loading to the **Chat** interface, improving it in other ways as well. 
 Besides the **Chat** changes, this update irons out some bugs & missing interfaces for (streamed) Ollama response parsing.
 ### Breaking changes

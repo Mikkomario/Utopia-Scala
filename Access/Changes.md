@@ -1,6 +1,6 @@
 # Utopia Access - List of Changes
 
-## v1.5.3 (in development)
+## v1.5.3 - 23.01.2025
 This small update makes calling `Status.setup()` optional. The "failures" to do so will now be handled automatically, 
 instead of throwing exceptions.
 ### New methods

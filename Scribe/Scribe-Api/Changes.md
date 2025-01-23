@@ -1,6 +1,6 @@
 # Utopia Scribe Api - list of changes
 
-## v1.0.4 (in development)
+## v1.0.4 - 23.01.2025
 This update merely adds support for the latest **Flow** version.
 
 ## v1.0.3 - 04.10.2024

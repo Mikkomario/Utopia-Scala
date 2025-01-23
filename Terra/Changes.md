@@ -1,6 +1,6 @@
 # Utopia Terra - list of changes
 
-## v1.2.1 (in development)
+## v1.2.1 - 23.01.2025
 This update adds functions for hidden height (i.e. physical horizon) calculations, (assuming a perfectly spherical Earth).
 ### New features
 - Added `.calculateHiddenHeight(...)` function to **GlobeMath**, 

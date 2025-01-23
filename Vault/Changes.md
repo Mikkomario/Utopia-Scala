@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.20.1 (in development)
+## v1.20.1 - 23.01.2025
 This update adds:
 - A number of important bugfixes
 - Support for queries which pull information from a single additional column

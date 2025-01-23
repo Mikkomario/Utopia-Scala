@@ -1,6 +1,6 @@
 # Utopia Reach - List of Changes
 
-## v1.5 (in development)
+## v1.5 - 23.01.2025
 This update focuses on the following main areas:
 - Applying variable context classes from **Firmament v1.4** update
 - Rewriting **ViewStack** and **(CachingView)Swapper** components

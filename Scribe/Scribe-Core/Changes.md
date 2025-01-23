@@ -1,6 +1,6 @@
 # Utopia Scribe Core - list of changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 23.01.2025
 This update merely adds support for the latest **Flow** version.
 
 ## v1.1 - 04.10.2024

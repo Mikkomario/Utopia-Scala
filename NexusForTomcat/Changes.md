@@ -1,6 +1,6 @@
 # Utopia Nexus for Tomcat - List of changes
 
-## v1.3.1 (in development)
+## v1.3.1 - 23.01.2025
 Support for latest Flow
 
 ## v1.3 - 04.10.2024

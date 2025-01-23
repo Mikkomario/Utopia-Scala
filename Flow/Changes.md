@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.5.1 (in development)
+## v2.5.1 - 23.01.2025
 This update focuses mostly on utility additions. These updates are divided over several areas:
 - New pointer classes for pointer-splitting, lazily initialized pointers and lockable volatile (i.e. thread-safe) pointers
 - Refactored time unit conversion logic / interface
