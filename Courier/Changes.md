@@ -1,6 +1,7 @@
 # Utopia Courier - List of Changes
 
 ## v1.1.3 (in development)
+This small update fixes some more rarely occurring bugs / issues.
 ### Bugfixes
 - Added support for nested messages
 - Added handling of `null` message subject values

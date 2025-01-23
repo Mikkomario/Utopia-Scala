@@ -1,6 +1,8 @@
 # Utopia Access - List of Changes
 
 ## v1.5.3 (in development)
+This small update makes calling `Status.setup()` optional. The "failures" to do so will now be handled automatically, 
+instead of throwing exceptions.
 ### New methods
 - **Status**
   - Added `.apply(Int)` that finds or constructs a **Status** instance

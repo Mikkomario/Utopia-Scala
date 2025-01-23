@@ -1,6 +1,7 @@
 # Utopia Ambassador - List of Changes
 
 ## v2.3 (in development)
+A minor (although breaking) update reflecting changes in **Disciple**.
 ### Breaking changes
 - Because of changes in **Disciple**, **AcquireTokens** now requires access to an implicit **Logger**
 

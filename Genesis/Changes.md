@@ -1,6 +1,10 @@
 # Utopia Genesis - List of Changes
 
 ## v4.2 (in development)
+This update largely modifies how the **Image** interface is implemented. 
+However, breaking changes are relatively few, as the outer interface remains mostly the same (although extended).
+
+Besides **Image** interface changes, this update adds more robust logging to **Handler**s.
 ### Breaking changes
 - Replaced **ImageLike** implementation. The previous implementation is now named **ConcreteImageView**.
 - The previous **Image** implementation is now named **ConcreteImage**

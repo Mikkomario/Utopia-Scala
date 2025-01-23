@@ -1,6 +1,10 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.1 (in development)
+This update adds:
+- A number of important bugfixes
+- Support for queries which pull information from a single additional column
+- Better column length rules -import support
 ### Bugfixes
 - Previously column length altering logic would fail with columns that have default values
 - Automatically generated joins from a **ReferencePoint** may now include a join from the specified point, 

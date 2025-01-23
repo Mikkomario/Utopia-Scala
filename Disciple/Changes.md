@@ -1,6 +1,8 @@
 # Utopia Disciple - List of Changes
 
 ## v1.8 (in development)
+This update makes response parsing more reliable, handling better edge cases such as empty responses and 
+certain failures thrown during the response body -accessing process.
 ### Breaking changes
 - Because response body-accessing failures are now logged, **Gateway** functions now require an implicit **Logger**
 ### Other changes

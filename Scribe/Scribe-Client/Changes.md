@@ -1,7 +1,7 @@
 # Utopia Scribe Client - list of changes
 
 ## v1.0.4 (in development)
-Responding to changes in Flow v2.5.1
+This update merely reflects some changes introduced in **Flow v2.5.1**.
 ### Other changes
 - Fixed a deprecation warning, reflecting **Flow** changes
 

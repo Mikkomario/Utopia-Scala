@@ -1,6 +1,8 @@
 # Utopia Logos - List of Changes
 
 ## v0.4 (in development)
+This update changes how words are stored in the database, making this a rather breaking update when compared to v0.3. 
+Besides changing this storage logic, this update adds some previously missing interfaces / features.
 ### Breaking changes
 - Words are now stored in a standardized format. 
   **WordPlacement**'s `displayStyle` is then used to properly stylize these words in each use-case.

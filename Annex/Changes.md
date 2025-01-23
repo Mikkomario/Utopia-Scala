@@ -1,7 +1,7 @@
 # Utopia Annex - List of Changes
 
 ## v1.9.1 (in development)
-Supports changes made to Disciple
+This small update introduces new customization / constructors for **PullSchrodinger**s.
 ### New methods
 - **PullSchrodinger**
   - Added new `.resolved(...)` and `.failed(...)` variants which support local values

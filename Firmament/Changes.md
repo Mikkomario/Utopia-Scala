@@ -1,6 +1,18 @@
 # Utopia Firmament - List of Changes
 
 ## v1.4 (in development)
+This major update overhauls the context class implementations, adding new variable context classes that replace 
+the need for using context pointers. This allows for much cleaner and more optimized code 
+(as pointer mapping is optimized in the background).
+
+Do note that because of the size of this change, a lot of build errors will occur. 
+For the most part, these may be resolved by replacing the static context use cases with the static context variant
+(e.g. instead of TextContext use StaticTextContext). In places where you used context pointers (i.e. Changing), 
+you will need to replace the pointers with instances of variable context classes (e.g. VariableTextContext).
+
+Besides the context class overhaul, this update introduces some smaller bugfixes. 
+This update also accounts for the **Image** class changes in **Genesis**, slightly modifying the 
+**ImageDrawer** and **ImageComponent** interfaces.
 ### Breaking changes
 - All context classes, except for **WindowContext** now have a static and a variable version
   - Variable context classes replace use cases where context pointers were used, previously

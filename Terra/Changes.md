@@ -1,6 +1,7 @@
 # Utopia Terra - list of changes
 
 ## v1.2.1 (in development)
+This update adds functions for hidden height (i.e. physical horizon) calculations, (assuming a perfectly spherical Earth).
 ### New features
 - Added `.calculateHiddenHeight(...)` function to **GlobeMath**, 
   which calculates how much of a viewed object should be hidden behind a physical horizon.

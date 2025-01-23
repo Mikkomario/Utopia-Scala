@@ -1,13 +1,15 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.7.1 (in development)
-Working on distance vectors
+This update focuses on the **Distance** class, adding 2D vector representations with real life distance units.
 ### Bugfixes
 - Attempting to calculate a value for a **Change** with duration of zero would previously cause a 
   **StackOverFlowException** in situations where the **Change**'s `.toString` involved such value calculations.
   - For example, such a case would be with **LinearVelocity**
 - Very long parallel vectors would previously yield false with `.isParallelWith`
 ### New features
+- Added **DistanceVector**, **RealPoint** and **RealSize** classes that may be used as 2D vector implementations in 
+  situations involving real world scales (such as printable documents, for example).
 - Added **Dtp** - a typographic point - as a new **DistanceUnit**
 - Added **DistanceIsNumericIn** for situations where you need **Numeric** support with **Distance**
 - Added **FromVariableShadeFactory**

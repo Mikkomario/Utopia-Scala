@@ -1,10 +1,18 @@
 # Utopia Flow - List of Changes
 
 ## v2.5.1 (in development)
+This update focuses mostly on utility additions. These updates are divided over several areas:
+- New pointer classes for pointer-splitting, lazily initialized pointers and lockable volatile (i.e. thread-safe) pointers
+- Refactored time unit conversion logic / interface
+- Bugfixes to certain file operations (`hasSameContentAs(...)` and `allChildrenIterator`)
+- Various new collection functions
+- Various new functions for **Try** classes
+- Other utility classes / functions (see details below)
 ### Deprecations
 - Moved **AsyncCollectionExtensions** features to **CollectionExtensions** 
-  because some compilers couldn't handle cases where both were imported
-- In TryCatch, renamed `.logToOption` to `.log` and `.logToOptionWithMessage(String)` to `.logWithMessage(String)`
+  because some compilers couldn't handle cases where both were imported.
+  - **AsyncCollectionExtensions** is still available, but deprecated for removal.
+- In **TryCatch**, renamed `.logToOption` to `.log` and `.logToOptionWithMessage(String)` to `.logWithMessage(String)`
 - Renamed **SignedOrZero**'s `.minZero` to `.atLeastZero` and `.maxZero` to `.atMostZero`
 - Renamed **DateRange**'s `.period` to `.length`
 ### Bugfixes
@@ -50,7 +58,7 @@
   - Modified conversions between different duration types
   - Added better handling for Inf & MinusInf duration values
   - Rewrote number to duration conversions
-- `.allChildrenIterator` in Path (via **FileExtensions**) now returns the paths from top to bottom
+- `.allChildrenIterator` in **Path** (via **FileExtensions**) now returns the paths from top to bottom
 - **Days** now extends **HasSign**
 - Minor refactoring in **Duration**`.finite`
 - Minor refactoring in `ModelLike.apply(IterableOnce)`
