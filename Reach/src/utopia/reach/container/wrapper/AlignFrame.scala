@@ -26,12 +26,23 @@ trait AlignFrameFactoryLike[+Repr]
 	  * @return The alignment used in this factory
 	  */
 	def alignment: Alignment
+	/**
+	  * @return Whether the component should be scaled to fill the non-aligned sides.
+	  */
+	def scalesToFill: Boolean
+	
+	/**
+	  * @return Copy of this factory which scales the component to fill the non-aligned sides.
+	  *         E.g. When aligning to top, this would
+	  *         scale the component to fill the horizontal space of this container.
+	  */
+	def scalingToFillSides: Repr
 	
 	
 	// IMPLEMENTED  ---------------------
 	
 	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[AlignFrame, C, R] = {
-		val frame = new AlignFrame(parentHierarchy, content.component, alignment, customDrawers)
+		val frame = new AlignFrame(parentHierarchy, content.component, alignment, customDrawers, scalesToFill)
 		content attachTo frame
 	}
 }
@@ -73,11 +84,13 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 }
 
 case class InitializedAlignFrameFactory(parentHierarchy: ComponentHierarchy, alignment: Alignment,
-                                        customDrawers: Seq[CustomDrawer] = Empty)
+                                        customDrawers: Seq[CustomDrawer] = Empty, scalesToFill: Boolean = false)
 	extends AlignFrameFactoryLike[InitializedAlignFrameFactory]
 		with NonContextualWrapperContainerFactory[AlignFrame, ReachComponentLike]
 		with FromGenericContextFactory[Any, InitializedContextualAlignFrameFactory]
 {
+	override def scalingToFillSides: InitializedAlignFrameFactory = copy(scalesToFill = true)
+	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedAlignFrameFactory =
 		copy(customDrawers = drawers)
 	
@@ -107,11 +120,13 @@ case class ContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, c
 }
 
 case class InitializedContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, context: N,
-                                                     alignment: Alignment,
-                                                     customDrawers: Seq[CustomDrawer] = Empty)
+                                                     alignment: Alignment, customDrawers: Seq[CustomDrawer] = Empty,
+                                                     scalesToFill: Boolean = false)
 	extends AlignFrameFactoryLike[InitializedContextualAlignFrameFactory[N]]
 		with ContextualWrapperContainerFactory[N, Any, AlignFrame, ReachComponentLike, InitializedContextualAlignFrameFactory]
 {
+	override def scalingToFillSides: InitializedContextualAlignFrameFactory[N] = copy(scalesToFill = true)
+	
 	override def withContext[N2 <: Any](newContext: N2): InitializedContextualAlignFrameFactory[N2] =
 		copy(context = newContext)
 	
@@ -125,5 +140,6 @@ case class InitializedContextualAlignFrameFactory[N](parentHierarchy: ComponentH
  * @since 30.1.2021, v0.1
  */
 class AlignFrame(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
-                 override val alignment: Alignment, override val customDrawers: Seq[CustomDrawer] = Empty)
+                 override val alignment: Alignment, override val customDrawers: Seq[CustomDrawer] = Empty,
+                 override val scaleToFill: Boolean = false)
 	extends CustomDrawReachComponent with AlignFrameLike[ReachComponentLike]

@@ -78,10 +78,11 @@ class AlignFrame[C <: AwtStackable](initialComponent: C, initialAlignment: Align
 		}
 	}
 	
+	// Never scaled to fill, matching older functionality
+	override def scaleToFill: Boolean = false
+	
 	override protected def container = panel
-	
 	override def component = panel.component
-	
 	override def drawable = panel
 	
 	override protected def _set(content: C): Unit = {

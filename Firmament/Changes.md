@@ -1,5 +1,9 @@
 # Utopia Firmament - List of Changes
 
+## v1.4.1 (in development)
+### Other changes
+- Added content scaling support to **AlignFrameLike**
+
 ## v1.4 - 23.01.2025
 This major update overhauls the context class implementations, adding new variable context classes that replace 
 the need for using context pointers. This allows for much cleaner and more optimized code 

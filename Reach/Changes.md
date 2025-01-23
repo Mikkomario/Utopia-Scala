@@ -1,5 +1,10 @@
 # Utopia Reach - List of Changes
 
+## v1.5.1 (in development)
+### Other changes
+- **AlignFrame** now supports content-scaling
+- Buttons are now highlighted more (in terms of color) when in focus and when activated
+
 ## v1.5 - 23.01.2025
 This update focuses on the following main areas:
 - Applying variable context classes from **Firmament v1.4** update

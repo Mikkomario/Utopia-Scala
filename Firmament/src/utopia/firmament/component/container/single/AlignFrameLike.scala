@@ -18,6 +18,10 @@ trait AlignFrameLike[+C <: Stackable] extends CachingStackable with SingleContai
 	 * @return Alignment used in content alignment
 	 */
 	def alignment: Alignment
+	/**
+	  * @return Whether the wrapped component should be scaled to fill this container's space along the non-aligned axis.
+	  */
+	def scaleToFill: Boolean
 	
 	
 	// IMPLEMENTED	------------------
@@ -26,8 +30,21 @@ trait AlignFrameLike[+C <: Stackable] extends CachingStackable with SingleContai
 	override def updateLayout() = {
 		// Calculates new size
 		val mySize = size
-		val targetSize = content.stackSize.optimal.croppedToFitWithin(mySize)
-		
+		val optimalContentSize = content.stackSize.optimal
+		val alignment = this.alignment
+		val targetSize = {
+			// Case: Scales to fill the "breadth" of this container
+			if (scaleToFill)
+				mySize.mapComponents { myLength =>
+					if (alignment(myLength.axis).movesItems)
+						optimalContentSize(myLength.axis) min myLength.length
+					else
+						myLength.length
+				}
+			// Case: Component is not scaled beyond its optimal size
+			else
+				optimalContentSize.croppedToFitWithin(mySize)
+		}
 		// Calculates new position
 		val targetPosition = alignment.position(targetSize, mySize)
 		
@@ -41,13 +58,12 @@ trait AlignFrameLike[+C <: Stackable] extends CachingStackable with SingleContai
 		val align = alignment
 		if (align == Center)
 			content.stackSize.withNoMax.expanding
-		else {
+		else
 			content.stackSize.map { (axis, length) =>
 				if (align(axis).movesItems)
 					length.noMax.expanding
 				else
 					length
 			}
-		}
 	}
 }

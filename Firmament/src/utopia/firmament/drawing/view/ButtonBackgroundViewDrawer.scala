@@ -23,7 +23,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
   */
 case class ButtonBackgroundViewDrawer(baseColorPointer: Changing[Color], statePointer: Changing[GuiElementStatus],
                                       borderWidthPointer: Changing[Double] = Fixed(0.0),
-                                      colorChangeIntensity: Double = 1.0,
+                                      colorChangeIntensity: Double = 1.5,
                                       borderColorIntensity: Double = 1.0, override val drawLevel: DrawLevel = Background)
 	extends BorderDrawerLike
 {
