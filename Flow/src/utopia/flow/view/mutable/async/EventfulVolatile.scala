@@ -82,4 +82,23 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 			Single(() => fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log })
 		}
 	}
+	
+	override def once[U](condition: A => Boolean)(f: A => U) = {
+		// Locks this pointer while testing for immediate trigger
+		val immediateTrigger = lockWhile { value =>
+			if (condition(value))
+				Some(value)
+			else {
+				onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
+				None
+			}
+		}
+		// The triggered function is called, if appropriate, outside of this lock
+		immediateTrigger.foreach(f)
+	}
+	
+	// Locks this pointer during future formation
+	// in order to ensure that the wrapped value doesn't change during this process (possibly causing a deadlock)
+	override protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean) =
+		lockWhile { _ => super._findMapFuture(condition, disableImmediateTrigger) }
 }

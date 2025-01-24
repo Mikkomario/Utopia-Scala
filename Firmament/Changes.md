@@ -1,8 +1,10 @@
 # Utopia Firmament - List of Changes
 
 ## v1.4.1 (in development)
-### Other changes
+### New features
 - Added content scaling support to **AlignFrameLike**
+### Other changes
+- Added additional rounding to scaling **ButtonImageEffect**
 
 ## v1.4 - 23.01.2025
 This major update overhauls the context class implementations, adding new variable context classes that replace 

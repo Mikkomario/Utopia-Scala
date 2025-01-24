@@ -30,7 +30,6 @@ object ChangingWrapper
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-// TODO: Consider removing some of the overridden functions
 trait ChangingWrapper[+A] extends Changing[A]
 {
 	// ABSTRACT ------------------------
@@ -75,10 +74,16 @@ trait ChangingWrapper[+A] extends Changing[A]
 	                                        =
 		wrapped.incrementalMergeWith(other)(initialMerge)(incrementMerge)
 	
+	// Overrides these future-related functions in order to ensure (for example)
+	// that thread-safe execution is preserved when wrapping volatile pointers
 	override def futureWhere(valueCondition: A => Boolean) = wrapped.futureWhere(valueCondition)
 	override def nextFutureWhere(valueCondition: A => Boolean) = wrapped.nextFutureWhere(valueCondition)
 	override def findMapFuture[B](f: A => Option[B]) = wrapped.findMapFuture(f)
 	override def findMapNextFuture[B](f: A => Option[B]) = wrapped.findMapNextFuture(f)
+	override def onNextChange[U](f: ChangeEvent[A] => U) = wrapped.onNextChange(f)
+	override def onNextChangeWhere[U](condition: ChangeEvent[A] => Boolean)(f: ChangeEvent[A] => U) =
+		wrapped.onNextChangeWhere(condition)(f)
+	override def once[U](condition: A => Boolean)(f: A => U) = wrapped.once(condition)(f)
 	override def existsFixed(condition: A => Boolean) = wrapped.existsFixed(condition)
 	override def notFixedWhere(condition: A => Boolean) = wrapped.notFixedWhere(condition)
 	override def flatMap[B](f: A => Changing[B]) = wrapped.flatMap(f)

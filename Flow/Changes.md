@@ -1,5 +1,11 @@
 # Utopia Flow - List of Changes
 
+## v2.5.2 (in development)
+### Other changes
+- Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
+  that were previously vulnerable to asynchronous state changes.
+- Minor refactoring in **ActionQueue**
+
 ## v2.5.1 - 23.01.2025
 This update focuses mostly on utility additions. These updates are divided over several areas:
 - New pointer classes for pointer-splitting, lazily initialized pointers and lockable volatile (i.e. thread-safe) pointers

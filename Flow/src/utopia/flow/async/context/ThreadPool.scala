@@ -24,6 +24,7 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
+// TODO: Add support for clearing all threads (before or at shutdown)
 class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
                  val maxIdleDuration: FiniteDuration = 1.minutes)
                 (implicit log: Logger)

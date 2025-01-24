@@ -93,9 +93,9 @@ object ButtonImageEffect
 				val maxScaling = adj(0.5)
 				val newSize = (original.action.size * maxScaling).round
 				
-				val default = (original.default * adj(-1)).withCanvasSize(newSize)
-				val focus = original.focus.withCanvasSize(newSize)
-				val activated = original.action.withSize(newSize)
+				val default = (original.default * adj(-1)).withCanvasSize(newSize).roundSize
+				val focus = original.focus.withCanvasSize(newSize).roundSize
+				val activated = original.action.withSize(newSize).roundSize
 				
 				original.copy(default, focus, activated)
 			}

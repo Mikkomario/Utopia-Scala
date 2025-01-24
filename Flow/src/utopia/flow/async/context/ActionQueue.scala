@@ -87,11 +87,11 @@ object ActionQueue
 	
 	private class CompletedAction[+A](result: A) extends QueuedAction[A]
 	{
-		override def future: Future[A] = Future.successful(result)
-		override def startFuture: Future[Unit] = Future.successful(())
+		override val state = Completed
+		override lazy val statePointer = Fixed(Completed)
 		
-		override def state = Completed
-		override def statePointer = Fixed(Completed)
+		override lazy val future: Future[A] = Future.successful(result)
+		override lazy val startFuture: Future[Unit] = Future.successful(())
 		
 		override def waitFor(timeout: Duration) = Success(result)
 		override def waitUntilStarted(timeout: Duration) = Success(this)
@@ -102,6 +102,7 @@ object ActionQueue
 		// ATTRIBUTES   ------------------
 		
 		private val _statePointer = Volatile.eventful[BasicProcessState](NotStarted)(SysErrLogger)
+		override lazy val statePointer: Changing[BasicProcessState] = _statePointer.readOnly
 		
 		override lazy val startFuture: Future[Unit] =
 			_statePointer.findMapFuture { state => if (state.hasStarted) Some(()) else None }
@@ -110,11 +111,6 @@ object ActionQueue
 		// COMPUTED ----------------------
 		
 		protected def state_=(newState: BasicProcessState) = _statePointer.value = newState
-		
-		
-		// IMPLEMENTED  ------------------
-		
-		override def statePointer: Changing[BasicProcessState] = _statePointer.readOnly
 	}
 	
 	private class SureAction[A](action: => A) extends InteractiveAction[A]
@@ -139,15 +135,14 @@ object ActionQueue
 		// ATTRIBUTES	-----------------
 		
 		private val promise = Promise[A]()
+		override lazy val future = promise.future
 		
 		
 		// IMPLEMENTED	-----------------
 		
-		override def future = promise.future
-		
 		override def run() = {
 			state = Running
-			promise.complete(action)
+			promise.complete(Try(action).flatten)
 			state = Completed
 		}
 	}
@@ -160,11 +155,8 @@ object ActionQueue
 		// Contains None before requested
 		private val wrappedPointer = Volatile.optional[Either[Promise[A], Future[A]]]()
 		
-		
-		// IMPLEMENTED  ---------------
-		
 		// Prepares a future if one hasn't been prepared already
-		override def future = wrappedPointer.mutate {
+		override lazy val future = wrappedPointer.mutate {
 			// Case: Future already prepared => Returns that
 			case Some(wrapped) => wrapped.rightOrMap { _.future } -> Some(wrapped)
 			// Case: No future prepared => Forms a promise and returns the future of that promise
@@ -172,6 +164,9 @@ object ActionQueue
 				val promise = Promise[A]()
 				promise.future -> Some(Left(promise))
 		}
+		
+		
+		// IMPLEMENTED  ---------------
 		
 		override def run() = {
 			state = Running
