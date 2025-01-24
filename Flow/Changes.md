@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
 ## v2.5.2 (in development)
+### New methods
+- **ThreadPool**
+  - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.

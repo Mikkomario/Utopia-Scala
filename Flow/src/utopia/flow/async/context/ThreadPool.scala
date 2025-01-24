@@ -2,9 +2,10 @@ package utopia.flow.async.context
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ExcEvent.{QueueCleared, TaskAccepted, TaskCompleted, TaskQueued, ThreadClosed, ThreadCreated}
+import utopia.flow.async.context.ThreadPool.noOp
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
@@ -19,12 +20,22 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.Try
 
+object ThreadPool
+{
+	// ATTRIBUTES   ----------------------
+	
+	/**
+	  * A runnable that does nothing.
+	  * Used when terminating threads.
+	  */
+	private lazy val noOp: Runnable = () => ()
+}
+
 /**
 * This class handles thread reuse and task distribution
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-// TODO: Add support for clearing all threads (before or at shutdown)
 class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
                  val maxIdleDuration: FiniteDuration = 1.minutes)
                 (implicit log: Logger)
@@ -40,9 +51,9 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	
     private val indexCounter = Iterator.iterate(coreSize + 1) { _ + 1 }
 	// Creates the core threads from the very beginning
-	private val threads: Volatile[Seq[WorkerThread2]] = Volatile.seq(
+	private val threads: Volatile[Seq[WorkerThread]] = Volatile.seq(
 		(0 until coreSize).map { i =>
-			val thread = WorkerThread2.core(s"$name-core-${ i + 1 }", i)._1
+			val thread = WorkerThread.core(s"$name-core-${ i + 1 }", i)._1
 			thread.start()
 			thread
 		})
@@ -107,6 +118,12 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 	// OTHER    --------------------------
 	
 	/**
+	  * Requests all threads in this pool to close after finishing their queued tasks.
+	  * Note: This also includes the so-called core threads, which will not be replaced with new ones.
+	  */
+	def stop(): Unit = threads.updateAndGet { _.filterNot { _.isFinished } }.foreach { _.requestToStop() }
+	
+	/**
 	  * Adds a new listener to be informed of execution context -events
 	  * @param listener Listener to inform of new events
 	  */
@@ -146,9 +163,11 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 				// If all were busy, tries to create a new thread
 				val currentThreadCount = current.size
 				if (currentThreadCount < maxSize) {
-					val (newThread, events) = WorkerThread2.temp(nextThreadName, currentThreadCount, maxIdleDuration,
-						task, eventful)
-					(Some(newThread), events) -> (current :+ newThread)
+					val (newThread, events) = WorkerThread
+						.temp(nextThreadName, currentThreadCount, maxIdleDuration, task, eventful)
+					// Also clears any previous thread that had finished already
+					val newThreads = Vector.concat(current.view.filterNot { _.isFinished }, Single(newThread))
+					(Some(newThread), events) -> newThreads
 				}
 				else {
 					// If max thread limit is reached, pushes the task to queue
@@ -224,20 +243,20 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		}
 	}
 	
-	private object WorkerThread2
+	private object WorkerThread
 	{
-		def core(name: String, existingThreadCount: Int): (WorkerThread2, Seq[ExcEvent]) =
+		def core(name: String, existingThreadCount: Int): (WorkerThread, Seq[ExcEvent]) =
 			apply(name, existingThreadCount)
 		
 		def temp(name: String, existingThreadCount: Int, maxIdleDuration: Duration, initialTask: Runnable,
-		         eventful: Boolean = true): (WorkerThread2, Seq[ExcEvent]) =
+		         eventful: Boolean = true): (WorkerThread, Seq[ExcEvent]) =
 			apply(name, existingThreadCount, maxIdleDuration, Some(initialTask -> eventful))
 		
 		private def apply(name: String, existingThreadCount: Int, maxIdleDuration: Duration = Duration.Inf,
-		                  initialTask: Option[(Runnable, Boolean)] = None): (WorkerThread2, Seq[ExcEvent]) =
+		                  initialTask: Option[(Runnable, Boolean)] = None): (WorkerThread, Seq[ExcEvent]) =
 		{
 			// Creates the thread
-			val thread = new WorkerThread2(name, maxIdleDuration, initialTask)
+			val thread = new WorkerThread(name, maxIdleDuration, initialTask)
 			
 			// Prepares events
 			val events = Single(ThreadCreated(name, existingThreadCount + 1)) ++
@@ -247,17 +266,27 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 			thread -> events
 		}
 	}
-	private class WorkerThread2(name: String, maxIdleDuration: Duration = Duration.Inf,
-	                            initialTask: Option[(Runnable, Boolean)] = None)
+	private class WorkerThread(name: String, maxIdleDuration: Duration = Duration.Inf,
+	                           initialTask: Option[(Runnable, Boolean)] = None)
 		extends Thread
 	{
 		// ATTRIBUTES    ---------------------
 		
-		private val ended = Volatile.switch
-		// Some(...) when accepting a new task, None when not accepting
-		// Contains 2 values when waiting for a task:
-		//      1. A promise for holding the task (+ whether events should be generated)
-		//      2. Time when this promise was initiated / wait was started
+		/**
+		  * A flag that is set once all tasks have been handled and this thread is ready to close
+		  */
+		private val finishedFlag = Volatile.switch
+		/**
+		  * A flag that is set (from outside) when one wants this thread to terminate/finish as soon as possible
+		  */
+		private val stoppedFlag = Volatile.switch
+		
+		/**
+		  * Some(...) when accepting a new task, None when not accepting.
+		  * Contains 2 values when waiting for a task:
+		  *     1. A promise for holding the task (+ whether events should be generated)
+		  *     1. Time when this promise was initiated / wait was started
+		  */
 		private val waitingTask = Volatile.optional[(Promise[(Runnable, Boolean)], Instant)]()
 		
 		private var _lastTaskStartTime = Now.toInstant
@@ -271,24 +300,29 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		
 		// COMPUTED    -----------------------
 		
-		def running = waitingTask.isEmpty && ended.isNotSet
+		def running = waitingTask.isEmpty && finishedFlag.isNotSet
 		
-		// Returns:
-		//      1. Whether running a task (true) or waiting (false)
-		//      2. Since when
+		/**
+		  * @return Returns 2 values:
+		  *             1. Whether running a task (true) or waiting (false)
+		  *             1. Since when
+		  */
 		def state = waitingTask.value match {
 			case Some((_, since)) => false -> since
 			case None => true -> _lastTaskStartTime
 		}
 		
-		private def isEnded = ended.isSet
+		def isFinished = finishedFlag.isSet
 		
 		
 		// IMPLEMENTED    --------------------
 		
 		override def run() = {
 			val nextTaskPointer = Pointer(initialTask)
-			while (ended.isNotSet) {
+			// Continues until finished, or until stopped without a queued task pending for execution
+			while (finishedFlag.isNotSet &&
+				(stoppedFlag.isNotSet || nextTaskPointer.nonEmpty || waitingTask.exists { _._1.isCompleted }))
+			{
 				// Finds the next task to perform, may fail if maximum idle duration is reached
 				val next = nextTaskPointer.pop().orElse {
 					// Starts waiting for the next task
@@ -325,7 +359,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 						}
 					
 					// Case: No task available => Ends
-					case None => ended.set()
+					case None => finishedFlag.set()
 				}
 			}
 			
@@ -334,7 +368,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 			waitingTask.clear()
 			
 			// Clears this thread from the thread pool
-			val remainingThreadCount = threads.updateAndGet { _.filterNot { _.isEnded } }.size
+			val remainingThreadCount = threads.updateAndGet { _.filterNot { _.isFinished } }.size
 			// If appropriate, fires a thread cleared -event
 			fireEvent(ThreadClosed(name, remainingThreadCount), synchronous = true)
 		}
@@ -349,7 +383,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		  */
 		def offer(task: Runnable, eventful: Boolean = true) = {
 			// Only accepts new tasks if not busy already
-			if (ended.isNotSet) {
+			if (finishedFlag.isNotSet) {
 				waitingTask.lockWhile { waiter =>
 					// Proposes the task to a waiting promise,
 					// if there is one and if that promise hasn't been completed already
@@ -368,6 +402,19 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 			// Case: Already ended => Rejects the task
 			else
 				false
+		}
+		
+		/**
+		  * Requests this thread to stop/finish as soon as possible
+		  */
+		def requestToStop() = {
+			// If this thread was waiting for the next task,
+			// provides a placeholder task for it in order to complete the wait process
+			if (stoppedFlag.set())
+				waitingTask.value.foreach { case (taskPromise, _) =>
+					if (!taskPromise.isCompleted)
+						taskPromise.trySuccess(noOp -> false)
+				}
 		}
 	}
 }
