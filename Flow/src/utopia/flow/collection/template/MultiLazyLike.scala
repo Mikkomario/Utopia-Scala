@@ -43,6 +43,7 @@ object MultiLazy
 		override def cachedValues = caches.cachedValues.flatMap { _.current }
 		
 		override def cacheFor(key: K) = caches(key)
+		override def existingCacheFor(key: K): Option[P] = caches.cached(key)
 	}
 }
 
@@ -60,11 +61,16 @@ trait MultiLazyLike[-K, +V, +P <: Lazy[V]] extends Cache[K, V]
 	  * @return A cache that will hold the value for that key
 	  */
 	def cacheFor(key: K): P
+	/**
+	 * @param key A key
+	 * @return A previously initialized cache that may hold the value for that key.
+	 *         None if no cache has been initialized for that key.
+	 */
+	def existingCacheFor(key: K): Option[P]
 	
 	
 	// IMPLEMENTED  --------------------------
 	
 	override def apply(key: K) = cacheFor(key).value
-	
-	override def cached(key: K) = cacheFor(key).current
+	override def cached(key: K) = existingCacheFor(key).flatMap { _.current }
 }

@@ -30,7 +30,7 @@ object ResettableMultiLazy
 	{
 		// ATTRIBUTES   -------------------------
 		
-		private var caches = Map[K, P]()
+		private var caches = Map[Any, P]()
 		
 		
 		// IMPLEMENTED  -------------------------
@@ -44,6 +44,7 @@ object ResettableMultiLazy
 			caches += key -> newCache
 			newCache
 		})
+		override def existingCacheFor(key: K): Option[P] = caches.get(key)
 	}
 }
 

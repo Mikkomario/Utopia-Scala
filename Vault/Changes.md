@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+## v1.20.2 (in development)
+### Other changes
+- Minor refactoring within **DatabaseCache**
+
 ## v1.20.1 - 23.01.2025
 This update adds:
 - A number of important bugfixes

@@ -4,6 +4,7 @@
 ### Breaking changes
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
   since that one had confusing effects.
+- **MultiLazyLike** now requires the implementation of `def existingCacheFor(key: K): Option[P]`
 ### New methods
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed

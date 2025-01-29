@@ -24,7 +24,7 @@ object ClearableCache
 	{
 		// ATTRIBUTES	------------------
 		
-		private val cachedItems: mutable.Map[Key, Value] = mutable.Map()
+		private val cachedItems: mutable.Map[Any, Value] = mutable.Map()
 		
 		
 		// IMPLEMENTED	------------------

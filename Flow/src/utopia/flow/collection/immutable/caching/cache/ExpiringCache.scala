@@ -54,7 +54,7 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 	implicit val log: Logger = SysErrLogger
 	
 	private val waitLock = new AnyRef
-	private val cachePointer = Volatile(Map[K, V]())
+	private val cachePointer = Volatile(Map[Any, V]())
 	private val queuedExpirationsPointer = Volatile.seq[(Instant, K)]()
 	
 	
@@ -101,7 +101,6 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 		// Finally returns the newly calculated value
 		newValue
 	}
-	
 	override def cached(key: K) = cachePointer.value.get(key)
 	
 	
