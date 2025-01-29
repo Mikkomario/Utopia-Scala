@@ -1,12 +1,17 @@
 # Utopia Flow - List of Changes
 
-## v2.5.2 (in development)
+## v2.6 (in development)
+### Breaking changes
+- Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
+  since that one had confusing effects.
 ### New methods
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
+- **ThreadPool** now occasionally clears finished threads from its pool
+  - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Minor refactoring in **ActionQueue**
 
 ## v2.5.1 - 23.01.2025

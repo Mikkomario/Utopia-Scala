@@ -1231,11 +1231,6 @@ object TimeExtensions
 	implicit def javaDurationToExtendedFiniteDuration(duration: java.time.Duration): ExtendedFiniteDuration =
 		javaDurationToScalaDuration(duration)
 	/**
-	  * Converts a java duration option to scala duration
-	  */
-	implicit def javaDurationOptionToScalaDuration(duration: Option[java.time.Duration]): scala.concurrent.duration.Duration =
-		duration.map(javaDurationToScalaDuration).getOrElse(scala.concurrent.duration.Duration.Inf)
-	/**
 	  * Converts a finite scala duration to a java duration
 	  */
 	implicit def scalaDurationToJavaDuration(duration: FiniteDuration): Duration =
