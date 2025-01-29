@@ -17,14 +17,12 @@ object UniqueWordPlacementAccess extends ViewFactory[UniqueWordPlacementAccess]
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	override def apply(condition: Condition): UniqueWordPlacementAccess = 
-		_UniqueWordPlacementAccess(Some(condition))
+	override def apply(condition: Condition): UniqueWordPlacementAccess = _UniqueWordPlacementAccess(condition)
 	
 	
 	// NESTED	--------------------
 	
-	private case class _UniqueWordPlacementAccess(override val accessCondition: Option[Condition]) 
-		extends UniqueWordPlacementAccess
+	private case class _UniqueWordPlacementAccess(override val condition: Condition) extends UniqueWordPlacementAccess
 }
 
 /**

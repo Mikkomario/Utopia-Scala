@@ -14,39 +14,39 @@ object LogosTables
 	/**
 	  * Table that contains domains (Represents the address of an internet service)
 	  */
-	def domain = apply("domain")
+	lazy val domain = apply("domain")
 	/**
 	  * Table that contains links (Represents a link for a specific http(s) request)
 	  */
-	def link = apply("link")
+	lazy val link = apply("link")
 	/**
 	  * Table that contains link placements (Places a link within a statement)
 	  */
-	def linkPlacement = apply("link_placement")
+	lazy val linkPlacement = apply("link_placement")
 	/**
 	  * Table that contains request paths (Represents a specific http(s) request url, 
 	  * not including any query parameters)
 	  */
-	def requestPath = apply("request_path")
+	lazy val requestPath = apply("request_path")
 	
 	/**
 	  * Table that contains statements (Represents an individual statement made within some text.
 	  *  Consecutive statements form whole texts.)
 	  */
-	def statement = apply("statement")
+	lazy val statement = apply("statement")
 	/**
 	  * Table that contains words (Represents an individual word used in a text document. Case-sensitive.)
 	  */
-	def word = apply("word")
+	lazy val word = apply("word")
 	/**
 	  * Table that contains word placements (Records when a word is used in a statement)
 	  */
-	def wordPlacement = apply("word_placement")
+	lazy val wordPlacement = apply("word_placement")
 	/**
 	  * Table that contains delimiters (Represents a character sequence used to separate two statements or parts
 	  *  of a statement)
 	  */
-	def delimiter = apply("delimiter")
+	lazy val delimiter = apply("delimiter")
 	
 	
 	// OTHER	--------------------

@@ -16,13 +16,12 @@ object UniqueLinkPlacementAccess extends ViewFactory[UniqueLinkPlacementAccess]
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	override def apply(condition: Condition): UniqueLinkPlacementAccess = 
-		_UniqueLinkPlacementAccess(Some(condition))
+	override def apply(condition: Condition): UniqueLinkPlacementAccess = _UniqueLinkPlacementAccess(condition)
 	
 	
 	// NESTED	--------------------
 	
-	private case class _UniqueLinkPlacementAccess(override val accessCondition: Option[Condition]) 
+	private case class _UniqueLinkPlacementAccess(override val condition: Condition)
 		extends UniqueLinkPlacementAccess
 }
 

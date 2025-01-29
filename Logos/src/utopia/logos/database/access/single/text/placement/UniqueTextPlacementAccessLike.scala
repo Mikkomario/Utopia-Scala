@@ -1,10 +1,8 @@
 package utopia.logos.database.access.single.text.placement
 
-import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.SingleModelAccess
-import utopia.vault.nosql.access.template.model.DistinctModelAccess
+import utopia.vault.nosql.access.single.model.distinct.UniqueModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 
@@ -15,9 +13,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 27.08.2024, v0.3
   */
-trait UniqueTextPlacementAccessLike[+A, +Repr] 
-	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with FilterableView[Repr] 
-		with Indexed
+trait UniqueTextPlacementAccessLike[+A, +Repr] extends UniqueModelAccess[A] with FilterableView[Repr] with Indexed
 {
 	// ABSTRACT	--------------------
 	
@@ -34,19 +30,16 @@ trait UniqueTextPlacementAccessLike[+A, +Repr]
 	  * None if no text placement (or value) was found.
 	  */
 	def parentId(implicit connection: Connection) = pullColumn(model.parentId.column).int
-	
 	/**
 	  * Id of the text that is placed within the parent text. 
 	  * None if no text placement (or value) was found.
 	  */
 	def placedId(implicit connection: Connection) = pullColumn(model.placedId.column).int
-	
 	/**
 	  * 0-based index that indicates the specific location of the placed text. 
 	  * None if no text placement (or value) was found.
 	  */
 	def orderIndex(implicit connection: Connection) = pullColumn(model.orderIndex.column).int
-	
 	/**
 	  * Unique id of the accessible text placement. None if no text placement was accessible.
 	  */
