@@ -21,6 +21,14 @@ trait PlacedAccessLike[+Repr] extends FilterableView[Repr] with PlacedFactory[Re
 	protected def orderIndexColumn: Column
 	
 	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Access to starting elements (i.e. those at position 0)
+	 */
+	def starting = at(0)
+	
+	
 	// IMPLEMENTED  --------------------
 	
 	override def at(orderIndex: Int): Repr = filter(orderIndexColumn <=> orderIndex)

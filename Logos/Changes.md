@@ -4,6 +4,9 @@
 ### Breaking changes
 - **UniqueTextPlacementAccessLike** now extends **UniqueModelAccess**, which changes the abstract property from 
   `accessCondition: Option[Condition]` to `condition: Condition`
+### New methods
+- **PlacedAccessLike**
+  - Added `.starting`
 
 ## v0.4 - 23.01.2025
 This update changes how words are stored in the database, making this a rather breaking update when compared to v0.3. 

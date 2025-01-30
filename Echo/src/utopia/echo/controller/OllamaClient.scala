@@ -13,6 +13,7 @@ import utopia.disciple.http.request.{Body, StringBody, Timeout}
 import utopia.disciple.http.response.ResponseParser
 import utopia.disciple.model.error.RequestFailedException
 import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.request.generate.{Generate, Prompt}
 import utopia.echo.model.request.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
 import utopia.echo.model.response.llm.StreamedStatus
 import utopia.flow.async.TryFuture
@@ -64,6 +65,37 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	
 	
 	// OTHER    ----------------------------
+	
+	/**
+	 * Requests a buffered reply to a prompt.
+	 * Buffered, in this context, means that the reply will be received all at once (which may take a while to complete).
+	 *
+	 * This function is suitable for very simple queries in a background thread,
+	 * where user-interactivity is not important. For more complex interactions, consider using the [[Chat]] interface.
+	 *
+	 * @param prompt Prompt to send out for the LLM
+	 * @param system System message to set.
+	 *               If not empty, this will override whatever the targeted model's default system message is.
+	 *               Default = empty = no system message.
+	 * @param encodedImages Base 64 encoded images to include with the request.
+	 *                      Use only with models that support image input.
+	 *                      Default = empty.
+	 * @param json Whether the Ollama server should process the LLM's response into a valid JSON string.
+	 *             This will also include a statement, instructing the LLM to respond in JSON.
+	 *
+	 *             Note: If you want to perform the JSON parsing in Echo, or by yourself, set this to false and
+	 *             request the LLM to respond in JSON within your prompt.
+	 *
+	 *             Default = false.
+	 * @param llm The name of the targeted large language model (implicit)
+	 * @return A future that resolves into a buffered reply from the Ollama server.
+	 *         May yield a failure.
+	 */
+	def bufferedResponseFor(prompt: String, system: String = "", encodedImages: Seq[String] = Empty,
+	                        json: Boolean = false)
+	                       (implicit llm: LlmDesignator) =
+		push(Prompt(prompt, systemMessage = system, encodedImages = encodedImages).toQuery.copy(requestJson = json)
+			.toRequest.buffered).future
 	
 	/**
 	  * Makes sure that a system message is not defined in a model-file
