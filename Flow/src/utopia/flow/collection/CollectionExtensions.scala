@@ -1831,6 +1831,36 @@ object CollectionExtensions
 	implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
 	{
 		/**
+		  * @return The first 2 elements of this collection as a pair
+		  * @throws NoSuchElementException If this collection contains less than 2 elements
+		  */
+		@throws[NoSuchElementException]("If this collection contains less than 2 elements")
+		def headPair = Pair(s.head, s(1))
+		/**
+		  * @return The last 2 elements of this collection as a pair
+		  * @throws NoSuchElementException If this collection contains less than 2 elements
+		  */
+		@throws[NoSuchElementException]("If this collection contains less than 2 elements")
+		def lastPair = {
+			val size = s.size
+			if (size < 2)
+				throw new NoSuchElementException("lastPair requires at least 2 elements")
+			else
+				Pair(size - 2, size - 1)
+		}
+		/**
+		  * @return An iterator that yields every unique 2 item combination within this collection.
+		  *
+		  *         E.g. If this collection is [A,B,C,D], returns (A,B), (A,C), (A,D), (B,C), (B,D) and (C,D).
+		  *
+		  *         If this collection contains less than 2 elements, returns an empty iterator.
+		  */
+		def uniquePairsIterator = {
+			lazy val view = s.view
+			s.iterator.zipWithIndex.flatMap { case (first, index) => view.drop(index + 1).map { Pair(first, _) } }
+		}
+		
+		/**
 		  * @return A random item from this collection
 		  */
 		def random = s.apply(Random.nextInt(s.size))
@@ -1934,6 +1964,14 @@ object CollectionExtensions
 		  */
 		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
 			maxOptionIndexBy(f)(order.reverse)
+		
+		/**
+		  * @param firstIndex Index of the first collected element
+		  * @throws NoSuchElementException If firstIndex is out of bounds or the last element in this collection
+		  * @return A pair containing the 'firstIndex' and the following element
+		  */
+		@throws[NoSuchElementException]("If firstIndex is out of bounds or the last element in this collection")
+		def pairFrom(firstIndex: Int) = Pair(s(firstIndex), s(firstIndex + 1))
 		
 		/**
 		 * @param count Number of items to take
