@@ -1,14 +1,17 @@
 package utopia.paradigm.test
 
-import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
+import utopia.flow.generic.casting.ConversionHandler
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.paradigm.generic.ParadigmDataType.{BoundsType, CircleType, LineType, PointType, SizeType, Vector3DType}
+import utopia.paradigm.generic.ParadigmDataType.{BoundsType, CircleType, LineType, PointType, SizeType, Vector2DType, Vector3DType}
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.line.Line
+import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.shape3d.Vector3D
@@ -22,7 +25,7 @@ object DataTypeTest extends App
 {
     ParadigmDataType.setup()
     
-	private implicit val jsonParser: JsonParser = JsonReader
+	// private implicit val jsonParser: JsonParser = JsonReader
 	
     val vector1 = Vector3D(1, 1, 1)
     val vector2 = Vector3D(3)
@@ -96,23 +99,31 @@ object DataTypeTest extends App
     assert(r.castTo(LineType).get.castTo(BoundsType).get == r)
     assert(r.castTo(ModelType).get.castTo(BoundsType).get == r)
     
-    val model = Model(Vector(("vector", v1), ("Point", p1), ("Size", s1), ("line", l), ("circle", c), ("rectangle", r)))
-    println(model.toJson)
-    
-    // Tests JSON parsing
-	// TODO: Fix these assertions
-	/*
-    assert(Vector3D.fromJson(v1.vector3DOr().toJson) == v1.vector3D)
-	assert(Point.fromJson(p1.pointOr().toJson) == p1.point)
-	assert(Size.fromJson(s1.sizeOr().toJson) == s1.size)
-    assert(Line.fromJson(l.lineOr().toJson) == l.line)
-    assert(Circle.fromJson(c.circleOr().toJson) == c.circle)
-    assert(Bounds.fromJson(r.boundsOr().toJson) == r.bounds)
-    assert(Transformation.fromJson(t.transformationOr().toJson) == t.transformation)
-    */
+    // val model = Model(Vector(("vector", v1), ("Point", p1), ("Size", s1), ("line", l), ("circle", c), ("rectangle", r)))
+    // println(model.toJson)
 	
 	assert(s1.getString != "")
 	assert(p1.getString != "")
+	
+	// Tests parsing from string
+	val parsedPair = ("(1,2)": Value).getPair
+	assert(parsedPair.first.getInt == 1, parsedPair)
+	assert(parsedPair.second.getInt == 2, parsedPair)
+	
+	println(ConversionHandler.conversionRouteBetween(StringType, Vector2DType))
+	
+	val parsedVector = ("(1,2)": Value).getVector2D
+	assert(parsedVector.x == 1, parsedVector)
+	assert(parsedVector.y == 2, parsedVector)
+	
+	println(ConversionHandler.conversionRouteBetween(StringType, PointType))
+	
+	val parsedPoint = ("(1,2)": Value).getPoint
+	assert(parsedPoint.x == 1, parsedPoint)
+	assert(parsedPoint.y == 2, parsedPoint)
+	
+	// Tests toString
+	assert(Vector2D(1,2).toString == "(1.0, 2.0)", Vector2D(1,2).toString)
 	
     println("Success")
 }

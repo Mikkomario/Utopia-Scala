@@ -90,6 +90,7 @@ class Size private(override val dimensions: Dimensions[Double])
     
     override protected def equalsProperties = dimensions
     
+    override def toString = super[DoubleVectorLike].toString
     override def toValue = new Value(Some(this), SizeType)
     def toModel = Model.from("width" -> width, "height" -> height)
     

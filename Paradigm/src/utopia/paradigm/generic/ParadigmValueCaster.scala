@@ -48,11 +48,16 @@ object ParadigmValueCaster extends ValueCaster
     private implicit val timeUnit: TimeUnit = TimeUnit.MILLISECONDS
     
     override lazy val conversions = Set[Conversion](
+        // Conversions to String
+        immutable.Conversion(Vector2DType, StringType, ContextLoss),
+        immutable.Conversion(Vector3DType, StringType, ContextLoss),
+        immutable.Conversion(PointType, StringType, ContextLoss),
+        immutable.Conversion(SizeType, StringType, ContextLoss),
         // Conversions to Int
         immutable.Conversion(ColorType, IntType, ContextLoss),
         // Conversions to Double
-        immutable.Conversion(Vector2DType, DoubleType, DataLoss),
-        immutable.Conversion(Vector3DType, DoubleType, DataLoss),
+        immutable.Conversion(Vector2DType, DoubleType, MeaningLoss),
+        immutable.Conversion(Vector3DType, DoubleType, MeaningLoss),
         immutable.Conversion(AngleType, DoubleType, ContextLoss),
         immutable.Conversion(RotationType, DoubleType, ContextLoss),
         immutable.Conversion(LinearVelocityType, DoubleType, ContextLoss),
@@ -102,6 +107,7 @@ object ParadigmValueCaster extends ValueCaster
         immutable.Conversion(RgbType, ModelType, ContextLoss),
         immutable.Conversion(HslType, ModelType, ContextLoss),
         // Conversions to Vector2D
+        immutable.Conversion(StringType, Vector2DType, Dangerous),
         immutable.Conversion(VectorType, Vector2DType, Dangerous),
         immutable.Conversion(PairType, Vector2DType, Dangerous),
         immutable.Conversion(Vector3DType, Vector2DType, DataLoss),
@@ -112,6 +118,7 @@ object ParadigmValueCaster extends ValueCaster
         immutable.Conversion(Acceleration2DType, Vector2DType, ContextLoss),
         immutable.Conversion(ModelType, Vector2DType, Dangerous),
         // Conversions to Vector3D
+        immutable.Conversion(StringType, Vector3DType, Dangerous),
         immutable.Conversion(VectorType, Vector3DType, Dangerous),
         immutable.Conversion(Vector2DType, Vector3DType, Perfect),
         immutable.Conversion(Velocity3DType, Vector3DType, ContextLoss),
@@ -121,7 +128,7 @@ object ParadigmValueCaster extends ValueCaster
         immutable.Conversion(HslType, Vector3DType, ContextLoss),
         // Conversions to Point
         immutable.Conversion(Vector2DType, PointType, Perfect),
-        immutable.Conversion(SizeType, PointType, Perfect),
+        immutable.Conversion(SizeType, PointType, ContextLoss),
         immutable.Conversion(BoundsType, PointType, DataLoss),
         immutable.Conversion(ModelType, PointType, Dangerous),
         // Conversions to Size
@@ -241,10 +248,9 @@ object ParadigmValueCaster extends ValueCaster
     
     // IMPLEMENTED METHODS    -----
     
-    override def cast(value: Value, toType: DataType) = 
-    {
-        val newContent = toType match 
-        {
+    override def cast(value: Value, toType: DataType) = {
+        val newContent = toType match {
+            case StringType => stringOf(value)
             case IntType => intOf(value)
             case DoubleType => doubleOf(value)
             case LocalTimeType => localTimeOf(value)
@@ -283,6 +289,8 @@ object ParadigmValueCaster extends ValueCaster
     
     
     // OTHER METHODS    -----------
+    
+    private def stringOf(value: Value) = value.content.map { _.toString }
     
     private def intOf(value: Value): Option[Int] = value.dataType match {
         case ColorType => Some(value.getRgb.toInt)
@@ -380,6 +388,7 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def vector2DOf(value: Value): Option[Vector2D] = value.dataType match {
+        case StringType => value.pair.flatMap { _.findForBoth { _.double } }.map(Vector2D.apply)
         case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector2D.from)
         case PairType => value.tryPairWith { _.tryDouble }.toOption.map(Vector2D.apply)
         case Vector3DType => Some(value.getVector3D.toVector2D)
@@ -393,6 +402,7 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def vector3DOf(value: Value): Option[Vector3D] = value.dataType match {
+        case StringType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector3D.from)
         case VectorType => value.tryVectorWith { _.tryDouble }.toOption.map(Vector3D.from)
         case Vector2DType => Some(value.getVector2D.toVector3D)
         case Velocity3DType => Some(value.getVelocity3D.perMilliSecond)

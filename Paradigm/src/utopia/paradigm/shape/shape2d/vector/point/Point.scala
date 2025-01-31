@@ -81,6 +81,7 @@ class Point private(override val dimensions: Dimensions[Double])
 	
 	override protected def equalsProperties = dimensions
 	
+	override def toString = super[DoubleVectorLike].toString
 	override def toValue = new Value(Some(this), PointType)
 	override def toModel = Model.fromMap(HashMap("x" -> x, "y" -> y))
 	

@@ -184,7 +184,7 @@ class Vector3D private(override val dimensions: Dimensions[Double])
 	
 	override def zero = Vector3D.zero
 	
-	override def toString = s"($x, $y, $z)"
+	override def toString = super[DoubleVectorLike].toString
 	override def toValue = new Value(Some(this), Vector3DType)
 	override def toModel = Model.fromMap(Map("x" -> x, "y" -> y, "z" -> z).filterNot { _._2 ~== 0.0 })
     

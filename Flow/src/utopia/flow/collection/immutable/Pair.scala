@@ -371,7 +371,7 @@ case class Pair[+A](first: A, second: A)
 	
 	override def view = new PairView[A](first, second)
 	
-	override def toString = s"Pair($first, $second)"
+	override def toString = s"($first, $second)"
 	
 	override def sorted[B >: A](implicit ord: Ordering[B]): Pair[A] = super[PairOps].sorted[B]
 	

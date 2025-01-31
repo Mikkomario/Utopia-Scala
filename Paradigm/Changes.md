@@ -1,5 +1,12 @@
 # Utopia Paradigm - List of Changes
 
+## v1.7.2 (in development)
+### Bugfixes
+- Fixed some illogical string to value conversions
+### Other changes
+- Modified `toString` implementations of **Vector2D**, **Vector3D**, **Point** and **Size**
+- Made some modifications to data type conversion priorities
+
 ## v1.7.1 - 23.01.2025
 This update focuses on the **Distance** class, adding 2D vector representations with real life distance units.
 ### Bugfixes

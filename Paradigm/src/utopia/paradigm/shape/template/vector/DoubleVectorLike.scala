@@ -77,6 +77,8 @@ trait DoubleVectorLike[+Repr <: HasDoubleDimensions with HasLength]
 	override def components: IndexedSeq[Vector1D] =
 		dimensions.zipWithAxis.map { case (length, axis) => Vector1D(length, axis) }
 	
+	override def toString = s"(${ dimensions.values.mkString(", ") })"
+	
 	override def along(axis: Axis) = Vector1D(apply(axis), axis)
 	
 	override def /(div: Double) = super[NumericVectorLike]./(div)

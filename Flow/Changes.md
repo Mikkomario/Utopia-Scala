@@ -20,6 +20,7 @@
   that were previously vulnerable to asynchronous state changes.
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
+- Changed **Pair**'s `.toString` implementation
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**
 

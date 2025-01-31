@@ -96,6 +96,7 @@ class Vector2D private(override val dimensions: Dimensions[Double])
 	
 	override protected def equalsProperties = Single(dimensions)
 	
+	override def toString = super[DoubleVectorLike].toString
 	override implicit def toValue: Value = new Value(Some(this), Vector2DType)
 	override def toModel = Model.from("x" -> x, "y" -> y)
 	
