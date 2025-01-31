@@ -10,7 +10,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.genesis.handling.event.keyboard.Key.Enter
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
@@ -117,7 +117,7 @@ trait InteractionWindowFactory[A]
 		val resultPromise = Promise[A]()
 		// When this function finishes, this pointer contains the actually used condition
 		// (the condition is built incrementally)
-		val enterEnabledPointerPointer = SettableOnce[View[Boolean]]()
+		val enterEnabledPointerPointer = AssignableOnce[View[Boolean]]()
 		
 		// Creates the window and the main content stack with 1-3 rows (based on button layouts)
 		// TODO: Content should be allowed to appear outside (above) the framing, e.g. when displaying a header.

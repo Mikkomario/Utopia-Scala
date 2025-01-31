@@ -19,7 +19,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, AssignableOnce}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
@@ -154,8 +154,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		// Prepares pointers for the window and canvas
-		val windowPointer = SettableOnce[Window]()
-		val canvasPointer = SettableOnce[Stackable]()
+		val windowPointer = AssignableOnce[Window]()
+		val canvasPointer = AssignableOnce[Stackable]()
 		// The attachment status tracking starts once the window has been created
 		val attachmentPointer = windowPointer.flatMap {
 			case Some(window) => window.fullyVisibleFlag

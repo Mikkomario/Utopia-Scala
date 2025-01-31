@@ -13,7 +13,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, AssignableOnce}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -114,7 +114,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val selectedComponentPointer = selectedRowIndexPointer
 			.map { i => rowsWithIndices.find { _._2 == i }.map { _._1 } }
 		val keyPressedPointer = Pointer(false)
-		val stackPointer = SettableOnce[Stack]()
+		val stackPointer = AssignableOnce[Stack]()
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
 		val stackCreation = Stack(parentHierarchy).withAxis(rowDirection.perpendicular).withMargin(rowMargin)
 			.withCap(mainStackCap).withCustomDrawers(selector +: customDrawers)(mainStackContent)

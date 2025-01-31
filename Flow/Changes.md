@@ -2,10 +2,17 @@
 
 ## v2.6 (in development)
 ### Breaking changes
+- Converted **SettableOnce** into a trait called **AssignableOnce**
+  - **SettableOnce** is still available as a deprecated type alias
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
   since that one had confusing effects.
 - **MultiLazyLike** now requires the implementation of `def existingCacheFor(key: K): Option[P]`
+### New features
+- Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
+  - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 ### New methods
+- **Lockable**
+  - Added `def unlocked = !locked`
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 ### Other changes
@@ -13,6 +20,7 @@
   that were previously vulnerable to asynchronous state changes.
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
+- Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**
 
 ## v2.5.1 - 23.01.2025

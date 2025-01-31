@@ -2,7 +2,7 @@ package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.reach.component.input.selection.Slider
 import utopia.reach.container.wrapper.{Framing, Rotated}
 import utopia.reach.window.ReachWindow
@@ -19,7 +19,7 @@ object SliderTest extends App
 	private val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		framingF.build(Rotated) { rotatedF =>
 			rotatedF.counterClockwise.build(Slider) { sliderF =>
-				val sliderPointer = SettableOnce[Slider[_]]()
+				val sliderPointer = AssignableOnce[Slider[_]]()
 				// val mouseDrawer = new MousePositionDrawer(sliderPointer)
 				
 				val slider = sliderF

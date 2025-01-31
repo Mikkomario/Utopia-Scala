@@ -4,7 +4,7 @@ import utopia.firmament.component.Window
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, AssignableOnce}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Esc, FunctionKey}
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyTypedListener, KeyboardEvents}
 import utopia.genesis.image.Image
@@ -35,7 +35,7 @@ object ReachComponentTest extends App
 		FocusListener { event => println(s"$componentName: $event") }
 	
 	// Creates the components
-	private val windowPointer = SettableOnce[Window]()
+	private val windowPointer = AssignableOnce[Window]()
 	val window = ReachWindow.contentContextual.using(Stack) { (_, stackF) =>
 		// Column
 		stackF.withoutMargin.build(Mixed) { factories =>

@@ -1,7 +1,7 @@
 package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.StackSize
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.genesis.handling.event.keyboard.KeyStateListener
 import utopia.genesis.handling.event.mouse.{MouseButtonStateListener, MouseWheelListener}
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -21,7 +21,7 @@ object WindowMouseTest extends App
 	import ReachTestContext._
 	
 	private val window = ReachWindow.contentContextual.using(EmptyLabel) { (_, labelF) =>
-		val labelPointer = SettableOnce[ReachComponentLike]()
+		val labelPointer = AssignableOnce[ReachComponentLike]()
 		val drawer = new MousePositionDrawer(labelPointer, 3)
 		val label = labelF.withCustomDrawer(drawer)(StackSize.any(Size.square(480)))
 		labelPointer.set(label)

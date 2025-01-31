@@ -1,5 +1,8 @@
 # Utopia Genesis - List of Changes
 
+## v4.2.1 (in development)
+Supports **Flow v2.6**
+
 ## v4.2 - 23.01.2025
 This update largely modifies how the **Image** interface is implemented. 
 However, breaking changes are relatively few, as the outer interface remains mostly the same (although extended).

@@ -25,7 +25,7 @@ object Lockable
   */
 trait Lockable[+A] extends MayStopChanging[A]
 {
-	// COMPUTED -----------------------------
+	// ABSTRACT -----------------------------
 	
 	/**
 	  * @return Whether this pointer has been locked and won't change anymore
@@ -36,6 +36,14 @@ trait Lockable[+A] extends MayStopChanging[A]
 	  * Locks this pointer, so that it can't be changed anymore
 	  */
 	def lock(): Unit
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return Whether this pointer has not yet been locked
+	  */
+	def unlocked = !locked
 	
 	
 	// IMPLEMENTED  -------------------------

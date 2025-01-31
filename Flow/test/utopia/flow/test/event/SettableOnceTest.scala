@@ -1,6 +1,6 @@
 package utopia.flow.test.event
 
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.flow.test.TestContext._
 
 import scala.util.Try
@@ -12,7 +12,7 @@ import scala.util.Try
   */
 object SettableOnceTest extends App
 {
-	val s = new SettableOnce[Int]()
+	val s = new AssignableOnce[Int]()
 	
 	assert(s.value.isEmpty)
 	

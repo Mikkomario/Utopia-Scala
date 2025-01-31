@@ -9,7 +9,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -58,7 +58,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 	private lazy val withSecondsFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 	private lazy val secondsFormat = DateTimeFormatter.ofPattern("ss")
 	
-	private val queue = Volatile.seq[(Request, SettableOnce[(Try[Response], Instant)], Instant)]()
+	private val queue = Volatile.seq[(Request, AssignableOnce[(Try[Response], Instant)], Instant)]()
 	
 	
 	// INITIAL CODE ----------------------------
@@ -82,7 +82,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 	override def intercept(request: Request): Request = {
 		// Remembers the request, as well as the time, in order to log it later, once the response has been received
 		implicit val log: Logger = SysErrLogger
-		queue :+= (request, new SettableOnce(), Now)
+		queue :+= (request, new AssignableOnce(), Now)
 		request
 	}
 	
@@ -110,7 +110,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 						// after this logger has received them
 						case None =>
 							logger(s"WARNING: Request matching failed for ${ request.method } ${ request.requestUri }")
-							Vector((request, SettableOnce.set(response -> Now.toInstant), Now.toInstant)) -> queue
+							Vector((request, AssignableOnce.set(response -> Now.toInstant), Now.toInstant)) -> queue
 					}
 			}
 		}

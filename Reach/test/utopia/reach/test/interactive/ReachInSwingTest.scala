@@ -1,7 +1,7 @@
 package utopia.reach.test.interactive
 
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, AssignableOnce}
 import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.paradigm.color.Color
@@ -82,7 +82,7 @@ object ReachInSwingTest extends App
 			AlignFrame(hierarchy).withContext(baseContext.against(Color.yellow).forTextComponents)(Center)
 				.withBackground(Secondary)
 				.build(ViewTextLabel) { labelF =>
-					val componentP = SettableOnce[ReachComponentLike]()
+					val componentP = AssignableOnce[ReachComponentLike]()
 					val label = labelF.withBackground(Primary)
 						.withCustomDrawer(new MousePositionDrawer(componentP, 3.0))
 						.apply(textPointer)

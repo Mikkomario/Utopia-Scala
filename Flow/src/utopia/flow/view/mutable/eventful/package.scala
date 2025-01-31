@@ -6,6 +6,9 @@ package utopia.flow.view.mutable
   */
 package object eventful
 {
-	@deprecated("Please convert to using EventfulPointer instead", "v2.2")
+	@deprecated("Please use EventfulPointer instead", "v2.2")
 	type PointerWithEvents[A] = EventfulPointer[A]
+	
+	@deprecated("Please use AssignableOnce instead", "v2.6")
+	type SettableOnce[A] = AssignableOnce[A]
 }

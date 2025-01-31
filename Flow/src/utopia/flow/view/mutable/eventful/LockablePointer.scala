@@ -2,7 +2,7 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.LoggingPointerFactory
+import utopia.flow.view.mutable.{LoggingPointerFactory, MaybeAssignable}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 import scala.util.Try
@@ -58,7 +58,7 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
   * @author Mikko Hilpinen
   * @since 26.7.2023, v2.2
   */
-trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A]
+trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeAssignable[A]
 {
 	// ABSTRACT -----------------------------
 	
@@ -79,20 +79,17 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A]
 		else
 			assignToUnlocked(newValue)
 	}
-	
-	
-	// OTHER    ---------------------------
+	override def set(value: A): Unit = this.value = value
 	
 	/**
 	  * Attempts to modify the value of this pointer.
 	  * Won't modify the value if this pointer has been locked.
 	  * @param value A value that should be set to this pointer, if possible
-	  * @return Whether that value is now the current value of this pointer.
-	  *         I.e. true if this pointer was not locked or contained an identical value already.
+	  * @return Whether the value of this pointer was modified
 	  */
-	def trySet(value: A) = {
+	override def trySet(value: => A) = {
 		if (locked)
-			value == this.value
+			false
 		else {
 			assignToUnlocked(value)
 			true

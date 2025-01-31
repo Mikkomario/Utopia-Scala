@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, AssignableOnce}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -53,14 +53,14 @@ object ReflectionReachCanvas
 	                                     (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas
-		val canvasPointer = SettableOnce[ReflectionReachCanvas]()
+		val canvasPointer = AssignableOnce[ReflectionReachCanvas]()
 		lazy val absolutePositionView: View[Point] = View {
 			canvasPointer.value.flatMap { _.parent } match {
 				case Some(parent) => parent.absolutePosition
 				case None => Point.origin
 			}
 		}
-		val contentPointer = SettableOnce[ReachComponentLike]()
+		val contentPointer = AssignableOnce[ReachComponentLike]()
 		val canvas = new ReflectionReachCanvas(contentPointer, absolutePositionView,
 			EventfulPointer[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
 			disableFocus)({

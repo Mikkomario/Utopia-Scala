@@ -14,7 +14,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.paradigm.enumeration.Direction2D
@@ -176,7 +176,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		field.requestFocus(forceFocusLeave = true)
 		
 		// Creates a warning pop-up
-		val windowPointer = SettableOnce[Window]()
+		val windowPointer = AssignableOnce[Window]()
 		val window = field.createWindow(margin = context.margins.medium) { hierarchy =>
 			// The pop-up contains a close button and the warning text
 			Framing(hierarchy).withContext(context: StaticTextContext).small.build(Stack) { stackF =>

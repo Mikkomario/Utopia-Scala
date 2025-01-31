@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.LazyListener
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.eventful.SettableOnce
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.flow.view.template.eventful.{Changing, ChangingView}
 
 import scala.concurrent.{Future, Promise}
@@ -34,7 +34,7 @@ object ListenableLazy
 		private var queuedListeners: Seq[LazyListener[A]] = Empty
 		private var generated: Option[A] = None
 		
-		private val _stateView = SettableOnce[A]()
+		private val _stateView = AssignableOnce[A]()
 		override val stateView = new ChangingView[Option[A]](_stateView)
 		
 		// Value future is generated only once

@@ -18,7 +18,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, AssignableOnce}
 import utopia.flow.view.mutable.{Resettable, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -92,7 +92,7 @@ object ReachCanvas
 	                                     (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas first
-		val contentPointer = SettableOnce[ReachComponentLike]()
+		val contentPointer = AssignableOnce[ReachComponentLike]()
 		// The canvas is created in the AWT event thread
 		val canvas = AwtEventThread.blocking {
 			new ReachCanvas(contentPointer, attachmentPointer, absoluteParentPositionView, backgroundPointer,
@@ -163,7 +163,7 @@ object ReachCanvas
 		AwtEventThread.blocking {
 			// Implements the attachment tracking etc.
 			val attachmentPointer = ResettableFlag()
-			val componentPointer = SettableOnce[java.awt.Component]()
+			val componentPointer = AssignableOnce[java.awt.Component]()
 			// TODO: Utilize the ancestor listener in caching & resetting this value
 			val absoluteParentPositionView = ResettableLazy {
 				componentPointer.value match {

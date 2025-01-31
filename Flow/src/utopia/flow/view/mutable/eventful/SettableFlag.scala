@@ -30,7 +30,6 @@ object SettableFlag
 	  * @return A new flag
 	  */
 	def apply()(implicit log: Logger): SettableFlag = new _SettableFlag()
-	
 	/**
 	  * @param initialState Initial state to assign to this flag (i.e. whether already set)
 	  * @param log Implicit logging implementation
