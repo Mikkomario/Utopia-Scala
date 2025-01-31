@@ -10,9 +10,9 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 17.11.2022, v2.0
   */
-object SettableOnceTest extends App
+object AssignableOnceTest extends App
 {
-	val s = new AssignableOnce[Int]()
+	val s = AssignableOnce[Int]()
 	
 	assert(s.value.isEmpty)
 	

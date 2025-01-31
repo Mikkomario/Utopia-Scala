@@ -6,6 +6,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.TryExtensions._
 import utopia.flow.view.mutable.{MaybeAssignable, Switch}
+import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 import scala.concurrent.Future
@@ -29,7 +30,7 @@ object MutableOnce
   * @tparam A Type of value held within this pointer
   */
 class MutableOnce[A](initialValue: A)(implicit log: Logger)
-	extends AbstractMayStopChanging[A] with EventfulPointer[A] with MaybeAssignable[A]
+	extends AbstractMayStopChanging[A] with EventfulPointer[A] with MaybeAssignable[A] with MaybeSet
 {
 	// ATTRIBUTES   -----------------------
 	

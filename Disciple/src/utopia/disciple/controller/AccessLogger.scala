@@ -82,7 +82,7 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 	override def intercept(request: Request): Request = {
 		// Remembers the request, as well as the time, in order to log it later, once the response has been received
 		implicit val log: Logger = SysErrLogger
-		queue :+= (request, new AssignableOnce(), Now)
+		queue :+= (request, AssignableOnce(), Now)
 		request
 	}
 	

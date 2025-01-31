@@ -10,6 +10,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.MaybeAssignable
+import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, MayStopChanging}
 
 import scala.concurrent.Future
@@ -110,7 +111,8 @@ object AssignableOnce
   * @author Mikko Hilpinen
   * @since 16.11.2022, v2.0
   */
-trait AssignableOnce[A] extends MayStopChanging[Option[A]] with EventfulPointer[Option[A]] with MaybeAssignable[A]
+trait AssignableOnce[A]
+	extends MayStopChanging[Option[A]] with EventfulPointer[Option[A]] with MaybeAssignable[A] with MaybeSet
 {
 	// ABSTRACT -----------------------------
 	
