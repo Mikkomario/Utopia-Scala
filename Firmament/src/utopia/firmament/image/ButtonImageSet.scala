@@ -55,7 +55,7 @@ object ButtonImageSet
 	/**
 	  * Creates a new button image set that changes alpha value based on button state
 	  * @param image The source image
-	  * @param defaultAlpha Alpha used in button defeult state
+	  * @param defaultAlpha Alpha used in button default state
 	  * @param maxAlpha Alpha used in button pressed state
 	  * @return A button image set that uses varying alpha value
 	  */

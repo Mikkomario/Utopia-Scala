@@ -11,10 +11,12 @@
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 ### New methods
+- **Iterable** (**CollectionExtensions**)
+  - Added `.headPair`
 - **Lockable**
   - Added `def unlocked = !locked`
 - **Seq** (**CollectionExtensions**)
-  - Added `.headPair`, `.lastPair`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
+  - Added `.lastPair`, `.lastPairOption`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 ### Other changes

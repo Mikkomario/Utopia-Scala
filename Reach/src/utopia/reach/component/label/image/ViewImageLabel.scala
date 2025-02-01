@@ -16,7 +16,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
-import utopia.genesis.image.Image
+import utopia.genesis.image.{Image, ImageView}
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
@@ -25,7 +25,7 @@ import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
-import utopia.reach.component.factory.{BackgroundAssignable, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
 
@@ -466,7 +466,7 @@ object ViewImageLabel extends ViewImageLabelSetup()
   * @author Mikko Hilpinen
   * @since 28.10.2020, v0.1
   */
-class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[Image],
+class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
                      insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
                      transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
                      allowUpscalingPointer: Changing[Boolean] = AlwaysTrue,
@@ -494,7 +494,7 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 			}
 	}
 	
-	val customDrawers = additionalCustomDrawers :+
+	override val customDrawers = additionalCustomDrawers :+
 		ViewImageDrawer.copy(transformationView = transformationPointer, insetsPointer = insetsPointer,
 			alignmentView = alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
 	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }

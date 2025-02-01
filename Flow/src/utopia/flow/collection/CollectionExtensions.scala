@@ -1193,6 +1193,26 @@ object CollectionExtensions
 		def only = if (hasSize(1)) Some(t.head) else None
 		
 		/**
+		  * @return The first 2 elements of this collection as a pair
+		  * @throws NoSuchElementException If this collection contains less than 2 elements
+		  */
+		@throws[NoSuchElementException]("If this collection contains less than 2 elements")
+		def headPair = {
+			val iter = t.iterator
+			Pair.fill(iter.next())
+		}
+		/**
+		  * @return The first 2 elements of this collection as a Pair.
+		  *         None if this collection contains less than 2 elements.
+		  */
+		def headPairOption = {
+			val iter = t.iterator
+			iter.nextOption().flatMap { first =>
+				iter.nextOption().map { Pair(first, _) }
+			}
+		}
+		
+		/**
 		  * Converts this collection to a map by pairing each value with a map result key
 		  * @param f A function that extracts a key from each item (expected to return unique results)
 		  * @tparam K Type of keys used
@@ -1831,12 +1851,6 @@ object CollectionExtensions
 	implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
 	{
 		/**
-		  * @return The first 2 elements of this collection as a pair
-		  * @throws NoSuchElementException If this collection contains less than 2 elements
-		  */
-		@throws[NoSuchElementException]("If this collection contains less than 2 elements")
-		def headPair = Pair(s.head, s(1))
-		/**
 		  * @return The last 2 elements of this collection as a pair
 		  * @throws NoSuchElementException If this collection contains less than 2 elements
 		  */
@@ -1846,7 +1860,18 @@ object CollectionExtensions
 			if (size < 2)
 				throw new NoSuchElementException("lastPair requires at least 2 elements")
 			else
-				Pair(size - 2, size - 1)
+				Pair(s(size - 2), s(size - 1))
+		}
+		/**
+		  * @return The last 2 elements of this collection as a Pair.
+		  *         None if this collection contains less than 2 elements.
+		  */
+		def lastPairOption = {
+			val size = s.size
+			if (size < 2)
+				None
+			else
+				Some(Pair(s(size  - 2), s(size - 1)))
 		}
 		/**
 		  * @return An iterator that yields every unique 2 item combination within this collection.
@@ -2250,6 +2275,13 @@ object CollectionExtensions
 			
 			builder.result()
 		}
+		/**
+		  * Collects the next 2 items from this iterator, yielding a pair
+		  * @return The next 2 items from this iterator
+		  * @throws NoSuchElementException If this iterator has less than 2 items remaining
+		  */
+		@throws[NoSuchElementException]("If this iterator has less than 2 items remaining")
+		def nextPair() = Pair.fill(i.next())
 		
 		/**
 		  * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
