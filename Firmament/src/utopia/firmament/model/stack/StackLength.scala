@@ -350,7 +350,8 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @param newPriority New priority (default = current priority)
 	  */
 	def copy(newMin: Double = min, newOptimal: Double = optimal, newMax: Option[Double] = max,
-			 newPriority: LengthPriority = priority) = new StackLength(newMin, newOptimal, newMax, newPriority)
+			 newPriority: LengthPriority = priority) =
+		new StackLength(newMin, newOptimal, newMax, newPriority)
 	
 	/**
 	  * @param f A mapping function
@@ -525,8 +526,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * @return A stack length that has at least 'minimum' minimum width and at most 'maximum' maximum width
 	  */
 	def within(minimum: Double, maximum: Option[Double]): StackLength = {
-		maximum match
-		{
+		maximum match {
 			case Some(maximum) => within(minimum, maximum)
 			case None =>
 				val newMin = minimum max min

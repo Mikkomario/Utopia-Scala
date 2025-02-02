@@ -3,8 +3,10 @@
 ## v1.4.1 (in development)
 ### New features
 - Added content scaling support to **AlignFrameLike**
+- Added **MinOptimalLengthModifier** and **MinOptimalSizeModifier** (new stack size modifiers)
 ### Other changes
 - Added additional rounding to scaling **ButtonImageEffect**
+- **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary
 
 ## v1.4 - 23.01.2025
 This major update overhauls the context class implementations, adding new variable context classes that replace 

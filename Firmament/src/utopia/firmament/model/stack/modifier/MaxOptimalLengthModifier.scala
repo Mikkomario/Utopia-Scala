@@ -9,5 +9,12 @@ import utopia.firmament.model.stack.StackLength
   */
 case class MaxOptimalLengthModifier(max: Double) extends StackLengthModifier
 {
-	override def apply(length: StackLength) = if (length.optimal <= max) length else length.withOptimal(max)
+	override def apply(length: StackLength) = {
+		if (length.optimal <= max)
+			length
+		else if (length.min > max)
+			length.copy(newMin = max, newOptimal = max)
+		else
+			length.withOptimal(max)
+	}
 }

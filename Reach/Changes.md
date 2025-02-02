@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
 ## v1.5.1 (in development)
+### New features
+- Added **AnimatedImageLabel** class
 ### Other changes
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
