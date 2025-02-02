@@ -22,6 +22,5 @@ class PointMap2D(override val origin: MapPoint[Vector2D], references: Pair[MapPo
 			"The specified reference vectors can't produce a two-dimensional space") }
 	// Transforms that accepts a vector product (projection over the reference vectors)
 	// and produces an image coordinate (relative to 'origin')
-	private val imageTransform = Matrix2D(transforms.map { _.mapLocation.toVector })
-	override protected val fullTransform: Matrix2D = imageTransform * vectorTransform
+	protected val imageTransform = Matrix2D(transforms.map { _.mapLocation.toVector })
 }

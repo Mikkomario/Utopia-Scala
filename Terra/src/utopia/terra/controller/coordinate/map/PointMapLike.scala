@@ -31,10 +31,11 @@ trait PointMapLike[V <: DoubleVectorLike[V], +M <: MatrixLike[V, M]]
 	  */
 	protected def vectorTransform: M
 	/**
-	  * @return Transformation that takes world point vector coordinates and produces image coordinate vectors,
-	  *         relative to [[origin]]
+	  * @return A transformation that takes a combination of multiplier for each of the reference vectors
+	  *         (i.e. the result of [[vectorTransform]]) and
+	  *         produces an image coordinate, relative to the origin image coordinate.
 	  */
-	protected def fullTransform: M
+	protected def imageTransform: M
 	
 	/**
 	  * @param vectorPosition A real world position in its vector representation
@@ -45,13 +46,10 @@ trait PointMapLike[V <: DoubleVectorLike[V], +M <: MatrixLike[V, M]]
 		// Relates the specified position to origin vector
 		val vectorRelativeToOrigin = vectorPosition - origin.vector
 		// Transforms this point to image world space (relative to image origin vector)
-		val mapPointRelativeToOrigin = fullTransform(vectorRelativeToOrigin)
+		val transitive = vectorTransform(vectorRelativeToOrigin)
+		val image = imageTransform(transitive)
 		
-		// Applies the correct image origin - May need to mirror the vector in case of some transformations
-		if (vectorTransform.determinant >= 0)
-			origin.mapLocation + mapPointRelativeToOrigin
-		else
-			origin.mapLocation - mapPointRelativeToOrigin
+		origin.mapLocation + image
 	}
 	/**
 	  * @param point A world position

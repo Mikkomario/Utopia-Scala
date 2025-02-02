@@ -2,7 +2,6 @@ package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.text.VariableTextContext
-import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.DisplayFunction
@@ -15,7 +14,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
+import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.UnresolvedFramedFactory.{UnresolvedStackInsets, sides}
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
@@ -31,9 +30,7 @@ import utopia.reach.container.multi.Stack
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-trait ViewImageAndTextLabelSettingsLike[+Repr]
-	extends ImageAndTextLabelSettingsLike[ViewImageLabelSettings, Repr] with CustomDrawableFactory[Repr]
-		with FromAlignmentFactory[Repr]
+trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettingsLike[ViewImageLabelSettings, Repr]
 {
 	// ABSTRACT --------------------
 	
@@ -403,17 +400,15 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, context: Var
 				(textInsets max commonInsets) -- textAlignment.directions
 			} }
 		
-		// TODO: Utilize a view stack here in order to support variable context
-		Stack.withContext(parentHierarchy, appliedContext.current)
+		Stack.withContext(parentHierarchy, appliedContext)
 			.withMargin(settings.separatingMargin)
 			.withCustomDrawers(settings.customDrawers)
 			.buildPair(Mixed, textAlignment, forceFitLayout = settings.forceEqualBreadth) { factories =>
-				val variableFactories = factories.withContext(appliedContext)
-				val imageLabel = variableFactories(ViewImageLabel)
+				val imageLabel = factories(ViewImageLabel)
 					.withSettings(settings.imageSettings)
 					.withInsetsPointer(imageInsetsPointer)
 					.iconOrImagePointer(imgPointer)
-				val textLabel = variableFactories(ViewTextLabel)
+				val textLabel = factories(ViewTextLabel)
 					.apply(itemPointer, displayFunction)
 				Pair(imageLabel, textLabel)
 			}

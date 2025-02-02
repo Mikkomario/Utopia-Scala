@@ -1,5 +1,11 @@
 # Utopia Terra - list of changes
 
+## v1.3 (in development)
+### Breaking changes
+- **PointMapLike** now requires `imageTransform` instead of `fullTransform`
+### Bugfixes
+- Fixed a bug in **PointMapLike** projection logic
+
 ## v1.2.1 - 23.01.2025
 This update adds functions for hidden height (i.e. physical horizon) calculations, (assuming a perfectly spherical Earth).
 ### New features

@@ -19,6 +19,5 @@ class PointMap3D(override val origin: MapPoint[Vector3D],
 		.getOrElse { throw new IllegalArgumentException(
 			"The specified coordinates can't be used to produce a 3-dimensional space") }
 	// Accepts vector products (over reference vectors) and returns an image coordinate
-	private val imageTransform = Matrix3D(transforms.map { _.mapLocation.toVector3D })
-	override protected val fullTransform: Matrix3D = imageTransform * vectorTransform
+	protected val imageTransform = Matrix3D(transforms.map { _.mapLocation.toVector3D })
 }
