@@ -15,7 +15,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.image.ViewImageLabel
+import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
 import utopia.reach.component.template.ReachComponentWrapper
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
@@ -116,8 +116,10 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	override var focusListeners: Seq[FocusListener] = Single[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Empty
-	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer, insetsPointer, alignmentPointer,
-		transformationPointer, Fixed(allowUpscaling), additionalDrawers, useLowPrioritySize)
+	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer,
+		ViewImageLabelSettings(insetsPointer = insetsPointer, alignmentPointer = alignmentPointer,
+			transformationPointer = transformationPointer, customDrawers = additionalDrawers,
+			usesLowPrioritySize = useLowPrioritySize), Fixed(allowUpscaling))
 	
 	override val focusId = hashCode()
 	

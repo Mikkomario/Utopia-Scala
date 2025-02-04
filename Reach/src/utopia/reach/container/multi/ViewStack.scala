@@ -285,8 +285,7 @@ trait ViewStackFactoryLike[+Repr]
 		}
 	}
 	
-	override def pointer(content: Changing[SeparateOpenComponents[ReachComponentLike, _]]): Stack =
-	{
+	override def pointer(content: Changing[SeparateOpenComponents[ReachComponentLike, _]]): Stack = {
 		content.fixedValue match {
 			// Case: Displayed content doesn't change
 			case Some(staticContent) =>
@@ -337,7 +336,7 @@ trait ViewStackFactoryLike[+Repr]
 					Cache[Int, Flag] { componentHash => visibleHashesP.map { _.contains(componentHash) } }
 				
 				// When new components are introduced, makes sure they get attached to this stack
-				content.addListenerWhile(parentHierarchy.linkPointer) { change =>
+				content.addListenerWhileAndSimulateEvent(parentHierarchy.linkPointer, Empty) { change =>
 					change.newValue.foreach { open =>
 						val hash = open.component.hashCode()
 						// Case: Not previously attached => Creates a new link pointer and attaches the component

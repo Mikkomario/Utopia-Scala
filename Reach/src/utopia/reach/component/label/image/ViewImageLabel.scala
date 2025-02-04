@@ -309,8 +309,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 		}
 		// Applies image scaling, also
 		val scaledImagePointer = coloredPointer.mergeWith(imageScalingPointer) { _ * _ }
-		new ViewImageLabel(parentHierarchy, scaledImagePointer, insetsPointer, alignmentPointer, transformationPointer,
-			allowUpscalingPointer, customDrawers, usesLowPrioritySize)
+		new ViewImageLabel(parentHierarchy, scaledImagePointer, settings, allowUpscalingPointer)
 	}
 }
 
@@ -467,17 +466,13 @@ object ViewImageLabel extends ViewImageLabelSetup()
   * @since 28.10.2020, v0.1
   */
 class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
-                     insetsPointer: Changing[StackInsets], alignmentPointer: Changing[Alignment],
-                     transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
-                     allowUpscalingPointer: Changing[Boolean] = AlwaysTrue,
-                     additionalCustomDrawers: Seq[CustomDrawer] = Empty,
-                     override val useLowPrioritySize: Boolean = false)
+                     settings: ViewImageLabelSettings, allowUpscalingPointer: Changing[Boolean] = AlwaysTrue)
 	extends CustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	---------------------------------
 	
 	private val localImagePointer = imagePointer.viewWhile(parentHierarchy.linkPointer)
-	private val localTransformationPointer = transformationPointer.viewWhile(parentHierarchy.linkPointer)
+	private val localTransformationPointer = settings.transformationPointer.viewWhile(parentHierarchy.linkPointer)
 	private val visualImageSizePointer = localTransformationPointer.fixedValue match {
 		case Some(transformation) =>
 			transformation match {
@@ -494,9 +489,9 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 			}
 	}
 	
-	override val customDrawers = additionalCustomDrawers :+
-		ViewImageDrawer.copy(transformationView = transformationPointer, insetsPointer = insetsPointer,
-			alignmentView = alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
+	override val customDrawers = settings.customDrawers :+
+		ViewImageDrawer.copy(transformationView = settings.transformationPointer, insetsPointer = settings.insetsPointer,
+			alignmentView = settings.alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
 	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	
 	
@@ -510,8 +505,8 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 			revalidate()
 	}
 	localTransformationPointer.addListener(revalidateListener)
-	insetsPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
-	alignmentPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => repaint() }
+	settings.insetsPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
+	settings.alignmentPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => repaint() }
 	allowUpscalingPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
 	
 	
@@ -520,15 +515,17 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 	/**
 	  * @return Current alignment used when positioning the image in this label
 	  */
-	def alignment = alignmentPointer.value
+	def alignment = settings.alignmentPointer.value
 	
 	
 	// IMPLEMENTED	---------------------------------
 	
+	override def useLowPrioritySize: Boolean = settings.usesLowPrioritySize
+	
 	override def visualImageSize: Size = visualImageSizePointer.value
 	override def maxScaling = localImagePointer.value.maxScaling
 	
-	override def insets = insetsPointer.value
+	override def insets = settings.insetsPointer.value
 	override def allowUpscaling: Boolean = allowUpscalingPointer.value
 	
 	override def updateLayout() = ()

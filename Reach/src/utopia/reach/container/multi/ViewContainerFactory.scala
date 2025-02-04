@@ -54,7 +54,7 @@ trait ViewContainerFactory[+Container, -Top]
 		// The components themselves are added or removed only when the number of displayed values changes
 		// In other situations, their individual value pointers are updated instead
 		val componentsP = pointer.mapWhile(linkedFlag) { _.indices.map(componentCache.apply) }
-		val container = this.pointer(ComponentCreationResult(componentsP))
+		val container = this.pointer(componentsP)
 		
 		// Updates the individual value pointers whenever the mapped pointer updates
 		pointer.addListenerWhile(linkedFlag) { e =>

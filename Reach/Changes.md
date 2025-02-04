@@ -1,6 +1,11 @@
 # Utopia Reach - List of Changes
 
-## v1.5.1 (in development)
+## v1.6 (in development)
+### Breaking changes
+- Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
+### Bugfixes
+- In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
+  would not manage the linked flags / attachment states correctly (initially)
 ### New features
 - Added **AnimatedImageLabel** class
 ### Other changes

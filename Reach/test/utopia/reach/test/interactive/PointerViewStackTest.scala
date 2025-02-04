@@ -2,7 +2,7 @@ package utopia.reach.test.interactive
 
 import utopia.flow.collection.immutable.Single
 import utopia.flow.view.mutable.Pointer
-import utopia.genesis.handling.event.keyboard.Key.ArrowKey
+import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, FunctionKey}
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.ViewStack
@@ -44,6 +44,9 @@ object PointerViewStackTest extends App
 					v :+ (v.last + 1)
 			}
 		}
+	}
+	KeyboardEvents += KeyStateListener.pressed(FunctionKey(1)) { _ =>
+		window.content.debugPrintHierarchy()
 	}
 	
 	// Displays the app
