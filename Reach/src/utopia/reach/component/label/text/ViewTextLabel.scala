@@ -21,7 +21,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.ConcreteCustomDrawReachComponent
 
 case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
                                           customDrawers: Seq[CustomDrawer] = Empty,
@@ -240,18 +240,18 @@ object ViewTextLabel extends Cff[ViewTextLabelFactory]
   * @author Mikko Hilpinen
   * @since 17.10.2020, v0.1
   */
-class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
+class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
                         stylePointer: Changing[TextDrawContext], allowTextShrinkPointer: Changing[Boolean] = AlwaysFalse,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
-	extends CustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
+	extends ConcreteCustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTE	-------------------------------------
 	
 	/**
 	  * Pointer containing the current (measured) text
 	  */
-	val textPointer = contentPointer.mergeWithWhile(stylePointer, parentHierarchy.linkPointer) { (content, style) =>
+	val textPointer = contentPointer.mergeWithWhile(stylePointer, hierarchy.linkedFlag) { (content, style) =>
 		measure(displayFunction(content), style)
 	}
 	override val customDrawers =  additionalDrawers :+ TextViewDrawer(textPointer, stylePointer)
@@ -267,11 +267,11 @@ class ViewTextLabel[+A](override val parentHierarchy: ComponentHierarchy, overri
 			revalidate()
 	}
 	// Style changes (color & alignment) also trigger a revalidation / repaint
-	stylePointer.addListenerWhile(parentHierarchy.linkPointer) { event =>
+	stylePointer.addListenerWhile(hierarchy.linkedFlag) { event =>
 		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
 			repaint(Priority.Low)
 	}
-	allowTextShrinkPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
+	allowTextShrinkPointer.addListenerWhile(hierarchy.linkedFlag) { _ => revalidate() }
 	
 	
 	// IMPLEMENTED	-------------------------------------

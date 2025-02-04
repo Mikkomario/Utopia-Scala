@@ -29,7 +29,7 @@ object ButtonLike
   * @author Mikko Hilpinen
   * @since 24.10.2020, v0.1
   */
-trait ButtonLike extends ReachComponentLike with FocusableWithState with CursorDefining with HasGuiState
+trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefining with HasGuiState
 {
 	// ABSTRACT	------------------------------
 	

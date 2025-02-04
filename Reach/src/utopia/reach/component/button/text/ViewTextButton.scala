@@ -36,7 +36,7 @@ class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
 		ContextualViewTextButtonFactory(parentHierarchy, c)
 }
 
-case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                            settings: ButtonSettings = ButtonSettings.default,
                                            customDrawers: Seq[CustomDrawer] = Empty)
 	extends ContextualFactory[VariableTextContext, ContextualViewTextButtonFactory]
@@ -63,7 +63,7 @@ case class ContextualViewTextButtonFactory(parentHierarchy: ComponentHierarchy, 
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	            (action: A => Unit) =
-		new ViewTextButton[A](parentHierarchy, context, contentPointer, settings, displayFunction,
+		new ViewTextButton[A](hierarchy, context, contentPointer, settings, displayFunction,
 			customDrawers)(action)
 	
 	/**

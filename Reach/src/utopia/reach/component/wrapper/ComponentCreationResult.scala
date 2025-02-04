@@ -2,7 +2,7 @@ package utopia.reach.component.wrapper
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
 import utopia.reach.container.layered.LayerPositioning
 
@@ -49,16 +49,16 @@ object ComponentCreationResult
 	implicit def tupleToResult[C, R](tuple: (C, R)): ComponentCreationResult[C, R] =
 		new ComponentCreationResult[C, R](tuple._1, tuple._2)
 	
-	implicit def componentToResult[C <: ReachComponentLike](component: C): CreationWrapper[C] =
+	implicit def componentToResult[C <: ReachComponent](component: C): CreationWrapper[C] =
 		new ComponentCreationResult[C, Unit](component, ())
 	
-	implicit def componentPairToResult[C <: ReachComponentLike](componentPair: Pair[C]): CreationWrapper[Pair[C]] =
+	implicit def componentPairToResult[C <: ReachComponent](componentPair: Pair[C]): CreationWrapper[Pair[C]] =
 		new ComponentCreationResult[Pair[C], Unit](componentPair, ())
 	
-	implicit def componentSeqToResult[C <: ReachComponentLike](components: Seq[C]): CreationWrapper[Seq[C]] =
+	implicit def componentSeqToResult[C <: ReachComponent](components: Seq[C]): CreationWrapper[Seq[C]] =
 		new ComponentCreationResult[Seq[C], Unit](components, ())
 	
-	implicit def componentAndVisibilityPointersToResult[C <: ReachComponentLike]
+	implicit def componentAndVisibilityPointersToResult[C <: ReachComponent]
 	(components: IterableOnce[(C, Changing[Boolean])]): SwitchableCreations[C, Unit] =
 		apply(components.iterator.map { case (c, p) => apply(c, p) })
 	

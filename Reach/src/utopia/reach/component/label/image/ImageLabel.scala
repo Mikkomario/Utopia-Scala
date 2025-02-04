@@ -19,7 +19,7 @@ import utopia.paradigm.transform.{LinearSizeAdjustable, LinearTransformable}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 
 /**
   * Common trait for image label factories and settings
@@ -242,7 +242,7 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 			case Some(c) => image.withColorOverlay(c)
 			case None => image
 		}
-		new _ImageLabel(parentHierarchy, img * imageScaling, transformation, insets, alignment, customDrawers,
+		new _ImageLabel(hierarchy, img * imageScaling, transformation, insets, alignment, customDrawers,
 			allowsUpscaling, usesLowPrioritySize)
 	}
 	
@@ -250,12 +250,12 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	// NESTED   --------------------------------------
 	
 	// A static image label implementation
-	private class _ImageLabel(override val parentHierarchy: ComponentHierarchy, image: ImageView,
+	private class _ImageLabel(override val hierarchy: ComponentHierarchy, image: ImageView,
 	                          transformation: Option[Matrix2D] = None,
 	                          override val insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 	                          additionalCustomDrawers: Seq[CustomDrawer] = Empty, override val allowUpscaling: Boolean = true,
 	                          override val useLowPrioritySize: Boolean = false)
-		extends CustomDrawReachComponent with ImageLabel
+		extends ConcreteCustomDrawReachComponent with ImageLabel
 	{
 		// ATTRIBUTES	------------------------------
 		
@@ -278,9 +278,9 @@ trait ImageLabelFactoryLike[+Repr, +VF]
 	}
 }
 
-case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
-                              settings: ImageLabelSettings = ImageLabelSettings.default,
-                              allowsUpscaling: Boolean = false)
+case class ImageLabelFactory(hierarchy: ComponentHierarchy,
+                             settings: ImageLabelSettings = ImageLabelSettings.default,
+                             allowsUpscaling: Boolean = false)
 	extends ImageLabelFactoryLike[ImageLabelFactory, ViewImageLabelFactory] with BackgroundAssignable[ImageLabelFactory]
 		with FromContextFactory[StaticColorContext, ContextualImageLabelFactory]
 {
@@ -289,7 +289,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def self: ImageLabelFactory = this
 	
 	override def toViewFactory: ViewImageLabelFactory =
-		ViewImageLabelFactory(parentHierarchy, settings.toViewSettings,
+		ViewImageLabelFactory(hierarchy, settings.toViewSettings,
 			allowUpscalingPointer = Fixed(allowsUpscaling))
 	
 	override def *(mod: Double): ImageLabelFactory = withImageScaledBy(mod).withInsetsScaledBy(mod)
@@ -299,7 +299,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withBackground(background: Color): ImageLabelFactory = withCustomDrawer(BackgroundDrawer(background))
 	
 	override def withContext(context: StaticColorContext): ContextualImageLabelFactory =
-		ContextualImageLabelFactory(parentHierarchy, context, settings)
+		ContextualImageLabelFactory(hierarchy, context, settings)
 	
 	
 	// COMPUTED ---------------------------
@@ -310,7 +310,7 @@ case class ImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	def allowingImageUpscaling = copy(allowsUpscaling = true)
 }
 
-case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+case class ContextualImageLabelFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                        settings: ImageLabelSettings = ImageLabelSettings.default)
 	extends ImageLabelFactoryLike[ContextualImageLabelFactory, ContextualViewImageLabelFactory]
 		with StaticContextualFramedFactory[ContextualImageLabelFactory]
@@ -324,7 +324,7 @@ case class ContextualImageLabelFactory(parentHierarchy: ComponentHierarchy, cont
 	override protected def allowsUpscaling: Boolean = context.allowImageUpscaling
 	
 	override def toViewFactory: ContextualViewImageLabelFactory =
-		ContextualViewImageLabelFactory(parentHierarchy, context.toVariableContext,
+		ContextualViewImageLabelFactory(hierarchy, context.toVariableContext,
 			settings.toViewSettings)
 	
 	override def withSettings(settings: ImageLabelSettings): ContextualImageLabelFactory =
@@ -379,4 +379,4 @@ object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory] with ImageL
   * @author Mikko Hilpinen
   * @since 27.10.2020, v0.1
   */
-trait ImageLabel extends ReachComponentLike with ImageComponent
+trait ImageLabel extends ReachComponent with ImageComponent

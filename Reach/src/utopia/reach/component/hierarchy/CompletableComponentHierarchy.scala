@@ -1,6 +1,6 @@
 package utopia.reach.component.hierarchy
 
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 /**
   * Common trait for component hierarchies that can be completed (connected to a parent) after they have been created
@@ -15,5 +15,5 @@ trait CompletableComponentHierarchy extends ComponentHierarchy
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike): Unit
+	def complete(parent: ReachComponent): Unit
 }

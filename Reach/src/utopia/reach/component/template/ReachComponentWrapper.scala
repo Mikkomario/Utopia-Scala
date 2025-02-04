@@ -11,16 +11,16 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
   * @author Mikko Hilpinen
   * @since 24.10.2020, v0.1
   */
-trait ReachComponentWrapper extends ReachComponentLike with StackableWrapper
+trait ReachComponentWrapper extends ReachComponent with StackableWrapper
 {
 	// ABSTRACT	--------------------------------
 	
-	override protected def wrapped: ReachComponentLike
+	override protected def wrapped: ReachComponent
 	
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def parentHierarchy = wrapped.parentHierarchy
+	override def hierarchy = wrapped.hierarchy
 	override def children = wrapped.children
 	
 	override def transparent = wrapped.transparent

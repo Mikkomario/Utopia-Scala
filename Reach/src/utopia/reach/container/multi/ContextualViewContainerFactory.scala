@@ -3,7 +3,7 @@ package utopia.reach.container.multi
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.GenericContextualFactory
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.Open
 
@@ -18,7 +18,7 @@ import utopia.reach.component.wrapper.Open
   * @tparam TopC Highest accepted component to wrap (typically ReachComponentLike)
   * @tparam Repr This factory type
   */
-trait ContextualViewContainerFactory[+N, TopN, +Container, -TopC <: ReachComponentLike, +Repr[N2 <: TopN]]
+trait ContextualViewContainerFactory[+N, TopN, +Container, -TopC <: ReachComponent, +Repr[N2 <: TopN]]
 	extends ViewContainerFactory[Container, TopC] with GenericContextualFactory[N, TopN, Repr]
 {
 	/**
@@ -31,7 +31,7 @@ trait ContextualViewContainerFactory[+N, TopN, +Container, -TopC <: ReachCompone
 	  * @return A new container (also includes the created component and the additional creation result)
 	  */
 	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: Iterator[F] => SwitchableCreations[C, R]) =
-		apply(Open.withContext(context).many(contentFactory)(fill)(parentHierarchy.top))
+		apply(Open.withContext(context).many(contentFactory)(fill)(hierarchy.top))
 	
 	/**
 	  * Builds a new container which reflects the contents of a multi-value pointer.

@@ -6,7 +6,7 @@ import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.util.logging.Logger
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.context.ReachWindowContext
 import utopia.reach.focus.{FocusListener, FocusRequestable}
@@ -23,7 +23,7 @@ object Focusable
 	  * @param focusListeners Focus listeners to assign to this component
 	  * @return The wrapped component
 	  */
-	def wrap[C <: ReachComponentLike](component: C, focusListeners: Seq[FocusListener]) =
+	def wrap[C <: ReachComponent](component: C, focusListeners: Seq[FocusListener]) =
 		new FocusWrapper(component, focusListeners)
 	
 	
@@ -34,7 +34,7 @@ object Focusable
 	  * @param wrapped Component to wrap
 	  * @param focusListeners Focus listeners to assign to the component
 	  */
-	class FocusWrapper[+C <: ReachComponentLike](override val wrapped: C, override val focusListeners: Seq[FocusListener])
+	class FocusWrapper[+C <: ReachComponent](override val wrapped: C, override val focusListeners: Seq[FocusListener])
 		extends Focusable with ReachComponentWrapper
 	{
 		// INITIAL CODE	------------------------
@@ -58,7 +58,7 @@ object Focusable
   * @author Mikko Hilpinen
   * @since 21.10.2020, v0.1
   */
-trait Focusable extends ReachComponentLike with FocusRequestable
+trait Focusable extends ReachComponent with FocusRequestable
 {
 	// ABSTRACT	--------------------------------
 	
@@ -126,7 +126,7 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 				disableFocusHandling()
 		}
 		// Performs the initial registration if already linked
-		if (parentHierarchy.isLinked)
+		if (hierarchy.isLinked)
 			enableFocusHandling()
 	}
 	
@@ -190,12 +190,12 @@ trait Focusable extends ReachComponentLike with FocusRequestable
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	def createOwnedWindow[C <: ReachComponentLike, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
-	                                                  title: LocalizedString = LocalizedString.empty,
-	                                                  matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
-	                                                  display: Boolean = false)
-	                                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                                 (implicit context: ReachWindowContext, exc: ExecutionContext,
+	def createOwnedWindow[C <: ReachComponent, R](alignment: Alignment = Alignment.Right, margin: Double = 0.0,
+	                                              title: LocalizedString = LocalizedString.empty,
+	                                              matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
+	                                              display: Boolean = false)
+	                                             (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                             (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                                  log: Logger): WindowCreationResult[C, R] =
 	{
 		// Always enables focus on the created windows

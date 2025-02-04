@@ -14,7 +14,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.BaseContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{MutableCustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.OpenComponent
 
 case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
@@ -50,7 +50,7 @@ case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSet
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike]() = {
+	def apply[C <: ReachComponent]() = {
 		val stack = new MutableStack[C](hierarchy, axis, layout, margin, capPointer.value)
 		capPointer.addListenerWhile(stack.linkedFlag) { e => stack.cap = e.newValue }
 		stack
@@ -90,7 +90,7 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 	  * @tparam C Type of components within this stack
 	  * @return A new stack
 	  */
-	def apply[C <: ReachComponentLike]() = {
+	def apply[C <: ReachComponent]() = {
 		// FIXME: Doesn't support mutating cap at this time
 		val stack = new MutableStack[C](hierarchy, axis, layout,
 			if (areRelated) context.smallStackMargin else context.stackMargin, capPointer.value)
@@ -108,10 +108,10 @@ object MutableStack extends Cff[MutableStackFactory]
   * @author Mikko Hilpinen
   * @since 17.10.2020, v0.1
   */
-class MutableStack[C <: ReachComponentLike](override val parentHierarchy: ComponentHierarchy,
-											initialDirection: Axis2D, initialLayout: StackLayout,
-											initialMargin: StackLength, initialCap: StackLength)
-	extends MutableCustomDrawReachComponent with Stack with MutableMultiContainer[OpenComponent[C, _], C]
+class MutableStack[C <: ReachComponent](override val hierarchy: ComponentHierarchy,
+                                        initialDirection: Axis2D, initialLayout: StackLayout,
+                                        initialMargin: StackLength, initialCap: StackLength)
+	extends MutableConcreteCustomDrawReachComponent with Stack with MutableMultiContainer[OpenComponent[C, _], C]
 {
 	// ATTRIBUTES	------------------------
 	

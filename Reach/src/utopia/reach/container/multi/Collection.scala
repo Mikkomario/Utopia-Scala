@@ -24,7 +24,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.container.multi.Collection.{StackBoundsWrapper, layoutPriorities}
@@ -69,7 +69,7 @@ object Collection extends Cff[CollectionFactory]
 }
 
 trait CollectionFactoryLike[+Repr]
-	extends CombiningContainerFactory[Collection, ReachComponentLike] with CustomDrawableFactory[Repr]
+	extends CombiningContainerFactory[Collection, ReachComponent] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT ------------------------
 	
@@ -128,8 +128,8 @@ trait CollectionFactoryLike[+Repr]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
-		val collection: Collection = new _Collection(parentHierarchy, content.component,
+	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
+		val collection: Collection = new _Collection(hierarchy, content.component,
 			primaryAxis, insideRowLayout, betweenRowsLayout, innerMarginPointer, outerMarginPointer, splitThreshold,
 			customDrawers)
 		content attachTo collection
@@ -156,13 +156,13 @@ trait CollectionFactoryLike[+Repr]
 	def mapOuterMargin(f: Mutate[StackLength]) = mapOuterMarginPointer { _.map(f) }
 }
 
-case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: Axis2D = X,
+case class CollectionFactory(hierarchy: ComponentHierarchy, primaryAxis: Axis2D = X,
                              insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
                              innerMarginPointer: Changing[StackLength] = Fixed(StackLength.any),
                              outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
                              splitThreshold: Option[Double] = None, customDrawers: Seq[CustomDrawer] = Empty)
 	extends CollectionFactoryLike[CollectionFactory]
-		with NonContextualCombiningContainerFactory[Collection, ReachComponentLike]
+		with NonContextualCombiningContainerFactory[Collection, ReachComponent]
 		with FromGenericContextFactory[BaseContextPropsView, ContextualCollectionFactory]
 {
 	// IMPLEMENTED  ------------------------
@@ -176,11 +176,11 @@ case class CollectionFactory(parentHierarchy: ComponentHierarchy, primaryAxis: A
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): CollectionFactory = copy(customDrawers = drawers)
 	
 	override def withContext[N <: BaseContextPropsView](context: N): ContextualCollectionFactory[N] =
-		ContextualCollectionFactory[N](parentHierarchy, context, primaryAxis, insideRowLayout, betweenRowsLayout,
+		ContextualCollectionFactory[N](hierarchy, context, primaryAxis, insideRowLayout, betweenRowsLayout,
 			outerMarginPointer, splitThreshold, customDrawers)
 }
 
-case class ContextualCollectionFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualCollectionFactory[+N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N,
                                                                    primaryAxis: Axis2D = X,
                                                                    insideRowLayout: StackLayout = Fit,
                                                                    betweenRowsLayout: StackLayout = Leading,
@@ -190,7 +190,7 @@ case class ContextualCollectionFactory[+N <: BaseContextPropsView](parentHierarc
                                                                    customInnerMarginPointer: Option[Changing[StackLength]] = None,
                                                                    areRelated: Boolean = false)
 	extends CollectionFactoryLike[ContextualCollectionFactory[N]]
-		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Collection, ReachComponentLike, ContextualCollectionFactory]
+		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Collection, ReachComponent, ContextualCollectionFactory]
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -248,7 +248,7 @@ case class ContextualCollectionFactory[+N <: BaseContextPropsView](parentHierarc
   * @author Mikko Hilpinen
   * @since 3.5.2023, v1.1
   */
-trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLike] with StackSizeCalculating
+trait Collection extends ReachComponent with MultiContainer[ReachComponent] with StackSizeCalculating
 {
 	// ABSTRACT --------------------------
 	
@@ -333,7 +333,7 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 	
 	override def updateLayout(): Unit = {
 		val mySize = size
-		val componentsWithSizes = components.map { c => (c: ReachComponentLike) -> c.stackSize }
+		val componentsWithSizes = components.map { c => (c: ReachComponent) -> c.stackSize }
 		if (componentsWithSizes.nonEmpty) {
 			val maxLength = mySize(primaryAxis)
 			val maxBreadth = mySize(secondaryAxis)
@@ -380,7 +380,7 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 		}
 	}
 	
-	private def actualizeLayout(area: Size, layout: Seq[Seq[(ReachComponentLike, StackSize)]],
+	private def actualizeLayout(area: Size, layout: Seq[Seq[(ReachComponent, StackSize)]],
 	                            margins: Pair[StackLength]) =
 	{
 		val innerMargin = margins.first
@@ -439,13 +439,13 @@ trait Collection extends ReachComponentLike with MultiContainer[ReachComponentLi
 	}
 }
 
-private class _Collection(override val parentHierarchy: ComponentHierarchy,
-                          override val components: Seq[ReachComponentLike], override val primaryAxis: Axis2D,
+private class _Collection(override val hierarchy: ComponentHierarchy,
+                          override val components: Seq[ReachComponent], override val primaryAxis: Axis2D,
                           override val insideRowLayout: StackLayout, override val betweenRowsLayout: StackLayout,
                           override val innerMarginPointer: Changing[StackLength],
                           override val outerMarginPointer: Changing[StackLength],
                           override val splitThreshold: Option[Double], override val customDrawers: Seq[CustomDrawer])
-	extends CustomDrawReachComponent with Collection
+	extends ConcreteCustomDrawReachComponent with Collection
 {
 	// INITIAL CODE ----------------------------
 	

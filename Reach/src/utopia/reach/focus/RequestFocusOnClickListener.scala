@@ -4,7 +4,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 /**
   * A mouse event listener that moves component to focus when it is clicked
@@ -13,7 +13,7 @@ import utopia.reach.component.template.ReachComponentLike
   * @param component The component that is brought to focus when it is clicked
   * @param enabledFlag A pointer that determines whether this feature is enabled or not. Default = always enabled.
   */
-class RequestFocusOnClickListener(component: FocusRequestable with ReachComponentLike,
+class RequestFocusOnClickListener(component: FocusRequestable with ReachComponent,
                                   enabledFlag: Flag = AlwaysTrue)
 	extends MouseButtonStateListener
 {

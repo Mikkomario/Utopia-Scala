@@ -23,7 +23,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.cursor.DragTo.RepositionLogic.{RepositionComponent, RepositionParent, RepositionWindow}
 import utopia.reach.cursor.DragTo.{RepositionLogic, componentBoundsActions, windowBoundsActions}
 
@@ -57,7 +57,7 @@ object DragTo
 	  * @param component The component that will be repositioned
 	  * @return A new factory that repositions the specified component
 	  */
-	def repositionOther(component: ReachComponentLike) =
+	def repositionOther(component: ReachComponent) =
 		DragToFactory(resizeAxes = Set(), repositionLogic = Some(RepositionParent(component)))
 	
 	private def windowBoundsActions(window: java.awt.Window) = {
@@ -67,8 +67,8 @@ object DragTo
 		(getBounds, getArea, setBounds)
 	}
 	
-	private def componentBoundsActions(component: ReachComponentLike) =
-		component.parentHierarchy.parent match {
+	private def componentBoundsActions(component: ReachComponent) =
+		component.hierarchy.parent match {
 			// Case: Canvas root component => Directly manipulates the window, if possible
 			case Left(canvas) =>
 				canvas.parentWindow match {
@@ -133,7 +133,7 @@ object DragTo
 		  * Repositions a specific parent component in the component's hierarchy
 		  * @param component A component to which the repositioning applies
 		  */
-		case class RepositionParent(component: ReachComponentLike) extends RepositionLogic
+		case class RepositionParent(component: ReachComponent) extends RepositionLogic
 	}
 	
 	case class DragToFactory(resizeAxes: Set[Axis2D] = Axis2D.values.toSet,
@@ -189,7 +189,7 @@ object DragTo
 		  * @param component Component to reposition when the targeted component is dragged
 		  * @return Copy of this factory that applies repositioning to the specified component
 		  */
-		def repositioningOther(component: ReachComponentLike) =
+		def repositioningOther(component: ReachComponent) =
 			repositioningUsing(RepositionParent(component))
 		
 		/**
@@ -210,7 +210,7 @@ object DragTo
 		  * @param exc Implicit execution context for the resizing
 		  * @param log Implicit logging implementation for possible unexpected resizing errors
 		  */
-		def applyTo(component: ReachComponentLike, activeBorders: Insets)
+		def applyTo(component: ReachComponent, activeBorders: Insets)
 		           (implicit exc: ExecutionContext, log: Logger): Unit =
 			new DragTo(component, activeBorders, repositionLogic, resizeAxes, updateDelay, expandAtSides, fillAtTop)
 	}
@@ -221,7 +221,7 @@ object DragTo
   * @author Mikko Hilpinen
   * @since 20/01/2024, v1.2
   */
-class DragTo protected(component: ReachComponentLike, resizeActiveInsets: Insets,
+class DragTo protected(component: ReachComponent, resizeActiveInsets: Insets,
                        repositionLogic: Option[RepositionLogic] = None,
                        resizeAxes: Set[Axis2D] = Axis2D.values.toSet,
                        updateDelay: FiniteDuration = Duration.Zero, expandAtSides: Boolean = false,

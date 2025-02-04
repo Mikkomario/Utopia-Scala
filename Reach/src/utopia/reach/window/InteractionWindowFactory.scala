@@ -17,7 +17,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.button.image.ImageAndTextButton
 import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
-import utopia.reach.component.template.{ButtonLike, ReachComponentLike}
+import utopia.reach.component.template.{ButtonLike, ReachComponent}
 import utopia.reach.component.wrapper.WindowCreationResult
 import utopia.reach.container.multi.{Stack, StackFactory}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
@@ -75,7 +75,7 @@ trait InteractionWindowFactory[A]
 	  * @return The main content + list of button blueprints + pointer to whether the default button may be
 	  *         triggered by pressing enter inside this window
 	  */
-	protected def createContent(factories: ContextualMixed[StaticTextContext]): (ReachComponentLike, Seq[WindowButtonBlueprint[A]], View[Boolean])
+	protected def createContent(factories: ContextualMixed[StaticTextContext]): (ReachComponent, Seq[WindowButtonBlueprint[A]], View[Boolean])
 	
 	
 	// OTHER	-----------------------
@@ -109,7 +109,7 @@ trait InteractionWindowFactory[A]
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected),
 	  *         as an additional result
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None): WindowCreationResult[ReachComponentLike, Future[A]] = {
+	def display(parentWindow: Option[java.awt.Window] = None): WindowCreationResult[ReachComponent, Future[A]] = {
 		implicit val wc: StaticReachContentWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
 		implicit val log: Logger = this.log
@@ -135,7 +135,7 @@ trait InteractionWindowFactory[A]
 					// Places the main content and the buttons in a vertical stack
 					val factoriesWithoutContext = factories.withoutContext
 					val defaultButtonMargin = factories.context.stackMargin.optimal
-					val rowsBuilder = new VectorBuilder[ReachComponentLike]()
+					val rowsBuilder = new VectorBuilder[ReachComponent]()
 					val buttonsBuilder = new VectorBuilder[ButtonLike]()
 					
 					// Appends a single button row, if necessary
@@ -177,7 +177,7 @@ trait InteractionWindowFactory[A]
 	
 	private def buttonRow(factories: Mixed, buttons: Seq[WindowButtonBlueprint[A]],
 						  baseMargin: Double, resultPromise: Promise[A],
-						  defaultActionEnabled: => Boolean): (ReachComponentLike, Seq[ButtonLike]) =
+						  defaultActionEnabled: => Boolean): (ReachComponent, Seq[ButtonLike]) =
 	{
 		val nonScalingMargin = baseMargin.downscaling
 		

@@ -19,7 +19,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
 import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
@@ -205,7 +205,7 @@ trait StackSettingsWrapper[+Repr] extends StackSettingsLike[Repr]
   * @since 02.06.2023, v1.1
   */
 trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
-	extends StackSettingsWrapper[Repr] with CombiningContainerFactory[Stack, ReachComponentLike]
+	extends StackSettingsWrapper[Repr] with CombiningContainerFactory[Stack, ReachComponent]
 {
 	// ABSTRACT --------------------------
 	
@@ -231,8 +231,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Stack, C, R] = {
-		val stack: Stack = new _Stack(parentHierarchy, content.component, axis, layout, marginPointer, capPointer,
+	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Stack, C, R] = {
+		val stack: Stack = new _Stack(hierarchy, content.component, axis, layout, marginPointer, capPointer,
 			customDrawers)
 		content attachTo stack
 	}
@@ -254,7 +254,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def segmented[C <: ReachComponentLike, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) = {
+	def segmented[C <: ReachComponent, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) = {
 		// Wraps the components in segments first
 		val wrapped = Open { hierarchy =>
 			val wrapResult = group.wrapUnderSingle(hierarchy, content)
@@ -266,7 +266,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		stack.withChild(content.map { _.component })
 	}
 	@deprecated("Renamed to .segmented(...)", "v1.1")
-	def withSegments[C <: ReachComponentLike, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) =
+	def withSegments[C <: ReachComponent, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) =
 		segmented(content, group)
 	
 	/**
@@ -288,8 +288,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def pair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                     forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
+	def pair[C <: ReachComponent, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                 forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
 		// The first item always goes to the direction of the alignment
@@ -313,8 +313,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		withAxisAndLayout(axis, if (forceFitLayout) Fit else layout)(orderedContent)
 	}
 	@deprecated("Renamed to .pair(...)", "v1.1")
-	def forPair[C <: ReachComponentLike, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                        forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
+	def forPair[C <: ReachComponent, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                    forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
 		pair(content, alignment, forceFitLayout)
 }
 
@@ -324,16 +324,16 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
+case class StackFactory(hierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
                         marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends StackFactoryLike[StackFactory]
 		with FromGenericContextFactory[BaseContextPropsView, ContextualStackFactory]
-		with NonContextualCombiningContainerFactory[Stack, ReachComponentLike]
+		with NonContextualCombiningContainerFactory[Stack, ReachComponent]
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def withContext[N <: BaseContextPropsView](context: N): ContextualStackFactory[N] =
-		ContextualStackFactory(parentHierarchy, context, settings)
+		ContextualStackFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: StackSettings): StackFactory = copy(settings = settings)
 	override def withMarginPointer(p: Changing[StackLength]): StackFactory = copy(marginPointer = p)
@@ -354,8 +354,8 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def buildSegmented[F, C <: ReachComponentLike, R](contentFactory: Cff[F], group: SegmentGroup)
-	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
+	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Cff[F], group: SegmentGroup)
+	                                             (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
 		val content = Open.manyUsing(contentFactory) { fill(_) }
 		segmented(content.component, group).withResult(content.result)
@@ -381,9 +381,9 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
-	                                             forceFitLayout: Boolean = false)
-	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
+	def buildPair[F, C <: ReachComponent, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
+	                                         forceFitLayout: Boolean = false)
+	                                        (fill: F => ComponentCreationResult[Pair[C], R]) =
 		pair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
 }
 
@@ -395,12 +395,12 @@ case class StackFactory(parentHierarchy: ComponentHierarchy, settings: StackSett
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N,
                                                               settings: StackSettings = StackSettings.default,
                                                               customMarginPointer: Option[Changing[StackLength]] = None,
                                                               relatedFlag: Flag = AlwaysFalse)
 	extends StackFactoryLike[ContextualStackFactory[N]]
-		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Stack, ReachComponentLike, ContextualStackFactory]
+		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Stack, ReachComponent, ContextualStackFactory]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -472,8 +472,8 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def buildSegmented[F, C <: ReachComponentLike, R](contentFactory: Ccff[N, F], group: SegmentGroup)
-	                                                 (fill: Iterator[F] => ComponentsResult[C, R]) =
+	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], group: SegmentGroup)
+	                                             (fill: Iterator[F] => ComponentsResult[C, R]) =
 	{
 		val content = Open.withContext(context).many(contentFactory) { fill(_) }
 		segmented(content.component, group).withResult(content.result)
@@ -499,9 +499,9 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](parentHierarchy: C
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def buildPair[F, C <: ReachComponentLike, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
-	                                             forceFitLayout: Boolean = false)
-	                                            (fill: F => ComponentCreationResult[Pair[C], R]) =
+	def buildPair[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
+	                                         forceFitLayout: Boolean = false)
+	                                        (fill: F => ComponentCreationResult[Pair[C], R]) =
 		pair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
 }
 
@@ -534,7 +534,7 @@ object Stack extends StackSetup()
 /**
   * Common trait for all Reach stack implementations, regardless of implementation style
   */
-trait Stack extends CustomDrawReachComponent with StackLike[ReachComponentLike]
+trait Stack extends ConcreteCustomDrawReachComponent with StackLike[ReachComponent]
 {
 	// ABSTRACT --------------------------
 	
@@ -549,8 +549,8 @@ trait Stack extends CustomDrawReachComponent with StackLike[ReachComponentLike]
 	override def children = components
 }
 
-private class _Stack(override val parentHierarchy: ComponentHierarchy,
-                     override val components: Seq[ReachComponentLike], override val direction: Axis2D,
+private class _Stack(override val hierarchy: ComponentHierarchy,
+                     override val components: Seq[ReachComponent], override val direction: Axis2D,
                      override val layout: StackLayout, marginPointer: Changing[StackLength],
                      capPointer: Changing[StackLength], override val customDrawers: Seq[CustomDrawer])
 	extends Stack

@@ -7,7 +7,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.OpenComponent
 
 object SegmentGroup
@@ -71,7 +71,7 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	  * @param row Row of hierarchies to host the new components and open components to register & wrap
 	  * @return Wrapped components
 	  */
-	def wrapUnderMany[C <: ReachComponentLike, R](row: Seq[(ComponentHierarchy, OpenComponent[C, R])]) =
+	def wrapUnderMany[C <: ReachComponent, R](row: Seq[(ComponentHierarchy, OpenComponent[C, R])]) =
 	{
 		val parentsIterator = row.iterator.map { _._1 }
 		wrap(row.map { _._2 }) { parentsIterator.next() }
@@ -83,7 +83,7 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	  * @param row Row of open components to register & wrap
 	  * @return Wrapped components
 	  */
-	def wrapUnderSingle[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
+	def wrapUnderSingle[C <: ReachComponent, R](parentHierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
 		wrap(row)(parentHierarchy)
 	
 	/**
@@ -93,7 +93,7 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	  *                      components will be attached
 	  * @return Wrapped components
 	  */
-	def wrap[C <: ReachComponentLike, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
+	def wrap[C <: ReachComponent, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
 	{
 		// Adds each piece of the row into its own segment (creates new segments if necessary)
 		if (row.size > segments.size) {

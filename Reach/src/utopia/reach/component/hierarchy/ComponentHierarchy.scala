@@ -10,7 +10,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
 
 import scala.annotation.tailrec
@@ -29,14 +29,13 @@ trait ComponentHierarchy
 	  * @return The next "block" in this hierarchy (either Left: Canvas at the top or
 	  *         Right: an intermediate block + a component associated with that block)
 	  */
-	def parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]
+	def parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponent)]
 	
 	/**
 	  * @return A pointer that shows whether this hierarchy is currently active / linked to the top window.
 	  *         Should take into account possible parent state.
 	  */
-	// TODO: Rename to linkedFlag
-	def linkPointer: Flag
+	def linkedFlag: Flag
 	// TODO: Consider adding the following two methods
 	/*
 	  * @return A pointer that contains the direct parent component's position relative to the root canvas component
@@ -82,7 +81,7 @@ trait ComponentHierarchy
 	/**
 	  * @return Whether this hierarchy currently reaches the top component without any broken links
 	  */
-	def isLinked = linkPointer.value
+	def isLinked = linkedFlag.value
 	/**
 	  * @return Whether this hierarchy doesn't reach the top component at this time
 	  */
@@ -108,7 +107,10 @@ trait ComponentHierarchy
 	  *         placed in the beginning and the last element is the first direct parent component. If this hierarchy
 	  *         doesn't have parents before the canvas, returns an empty vector.
 	  */
-	def toVector: Vector[ReachComponentLike] = parentsIterator.toVector.reverse
+	def toVector: Vector[ReachComponent] = parentsIterator.toVector.reverse
+	
+	@deprecated("Deprecated for removal. Please use .linkedFlag instead", "v1.6")
+	def linkPointer: Flag = linkedFlag
 	
 	private def defaultPositionToTopModifier = parent match {
 		case Left(_) => Vector2D.zero
@@ -132,7 +134,7 @@ trait ComponentHierarchy
 	  * @return Whether this component hierarchy block is under specified component
 	  */
 	@tailrec
-	final def isChildOf(component: ReachComponentLike): Boolean = parent match {
+	final def isChildOf(component: ReachComponent): Boolean = parent match {
 		case Right((parentHierarchy, parentComponent)) =>
 			parentComponent == component || parentHierarchy.isChildOf(component)
 		case Left(_) => false
@@ -141,15 +143,15 @@ trait ComponentHierarchy
 	  * @param component A component
 	  * @return Whether that component is part of this hierarchy (either below or above)
 	  */
-	def contains(component: ReachComponentLike) =
-		component.parentHierarchy == this || component.isChildOf(this) || isChildOf(component)
+	def contains(component: ReachComponent) =
+		component.hierarchy == this || component.isChildOf(this) || isChildOf(component)
 	
 	/**
 	  * @param component A component
 	  * @return A modifier to apply to this hierarchy's child's position in order to get the position in the specified
 	  *         component. None if this hierarchy is not a child of the specified component.
 	  */
-	def positionInComponentModifier(component: ReachComponentLike): Option[Vector2D] = parent match {
+	def positionInComponentModifier(component: ReachComponent): Option[Vector2D] = parent match {
 		case Right((parentHierarchy, parentComponent)) =>
 			val default = {
 				if (parentComponent == component)
@@ -165,8 +167,8 @@ trait ComponentHierarchy
 	  * Revalidates this component hierarchy (provided this part of the hierarchy is currently linked to the main
 	  * stack hierarchy)
 	  */
-	def revalidate(layoutUpdateComponents: Seq[ReachComponentLike]): Unit = {
-		val branchBuilder = new VectorBuilder[ReachComponentLike]()
+	def revalidate(layoutUpdateComponents: Seq[ReachComponent]): Unit = {
+		val branchBuilder = new VectorBuilder[ReachComponent]()
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
 		_revalidate(branchBuilder) { _.revalidate(_) }
 	}
@@ -176,14 +178,14 @@ trait ComponentHierarchy
 	  * @param f A function called once this hierarchy has been updated. Please note that this function might not
 	  *          get called at all.
 	  */
-	def revalidateAndThen(layoutUpdateComponents: Seq[ReachComponentLike])(f: => Unit): Unit = {
-		val branchBuilder = new VectorBuilder[ReachComponentLike]()
+	def revalidateAndThen(layoutUpdateComponents: Seq[ReachComponent])(f: => Unit): Unit = {
+		val branchBuilder = new VectorBuilder[ReachComponent]()
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
 		_revalidate(branchBuilder) { _.revalidateAndThen(_)(f) }
 	}
 	@tailrec
-	private def _revalidate(branchBuilder: VectorBuilder[ReachComponentLike])
-	                       (callCanvas: (ReachCanvas, Vector[ReachComponentLike]) => Unit): Unit =
+	private def _revalidate(branchBuilder: VectorBuilder[ReachComponent])
+	                       (callCanvas: (ReachCanvas, Vector[ReachComponent]) => Unit): Unit =
 	{
 		// Terminates if not linked
 		if (isThisLevelLinked)

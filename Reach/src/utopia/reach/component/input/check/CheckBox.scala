@@ -154,7 +154,7 @@ trait CheckBoxFactoryLike[+Repr] extends CheckBoxSettingsWrapper[Repr] with Part
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+case class ContextualCheckBoxFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                      settings: CheckBoxSettings = CheckBoxSettings.default,
                                      selectedColorRole: ColorRole = ColorRole.Secondary)
 	extends CheckBoxFactoryLike[ContextualCheckBoxFactory]
@@ -198,7 +198,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
 					icon(selectedColorRole)
 			}
 		}
-		new CheckBox(parentHierarchy, appliedImages,
+		new CheckBox(hierarchy, appliedImages,
 			Pair(context.textColor.withAlpha(1.0), context.color(selectedColorRole)),
 			context.margins.small.round.toDouble, settings, valuePointer)
 	}
@@ -226,7 +226,7 @@ case class ContextualCheckBoxFactory(parentHierarchy: ComponentHierarchy, contex
   * @author Mikko Hilpinen
   * @since 20.06.2023, v1.1
   */
-case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
+case class CheckBoxFactory(hierarchy: ComponentHierarchy,
                            settings: CheckBoxSettings = CheckBoxSettings.default)
 	extends CheckBoxFactoryLike[CheckBoxFactory]
 		with FromContextFactory[StaticColorContext, ContextualCheckBoxFactory]
@@ -236,7 +236,7 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(context: StaticColorContext) =
-		ContextualCheckBoxFactory(parentHierarchy, context, settings)
+		ContextualCheckBoxFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: CheckBoxSettings) = copy(settings = settings)
 	
@@ -253,7 +253,7 @@ case class CheckBoxFactory(parentHierarchy: ComponentHierarchy,
 	  */
 	def apply(images: Pair[Image], hoverColors: Pair[Color], hoverRadius: Double = 0.0,
 	          valuePointer: EventfulPointer[Boolean] = ResettableFlag()) =
-		new CheckBox(parentHierarchy, images, hoverColors, hoverRadius, settings, valuePointer)
+		new CheckBox(hierarchy, images, hoverColors, hoverRadius, settings, valuePointer)
 }
 
 case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,

@@ -10,7 +10,7 @@ import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.wrapper.AlignFrame
 import utopia.reach.drawing.MousePositionDrawer
@@ -82,7 +82,7 @@ object ReachInSwingTest extends App
 			AlignFrame(hierarchy).withContext(baseContext.against(Color.yellow).forTextComponents)(Center)
 				.withBackground(Secondary)
 				.build(ViewTextLabel) { labelF =>
-					val componentP = AssignableOnce[ReachComponentLike]()
+					val componentP = AssignableOnce[ReachComponent]()
 					val label = labelF.withBackground(Primary)
 						.withCustomDrawer(new MousePositionDrawer(componentP, 3.0))
 						.apply(textPointer)

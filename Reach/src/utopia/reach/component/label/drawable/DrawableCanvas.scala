@@ -24,7 +24,7 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ConcreteReachComponent}
 
 import scala.concurrent.ExecutionContext
 
@@ -166,7 +166,7 @@ trait DrawableCanvasFactoryLike[+Repr]
 	// OTHER    ------------------------
 	
 	protected def _apply(viewAreaPointer: Changing[Bounds])(implicit exc: ExecutionContext, log: Logger) =
-		new DrawableCanvas(parentHierarchy, viewAreaPointer, scalingLogic, fpsLimits, minSize)
+		new DrawableCanvas(hierarchy, viewAreaPointer, scalingLogic, fpsLimits, minSize)
 }
 
 /**
@@ -174,7 +174,7 @@ trait DrawableCanvasFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 25.02.2024, v1.3
   */
-case class ContextualDrawableCanvasFactory(parentHierarchy: ComponentHierarchy, context: BaseContext,
+case class ContextualDrawableCanvasFactory(hierarchy: ComponentHierarchy, context: BaseContext,
                                            settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasFactoryLike[ContextualDrawableCanvasFactory]
 		with ContextualFactory[BaseContext, ContextualDrawableCanvasFactory]
@@ -198,7 +198,7 @@ case class ContextualDrawableCanvasFactory(parentHierarchy: ComponentHierarchy, 
   * @author Mikko Hilpinen
   * @since 25.02.2024, v1.3
   */
-case class DrawableCanvasFactory(parentHierarchy: ComponentHierarchy,
+case class DrawableCanvasFactory(hierarchy: ComponentHierarchy,
                                  settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasFactoryLike[DrawableCanvasFactory]
 		with FromContextFactory[BaseContext, ContextualDrawableCanvasFactory]
@@ -206,7 +206,7 @@ case class DrawableCanvasFactory(parentHierarchy: ComponentHierarchy,
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(context: BaseContext) =
-		ContextualDrawableCanvasFactory(parentHierarchy, context, settings)
+		ContextualDrawableCanvasFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: DrawableCanvasSettings) = copy(settings = settings)
 	
@@ -249,11 +249,11 @@ object DrawableCanvas extends DrawableCanvasSetup()
   * @since 09/02/2024, v1.3
   */
 // TODO: Add support for mouse drag events
-class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaPointer: Changing[Bounds],
+class DrawableCanvas(override val hierarchy: ComponentHierarchy, viewAreaPointer: Changing[Bounds],
                      scalingLogic: ScalePreservingShape = Fit, fpsLimits: Map[Priority, Fps] = Map(),
                      minSize: Size = Size.zero)
                     (implicit exc: ExecutionContext, log: Logger)
-	extends ReachComponent with CoordinateTransform
+	extends ConcreteReachComponent with CoordinateTransform
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -263,7 +263,7 @@ class DrawableCanvas(override val parentHierarchy: ComponentHierarchy, viewAreaP
 	  * Handler where the items drawn within this canvas should be placed
 	  */
 	val drawHandler = DrawableHandler.withClipPointer(viewAreaPointer)
-		.withVisibilityPointer(parentHierarchy.linkPointer).withFpsLimits(fpsLimits).empty
+		.withVisibilityPointer(hierarchy.linkedFlag).withFpsLimits(fpsLimits).empty
 	private val wrapper = new Repositioner(drawHandler, Left(Fixed(Point.origin), visualSizePointer), scalingLogic)
 	
 	private val relativeMouseButtonHandler = MouseButtonStateHandler.empty

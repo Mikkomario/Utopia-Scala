@@ -11,7 +11,7 @@ import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.
 import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
 
@@ -26,7 +26,7 @@ object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
 	// EXTENSIONS	------------------------
 	
 	// Swappers using a mutable pointer can be considered mutable themselves
-	implicit class MutableCachingViewSwapper[A, +C <: ReachComponentLike](val s: CachingViewSwapper[A, C, EventfulPointer[A]])
+	implicit class MutableCachingViewSwapper[A, +C <: ReachComponent](val s: CachingViewSwapper[A, C, EventfulPointer[A]])
 		extends InteractionWithPointer[A]
 	{
 		override def valuePointer = s.valuePointer
@@ -61,9 +61,9 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  * @tparam P Value pointer type
 	  * @return A new swapper container
 	  */
-	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
-	                                                        customDrawers: Seq[CustomDrawer] = Empty)
-	                                                       (makeContent: A => OpenComponent[C, _]) =
+	def apply[A, C <: ReachComponent, P <: Changing[A]](valuePointer: P,
+	                                                    customDrawers: Seq[CustomDrawer] = Empty)
+	                                                   (makeContent: A => OpenComponent[C, _]) =
 		new CachingViewSwapper[A, C, P](parentHierarchy, valuePointer, customDrawers)(makeContent)
 	
 	/**
@@ -77,8 +77,8 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new swapper container
 	  */
 	def generic[A](valuePointer: Changing[A], customDrawers: Seq[CustomDrawer] = Empty)
-				  (makeContent: A => OpenComponent[ReachComponentLike, _]) =
-		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
+				  (makeContent: A => OpenComponent[ReachComponent, _]) =
+		apply[A, ReachComponent, Changing[A]](valuePointer, customDrawers)(makeContent)
 	
 	/**
 	 * @param contentFactory A factory for building displayed views
@@ -118,9 +118,9 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 	  * @tparam P Type of value pointer used
 	  * @return A new swapper
 	  */
-	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
-	                                                        customDrawers: Seq[CustomDrawer] = Empty)
-	                                                       (makeContent: (F, A) => C) =
+	def apply[A, C <: ReachComponent, P <: Changing[A]](valuePointer: P,
+	                                                    customDrawers: Seq[CustomDrawer] = Empty)
+	                                                   (makeContent: (F, A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item => Open.using(contentFactory) { makeContent(_, item) } }
 	
 	/**
@@ -132,8 +132,8 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 	  * @return A new swapper
 	  */
 	def generic[A](valuePointer: Changing[A], customDrawers: Seq[CustomDrawer] = Empty)
-				  (makeContent: (F, A) => ReachComponentLike) =
-		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
+				  (makeContent: (F, A) => ReachComponent) =
+		apply[A, ReachComponent, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
 @deprecated("Deprecated for removal. Replaced with ContextualSwapperBuilder", "v1.5")
@@ -151,9 +151,9 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
 	  * @tparam P Type of value pointer used
 	  * @return A new swapper
 	  */
-	def apply[A, C <: ReachComponentLike, P <: Changing[A]](valuePointer: P,
-	                                                        customDrawers: Seq[CustomDrawer] = Empty)
-	                                                       (makeContent: (F[N], A) => C) =
+	def apply[A, C <: ReachComponent, P <: Changing[A]](valuePointer: P,
+	                                                    customDrawers: Seq[CustomDrawer] = Empty)
+	                                                   (makeContent: (F[N], A) => C) =
 		factory[A, C, P](valuePointer, customDrawers) { item =>
 			Open.withContext(context)(contentFactory) { makeContent(_, item) }
 		}
@@ -167,8 +167,8 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
 	  * @return A new swapper
 	  */
 	def generic[A](valuePointer: Changing[A], customDrawers: Seq[CustomDrawer] = Empty)
-				  (makeContent: (F[N], A) => ReachComponentLike) =
-		apply[A, ReachComponentLike, Changing[A]](valuePointer, customDrawers)(makeContent)
+				  (makeContent: (F[N], A) => ReachComponent) =
+		apply[A, ReachComponent, Changing[A]](valuePointer, customDrawers)(makeContent)
 }
 
 /**
@@ -177,7 +177,7 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
   * component creations
   * @author Mikko Hilpinen
   * @since 16.12.2020, v0.1
-  * @param parentHierarchy Component hierarchy this container is attached to
+  * @param hierarchy Component hierarchy this container is attached to
   * @param valuePointer Pointer to the currently selected value
   * @param customDrawers Custom drawers used in this container (default = empty)
   * @tparam A Type of mirrored value
@@ -185,10 +185,10 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
   * @tparam P Type of value pointer used
   */
 @deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
-class CachingViewSwapper[A, +C <: ReachComponentLike, +P <: Changing[A]]
-(override val parentHierarchy: ComponentHierarchy, override val valuePointer: P,
+class CachingViewSwapper[A, +C <: ReachComponent, +P <: Changing[A]]
+(override val hierarchy: ComponentHierarchy, override val valuePointer: P,
  override val customDrawers: Seq[CustomDrawer] = Empty)(makeContent: A => OpenComponent[C, _])
-	extends CustomDrawReachComponent with InputWithPointer[A, Changing[A]]
+	extends ConcreteCustomDrawReachComponent with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------
 	

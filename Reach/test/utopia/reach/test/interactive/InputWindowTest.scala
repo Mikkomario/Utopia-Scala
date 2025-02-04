@@ -27,7 +27,7 @@ import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.input.check.CheckBox
 import utopia.reach.component.input.selection.RadioButtonGroup
 import utopia.reach.component.input.text.{DurationField, TextField}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
@@ -119,7 +119,7 @@ object InputWindowTest extends App
 		}
 		
 		override protected def buildLayout(factories: ContextualMixed[StaticTextContext],
-		                                   content: Seq[OpenComponent[ReachComponentLike, Changing[Boolean]]],
+		                                   content: Seq[OpenComponent[ReachComponent, Changing[Boolean]]],
 		                                   context: Unit) =
 		{
 			val framingMargin = margins.medium.downscaling x margins.medium.any
@@ -141,8 +141,8 @@ object InputWindowTest extends App
 		}
 		
 		override protected def specifyButtons(context: Unit,
-											  input: => Either[(String, ReachComponentLike with FocusRequestable), Model],
-											  warn: (String, LocalizedString) => Unit) =
+		                                      input: => Either[(String, ReachComponent with FocusRequestable), Model],
+		                                      warn: (String, LocalizedString) => Unit) =
 		{
 			val okButton = model.WindowButtonBlueprint[Model]("OK", role = Secondary, isDefault = true) { promise =>
 				input.toOption.foreach(promise.trySuccess)

@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory, WrapperContainerFactory}
 
@@ -36,7 +36,7 @@ object ScrollArea extends Cff[ScrollAreaFactory]
   * @tparam Repr This factory type
   */
 trait ScrollWrapperFactoryLike[+Container, +Repr]
-	extends WrapperContainerFactory[Container, ReachComponentLike] with CustomDrawableFactory[Repr]
+	extends WrapperContainerFactory[Container, ReachComponent] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT ---------------------------
 	
@@ -131,9 +131,9 @@ trait ScrollAreaFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollArea, 
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[ScrollArea, C, R] = {
+	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[ScrollArea, C, R] = {
 		val context = scrollContext
-		val area = new ScrollArea(parentHierarchy, content.component, context.actorHandler, context.scrollBarDrawer,
+		val area = new ScrollArea(hierarchy, content.component, context.actorHandler, context.scrollBarDrawer,
 			context.scrollBarWidth, scrollBarMargin, context.scrollPerWheelClick, context.scrollFriction,
 			customDrawers, limitsToContentSize, context.scrollBarIsInsideContent)
 		applyLengthConstraintsTo(area)
@@ -180,17 +180,17 @@ case class ScrollAreaFactory(parentHierarchy: ComponentHierarchy)
 		ContextualScrollAreaFactory(parentHierarchy, context)
 }
 
-case class InitializedScrollAreaFactory(parentHierarchy: ComponentHierarchy, scrollBarMargin: Size = Size.zero,
+case class InitializedScrollAreaFactory(hierarchy: ComponentHierarchy, scrollBarMargin: Size = Size.zero,
                                         maxOptimalLengths: Dimensions[Option[Double]] = Dimensions[Option[Double]](None).empty,
                                         customDrawers: Seq[CustomDrawer] = Empty,
                                         limitsToContentSize: Boolean = false)
                                        (implicit override val scrollContext: ScrollingContext)
 	extends ScrollAreaFactoryLike[InitializedScrollAreaFactory]
-		with NonContextualWrapperContainerFactory[ScrollArea, ReachComponentLike]
+		with NonContextualWrapperContainerFactory[ScrollArea, ReachComponent]
 		with FromGenericContextFactory[Any, InitializedContextualScrollAreaFactory]
 {
 	override def withContext[N <: Any](context: N): InitializedContextualScrollAreaFactory[N] =
-		InitializedContextualScrollAreaFactory(parentHierarchy, context, scrollBarMargin, maxOptimalLengths,
+		InitializedContextualScrollAreaFactory(hierarchy, context, scrollBarMargin, maxOptimalLengths,
 			customDrawers, limitsToContentSize)
 	
 	override def withScrollBarMargin(margin: Size): InitializedScrollAreaFactory = copy(scrollBarMargin = margin)
@@ -223,14 +223,14 @@ case class ContextualScrollAreaFactory[N](parentHierarchy: ComponentHierarchy, c
 	def withoutContext = ScrollAreaFactory(parentHierarchy)
 }
 
-case class InitializedContextualScrollAreaFactory[N](parentHierarchy: ComponentHierarchy, context: N,
+case class InitializedContextualScrollAreaFactory[N](hierarchy: ComponentHierarchy, context: N,
                                                      scrollBarMargin: Size = Size.zero,
                                                      maxOptimalLengths: Dimensions[Option[Double]] = Dimensions[Option[Double]](None).empty,
                                                      customDrawers: Seq[CustomDrawer] = Empty,
                                                      limitsToContentSize: Boolean = false)
                                                     (implicit override val scrollContext: ScrollingContext)
 	extends ScrollAreaFactoryLike[InitializedContextualScrollAreaFactory[N]]
-		with ContextualWrapperContainerFactory[N, Any, ScrollArea, ReachComponentLike, InitializedContextualScrollAreaFactory]
+		with ContextualWrapperContainerFactory[N, Any, ScrollArea, ReachComponent, InitializedContextualScrollAreaFactory]
 {
 	override def withContext[N2 <: Any](newContext: N2): InitializedContextualScrollAreaFactory[N2] =
 		copy(context = newContext)
@@ -249,7 +249,7 @@ case class InitializedContextualScrollAreaFactory[N](parentHierarchy: ComponentH
   * @author Mikko Hilpinen
   * @since 7.12.2020, v0.1
   */
-class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
+class ScrollArea(override val hierarchy: ComponentHierarchy, override val content: ReachComponent,
                  actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike,
                  override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
                  override val scrollBarMargin: Size = Size.zero,
@@ -258,7 +258,7 @@ class ScrollArea(override val parentHierarchy: ComponentHierarchy, override val 
                  additionalDrawers: Seq[CustomDrawer] = Empty,
                  override val limitsToContentSize: Boolean = false,
                  override val scrollBarIsInsideContent: Boolean = true)
-	extends CustomDrawReachComponent with ScrollAreaLike[ReachComponentLike]
+	extends ConcreteCustomDrawReachComponent with ScrollAreaLike[ReachComponent]
 {
 	// ATTRIBUTES	----------------------------
 	

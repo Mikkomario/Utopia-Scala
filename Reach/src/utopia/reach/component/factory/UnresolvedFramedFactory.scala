@@ -101,7 +101,7 @@ trait UnresolvedFramedFactory[+Repr]
 			contextPointer.fixedValue match {
 				case Some(c) => Fixed(resolveInsetsIn(c))
 				// TODO: Once we have a better variable context class, map the margins instead of the whole context
-				case None => contextPointer.mapWhile(hierarchy.linkPointer) { resolveInsetsIn(_) }
+				case None => contextPointer.mapWhile(hierarchy.linkedFlag) { resolveInsetsIn(_) }
 			}
 	}
 	

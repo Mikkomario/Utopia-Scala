@@ -13,7 +13,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.OpenComponent
 
 /**
@@ -66,9 +66,9 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	  * @param index Index of this segment
 	  * @return Container that now wraps the specified component (as a wrap result)
 	  */
-	def wrap[C <: ReachComponentLike, R](parentHierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
+	def wrap[C <: ReachComponent, R](parentHierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
 	{
-		val container: ReachComponent = new SegmentContainer(parentHierarchy, component, index)
+		val container: ConcreteReachComponent = new SegmentContainer(parentHierarchy, component, index)
 		component.attachTo(container)
 	}
 	
@@ -91,8 +91,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	
 	// NESTED	---------------------------------
 	
-	private class SegmentContainer(override val parentHierarchy: ComponentHierarchy,
-								   val wrappedComponent: ReachComponentLike, index: Int) extends ReachComponent
+	private class SegmentContainer(override val hierarchy: ComponentHierarchy,
+	                               val wrappedComponent: ReachComponent, index: Int) extends ConcreteReachComponent
 	{
 		// ATTRIBUTES	-------------------------
 		
@@ -125,7 +125,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 			super.resetCachedSize()
 			// If needs to reset cached size while not in update mode, revalidates all segment containers and not
 			// just this one
-			if (parentHierarchy.isLinked && isUpdatingFlag.isNotSet)
+			if (hierarchy.isLinked && isUpdatingFlag.isNotSet)
 				updateContainers()
 		}
 		

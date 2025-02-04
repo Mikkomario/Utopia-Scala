@@ -177,7 +177,7 @@ trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr] wit
 	  * @return A new image button
 	  */
 	def apply[U](images: ButtonImageSet)(action: => U) =
-		new ImageButton(parentHierarchy, images ++ settings.imageEffects, settings, allowsUpscaling)(action)
+		new ImageButton(hierarchy, images ++ settings.imageEffects, settings, allowsUpscaling)(action)
 	/**
 	  * Creates a new image button
 	  * @param image The image to display on this button
@@ -192,7 +192,7 @@ trait ImageButtonFactoryLike[+Repr] extends ImageButtonSettingsWrapper[Repr] wit
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+case class ContextualImageButtonFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                         settings: ImageButtonSettings = ImageButtonSettings.default)
 	extends ImageButtonFactoryLike[ContextualImageButtonFactory]
 		with ColorContextualFactory[ContextualImageButtonFactory]
@@ -262,7 +262,7 @@ case class ContextualImageButtonFactory(parentHierarchy: ComponentHierarchy, con
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
+case class ImageButtonFactory(hierarchy: ComponentHierarchy,
                               settings: ImageButtonSettings = ImageButtonSettings.default,
                               allowsUpscaling: Boolean = false)
 	extends ImageButtonFactoryLike[ImageButtonFactory]
@@ -281,7 +281,7 @@ case class ImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	override def self: ImageButtonFactory = this
 	
 	override def withContext(context: StaticColorContext) =
-		ContextualImageButtonFactory(parentHierarchy, context, settings)
+		ContextualImageButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ImageButtonSettings) = copy(settings = settings)
 }

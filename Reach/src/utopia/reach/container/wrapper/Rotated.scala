@@ -23,12 +23,12 @@ import utopia.paradigm.transform.LinearTransformation
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.container.ReachCanvas
 
 trait RotatedFactoryLike[+Repr]
-	extends WrapperContainerFactory[Rotated, ReachComponentLike] with CustomDrawableFactory[Repr]
+	extends WrapperContainerFactory[Rotated, ReachComponent] with CustomDrawableFactory[Repr]
 {
 	// ABSTRACT ----------------------
 	
@@ -58,29 +58,29 @@ trait RotatedFactoryLike[+Repr]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[Rotated, C, R] = {
-		val container = new Rotated(parentHierarchy, content.component, direction, customDrawers)
-		content.attachTo(container, RotatedHierarchy(parentHierarchy, container, direction))
+	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[Rotated, C, R] = {
+		val container = new Rotated(hierarchy, content.component, direction, customDrawers)
+		content.attachTo(container, RotatedHierarchy(hierarchy, container, direction))
 	}
 }
 
-case class RotatedFactory(parentHierarchy: ComponentHierarchy, direction: RotationDirection = Clockwise,
+case class RotatedFactory(hierarchy: ComponentHierarchy, direction: RotationDirection = Clockwise,
                           customDrawers: Seq[CustomDrawer] = Empty)
-	extends RotatedFactoryLike[RotatedFactory] with NonContextualWrapperContainerFactory[Rotated, ReachComponentLike]
+	extends RotatedFactoryLike[RotatedFactory] with NonContextualWrapperContainerFactory[Rotated, ReachComponent]
 		with FromGenericContextFactory[Any, ContextualRotatedFactory]
 {
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): RotatedFactory = copy(customDrawers = customDrawers)
 	override def withDirection(direction: RotationDirection): RotatedFactory = copy(direction = direction)
 	
 	override def withContext[N <: Any](context: N): ContextualRotatedFactory[N] =
-		ContextualRotatedFactory(parentHierarchy, context, direction, customDrawers)
+		ContextualRotatedFactory(hierarchy, context, direction, customDrawers)
 }
 
-case class ContextualRotatedFactory[+N](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualRotatedFactory[+N](hierarchy: ComponentHierarchy, context: N,
                                         direction: RotationDirection = Clockwise,
                                         customDrawers: Seq[CustomDrawer] = Empty)
 	extends RotatedFactoryLike[ContextualRotatedFactory[N]]
-		with ContextualWrapperContainerFactory[N, Any, Rotated, ReachComponentLike, ContextualRotatedFactory]
+		with ContextualWrapperContainerFactory[N, Any, Rotated, ReachComponent, ContextualRotatedFactory]
 {
 	override def withContext[N2 <: Any](newContext: N2): ContextualRotatedFactory[N2] = copy(context = newContext)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualRotatedFactory[N] =
@@ -89,13 +89,13 @@ case class ContextualRotatedFactory[+N](parentHierarchy: ComponentHierarchy, con
 }
 
 // A component hierarchy block which performs the necessary coordinate transformations
-private case class RotatedHierarchy(parentHierarchy: ComponentHierarchy, container: ReachComponentLike,
+private case class RotatedHierarchy(parentHierarchy: ComponentHierarchy, container: ReachComponent,
                                     direction: RotationDirection)
 	extends ComponentHierarchy
 {
 	// ATTRIBUTES   --------------------
 	
-	override val parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)] =
+	override val parent: Either[ReachCanvas, (ComponentHierarchy, ReachComponent)] =
 		Right(parentHierarchy -> container)
 	
 	private val rotation = Matrix2D.quarterRotationTowards(direction)
@@ -107,7 +107,7 @@ private case class RotatedHierarchy(parentHierarchy: ComponentHierarchy, contain
 	
 	// IMPLEMENTED  --------------------
 	
-	override def linkPointer: Flag = parentHierarchy.linkPointer
+	override def linkedFlag: Flag = parentHierarchy.linkedFlag
 	override def isThisLevelLinked: Boolean = true
 	
 	override def coordinateTransform: Option[CoordinateTransform] = Some(Transform)
@@ -140,10 +140,10 @@ object Rotated extends Cff[RotatedFactory]
   * @author Mikko Hilpinen
   * @since 17.08.2024, v1.4
   */
-class Rotated(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
+class Rotated(override val hierarchy: ComponentHierarchy, override val content: ReachComponent,
               direction: RotationDirection = Clockwise,
               override val customDrawers: Seq[CustomDrawer] = Empty)
-	extends CustomDrawReachComponent with SingleContainer[ReachComponentLike]
+	extends ConcreteCustomDrawReachComponent with SingleContainer[ReachComponent]
 {
 	// ATTRIBUTES   ---------------------------
 	

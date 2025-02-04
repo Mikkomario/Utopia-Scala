@@ -10,7 +10,7 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableCustomDrawReachComponent
+import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
 
 // TODO: Use ImageLabelSettings here
 class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
@@ -40,10 +40,10 @@ object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactor
   * @author Mikko Hilpinen
   * @since 28.10.2020, v0.1
   */
-class MutableImageLabel(override val parentHierarchy: ComponentHierarchy, initialImage: Image,
-						initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
-						override val allowUpscaling: Boolean = true, override val useLowPrioritySize: Boolean = false)
-	extends MutableCustomDrawReachComponent with ImageLabel
+class MutableImageLabel(override val hierarchy: ComponentHierarchy, initialImage: Image,
+                        initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
+                        override val allowUpscaling: Boolean = true, override val useLowPrioritySize: Boolean = false)
+	extends MutableConcreteCustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	--------------------------
 	

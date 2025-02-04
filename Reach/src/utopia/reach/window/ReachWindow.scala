@@ -29,7 +29,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
 import utopia.reach.container.RevalidationStyle.{Delayed, Immediate}
 import utopia.reach.container.{ReachCanvas, RevalidationStyle}
@@ -148,10 +148,10 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def apply[C <: ReachComponentLike, R](parent: Option[java.awt.Window] = None,
-	                                      title: LocalizedString = LocalizedString.empty,
-	                                      disableAutoBoundsUpdates: Boolean = false)
-	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	def apply[C <: ReachComponent, R](parent: Option[java.awt.Window] = None,
+	                                  title: LocalizedString = LocalizedString.empty,
+	                                  disableAutoBoundsUpdates: Boolean = false)
+	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		// Prepares pointers for the window and canvas
 		val windowPointer = AssignableOnce[Window]()
@@ -223,15 +223,15 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	def anchoredTo[C <: ReachComponentLike, R](component: ReachComponentLike, preferredAlignment: Alignment,
-	                                           margin: Double = 0.0, title: LocalizedString = LocalizedString.empty,
-	                                           matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
-	                                          (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	def anchoredTo[C <: ReachComponent, R](component: ReachComponent, preferredAlignment: Alignment,
+	                                       margin: Double = 0.0, title: LocalizedString = LocalizedString.empty,
+	                                       matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
+	                                      (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
 	{
 		// Full-screen is not supported for anchored windows
 		val factory = windowed.withAnchorAlignment(preferredAlignment)
 		// Creates the window and the canvas
-		val windowCreation = factory(component.parentHierarchy.top.parentWindow, title,
+		val windowCreation = factory(component.hierarchy.top.parentWindow, title,
 			disableAutoBoundsUpdates = true)(createContent)
 		val window = windowCreation.window
 		
@@ -239,7 +239,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		lazy val screenArea = {
 			val base = Bounds(Point.origin, Screen.actualSize)
 			if (context.screenInsetsEnabled)
-				base - Screen.actualInsetsAt(component.parentHierarchy.top.component.getGraphicsConfiguration)
+				base - Screen.actualInsetsAt(component.hierarchy.top.component.getGraphicsConfiguration)
 			else
 				base
 		}
@@ -304,7 +304,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			else
 				window.sizePointer.addListener(repositionListener)
 			component.boundsPointer.addListener(repositionListener)
-			component.parentHierarchy.parentsIterator.foreach { _.positionPointer.addListener(repositionListener) }
+			component.hierarchy.parentsIterator.foreach { _.positionPointer.addListener(repositionListener) }
 			// The canvas absolute position tracking may not be working
 			component.parentCanvas.absolutePositionView.toOption.foreach { _.addListener(repositionListener) }
 		}
@@ -454,11 +454,11 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def using[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticReachContentWindowContext, F],
-	                                         parent: Option[java.awt.Window] = None,
-	                                         title: LocalizedString = LocalizedString.empty,
-	                                         disableAutoBoundsUpdates: Boolean = false)
-	                                        (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
+	def using[F, C <: ReachComponent, R](factory: FromContextComponentFactoryFactory[StaticReachContentWindowContext, F],
+	                                     parent: Option[java.awt.Window] = None,
+	                                     title: LocalizedString = LocalizedString.empty,
+	                                     disableAutoBoundsUpdates: Boolean = false)
+	                                    (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
 		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}
@@ -500,12 +500,12 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	def anchoredToUsing[F, C <: ReachComponentLike, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
-	                                                   component: ReachComponentLike, preferredAlignment: Alignment,
-	                                                   margin: Double = 0.0,
-	                                                   title: LocalizedString = LocalizedString.empty,
-	                                                   matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
-	                                                  (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
+	def anchoredToUsing[F, C <: ReachComponent, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
+	                                               component: ReachComponent, preferredAlignment: Alignment,
+	                                               margin: Double = 0.0,
+	                                               title: LocalizedString = LocalizedString.empty,
+	                                               matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
+	                                              (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
 		windowFactory.anchoredTo(component, preferredAlignment, margin, title, matchEdgeLength, keepAnchored) { hierarchy =>
 			createContent(hierarchy.top, factory.withContext(hierarchy, context))
 		}

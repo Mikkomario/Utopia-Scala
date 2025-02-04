@@ -30,7 +30,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.ReachCanvas
@@ -41,7 +41,7 @@ import java.awt.event.KeyEvent
 case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: Lazy[Changing[Boolean]],
                           rowIndex: Int)
 
-case class ListRowContent(components: IterableOnce[ReachComponentLike], context: ListRowContext, action: () => Unit)
+case class ListRowContent(components: IterableOnce[ReachComponent], context: ListRowContext, action: () => Unit)
 
 /**
   * Used for creating actionable lists
@@ -103,7 +103,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 					rowContent.context.parentHierarchy)
 				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
 					.withCap(rowCap)(wrappedRowComponents)
-					.parent: ReachComponentLike
+					.parent: ReachComponent
 				row -> rowContent
 			}
 		}
@@ -230,7 +230,7 @@ private class SelectionKeyListener(selectedIndexPointer: Pointer[Int], keyPresse
 }
 
 private class Selector(stackPointer: Changing[Option[Stack]], backgroundPointer: View[Color],
-                       selectedComponentPointer: Changing[Option[ReachComponentLike]],
+                       selectedComponentPointer: Changing[Option[ReachComponent]],
                        keyPressedPointer: View[Boolean])
 	extends CustomDrawer with MouseMoveListener with MouseButtonStateListener
 {

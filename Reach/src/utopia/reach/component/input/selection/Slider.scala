@@ -44,7 +44,7 @@ import utopia.reach.component.factory.{FocusListenableFactory, FromContextCompon
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.selection.Slider.SliderColors
 import utopia.reach.component.template.focus.FocusableWithState
-import utopia.reach.component.template.{CustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
 import utopia.reach.focus.FocusListener
 
 import scala.concurrent.duration.Duration
@@ -301,7 +301,7 @@ trait SliderSettingsWrapper[+Repr] extends SliderSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.4
   */
-case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+case class ContextualSliderFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                    settings: SliderSettings = SliderSettings.default,
                                    customColors: Option[SliderColors] = None)
 	extends SliderSettingsWrapper[ContextualSliderFactory]
@@ -402,7 +402,7 @@ case class ContextualSliderFactory(parentHierarchy: ComponentHierarchy, context:
 					}
 			}
 			val hoverRadius = knobRadius * 0.75
-			new Slider[A](parentHierarchy, context.actorHandler, initialValue, width, knobRadius * 2,
+			new Slider[A](hierarchy, context.actorHandler, initialValue, width, knobRadius * 2,
 				colorFunction, stickingPoints, progressPerArrowPress, progressWhileArrowDown, hoverRadius,
 				context.color(settings.colorRole), leftToRightBarHeightRatio, animationDuration,
 				maxJumpWithoutAnimation, enabledFlag, focusListeners,
@@ -452,7 +452,7 @@ object Slider extends SliderSetup()
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.4
   */
-class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, initialValue: A,
+class Slider[A](override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, initialValue: A,
                 stackWidth: StackLength, optimalKnobDiameter: Double,
                 colorFunction: Either[SliderColors, Either[Double => SliderColors, A => SliderColors]],
                 stickingPoints: Seq[Double] = Empty, progressWithArrow: Double = 0.2,
@@ -462,7 +462,7 @@ class Slider[A](override val parentHierarchy: ComponentHierarchy, actorHandler: 
                 enabledFlag: Flag = AlwaysTrue, additionalFocusListeners: Seq[FocusListener] = Empty,
                 additionalDrawers: Seq[CustomDrawer] = Empty)
                (progressToSelection: Double => A)(selectionToProgress: A => Double)
-	extends CustomDrawReachComponent with InteractionWithPointer[A] with HasGuiState with FocusableWithState
+	extends ConcreteCustomDrawReachComponent with InteractionWithPointer[A] with HasGuiState with FocusableWithState
 {
 	// ATTRIBUTES   --------------------------
 	

@@ -145,9 +145,9 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, animation: TimedAnimatio
 		
 		override lazy val handleCondition: Flag = {
 			if (looping)
-				hierarchy.linkPointer
+				hierarchy.linkedFlag
 			else
-				hierarchy.linkPointer && advanceP.map { _ < maxDuration }
+				hierarchy.linkedFlag && advanceP.map { _ < maxDuration }
 		}
 		
 		

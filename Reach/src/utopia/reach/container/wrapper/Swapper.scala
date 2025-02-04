@@ -14,7 +14,7 @@ import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.
 import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{Open, OpenComponent}
 
 trait SwapperSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
@@ -90,17 +90,17 @@ trait SwapperSettingsWrapper[+Repr] extends SwapperSettingsLike[Repr]
 
 trait SwapperFactoryLike[+Repr] extends PartOfComponentHierarchy with SwapperSettingsWrapper[Repr]
 {
-	protected def _apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponentLike, _]) =
-		new Swapper[A](parentHierarchy, valuePointer, customDrawers, isCachingEnabled)(makeContent)
+	protected def _apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponent, _]) =
+		new Swapper[A](hierarchy, valuePointer, customDrawers, isCachingEnabled)(makeContent)
 }
 
-case class SwapperFactory(parentHierarchy: ComponentHierarchy, settings: SwapperSettings)
+case class SwapperFactory(hierarchy: ComponentHierarchy, settings: SwapperSettings)
 	extends SwapperFactoryLike[SwapperFactory] with FromGenericContextFactory[Any, ContextualSwapperFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
 	override def withContext[N <: Any](context: N) =
-		ContextualSwapperFactory(parentHierarchy, context, settings)
+		ContextualSwapperFactory(hierarchy, context, settings)
 	override def withSettings(settings: SwapperSettings): SwapperFactory = copy(settings = settings)
 	
 	
@@ -113,7 +113,7 @@ case class SwapperFactory(parentHierarchy: ComponentHierarchy, settings: Swapper
 	  * @tparam A Type of items being mirrored
 	  * @return A new swapper container
 	  */
-	def apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponentLike, _]) =
+	def apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponent, _]) =
 		_apply(valuePointer)(makeContent)
 	
 	/**
@@ -122,10 +122,10 @@ case class SwapperFactory(parentHierarchy: ComponentHierarchy, settings: Swapper
 	  * @return A new view swapper builder
 	  */
 	def build[F](contentFactory: ComponentFactoryFactory[F]) =
-		SwapperBuilder[F](parentHierarchy, settings, contentFactory)
+		SwapperBuilder[F](hierarchy, settings, contentFactory)
 }
 
-case class SwapperBuilder[+F](parentHierarchy: ComponentHierarchy, settings: SwapperSettings,
+case class SwapperBuilder[+F](hierarchy: ComponentHierarchy, settings: SwapperSettings,
                               contentFactory: ComponentFactoryFactory[F])
 	extends SwapperFactoryLike[SwapperBuilder[F]]
 {
@@ -143,24 +143,24 @@ case class SwapperBuilder[+F](parentHierarchy: ComponentHierarchy, settings: Swa
 	  * @tparam A Type of mirrored value
 	  * @return A new swapper
 	  */
-	def apply[A](valuePointer: Changing[A])(makeContent: (F, A) => ReachComponentLike) =
+	def apply[A](valuePointer: Changing[A])(makeContent: (F, A) => ReachComponent) =
 		_apply(valuePointer) { item => Open.using(contentFactory) { makeContent(_, item) } }
 }
 
-case class ContextualSwapperFactory[N](parentHierarchy: ComponentHierarchy, context: N, settings: SwapperSettings)
+case class ContextualSwapperFactory[N](hierarchy: ComponentHierarchy, context: N, settings: SwapperSettings)
 	extends AnyContextContainerBuilderFactory[N, SwapperFactory, ContextualSwapperBuilder, ContextualSwapperFactory]
 		with SwapperFactoryLike[ContextualSwapperFactory[N]]
 {
-	override def withoutContext = SwapperFactory(parentHierarchy, settings)
+	override def withoutContext = SwapperFactory(hierarchy, settings)
 	
 	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
 	override def withSettings(settings: SwapperSettings): ContextualSwapperFactory[N] = copy(settings = settings)
 	
 	override def build[F[_]](contentFactory: Gccff[N, F]) =
-		ContextualSwapperBuilder[N, F](parentHierarchy, context, settings, contentFactory)
+		ContextualSwapperBuilder[N, F](hierarchy, context, settings, contentFactory)
 }
 
-case class ContextualSwapperBuilder[N, +F[_]](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualSwapperBuilder[N, +F[_]](hierarchy: ComponentHierarchy, context: N,
                                               settings: SwapperSettings, contentFactory: Gccff[N, F])
 	extends SwapperFactoryLike[ContextualSwapperBuilder[N, F]]
 {
@@ -178,7 +178,7 @@ case class ContextualSwapperBuilder[N, +F[_]](parentHierarchy: ComponentHierarch
 	  * @tparam A Type of mirrored value
 	  * @return A new swapper
 	  */
-	def apply[A](valuePointer: Changing[A])(makeContent: (F[N], A) => ReachComponentLike) =
+	def apply[A](valuePointer: Changing[A])(makeContent: (F[N], A) => ReachComponent) =
 		_apply[A](valuePointer) { item => Open.withContext(context)(contentFactory) { makeContent(_, item) } }
 }
 
@@ -195,15 +195,15 @@ object Swapper extends Cff[SwapperFactory] with Gccff[Any, ContextualSwapperFact
   * @author Mikko Hilpinen
   * @since 10.1.2025, v1.5
   * @tparam A Type of mirrored value
-  * @param parentHierarchy Component hierarchy this container is attached to
+  * @param hierarchy Component hierarchy this container is attached to
   * @param valuePointer Pointer to the currently selected value
   * @param customDrawers Custom drawers used in this container (default = empty)
   * @param cachingEnabled Whether the created components should be cached & reused / kept in memory (default = true)
   */
-class Swapper[A](override val parentHierarchy: ComponentHierarchy, override val valuePointer: Changing[A],
+class Swapper[A](override val hierarchy: ComponentHierarchy, override val valuePointer: Changing[A],
                  override val customDrawers: Seq[CustomDrawer] = Empty, cachingEnabled: Boolean = true)
-                (makeContent: A => OpenComponent[ReachComponentLike, _])
-	extends CustomDrawReachComponent with InputWithPointer[A, Changing[A]]
+                (makeContent: A => OpenComponent[ReachComponent, _])
+	extends ConcreteCustomDrawReachComponent with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -254,7 +254,7 @@ class Swapper[A](override val parentHierarchy: ComponentHierarchy, override val 
 	// INITIAL CODE	-------------------------------
 	
 	// Revalidates this container whenever content is swapped
-	contentPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => revalidate() }
+	contentPointer.addListenerWhile(hierarchy.linkedFlag) { _ => revalidate() }
 	
 	
 	// COMPUTED	-----------------------------------
@@ -267,7 +267,7 @@ class Swapper[A](override val parentHierarchy: ComponentHierarchy, override val 
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def children: Seq[ReachComponentLike] = Single(content)
+	override def children: Seq[ReachComponent] = Single(content)
 	
 	// Sets the content size equal to this container's size
 	override def updateLayout() = content.size = size

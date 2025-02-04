@@ -1,7 +1,7 @@
 package utopia.reach.window
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
 import utopia.reach.focus.FocusRequestable
 import utopia.firmament.component.input.Input
 import utopia.firmament.localization.LocalizedString
@@ -19,7 +19,7 @@ object InputField
 	  * @tparam A Type of field input
 	  * @return A new input field that wraps the specified field
 	  */
-	implicit def autoConvert[A](field: ReachComponentLike with FocusRequestable with Input[A])
+	implicit def autoConvert[A](field: ReachComponent with FocusRequestable with Input[A])
 	                           (implicit f: A => Value): InputField =
 		wrap(field) { Right(f(field.value)) }
 	
@@ -34,7 +34,7 @@ object InputField
 	  *                 Left: Failure, as an error message to display
 	  * @return A new input field that wraps the specified field and uses the specified input function
 	  */
-	def wrap(field: ReachComponentLike with FocusRequestable)(value: => Either[LocalizedString, Value]): InputField =
+	def wrap(field: ReachComponent with FocusRequestable)(value: => Either[LocalizedString, Value]): InputField =
 		new InputFieldWrapper(field, value)
 	
 	/**
@@ -43,7 +43,7 @@ object InputField
 	  * @param value A function that generates the input value (as a [[Value]])
 	  * @return A new input field that wraps the specified field and uses the specified input function
 	  */
-	def apply(field: ReachComponentLike with FocusRequestable)(value: => Value) = wrap(field)(Right(value))
+	def apply(field: ReachComponent with FocusRequestable)(value: => Value) = wrap(field)(Right(value))
 	
 	/**
 	  * Adds input validation / conversion for an input field
@@ -54,7 +54,7 @@ object InputField
 	  * @tparam A Type of original input value
 	  * @return A new input field
 	  */
-	def test[A](field: ReachComponentLike with FocusRequestable with Input[A])(test: A => Either[LocalizedString, Value]) =
+	def test[A](field: ReachComponent with FocusRequestable with Input[A])(test: A => Either[LocalizedString, Value]) =
 		wrap(field)(test(field.value))
 	
 	/**
@@ -64,7 +64,7 @@ object InputField
 	  * @tparam A Type of fields input
 	  * @return A new input field
 	  */
-	def convert[A](field: ReachComponentLike with FocusRequestable with Input[A])(convert: A => Value) =
+	def convert[A](field: ReachComponent with FocusRequestable with Input[A])(convert: A => Value) =
 		wrap(field)(Right(convert(field.value)))
 	
 	/**
@@ -76,7 +76,7 @@ object InputField
 	  * @tparam A Field's input type
 	  * @return A new input field
 	  */
-	def validate[A](field: ReachComponentLike with FocusRequestable with Input[A])
+	def validate[A](field: ReachComponent with FocusRequestable with Input[A])
 	               (validate: A => LocalizedString)(implicit f: A => Value) =
 		wrap(field) {
 			val input = field.value
@@ -86,7 +86,7 @@ object InputField
 	
 	// EXTENSIONS   ---------------------
 	
-	implicit class InputFieldConvertible[A](val field: ReachComponentLike with FocusRequestable with Input[A]) extends AnyVal
+	implicit class InputFieldConvertible[A](val field: ReachComponent with FocusRequestable with Input[A]) extends AnyVal
 	{
 		/**
 		  * Adds value conversion & input validation to this field
@@ -115,7 +115,7 @@ object InputField
 		def validateWith(f: A => LocalizedString)(implicit c: A => Value) = InputField.validate(field)(f)
 	}
 	
-	implicit class FieldWithoutInput(val field: ReachComponentLike with FocusRequestable) extends AnyVal
+	implicit class FieldWithoutInput(val field: ReachComponent with FocusRequestable) extends AnyVal
 	{
 		/**
 		  * Adds input generation into this field
@@ -137,7 +137,7 @@ object InputField
 	
 	// NESTED   -------------------------
 	
-	private class InputFieldWrapper(field: ReachComponentLike with FocusRequestable,
+	private class InputFieldWrapper(field: ReachComponent with FocusRequestable,
 	                                f: => Either[LocalizedString, Value])
 		extends InputField with ReachComponentWrapper
 	{
@@ -154,4 +154,4 @@ object InputField
   * @author Mikko Hilpinen
   * @since 6.4.2023, v0.6
   */
-trait InputField extends ReachComponentLike with FocusRequestable with Input[Either[LocalizedString, Value]]
+trait InputField extends ReachComponent with FocusRequestable with Input[Either[LocalizedString, Value]]

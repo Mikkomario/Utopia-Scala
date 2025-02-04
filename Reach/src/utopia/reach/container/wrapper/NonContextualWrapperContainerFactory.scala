@@ -24,5 +24,5 @@ trait NonContextualWrapperContainerFactory[+Container, -Top]
 	  * @return The created container, created components and the additional result
 	  */
 	def build[F, C <: Top, R](contentFactory: Cff[F])(fill: F => ComponentCreationResult[C, R]) =
-		apply(Open.using(contentFactory)(fill)(parentHierarchy.top))
+		apply(Open.using(contentFactory)(fill)(hierarchy.top))
 }

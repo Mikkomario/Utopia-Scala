@@ -16,7 +16,7 @@ trait PartOfComponentHierarchy
 	  * @return The component hierarchy this component is part of.
 	  *         Returns the hierarchy block that matches the direct parent of this component.
 	  */
-	def parentHierarchy: ComponentHierarchy
+	def hierarchy: ComponentHierarchy
 	
 	
 	// COMPUTED --------------------------
@@ -24,10 +24,13 @@ trait PartOfComponentHierarchy
 	/**
 	  * @return The Reach Canvas -element to which this component belongs
 	  */
-	implicit def canvas: ReachCanvas = parentHierarchy.top
+	implicit def canvas: ReachCanvas = hierarchy.top
 	
 	/**
 	  * @return A flag that contains true while this component is linked to the main component hierarchy
 	  */
-	def linkedFlag = parentHierarchy.linkPointer
+	def linkedFlag = hierarchy.linkedFlag
+	
+	@deprecated("Deprecated for removal. Please use .hierarchy instead", "v1.6")
+	def parentHierarchy: ComponentHierarchy = hierarchy
 }

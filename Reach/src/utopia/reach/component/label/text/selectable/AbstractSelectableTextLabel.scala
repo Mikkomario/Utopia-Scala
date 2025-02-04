@@ -27,7 +27,7 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.FocusableWithState
-import utopia.reach.component.template.{CursorDefining, CustomDrawReachComponent}
+import utopia.reach.component.template.{CursorDefining, ConcreteCustomDrawReachComponent}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
 import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
@@ -44,12 +44,12 @@ import scala.util.Try
   * @since 30.10.2020, v0.3
   */
 // TODO: Create a password mode where text is not displayed nor copyable
-abstract class AbstractSelectableTextLabel(override val parentHierarchy: ComponentHierarchy,
+abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHierarchy,
                                            context: VariableTextContext, textPointer: Changing[LocalizedString],
                                            val selectableFlag: Flag,
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                            enabledFlag: Flag = AlwaysTrue)
-	extends CustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
+	extends ConcreteCustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
 	

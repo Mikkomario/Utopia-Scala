@@ -36,7 +36,7 @@ trait TextButtonFactoryLike[+Repr]
 	                     textInsets: StackInsets, borderWidth: Double, lineSplitThreshold: Option[Double],
 	                     betweenLinesMargin: Double, allowLineBreaks: Boolean, allowTextShrink: Boolean)
 	                    (action: => Unit) =
-		new TextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
+		new TextButton(hierarchy, text, TextDrawContext(font, textColor, alignment, textInsets + borderWidth,
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), color, settings, borderWidth, customDrawers,
 			allowTextShrink)(action)
 }
@@ -46,7 +46,7 @@ trait TextButtonFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+case class ContextualTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
                                        settings: ButtonSettings = ButtonSettings.default,
                                        customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[ContextualTextButtonFactory]
@@ -81,7 +81,7 @@ case class ContextualTextButtonFactory(parentHierarchy: ComponentHierarchy, cont
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
+case class TextButtonFactory(hierarchy: ComponentHierarchy,
                              settings: ButtonSettings = ButtonSettings.default,
                              customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[TextButtonFactory]
@@ -90,7 +90,7 @@ case class TextButtonFactory(parentHierarchy: ComponentHierarchy,
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(context: StaticTextContext) =
-		ContextualTextButtonFactory(parentHierarchy, context, settings)
+		ContextualTextButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): TextButtonFactory = copy(customDrawers = drawers)

@@ -2,7 +2,7 @@ package utopia.reach.container.multi
 
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableCreations
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
 import utopia.reach.component.wrapper.Open
@@ -15,7 +15,7 @@ import utopia.reach.component.wrapper.Open
   * @tparam Container The type of container yielded by this factory
   * @tparam Top       The highest accepted wrapped component type (typically ReachComponentLike)
   */
-trait NonContextualViewContainerFactory[+Container, -Top <: ReachComponentLike]
+trait NonContextualViewContainerFactory[+Container, -Top <: ReachComponent]
 	extends ViewContainerFactory[Container, Top]
 {
 	/**
@@ -31,7 +31,7 @@ trait NonContextualViewContainerFactory[+Container, -Top <: ReachComponentLike]
 	  */
 	def build[F, C <: Top, R](contentFactory: Cff[F])
 	                         (fill: Iterator[F] => SwitchableCreations[C, R]): SwitchableComponentsWrapResult[Container, C, R] =
-		apply(Open.manyUsing[F, C, Changing[Boolean], R](contentFactory)(fill)(parentHierarchy.top))
+		apply(Open.manyUsing[F, C, Changing[Boolean], R](contentFactory)(fill)(hierarchy.top))
 	
 	/**
 	  * Builds a new container which reflects the contents of a multi-value pointer.

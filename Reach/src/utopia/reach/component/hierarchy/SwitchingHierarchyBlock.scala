@@ -2,7 +2,7 @@ package utopia.reach.component.hierarchy
 
 import utopia.firmament.model.CoordinateTransform
 import utopia.flow.view.template.eventful.Flag
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 /**
   * A component hierarchy block used in situations where a static parent-child connection switches on and off,
@@ -10,15 +10,15 @@ import utopia.reach.component.template.ReachComponentLike
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-class SwitchingHierarchyBlock(parentComponent: ReachComponentLike, switchPointer: Flag)
+class SwitchingHierarchyBlock(parentComponent: ReachComponent, switchPointer: Flag)
 	extends ComponentHierarchy
 {
 	// ATTRIBUTES	---------------------------
 	
-	override lazy val parent = Right(parentComponent.parentHierarchy -> parentComponent)
+	override lazy val parent = Right(parentComponent.hierarchy -> parentComponent)
 	override lazy val top = super.top
 	
-	override lazy val linkPointer = parentComponent.parentHierarchy.linkPointer && switchPointer
+	override lazy val linkedFlag = parentComponent.hierarchy.linkedFlag && switchPointer
 	
 	
 	// IMPLEMENTED	---------------------------

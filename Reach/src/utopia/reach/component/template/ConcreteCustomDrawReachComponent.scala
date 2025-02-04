@@ -7,7 +7,7 @@ import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
-object CustomDrawReachComponent
+object ConcreteCustomDrawReachComponent
 {
 	// OTHER	------------------------------
 	
@@ -19,16 +19,16 @@ object CustomDrawReachComponent
 	  * @return A new custom draw component
 	  */
 	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer])
-			 (stackSize: => StackSize): CustomDrawReachComponent =
+			 (stackSize: => StackSize): ConcreteCustomDrawReachComponent =
 		new BasicComponent(parentHierarchy, customDrawers, stackSize)
 	
 	
 	// NESTED	------------------------------
 	
-	private class BasicComponent(override val parentHierarchy: ComponentHierarchy,
-								 override val customDrawers: Seq[CustomDrawer],
-								 getStackSize: => StackSize)
-		extends CustomDrawReachComponent
+	private class BasicComponent(override val hierarchy: ComponentHierarchy,
+	                             override val customDrawers: Seq[CustomDrawer],
+	                             getStackSize: => StackSize)
+		extends ConcreteCustomDrawReachComponent
 	{
 		override def updateLayout() = ()
 		
@@ -41,7 +41,7 @@ object CustomDrawReachComponent
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-trait CustomDrawReachComponent extends ReachComponent with CustomDrawable
+trait ConcreteCustomDrawReachComponent extends ConcreteReachComponent with CustomDrawable
 {
 	// IMPLEMENTED	--------------------------
 	

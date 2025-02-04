@@ -20,7 +20,7 @@ import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentLike}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
 import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
@@ -230,7 +230,7 @@ trait ViewStackSettingsWrapper[+Repr] extends ViewStackSettingsLike[Repr]
   * @since 12.01.2025, v1.5
   */
 trait ViewStackFactoryLike[+Repr]
-	extends ViewStackSettingsWrapper[Repr] with ViewContainerFactory[Stack, ReachComponentLike]
+	extends ViewStackSettingsWrapper[Repr] with ViewContainerFactory[Stack, ReachComponent]
 		with PartOfComponentHierarchy
 {
 	// ABSTRACT	--------------------
@@ -254,7 +254,7 @@ trait ViewStackFactoryLike[+Repr]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Stack, C, R] =
+	override def apply[C <: ReachComponent, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Stack, C, R] =
 	{
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
@@ -285,7 +285,7 @@ trait ViewStackFactoryLike[+Repr]
 		}
 	}
 	
-	override def pointer(content: Changing[SeparateOpenComponents[ReachComponentLike, _]]): Stack = {
+	override def pointer(content: Changing[SeparateOpenComponents[ReachComponent, _]]): Stack = {
 		content.fixedValue match {
 			// Case: Displayed content doesn't change
 			case Some(staticContent) =>
@@ -305,14 +305,14 @@ trait ViewStackFactoryLike[+Repr]
 								wrapResult.map { _.parent }
 							}
 							// The specified group defines the direction of this stack
-							val stack = new ViewStack(parentHierarchy, Fixed(wrapped),
+							val stack = new ViewStack(hierarchy, Fixed(wrapped),
 								settings.withAxis(segmentGroup.rowDirection), marginPointer)
 								
 							stack
 							
 						// Case: No segmentation is applied
 						case None =>
-							val stack = new ViewStack(parentHierarchy, Fixed(staticContent.map { _.component }), settings,
+							val stack = new ViewStack(hierarchy, Fixed(staticContent.map { _.component }), settings,
 								marginPointer)
 							
 							// Attaches the components to this new stack using a single hierarchy block
@@ -326,7 +326,7 @@ trait ViewStackFactoryLike[+Repr]
 			case None =>
 				// Creates the stack
 				val componentsP = content.map { _.map { _.component } }
-				val stack = new ViewStack(parentHierarchy, componentsP, settings, marginPointer)
+				val stack = new ViewStack(hierarchy, componentsP, settings, marginPointer)
 				
 				// Adds attachment management
 				// Tracks visible components as hashcodes
@@ -336,7 +336,7 @@ trait ViewStackFactoryLike[+Repr]
 					Cache[Int, Flag] { componentHash => visibleHashesP.map { _.contains(componentHash) } }
 				
 				// When new components are introduced, makes sure they get attached to this stack
-				content.addListenerWhileAndSimulateEvent(parentHierarchy.linkPointer, Empty) { change =>
+				content.addListenerWhileAndSimulateEvent(hierarchy.linkedFlag, Empty) { change =>
 					change.newValue.foreach { open =>
 						val hash = open.component.hashCode()
 						// Case: Not previously attached => Creates a new link pointer and attaches the component
@@ -363,7 +363,7 @@ trait ViewStackFactoryLike[+Repr]
 	  */
 	def mapMargin(f: StackLength => StackLength) = withMarginPointer(marginPointer.map(f))
 	
-	private def fromVisiblePointers[C <: ReachComponentLike, R](content: SwitchableOpenComponents[C, R]) = {
+	private def fromVisiblePointers[C <: ReachComponent, R](content: SwitchableOpenComponents[C, R]) = {
 		// Adds visible components -tracking
 		val components = content.map { _.componentAndResult }
 		val visibleContentP =
@@ -371,10 +371,10 @@ trait ViewStackFactoryLike[+Repr]
 				ComponentCreationDefaults.componentLogger)
 		
 		components.foreach { case (_, visibleFlag) =>
-			visibleFlag.addListenerWhile(parentHierarchy.linkPointer) { _ => visibleContentP.update() }
+			visibleFlag.addListenerWhile(hierarchy.linkedFlag) { _ => visibleContentP.update() }
 		}
 		
-		val stack = new ViewStack(parentHierarchy, visibleContentP, settings, marginPointer)
+		val stack = new ViewStack(hierarchy, visibleContentP, settings, marginPointer)
 		content.foreach { open => open.attachTo(stack, open.result) }
 		
 		stack
@@ -387,12 +387,12 @@ trait ViewStackFactoryLike[+Repr]
 	  * @param visibleContent Visible content (called if segmentation is not applied)
 	  * @return Component wrap result of the created stack
 	  */
-	private def fixed[C <: ReachComponentLike](fullContent: => SeparateOpenComponents[C, _],
-	                                           visibleContent: => SeparateOpenComponents[C, _]) =
+	private def fixed[C <: ReachComponent](fullContent: => SeparateOpenComponents[C, _],
+	                                       visibleContent: => SeparateOpenComponents[C, _]) =
 	{
 		val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
 			capPointer = capPointer, customDrawers = customDrawers)
-		val stackF = Stack(parentHierarchy).withSettings(fixedSettings).withMarginPointer(marginPointer)
+		val stackF = Stack(hierarchy).withSettings(fixedSettings).withMarginPointer(marginPointer)
 		// Uses segmentation if available
 		segmentGroup match {
 			// Case: Segmentation used
@@ -417,7 +417,7 @@ trait ViewStackFactoryLike[+Repr]
 				new OpenComponent(ComponentCreationResult(content.map { _.component }), commonHierarchy)
 			
 			case None =>
-				new OpenComponent(ComponentCreationResult(Empty: Seq[C]), new SeedHierarchyBlock(parentHierarchy.top))
+				new OpenComponent(ComponentCreationResult(Empty: Seq[C]), new SeedHierarchyBlock(hierarchy.top))
 		}
 	}
 }
@@ -429,16 +429,16 @@ trait ViewStackFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 12.01.2025, v1.5
   */
-case class ViewStackFactory(parentHierarchy: ComponentHierarchy, settings: ViewStackSettings = ViewStackSettings.default,
+case class ViewStackFactory(hierarchy: ComponentHierarchy, settings: ViewStackSettings = ViewStackSettings.default,
                             marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends ViewStackFactoryLike[ViewStackFactory]
 		with FromGenericContextFactory[BaseContextPropsView, ContextualViewStackFactory]
-		with NonContextualViewContainerFactory[Stack, ReachComponentLike]
+		with NonContextualViewContainerFactory[Stack, ReachComponent]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext[N <: BaseContextPropsView](context: N) =
-		ContextualViewStackFactory(parentHierarchy, context, settings,
+		ContextualViewStackFactory(hierarchy, context, settings,
 			customMarginPointer = {
 				// Case: Using the default margin pointer => Won't forward it
 				if (marginPointer.fixedValue.contains(StackLength.any))
@@ -466,12 +466,12 @@ case class ViewStackFactory(parentHierarchy: ComponentHierarchy, settings: ViewS
   * @author Mikko Hilpinen
   * @since 12.01.2025, v1.5
   */
-case class ContextualViewStackFactory[+N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualViewStackFactory[+N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N,
                                                                   settings: ViewStackSettings = ViewStackSettings.default,
                                                                   customMarginPointer: Option[Either[Changing[SizeCategory], Changing[StackLength]]] = None,
                                                                   relatedFlag: Flag = AlwaysFalse)
 	extends ViewStackFactoryLike[ContextualViewStackFactory[N]]
-		with ContextualViewContainerFactory[N, BaseContextPropsView, Stack, ReachComponentLike, ContextualViewStackFactory]
+		with ContextualViewContainerFactory[N, BaseContextPropsView, Stack, ReachComponent, ContextualViewStackFactory]
 {
 	// ATTRIBUTES   ----------------
 	
@@ -564,8 +564,8 @@ object ViewStack extends ViewStackSetup()
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-class ViewStack(override val parentHierarchy: ComponentHierarchy, componentsP: Changing[Seq[ReachComponentLike]],
-                 settings: ViewStackSettings, marginPointer: Changing[StackLength] = Fixed(StackLength.any))
+class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changing[Seq[ReachComponent]],
+                settings: ViewStackSettings, marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends Stack
 {
 	// ATTRIBUTES	-------------------------------
@@ -589,10 +589,10 @@ class ViewStack(override val parentHierarchy: ComponentHierarchy, componentsP: C
 	}
 	
 	// Revalidates this component on other layout changes
-	settings.axisPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
-	settings.layoutPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
-	marginPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
-	settings.capPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateOnChange)
+	settings.axisPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
+	settings.layoutPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
+	marginPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
+	settings.capPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
 	
 	
 	// IMPLEMENTED	-------------------------------

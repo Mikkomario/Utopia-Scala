@@ -13,7 +13,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableCustomDrawReachComponent
+import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
 
 object MutableTextLabel extends Ccff[StaticTextContext, ContextualMutableTextLabelFactory]
 {
@@ -83,9 +83,9 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-class MutableTextLabel(override val parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
+class MutableTextLabel(override val hierarchy: ComponentHierarchy, initialText: LocalizedString,
                        initialStyle: TextDrawContext, override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with TextComponent with MutableTextComponent
+	extends MutableConcreteCustomDrawReachComponent with TextComponent with MutableTextComponent
 {
 	// ATTRIBUTES	-------------------------
 	

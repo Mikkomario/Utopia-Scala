@@ -21,7 +21,7 @@ object CursorDefining
 	 *                       if appropriate. Returns None if no custom cursor should be applied.
 	 *                       None if no customization function should be used.
 	  */
-	def defineCursorFor(component: ReachComponentLike, cursorTypePointer: View[CursorType],
+	def defineCursorFor(component: ReachComponent, cursorTypePointer: View[CursorType],
 	                    shadePointer: View[ColorShade],
 	                    customization: Option[(Cursor, Point) => Option[Image]] = None) =
 	{
@@ -43,13 +43,13 @@ object CursorDefining
 	  * @param cursorType type of cursor to use
 	  * @param shade shade to expect the component to be (light or dark)
 	  */
-	def defineCursorFor(component: ReachComponentLike, cursorType: CursorType, shade: ColorShade): Unit =
+	def defineCursorFor(component: ReachComponent, cursorType: CursorType, shade: ColorShade): Unit =
 		defineCursorFor(component, View.fixed(cursorType), View.fixed(shade))
 	
 	
 	// NESTED	--------------------------------
 	
-	private class CursorDefiningWrapper(wrapped: ReachComponentLike, cursorTypePointer: View[CursorType],
+	private class CursorDefiningWrapper(wrapped: ReachComponent, cursorTypePointer: View[CursorType],
 	                                    shadePointer: View[ColorShade],
 	                                    customization: Option[(Cursor, Point) => Option[Image]] = None)
 		extends CursorDefining
@@ -74,7 +74,7 @@ object CursorDefining
 	
 	// EXTENSIONS   ----------------------------
 	
-	implicit class CursorDefiningComponent(val c: ReachComponentLike with CursorDefining) extends AnyVal
+	implicit class CursorDefiningComponent(val c: ReachComponent with CursorDefining) extends AnyVal
 	{
 		/**
 		 * Registers this component to the parent canvases cursor manager, if available.

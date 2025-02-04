@@ -21,7 +21,7 @@ import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSett
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -175,7 +175,7 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] wit
 	                        backgroundColorPointer: Changing[Color], diameter: Double,
 	                        hoverExtraRadius: Double, ringWidth: Double)
 	                       (implicit colorScheme: ColorScheme) =
-		new RadioButton[A](parentHierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
+		new RadioButton[A](hierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
 			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, settings)
 }
 
@@ -185,7 +185,7 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] wit
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualRadioButtonFactory(hierarchy: ComponentHierarchy,
                                         context: VariableColorContext,
                                         settings: RadioButtonSettings = RadioButtonSettings.default,
                                         scaling: Double = 1.0)
@@ -228,14 +228,14 @@ case class ContextualRadioButtonFactory(parentHierarchy: ComponentHierarchy,
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class RadioButtonFactory(parentHierarchy: ComponentHierarchy,
+case class RadioButtonFactory(hierarchy: ComponentHierarchy,
                               settings: RadioButtonSettings = RadioButtonSettings.default)
 	extends RadioButtonFactoryLike[RadioButtonFactory]
 		with FromContextFactory[VariableColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(c: VariableColorContext) = ContextualRadioButtonFactory(parentHierarchy, c, settings)
+	override def withContext(c: VariableColorContext) = ContextualRadioButtonFactory(hierarchy, c, settings)
 	override def withSettings(settings: RadioButtonSettings) = copy(settings = settings)
 	
 	
@@ -291,12 +291,12 @@ object RadioButton extends RadioButtonSetup()
  * @author Mikko Hilpinen
  * @since 30.1.2021, v0.1
  */
-class RadioButton[A](override val parentHierarchy: ComponentHierarchy, selectedValuePointer: EventfulPointer[A],
+class RadioButton[A](override val hierarchy: ComponentHierarchy, selectedValuePointer: EventfulPointer[A],
                      representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
                      settings: RadioButtonSettings = RadioButtonSettings.default)
                     (implicit colorScheme: ColorScheme)
-	extends AbstractButton(settings) with CustomDrawReachComponent
+	extends AbstractButton(settings) with ConcreteCustomDrawReachComponent
 {
 	// ATTRIBUTES   ---------------------------------
 	

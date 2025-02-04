@@ -11,7 +11,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.ConcreteCustomDrawReachComponent
 
 object EmptyLabel extends Cff[EmptyLabelFactory]
 {
@@ -99,9 +99,9 @@ case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: S
  * @author Mikko Hilpinen
  * @since 29.1.2021, v0.1
  */
-class EmptyLabel(override val parentHierarchy: ComponentHierarchy, override val calculatedStackSize: StackSize,
+class EmptyLabel(override val hierarchy: ComponentHierarchy, override val calculatedStackSize: StackSize,
                  override val customDrawers: Seq[CustomDrawer])
-	extends CustomDrawReachComponent
+	extends ConcreteCustomDrawReachComponent
 {
 	override def updateLayout() = ()
 }

@@ -33,7 +33,7 @@ import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
-import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ConcreteReachComponent, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
 import utopia.reach.cursor.Cursor
@@ -214,12 +214,12 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	protected def _apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
+	protected def _apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
-		new SelectionList[A, C, P](parentHierarchy, actorHandler, contextBackgroundPointer, contentPointer,
+		new SelectionList[A, C, P](hierarchy, actorHandler, contextBackgroundPointer, contentPointer,
 			valuePointer, settings, marginPointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
 }
 
@@ -229,7 +229,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
+case class SelectionListFactory(hierarchy: ComponentHierarchy,
                                 settings: SelectionListSettings = SelectionListSettings.default,
                                 marginPointer: Changing[StackLength] = Fixed(StackLength.any))
 	extends SelectionListFactoryLike[SelectionListFactory]
@@ -240,7 +240,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	// IMPLEMENTED  ----------------------
 	
 	override def withContext(c: VariableColorContext): ContextualSelectionListFactory =
-		ContextualSelectionListFactory(parentHierarchy, c, settings)
+		ContextualSelectionListFactory(hierarchy, c, settings)
 	
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
 	def withMarginPointer(p: Changing[StackLength]) = copy(marginPointer = p)
@@ -266,7 +266,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
+	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
@@ -280,7 +280,7 @@ case class SelectionListFactory(parentHierarchy: ComponentHierarchy,
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
                                           context: VariableColorContext,
                                           settings: SelectionListSettings = SelectionListSettings.default,
                                           customMarginPointer: Option[Changing[StackLength]] = None)
@@ -334,7 +334,7 @@ case class ContextualSelectionListFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of selection pool pointer
 	  * @return A new list
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
+	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
@@ -373,7 +373,7 @@ object SelectionList extends SelectionListSetup()
   * @author Mikko Hilpinen
   * @since 19.12.2020, v0.1
   */
-class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changing[Seq[A]]]
+class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[Seq[A]]]
 (parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
@@ -489,7 +489,7 @@ class SelectionList[A, C <: ReachComponentLike with Refreshable[A], +P <: Changi
 	
 	// IMPLEMENTED	--------------------------------
 	
-	override protected def wrapped: ReachComponent = stack
+	override protected def wrapped: ConcreteReachComponent = stack
 	override protected def drawable: MutableCustomDrawable = stack
 	
 	// Focus may enter if there are items to select

@@ -30,7 +30,7 @@ import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSett
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -177,7 +177,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 	{
 		val scaling = ComponentCreationDefaults.switchScalingFactor
-		new Switch(parentHierarchy, actorHandler, color, math.round(knobDiameter * scaling).toDouble,
+		new Switch(hierarchy, actorHandler, color, math.round(knobDiameter * scaling).toDouble,
 			math.round(hoverExtraRadius * scaling).toDouble,
 			knobShadowOffset.map { o => math.round(o * scaling).toDouble },
 			valuePointer, settings, shade, animationDuration)
@@ -190,7 +190,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context: StaticColorContext,
+case class ContextualSwitchFactory(hierarchy: ComponentHierarchy, context: StaticColorContext,
                                    settings: SwitchSettings = SwitchSettings.default,
                                    colorRole: ColorRole = ColorRole.Secondary)
 	extends SwitchFactoryLike[ContextualSwitchFactory] with ColorContextualFactory[ContextualSwitchFactory]
@@ -233,7 +233,7 @@ case class ContextualSwitchFactory(parentHierarchy: ComponentHierarchy, context:
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class SwitchFactory(parentHierarchy: ComponentHierarchy,
+case class SwitchFactory(hierarchy: ComponentHierarchy,
                          settings: SwitchSettings = SwitchSettings.default)
 	extends SwitchFactoryLike[SwitchFactory] with FromContextFactory[StaticColorContext, ContextualSwitchFactory]
 {
@@ -241,7 +241,7 @@ case class SwitchFactory(parentHierarchy: ComponentHierarchy,
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withContext(context: StaticColorContext) = ContextualSwitchFactory(parentHierarchy, context, settings)
+	override def withContext(context: StaticColorContext) = ContextualSwitchFactory(hierarchy, context, settings)
 	override def withSettings(settings: SwitchSettings) = copy(settings = settings)
 	
 	
@@ -305,12 +305,12 @@ object Switch extends SwitchSetup()
   * @author Mikko Hilpinen
   * @since 19.11.2020, v0.1
   */
-class Switch(override val parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
+class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
-	extends AbstractButton(settings) with CustomDrawReachComponent with InteractionWithPointer[Boolean]
+	extends AbstractButton(settings) with ConcreteCustomDrawReachComponent with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------
 	

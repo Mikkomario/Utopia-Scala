@@ -25,7 +25,7 @@ import utopia.reach.component.input.{FieldWithSelectionPopup, FieldWithSelection
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
-import utopia.reach.component.template.{CursorDefining, ReachComponentLike}
+import utopia.reach.component.template.{CursorDefining, ReachComponent}
 import utopia.reach.context.VariableReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
@@ -83,7 +83,7 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 	  * @tparam P Type of content pointer used
 	  * @return A new field
 	  */
-	def apply[A, C <: ReachComponentLike with Refreshable[A], P <: Changing[Seq[A]]]
+	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)

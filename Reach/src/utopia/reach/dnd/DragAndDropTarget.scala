@@ -3,7 +3,7 @@ package utopia.reach.dnd
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.HasSize
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 object DragAndDropTarget
 {
@@ -17,7 +17,7 @@ object DragAndDropTarget
 	  * @tparam U Arbitrary function return type
 	  * @return A new drag-and-drop target that function's over the component's area
 	  */
-	def wrap[U](component: ReachComponentLike, acceptNearbyDrops: Boolean = false)
+	def wrap[U](component: ReachComponent, acceptNearbyDrops: Boolean = false)
 	            (f: DragAndDropEvent => U): DragAndDropTarget =
 		new _DragAndDropTarget[U](component.boundsInsideTop, f, (_, _) => acceptNearbyDrops)
 	

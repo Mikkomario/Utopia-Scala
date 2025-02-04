@@ -6,7 +6,7 @@ import utopia.genesis.graphics.{PaintManager, Priority}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager
 
@@ -24,7 +24,7 @@ trait ReachCanvasLike
 	/**
 	  * @return The currently managed / displayed component. None while not set up.
 	  */
-	protected def currentContent: Option[ReachComponentLike]
+	protected def currentContent: Option[ReachComponent]
 	
 	/**
 	  * @return A painter that will draw canvas content. None while not set up.
@@ -46,7 +46,7 @@ trait ReachCanvasLike
 	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
 	  *                         this canvas has been revalidated
 	  */
-	def revalidate(updateComponents: Seq[ReachComponentLike]): Unit
+	def revalidate(updateComponents: Seq[ReachComponent]): Unit
 	
 	/**
 	  * Revalidates this component's layout. Calls the specified function when whole component layout has been updated.
@@ -54,7 +54,7 @@ trait ReachCanvasLike
 	  *                         this canvas has been revalidated
 	  * @param f A function called after layout has been updated.
 	  */
-	def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit): Unit
+	def revalidateAndThen(updateComponents: Seq[ReachComponent])(f: => Unit): Unit
 	
 	
 	// COMPUTED	-------------------------------
@@ -82,7 +82,7 @@ trait ReachCanvasLike
 	  * @param queues Sequences of components from hierarchy top downwards that require a layout update
 	  * @param componentTargetSize Size to assign for the managed component
 	  */
-	protected def updateLayout(queues: Set[Seq[ReachComponentLike]], componentTargetSize: Size) = {
+	protected def updateLayout(queues: Set[Seq[ReachComponent]], componentTargetSize: Size) = {
 		// Updates content size
 		val contentSizeChanged = currentContent match {
 			case Some(content) =>
@@ -93,8 +93,8 @@ trait ReachCanvasLike
 			case None => false
 		}
 		// Updates content layout
-		val layoutUpdateQueues = queues.map { q: Seq[ReachComponentLike] => q -> contentSizeChanged }
-		val sizeChangeTargets: Set[ReachComponentLike] = {
+		val layoutUpdateQueues = queues.map { q: Seq[ReachComponent] => q -> contentSizeChanged }
+		val sizeChangeTargets: Set[ReachComponent] = {
 			if (contentSizeChanged)
 				currentContent.toSet
 			else
@@ -129,11 +129,11 @@ trait ReachCanvasLike
 	// Second parameter in queues is whether a repaint operation has already been queued for them
 	// Resized children are expected to have their repaints already queued
 	// Returns areas to repaint afterwards
-	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponentLike], Boolean)],
-								sizeChangedChildren: Set[ReachComponentLike]): Vector[Bounds] =
+	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponent], Boolean)],
+	                            sizeChangedChildren: Set[ReachComponent]): Vector[Bounds] =
 	{
-		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
-		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponentLike]()
+		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponent]()
+		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponent]()
 		val repaintZonesBuilder = new VectorBuilder[Bounds]()
 		
 		// Component -> Whether paint operation has already been queued
@@ -160,7 +160,7 @@ trait ReachCanvasLike
 					val currentBounds = child.bounds
 					if (currentBounds != oldBounds) {
 						repaintZonesBuilder += (Bounds.around(Pair(oldBounds, currentBounds)) +
-							child.parentHierarchy.positionToTopModifier)
+							child.hierarchy.positionToTopModifier)
 						if (oldBounds.size != currentBounds.size)
 							nextSizeChangeChildrenBuilder += child
 						else

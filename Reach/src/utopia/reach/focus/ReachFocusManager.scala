@@ -9,7 +9,7 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.focus.FocusEvent.{FocusEntering, FocusGained, FocusLeaving, FocusLost}
 
@@ -32,7 +32,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	
 	private val targetsPointer = EventfulPointer(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
-		sortComponents(targets.map { c => c.parentHierarchy.toVector -> c }.toVector) }
+		sortComponents(targets.map { c => c.hierarchy.toVector -> c }.toVector) }
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }
 	
 	// Focus id -> Owned window
@@ -350,7 +350,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	}
 	
 	// Traverses same container components in sequence before jumping to the container's sibling
-	private def sortComponents(components: Vector[(Vector[ReachComponentLike], Focusable)]): Vector[Focusable] = {
+	private def sortComponents(components: Vector[(Vector[ReachComponent], Focusable)]): Vector[Focusable] = {
 		val (directTargets, deepTargets) = components.divideWith { case (hierarchy, target) =>
 			if (hierarchy.isEmpty)
 				Left(target)

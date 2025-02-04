@@ -32,7 +32,7 @@ object ViewPointerTest extends App
 	window.fullyVisibleFlag.addContinuousListener { e => println(s"Window visible state $e (destiny = ${window.fullyVisibleFlag.destiny})") }
 	window.openFlag.addContinuousListener { e => println(s"Window open state $e (destiny = ${window.openFlag.destiny})") }
 	window.canvas.attachmentPointer.addContinuousListener { e => println(s"Canvas attachment state $e (destiny = ${window.canvas.attachmentPointer.destiny})") }
-	window.result.parentHierarchy.linkPointer.addContinuousListener { e => println(s"Label attachment $e (destiny = ${window.result.parentHierarchy.linkPointer.destiny})") }
+	window.result.hierarchy.linkedFlag.addContinuousListener { e => println(s"Label attachment $e (destiny = ${window.result.hierarchy.linkedFlag.destiny})") }
 	
 	start()
 	window.display(centerOnParent = true)

@@ -27,5 +27,5 @@ trait ContextualWrapperContainerFactory[+N, TopN, +Container, -TopC, +Repr[N2 <:
 	  * @return A new container (als includes the created component and the additional creation result)
 	  */
 	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: F => ComponentCreationResult[C, R]) =
-		apply[C, R](Open.withContext(context)(contentFactory)(fill)(parentHierarchy.top))
+		apply[C, R](Open.withContext(context)(contentFactory)(fill)(hierarchy.top))
 }

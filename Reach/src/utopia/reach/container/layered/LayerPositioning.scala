@@ -2,7 +2,7 @@ package utopia.reach.container.layered
 
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.firmament.model.stack.StackSize
@@ -33,7 +33,7 @@ object LayerPositioning
 	  * @param primaryAxis Axis to consider first when the alignment affects both of the axes.
 	  *                    Default = Y = Vertical position will be assigned first for BottomX and TopX alignments.
 	  */
-	case class AnchoredTo(component: ReachComponentLike, alignment: Alignment = Center, optimalMargin: Double = 0.0,
+	case class AnchoredTo(component: ReachComponent, alignment: Alignment = Center, optimalMargin: Double = 0.0,
 	                      primaryAxis: Axis2D = Y)
 		extends LayerPositioning
 	

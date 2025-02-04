@@ -11,7 +11,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 /**
   * Draws the last recorded mouse position. May be useful for testing and/or debugging.
@@ -23,7 +23,7 @@ import utopia.reach.component.template.ReachComponentLike
   * @param outsideColor Color to use when drawing a mouse coordinate outside the component's bounds
   *                     (default = blue with 20% alpha)
   */
-class MousePositionDrawer(componentPointer: Changing[Option[ReachComponentLike]], radius: Double = 1.0,
+class MousePositionDrawer(componentPointer: Changing[Option[ReachComponent]], radius: Double = 1.0,
                           insideColor: Color = Color.red, outsideColor: Color = Color.blue.withAlpha(0.5))
 	extends CustomDrawer with MouseMoveListener
 {

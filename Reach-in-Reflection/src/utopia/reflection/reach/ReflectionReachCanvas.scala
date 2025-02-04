@@ -11,7 +11,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.ReachCanvas
 import utopia.reach.cursor.CursorSet
@@ -47,10 +47,10 @@ object ReflectionReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def apply[C <: ReachComponentLike, R](background: Color, cursors: Option[CursorSet] = None,
-	                                      enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
-	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                     (implicit exc: ExecutionContext, log: Logger) =
+	def apply[C <: ReachComponent, R](background: Color, cursors: Option[CursorSet] = None,
+	                                  enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                 (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas
 		val canvasPointer = AssignableOnce[ReflectionReachCanvas]()
@@ -60,7 +60,7 @@ object ReflectionReachCanvas
 				case None => Point.origin
 			}
 		}
-		val contentPointer = AssignableOnce[ReachComponentLike]()
+		val contentPointer = AssignableOnce[ReachComponent]()
 		val canvas = new ReflectionReachCanvas(contentPointer, absolutePositionView,
 			EventfulPointer[Color](background), ResettableFlag(), cursors, enableAwtDoubleBuffering,
 			disableFocus)({
@@ -115,7 +115,7 @@ object ReflectionReachCanvas
   * @author Mikko Hilpinen
   * @since 19.4.2023, v1.0
   */
-class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]],
+class ReflectionReachCanvas protected(contentPointer: Changing[Option[ReachComponent]],
                                       absoluteParentPositionView: => View[Point],
                                       backgroundPointer: EventfulPointer[Color],
                                       attachmentPointer: ResettableFlag = ResettableFlag()(ComponentCreationDefaults.componentLogger),

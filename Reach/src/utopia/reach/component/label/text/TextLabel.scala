@@ -16,7 +16,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 /**
   * Common trait for factories that are used for constructing text labels
@@ -29,7 +29,7 @@ trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with PartO
 	// OTHER    -------------------
 	
 	protected def _apply(text: LocalizedString, drawContext: TextDrawContext, allowTextShrink: Boolean = false) =
-		new TextLabel(parentHierarchy, text, drawContext, customDrawers, allowTextShrink)
+		new TextLabel(hierarchy, text, drawContext, customDrawers, allowTextShrink)
 }
 
 /**
@@ -38,7 +38,7 @@ trait TextLabelFactoryLike[+Repr] extends CustomDrawableFactory[Repr] with PartO
   * @author Mikko Hilpinen
   * @since 20.07.2023, v1.1
   */
-case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+case class ContextualTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
                                       customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextLabelFactoryLike[ContextualTextLabelFactory]
 		with TextContextualFactory[ContextualTextLabelFactory]
@@ -101,7 +101,7 @@ case class ContextualTextLabelFactory(parentHierarchy: ComponentHierarchy, conte
   * @author Mikko Hilpinen
   * @since 20.07.2023, v1.1
   */
-case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
+case class TextLabelFactory(hierarchy: ComponentHierarchy,
                             alignment: Alignment = Alignment.Left, insets: StackInsets = StackInsets.any,
                             customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextLabelFactoryLike[TextLabelFactory]
@@ -117,7 +117,7 @@ case class TextLabelFactory(parentHierarchy: ComponentHierarchy,
 	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): TextLabelFactory = copy(customDrawers = drawers)
 	override def withContext(context: StaticTextContext) =
-		ContextualTextLabelFactory(parentHierarchy, context, customDrawers)
+		ContextualTextLabelFactory(hierarchy, context, customDrawers)
 	
 	
 	// OTHER	--------------------------------
@@ -150,16 +150,16 @@ object TextLabel extends Cff[TextLabelFactory]
   * This text label doesn't allow content or styling modifications from outside but presents static text
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
-  * @param parentHierarchy This component's parent hierarchy
+  * @param hierarchy This component's parent hierarchy
   * @param text Text displayed on this label
   * @param textDrawContext Styling settings for text drawing and layout
   * @param additionalDrawers Additional custom drawing (default = empty)
   * @param allowTextShrink Whether text should be allowed to shrink below its standard size if necessary (default = false)
   */
-class TextLabel(override val parentHierarchy: ComponentHierarchy, val text: LocalizedString,
+class TextLabel(override val hierarchy: ComponentHierarchy, val text: LocalizedString,
                 override val textDrawContext: TextDrawContext,
                 additionalDrawers: Seq[CustomDrawer] = Empty, override val allowTextShrink: Boolean = false)
-	extends CustomDrawReachComponent with TextComponent
+	extends ConcreteCustomDrawReachComponent with TextComponent
 {
 	// ATTRIBUTES	-----------------------------
 	

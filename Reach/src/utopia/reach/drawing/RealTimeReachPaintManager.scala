@@ -16,7 +16,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 
 import java.awt.{Graphics2D, Toolkit}
 import javax.swing.RepaintManager
@@ -41,7 +41,7 @@ object RealTimeReachPaintManager
 	  *                      This is to make the drawing results more responsive (default = true)
 	  * @return A new paint manager
 	  */
-	def apply(component: ReachComponentLike, background: => Option[Color] = None,
+	def apply(component: ReachComponent, background: => Option[Color] = None,
 	          maxQueueSize: Int = 30, delayPaintingWhile: Flag = AlwaysFalse,
 	          disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true) =
 		new RealTimeReachPaintManager(component, background, maxQueueSize, delayPaintingWhile,
@@ -56,7 +56,7 @@ object RealTimeReachPaintManager
   */
 // TODO: Add a position modifier (call by name) that affects all draw operations
 //  (used for moving window contents while still keeping component position as (0,0))
-class RealTimeReachPaintManager(component: ReachComponentLike, background: => Option[Color] = None,
+class RealTimeReachPaintManager(component: ReachComponent, background: => Option[Color] = None,
                                 maxQueueSize: Int = 30, delayPaintingFlag: Flag = AlwaysFalse,
                                 disableDoubleBuffering: Boolean = true, syncAfterDraw: Boolean = true)
 	extends PaintManager

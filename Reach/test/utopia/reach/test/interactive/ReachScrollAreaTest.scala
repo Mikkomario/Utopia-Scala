@@ -11,7 +11,7 @@ import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.Hsl
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.template.CustomDrawReachComponent
+import utopia.reach.component.template.ConcreteCustomDrawReachComponent
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.Stack
@@ -53,7 +53,7 @@ object ReachScrollAreaTest extends App
 						// Each block is created in open form
 						val content = Open { hierarchy =>
 							Vector.fill(5) {
-								CustomDrawReachComponent(hierarchy,
+								ConcreteCustomDrawReachComponent(hierarchy,
 									Vector(BackgroundDrawer(colorIterator.next()))) { activeSizePointer.value }
 							}
 						}

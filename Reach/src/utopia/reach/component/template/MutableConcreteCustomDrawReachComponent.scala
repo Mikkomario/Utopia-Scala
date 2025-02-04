@@ -8,7 +8,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.immutable.Empty
 
-object MutableCustomDrawReachComponent
+object MutableConcreteCustomDrawReachComponent
 {
 	// OTHER	---------------------------
 	
@@ -20,7 +20,7 @@ object MutableCustomDrawReachComponent
 	  * @return A new component
 	  */
 	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty)
-			 (stackSize: => StackSize): MutableCustomDrawReachComponent =
+			 (stackSize: => StackSize): MutableConcreteCustomDrawReachComponent =
 	{
 		val c = new BasicComponent(parentHierarchy, stackSize)
 		if (customDrawers.nonEmpty)
@@ -31,8 +31,8 @@ object MutableCustomDrawReachComponent
 	
 	// NESTED	---------------------------
 	
-	private class BasicComponent(override val parentHierarchy: ComponentHierarchy, getSize: => StackSize)
-		extends MutableCustomDrawReachComponent
+	private class BasicComponent(override val hierarchy: ComponentHierarchy, getSize: => StackSize)
+		extends MutableConcreteCustomDrawReachComponent
 	{
 		// IMPLEMENTED	-------------------
 		
@@ -47,7 +47,7 @@ object MutableCustomDrawReachComponent
   * @author Mikko Hilpinen
   * @since 4.10.2020, v0.1
   */
-trait MutableCustomDrawReachComponent extends CustomDrawReachComponent with MutableCustomDrawable
+trait MutableConcreteCustomDrawReachComponent extends ConcreteCustomDrawReachComponent with MutableCustomDrawable
 {
 	// ATTRIBUTES	--------------------------
 	

@@ -2,6 +2,11 @@
 
 ## v1.6 (in development)
 ### Breaking changes
+- Renamed **ReachComponent** to **ConcreteReachComponent**
+  - Applied similar renaming to **CustomDrawReachComponent** and **MutableCustomDrawReachComponent**
+- Renamed **ReachComponentLike** to **ReachComponent**
+- Renamed **PartOfComponentHierarchy**'s `.parentHierarchy` to `.hierarchy`
+- In **ReachComponent**, renamed `.linkPointer` to `.linkedFlag`
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 

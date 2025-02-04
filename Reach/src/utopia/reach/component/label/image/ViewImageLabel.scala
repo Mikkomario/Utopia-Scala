@@ -27,7 +27,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 /**
   * Common trait for view image label factories and settings
@@ -309,7 +309,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 		}
 		// Applies image scaling, also
 		val scaledImagePointer = coloredPointer.mergeWith(imageScalingPointer) { _ * _ }
-		new ViewImageLabel(parentHierarchy, scaledImagePointer, settings, allowUpscalingPointer)
+		new ViewImageLabel(hierarchy, scaledImagePointer, settings, allowUpscalingPointer)
 	}
 }
 
@@ -318,7 +318,7 @@ trait ViewImageLabelFactoryLike[+Repr]
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableColorContext,
+case class ContextualViewImageLabelFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                            settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                            drawBackground: Boolean = false)
 	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
@@ -399,7 +399,7 @@ case class ContextualViewImageLabelFactory(parentHierarchy: ComponentHierarchy, 
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
-case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
+case class ViewImageLabelFactory(hierarchy: ComponentHierarchy,
                                  settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                  allowUpscalingPointer: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
@@ -421,7 +421,7 @@ case class ViewImageLabelFactory(parentHierarchy: ComponentHierarchy,
 	override def withBackground(background: Color): ViewImageLabelFactory =
 		withCustomDrawer(BackgroundDrawer(background))
 	override def withContext(context: VariableColorContext) =
-		ContextualViewImageLabelFactory(parentHierarchy, context, settings)
+		ContextualViewImageLabelFactory(hierarchy, context, settings)
 	
 	override def *(mod: Double): ViewImageLabelFactory = withInsetsScaledBy(mod).withImageScaledBy(mod)
 	
@@ -465,14 +465,14 @@ object ViewImageLabel extends ViewImageLabelSetup()
   * @author Mikko Hilpinen
   * @since 28.10.2020, v0.1
   */
-class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
+class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
                      settings: ViewImageLabelSettings, allowUpscalingPointer: Changing[Boolean] = AlwaysTrue)
-	extends CustomDrawReachComponent with ImageLabel
+	extends ConcreteCustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val localImagePointer = imagePointer.viewWhile(parentHierarchy.linkPointer)
-	private val localTransformationPointer = settings.transformationPointer.viewWhile(parentHierarchy.linkPointer)
+	private val localImagePointer = imagePointer.viewWhile(hierarchy.linkedFlag)
+	private val localTransformationPointer = settings.transformationPointer.viewWhile(hierarchy.linkedFlag)
 	private val visualImageSizePointer = localTransformationPointer.fixedValue match {
 		case Some(transformation) =>
 			transformation match {
@@ -505,9 +505,9 @@ class ViewImageLabel(override val parentHierarchy: ComponentHierarchy, imagePoin
 			revalidate()
 	}
 	localTransformationPointer.addListener(revalidateListener)
-	settings.insetsPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
-	settings.alignmentPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => repaint() }
-	allowUpscalingPointer.addListenerWhile(parentHierarchy.linkPointer)(revalidateListener)
+	settings.insetsPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
+	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag) { _ => repaint() }
+	allowUpscalingPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
 	
 	
 	// COMPUTED	-------------------------------------

@@ -16,7 +16,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.layered.LayerPositioning
@@ -66,8 +66,8 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * @return New open components, with additional results included (if defined). Also contains the primary
 	  *         additional creation result.
 	  */
-	def many[C <: ReachComponentLike, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
-	                                        (implicit canvas: ReachCanvas) =
+	def many[C <: ReachComponent, CR, R](creation: Iterator[ComponentHierarchy] => CreationsResult[C, CR, R])
+	                                    (implicit canvas: ReachCanvas) =
 	{
 		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
 		// Collects all created component hierarchies
@@ -76,7 +76,7 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 		creation(moreHierarchiesIterator).mapComponent {
 			_.iterator.flatMap { component =>
 				// Components must use provided seed hierarchies
-				component.component.parentHierarchy match {
+				component.component.hierarchy match {
 					case seed: SeedHierarchyBlock => Some(new OpenComponent(component, seed))
 					case _ => None
 				}
@@ -113,9 +113,9 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyUsing[F, C <: ReachComponentLike, CR, R](factory: ComponentFactoryFactory[F])
-							  (creation: Iterator[F] => CreationsResult[C, CR, R])
-							  (implicit canvas: ReachCanvas) =
+	def manyUsing[F, C <: ReachComponent, CR, R](factory: ComponentFactoryFactory[F])
+	                                            (creation: Iterator[F] => CreationsResult[C, CR, R])
+	                                            (implicit canvas: ReachCanvas) =
 		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	
 	/**
@@ -156,9 +156,9 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
 	@deprecated("Replaced with .withContext(N).many(...)", "v1.0")
-	def manyWithContext[C <: ReachComponentLike, CR, R, N, F[X <: N]](factory: Gccff[N, F], context: N)
-	                                                                 (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
-	                                                                 (implicit canvas: ReachCanvas) =
+	def manyWithContext[C <: ReachComponent, CR, R, N, F[X <: N]](factory: Gccff[N, F], context: N)
+	                                                             (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
+	                                                             (implicit canvas: ReachCanvas) =
 		many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
 	/**
@@ -196,9 +196,9 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
 	@deprecated("Replaced with .contextual.many(...)", "v1.0")
-	def contextualMany[C <: ReachComponentLike, CR, R, N, F[X <: N]](factory: Gccff[N, F])
-	                                                                (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
-	                                                                (implicit canvas: ReachCanvas, context: N) =
+	def contextualMany[C <: ReachComponent, CR, R, N, F[X <: N]](factory: Gccff[N, F])
+	                                                            (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
+	                                                            (implicit canvas: ReachCanvas, context: N) =
 		manyWithContext(factory, context)(creation)
 }
 
@@ -249,9 +249,9 @@ case class ContextualOpenComponentFactory[N](context: N)
 	  * @tparam R  Additional (reduced) creation result type
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def many[F[X <: N], C <: ReachComponentLike, CR, R](factory: Gccff[N, F])
-	                                                   (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
-	                                                   (implicit canvas: ReachCanvas) =
+	def many[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
+	                                               (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
+	                                               (implicit canvas: ReachCanvas) =
 		Open.many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
 	/**
@@ -271,9 +271,9 @@ case class ContextualOpenComponentFactory[N](context: N)
 	  * @tparam R  Additional (reduced) creation result type
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def many[F, C <: ReachComponentLike, CR, R](factory: FromContextComponentFactoryFactory[N, F])
-	                                           (creation: Iterator[F] => CreationsResult[C, CR, R])
-	                                           (implicit canvas: ReachCanvas) =
+	def many[F, C <: ReachComponent, CR, R](factory: FromContextComponentFactoryFactory[N, F])
+	                                       (creation: Iterator[F] => CreationsResult[C, CR, R])
+	                                       (implicit canvas: ReachCanvas) =
 		Open.many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	
 }
@@ -310,7 +310,7 @@ object OpenComponent
 	// EXTENSIONS	-------------------------
 	
 	// Extensions for single wrapped components
-	implicit class SingleOpenComponent[C <: ReachComponentLike, R](val c: OpenComponent[C, R]) extends AnyVal
+	implicit class SingleOpenComponent[C <: ReachComponent, R](val c: OpenComponent[C, R]) extends AnyVal
 	{
 		/**
 		  * A framed version of this component
@@ -323,7 +323,7 @@ object OpenComponent
 			Open.using(Framing) { ff =>
 				val wrapping = ff.apply(insets).withCustomDrawers(customDrawers)(c)
 				wrapping.parent -> wrapping.result
-			}(c.parentHierarchy.top)
+			}(c.hierarchy.top)
 		}
 		
 		/**
@@ -337,7 +337,7 @@ object OpenComponent
 	}
 	
 	// Extension for sequence of wrapped components
-	implicit class MultiOpenComponent[C <: ReachComponentLike, R](val c: OpenComponent[Seq[C], R]) extends AnyVal
+	implicit class MultiOpenComponent[C <: ReachComponent, R](val c: OpenComponent[Seq[C], R]) extends AnyVal
 	{
 		/**
 		  * Creates a stack that will hold these components
@@ -438,7 +438,7 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	  * @return A result with the wrapping parent container, the wrapped component and a component creation result
 	  */
 	@throws[IllegalStateException]("If this component was already attached to a parent container")
-	def attachTo[P <: ReachComponentLike](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
+	def attachTo[P <: ReachComponent](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
 	{
 		hierarchy.complete(parent, switchPointer)
 		creation.in(parent)

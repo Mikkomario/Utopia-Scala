@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableCustomDrawReachComponent
+import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
 
 object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 {
@@ -192,12 +192,12 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
   * @author Mikko Hilpinen
   * @since 21.10.2020, v0.1
   */
-class MutableViewTextLabel[A](override val parentHierarchy: ComponentHierarchy,
+class MutableViewTextLabel[A](override val hierarchy: ComponentHierarchy,
                               override val contentPointer: EventfulPointer[A],
                               initialDrawContext: TextDrawContext,
                               displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                               override val allowTextShrink: Boolean = false)
-	extends MutableCustomDrawReachComponent with MutableStyleTextComponent with TextComponent
+	extends MutableConcreteCustomDrawReachComponent with MutableStyleTextComponent with TextComponent
 		with RefreshableWithPointer[A]
 {
 	// ATTRIBUTES	----------------------------------

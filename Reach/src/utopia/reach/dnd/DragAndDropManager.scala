@@ -8,7 +8,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
 import utopia.reach.dnd.DragAndDropEvent._
 
@@ -76,8 +76,8 @@ class DragAndDropManager(component: => java.awt.Component)(implicit log: Logger)
 	  * Only manages the target while it is attached to the main component hierarchy.
 	  * @param target New drag-and-drop target
 	  */
-	def addTargetWhileAttached(target: DragAndDropTarget with ReachComponentLike) =
-		target.parentHierarchy.linkPointer.addListenerAndSimulateEvent(false) { isLinked =>
+	def addTargetWhileAttached(target: DragAndDropTarget with ReachComponent) =
+		target.hierarchy.linkedFlag.addListenerAndSimulateEvent(false) { isLinked =>
 			if (isLinked.newValue)
 				addTarget(target)
 			else

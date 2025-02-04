@@ -1,6 +1,6 @@
 package utopia.reach.focus
 
-import utopia.reach.component.template.{ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
 
 object FocusRequestable
 {
@@ -11,7 +11,7 @@ object FocusRequestable
 	  * @param focusTarget The component that will handle focus requests
 	  * @return A new component wrapper
 	  */
-	def delegate(wrapped: ReachComponentLike, focusTarget: FocusRequestable) =
+	def delegate(wrapped: ReachComponent, focusTarget: FocusRequestable) =
 		wrap(wrapped)(focusTarget.requestFocus)
 	/**
 	  * Wraps a Reach component, adding it focus request function
@@ -19,14 +19,14 @@ object FocusRequestable
 	  * @param requestFocus A focus request function
 	  * @return A wrapper around that component
 	  */
-	def wrap(component: ReachComponentLike)
-	        (requestFocus: (Boolean, Boolean) => Boolean): ReachComponentLike with FocusRequestable =
+	def wrap(component: ReachComponent)
+	        (requestFocus: (Boolean, Boolean) => Boolean): ReachComponent with FocusRequestable =
 		new FocusRequestableWrapper(component)(requestFocus)
 	
 	
 	// NESTED   -------------------------
 	
-	private class FocusRequestableWrapper(override protected val wrapped: ReachComponentLike)
+	private class FocusRequestableWrapper(override protected val wrapped: ReachComponent)
 	                                     (request: (Boolean, Boolean) => Boolean)
 		extends ReachComponentWrapper with FocusRequestable
 	{

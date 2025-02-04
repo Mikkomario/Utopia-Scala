@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, ReachComponentLike}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 
 object Framing extends Cff[FramingFactory]
@@ -28,13 +28,13 @@ object Framing extends Cff[FramingFactory]
 }
 
 trait FramingFactoryLike[+Repr]
-	extends WrapperContainerFactory[Framing, ReachComponentLike] with CustomDrawableFactory[Repr]
+	extends WrapperContainerFactory[Framing, ReachComponent] with CustomDrawableFactory[Repr]
 		with VariableFramedFactory[Repr]
 {
 	// IMPLEMENTED  --------------------
 	
-	override def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R]): ComponentWrapResult[Framing, C, R] = {
-		val framing = new Framing(parentHierarchy, content, insetsPointer, customDrawers)
+	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[Framing, C, R] = {
+		val framing = new Framing(hierarchy, content, insetsPointer, customDrawers)
 		// Closes the content
 		content.attachTo(framing)
 	}
@@ -71,15 +71,15 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new framing and the produced content component
 	  */
 	@deprecated("Replaced with .apply(StackInsetsConvertible).apply(OpenComponent)", "v1.1")
-	def apply[C <: ReachComponentLike, R](content: OpenComponent[C, R], insets: StackInsetsConvertible,
-										  customDrawers: Seq[CustomDrawer] = Empty): ComponentWrapResult[Framing, C, R] =
+	def apply[C <: ReachComponent, R](content: OpenComponent[C, R], insets: StackInsetsConvertible,
+	                                  customDrawers: Seq[CustomDrawer] = Empty): ComponentWrapResult[Framing, C, R] =
 		apply(insets).withCustomDrawers(customDrawers).apply(content)
 }
 
-case class InitializedFramingFactory(parentHierarchy: ComponentHierarchy, insetsPointer: Changing[StackInsets],
+case class InitializedFramingFactory(hierarchy: ComponentHierarchy, insetsPointer: Changing[StackInsets],
                                      customDrawers: Seq[CustomDrawer] = Empty)
 	extends FramingFactoryLike[InitializedFramingFactory]
-		with NonContextualWrapperContainerFactory[Framing, ReachComponentLike]
+		with NonContextualWrapperContainerFactory[Framing, ReachComponent]
 {
 	override def withInsetsPointer(p: Changing[StackInsets]): InitializedFramingFactory = copy(insetsPointer = p)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): InitializedFramingFactory =
@@ -117,11 +117,11 @@ object ContextualFramingFactory
 	}
 }
 
-case class ContextualFramingFactory[N <: BaseContextPropsView](parentHierarchy: ComponentHierarchy, context: N,
+case class ContextualFramingFactory[N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N,
                                                                customDrawers: Seq[CustomDrawer] = Empty,
                                                                customInsets: Either[Changing[SizeCategory], Changing[StackInsets]] = Left(Fixed(Medium)))
 	extends FramingFactoryLike[ContextualFramingFactory[N]]
-		with ContextualWrapperContainerFactory[N, BaseContextPropsView, Framing, ReachComponentLike, ContextualFramingFactory]
+		with ContextualWrapperContainerFactory[N, BaseContextPropsView, Framing, ReachComponent, ContextualFramingFactory]
 		with ContextualFramedFactory[ContextualFramingFactory[N]]
 {
 	// ATTRIBUTES   ------------------------
@@ -171,9 +171,9 @@ case class ContextualFramingFactory[N <: BaseContextPropsView](parentHierarchy: 
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-class Framing(override val parentHierarchy: ComponentHierarchy, override val content: ReachComponentLike,
+class Framing(override val hierarchy: ComponentHierarchy, override val content: ReachComponent,
               insetsPointer: Changing[StackInsets], override val customDrawers: Seq[CustomDrawer] = Empty)
-	extends CustomDrawReachComponent with FramingLike[ReachComponentLike]
+	extends ConcreteCustomDrawReachComponent with FramingLike[ReachComponent]
 {
 	// INITIAL CODE -----------------------------
 	

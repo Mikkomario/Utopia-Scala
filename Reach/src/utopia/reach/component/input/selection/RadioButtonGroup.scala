@@ -189,7 +189,7 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	{
 		val group = new RadioButtonGroup[A](parentHierarchy, context, options, valuePointer, settings, hotKeys)
 		if (drawsBackground)
-			context.backgroundPointer.addListenerWhile(parentHierarchy.linkPointer) { _ => group.repaint() }
+			context.backgroundPointer.addListenerWhile(parentHierarchy.linkedFlag) { _ => group.repaint() }
 		group
 	}
 	

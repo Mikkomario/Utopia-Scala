@@ -31,7 +31,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.{Focusable, FocusableWithState, FocusableWrapper}
-import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentLike, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ConcreteReachComponent, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
@@ -463,10 +463,10 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: 
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def apply[C <: ReachComponentLike with Focusable](isEmptyPointer: Changing[Boolean])
-	                                                 (makeField: FieldCreationContext => C)
-	                                                 (makeRightHintLabel: ExtraFieldCreationContext[C] =>
-		                                                 Option[OpenComponent[ReachComponentLike, Any]]) =
+	def apply[C <: ReachComponent with Focusable](isEmptyPointer: Changing[Boolean])
+	                                             (makeField: FieldCreationContext => C)
+	                                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
+		                                                 Option[OpenComponent[ReachComponent, Any]]) =
 		new Field[C](parentHierarchy, context, isEmptyPointer, settings)(makeField)(makeRightHintLabel)
 	
 	/**
@@ -477,8 +477,8 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: 
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def withoutExtraLabel[C <: ReachComponentLike with Focusable](isEmptyPointer: Changing[Boolean])
-	                                                             (makeField: FieldCreationContext => C) =
+	def withoutExtraLabel[C <: ReachComponent with Focusable](isEmptyPointer: Changing[Boolean])
+	                                                         (makeField: FieldCreationContext => C) =
 		apply(isEmptyPointer)(makeField) { _ => None }
 }
 
@@ -513,13 +513,13 @@ object Field extends FieldSetup()
   * @tparam C Type of wrapped field
   */
 // TODO: It would be more reasonable if isEmptyPointer was nonEmptyPointer - the problem is that the transition is hard
-class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy: ComponentHierarchy,
-                                                    context: VariableTextContext,
-                                                    isEmptyPointer: Changing[Boolean],
-                                                    settings: FieldSettings = FieldSettings.default)
-                                                   (makeField: FieldCreationContext => C)
-                                                   (makeRightHintLabel: ExtraFieldCreationContext[C] =>
-	                                                   Option[OpenComponent[ReachComponentLike, Any]])
+class Field[C <: ReachComponent with Focusable](override val hierarchy: ComponentHierarchy,
+                                                context: VariableTextContext,
+                                                isEmptyPointer: Changing[Boolean],
+                                                settings: FieldSettings = FieldSettings.default)
+                                               (makeField: FieldCreationContext => C)
+                                               (makeRightHintLabel: ExtraFieldCreationContext[C] =>
+	                                                   Option[OpenComponent[ReachComponent, Any]])
 	extends ReachComponentWrapper with FocusableWrapper with FocusableWithState with PartOfComponentHierarchy
 {
 	// ATTRIBUTES	------------------------------------------
@@ -632,11 +632,11 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 			// Case: Both main and hint area used => uses a view stack
 			case Some(openHintArea) =>
 				val framedMainArea = Open.using(Framing) { makeContentFraming(_, openMainArea) }
-				ViewStack(parentHierarchy)
+				ViewStack(hierarchy)
 					.withoutMargin(Pair(framedMainArea.withResult(AlwaysTrue), openHintArea)).parent
 			
 			// Case: Only main area used => uses framing only
-			case None => makeContentFraming(Framing(parentHierarchy), openMainArea).parent
+			case None => makeContentFraming(Framing(hierarchy), openMainArea).parent
 		}
 		component -> openMainArea.result
 	}
@@ -667,12 +667,12 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	
 	override protected def focusable = field
 	
-	override protected def wrapped: ReachComponent = _wrapped
+	override protected def wrapped: ConcreteReachComponent = _wrapped
 	
 	
 	// OTHER	----------------------------------------------
 	
-	private def makeContentFraming[C2 <: ReachComponentLike](factory: FramingFactory, content: OpenComponent[C2, C]) =
+	private def makeContentFraming[C2 <: ReachComponent](factory: FramingFactory, content: OpenComponent[C2, C]) =
 	{
 		// If extra icons are used, places them with the main content in a stack view
 		val framingContent = {
@@ -788,7 +788,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	}
 	
 	// Returns the generated open component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponentLike, Changing[Boolean]]] = {
+	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponent, Changing[Boolean]]] = {
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
 		// The right side hint label expands to the left and not right
@@ -835,7 +835,7 @@ class Field[C <: ReachComponentLike with Focusable](override val parentHierarchy
 	
 	// TODO: This version doesn't take into account margin between lines
 	private def measureText(text: LocalizedString, style: TextDrawContext) =
-		MeasuredText(text.string, parentHierarchy.fontMetricsWith(style.font), allowLineBreaks = style.allowLineBreaks)
+		MeasuredText(text.string, hierarchy.fontMetricsWith(style.font), allowLineBreaks = style.allowLineBreaks)
 	
 	private def focusBorderWidthFrom(context: BaseContextPropsView) = (context.margins.verySmall / 2) max 3
 	private def defaultBorderWidthFrom(context: BaseContextPropsView) = focusBorderWidthFrom(context) / 3

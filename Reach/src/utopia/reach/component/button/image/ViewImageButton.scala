@@ -185,7 +185,7 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
 	  * @return A new view image button
 	  */
 	def apply[U](images: Changing[ButtonImageSet])(action: => U) =
-		new ViewImageButton(parentHierarchy, images, settings, allowsUpscalingPointer)(action)
+		new ViewImageButton(hierarchy, images, settings, allowsUpscalingPointer)(action)
 	/**
 	  * Creates a new view image button
 	  * @param images Image/images to display on this button
@@ -208,7 +208,7 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy, context: VariableColorContext,
+case class ContextualViewImageButtonFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                             settings: ViewImageButtonSettings = ViewImageButtonSettings.default)
 	extends ViewImageButtonFactoryLike[ContextualViewImageButtonFactory]
 		with ContextualFactory[VariableColorContext, ContextualViewImageButtonFactory]
@@ -317,7 +317,7 @@ case class ContextualViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
+case class ViewImageButtonFactory(hierarchy: ComponentHierarchy,
                                   settings: ViewImageButtonSettings = ViewImageButtonSettings.default,
                                   allowsUpscalingPointer: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageButtonFactoryLike[ViewImageButtonFactory]
@@ -336,7 +336,7 @@ case class ViewImageButtonFactory(parentHierarchy: ComponentHierarchy,
 	override def self: ViewImageButtonFactory = this
 	
 	override def withContext(context: VariableColorContext) =
-		ContextualViewImageButtonFactory(parentHierarchy, context, settings)
+		ContextualViewImageButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageButtonSettings) = copy(settings = settings)
 	

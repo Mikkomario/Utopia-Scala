@@ -13,7 +13,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.{ContextualFactory, ContextualVariableBackgroundAssignable}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{CustomDrawReachComponent, PartOfComponentHierarchy}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 object ViewEmptyLabel extends Cff[ViewEmptyLabelFactory] with ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup]
 {
@@ -115,7 +115,7 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Rep
 			// Case: No background drawing is used
 			case None => drawersPointer -> None
 		}
-		val label = new ViewEmptyLabel(parentHierarchy, sizePointer, drawers)
+		val label = new ViewEmptyLabel(hierarchy, sizePointer, drawers)
 		// Applies repainting events, if needed
 		repaintPointer.foreach { _.addContinuousAnyChangeListener { label.repaint() } }
 		label
@@ -127,7 +127,7 @@ trait ViewEmptyLabelFactoryLike[+Repr] extends ViewEmptyLabelSettingsWrapper[Rep
 	def apply(size: StackSize): ViewEmptyLabel = apply(Fixed(size))
 }
 
-case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
+case class ViewEmptyLabelFactory(hierarchy: ComponentHierarchy,
                                  settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ViewEmptyLabelFactory]
 		with FromContextFactory[ColorContext, ContextualViewEmptyLabelFactory]
@@ -138,7 +138,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 		copy(settings = settings)
 	
 	override def withContext(context: ColorContext) =
-		ContextualViewEmptyLabelFactory(parentHierarchy, context, settings)
+		ContextualViewEmptyLabelFactory(hierarchy, context, settings)
 	
 	
 	// OTHER    ----------------------------------
@@ -182,7 +182,7 @@ case class ViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy,
 		withBackground(backgroundPointer).apply(stackSizePointer)
 }
 
-case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, context: ColorContext,
+case class ContextualViewEmptyLabelFactory(hierarchy: ComponentHierarchy, context: ColorContext,
                                            settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default)
 	extends ViewEmptyLabelFactoryLike[ContextualViewEmptyLabelFactory]
 		with ContextualFactory[ColorContext, ContextualViewEmptyLabelFactory]
@@ -194,7 +194,7 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
 	 * @return A copy of this factory without contextual information
 	 */
 	@deprecated("Deprecated for removal", "v1.1")
-	def withoutContext = ViewEmptyLabel(parentHierarchy)
+	def withoutContext = ViewEmptyLabel(hierarchy)
 	
 	
 	// IMPLEMENTED  -------------------------------
@@ -225,9 +225,9 @@ case class ContextualViewEmptyLabelFactory(parentHierarchy: ComponentHierarchy, 
  * @author Mikko Hilpinen
  * @since 29.1.2021, v0.1
  */
-class ViewEmptyLabel(override val parentHierarchy: ComponentHierarchy, val stackSizePointer: Changing[StackSize],
+class ViewEmptyLabel(override val hierarchy: ComponentHierarchy, val stackSizePointer: Changing[StackSize],
                      val customDrawersPointer: Changing[Seq[CustomDrawer]])
-	extends CustomDrawReachComponent
+	extends ConcreteCustomDrawReachComponent
 {
 	// INITIAL CODE -------------------------------
 	

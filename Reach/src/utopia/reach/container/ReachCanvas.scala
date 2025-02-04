@@ -38,7 +38,7 @@ import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
@@ -83,16 +83,16 @@ object ReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def apply[C <: ReachComponentLike, R](attachmentPointer: Flag,
-	                                      absoluteParentPositionView: => Either[View[Point], Changing[Point]],
-	                                      backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
-	                                      enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
-	                                     (revalidateImplementation: ReachCanvas => Unit)
-	                                     (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                     (implicit exc: ExecutionContext, log: Logger) =
+	def apply[C <: ReachComponent, R](attachmentPointer: Flag,
+	                                  absoluteParentPositionView: => Either[View[Point], Changing[Point]],
+	                                  backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
+	                                  enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+	                                 (revalidateImplementation: ReachCanvas => Unit)
+	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                 (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas first
-		val contentPointer = AssignableOnce[ReachComponentLike]()
+		val contentPointer = AssignableOnce[ReachComponent]()
 		// The canvas is created in the AWT event thread
 		val canvas = AwtEventThread.blocking {
 			new ReachCanvas(contentPointer, attachmentPointer, absoluteParentPositionView, backgroundPointer,
@@ -151,13 +151,13 @@ object ReachCanvas
 	  * @tparam R Type of the additional result from the 'createContent' function
 	  * @return The created canvas + the created content component + the additional result returned by 'createContent'
 	  */
-	def forSwing[C <: ReachComponentLike, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
-	                                         cursors: Option[CursorSet] = None,
-	                                         revalidateListener: ReachCanvas => Unit = _ => (),
-	                                         enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
-	                                         disableMouse: Boolean = false)
-	                                        (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
-	                                        (implicit exc: ExecutionContext, log: Logger) =
+	def forSwing[C <: ReachComponent, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
+	                                     cursors: Option[CursorSet] = None,
+	                                     revalidateListener: ReachCanvas => Unit = _ => (),
+	                                     enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
+	                                     disableMouse: Boolean = false)
+	                                    (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                    (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Performs the canvas creation in the AWT event tread (blocks)
 		AwtEventThread.blocking {
@@ -291,7 +291,7 @@ object ReachCanvas
   *                                 This might happen immediately or after a delay.
   * @param exc Implicit execution context
   */
-class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]], val attachmentPointer: Flag,
+class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], val attachmentPointer: Flag,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
                             enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
@@ -301,7 +301,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 {
 	// ATTRIBUTES	---------------------------
 	
-	private val layoutUpdateQueue = Volatile.seq[Seq[ReachComponentLike]]()
+	private val layoutUpdateQueue = Volatile.seq[Seq[ReachComponent]]()
 	private val updateFinishedQueue = Volatile.seq[() => Unit]()
 	
 	/**
@@ -466,7 +466,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	  * @param updateComponents Sequence of components from hierarchy top downwards that require a layout update once
 	  *                         this canvas has been revalidated
 	  */
-	override def revalidate(updateComponents: Seq[ReachComponentLike]): Unit = {
+	override def revalidate(updateComponents: Seq[ReachComponent]): Unit = {
 		if (updateComponents.nonEmpty)
 			layoutUpdateQueue :+= updateComponents
 		revalidate()
@@ -477,7 +477,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	  *                         this canvas has been revalidated
 	  * @param f                A function called after layout has been updated.
 	  */
-	override def revalidateAndThen(updateComponents: Seq[ReachComponentLike])(f: => Unit) = {
+	override def revalidateAndThen(updateComponents: Seq[ReachComponent])(f: => Unit) = {
 		// Queues the action
 		updateFinishedQueue :+= (() => f)
 		// Queues revalidation
@@ -591,7 +591,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponentLike]]
 	private object HierarchyConnection extends ComponentHierarchy
 	{
 		override def parent = Left(ReachCanvas.this)
-		override def linkPointer = attachmentPointer
+		override def linkedFlag = attachmentPointer
 		override def isThisLevelLinked = isLinked
 		override def top = ReachCanvas.this
 		override def coordinateTransform: Option[CoordinateTransform] = None

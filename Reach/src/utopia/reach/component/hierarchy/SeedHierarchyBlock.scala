@@ -8,7 +8,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
-import utopia.reach.component.template.ReachComponentLike
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
 
 /**
@@ -22,7 +22,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 {
 	// ATTRIBUTES	--------------------------
 	
-	private var foundParent: Option[Either[ReachCanvas, (ComponentHierarchy, ReachComponentLike)]] = None
+	private var foundParent: Option[Either[ReachCanvas, (ComponentHierarchy, ReachComponent)]] = None
 	// Set when this block is replaced with another block
 	private var replacement: Option[ComponentHierarchy] = None
 	
@@ -33,8 +33,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		case Some(r) => r.parent
 		case None => foundParent.getOrElse(Left(top))
 	}
-	override def linkPointer: Flag = replacement match {
-		case Some(replacement) => replacement.linkPointer
+	override def linkedFlag: Flag = replacement match {
+		case Some(replacement) => replacement.linkedFlag
 		case None => LinkManager
 	}
 	override def isThisLevelLinked = replacement match {
@@ -44,7 +44,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	override def coordinateTransform: Option[CoordinateTransform] = replacement.flatMap { _.coordinateTransform }
 	
-	override def complete(parent: ReachComponentLike): Unit = complete(parent, AlwaysTrue)
+	override def complete(parent: ReachComponent): Unit = complete(parent, AlwaysTrue)
 	
 	
 	// OTHER	------------------------------
@@ -57,7 +57,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponentLike, switchConditionPointer: Changing[Boolean]) ={
+	def complete(parent: ReachComponent, switchConditionPointer: Changing[Boolean]) ={
 		foundParent match {
 			// Throws if there already existed a parent connection
 			case Some(existingParent) =>
@@ -68,10 +68,10 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 				throw new IllegalStateException(s"Trying to override $existingHierarchyString with $parent")
 			case None =>
 				// Remembers the parent
-				val parentHierarchy = parent.parentHierarchy
+				val parentHierarchy = parent.hierarchy
 				foundParent = Some(Right(parentHierarchy -> parent))
 				// Informs the link manager about the new link connection
-				LinkManager.onParentFound(parentHierarchy.linkPointer, switchConditionPointer)
+				LinkManager.onParentFound(parentHierarchy.linkedFlag, switchConditionPointer)
 		}
 	}
 	/**
@@ -145,7 +145,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer, additionalConditionPointer)
 		
 		def onReplacement(replacement: ComponentHierarchy) =
-			specifyFinalPointer(replacement.linkPointer, View { replacement.isThisLevelLinked })
+			specifyFinalPointer(replacement.linkedFlag, View { replacement.isThisLevelLinked })
 		
 		private def specifyFinalPointer(pointer: Changing[Boolean], thisLevelPointer: View[Boolean]) = {
 			// Updates the pointer(s)
