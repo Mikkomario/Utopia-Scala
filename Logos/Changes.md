@@ -4,7 +4,19 @@
 ### Breaking changes
 - **UniqueTextPlacementAccessLike** now extends **UniqueModelAccess**, which changes the abstract property from 
   `accessCondition: Option[Condition]` to `condition: Condition`
+- **PlacedStatement** now expects a **StatementPlacement** instead of a **TextPlacement**
+  - Same with **PlacedStatementDbFactory**
+- **PlacedStatementDbFactory**
+  - Added a new utility constructor: `def apply(placementModel: StatementPlacementDbProps with HasTable)`
+- **DetailedStatement** is now a trait
+### New features
+- Added **DetailedPlacedStatement** model
+- Added **ManyPlacedStatementsAccess** trait
 ### New methods
+- **DbStatements**
+  - Added `.attachDetailsTo(Seq[StoredStatement])` that converts the statements to **DetailedStatement**s
+- **ManyStatementsAccess**
+  - Added `.pullDetailed`
 - **PlacedAccessLike**
   - Added `.starting`
 

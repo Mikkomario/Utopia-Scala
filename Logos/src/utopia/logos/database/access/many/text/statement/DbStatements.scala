@@ -2,13 +2,18 @@ package utopia.logos.database.access.many.text.statement
 
 import com.vdurmont.emoji.EmojiParser
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.NotEmpty
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
+import utopia.logos.database.access.many.text.word.placement.DbWordPlacements
 import utopia.logos.database.access.many.url.link.DbLinks
+import utopia.logos.database.access.many.url.link.placement.DbLinkPlacements
 import utopia.logos.database.access.single.text.statement.DbStatement
 import utopia.logos.model.cached.{PreparedWordOrLinkPlacement, Statement}
+import utopia.logos.model.combined.text.{DetailedStatement, StatedWord}
+import utopia.logos.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
@@ -21,6 +26,49 @@ import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 object DbStatements 
 	extends ManyStatementsAccess with UnconditionalView with ViewManyByIntIds[ManyStatementsAccess]
 {
+	/**
+	 * Attaches textual details to a set of statements
+	 * @param statements Statements to enhance
+	 * @param connection Implicit DB connection
+	 * @return Detailed copies of the specified statements
+	 */
+	def attachDetailsTo(statements: Seq[StoredStatement])(implicit connection: Connection) = {
+		if (statements.isEmpty)
+			Empty
+		else {
+			// Pulls words involved
+			val statementIds = statements.view.map { _.id }.toIntSet
+			val wordPlacements = DbWordPlacements.withinStatements(statementIds).pull
+			val wordMap = DbWords(wordPlacements.view.map { _.wordId }.toIntSet).toMapBy { _.id }
+			val detailedWordPlacementsPerStatementId = wordPlacements
+				.map { p => StatedWord(wordMap(p.wordId), p) }
+				.groupBy { _.useCase.statementId }.withDefaultValue(Empty)
+			
+			// Pulls links involved
+			val linkPlacements = DbLinkPlacements.withinStatements(statementIds).pull
+			val linkMap = NotEmpty(linkPlacements) match {
+				case Some(placements) =>
+					DbLinks(placements.view.map { _.linkId }.toIntSet).pullDetailed.view.map { l => l.id -> l }.toMap
+				case None => Map[Int, DetailedLink]()
+			}
+			val detailedLinkPlacementsPerStatementId = linkPlacements
+				.map { p => DetailedLinkPlacement(p, linkMap(p.linkId)) }
+				.groupBy { _.statementId }.withDefaultValue(Empty)
+			
+			// Pulls all statements and delimiters involved
+			val delimiterMap = DbDelimiters(statements.view.flatMap { _.delimiterId }.toIntSet).toMapBy { _.id }
+			
+			// Combines the information together
+			statements.map { s =>
+				DetailedStatement(s,
+					detailedWordPlacementsPerStatementId(s.id),
+					detailedLinkPlacementsPerStatementId(s.id),
+					s.delimiterId.flatMap(delimiterMap.get)
+				)
+			}
+		}
+	}
+	
 	/**
 	  * Stores the specified text to the database as a sequence of statements.
 	  * Avoids inserting duplicate entries.

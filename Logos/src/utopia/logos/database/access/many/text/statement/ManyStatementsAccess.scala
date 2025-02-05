@@ -44,12 +44,6 @@ trait ManyStatementsAccess
 	// COMPUTED ------------------------
 	
 	/**
-	  * Accessible empty statements (i.e. statements without any words)
-	  * @param connection Implicit DB Connection
-	  */
-	def pullEmpty(implicit connection: Connection) = findShorterThan(1)
-	
-	/**
 	  * Model used for interacting with statement-word links
 	  */
 	protected def wordLinkModel = WordPlacementDbModel
@@ -57,6 +51,19 @@ trait ManyStatementsAccess
 	  * Model used for interacting with statement-link links
 	  */
 	protected def linkLinkModel = LinkPlacementDbModel
+	
+	/**
+	 * Accessible empty statements (i.e. statements without any words)
+	 * @param connection Implicit DB Connection
+	 */
+	def pullEmpty(implicit connection: Connection) = findShorterThan(1)
+	
+	/**
+	 * Pulls all accessible statements, including all textual information
+	 * @param connection Implicit connection
+	 * @return Accessible statements that include textual details
+	 */
+	def pullDetailed(implicit connection: Connection) = DbStatements.attachDetailsTo(pull)
 	
 	
 	// IMPLEMENTED	--------------------

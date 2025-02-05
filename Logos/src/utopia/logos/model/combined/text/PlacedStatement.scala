@@ -1,7 +1,7 @@
 package utopia.logos.model.combined.text
 
-import utopia.logos.model.partial.text.TextPlacementData
-import utopia.logos.model.stored.text.{StoredStatement, TextPlacement}
+import utopia.logos.model.partial.text.StatementPlacementData
+import utopia.logos.model.stored.text.{StatementPlacement, StoredStatement}
 
 object PlacedStatement
 {
@@ -12,12 +12,14 @@ object PlacedStatement
 	  * @param placement Placement to attach to that statement
 	  * @return A combination of the specified statement and placement
 	  */
-	def apply(statement: StoredStatement, placement: TextPlacement): PlacedStatement = _PlacedStatement(statement, placement)
+	def apply(statement: StoredStatement, placement: StatementPlacement): PlacedStatement =
+		_PlacedStatement(statement, placement)
 	
 	
 	// NESTED   -----------------------
 	
-	private case class _PlacedStatement(statement: StoredStatement, placement: TextPlacement) extends PlacedStatement
+	private case class _PlacedStatement(statement: StoredStatement, placement: StatementPlacement)
+		extends PlacedStatement
 	{
 		override protected def wrap(factory: StoredStatement): PlacedStatement = copy(statement = factory)
 	}
@@ -29,5 +31,5 @@ object PlacedStatement
   * @since 27.08.2024, v0.3
   */
 trait PlacedStatement
-	extends CombinedStatement[PlacedStatement]
-		with PlacedStatementLike[PlacedStatement, TextPlacement, TextPlacementData]
+	extends PlacedStatementLike[PlacedStatement, StatementPlacement, StatementPlacementData]
+		with CombinedStatement[PlacedStatement]
