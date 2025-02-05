@@ -4,11 +4,7 @@ import utopia.firmament.localization.DisplayFunction
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.range.Span
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
-import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.input.InputValidationResult
 import utopia.reach.component.input.InputValidationResult.Default
