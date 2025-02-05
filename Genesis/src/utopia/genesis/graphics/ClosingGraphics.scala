@@ -23,13 +23,13 @@ object ClosingGraphics
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => Changing[Boolean])
+class ClosingGraphics(override val wrapped: Graphics2D, parentClosedFlag: => Changing[Boolean])
 	extends AutoCloseable with Extender[Graphics2D]
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val closedPointer = SettableFlag()(SysErrLogger)
-	private lazy val statePointer = closedPointer || parentClosedPointer
+	private lazy val closedFlag = SettableFlag()(SysErrLogger)
+	private lazy val statePointer = closedFlag || parentClosedFlag
 	
 	
 	// COMPUTED ------------------------------------
@@ -53,7 +53,7 @@ class ClosingGraphics(override val wrapped: Graphics2D, parentClosedPointer: => 
 	
 	override def close() = {
 		if (isOpen) {
-			closedPointer.set()
+			closedFlag.set()
 			wrapped.dispose()
 		}
 	}

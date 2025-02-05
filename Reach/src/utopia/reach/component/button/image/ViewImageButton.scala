@@ -8,7 +8,7 @@ import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -55,7 +55,7 @@ trait ViewImageButtonSettingsLike[+Repr]
 	override def alignmentPointer = imageSettings.alignmentPointer
 	override def colorOverlayPointer = imageSettings.colorOverlayPointer
 	override def customDrawers = imageSettings.customDrawers
-	override def enabledPointer = buttonSettings.enabledPointer
+	override def enabledFlag = buttonSettings.enabledFlag
 	override def focusListeners = buttonSettings.focusListeners
 	override def hotKeys = buttonSettings.hotKeys
 	override def imageScalingPointer = imageSettings.imageScalingPointer
@@ -69,8 +69,8 @@ trait ViewImageButtonSettingsLike[+Repr]
 		withImageSettings(imageSettings.withColorOverlayPointer(p))
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withImageSettings(imageSettings.withCustomDrawers(drawers))
-	override def withEnabledPointer(p: Changing[Boolean]) =
-		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag) =
+		withButtonSettings(buttonSettings.withEnabledFlag(p))
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
@@ -173,7 +173,7 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
 	  * @return Pointer that determines whether the drawn images should be allowed to scale
 	  *         beyond their original source resolution
 	  */
-	protected def allowsUpscalingPointer: Changing[Boolean]
+	protected def allowsUpscalingFlag: Changing[Boolean]
 	
 	
 	// OTHER	--------------------
@@ -185,7 +185,7 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
 	  * @return A new view image button
 	  */
 	def apply[U](images: Changing[ButtonImageSet])(action: => U) =
-		new ViewImageButton(hierarchy, images, settings, allowsUpscalingPointer)(action)
+		new ViewImageButton(hierarchy, images, settings, allowsUpscalingFlag)(action)
 	/**
 	  * Creates a new view image button
 	  * @param images Image/images to display on this button
@@ -217,7 +217,7 @@ case class ContextualViewImageButtonFactory(hierarchy: ComponentHierarchy, conte
 	
 	override def self: ContextualViewImageButtonFactory = this
 	
-	override protected def allowsUpscalingPointer: Changing[Boolean] = context.allowImageUpscalingFlag
+	override protected def allowsUpscalingFlag = context.allowImageUpscalingFlag
 	
 	override def withContext(context: VariableColorContext) =
 		copy(context = context)
@@ -319,7 +319,7 @@ case class ContextualViewImageButtonFactory(hierarchy: ComponentHierarchy, conte
   */
 case class ViewImageButtonFactory(hierarchy: ComponentHierarchy,
                                   settings: ViewImageButtonSettings = ViewImageButtonSettings.default,
-                                  allowsUpscalingPointer: Changing[Boolean] = AlwaysFalse)
+                                  allowsUpscalingFlag: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageButtonFactoryLike[ViewImageButtonFactory]
 		with FromContextFactory[VariableColorContext, ContextualViewImageButtonFactory]
 {
@@ -328,7 +328,7 @@ case class ViewImageButtonFactory(hierarchy: ComponentHierarchy,
 	/**
 	  * @return Copy of this factory that allows the drawn images to scale beyond their source resolution
 	  */
-	def allowingUpscaling = copy(allowsUpscalingPointer = AlwaysTrue)
+	def allowingUpscaling = copy(allowsUpscalingFlag = AlwaysTrue)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -378,8 +378,8 @@ object ViewImageButton extends ViewImageButtonSetup()
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changing[ButtonImageSet],
-                      settings: ViewImageButtonSettings, allowUpscalingPointer: Changing[Boolean] = AlwaysTrue)
+class ViewImageButton(override val hierarchy: ComponentHierarchy, imagesPointer: Changing[ButtonImageSet],
+                      settings: ViewImageButtonSettings, allowUpscalingFlag: Changing[Boolean] = AlwaysTrue)
                      (action: => Unit)
 	extends AbstractButton(settings) with ReachComponentWrapper
 {
@@ -390,9 +390,9 @@ class ViewImageButton(parentHierarchy: ComponentHierarchy, imagesPointer: Changi
 		case None => imagesPointer
 	}
 	
-	override protected val wrapped = ViewImageLabel(parentHierarchy)
+	override protected val wrapped = ViewImageLabel(hierarchy)
 		.withSettings(settings.imageSettings)
-		.copy(allowUpscalingPointer = allowUpscalingPointer)
+		.copy(allowUpscalingFlag = allowUpscalingFlag)
 		.apply(statePointer.mergeWith(appliedImagesPointer) { (state, images) => images(state) })
 	
 	/**

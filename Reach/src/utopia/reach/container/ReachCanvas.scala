@@ -270,7 +270,7 @@ object ReachCanvas
   * @constructor Creates a new ReachCanvas. Expects the main canvas element to be created soon after.
   * @param contentPointer A pointer that will contain the component wrapped by this canvas.
   *                       Contains None until initialized.
-  * @param attachmentPointer A pointer that contains true whenever this canvas is attached to the main component
+  * @param linkedFlag A pointer that contains true whenever this canvas is attached to the main component
   *                          hierarchy (i.e. connected to a visible screen)
   * @param absoluteParentPositionView A view into the parent element's absolute position.
   *                                   Either Left: a view or Right: a real-time pointer (preferred).
@@ -291,7 +291,7 @@ object ReachCanvas
   *                                 This might happen immediately or after a delay.
   * @param exc Implicit execution context
   */
-class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], val attachmentPointer: Flag,
+class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], val linkedFlag: Flag,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
                             enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
@@ -395,7 +395,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 		}
 	}
 	
-	attachmentPointer.addContinuousListener { event =>
+	linkedFlag.addContinuousListener { event =>
 		// When attached to the stack hierarchy,
 		// makes sure to update immediate content layout and repaint this component
 		if (event.newValue) {
@@ -591,7 +591,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 	private object HierarchyConnection extends ComponentHierarchy
 	{
 		override def parent = Left(ReachCanvas.this)
-		override def linkedFlag = attachmentPointer
+		override def linkedFlag = ReachCanvas.this.linkedFlag
 		override def isThisLevelLinked = isLinked
 		override def top = ReachCanvas.this
 		override def coordinateTransform: Option[CoordinateTransform] = None
@@ -660,7 +660,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 		// INITIAL CODE -----------------------------
 		
 		// Calculates and changes the cursor image asynchronously
-		attachmentPointer.onceSet {
+		linkedFlag.onceSet {
 			val defaultCursor = cursorManager.cursors.default.light
 			mousePositionPointer
 				// Calculates new cursor image to use when mouse position changes
@@ -675,7 +675,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 				}
 		}
 		// Whenever detached from the component hierarchy, kills the cursor-managing thread
-		attachmentPointer.addContinuousListener { e =>
+		linkedFlag.addContinuousListener { e =>
 			if (!e.newValue)
 				swapExc.stop()
 		}

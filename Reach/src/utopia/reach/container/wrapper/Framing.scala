@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 
 object Framing extends Cff[FramingFactory]
@@ -40,13 +40,13 @@ trait FramingFactoryLike[+Repr]
 	}
 }
 
-case class FramingFactory(parentHierarchy: ComponentHierarchy)
-	extends FromGenericContextFactory[BaseContextPropsView, ContextualFramingFactory]
+case class FramingFactory(hierarchy: ComponentHierarchy)
+	extends FromGenericContextFactory[BaseContextPropsView, ContextualFramingFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------------
 	
 	override def withContext[N <: BaseContextPropsView](context: N) =
-		ContextualFramingFactory(parentHierarchy, context)
+		ContextualFramingFactory(hierarchy, context)
 	
 	
 	// OTHER	----------------------------------
@@ -55,12 +55,12 @@ case class FramingFactory(parentHierarchy: ComponentHierarchy)
 	  * @param insets The insets to place around the content in this framing
 	  * @return A new framing factory that uses the specified insets
 	  */
-	def apply(insets: StackInsetsConvertible) = InitializedFramingFactory(parentHierarchy, Fixed(insets.toInsets))
+	def apply(insets: StackInsetsConvertible) = InitializedFramingFactory(hierarchy, Fixed(insets.toInsets))
 	/**
 	  * @param insetsPointer A pointer that contains insets to place around the content in this framing
 	  * @return A new framing factory that uses the specified insets pointer
 	  */
-	def apply(insetsPointer: Changing[StackInsets]) = InitializedFramingFactory(parentHierarchy, insetsPointer)
+	def apply(insetsPointer: Changing[StackInsets]) = InitializedFramingFactory(hierarchy, insetsPointer)
 	
 	/**
 	  * Creates a new framing

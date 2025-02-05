@@ -21,7 +21,7 @@ import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.container.multi.Stack
 
 /**
@@ -305,12 +305,12 @@ trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsL
 	def mapSettings(f: ImageAndTextLabelSettings => ImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+case class ContextualImageAndTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
                                               settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
 	extends TextContextualFactory[ContextualImageAndTextLabelFactory]
 		with ImageAndTextLabelSettingsWrapper[ContextualImageAndTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualImageAndTextLabelFactory]
-		with FromAlignmentFactory[ContextualImageAndTextLabelFactory]
+		with FromAlignmentFactory[ContextualImageAndTextLabelFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED --------------------
 	
@@ -318,7 +318,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return A factory resembling this factory, which may be used for constructing view-based labels
 	  */
 	def toViewFactory: ContextualViewImageAndTextLabelFactory =
-		ContextualViewImageAndTextLabelFactory(parentHierarchy, context.toVariableContext, settings.toViewSettings)
+		ContextualViewImageAndTextLabelFactory(hierarchy, context.toVariableContext, settings.toViewSettings)
 	
 	private def resolveInsets = resolveInsetsIn(context)
 	
@@ -358,7 +358,7 @@ case class ContextualImageAndTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return A new label
 	  */
 	def apply(image: Either[Image, SingleColorIcon], text: LocalizedString) =
-		new ImageAndTextLabel(parentHierarchy, context, image, text, settings, resolveInsets)
+		new ImageAndTextLabel(hierarchy, context, image, text, settings, resolveInsets)
 	
 	/**
 	  * Creates a new label that contains both an image and text
@@ -428,7 +428,7 @@ object ImageAndTextLabel extends ImageAndTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+class ImageAndTextLabel(override val hierarchy: ComponentHierarchy, context: StaticTextContext,
                         image: Either[Image, SingleColorIcon], text: LocalizedString,
                         settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default,
                         commonInsets: StackInsets)
@@ -440,14 +440,14 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: StaticText
 	override protected val wrapped = {
 		// If one of the provided items is empty, only creates one component
 		if (image.either.isEmpty)
-			TextLabel(parentHierarchy).withContext(context.mapTextInsets { _ max commonInsets })
+			TextLabel(hierarchy).withContext(context.mapTextInsets { _ max commonInsets })
 				.withIsHint(settings.isHint).withAdditionalCustomDrawers(settings.customDrawers)
 				.apply(text)
 		else if (text.isEmpty)
 			ImageLabel.withSettings(settings.imageSettings)
 				.withAdditionalCustomDrawers(settings.customDrawers)
 				.mapInsets { _ max commonInsets }
-				.apply(parentHierarchy).withContext(context)
+				.apply(hierarchy).withContext(context)
 				.apply(image)
 		else {
 			val textAlignment = context.textAlignment
@@ -472,7 +472,7 @@ class ImageAndTextLabel(parentHierarchy: ComponentHierarchy, context: StaticText
 			}
 			
 			// Wraps the components in a stack
-			Stack(parentHierarchy).withContext(appliedContext)
+			Stack(hierarchy).withContext(appliedContext)
 				.withCustomDrawers(settings.customDrawers).withMargin(settings.separatingMargin)
 				.buildPair(Mixed, context.textAlignment, settings.forceEqualBreadth) { factories =>
 					Pair(

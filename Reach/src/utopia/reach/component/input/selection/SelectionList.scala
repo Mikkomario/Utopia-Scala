@@ -374,7 +374,7 @@ object SelectionList extends SelectionListSetup()
   * @since 19.12.2020, v0.1
   */
 class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[Seq[A]]]
-(parentHierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
+(override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
  marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],
@@ -389,7 +389,7 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	private val focusTracker = new FocusStateTracker(false)
 	override var focusListeners: Seq[FocusListener] = Single(focusTracker)
 	
-	private val stack = MutableStack(parentHierarchy)
+	private val stack = MutableStack(hierarchy)
 		.withSettings(settings.stackSettings)
 		.withMargin(marginPointer.value)[C]()
 	private val locationTracker = new StackItemAreas[C](stack, stack.componentsPointer)

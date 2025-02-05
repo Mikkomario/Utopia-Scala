@@ -27,13 +27,13 @@ object ViewTextButton extends Cff[ViewTextButtonFactory]
 		ContextualViewTextButtonFactory(hierarchy, context)
 }
 
-class ViewTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[VariableTextContext, ContextualViewTextButtonFactory]
+case class ViewTextButtonFactory(hierarchy: ComponentHierarchy)
+	extends FromContextFactory[VariableTextContext, ContextualViewTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	-----------------------------
 	
 	override def withContext(c: VariableTextContext): ContextualViewTextButtonFactory =
-		ContextualViewTextButtonFactory(parentHierarchy, c)
+		ContextualViewTextButtonFactory(hierarchy, c)
 }
 
 case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
@@ -97,7 +97,7 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
   * @author Mikko Hilpinen
   * @since 26.10.2020, v0.1
   */
-class ViewTextButton[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class ViewTextButton[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                         contentPointer: Changing[A], settings: ButtonSettings = ButtonSettings.default,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
@@ -115,7 +115,7 @@ class ViewTextButton[A](parentHierarchy: ComponentHierarchy, context: VariableTe
 			context
 	}
 	
-	override protected val wrapped = ViewTextLabel.withContext(parentHierarchy, appliedContext)
+	override protected val wrapped = ViewTextLabel.withContext(hierarchy, appliedContext)
 		.withCustomDrawers(
 			ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)) +: additionalDrawers)
 		.apply[A](contentPointer, displayFunction)

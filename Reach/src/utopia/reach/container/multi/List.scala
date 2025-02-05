@@ -13,7 +13,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.{EventfulPointer, AssignableOnce}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -30,16 +30,24 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
-import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.template.focus.Focusable
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
-import utopia.reach.container.ReachCanvas
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 import java.awt.event.KeyEvent
 
-case class ListRowContext(parentHierarchy: SeedHierarchyBlock, selectionPointer: Lazy[Changing[Boolean]],
-                          rowIndex: Int)
+case class ListRowContext(hierarchy: SeedHierarchyBlock, lazySelectedFlag: Lazy[Changing[Boolean]], rowIndex: Int)
+	extends PartOfComponentHierarchy
+{
+	/**
+	  * @return A flag that contains true while this list item is selected
+	  */
+	def selectedFlag = lazySelectedFlag.value
+	
+	@deprecated("Deprecated for removal. Please use .lazySelectedFlag instead", "v1.6")
+	def selectionPointer = lazySelectedFlag
+}
 
 case class ListRowContent(components: IterableOnce[ReachComponent], context: ListRowContext, action: () => Unit)
 
@@ -50,15 +58,13 @@ case class ListRowContent(components: IterableOnce[ReachComponent], context: Lis
   */
 object List extends Cff[ListFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ListFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = ListFactory(hierarchy)
 }
 
-class ListFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[StaticColorContext, ContextualListFactory]
+case class ListFactory(hierarchy: ComponentHierarchy)
+	extends FromContextFactory[StaticColorContext, ContextualListFactory] with PartOfComponentHierarchy
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
-	
-	private implicit val canvas: ReachCanvas = parentHierarchy.top
 	
 	override def withContext(context: StaticColorContext) = ContextualListFactory(this, context)
 	
@@ -100,7 +106,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val mainStackContent = Open.using(Stack) { rowF =>
 			content.iterator.splitMap { rowContent =>
 				val wrappedRowComponents = new OpenComponent(Seq.from(rowContent.components),
-					rowContent.context.parentHierarchy)
+					rowContent.context.hierarchy)
 				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
 					.withCap(rowCap)(wrappedRowComponents)
 					.parent: ReachComponent
@@ -116,7 +122,7 @@ class ListFactory(parentHierarchy: ComponentHierarchy)
 		val keyPressedPointer = Pointer(false)
 		val stackPointer = AssignableOnce[Stack]()
 		val selector = new Selector(stackPointer, contextBackgroundPointer, selectedComponentPointer, keyPressedPointer)
-		val stackCreation = Stack(parentHierarchy).withAxis(rowDirection.perpendicular).withMargin(rowMargin)
+		val stackCreation = Stack(hierarchy).withAxis(rowDirection.perpendicular).withMargin(rowMargin)
 			.withCap(mainStackCap).withCustomDrawers(selector +: customDrawers)(mainStackContent)
 		if (rowsWithResults.nonEmpty) {
 			val stack = stackCreation.parent

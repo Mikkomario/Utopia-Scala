@@ -1,7 +1,7 @@
 # Reach in Reflection - List of Changes
 
 ## v1.0.5 (in development)
-Supports **Flow v2.6**
+Supports **Flow v2.6** and **Reach v1.6**
 
 ## v1.0.4 - 23.01.2025
 A new build compatible with the latest parent module versions.

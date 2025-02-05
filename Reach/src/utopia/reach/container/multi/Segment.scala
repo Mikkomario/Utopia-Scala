@@ -61,14 +61,14 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	
 	/**
 	  * Wraps a component in a container that aligns with the other elements in this segment
-	  * @param parentHierarchy Hierarchy that will contain the segment wrapper
+	  * @param hierarchy Hierarchy that will contain the segment wrapper
 	  * @param component (Open) component to wrap
 	  * @param index Index of this segment
 	  * @return Container that now wraps the specified component (as a wrap result)
 	  */
-	def wrap[C <: ReachComponent, R](parentHierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
+	def wrap[C <: ReachComponent, R](hierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
 	{
-		val container: ConcreteReachComponent = new SegmentContainer(parentHierarchy, component, index)
+		val container: ConcreteReachComponent = new SegmentContainer(hierarchy, component, index)
 		component.attachTo(container)
 	}
 	

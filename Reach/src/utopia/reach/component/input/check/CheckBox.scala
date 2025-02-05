@@ -12,7 +12,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.enumeration.End.First
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawSettings, Drawer}
 import utopia.genesis.image.Image
@@ -59,12 +59,11 @@ trait CheckBoxSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with Butto
 	
 	// IMPLEMENTED	--------------------
 	
-	override def enabledPointer = buttonSettings.enabledPointer
+	override def enabledFlag = buttonSettings.enabledFlag
 	override def focusListeners = buttonSettings.focusListeners
 	override def hotKeys = buttonSettings.hotKeys
 	
-	override def withEnabledPointer(p: Changing[Boolean]) =
-		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag) = withButtonSettings(buttonSettings.withEnabledFlag(p))
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
@@ -291,8 +290,8 @@ case class FullCheckBoxSetup(images: Either[Pair[SingleColorIcon], Pair[Image]],
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def withContext(parentHierarchy: ComponentHierarchy, context: StaticColorContext) =
-		FullContextualCheckBoxFactory(ContextualCheckBoxFactory(parentHierarchy, context, settings, selectedColorRole),
+	override def withContext(hierarchy: ComponentHierarchy, context: StaticColorContext) =
+		FullContextualCheckBoxFactory(ContextualCheckBoxFactory(hierarchy, context, settings, selectedColorRole),
 			images)
 	
 	
@@ -362,7 +361,7 @@ object CheckBox extends CheckBoxSetup()
   * @author Mikko Hilpinen
   * @since 25.2.2021, v0.1
   */
-class CheckBox(parentHierarchy: ComponentHierarchy,
+class CheckBox(override val hierarchy: ComponentHierarchy,
                images: Pair[Image], hoverColors: Pair[Color],
                hoverRadius: Double = 0.0, settings: CheckBoxSettings = CheckBoxSettings.default,
                override val valuePointer: EventfulPointer[Boolean] = ResettableFlag()(ComponentCreationDefaults.componentLogger))
@@ -373,12 +372,12 @@ class CheckBox(parentHierarchy: ComponentHierarchy,
 	/**
 	  * Pointer to the currently displayed image
 	  */
-	val imagePointer = valuePointer.mergeWith(settings.enabledPointer) { (selected, enabled) =>
+	val imagePointer = valuePointer.mergeWith(settings.enabledFlag) { (selected, enabled) =>
 		val base = if (selected) images.second else images.first
 		if (enabled) base else base.timesAlpha(0.66)
 	}
 	override protected val wrapped = {
-		ViewImageLabel(parentHierarchy)
+		ViewImageLabel(hierarchy)
 			.withInsets(hoverRadius.downscaling.toInsets).withCustomDrawers(settings.customDrawers :+ HoverDrawer)
 			.apply(imagePointer)
 	}

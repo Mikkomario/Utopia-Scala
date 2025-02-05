@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory}
 
@@ -72,21 +72,21 @@ trait ScrollViewFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollView, 
 	def withMaxOptimalLength(max: Double) = mapMaxOptimalLengths { _.withDimension(axis, Some(max)) }
 }
 
-case class ScrollViewFactory(parentHierarchy: ComponentHierarchy)
+case class ScrollViewFactory(hierarchy: ComponentHierarchy)
 	extends UninitializedScrollAreaFactory[InitializedScrollViewFactory]
-		with FromGenericContextFactory[Any, ContextualScrollViewFactory]
+		with FromGenericContextFactory[Any, ContextualScrollViewFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def withContext[N <: Any](context: N): ContextualScrollViewFactory[N] =
-		ContextualScrollViewFactory(parentHierarchy, context)
+		ContextualScrollViewFactory(hierarchy, context)
 	
 	/**
 	  * @param scrollContext Scrolling context to use
 	  * @return An initialized version of this factory
 	  */
 	override def withScrollContext(scrollContext: ScrollingContext) =
-		InitializedScrollViewFactory(parentHierarchy)(scrollContext)
+		InitializedScrollViewFactory(hierarchy)(scrollContext)
 }
 
 case class InitializedScrollViewFactory(hierarchy: ComponentHierarchy, axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
@@ -115,9 +115,9 @@ case class InitializedScrollViewFactory(hierarchy: ComponentHierarchy, axis: Axi
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 }
 
-case class ContextualScrollViewFactory[N](parentHierarchy: ComponentHierarchy, context: N)
+case class ContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N)
 	extends GenericContextualFactory[N, Any, ContextualScrollViewFactory]
-		with UninitializedScrollAreaFactory[InitializedContextualScrollViewFactory[N]]
+		with UninitializedScrollAreaFactory[InitializedContextualScrollViewFactory[N]] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  -----------------------
 	
@@ -128,7 +128,7 @@ case class ContextualScrollViewFactory[N](parentHierarchy: ComponentHierarchy, c
 	  * @return An initialized version of this factory
 	  */
 	override def withScrollContext(scrollContext: ScrollingContext) =
-		InitializedContextualScrollViewFactory(parentHierarchy, context)(scrollContext)
+		InitializedContextualScrollViewFactory(hierarchy, context)(scrollContext)
 }
 
 case class InitializedContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N, axis: Axis2D = Y,

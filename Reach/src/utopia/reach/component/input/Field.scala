@@ -31,7 +31,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.{Focusable, FocusableWithState, FocusableWrapper}
-import utopia.reach.component.template.{PartOfComponentHierarchy, ConcreteReachComponent, ReachComponent, ReachComponentWrapper}
+import utopia.reach.component.template.{ConcreteReachComponent, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
@@ -39,13 +39,14 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener}
 
 /**
   * A set of context variables provided when creating field contents
-  * @param parentHierarchy   Component hierarchy to use
+  * @param hierarchy   Component hierarchy to use
   * @param context    Variable field creation text context
   * @param focusListener     Focus listener to assign to the created component
   * @param promptDrawers     Custom drawers to assign for prompt drawing
   */
-case class FieldCreationContext(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class FieldCreationContext(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                 focusListener: FocusChangeListener, promptDrawers: Seq[CustomDrawer])
+	extends PartOfComponentHierarchy
 
 /**
   * A set of context variables provided when creating an additional right side label
@@ -439,10 +440,10 @@ trait FieldSettingsWrapper[+Repr] extends FieldSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                   settings: FieldSettings = FieldSettings.default)
 	extends FieldSettingsWrapper[ContextualFieldFactory]
-		with ContextualFactory[VariableTextContext, ContextualFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualFieldFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
 	
@@ -454,7 +455,7 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: 
 	
 	/**
 	  * Creates a new field
-	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  * @param emptyFlag A pointer that contains true when the content of this field is considered empty
 	  *                       (of text / selection etc.)
 	  * @param makeField A function for creating field contents (accepts contextual data)
 	  * @param makeRightHintLabel A function for producing an additional right edge hint field (accepts created main
@@ -463,23 +464,23 @@ case class ContextualFieldFactory(parentHierarchy: ComponentHierarchy, context: 
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def apply[C <: ReachComponent with Focusable](isEmptyPointer: Changing[Boolean])
+	def apply[C <: ReachComponent with Focusable](emptyFlag: Changing[Boolean])
 	                                             (makeField: FieldCreationContext => C)
 	                                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 		                                                 Option[OpenComponent[ReachComponent, Any]]) =
-		new Field[C](parentHierarchy, context, isEmptyPointer, settings)(makeField)(makeRightHintLabel)
+		new Field[C](hierarchy, context, emptyFlag, settings)(makeField)(makeRightHintLabel)
 	
 	/**
 	  * Creates a new field
-	  * @param isEmptyPointer A pointer that contains true when the content of this field is considered empty
+	  * @param emptyFlag A pointer that contains true when the content of this field is considered empty
 	  *                       (of text / selection etc.)
 	  * @param makeField A function for creating field contents (accepts contextual data)
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def withoutExtraLabel[C <: ReachComponent with Focusable](isEmptyPointer: Changing[Boolean])
+	def withoutExtraLabel[C <: ReachComponent with Focusable](emptyFlag: Changing[Boolean])
 	                                                         (makeField: FieldCreationContext => C) =
-		apply(isEmptyPointer)(makeField) { _ => None }
+		apply(emptyFlag)(makeField) { _ => None }
 }
 
 /**
@@ -512,10 +513,10 @@ object Field extends FieldSetup()
   * @since 14.11.2020, v0.1
   * @tparam C Type of wrapped field
   */
-// TODO: It would be more reasonable if isEmptyPointer was nonEmptyPointer - the problem is that the transition is hard
+// TODO: It would be more reasonable if isEmptyPointer/flag was nonEmptyPointer/flag - the problem is that the transition is hard
 class Field[C <: ReachComponent with Focusable](override val hierarchy: ComponentHierarchy,
                                                 context: VariableTextContext,
-                                                isEmptyPointer: Changing[Boolean],
+                                                emptyFlag: Changing[Boolean],
                                                 settings: FieldSettings = FieldSettings.default)
                                                (makeField: FieldCreationContext => C)
                                                (makeRightHintLabel: ExtraFieldCreationContext[C] =>
@@ -718,7 +719,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 				// Field name is displayed when
 				// a) it is available AND
 				// b) The edit label has focus OR c) The edit label is not empty
-				val nameShouldBeSeparatePointer = _focusPointer.mergeWith(isEmptyPointer) { _ || !_ }
+				val nameShouldBeSeparatePointer = _focusPointer.mergeWith(emptyFlag) { _ || !_ }
 				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
 				// TODO: Name label might have wrong text color because of background highlighting - Needs a different context if so
 				val nameLabel = factories.next()(ViewTextLabel).withContext(hintContext).text(fieldNamePointer)
@@ -757,7 +758,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 					TextViewDrawer(displayedPromptPointer, promptStylePointer)
 				}
 				
-				val wrappedField = makeField(FieldCreationContext(factories.next().parentHierarchy,
+				val wrappedField = makeField(FieldCreationContext(factories.next().hierarchy,
 					contentContext, FocusTracker, Single(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items

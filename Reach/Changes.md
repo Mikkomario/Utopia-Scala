@@ -7,6 +7,8 @@
 - Renamed **ReachComponentLike** to **ReachComponent**
 - Renamed **PartOfComponentHierarchy**'s `.parentHierarchy` to `.hierarchy`
 - In **ReachComponent**, renamed `.linkPointer` to `.linkedFlag`
+- In multiple components and component factories, renamed -pointer properties to -flag properties
+  - Especially, changed `enabledPointer`s to `enabledFlag`s and changed their type to **Flag**
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 

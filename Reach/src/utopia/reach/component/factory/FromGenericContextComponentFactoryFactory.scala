@@ -35,8 +35,8 @@ object FromGenericContextComponentFactoryFactory
 	private class _Gcff[-Top, +F[X <: Top]](factory: ComponentFactoryFactory[FromGenericContextFactory[Top, F]])
 		extends FromGenericContextComponentFactoryFactory[Top, F]
 	{
-		override def withContext[N <: Top](parentHierarchy: ComponentHierarchy, context: N): F[N] =
-			factory(parentHierarchy).withContext(context)
+		override def withContext[N <: Top](hierarchy: ComponentHierarchy, context: N): F[N] =
+			factory(hierarchy).withContext(context)
 	}
 }
 

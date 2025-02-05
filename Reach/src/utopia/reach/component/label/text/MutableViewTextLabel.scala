@@ -19,15 +19,15 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
+import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableViewTextLabelFactory(hierarchy)
 }
 
-class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[StaticTextContext, ContextualMutableViewTextLabelFactory]
+case class MutableViewTextLabelFactory(hierarchy: ComponentHierarchy)
+	extends FromContextFactory[StaticTextContext, ContextualMutableViewTextLabelFactory] with PartOfComponentHierarchy
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 	
@@ -60,7 +60,7 @@ class MutableViewTextLabelFactory(parentHierarchy: ComponentHierarchy)
 	                  insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
 	                  betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
 	                  allowTextShrink: Boolean = false) =
-		new MutableViewTextLabel[A](parentHierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
+		new MutableViewTextLabel[A](hierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), displayFunction, allowTextShrink)
 	
 	/**

@@ -3,7 +3,7 @@ package utopia.flow.async.process
 import utopia.flow.async.process.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.ExecutionContext
 
@@ -26,7 +26,7 @@ object DelayedProcess
 	  */
 	def apply[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef,
 	             shutdownReaction: Option[ShutdownReaction] = None, isRestartable: Boolean = true)
-	            (f: => Changing[Boolean] => U)
+	            (f: => Flag => U)
 	            (implicit exc: ExecutionContext, logger: Logger): DelayedProcess =
 		new DelayedFunction(waitTarget, waitLock, shutdownReaction, isRestartable)(f)
 	
@@ -43,7 +43,7 @@ object DelayedProcess
 	  * @return A new delayed process instance
 	  */
 	def hurriable[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
-	                (f: => Changing[Boolean] => U)
+	                (f: => Flag => U)
 	                (implicit exc: ExecutionContext, logger: Logger) =
 		apply(waitTarget, waitLock, Some(SkipDelay), isRestartable = isRestartable)(f)
 	
@@ -75,7 +75,7 @@ object DelayedProcess
 	  * @return A new delayed process instance
 	  */
 	def skippable[U](waitTarget: WaitTarget, waitLock: AnyRef = new AnyRef, isRestartable: Boolean = true)
-	                (f: => Changing[Boolean] => U)
+	                (f: => Flag => U)
 	                (implicit exc: ExecutionContext, logger: Logger) =
 		apply(waitTarget, waitLock, Some(Cancel), isRestartable = isRestartable)(f)
 	
@@ -85,13 +85,13 @@ object DelayedProcess
 	private class DelayedFunction[U](waitTarget: WaitTarget, waitLock: AnyRef,
 	                                 shutdownReaction: Option[ShutdownReaction] = None,
 	                                 override val isRestartable: Boolean)
-	                                (f: => Changing[Boolean] => U)
+	                                (f: => Flag => U)
 	                                (implicit exc: ExecutionContext, logger: Logger)
 		extends DelayedProcess(waitLock, shutdownReaction)
 	{
 		override protected def nextDelayTarget = waitTarget
 		
-		override protected def afterDelay() = f(hurryPointer)
+		override protected def afterDelay() = f(hurryFlag)
 	}
 }
 

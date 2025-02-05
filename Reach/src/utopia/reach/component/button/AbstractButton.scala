@@ -18,7 +18,7 @@ abstract class AbstractButton(settings: ButtonSettingsLike[_], triggerKeys: Set[
 {
 	// ATTRIBUTES   ------------------------
 	
-	override val enabledPointer: Flag = settings.enabledPointer
+	override val enabledPointer: Flag = settings.enabledFlag
 	
 	private val baseStatePointer = EventfulPointer(GuiElementStatus.identity)
 	override val statePointer: Changing[GuiElementStatus] = {

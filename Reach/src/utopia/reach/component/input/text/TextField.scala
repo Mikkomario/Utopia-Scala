@@ -18,7 +18,7 @@ import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
@@ -30,7 +30,7 @@ import utopia.reach.component.input._
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.component.template.focus.FocusableWithPointerWrapper
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
@@ -117,7 +117,7 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 	override def imageSettings = fieldSettings.imageSettings
 	override def promptPointer = fieldSettings.promptPointer
 	override def allowsSelectionWhileDisabled = editingSettings.allowsSelectionWhileDisabled
-	override def enabledPointer: Changing[Boolean] = editingSettings.enabledPointer
+	override def enabledFlag: Flag = editingSettings.enabledFlag
 	override def focusListeners = labelSettings.focusListeners
 	override def inputFilter = editingSettings.inputFilter
 	override def maxLength = editingSettings.maxLength
@@ -142,8 +142,8 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 		withFieldSettings(fieldSettings.withPromptPointer(p))
 	override def withAllowsSelectionWhileDisabled(allow: Boolean) =
 		withEditingSettings(editingSettings.withAllowsSelectionWhileDisabled(allow))
-	override def withEnabledPointer(p: Changing[Boolean]): Repr =
-		withEditingSettings(editingSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag): Repr =
+		withEditingSettings(editingSettings.withEnabledFlag(p))
 	override def withInputFilter(filter: Option[Regex]) =
 		withEditingSettings(editingSettings.withInputFilter(filter))
 	override def withLabelSettings(settings: SelectableTextLabelSettings) =
@@ -253,11 +253,11 @@ trait TextFieldSettingsWrapper[+Repr] extends TextFieldSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
                                       context: VariableTextContext,
                                       settings: TextFieldSettings = TextFieldSettings.default)
 	extends TextFieldSettingsWrapper[ContextualTextFieldFactory]
-		with ContextualFactory[VariableTextContext, ContextualTextFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualTextFieldFactory] with PartOfComponentHierarchy
 {
 	// IMPLICIT	------------------------------------
 	
@@ -290,7 +290,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 	             textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	             inputValidation: Option[A => InputValidationResult] = None)
 	            (parseResult: String => A) =
-		new TextField[A](parentHierarchy, context, defaultWidth, settings, textPointer,
+		new TextField[A](hierarchy, context, defaultWidth, settings, textPointer,
 			inputValidation)(parseResult)
 	
 	/**
@@ -545,7 +545,7 @@ case class ContextualTextFieldFactory(parentHierarchy: ComponentHierarchy,
 		val extraCharsString = String.valueOf(Vector.fill(extraInputLength)('0'))
 		val maxLength = minMaxStrings.map { _.length }.max + extraInputLength
 		// TODO: Uses a static default width, although the context is variable => May require refactoring
-		val fontMetrics = parentHierarchy.fontMetricsWith(context.fontPointer.value)
+		val fontMetrics = hierarchy.fontMetricsWith(context.fontPointer.value)
 		val stringWidthRange = minMaxStrings.map { s => fontMetrics.widthOf(s"$s$extraCharsString") }.minMax
 		val defaultWidth = StackLength(stringWidthRange.first, stringWidthRange.second)
 		
@@ -672,7 +672,7 @@ object TextField extends TextFieldSetup()
   * @author Mikko Hilpinen
   * @since 14.11.2020, v0.1
   */
-class TextField[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class TextField[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                    defaultWidth: StackLength, settings: TextFieldSettings = TextFieldSettings.default,
                    textContentPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
                    inputValidation: Option[A => InputValidationResult] = None)
@@ -730,7 +730,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, context: VariableTextCon
 			.withPromptPointer(actualPromptPointer)
 	}
 	
-	private val _wrapped = Field.withContext(parentHierarchy, context).withSettings(appliedFieldSettings)
+	private val _wrapped = Field.withContext(hierarchy, context).withSettings(appliedFieldSettings)
 		.apply(isEmptyPointer) { fieldContext =>
 			// Modifies the context
 			val labelContext = fieldContext.context.withHorizontallyExpandingText
@@ -748,7 +748,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, context: VariableTextCon
 			val appliedLabelSettings = settings.editingSettings
 				.withAdditionalFocusListeners(Pair(fieldContext.focusListener, mainFocusListener))
 				.withAdditionalCustomDrawers(fieldContext.promptDrawers)
-			EditableTextLabel.withContext(fieldContext.parentHierarchy, labelContext)
+			EditableTextLabel.withContext(fieldContext.hierarchy, labelContext)
 				.withSettings(appliedLabelSettings)
 				.apply(textContentPointer)
 		} { fieldContext =>
@@ -764,7 +764,7 @@ class TextField[A](parentHierarchy: ComponentHierarchy, context: VariableTextCon
 							DisplayFunction.functionToDisplayFunction[Int] { length =>
 								s"%i / %i".noLanguage.localized.interpolated(Pair(length, maxLength))
 							})
-					}(parentHierarchy.top)
+					}(hierarchy.top)
 				}
 			// Case: No bottom right label is required
 			else

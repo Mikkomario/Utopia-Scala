@@ -19,7 +19,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory, WrapperContainerFactory}
 
@@ -167,17 +167,17 @@ trait UninitializedScrollAreaFactory[+Initialized]
 	def withScrollContext(scrollContext: ScrollingContext): Initialized
 }
 
-case class ScrollAreaFactory(parentHierarchy: ComponentHierarchy)
+case class ScrollAreaFactory(hierarchy: ComponentHierarchy)
 	extends UninitializedScrollAreaFactory[InitializedScrollAreaFactory]
-		with FromGenericContextFactory[Any, ContextualScrollAreaFactory]
+		with FromGenericContextFactory[Any, ContextualScrollAreaFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	----------------------------------
 	
 	override def withScrollContext(scrollContext: ScrollingContext): InitializedScrollAreaFactory =
-		InitializedScrollAreaFactory(parentHierarchy)(scrollContext)
+		InitializedScrollAreaFactory(hierarchy)(scrollContext)
 	
 	override def withContext[N <: Any](context: N) =
-		ContextualScrollAreaFactory(parentHierarchy, context)
+		ContextualScrollAreaFactory(hierarchy, context)
 }
 
 case class InitializedScrollAreaFactory(hierarchy: ComponentHierarchy, scrollBarMargin: Size = Size.zero,
@@ -202,14 +202,14 @@ case class InitializedScrollAreaFactory(hierarchy: ComponentHierarchy, scrollBar
 		copy(customDrawers = drawers)
 }
 
-case class ContextualScrollAreaFactory[N](parentHierarchy: ComponentHierarchy, context: N)
+case class ContextualScrollAreaFactory[N](hierarchy: ComponentHierarchy, context: N)
 	extends GenericContextualFactory[N, Any, ContextualScrollAreaFactory]
-		with UninitializedScrollAreaFactory[InitializedContextualScrollAreaFactory[N]]
+		with UninitializedScrollAreaFactory[InitializedContextualScrollAreaFactory[N]] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------------
 	
 	override def withScrollContext(scrollContext: ScrollingContext): InitializedContextualScrollAreaFactory[N] =
-		InitializedContextualScrollAreaFactory(parentHierarchy, context)(scrollContext)
+		InitializedContextualScrollAreaFactory(hierarchy, context)(scrollContext)
 	
 	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
 	
@@ -220,7 +220,7 @@ case class ContextualScrollAreaFactory[N](parentHierarchy: ComponentHierarchy, c
 	  * @return A version of this factory which doesn't utilize component creation context
 	  */
 	@deprecated("Deprecated for removal", "v1.1")
-	def withoutContext = ScrollAreaFactory(parentHierarchy)
+	def withoutContext = ScrollAreaFactory(hierarchy)
 }
 
 case class InitializedContextualScrollAreaFactory[N](hierarchy: ComponentHierarchy, context: N,

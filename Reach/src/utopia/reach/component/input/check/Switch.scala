@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.VeryHigh
 import utopia.genesis.graphics.{DrawSettings, Drawer}
@@ -64,12 +64,11 @@ trait SwitchSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with ButtonS
 	
 	// IMPLEMENTED	--------------------
 	
-	override def enabledPointer = buttonSettings.enabledPointer
+	override def enabledFlag = buttonSettings.enabledFlag
 	override def focusListeners = buttonSettings.focusListeners
 	override def hotKeys = buttonSettings.hotKeys
 	
-	override def withEnabledPointer(p: Changing[Boolean]) =
-		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag) = withButtonSettings(buttonSettings.withEnabledFlag(p))
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))

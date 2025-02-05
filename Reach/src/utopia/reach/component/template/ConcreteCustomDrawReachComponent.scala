@@ -13,14 +13,14 @@ object ConcreteCustomDrawReachComponent
 	
 	/**
 	  * Creates a new simplistic custom draw component
-	  * @param parentHierarchy This component's parent hierarchy
+	  * @param hierarchy This component's parent hierarchy
 	  * @param customDrawers Drawers used with this component
 	  * @param stackSize Stack size to be used with this component (call by name)
 	  * @return A new custom draw component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer])
+	def apply(hierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer])
 			 (stackSize: => StackSize): ConcreteCustomDrawReachComponent =
-		new BasicComponent(parentHierarchy, customDrawers, stackSize)
+		new BasicComponent(hierarchy, customDrawers, stackSize)
 	
 	
 	// NESTED	------------------------------

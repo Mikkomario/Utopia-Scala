@@ -22,8 +22,7 @@ trait ButtonSettingsLike[+Repr]
 	/**
 	  * A pointer that determines whether this button is interactive or not
 	  */
-	// TODO: Rename to enabledFlag
-	def enabledPointer: Flag
+	def enabledFlag: Flag
 	/**
 	  * The keys used for triggering this button even when it doesn't have focus
 	  */
@@ -39,7 +38,7 @@ trait ButtonSettingsLike[+Repr]
 	  *          A pointer that determines whether this button is interactive or not
 	  * @return Copy of this factory with the specified enabled pointer
 	  */
-	def withEnabledPointer(p: Changing[Boolean]): Repr
+	def withEnabledFlag(p: Flag): Repr
 	/**
 	  * Focus listeners that should receive focus events from this button
 	  * @param listeners New focus listeners to use.
@@ -71,10 +70,13 @@ trait ButtonSettingsLike[+Repr]
 	 */
 	def triggeredWithEscape = triggeredWith(Esc)
 	
+	@deprecated("Renamed to enabledFlag", "v1.6")
+	def enabledPointer = enabledFlag
+	
 	
 	// OTHER	--------------------
 	
-	def mapEnabledPointer(f: Mutate[Flag]) = withEnabledPointer(f(enabledPointer))
+	def mapEnabledFlag(f: Mutate[Flag]) = withEnabledFlag(f(enabledFlag))
 	def mapFocusListeners(f: Seq[FocusListener] => Seq[FocusListener]) =
 		withFocusListeners(f(focusListeners))
 	def mapHotKeys(f: Set[HotKey] => Set[HotKey]) = withHotKeys(f(hotKeys))
@@ -106,6 +108,11 @@ trait ButtonSettingsLike[+Repr]
 	  * @return Copy of this factory that assigns the specified focus listener
 	  */
 	def withFocusListener(listener: FocusListener) = mapFocusListeners { _ :+ listener }
+	
+	@deprecated("Please use withEnabledFlag(Flag) instead", "v1.6")
+	def withEnabledPointer(p: Changing[Boolean]) = withEnabledFlag(p)
+	@deprecated("Please use mapEnabledFlag(...) instead", "v1.6")
+	def mapEnabledPointer(f: Mutate[Flag]) = mapEnabledFlag(f)
 }
 
 object ButtonSettings
@@ -117,19 +124,19 @@ object ButtonSettings
 
 /**
   * Combined settings used when constructing buttons
-  * @param enabledPointer A pointer that determines whether this button is interactive or not
+  * @param enabledFlag A pointer that determines whether this button is interactive or not
   * @param hotKeys        The keys used for triggering this button even when it doesn't have focus
   * @param focusListeners Focus listeners that should receive focus events from this button
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ButtonSettings(enabledPointer: Flag = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
+case class ButtonSettings(enabledFlag: Flag = AlwaysTrue, hotKeys: Set[HotKey] = Set(),
                           focusListeners: Seq[FocusListener] = Empty)
 	extends ButtonSettingsLike[ButtonSettings]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withEnabledPointer(p: Changing[Boolean]) = copy(enabledPointer = p)
+	override def withEnabledFlag(p: Flag) = copy(enabledFlag = p)
 	override def withFocusListeners(listeners: Seq[FocusListener]) = copy(focusListeners = listeners)
 	override def withHotKeys(keys: Set[HotKey]) = copy(hotKeys = keys)
 }
@@ -157,11 +164,11 @@ trait ButtonSettingsWrapper[+Repr] extends ButtonSettingsLike[Repr]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def enabledPointer = settings.enabledPointer
+	override def enabledFlag = settings.enabledFlag
 	override def focusListeners = settings.focusListeners
 	override def hotKeys = settings.hotKeys
 	
-	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }
+	override def withEnabledFlag(p: Flag) = mapSettings { _.withEnabledFlag(p) }
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		mapSettings { _.withFocusListeners(listeners) }
 	override def withHotKeys(keys: Set[HotKey]) = mapSettings { _.withHotKeys(keys) }

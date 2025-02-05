@@ -258,7 +258,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 {
 	// ABSTRACT ------------------------------
 	
-	protected def allowUpscalingPointer: Changing[Boolean]
+	protected def allowUpscalingFlag: Changing[Boolean]
 	
 	
 	// OTHER    ------------------------------
@@ -309,7 +309,7 @@ trait ViewImageLabelFactoryLike[+Repr]
 		}
 		// Applies image scaling, also
 		val scaledImagePointer = coloredPointer.mergeWith(imageScalingPointer) { _ * _ }
-		new ViewImageLabel(hierarchy, scaledImagePointer, settings, allowUpscalingPointer)
+		new ViewImageLabel(hierarchy, scaledImagePointer, settings, allowUpscalingFlag)
 	}
 }
 
@@ -328,7 +328,7 @@ case class ContextualViewImageLabelFactory(hierarchy: ComponentHierarchy, contex
 	
 	override def self: ContextualViewImageLabelFactory = this
 	
-	override protected def allowUpscalingPointer: Changing[Boolean] = context.allowImageUpscalingFlag
+	override protected def allowUpscalingFlag: Changing[Boolean] = context.allowImageUpscalingFlag
 	
 	override def withContext(c: VariableColorContext): ContextualViewImageLabelFactory = copy(context = c)
 	override def withSettings(settings: ViewImageLabelSettings): ContextualViewImageLabelFactory =
@@ -394,14 +394,14 @@ case class ContextualViewImageLabelFactory(hierarchy: ComponentHierarchy, contex
 
 /**
   * Factory class that is used for constructing view image labels without using contextual information
-  * @param allowUpscalingPointer Pointer that determines whether drawn images should be allowed to scale
+  * @param allowUpscalingFlag Pointer that determines whether drawn images should be allowed to scale
   *                               beyond their source resolution
   * @author Mikko Hilpinen
   * @since 30.05.2023, v1.1
   */
 case class ViewImageLabelFactory(hierarchy: ComponentHierarchy,
                                  settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
-                                 allowUpscalingPointer: Changing[Boolean] = AlwaysFalse)
+                                 allowUpscalingFlag: Changing[Boolean] = AlwaysFalse)
 	extends ViewImageLabelFactoryLike[ViewImageLabelFactory] with BackgroundAssignable[ViewImageLabelFactory]
 		with FromContextFactory[VariableColorContext, ContextualViewImageLabelFactory]
 {
@@ -432,7 +432,7 @@ case class ViewImageLabelFactory(hierarchy: ComponentHierarchy,
 	  * @param allow Whether drawn images should be allowed to scale beyond their source resolution
 	  * @return Copy of this factory with the specified allows upscaling
 	  */
-	def withAllowUpscaling(allow: Boolean) = copy(allowUpscalingPointer = Fixed(allow))
+	def withAllowUpscaling(allow: Boolean) = copy(allowUpscalingFlag = Fixed(allow))
 }
 
 /**
@@ -466,7 +466,7 @@ object ViewImageLabel extends ViewImageLabelSetup()
   * @since 28.10.2020, v0.1
   */
 class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
-                     settings: ViewImageLabelSettings, allowUpscalingPointer: Changing[Boolean] = AlwaysTrue)
+                     settings: ViewImageLabelSettings, allowUpscalingFlag: Changing[Boolean] = AlwaysTrue)
 	extends ConcreteCustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	---------------------------------
@@ -507,7 +507,7 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: C
 	localTransformationPointer.addListener(revalidateListener)
 	settings.insetsPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
 	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag) { _ => repaint() }
-	allowUpscalingPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
+	allowUpscalingFlag.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
 	
 	
 	// COMPUTED	-------------------------------------
@@ -526,7 +526,7 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: C
 	override def maxScaling = localImagePointer.value.maxScaling
 	
 	override def insets = settings.insetsPointer.value
-	override def allowUpscaling: Boolean = allowUpscalingPointer.value
+	override def allowUpscaling: Boolean = allowUpscalingFlag.value
 	
 	override def updateLayout() = ()
 }

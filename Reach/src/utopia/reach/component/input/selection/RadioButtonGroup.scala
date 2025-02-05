@@ -19,7 +19,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.input.check.RadioButtonLine
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.container.multi.{Stack, StackSettings, StackSettingsLike}
 import utopia.reach.focus.ManyFocusableWrapper
 
@@ -139,13 +139,14 @@ trait RadioButtonGroupSettingsWrapper[+Repr] extends RadioButtonGroupSettingsLik
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
-case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualRadioButtonGroupFactory(hierarchy: ComponentHierarchy,
                                              context: VariableTextContext,
                                              settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                                              drawsBackground: Boolean = false)
 	extends RadioButtonGroupSettingsWrapper[ContextualRadioButtonGroupFactory]
 		with ContextualFactory[VariableTextContext, ContextualRadioButtonGroupFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualRadioButtonGroupFactory]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------
 	
@@ -187,9 +188,9 @@ case class ContextualRadioButtonGroupFactory(parentHierarchy: ComponentHierarchy
 	def apply[A](options: Seq[(A, LocalizedString)], valuePointer: EventfulPointer[A],
 	             hotKeys: Map[A, Set[HotKey]] = Map()) =
 	{
-		val group = new RadioButtonGroup[A](parentHierarchy, context, options, valuePointer, settings, hotKeys)
+		val group = new RadioButtonGroup[A](hierarchy, context, options, valuePointer, settings, hotKeys)
 		if (drawsBackground)
-			context.backgroundPointer.addListenerWhile(parentHierarchy.linkedFlag) { _ => group.repaint() }
+			context.backgroundPointer.addListenerWhile(hierarchy.linkedFlag) { _ => group.repaint() }
 		group
 	}
 	
@@ -236,7 +237,7 @@ object RadioButtonGroup extends RadioButtonGroupSetup()
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
-class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                           options: Seq[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                           hotKeys: Map[A, Set[HotKey]] = Map())
@@ -247,7 +248,7 @@ class RadioButtonGroup[A](parentHierarchy: ComponentHierarchy, context: Variable
 	
 	override val content = options.map { _._1 }
 	
-	private val (_wrapped, buttons) = Stack(parentHierarchy).withContext(context)
+	private val (_wrapped, buttons) = Stack(hierarchy).withContext(context)
 		.withSettings(settings.stackSettings).related
 		.build(RadioButtonLine) { baseLineF =>
 			// Creates a line for each option

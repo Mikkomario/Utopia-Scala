@@ -13,7 +13,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
+import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 object MutableTextLabel extends Ccff[StaticTextContext, ContextualMutableTextLabelFactory]
 {
@@ -21,11 +21,11 @@ object MutableTextLabel extends Ccff[StaticTextContext, ContextualMutableTextLab
 		ContextualMutableTextLabelFactory(hierarchy, context)
 }
 
-case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+case class ContextualMutableTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
                                              customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
 	extends TextContextualFactory[ContextualMutableTextLabelFactory]
 		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualMutableTextLabelFactory]
-		with CustomDrawableFactory[ContextualMutableTextLabelFactory]
+		with CustomDrawableFactory[ContextualMutableTextLabelFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED --------------------------------------
 	
@@ -52,7 +52,7 @@ case class ContextualMutableTextLabelFactory(parentHierarchy: ComponentHierarchy
 	  * @return A new label
 	  */
 	def apply(text: LocalizedString) = {
-		val label = new MutableTextLabel(parentHierarchy, text, context.textDrawContextFor(isHint),
+		val label = new MutableTextLabel(hierarchy, text, context.textDrawContextFor(isHint),
 			context.allowTextShrink)
 		customDrawers.foreach(label.addCustomDrawer)
 		label

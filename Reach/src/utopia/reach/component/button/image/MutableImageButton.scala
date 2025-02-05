@@ -16,7 +16,7 @@ import utopia.reach.component.button.MutableButtonLike
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -25,7 +25,7 @@ object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFact
 	override def apply(hierarchy: ComponentHierarchy) = new MutableImageButtonFactory(hierarchy)
 }
 
-class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
+case class MutableImageButtonFactory(override val hierarchy: ComponentHierarchy) extends PartOfComponentHierarchy
 {
 	/**
 	  * Creates a new image button
@@ -43,7 +43,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
 					  alignment: Alignment = Alignment.Center, hotKeys: Set[HotKey] = Set(),
 					  additionalDrawers: Seq[CustomDrawer] = Empty,
 					  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false) =
-		new MutableImageButton(parentHierarchy, images, insets, alignment, hotKeys, additionalDrawers,
+		new MutableImageButton(hierarchy, images, insets, alignment, hotKeys, additionalDrawers,
 			allowUpscaling, useLowPrioritySize)
 	
 	/**
@@ -76,7 +76,7 @@ class MutableImageButtonFactory(parentHierarchy: ComponentHierarchy)
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: ButtonImageSet,
+class MutableImageButton(override val hierarchy: ComponentHierarchy, initialImages: ButtonImageSet,
                          initialInsets: StackInsets = StackInsets.zero, initialAlignment: Alignment = Alignment.Center,
                          hotKeys: Set[HotKey] = Set(), additionalDrawers: Seq[CustomDrawer] = Empty,
                          allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false)
@@ -116,7 +116,7 @@ class MutableImageButton(parentHierarchy: ComponentHierarchy, initialImages: But
 	
 	override var focusListeners: Seq[FocusListener] = Single[FocusListener](new ButtonDefaultFocusListener(_statePointer))
 	override protected var actions: Seq[() => Unit] = Empty
-	override protected val wrapped = new ViewImageLabel(parentHierarchy, imagePointer,
+	override protected val wrapped = new ViewImageLabel(hierarchy, imagePointer,
 		ViewImageLabelSettings(insetsPointer = insetsPointer, alignmentPointer = alignmentPointer,
 			transformationPointer = transformationPointer, customDrawers = additionalDrawers,
 			usesLowPrioritySize = useLowPrioritySize), Fixed(allowUpscaling))

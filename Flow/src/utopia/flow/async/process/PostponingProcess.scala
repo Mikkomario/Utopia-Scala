@@ -11,7 +11,7 @@ import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -39,7 +39,7 @@ object PostponingProcess
 	  */
 	def apply[U](targetPointer: Changing[WaitTarget], waitLock: AnyRef = new AnyRef,
 	             shutdownReaction: Option[ShutdownReaction] = None, isRestartable: Boolean = true)
-	            (f: Changing[Boolean] => U)
+	            (f: Flag => U)
 	            (implicit exc: ExecutionContext, logger: Logger): PostponingProcess =
 		new FunctionalPostponingProcess(targetPointer, waitLock, shutdownReaction, isRestartable)(f)
 	
@@ -80,11 +80,11 @@ object PostponingProcess
 	private class FunctionalPostponingProcess[U](targetPointer: Changing[WaitTarget], waitLock: AnyRef,
 	                                             shutdownReaction: Option[ShutdownReaction],
 	                                             override val isRestartable: Boolean)
-	                                            (f: Changing[Boolean] => U)
+	                                            (f: Flag => U)
 	                                            (implicit exc: ExecutionContext, logger: Logger)
 		extends PostponingProcess(targetPointer, waitLock, shutdownReaction)
 	{
-		override protected def afterDelay() = f(hurryPointer)
+		override protected def afterDelay() = f(hurryFlag)
 	}
 	
 	private class RangePostponingRevalidationProcess(waitTargetPointer: EventfulPointer[WaitTarget],

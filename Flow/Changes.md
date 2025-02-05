@@ -7,6 +7,8 @@
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
   since that one had confusing effects.
 - **MultiLazyLike** now requires the implementation of `def existingCacheFor(key: K): Option[P]`
+### Deprecations
+- Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### New features
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**

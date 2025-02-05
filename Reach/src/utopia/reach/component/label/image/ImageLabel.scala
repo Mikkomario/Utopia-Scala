@@ -290,7 +290,7 @@ case class ImageLabelFactory(hierarchy: ComponentHierarchy,
 	
 	override def toViewFactory: ViewImageLabelFactory =
 		ViewImageLabelFactory(hierarchy, settings.toViewSettings,
-			allowUpscalingPointer = Fixed(allowsUpscaling))
+			allowUpscalingFlag = Fixed(allowsUpscaling))
 	
 	override def *(mod: Double): ImageLabelFactory = withImageScaledBy(mod).withInsetsScaledBy(mod)
 	

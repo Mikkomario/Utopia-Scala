@@ -9,7 +9,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 
 object AlignFrame extends Cff[AlignFrameFactory]
@@ -47,9 +47,9 @@ trait AlignFrameFactoryLike[+Repr]
 	}
 }
 
-class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
+case class AlignFrameFactory(hierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[Any, ContextualAlignFrameFactory]
-		with FromAlignmentFactory[InitializedAlignFrameFactory]
+		with FromAlignmentFactory[InitializedAlignFrameFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------------
 	
@@ -57,10 +57,10 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 	  * @param alignment The alignment to use
 	  * @return A factory that uses the specified alignment
 	  */
-	override def apply(alignment: Alignment) = InitializedAlignFrameFactory(parentHierarchy, alignment)
+	override def apply(alignment: Alignment) = InitializedAlignFrameFactory(hierarchy, alignment)
 	
 	override def withContext[N <: Any](context: N) =
-		ContextualAlignFrameFactory(parentHierarchy, context)
+		ContextualAlignFrameFactory(hierarchy, context)
 	
 	
 	// OTHER    ----------------------------------
@@ -78,7 +78,7 @@ class AlignFrameFactory(val parentHierarchy: ComponentHierarchy)
 	def apply[C <: ReachComponent, R](content: OpenComponent[C, R], alignment: Alignment,
 	                                  customDrawers: Seq[CustomDrawer] = Empty) =
 	{
-		val frame = new AlignFrame(parentHierarchy, content.component, alignment, customDrawers)
+		val frame = new AlignFrame(hierarchy, content.component, alignment, customDrawers)
 		content attachTo frame
 	}
 }
@@ -98,9 +98,9 @@ case class InitializedAlignFrameFactory(hierarchy: ComponentHierarchy, alignment
 		InitializedContextualAlignFrameFactory(hierarchy, context, alignment, customDrawers)
 }
 
-case class ContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, context: N)
+case class ContextualAlignFrameFactory[N](hierarchy: ComponentHierarchy, context: N)
 	extends GenericContextualFactory[N, Any, ContextualAlignFrameFactory]
-		with FromAlignmentFactory[InitializedContextualAlignFrameFactory[N]]
+		with FromAlignmentFactory[InitializedContextualAlignFrameFactory[N]] with PartOfComponentHierarchy
 {
 	// COMPUTED ------------------------------
 	
@@ -108,13 +108,13 @@ case class ContextualAlignFrameFactory[N](parentHierarchy: ComponentHierarchy, c
 	 * @return A copy of this factory with no contextual information
 	 */
 	@deprecated("Deprecated for removal", "v1.1")
-	def withoutContext = new AlignFrameFactory(parentHierarchy)
+	def withoutContext = new AlignFrameFactory(hierarchy)
 	
 	
 	// IMPLEMENTED  --------------------------
 	
 	override def apply(alignment: Alignment) =
-		InitializedContextualAlignFrameFactory(parentHierarchy, context, alignment)
+		InitializedContextualAlignFrameFactory(hierarchy, context, alignment)
 	
 	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
 }

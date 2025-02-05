@@ -8,7 +8,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -32,7 +32,7 @@ object Process
 	  */
 	def apply[U](waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	             isRestartable: Boolean = true)
-	            (f: => Changing[Boolean] => U)
+	            (f: => Flag => U)
 	            (implicit exc: ExecutionContext, logger: Logger): Process =
 		new FunctionProcess[U](waitLock, shutdownReaction, isRestartable)(f)
 	
@@ -41,11 +41,11 @@ object Process
 	
 	private class FunctionProcess[U](waitLock: AnyRef, shutdownReaction: ShutdownReaction = Cancel,
 	                                 override val isRestartable: Boolean)
-	                                (f: => Changing[Boolean] => U)
+	                                (f: => Flag => U)
 	                                (implicit exc: ExecutionContext, logger: Logger)
 		extends Process(waitLock, Some(shutdownReaction))
 	{
-		override protected def runOnce() = f(hurryPointer)
+		override protected def runOnce() = f(hurryFlag)
 	}
 }
 
@@ -63,13 +63,13 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	
 	private val _statePointer = Volatile.eventful[ProcessState](NotStarted)
 	private val completionFuturePointer = ResettableLazy { _statePointer.futureWhere { _.isFinal } }
-	private val _shutdownPointer = VolatileFlag()
+	private val _shutdownFlag = VolatileFlag()
 	
 	/**
 	  * A pointer which indicates whether this process should be hurried
 	  * (based on stop & shutdown status + shutdown reaction)
 	  */
-	lazy val hurryPointer = statePointer.mergeWith(shutdownPointer) { case (state, shutdown) =>
+	lazy val hurryFlag: Flag = statePointer.mergeWith(shutDownFlag) { case (state, shutdown) =>
 		state.isBroken || (shutdown && shutdownReaction.exists { _.skipWait })
 	}
 	
@@ -110,13 +110,18 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	/**
 	  * @return Whether the JVM hosting this process has scheduled a shutdown during this process' completion
 	  */
-	def isShutDown = _shutdownPointer.value
+	def isShutDown = _shutdownFlag.value
 	
 	/**
 	  * @return A flag that contains true after the JVM hosting this process has scheduled a shutdown during
 	  *         this process' completion
 	  */
-	def shutdownPointer = _shutdownPointer.readOnly
+	def shutDownFlag = _shutdownFlag.view
+	
+	@deprecated("Renamed to .hurryFlag", "v2.6")
+	def hurryPointer = hurryFlag
+	@deprecated("Renamed to .shutDownFlag", "v2.6")
+	def shutdownPointer = shutDownFlag
 	
 	
 	// COMPUTED ----------------------------------
@@ -133,7 +138,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	/**
 	  * @return Whether this process should hurry to complete itself
 	  */
-	protected def shouldHurry = hurryPointer.value
+	protected def shouldHurry = hurryFlag.value
 	
 	
 	// IMPLEMENTED  ------------------------------
@@ -153,8 +158,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 			Future.successful(state)
 	}
 	
-	override def run() =
-	{
+	override def run() = {
 		// Updates the state and checks whether this process may actually be run
 		val shouldRun = _statePointer.mutate { currentState =>
 			// Case: Cancelled => May cancel the cancellation, but doesn't perform this iteration
@@ -174,7 +178,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 			// Prepares a new completion future if necessary
 			completionFuturePointer.filterNot { _.isCompleted }
 			// Prepares for possible jvm shutdown
-			_shutdownPointer.reset()
+			_shutdownFlag.reset()
 			val reaction = shutdownReaction.map { new ShutDownAction(_) }
 			reaction.foreach { CloseHook += _ }
 			// Runs this process (catches and prints errors)
@@ -282,7 +286,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	private class ShutDownAction(reaction: ShutdownReaction) extends Breakable
 	{
 		override def stop() = {
-			_shutdownPointer.set()
+			_shutdownFlag.set()
 			if (reaction.finishBeforeShutdown) {
 				if (reaction.skipWait)
 					WaitUtils.notify(waitLock)

@@ -7,6 +7,7 @@ import utopia.firmament.localization.LocalString._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -18,6 +19,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.{AbstractSelectableTextLabel, SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
+import utopia.reach.component.template.PartOfComponentHierarchy
 import utopia.reach.focus.FocusListener
 
 import java.awt.Toolkit
@@ -43,7 +45,7 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	/**
 	  * Pointer that determines whether this label is interactive or not
 	  */
-	def enabledPointer: Changing[Boolean]
+	def enabledFlag: Flag
 	/**
 	  * Filter that determines what input strings are recognized.
 	  * This filter is used to test individual characters.
@@ -71,7 +73,7 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	  *          Pointer that determines whether this label is interactive or not
 	  * @return Copy of this factory with the specified enabled pointer
 	  */
-	def withEnabledPointer(p: Changing[Boolean]): Repr
+	def withEnabledFlag(p: Flag): Repr
 	/**
 	  * Filter that determines what input strings are recognized.
 	  * This filter is used to test individual characters.
@@ -124,6 +126,9 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	  */
 	def onlyAlphaNumeric = withInputFilter(Regex.letterOrDigit)
 	
+	@deprecated("Replaced with enabledFlag", "v1.6")
+	def enabledPointer = enabledFlag
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -150,7 +155,7 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	
 	// OTHER	--------------------
 	
-	def mapEnabledPointer(f: Changing[Boolean] => Changing[Boolean]) = withEnabledPointer(f(enabledPointer))
+	def mapEnabledFlag(f: Mutate[Flag]) = withEnabledFlag(f(enabledFlag))
 	def mapLabelSettings(f: SelectableTextLabelSettings => SelectableTextLabelSettings) =
 		withLabelSettings(f(labelSettings))
 	
@@ -166,6 +171,11 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	  * @return Copy of this factory with the specified maximum input length
 	  */
 	def withMaxLength(maxLength: Int): Repr = withMaxLength(Some(maxLength))
+	
+	@deprecated("Replaced with .withEnabledFlag(Flag)", "v1.6")
+	def withEnabledPointer(p: Changing[Boolean]) = withEnabledFlag(p)
+	@deprecated("Replaced with .mapEnabledFlag(...)", "v1.6")
+	def mapEnabledPointer(f: Changing[Boolean] => Changing[Boolean]) = mapEnabledFlag { f(_) }
 }
 
 object EditableTextLabelSettings
@@ -178,7 +188,7 @@ object EditableTextLabelSettings
 /**
   * Combined settings used when constructing editable text labels
   * @param labelSettings                Wrapped general selectable text label settings
-  * @param enabledPointer               Pointer that determines whether this label is interactive or not
+  * @param enabledFlag               Pointer that determines whether this label is interactive or not
   * @param inputFilter                  Filter that determines what input strings are recognized.
   *                                     This filter is used to test individual characters.
   * @param maxLength                    Longest allowed input length. None if no maximum is defined.
@@ -188,7 +198,7 @@ object EditableTextLabelSettings
   * @since 01.06.2023, v1.1
   */
 case class EditableTextLabelSettings(labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                     enabledPointer: Changing[Boolean] = AlwaysTrue, inputFilter: Option[Regex] = None,
+                                     enabledFlag: Flag = AlwaysTrue, inputFilter: Option[Regex] = None,
                                      maxLength: Option[Int] = None,
                                      allowsSelectionWhileDisabled: Boolean = true)
 	extends EditableTextLabelSettingsLike[EditableTextLabelSettings]
@@ -197,7 +207,7 @@ case class EditableTextLabelSettings(labelSettings: SelectableTextLabelSettings 
 	
 	override def withAllowsSelectionWhileDisabled(allow: Boolean) =
 		copy(allowsSelectionWhileDisabled = allow)
-	override def withEnabledPointer(p: Changing[Boolean]) = copy(enabledPointer = p)
+	override def withEnabledFlag(p: Flag) = copy(enabledFlag = p)
 	override def withInputFilter(filter: Option[Regex]) = copy(inputFilter = filter)
 	override def withLabelSettings(settings: SelectableTextLabelSettings) = copy(labelSettings = settings)
 	override def withMaxLength(max: Option[Int]) = copy(maxLength = max)
@@ -227,14 +237,14 @@ trait EditableTextLabelSettingsWrapper[+Repr] extends EditableTextLabelSettingsL
 	// IMPLEMENTED	--------------------
 	
 	override def allowsSelectionWhileDisabled = settings.allowsSelectionWhileDisabled
-	override def enabledPointer = settings.enabledPointer
+	override def enabledFlag = settings.enabledFlag
 	override def inputFilter = settings.inputFilter
 	override def labelSettings = settings.labelSettings
 	override def maxLength = settings.maxLength
 	
 	override def withAllowsSelectionWhileDisabled(allow: Boolean) =
 		mapSettings { _.withAllowsSelectionWhileDisabled(allow) }
-	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }
+	override def withEnabledFlag(p: Flag) = mapSettings { _.withEnabledFlag(p) }
 	override def withInputFilter(filter: Option[Regex]) = mapSettings { _.withInputFilter(filter) }
 	override def withLabelSettings(settings: SelectableTextLabelSettings) =
 		mapSettings { _.withLabelSettings(settings) }
@@ -251,13 +261,14 @@ trait EditableTextLabelSettingsWrapper[+Repr] extends EditableTextLabelSettingsL
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualEditableTextLabelFactory(hierarchy: ComponentHierarchy,
                                               context: VariableTextContext,
                                               settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                                               drawsBackground: Boolean = false)
 	extends EditableTextLabelSettingsWrapper[ContextualEditableTextLabelFactory]
 		with ContextualFactory[VariableTextContext, ContextualEditableTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualEditableTextLabelFactory]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------
 	
@@ -279,7 +290,7 @@ case class ContextualEditableTextLabelFactory(parentHierarchy: ComponentHierarch
 	  * @return a new label
 	  */
 	def apply(textPointer: EventfulPointer[String] = EventfulPointer("")) =
-		new EditableTextLabel(parentHierarchy, context, settings, textPointer)
+		new EditableTextLabel(hierarchy, context, settings, textPointer)
 }
 
 /**
@@ -313,13 +324,13 @@ object EditableTextLabel extends EditableTextLabelSetup()
   */
 // TODO: Create a password mode where text is not displayed nor copyable
 // TODO: Should also support input modification (e.g. upper-casing)
-class EditableTextLabel(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                         val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger))
-	extends AbstractSelectableTextLabel(parentHierarchy, context,
+	extends AbstractSelectableTextLabel(hierarchy, context,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped },
-		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledPointer, settings.labelSettings,
-		settings.enabledPointer)
+		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledFlag, settings.labelSettings,
+		settings.enabledFlag)
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -347,7 +358,7 @@ class EditableTextLabel(parentHierarchy: ComponentHierarchy, context: VariableTe
 	/**
 	  * @return Pointer that contains true while this lable is enabled
 	  */
-	def enabledPointer = settings.enabledPointer
+	def enabledPointer = settings.enabledFlag
 	/**
 	  * @return Whether this label is currently enabled
 	  */

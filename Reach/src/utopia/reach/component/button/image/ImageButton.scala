@@ -6,7 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.StackInsetsConvertible
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -55,7 +55,7 @@ trait ImageButtonSettingsLike[+Repr]
 	override def alignment = imageSettings.alignment
 	override def colorOverlay = imageSettings.colorOverlay
 	override def customDrawers = imageSettings.customDrawers
-	override def enabledPointer = buttonSettings.enabledPointer
+	override def enabledFlag = buttonSettings.enabledFlag
 	override def focusListeners = buttonSettings.focusListeners
 	override def hotKeys = buttonSettings.hotKeys
 	override def imageScaling = imageSettings.imageScaling
@@ -68,8 +68,7 @@ trait ImageButtonSettingsLike[+Repr]
 	override def withColor(color: Option[Color]) = withImageSettings(imageSettings.withColor(color))
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		withImageSettings(imageSettings.withCustomDrawers(drawers))
-	override def withEnabledPointer(p: Changing[Boolean]) =
-		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag) = withButtonSettings(buttonSettings.withEnabledFlag(p))
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
@@ -319,14 +318,14 @@ object ImageButton extends ImageButtonSetup()
   * @author Mikko Hilpinen
   * @since 29.10.2020, v0.1
   */
-class ImageButton(parentHierarchy: ComponentHierarchy, images: ButtonImageSet, settings: ImageButtonSettings,
+class ImageButton(override val hierarchy: ComponentHierarchy, images: ButtonImageSet, settings: ImageButtonSettings,
                   allowUpscaling: Boolean = true)
                  (action: => Unit)
 	extends AbstractButton(settings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override protected val wrapped = ViewImageLabel(parentHierarchy)
+	override protected val wrapped = ViewImageLabel(hierarchy)
 		.withSettings(settings.imageSettings)
 		.withAllowUpscaling(allowUpscaling)
 		.apply(statePointer.strongMap { state => images(state) })

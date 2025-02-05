@@ -11,19 +11,19 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ConcreteCustomDrawReachComponent
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 object EmptyLabel extends Cff[EmptyLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new EmptyLabelFactory(hierarchy)
 }
 
-class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[StaticColorContext, ContextualEmptyLabelFactory]
+case class EmptyLabelFactory(hierarchy: ComponentHierarchy)
+	extends FromContextFactory[StaticColorContext, ContextualEmptyLabelFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  --------------------------------
 	
-	override def withContext(context: StaticColorContext) = ContextualEmptyLabelFactory(parentHierarchy, context)
+	override def withContext(context: StaticColorContext) = ContextualEmptyLabelFactory(hierarchy, context)
 	
 	
 	// OTHER    ------------------------------------
@@ -35,7 +35,7 @@ class EmptyLabelFactory(parentHierarchy: ComponentHierarchy)
 	 * @return A new empty label
 	 */
 	def apply(stackSize: StackSize, customDrawers: Seq[CustomDrawer] = Empty) =
-		new EmptyLabel(parentHierarchy, stackSize, customDrawers)
+		new EmptyLabel(hierarchy, stackSize, customDrawers)
 	
 	/**
 	 * Creates a new empty label with a static background color

@@ -25,7 +25,7 @@ import utopia.reach.component.input.{FieldWithSelectionPopup, FieldWithSelection
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
-import utopia.reach.component.template.{CursorDefining, ReachComponent}
+import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.context.VariableReachContentWindowContext
 import utopia.reach.cursor.CursorType.Interactive
 
@@ -49,11 +49,11 @@ case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSe
   */
 object DropDown extends DropDownSetup()
 
-case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
                                      context: VariableReachContentWindowContext,
                                      settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends ContextualFactory[VariableReachContentWindowContext, ContextualDropDownFactory]
-		with FieldWithSelectionPopupSettingsWrapper[ContextualDropDownFactory]
+		with FieldWithSelectionPopupSettingsWrapper[ContextualDropDownFactory] with PartOfComponentHierarchy
 {
 	override def withContext(p: VariableReachContentWindowContext): ContextualDropDownFactory = copy(context = p)
 	override def withSettings(settings: FieldWithSelectionPopupSettings): ContextualDropDownFactory =
@@ -98,12 +98,12 @@ case class ContextualDropDownFactory(parentHierarchy: ComponentHierarchy,
 		}
 		val appliedSettings = settings.withPromptPointer(actualPromptPointer)
 			.withAdditionalActivationKeys(Set(Space, RightArrow, DownArrow))
-		val field = FieldWithSelectionPopup.withContext(parentHierarchy, context).withSettings(appliedSettings)
+		val field = FieldWithSelectionPopup.withContext(hierarchy, context).withSettings(appliedSettings)
 			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
 				sameItemCheck)
 				{ fieldContext =>
 					val label = ViewTextLabel
-						.withContext(fieldContext.parentHierarchy, fieldContext.context)
+						.withContext(fieldContext.hierarchy, fieldContext.context)
 						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
 						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
 						.apply(valuePointer, displayFunction)

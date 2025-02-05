@@ -14,15 +14,15 @@ object MutableConcreteCustomDrawReachComponent
 	
 	/**
 	  * Creates a new simplistic custom draw component
-	  * @param parentHierarchy This component's parent hierarchy
+	  * @param hierarchy This component's parent hierarchy
 	  * @param customDrawers Custom drawers initially assigned to this component (default = empty)
 	  * @param stackSize Stack size for this component (call by name)
 	  * @return A new component
 	  */
-	def apply(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty)
+	def apply(hierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty)
 			 (stackSize: => StackSize): MutableConcreteCustomDrawReachComponent =
 	{
-		val c = new BasicComponent(parentHierarchy, stackSize)
+		val c = new BasicComponent(hierarchy, stackSize)
 		if (customDrawers.nonEmpty)
 			c.customDrawers = customDrawers
 		c

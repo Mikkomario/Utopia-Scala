@@ -18,13 +18,13 @@ object InputRowBlueprint
 	  * @param key Unique key used for this row
 	  * @param displayName Field name displayed on this row (default = empty = no name displayed)
 	  * @param fieldAlignment Alignment used when placing the field component (relative to the field name) (default = right)
-	  * @param visibilityFlag A pointer to this row's visibility state (default = always visible)
+	  * @param visibleFlag A pointer to this row's visibility state (default = always visible)
 	  * @param scalable Whether the field can be scaled horizontally (default = true)
 	  * @return A new input row blueprint factory
 	  */
 	def apply(key: String, displayName: LocalizedString  = LocalizedString.empty,
-	          fieldAlignment: Alignment = Alignment.Right, visibilityFlag: Flag = AlwaysTrue, scalable: Boolean = true) =
-		InputRowBlueprintFactory(key, displayName, fieldAlignment, visibilityFlag, scalable)
+	          fieldAlignment: Alignment = Alignment.Right, visibleFlag: Flag = AlwaysTrue, scalable: Boolean = true) =
+		InputRowBlueprintFactory(key, displayName, fieldAlignment, visibleFlag, scalable)
 	
 	/**
 	  * Creates a new input row blueprint utilizing a component creation factory
@@ -52,7 +52,7 @@ object InputRowBlueprint
 	
 	case class InputRowBlueprintFactory(key: String, displayName: LocalizedString = LocalizedString.empty,
 	                                    fieldAlignment: Alignment = Alignment.Right,
-	                                    visibilityFlag: Flag = AlwaysTrue, isScalable: Boolean = false)
+	                                    visibleFlag: Flag = AlwaysTrue, isScalable: Boolean = false)
 		extends FromAlignmentFactory[InputRowBlueprintFactory]
 	{
 		// COMPUTED ----------------------------
@@ -79,7 +79,9 @@ object InputRowBlueprint
 		  * @param flag A flag that contains true while this field should be displayed
 		  * @return Copy of this factory that utilizes the specified visibility flag
 		  */
-		def withVisibilityFlag(flag: Flag) = copy(visibilityFlag = flag)
+		def withVisibleFlag(flag: Flag) = copy(visibleFlag = flag)
+		@deprecated("Renamed to withVisibleFlag", "v1.6")
+		def withVisibilityFlag(flag: Flag) = withVisibleFlag(flag)
 		
 		/**
 		  * @param createField A function for creating the input field.
@@ -87,7 +89,7 @@ object InputRowBlueprint
 		  * @return A new input row blueprint utilizing the specified constructor
 		  */
 		def apply(createField: (ComponentHierarchy, StaticTextContext) => InputField) =
-			new InputRowBlueprint(key, displayName, fieldAlignment, visibilityFlag, isScalable)(createField)
+			new InputRowBlueprint(key, displayName, fieldAlignment, visibleFlag, isScalable)(createField)
 		/**
 		  * @param factory Component factory to utilize in field construction
 		  * @param createField A function that accepts an initialized component creation factory and
@@ -117,15 +119,14 @@ object InputRowBlueprint
   * @param key Unique key used for this row
   * @param displayName Field name displayed on this row (default = empty = no name displayed)
   * @param fieldAlignment Alignment used when placing the field component (relative to the field name) (default = right)
-  * @param visibilityPointer A pointer to this row's visibility state (default = always visible)
+  * @param visibleFlag A pointer to this row's visibility state (default = always visible)
   * @param isScalable Whether the field can be scaled horizontally (default = true)
   * @param createField A function for creating a new managed field when component creation context is known.
   *                    Accepts component creation hierarchy and context.
   */
-// TODO: Rename visibilityPointer to visibilityFlag and change type to Flag
 class InputRowBlueprint(val key: String, val displayName: LocalizedString = LocalizedString.empty,
                         val fieldAlignment: Alignment = Alignment.Right,
-                        val visibilityPointer: Changing[Boolean] = AlwaysTrue, val isScalable: Boolean = true)
+                        val visibleFlag: Flag = AlwaysTrue, val isScalable: Boolean = true)
                        (createField: (ComponentHierarchy, StaticTextContext) => InputField)
 {
 	// COMPUTED	-----------------------------
@@ -133,7 +134,7 @@ class InputRowBlueprint(val key: String, val displayName: LocalizedString = Loca
 	/**
 	  * @return Whether this row should always be displayed
 	  */
-	def isAlwaysVisible = visibilityPointer.isAlwaysTrue
+	def isAlwaysVisible = visibleFlag.isAlwaysTrue
 	
 	/**
 	  * @return Whether this blueprint specifies a field name to display
@@ -150,6 +151,9 @@ class InputRowBlueprint(val key: String, val displayName: LocalizedString = Loca
 	  * @return Whether this row enables placing of the field name and input field to separate segments
 	  */
 	def usesSegmentLayout = fieldSegmentSide.isDefined
+	
+	@deprecated("Deprecated for removal. Please use .visibleFlag instead", "v1.6")
+	def visibilityPointer = visibleFlag
 	
 	
 	// OTHER	-----------------------------

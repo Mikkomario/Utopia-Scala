@@ -11,9 +11,10 @@ import utopia.flow.async.process
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
@@ -23,7 +24,7 @@ import utopia.reach.component.input.{FieldSettings, FieldSettingsLike}
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.{SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.focus.{FocusListener, ManyFocusableWrapper}
@@ -54,7 +55,7 @@ trait DurationFieldSettingsLike[+Repr]
 	/**
 	  * A pointer that determines whether this field is interactive or not
 	  */
-	def enabledPointer: Changing[Boolean]
+	def enabledFlag: Flag
 	/**
 	  * The initially selected value in created fields
 	  */
@@ -89,7 +90,7 @@ trait DurationFieldSettingsLike[+Repr]
 	  *          A pointer that determines whether this field is interactive or not
 	  * @return Copy of this factory with the specified enabled pointer
 	  */
-	def withEnabledPointer(p: Changing[Boolean]): Repr
+	def withEnabledFlag(p: Flag): Repr
 	/**
 	  * Settings that apply to the individual fields that form this component. Applied selectively.
 	  * @param settings New field settings to use.
@@ -150,6 +151,9 @@ trait DurationFieldSettingsLike[+Repr]
 	  */
 	def withoutSeparator = withSeparator(LocalizedString.empty)
 	
+	@deprecated("Replaced with enabledFlag", "v1.6")
+	def enabledPointer = enabledFlag
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -204,13 +208,18 @@ trait DurationFieldSettingsLike[+Repr]
 	
 	// OTHER	--------------------
 	
-	def mapEnabledPointer(f: Changing[Boolean] => Changing[Boolean]) = withEnabledPointer(f(enabledPointer))
+	def mapEnabledFlag(f: Mutate[Flag]) = withEnabledFlag(f(enabledFlag))
 	def mapFieldSettings(f: FieldSettings => FieldSettings) = withFieldSettings(f(fieldSettings))
 	def mapInitialValue(f: Duration => Duration) = withInitialValue(f(initialValue))
 	def mapLabelSettings(f: SelectableTextLabelSettings => SelectableTextLabelSettings) =
 		withLabelSettings(f(labelSettings))
 	def mapMaxValue(f: Duration => Duration) = withMaxValue(f(maxValue))
 	def mapSeparator(f: LocalizedString => LocalizedString) = withSeparator(f(separator))
+	
+	@deprecated("Please use withEnabledFlag(Flag) instead", "v1.6")
+	def withEnabledPointer(p: Changing[Boolean]) = withEnabledFlag(p)
+	@deprecated("Please use mapEnabledFlag(Flag) instead", "v1.6")
+	def mapEnabledPointer(f: Changing[Boolean] => Changing[Boolean]) = mapEnabledFlag { f(_) }
 }
 
 object DurationFieldSettings
@@ -225,7 +234,7 @@ object DurationFieldSettings
   * @param fieldSettings   Settings that apply to the individual fields that form this component.
   *                        Applied selectively.
   * @param labelSettings   Settings that apply to each of the input text fields that form this component.
-  * @param enabledPointer  A pointer that determines whether this field is interactive or not
+  * @param enabledFlag  A pointer that determines whether this field is interactive or not
   * @param initialValue    The initially selected value in created fields
   * @param maxValue        The largest allowed input value (inclusive)
   * @param separator       A separator placed between the individual input fields (i.e. the hours,
@@ -237,7 +246,7 @@ object DurationFieldSettings
   */
 case class DurationFieldSettings(fieldSettings: FieldSettings = FieldSettings.default,
                                  labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                 enabledPointer: Changing[Boolean] = AlwaysTrue, initialValue: Duration = Duration.Zero,
+                                 enabledFlag: Flag = AlwaysTrue, initialValue: Duration = Duration.Zero,
                                  maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
                                  separator: LocalizedString = ":".noLanguageLocalizationSkipped,
                                  capturesSeconds: Boolean = false, showsLabels: Boolean = false)
@@ -246,7 +255,7 @@ case class DurationFieldSettings(fieldSettings: FieldSettings = FieldSettings.de
 	// IMPLEMENTED	--------------------
 	
 	override def withCapturesSeconds(capture: Boolean) = copy(capturesSeconds = capture)
-	override def withEnabledPointer(p: Changing[Boolean]) = copy(enabledPointer = p)
+	override def withEnabledFlag(p: Flag) = copy(enabledFlag = p)
 	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
 	override def withInitialValue(v: Duration) = copy(initialValue = v)
 	override def withLabelSettings(settings: SelectableTextLabelSettings) = copy(labelSettings = settings)
@@ -279,7 +288,7 @@ trait DurationFieldSettingsWrapper[+Repr] extends DurationFieldSettingsLike[Repr
 	// IMPLEMENTED	--------------------
 	
 	override def capturesSeconds = settings.capturesSeconds
-	override def enabledPointer = settings.enabledPointer
+	override def enabledFlag = settings.enabledFlag
 	override def fieldSettings = settings.fieldSettings
 	override def initialValue = settings.initialValue
 	override def labelSettings = settings.labelSettings
@@ -288,7 +297,7 @@ trait DurationFieldSettingsWrapper[+Repr] extends DurationFieldSettingsLike[Repr
 	override def showsLabels = settings.showsLabels
 	
 	override def withCapturesSeconds(capture: Boolean) = mapSettings { _.withCapturesSeconds(capture) }
-	override def withEnabledPointer(p: Changing[Boolean]) = mapSettings { _.withEnabledPointer(p) }
+	override def withEnabledFlag(p: Flag) = mapSettings { _.withEnabledFlag(p) }
 	override def withFieldSettings(settings: FieldSettings) = mapSettings { _.withFieldSettings(settings) }
 	override def withInitialValue(v: Duration) = mapSettings { _.withInitialValue(v) }
 	override def withLabelSettings(settings: SelectableTextLabelSettings) =
@@ -308,10 +317,10 @@ trait DurationFieldSettingsWrapper[+Repr] extends DurationFieldSettingsLike[Repr
   * @author Mikko Hilpinen
   * @since 18.06.2023, v1.1
   */
-case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualDurationFieldFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                           settings: DurationFieldSettings = DurationFieldSettings.default)
 	extends DurationFieldSettingsWrapper[ContextualDurationFieldFactory]
-		with ContextualFactory[VariableTextContext, ContextualDurationFieldFactory]
+		with ContextualFactory[VariableTextContext, ContextualDurationFieldFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------------
 	
@@ -327,7 +336,7 @@ case class ContextualDurationFieldFactory(parentHierarchy: ComponentHierarchy, c
 	  * @param exc Implicit execution context for delayed focus transfer events
 	  * @return A new duration input field
 	  */
-	def apply()(implicit exc: ExecutionContext) = new DurationField(parentHierarchy, context, settings)
+	def apply()(implicit exc: ExecutionContext) = new DurationField(hierarchy, context, settings)
 }
 
 /**
@@ -357,7 +366,7 @@ object DurationField extends DurationFieldSetup()
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
-class DurationField(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class DurationField(override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                     settings: DurationFieldSettings = DurationFieldSettings.default)
 				   (implicit exc: ExecutionContext)
 	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
@@ -375,7 +384,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, context: VariableTextCo
 		if (settings.separator.isEmpty) context.smallStackMarginPointer else Fixed(StackLength.fixedZero)
 	
 	// The input fields are placed in a horizontal stack and separated with ":"
-	private val (_wrapped, (fields, _valuePointer)) = ViewStack(parentHierarchy).withContext(context)
+	private val (_wrapped, (fields, _valuePointer)) = ViewStack(hierarchy).withContext(context)
 		.withMarginPointer(marginPointer).centered.row.withCustomDrawers(settings.customDrawers)
 		.build(Mixed) { factories =>
 			// Creates the input fields
@@ -388,7 +397,7 @@ class DurationField(parentHierarchy: ComponentHierarchy, context: VariableTextCo
 			val initialMinutes = (settings.initialValue - initialHours.hours).toMinutes.toInt min maxMinutes
 			
 			val defaultFieldSettings = TextFieldSettings(fieldSettings = settings.fieldSettings)
-				.withLabelSettings(settings.labelSettings).withEnabledPointer(settings.enabledPointer)
+				.withLabelSettings(settings.labelSettings).withEnabledFlag(settings.enabledFlag)
 			
 			def makeField(label: => LocalizedString, prompt: LocalizedString, initialValue: Int, maxValue: Int,
 						  isLeftmost: Boolean = false, isRightmost: Boolean = false) =

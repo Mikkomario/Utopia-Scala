@@ -79,12 +79,12 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	
 	/**
 	  * Registers a new row of items into this group, producing wrapped components
-	  * @param parentHierarchy Component hierarchy that will hold the created wrappers
+	  * @param hierarchy Component hierarchy that will hold the created wrappers
 	  * @param row Row of open components to register & wrap
 	  * @return Wrapped components
 	  */
-	def wrapUnderSingle[C <: ReachComponent, R](parentHierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
-		wrap(row)(parentHierarchy)
+	def wrapUnderSingle[C <: ReachComponent, R](hierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
+		wrap(row)(hierarchy)
 	
 	/**
 	  * Registers a new row of items into this group, producing wrapped components

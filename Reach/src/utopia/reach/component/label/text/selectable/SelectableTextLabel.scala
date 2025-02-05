@@ -12,6 +12,7 @@ import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.template.PartOfComponentHierarchy
 import utopia.reach.focus.FocusListener
 
 import scala.concurrent.duration.Duration
@@ -207,12 +208,13 @@ trait SelectableTextLabelSettingsWrapper[+Repr] extends SelectableTextLabelSetti
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                                 settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                                 drawsBackground: Boolean = false)
 	extends SelectableTextLabelSettingsWrapper[ContextualSelectableTextLabelFactory]
 		with ContextualFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------------
 	
@@ -235,7 +237,7 @@ case class ContextualSelectableTextLabelFactory(parentHierarchy: ComponentHierar
 	  * @return A new selectable text label
 	  */
 	def apply(textPointer: Changing[LocalizedString]) = {
-		val label = new SelectableTextLabel(parentHierarchy, context, textPointer, settings)
+		val label = new SelectableTextLabel(hierarchy, context, textPointer, settings)
 		if (drawsBackground)
 			context.backgroundPointer.addListenerWhile(label.linkedFlag) { _ => label.repaint() }
 		label
@@ -271,9 +273,9 @@ object SelectableTextLabel extends SelectableTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 14.5.2021, v0.3
   */
-class SelectableTextLabel(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class SelectableTextLabel(override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                           val textPointer: Changing[LocalizedString], settings: SelectableTextLabelSettings)
-	extends AbstractSelectableTextLabel(parentHierarchy, context, textPointer, AlwaysTrue, settings)
+	extends AbstractSelectableTextLabel(hierarchy, context, textPointer, AlwaysTrue, settings)
 {
 	// COMPUTED ------------------------------
 	

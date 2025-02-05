@@ -102,7 +102,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	// IMPLEMENTED	-----------------------------
 	
 	override protected def createContent(factories: ContextualMixed[StaticTextContext]) = {
-		implicit val canvas: ReachCanvas = factories.parentHierarchy.top
+		implicit val canvas: ReachCanvas = factories.hierarchy.top
 		val (template, dialogContext) = inputTemplate
 		val (nameContext, fieldContext) = contentContext
 		implicit val rowContext: FieldRowContext = FieldRowContext(nameContext, fieldContext)
@@ -310,17 +310,17 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 			// Case: Field doesn't need to be aligned to any side but can fill the whole area
 			// => it is attached directly to the stack
 			if (blueprint.isScalable) {
-				val field = blueprint.apply(factories.parentHierarchy, context.fieldContext)
+				val field = blueprint.apply(factories.hierarchy, context.fieldContext)
 				fieldsBuilder += blueprint.key -> field
-				field.field -> blueprint.visibilityPointer
+				field.field -> blueprint.visibleFlag
 			}
 			// Case: Field needs to be aligned => it is wrapped before adding to the layout
 			else
 				factories(AlignFrame)(blueprint.fieldAlignment).build(Mixed) { factories =>
-					val field = blueprint(factories.parentHierarchy, context.fieldContext)
+					val field = blueprint(factories.hierarchy, context.fieldContext)
 					fieldsBuilder += blueprint.key -> field
 					field.field
-				}.parent -> blueprint.visibilityPointer
+				}.parent -> blueprint.visibleFlag
 		}
 	}
 	
@@ -349,13 +349,13 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				base
 		}
 		val fieldNameLabel = labelFactory(blueprint.displayName)
-		val field = blueprint(factories.parentHierarchy, context.fieldContext)
+		val field = blueprint(factories.hierarchy, context.fieldContext)
 		fieldsBuilder += blueprint.key -> field
 		// Field ordering depends on the blueprint alignment
 		val components = if (fieldNameIsFirst) Pair(fieldNameLabel, field.field) else Pair(field.field, fieldNameLabel)
 		
 		// Attaches field visibility pointer as a result
-		ComponentCreationResult.many(components, blueprint.visibilityPointer)
+		ComponentCreationResult.many(components, blueprint.visibleFlag)
 	}
 }
 

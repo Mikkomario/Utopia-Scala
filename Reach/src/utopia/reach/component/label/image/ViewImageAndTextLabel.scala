@@ -9,8 +9,9 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Medium, Small}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
@@ -21,7 +22,7 @@ import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.container.multi.Stack
 
 /**
@@ -37,12 +38,12 @@ trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettings
 	/**
 	  * @return A pointer that determines whether this label is a hint or a fully visible / standard label
 	  */
-	def isHintPointer: Changing[Boolean]
+	def hintFlag: Flag
 	/**
 	  * @param p A pointer that determines whether this is a hint label (true) or a regular label (false)
 	  * @return Copy of this factory that uses the specified hint pointer
 	  */
-	def withIsHintPointer(p: Changing[Boolean]): Repr
+	def withHintFlag(p: Flag): Repr
 	
 	
 	// COMPUTED	--------------------
@@ -64,11 +65,14 @@ trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettings
 	  */
 	def imageScalingPointer = imageSettings.imageScalingPointer
 	
+	@deprecated("Renamed to .hintFlag", "v1.6")
+	def isHintPointer = hintFlag
+	
 	
 	// IMPLEMENTED  ----------------
 	
-	override def isHint: Boolean = isHintPointer.value
-	override def withIsHint(isHint: Boolean): Repr = withIsHintPointer(Fixed(isHint))
+	override def isHint: Boolean = hintFlag.value
+	override def withIsHint(isHint: Boolean): Repr = withHintFlag(Fixed(isHint))
 	
 	override def mapImageAlignment(f: Alignment => Alignment) = mapImageAlignmentPointer { _.map(f) }
 	override def mapImageScaling(f: Double => Double) = mapImageScalingPointer { _.map(f) }
@@ -81,7 +85,7 @@ trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettings
 	
 	// OTHER	--------------------
 	
-	def mapIsHintPointer(f: Changing[Boolean] => Changing[Boolean]) = withIsHintPointer(f(isHintPointer))
+	def mapHintFlag(f: Mutate[Flag]) = withHintFlag(f(hintFlag))
 	def mapImageAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
 		withImageAlignmentPointer(f(imageAlignmentPointer))
 	def mapImageColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
@@ -130,6 +134,11 @@ trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettings
 	  * @return copy of this factory with the specified insets used
 	  */
 	def withImageInsets(insets: StackInsetsConvertible) = withImageInsetsPointer(Fixed(insets.toInsets))
+	
+	@deprecated("Please use .withHintFlag(Flag) instead", "v1.6")
+	def withIsHintPointer(p: Changing[Boolean]) = withHintFlag(p)
+	@deprecated("Please use .mapHintFlag(...) instead", "v1.6")
+	def mapIsHintPointer(f: Changing[Boolean] => Changing[Boolean]) = mapHintFlag { f(_) }
 }
 
 object ViewImageAndTextLabelSettings
@@ -151,13 +160,13 @@ case class ViewImageAndTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empt
                                          imageSettings: ViewImageLabelSettings = defaultImageSettings,
                                          separatingMargin: Option[SizeCategory] = Some(Small),
                                          insets: UnresolvedStackInsets = sides.symmetric(Left(Medium)),
-                                         isHintPointer: Changing[Boolean] = AlwaysFalse,
+                                         hintFlag: Flag = AlwaysFalse,
                                          forceEqualBreadth: Boolean = false)
 	extends ViewImageAndTextLabelSettingsLike[ViewImageAndTextLabelSettings]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def withIsHintPointer(p: Changing[Boolean]): ViewImageAndTextLabelSettings = copy(isHintPointer = p)
+	override def withHintFlag(p: Flag): ViewImageAndTextLabelSettings = copy(hintFlag = p)
 	override def withSeparatingMargin(margin: Option[SizeCategory]): ViewImageAndTextLabelSettings =
 		copy(separatingMargin = margin)
 	override def withForceEqualBreadth(force: Boolean) = copy(forceEqualBreadth = force)
@@ -197,11 +206,11 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	override def customDrawers = settings.customDrawers
 	override def forceEqualBreadth = settings.forceEqualBreadth
 	override def imageSettings = settings.imageSettings
-	override def isHintPointer: Changing[Boolean] = settings.isHintPointer
+	override def hintFlag = settings.hintFlag
 	override def separatingMargin: Option[SizeCategory] = settings.separatingMargin
 	override def insets: UnresolvedStackInsets = settings.insets
 	
-	override def withIsHintPointer(p: Changing[Boolean]): Repr = mapSettings { _.withIsHintPointer(p) }
+	override def withHintFlag(p: Flag): Repr = mapSettings { _.withHintFlag(p) }
 	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
 		mapSettings { _.withSeparatingMargin(margin) }
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
@@ -220,12 +229,13 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	def mapSettings(f: ViewImageAndTextLabelSettings => ViewImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
                                                   context: VariableTextContext,
                                                   settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default,
                                                   drawBackground: Boolean = false)
 	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
+		with PartOfComponentHierarchy
 {
 	// COMPUTED ----------------------
 	
@@ -284,7 +294,7 @@ case class ContextualViewImageAndTextLabelFactory(parentHierarchy: ComponentHier
 	def iconOrImage[A](itemPointer: Changing[A], imagePointer: Either[Changing[SingleColorIcon], Changing[Image]],
 	                   displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
 	{
-		val label = new ViewImageAndTextLabel[A](parentHierarchy, context, itemPointer, imagePointer,
+		val label = new ViewImageAndTextLabel[A](hierarchy, context, itemPointer, imagePointer,
 			settings, Fixed(resolveInsets), displayFunction)
 		if (drawBackground)
 			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
@@ -378,7 +388,7 @@ object ViewImageAndTextLabel extends ViewImageAndTextLabelSetup()
   * @author Mikko Hilpinen
   * @since 9.11.2020, v0.1
   */
-class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class ViewImageAndTextLabel[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                                val itemPointer: Changing[A],
                                imgPointer: Either[Changing[SingleColorIcon], Changing[Image]],
                                settings: ViewImageAndTextLabelSettings,
@@ -400,7 +410,7 @@ class ViewImageAndTextLabel[A](parentHierarchy: ComponentHierarchy, context: Var
 				(textInsets max commonInsets) -- textAlignment.directions
 			} }
 		
-		Stack.withContext(parentHierarchy, appliedContext)
+		Stack.withContext(hierarchy, appliedContext)
 			.withMargin(settings.separatingMargin)
 			.withCustomDrawers(settings.customDrawers)
 			.buildPair(Mixed, textAlignment, forceFitLayout = settings.forceEqualBreadth) { factories =>

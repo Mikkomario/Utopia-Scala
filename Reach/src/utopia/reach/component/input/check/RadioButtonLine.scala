@@ -13,7 +13,7 @@ import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
-import utopia.reach.component.template.CursorDefining
+import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy}
 import utopia.reach.container.multi.Stack
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 
@@ -39,12 +39,13 @@ object RadioButtonLine extends RadioButtonLineSetup()
 	def apply(settings: RadioButtonSettings) = withSettings(settings)
 }
 
-case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualRadioButtonLineFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                             settings: RadioButtonSettings = RadioButtonSettings.default,
                                             drawsBackground: Boolean = false)
 	extends RadioButtonSettingsWrapper[ContextualRadioButtonLineFactory]
 		with ContextualFactory[VariableTextContext, ContextualRadioButtonLineFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualRadioButtonLineFactory]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------------------
 	
@@ -72,13 +73,13 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 	 */
 	def apply[A](selectedValuePointer: EventfulPointer[A], value: A, labelText: LocalizedString) =
 	{
-		val stack = Stack(parentHierarchy).withContext(context).centeredRow
+		val stack = Stack(hierarchy).withContext(context).centeredRow
 			// The custom drawers are assigned to this whole component
 			.withCustomDrawers(customDrawers).withoutMargin
 			.build(Mixed) { factories =>
 				val radioButton = factories(RadioButton).withoutCustomDrawers.apply(selectedValuePointer, value)
 				val label = factories(ViewTextLabel)
-					.withIsHintPointer(settings.enabledPointer.lightMap { !_ })
+					.withHintFlag(settings.enabledFlag.lightMap { !_ })
 					.text(labelText)
 				// Clicking the label triggers the button
 				label.addMouseButtonListener(MouseButtonStateListener.leftPressed.over { label.bounds } { _ =>
@@ -87,7 +88,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 					Consume("Radio button selected via label")
 				})
 				// Adds mouse functionality to the label
-				CursorDefining.defineCursorFor(label, View { if (enabledPointer.value) Interactive else Default },
+				CursorDefining.defineCursorFor(label, View { if (enabledFlag.value) Interactive else Default },
 					View { context.backgroundPointer.value.shade })
 				
 				// Places the radio button on the left and the text field on the right
@@ -95,7 +96,7 @@ case class ContextualRadioButtonLineFactory(parentHierarchy: ComponentHierarchy,
 			}
 		// Repaints the component when drawn background color changes (if applicable)
 		if (drawsBackground)
-			context.backgroundPointer.addListenerWhile(parentHierarchy.linkedFlag) { _ =>
+			context.backgroundPointer.addListenerWhile(hierarchy.linkedFlag) { _ =>
 				stack.repaint()
 			}
 		stack

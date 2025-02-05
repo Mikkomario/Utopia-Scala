@@ -153,7 +153,7 @@ object TextButton extends TextButtonSetup()
   * @author Mikko Hilpinen
   * @since 24.10.2020, v0.1
   */
-class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
+class TextButton(override val hierarchy: ComponentHierarchy, text: LocalizedString, textDrawContext: TextDrawContext,
                  color: Color, settings: ButtonSettings = ButtonSettings.default, borderWidth: Double = 0.0,
                  customDrawers: Seq[CustomDrawer] = Empty,
                  allowTextShrink: Boolean = false)(action: => Unit)
@@ -161,7 +161,7 @@ class TextButton(parentHierarchy: ComponentHierarchy, text: LocalizedString, tex
 {
 	// ATTRIBUTES	-----------------------------
 	
-	override protected val wrapped = new TextLabel(parentHierarchy, text, textDrawContext,
+	override protected val wrapped = new TextLabel(hierarchy, text, textDrawContext,
 		ButtonBackgroundViewDrawer(Fixed(color), statePointer, Fixed(borderWidth)) +: customDrawers, allowTextShrink)
 	
 	

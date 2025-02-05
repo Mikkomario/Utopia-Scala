@@ -6,7 +6,6 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
-import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
@@ -53,11 +52,11 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	/**
 	  * Completes this component hierarchy by attaching it to a parent component
 	  * @param parent Parent component to connect to
-	  * @param switchConditionPointer A pointer that determines whether this connection is active. Default = always active.
+	  * @param switchConditionFlag A pointer that determines whether this connection is active. Default = always active.
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponent, switchConditionPointer: Changing[Boolean]) ={
+	def complete(parent: ReachComponent, switchConditionFlag: Changing[Boolean]) ={
 		foundParent match {
 			// Throws if there already existed a parent connection
 			case Some(existingParent) =>
@@ -71,16 +70,16 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 				val parentHierarchy = parent.hierarchy
 				foundParent = Some(Right(parentHierarchy -> parent))
 				// Informs the link manager about the new link connection
-				LinkManager.onParentFound(parentHierarchy.linkedFlag, switchConditionPointer)
+				LinkManager.onParentFound(parentHierarchy.linkedFlag, switchConditionFlag)
 		}
 	}
 	/**
 	  * Completes this component hierarchy by attaching it directly to the canvas at the top
-	  * @param switchConditionPointer An additional link condition pointer. Default = always linked.
+	  * @param switchConditionFlag An additional link condition pointer. Default = always linked.
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop(switchConditionPointer: Changing[Boolean] = AlwaysTrue) = foundParent match {
+	def lockToTop(switchConditionFlag: Changing[Boolean] = AlwaysTrue) = foundParent match {
 		case Some(existingParent) =>
 			existingParent match {
 				case Left(_) => ()
@@ -90,7 +89,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 			// Directly attaches to the top
 			foundParent = Some(Left(top))
 			// Also informs the link manager
-			LinkManager.onLinkedToCanvas(switchConditionPointer)
+			LinkManager.onLinkedToCanvas(switchConditionFlag)
 	}
 	/**
 	  * Completes this hierarchy by replacing this block with another.
@@ -137,20 +136,20 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// OTHER	--------------------------
 		
-		def onParentFound(defaultPointer: Changing[Boolean],
-		                  additionalConditionPointer: Changing[Boolean]) =
-			specifyFinalPointer(defaultPointer && additionalConditionPointer, additionalConditionPointer)
+		def onParentFound(defaultConditionFlag: Flag,
+		                  additionalConditionFlag: Changing[Boolean]) =
+			specifyFinalFlag(defaultConditionFlag && additionalConditionFlag, additionalConditionFlag)
 		
-		def onLinkedToCanvas(additionalConditionPointer: Changing[Boolean]) =
-			specifyFinalPointer(top.attachmentPointer && additionalConditionPointer, additionalConditionPointer)
+		def onLinkedToCanvas(additionalConditionFlag: Changing[Boolean]) =
+			specifyFinalFlag(top.linkedFlag && additionalConditionFlag, additionalConditionFlag)
 		
 		def onReplacement(replacement: ComponentHierarchy) =
-			specifyFinalPointer(replacement.linkedFlag, View { replacement.isThisLevelLinked })
+			specifyFinalFlag(replacement.linkedFlag, View { replacement.isThisLevelLinked })
 		
-		private def specifyFinalPointer(pointer: Changing[Boolean], thisLevelPointer: View[Boolean]) = {
+		private def specifyFinalFlag(flag: Changing[Boolean], thisLevelFlag: View[Boolean]) = {
 			// Updates the pointer(s)
-			_wrapped.complete(pointer)
-			finalLinkConditionPointer = Some(thisLevelPointer)
+			_wrapped.complete(flag)
+			finalLinkConditionPointer = Some(thisLevelFlag)
 		}
 	}
 }

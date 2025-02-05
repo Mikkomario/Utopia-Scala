@@ -432,15 +432,15 @@ class OpenComponent[+C, +R](val creation: ComponentCreationResult[C, R], val hie
 	/**
 	  * Attaches this component to a parent container
 	  * @param parent A parent container
-	  * @param switchPointer A pointer to the changing attachment status (default = always attached)
+	  * @param switchFlag A pointer to the changing attachment status (default = always attached)
 	  * @tparam P Type of parent container
 	  * @throws IllegalStateException if this component was already attached to a parent container
 	  * @return A result with the wrapping parent container, the wrapped component and a component creation result
 	  */
 	@throws[IllegalStateException]("If this component was already attached to a parent container")
-	def attachTo[P <: ReachComponent](parent: P, switchPointer: Changing[Boolean] = AlwaysTrue) =
+	def attachTo[P <: ReachComponent](parent: P, switchFlag: Changing[Boolean] = AlwaysTrue) =
 	{
-		hierarchy.complete(parent, switchPointer)
+		hierarchy.complete(parent, switchFlag)
 		creation.in(parent)
 	}
 	/**

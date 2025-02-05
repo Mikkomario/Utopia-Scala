@@ -22,7 +22,7 @@ import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.MutableTextLabel
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -31,12 +31,12 @@ object MutableTextButton extends Cff[MutableTextButtonFactory]
 	override def apply(hierarchy: ComponentHierarchy) = new MutableTextButtonFactory(hierarchy)
 }
 
-class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
-	extends FromContextFactory[StaticTextContext, ContextualMutableTextButtonFactory]
+case class MutableTextButtonFactory(hierarchy: ComponentHierarchy)
+	extends FromContextFactory[StaticTextContext, ContextualMutableTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	-------------------------------
 	
-	override def withContext(context: StaticTextContext) = ContextualMutableTextButtonFactory(parentHierarchy, context)
+	override def withContext(context: StaticTextContext) = ContextualMutableTextButtonFactory(hierarchy, context)
 	
 	
 	// OTHER	-----------------------------------
@@ -61,7 +61,7 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 					  alignment: Alignment = Alignment.Center, textInsets: StackInsets = StackInsets.any,
 					  borderWidth: Double = 0.0, betweenLinesMargin: Double = 0.0, hotKeys: Set[HotKey] = Set(),
 					  allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		new MutableTextButton(parentHierarchy, text, TextDrawContext(font, textColor, alignment, textInsets, None,
+		new MutableTextButton(hierarchy, text, TextDrawContext(font, textColor, alignment, textInsets, None,
 			betweenLinesMargin, allowLineBreaks), color, borderWidth, hotKeys, allowTextShrink)
 	
 	/**
@@ -93,8 +93,8 @@ class MutableTextButtonFactory(parentHierarchy: ComponentHierarchy)
 	}
 }
 
-case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext)
-	extends TextContextualFactory[ContextualMutableTextButtonFactory]
+case class ContextualMutableTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext)
+	extends TextContextualFactory[ContextualMutableTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------------------
 	
@@ -113,7 +113,7 @@ case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarch
 	  * @return A new button
 	  */
 	def withoutAction(text: LocalizedString = LocalizedString.empty, hotKeys: Set[HotKey] = Set()) =
-		new MutableTextButton(parentHierarchy, text, context.textDrawContext, context.background,
+		new MutableTextButton(hierarchy, text, context.textDrawContext, context.background,
 			context.buttonBorderWidth, hotKeys, context.allowTextShrink)
 	
 	/**
@@ -135,10 +135,10 @@ case class ContextualMutableTextButtonFactory(parentHierarchy: ComponentHierarch
   * @author Mikko Hilpinen
   * @since 25.10.2020, v0.1
   */
-class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: LocalizedString,
+class MutableTextButton(override val hierarchy: ComponentHierarchy, initialText: LocalizedString,
                         initialStyle: TextDrawContext,
-						initialColor: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),
-						override val allowTextShrink: Boolean = false)
+                        initialColor: Color, borderWidth: Double = 0.0, hotKeys: Set[HotKey] = Set(),
+                        override val allowTextShrink: Boolean = false)
 	extends ReachComponentWrapper with MutableButtonLike with MutableTextComponent with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	---------------------------------
@@ -147,7 +147,7 @@ class MutableTextButton(parentHierarchy: ComponentHierarchy, initialText: Locali
 	override val enabledPointer: Flag = _statePointer.map { _ isNot Disabled }
 	override val focusPointer: Flag = _statePointer.map { _ is Focused }
 	
-	protected val wrapped = new MutableTextLabel(parentHierarchy, initialText, initialStyle, allowTextShrink)
+	protected val wrapped = new MutableTextLabel(hierarchy, initialText, initialStyle, allowTextShrink)
 	/**
 	  * A mutable pointer to this button's base color
 	  */

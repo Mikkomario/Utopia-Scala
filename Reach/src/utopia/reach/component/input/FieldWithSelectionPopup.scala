@@ -43,7 +43,7 @@ import utopia.reach.component.input.FieldWithSelectionPopup.ignoreFocusAfterClos
 import utopia.reach.component.input.selection.{SelectionList, SelectionListFactory, SelectionListSettings}
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
-import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{StackSettings, ViewStack}
 import utopia.reach.container.wrapper.Swapper
@@ -379,11 +379,12 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy,
                                                     context: VariableReachContentWindowContext,
                                                     settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[ContextualFieldWithSelectionPopupFactory]
 		with ContextualFactory[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
 	
@@ -397,7 +398,7 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
-	  * @param isEmptyPointer A pointer that contains true when the wrapped field is empty (of text)
+	  * @param emptyFlag A pointer that contains true when the wrapped field is empty (of text)
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
@@ -423,15 +424,15 @@ case class ContextualFieldWithSelectionPopupFactory(parentHierarchy: ComponentHi
 	  * @return A new field
 	  */
 	def apply[A, C <: ReachComponent with Focusable, D <: ReachComponent with Refreshable[A],
-		P <: Changing[Seq[A]]](isEmptyPointer: Changing[Boolean], contentPointer: P,
-	                              valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
-	                              sameItemCheck: Option[EqualsFunction[A]] = None)
+		P <: Changing[Seq[A]]](emptyFlag: Changing[Boolean], contentPointer: P,
+	                           valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
+	                           sameItemCheck: Option[EqualsFunction[A]] = None)
 	                             (makeField: FieldCreationContext => C)
 	                             (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 	                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 										 Option[OpenComponent[ReachComponent, Any]])
 	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
-		new FieldWithSelectionPopup[A, C, D, P](parentHierarchy, context, isEmptyPointer, contentPointer,
+		new FieldWithSelectionPopup[A, C, D, P](hierarchy, context, emptyFlag, contentPointer,
 			valuePointer, settings, sameItemCheck)(makeField)(makeDisplay)(makeRightHintLabel)
 }
 
@@ -476,8 +477,8 @@ object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
   */
 class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachComponent with Refreshable[A],
 	+P <: Changing[Seq[A]]]
-(parentHierarchy: ComponentHierarchy, context: VariableReachContentWindowContext,
- isEmptyPointer: Changing[Boolean], override val contentPointer: P,
+(override val hierarchy: ComponentHierarchy, context: VariableReachContentWindowContext,
+ emptyFlag: Changing[Boolean], override val contentPointer: P,
  override val valuePointer: EventfulPointer[Option[A]],
  settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default,
  sameItemCheck: Option[EqualsFunction[A]] = None)
@@ -556,9 +557,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	/**
 	  * Field wrapped by this field
 	  */
-	val field = Field.withContext(parentHierarchy, context)
+	val field = Field.withContext(hierarchy, context)
 		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconPointer))
-		.apply(isEmptyPointer)(makeField)(makeRightHintLabel)
+		.apply(emptyFlag)(makeField)(makeRightHintLabel)
 	
 	/**
 	  * A pointer that contains true while the pop-up window is NOT displayed, but only while this field has focus
@@ -667,7 +668,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 									.apply(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
 										// Case: No options -view constructor
 										if (isEmpty)
-											makeNoOptionsView(factories.parentHierarchy, popUpContext)
+											makeNoOptionsView(factories.hierarchy, popUpContext)
 										// Case: List constructor
 										else
 											makeOptionsList(factories(SelectionList))
@@ -692,7 +693,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 								val mainContent = makeMainContent(topAndBottomFactories(
 									settings.extraOptionLocation.opposite))
 								val additional = makeAdditionalOption(
-									topAndBottomFactories(settings.extraOptionLocation).parentHierarchy,
+									topAndBottomFactories(settings.extraOptionLocation).hierarchy,
 									popUpContext)
 								if (settings.extraOptionLocation == First)
 									Pair(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)

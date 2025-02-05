@@ -11,7 +11,7 @@ import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.{Always, AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -21,18 +21,18 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.ConcreteCustomDrawReachComponent
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                           customDrawers: Seq[CustomDrawer] = Empty,
-                                          isHintPointer: Changing[Boolean] = AlwaysFalse,
+                                          hintFlag: Flag = AlwaysFalse,
                                           drawBackground: Boolean = false)
 	extends VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewTextLabelFactory]
-		with CustomDrawableFactory[ContextualViewTextLabelFactory]
+		with CustomDrawableFactory[ContextualViewTextLabelFactory] with PartOfComponentHierarchy
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private lazy val stylePointer = context.textDrawContextPointerFor(isHintPointer)
+	private lazy val stylePointer = context.textDrawContextPointerFor(hintFlag)
 	
 	
 	// COMPUTED ---------------------------------
@@ -40,12 +40,12 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	/**
 	 * @return A copy of this factory without contextual information
 	 */
-	def withoutContext = ViewTextLabelFactory(parentHierarchy)
+	def withoutContext = ViewTextLabelFactory(hierarchy)
 	
 	/**
 	  * @return Copy of this factory that creates hint labels
 	  */
-	def hint = withIsHintPointer(AlwaysTrue)
+	def hint = withHintFlag(AlwaysTrue)
 	
 	
 	// IMPLEMENTED	-----------------------------
@@ -62,11 +62,12 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	// OTHER	---------------------------------
 	
 	/**
-	  * @param isHintPointer A pointer that indicates whether hints (true) or normal text (false) is displayed
+	  * @param hintFlag A pointer that indicates whether hints (true) or normal text (false) is displayed
 	  * @return Copy of this factory that uses the specified pointer
 	  */
-	def withIsHintPointer(isHintPointer: Changing[Boolean]) =
-		copy(isHintPointer = isHintPointer)
+	def withHintFlag(hintFlag: Flag) = copy(hintFlag = hintFlag)
+	@deprecated("Replaced with .withHintFlag(Flag)", "v1.6")
+	def withIsHintPointer(isHintPointer: Changing[Boolean]) = withHintFlag(isHintPointer)
 	
 	/**
 	  * Creates a new text label utilizing contextual information
@@ -75,7 +76,7 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
-		val label = new ViewTextLabel[A](parentHierarchy, contentPointer, stylePointer, Always(context.allowTextShrink),
+		val label = new ViewTextLabel[A](hierarchy, contentPointer, stylePointer, Always(context.allowTextShrink),
 			displayFunction, customDrawers)
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
@@ -113,12 +114,13 @@ case class ContextualViewTextLabelFactory(parentHierarchy: ComponentHierarchy, c
 
 /**
   * Used for constructing new view text labels
-  * @param parentHierarchy A component hierarchy the new labels will be placed in
+  * @param hierarchy A component hierarchy the new labels will be placed in
   */
-case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty,
+case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Seq[CustomDrawer] = Empty,
                                 allowsTextToShrink: Boolean = false)
 	extends FromContextFactory[VariableTextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ViewTextLabelFactory] with BackgroundAssignable[ViewTextLabelFactory]
+		with PartOfComponentHierarchy
 {
 	// COMPUTED --------------------------------
 	
@@ -135,7 +137,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 		withCustomDrawer(BackgroundDrawer(background))
 	
 	override def withContext(context: VariableTextContext): ContextualViewTextLabelFactory =
-		ContextualViewTextLabelFactory(parentHierarchy, context, customDrawers)
+		ContextualViewTextLabelFactory(hierarchy, context, customDrawers)
 	
 	
 	// OTHER	--------------------------------
@@ -149,7 +151,7 @@ case class ViewTextLabelFactory(parentHierarchy: ComponentHierarchy, customDrawe
 	  */
 	def apply[A](contentPointer: Changing[A], stylePointer: Changing[TextDrawContext],
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		new ViewTextLabel(parentHierarchy, contentPointer, stylePointer, Fixed(allowsTextToShrink), displayFunction,
+		new ViewTextLabel(hierarchy, contentPointer, stylePointer, Fixed(allowsTextToShrink), displayFunction,
 			customDrawers)
 	
 	/**
@@ -241,7 +243,7 @@ object ViewTextLabel extends Cff[ViewTextLabelFactory]
   * @since 17.10.2020, v0.1
   */
 class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
-                        stylePointer: Changing[TextDrawContext], allowTextShrinkPointer: Changing[Boolean] = AlwaysFalse,
+                        stylePointer: Changing[TextDrawContext], allowTextShrinkFlag: Changing[Boolean] = AlwaysFalse,
                         displayFunction: DisplayFunction[A] = DisplayFunction.raw,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
 	extends ConcreteCustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
@@ -271,14 +273,14 @@ class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val
 		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
 			repaint(Priority.Low)
 	}
-	allowTextShrinkPointer.addListenerWhile(hierarchy.linkedFlag) { _ => revalidate() }
+	allowTextShrinkFlag.addListenerWhile(hierarchy.linkedFlag) { _ => revalidate() }
 	
 	
 	// IMPLEMENTED	-------------------------------------
 	
 	override def measuredText = textPointer.value
 	override def textDrawContext = stylePointer.value
-	override def allowTextShrink: Boolean = allowTextShrinkPointer.value
+	override def allowTextShrink: Boolean = allowTextShrinkFlag.value
 	
 	override def updateLayout() = ()
 }

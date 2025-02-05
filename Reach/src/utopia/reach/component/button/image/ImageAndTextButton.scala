@@ -11,7 +11,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
@@ -20,7 +20,7 @@ import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsLike, ImageLabelSettings}
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -64,7 +64,7 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 	// IMPLEMENTED	--------------------
 	
 	override def customDrawers = labelSettings.customDrawers
-	override def enabledPointer = buttonSettings.enabledPointer
+	override def enabledFlag = buttonSettings.enabledFlag
 	override def focusListeners = buttonSettings.focusListeners
 	override def forceEqualBreadth = labelSettings.forceEqualBreadth
 	override def hotKeys: Set[HotKey] = buttonSettings.hotKeys
@@ -78,8 +78,8 @@ trait ImageAndTextButtonSettingsLike[+Repr]
 		mapLabelSettings { _.withSeparatingMargin(margin) }
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
 		withLabelSettings(labelSettings.withCustomDrawers(drawers))
-	override def withEnabledPointer(p: Changing[Boolean]) =
-		withButtonSettings(buttonSettings.withEnabledPointer(p))
+	override def withEnabledFlag(p: Flag) =
+		withButtonSettings(buttonSettings.withEnabledFlag(p))
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	override def withForceEqualBreadth(force: Boolean) =
@@ -173,10 +173,10 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+case class ContextualImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
                                                settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ContextualImageAndTextButtonFactory]
-		with TextContextualFactory[ContextualImageAndTextButtonFactory]
+		with TextContextualFactory[ContextualImageAndTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------
 	
@@ -251,7 +251,7 @@ case class ContextualImageAndTextButtonFactory(parentHierarchy: ComponentHierarc
 	  */
 	private def _apply(image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString)
 	                  (action: => Unit) =
-		new ImageAndTextButton(parentHierarchy, context, image, text, settings)(action)
+		new ImageAndTextButton(hierarchy, context, image, text, settings)(action)
 }
 
 /**
@@ -286,7 +286,7 @@ object ImageAndTextButton extends ImageAndTextButtonSetup()
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: StaticTextContext,
+class ImageAndTextButton(override val hierarchy: ComponentHierarchy, context: StaticTextContext,
                          image: Either[Either[Image, SingleColorIcon], ButtonImageSet], text: LocalizedString,
                          settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
                         (action: => Unit)
@@ -325,7 +325,7 @@ class ImageAndTextButton(parentHierarchy: ComponentHierarchy, context: StaticTex
 			.mapInsets { _.map { _.mapBoth { _.more } { _ + borderWidth } } }
 		// Prepares the component factory
 		val factory = ImageAndTextLabel(appliedLabelSettings)
-			.withContext(parentHierarchy, context)
+			.withContext(hierarchy, context)
 			// Adds state-based background-drawing
 			.withCustomBackgroundDrawer(
 				ButtonBackgroundViewDrawer(Fixed(context.background), statePointer, Fixed(borderWidth)))

@@ -10,10 +10,10 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.MutableConcreteCustomDrawReachComponent
+import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
 // TODO: Use ImageLabelSettings here
-class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
+case class MutableImageLabelFactory(hierarchy: ComponentHierarchy) extends PartOfComponentHierarchy
 {
 	/**
 	  * Creates a new image label
@@ -27,7 +27,7 @@ class MutableImageLabelFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply(image: Image, insets: StackInsets = StackInsets.zero, alignment: Alignment = Alignment.Center,
 			  allowUpscaling: Boolean = true, useLowPrioritySize: Boolean = false) =
-		new MutableImageLabel(parentHierarchy, image, insets, alignment, allowUpscaling, useLowPrioritySize)
+		new MutableImageLabel(hierarchy, image, insets, alignment, allowUpscaling, useLowPrioritySize)
 }
 
 object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactory]

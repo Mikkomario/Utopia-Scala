@@ -10,7 +10,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
@@ -19,7 +19,7 @@ import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackIns
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
-import utopia.reach.component.template.ReachComponentWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
@@ -47,23 +47,23 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	
 	// IMPLEMENTED  -----------------
 	
-	def enabledPointer = buttonSettings.enabledPointer
+	def enabledFlag = buttonSettings.enabledFlag
 	def hotKeys = buttonSettings.hotKeys
 	def focusListeners = buttonSettings.focusListeners
 	
-	override def isHintPointer: Changing[Boolean] = labelSettings.isHintPointer
+	override def hintFlag = labelSettings.hintFlag
 	override def imageSettings: ViewImageLabelSettings = labelSettings.imageSettings
 	override def separatingMargin: Option[SizeCategory] = labelSettings.separatingMargin
 	override def forceEqualBreadth: Boolean = labelSettings.forceEqualBreadth
 	override def customDrawers: Seq[CustomDrawer] = labelSettings.customDrawers
 	override def insets: UnresolvedStackInsets = labelSettings.insets
 	
-	def withEnabledPointer(p: Changing[Boolean]) = withButtonSettings(buttonSettings.withEnabledPointer(p))
+	def withEnabledFlag(p: Flag) = withButtonSettings(buttonSettings.withEnabledFlag(p))
 	def withFocusListeners(listeners: Seq[FocusListener]) =
 		withButtonSettings(buttonSettings.withFocusListeners(listeners))
 	def withHotKeys(keys: Set[HotKey]) = withButtonSettings(buttonSettings.withHotKeys(keys))
 	
-	override def withIsHintPointer(p: Changing[Boolean]): Repr = mapLabelSettings { _.withIsHintPointer(p) }
+	override def withHintFlag(p: Flag): Repr = mapLabelSettings { _.withHintFlag(p) }
 	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
 		mapLabelSettings { _.withSeparatingMargin(margin) }
 	override def withForceEqualBreadth(force: Boolean): Repr = mapLabelSettings { _.withForceEqualBreadth(force) }
@@ -148,12 +148,12 @@ trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButto
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHierarchy,
+case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy,
                                                    context: VariableTextContext,
                                                    settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
 		with ContextualFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
-		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory]
+		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED ------------------------------
 	
@@ -188,7 +188,7 @@ case class ContextualViewImageAndTextButtonFactory(parentHierarchy: ComponentHie
 	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
 	             displayFunction: DisplayFunction[A] = DisplayFunction.raw)
 	            (action: A => Unit) =
-		new ViewImageAndTextButton[A](parentHierarchy, context, contentPointer, imagesPointer, settings,
+		new ViewImageAndTextButton[A](hierarchy, context, contentPointer, imagesPointer, settings,
 			displayFunction)(action)
 	
 	/**
@@ -308,7 +308,7 @@ object ViewImageAndTextButton extends ViewImageAndTextButtonSetup()
   * @author Mikko Hilpinen
   * @since 10.11.2020, v0.1
   */
-class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, context: VariableTextContext,
+class ViewImageAndTextButton[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                                 contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
                                 settings: ViewImageAndTextButtonSettings,
                                 displayFunction: DisplayFunction[A] = DisplayFunction.raw)
@@ -325,7 +325,7 @@ class ViewImageAndTextButton[A](parentHierarchy: ComponentHierarchy, context: Va
 		
 		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
 		
-		ViewImageAndTextLabel.withContext(parentHierarchy, context).withSettings(appliedLabelSettings)
+		ViewImageAndTextLabel.withContext(hierarchy, context).withSettings(appliedLabelSettings)
 			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)))
 			.apply(contentPointer, imagePointer, displayFunction)
 	}

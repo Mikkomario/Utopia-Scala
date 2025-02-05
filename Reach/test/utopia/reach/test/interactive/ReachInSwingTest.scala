@@ -105,7 +105,7 @@ object ReachInSwingTest extends App
 			println(s"Align frame Mouse: ${event.position.relative}")
 		})
 		
-		canvas.attachmentPointer.addListenerAndSimulateEvent(false) { e =>
+		canvas.linkedFlag.addListenerAndSimulateEvent(false) { e =>
 			if (e.newValue)
 				println("Canvas is now attached")
 			else
