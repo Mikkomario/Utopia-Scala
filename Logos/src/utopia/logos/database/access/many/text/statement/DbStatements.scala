@@ -70,6 +70,27 @@ object DbStatements
 	}
 	
 	/**
+	 * Stores n texts, attaching the stored statements back to these instances
+	 * @param texts Texts to store
+	 * @param extractText A function that extracts the text portion from the stored values
+	 * @param connection Implicit DB connection
+	 * @tparam O Type of stored texts
+	 * @tparam R Type of the resulting / combined models
+	 * @return Copy of the 'texts' sequence, where each item is accompanied by the statements matching that text
+	 */
+	def storeFrom[O, R](texts: Seq[O])(extractText: O => String)(mergeBack: (Seq[StoredStatement], O) => R)
+	                   (implicit connection: Connection) =
+	{
+		val groupedStatements = texts.map { text =>
+			text -> Statement.allFrom(EmojiParser.parseToAliases(extractText(text)))
+		}
+		// Note: Here assumes that stored statements count matches the input
+		val storedStatementsIter = store(groupedStatements.flatMap { _._2 }).iterator.map { _.either }
+		groupedStatements.map { case (text, preparedStatements) =>
+			mergeBack(storedStatementsIter.collectNext(preparedStatements.size), text)
+		}
+	}
+	/**
 	  * Stores the specified text to the database as a sequence of statements.
 	  * Avoids inserting duplicate entries.
 	  * @param text Text to store as statements
