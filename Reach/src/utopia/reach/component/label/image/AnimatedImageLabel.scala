@@ -1,10 +1,12 @@
 package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
-import utopia.firmament.model.stack.modifier.MinOptimalSizeModifier
+import utopia.firmament.context.base.BaseContextPropsView
+import utopia.firmament.model.stack.StackLength
+import utopia.firmament.model.stack.modifier.{MinOptimalSizeModifier, NoShrinkingLengthModifier}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Flag
-import utopia.genesis.handling.action.Actor
+import utopia.genesis.handling.action.{Actor, ActorHandler}
 import utopia.genesis.image.Image
 import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
@@ -17,7 +19,7 @@ import utopia.reach.component.template.ReachComponentWrapper
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
-case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy,
+case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy, context: BaseContextPropsView,
                                      settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                                      loops: Boolean = true)
 	extends ViewImageLabelSettingsWrapper[AnimatedImageLabelFactory]
@@ -47,7 +49,7 @@ case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy,
 	  * @return A new animated label
 	  */
 	def apply(animation: TimedAnimation[Image], transformAnimation: Option[TimedAnimation[Matrix2D]] = None) =
-		new AnimatedImageLabel(hierarchy, animation, transformAnimation, settings, loops)
+		new AnimatedImageLabel(hierarchy, context.actorHandler, animation, transformAnimation, settings, loops)
 	/**
 	  * Creates a new animated label, based on an animated transformation
 	  * @param image Image to draw
@@ -67,32 +69,32 @@ case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy,
 	  */
 	def rotating(image: Image, rotation: TimedAnimation[DirectionalRotation], centerOrigin: Boolean = false) =
 	{
-		val label = transforming(if (centerOrigin) image.withCenterOrigin else image, rotation.map(Matrix2D.rotation))
+		val appliedImage = if (centerOrigin) image.withCenterOrigin else image
+		val label = transforming(appliedImage, rotation.map(Matrix2D.rotation))
 		// Makes it so that the label won't change in size due to the rotation
 		val imageRadius = {
 			if (centerOrigin)
-				image.origin.length
+				appliedImage.origin.length
 			else
-				image.bounds.corners.iterator.map { _.length }.max
+				appliedImage.bounds.corners.iterator.map { _.length }.max
 		}
 		label.addConstraint(MinOptimalSizeModifier(Size.square(imageRadius * 2)))
+		// label.addConstraint(new NoShrinkingLengthModifier(StackLength.any(imageRadius * 2)).symmetric)
 		label
 	}
 }
 
-object AnimatedImageLabel extends Cff[AnimatedImageLabelFactory] with Ccff[Any, AnimatedImageLabelFactory]
+object AnimatedImageLabel extends Ccff[BaseContextPropsView, AnimatedImageLabelFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy): AnimatedImageLabelFactory = AnimatedImageLabelFactory(hierarchy)
-	
-	// Ignores the context
-	override def withContext(hierarchy: ComponentHierarchy, context: Any): AnimatedImageLabelFactory = apply(hierarchy)
+	override def withContext(hierarchy: ComponentHierarchy, context: BaseContextPropsView): AnimatedImageLabelFactory =
+		AnimatedImageLabelFactory(hierarchy, context)
 }
 /**
   * A label that displays an image + transformation -based animation
   * @author Mikko Hilpinen
   * @since 31.01.2025, v1.5.1
   */
-class AnimatedImageLabel(hierarchy: ComponentHierarchy, animation: TimedAnimation[Image],
+class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandler, animation: TimedAnimation[Image],
                          transformAnimation: Option[TimedAnimation[Matrix2D]],
                          settings: ViewImageLabelSettings, looping: Boolean)
 	extends ReachComponentWrapper with ConstrainableWrapper
@@ -114,6 +116,11 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, animation: TimedAnimatio
 	}
 	
 	override protected lazy val wrapped = ViewImageLabel(hierarchy).withSettings(appliedSettings).apply(Animator.imageP)
+	
+	
+	// INITIAL CODE -------------------------
+	
+	actorHandler += Animator
 	
 	
 	// NESTED   -----------------------------

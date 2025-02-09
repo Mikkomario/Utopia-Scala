@@ -13,10 +13,16 @@ import utopia.reach.container.wrapper.Swapper
 case class LoadingOrImageLabelFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                       settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
 	extends ContextualFactory[VariableColorContext, LoadingOrImageLabelFactory] with PartOfComponentHierarchy
+		with ViewImageLabelSettingsWrapper[LoadingOrImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------
 	
+	override def self: LoadingOrImageLabelFactory = this
+	
 	override def withContext(context: VariableColorContext): LoadingOrImageLabelFactory = copy(context = context)
+	override def withSettings(settings: ViewImageLabelSettings): LoadingOrImageLabelFactory = copy(settings = settings)
+	
+	override def *(mod: Double): LoadingOrImageLabelFactory = copy(settings = settings * mod)
 	
 	
 	// OTHER    --------------------------------
@@ -59,7 +65,7 @@ class LoadingOrImageLabel(override val hierarchy: ComponentHierarchy, context: V
 			case Some(loading) =>
 				// Case: Always loading => Only constructs the loading view
 				if (loading)
-					constructLoadingView(AnimatedImageLabel(hierarchy).withSettings(settings))
+					constructLoadingView(AnimatedImageLabel.withContext(hierarchy, context).withSettings(settings))
 				// Case: Never loading => Only constructs an image label
 				else
 					constructImageLabel(ViewImageLabel.withContext(hierarchy, context).withSettings(settings))
