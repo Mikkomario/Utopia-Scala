@@ -32,14 +32,14 @@ case class LoadingOrImageLabelFactory(hierarchy: ComponentHierarchy, context: Va
 	  * @param loadingFlag A flag that contains true while the loading state should be displayed
 	  * @param constructImageLabel A function that receives a prepared image label factory and yields the
 	  *                            image label to wrap
-	  * @param constructLoadingView A function that receives a prepared animation label factory and yields the
+	  * @param loadingLabelConstructor A function that receives a prepared animation label factory and yields the
 	  *                             loading view to wrap
 	  * @return A new label that displays an image or a loading view
 	  */
 	def apply(loadingFlag: Flag)
 	         (constructImageLabel: ContextualViewImageLabelFactory => ReachComponent with Constrainable)
-	         (constructLoadingView: AnimatedImageLabelFactory => ReachComponent with Constrainable) =
-		new LoadingOrImageLabel(hierarchy, context, loadingFlag, settings)(constructImageLabel)(constructLoadingView)
+	         (implicit loadingLabelConstructor: LoadingLabelConstructor) =
+		new LoadingOrImageLabel(hierarchy, context, loadingFlag, settings)(constructImageLabel)
 }
 
 object LoadingOrImageLabel extends Ccff[VariableColorContext, LoadingOrImageLabelFactory]
@@ -56,7 +56,7 @@ object LoadingOrImageLabel extends Ccff[VariableColorContext, LoadingOrImageLabe
 class LoadingOrImageLabel(override val hierarchy: ComponentHierarchy, context: VariableColorContext,
                           val loadingFlag: Flag, settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
                          (constructImageLabel: ContextualViewImageLabelFactory => ReachComponent with Constrainable)
-                         (constructLoadingView: AnimatedImageLabelFactory => ReachComponent with Constrainable)
+                         (implicit loadingLabelConstructor: LoadingLabelConstructor)
 	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	override protected val wrapped: ReachComponent with Constrainable = {
@@ -65,7 +65,7 @@ class LoadingOrImageLabel(override val hierarchy: ComponentHierarchy, context: V
 			case Some(loading) =>
 				// Case: Always loading => Only constructs the loading view
 				if (loading)
-					constructLoadingView(AnimatedImageLabel.withContext(hierarchy, context).withSettings(settings))
+					loadingLabelConstructor(AnimatedImageLabel.withContext(hierarchy, context).withSettings(settings))
 				// Case: Never loading => Only constructs an image label
 				else
 					constructImageLabel(ViewImageLabel.withContext(hierarchy, context).withSettings(settings))
@@ -75,7 +75,7 @@ class LoadingOrImageLabel(override val hierarchy: ComponentHierarchy, context: V
 				Swapper.withContext(hierarchy, context).build(Mixed)
 					.apply(loadingFlag) { (factories, loading) =>
 						if (loading)
-							constructLoadingView(factories(AnimatedImageLabel).withSettings(settings))
+							loadingLabelConstructor(factories(AnimatedImageLabel).withSettings(settings))
 						else
 							constructImageLabel(factories(ViewImageLabel).withSettings(settings))
 					}

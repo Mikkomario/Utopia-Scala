@@ -40,10 +40,21 @@ trait ViewImageAndTextLabelSettingsLike[+Repr] extends ImageAndTextLabelSettings
 	  */
 	def hintFlag: Flag
 	/**
+	  * @return Settings used for setting up a loading state within this label.
+	  *         None if loading is not enabled.
+	  */
+	def loadingSettings: Option[(Flag, LoadingLabelConstructor)]
+	/**
 	  * @param p A pointer that determines whether this is a hint label (true) or a regular label (false)
 	  * @return Copy of this factory that uses the specified hint pointer
 	  */
 	def withHintFlag(p: Flag): Repr
+	/**
+	  * @param loadingFlag Flag that contains true while this label is in "loading" state
+	  * @param loadingConstructor A constructor for creating the loading image view
+	  * @return Copy of this factory using the specified loading flag
+	  */
+	def withLoadingFlag(loadingFlag: Flag)(implicit loadingConstructor: LoadingLabelConstructor): Repr
 	
 	
 	// COMPUTED	--------------------
@@ -161,6 +172,7 @@ case class ViewImageAndTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empt
                                          separatingMargin: Option[SizeCategory] = Some(Small),
                                          insets: UnresolvedStackInsets = sides.symmetric(Left(Medium)),
                                          hintFlag: Flag = AlwaysFalse,
+                                         loadingSettings: Option[(Flag, LoadingLabelConstructor)] = None,
                                          forceEqualBreadth: Boolean = false)
 	extends ViewImageAndTextLabelSettingsLike[ViewImageAndTextLabelSettings]
 {
@@ -174,6 +186,9 @@ case class ViewImageAndTextLabelSettings(customDrawers: Seq[CustomDrawer] = Empt
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ViewImageAndTextLabelSettings =
 		copy(customDrawers = drawers)
 	override def withInsets(insets: UnresolvedStackInsets): ViewImageAndTextLabelSettings = copy(insets = insets)
+	override def withLoadingFlag(loadingFlag: Flag)
+	                            (implicit loadingConstructor: LoadingLabelConstructor): ViewImageAndTextLabelSettings =
+		copy(loadingSettings = Some(loadingFlag -> loadingConstructor))
 	
 	override protected def _withMargins(separatingMargin: Option[SizeCategory],
 	                                    insets: UnresolvedStackInsets): ViewImageAndTextLabelSettings =
@@ -209,6 +224,7 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	override def hintFlag = settings.hintFlag
 	override def separatingMargin: Option[SizeCategory] = settings.separatingMargin
 	override def insets: UnresolvedStackInsets = settings.insets
+	override def loadingSettings: Option[(Flag, LoadingLabelConstructor)] = settings.loadingSettings
 	
 	override def withHintFlag(p: Flag): Repr = mapSettings { _.withHintFlag(p) }
 	override def withSeparatingMargin(margin: Option[SizeCategory]): Repr =
@@ -219,6 +235,8 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	override def withImageSettings(settings: ViewImageLabelSettings) =
 		mapSettings { _.withImageSettings(settings) }
 	override def withInsets(insets: UnresolvedStackInsets): Repr = mapSettings { _.withInsets(insets) }
+	override def withLoadingFlag(loadingFlag: Flag)(implicit loadingConstructor: LoadingLabelConstructor): Repr =
+		mapSettings { _.withLoadingFlag(loadingFlag) }
 	
 	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
 		mapSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
@@ -414,10 +432,20 @@ class ViewImageAndTextLabel[A](override val hierarchy: ComponentHierarchy, conte
 			.withMargin(settings.separatingMargin)
 			.withCustomDrawers(settings.customDrawers)
 			.buildPair(Mixed, textAlignment, forceFitLayout = settings.forceEqualBreadth) { factories =>
-				val imageLabel = factories(ViewImageLabel)
-					.withSettings(settings.imageSettings)
-					.withInsetsPointer(imageInsetsPointer)
-					.iconOrImagePointer(imgPointer)
+				// The image part may support an animated loading label
+				val imageLabel = settings.loadingSettings.filterNot { _._1.isAlwaysFalse } match {
+					// Case: Loading is utilized
+					case Some((loadingFlag, loadingConstructor)) =>
+						factories(LoadingOrImageLabel)
+							.withSettings(settings.imageSettings).withInsetsPointer(imageInsetsPointer)
+							.apply(loadingFlag) { _.iconOrImagePointer(imgPointer) }(loadingConstructor)
+					// Case: Loading is not utilized
+					case None =>
+						factories(ViewImageLabel)
+							.withSettings(settings.imageSettings)
+							.withInsetsPointer(imageInsetsPointer)
+							.iconOrImagePointer(imgPointer)
+				}
 				val textLabel = factories(ViewTextLabel)
 					.apply(itemPointer, displayFunction)
 				Pair(imageLabel, textLabel)

@@ -18,7 +18,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.label.image.{ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
+import utopia.reach.component.label.image.{LoadingLabelConstructor, ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
@@ -45,6 +45,19 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	def withLabelSettings(settings: ViewImageAndTextLabelSettings): Repr
 	
 	
+	// COMPUTED ---------------------
+	
+	/**
+	  * @return Wrapped button settings that take into account a possible loading state's effect on the enabled state.
+	  */
+	def appliedButtonSettings = loadingSettings match {
+		// Case: Loading is enabled => This button is disabled while loading
+		case Some((loadingFlag, _)) => buttonSettings.mapEnabledFlag { _ && !loadingFlag }
+		// Case: Loading not enabled => Applies the default behavior
+		case None => buttonSettings
+	}
+	
+	
 	// IMPLEMENTED  -----------------
 	
 	def enabledFlag = buttonSettings.enabledFlag
@@ -57,6 +70,7 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	override def forceEqualBreadth: Boolean = labelSettings.forceEqualBreadth
 	override def customDrawers: Seq[CustomDrawer] = labelSettings.customDrawers
 	override def insets: UnresolvedStackInsets = labelSettings.insets
+	override def loadingSettings: Option[(Flag, LoadingLabelConstructor)] = labelSettings.loadingSettings
 	
 	def withEnabledFlag(p: Flag) = withButtonSettings(buttonSettings.withEnabledFlag(p))
 	def withFocusListeners(listeners: Seq[FocusListener]) =
@@ -72,6 +86,8 @@ trait ViewImageAndTextButtonSettingsLike[+Repr]
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): Repr =
 		mapLabelSettings { _.withCustomDrawers(drawers) }
 	override def withInsets(insets: UnresolvedStackInsets): Repr = mapLabelSettings { _.withInsets(insets) }
+	override def withLoadingFlag(loadingFlag: Flag)(implicit loadingConstructor: LoadingLabelConstructor): Repr =
+		mapLabelSettings { _.withLoadingFlag(loadingFlag) }
 	
 	override protected def _withMargins(separatingMargin: Option[SizeCategory], insets: UnresolvedStackInsets): Repr =
 		mapLabelSettings { _.copy(separatingMargin = separatingMargin, insets = insets) }
@@ -313,7 +329,7 @@ class ViewImageAndTextButton[A](override val hierarchy: ComponentHierarchy, cont
                                 settings: ViewImageAndTextButtonSettings,
                                 displayFunction: DisplayFunction[A] = DisplayFunction.raw)
                                (action: A => Unit)
-	extends AbstractButton(settings) with ReachComponentWrapper
+	extends AbstractButton(settings.appliedButtonSettings) with ReachComponentWrapper
 {
 	// ATTRIBUTES	-----------------------------
 	

@@ -14,7 +14,8 @@
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
   would not manage the linked flags / attachment states correctly (initially)
 ### New features
-- Added **AnimatedImageLabel** class
+- Added **AnimatedImageLabel** and **LoadingOrImageLabel** classes
+- **ViewImageAndTextLabel**, as well as **ViewImageAndTextButton** now support a loading state
 ### Other changes
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
