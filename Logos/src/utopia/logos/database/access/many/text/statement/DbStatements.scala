@@ -70,6 +70,15 @@ object DbStatements
 	}
 	
 	/**
+	 * Stores n statements which are (to be) linked to a number of texts
+	 * @param texts Texts to insert. Each entry contains 1) text id and 2) text
+	 * @param connection Implicit DB connection
+	 * @return A sequence of text id + statement id pairs. One for each inserted statement.
+	 */
+	def storeLinked(texts: Seq[(Int, String)])(implicit connection: Connection) =
+		storeFrom(texts) { _._2 } { case (statements, (textId, _)) => textId -> statements }
+			.flatMap { case (textId, statements) => statements.map { textId -> _.id } }
+	/**
 	 * Stores n texts, attaching the stored statements back to these instances
 	 * @param texts Texts to store
 	 * @param extractText A function that extracts the text portion from the stored values
