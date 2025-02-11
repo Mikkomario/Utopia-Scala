@@ -1,11 +1,13 @@
 package utopia.echo.model.request.chat.tool
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.util.NotEmpty
+import utopia.flow.util.StringExtensions._
 
 object ToolParameter
 {
@@ -48,12 +50,14 @@ case class ToolParameter(name: String, dataType: String, description: String = "
 	/**
 	  * A constant which represents this parameter and can be included in a function description
 	  */
-	lazy val toConstant = Constant(name,
-		Model.from(
-			"type" -> dataType,
-			"description" -> description,
-			"enum" -> enumValues.notEmpty
-		).withoutEmptyValues)
+	lazy val toConstant = {
+		val builder = OptimizedIndexedSeq.newBuilder[Constant]
+		builder += Constant("type", dataType)
+		description.ifNotEmpty.foreach { desc => builder += Constant("description", desc) }
+		NotEmpty(enumValues).foreach { enums => builder += Constant("enum", enums) }
+		
+		Constant(name, Model.withConstants(builder.result()))
+	}
 	
 	
 	// COMPUTED --------------------------

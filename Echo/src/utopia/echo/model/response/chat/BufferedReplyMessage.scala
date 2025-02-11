@@ -29,8 +29,11 @@ object BufferedReplyMessage
 	  *                      Should include statistical information, also.
 	  * @return A message read from the specified model
 	  */
-	def fromOllamaResponse(responseModel: Model) =
-		apply(ChatMessage.parseFrom(responseModel, Assistant), ResponseStatistics.fromOllamaResponse(responseModel))
+	def fromOllamaResponse(responseModel: Model) = {
+		// TODO: Add logging or return failure for invalid messages
+		apply(ChatMessage.parseFrom(responseModel("message").getModel, Assistant),
+			ResponseStatistics.fromOllamaResponse(responseModel))
+	}
 }
 
 /**

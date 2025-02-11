@@ -77,7 +77,7 @@ trait Tool extends ModelConvertible
 		Model.from(
 			"type" -> "function",
 			"function" -> Model.from(
-				"name" -> "name",
+				"name" -> name,
 				"description" -> description,
 				"parameters" -> paramsPart
 			).withoutEmptyValues

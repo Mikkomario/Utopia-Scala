@@ -1,6 +1,9 @@
 # Utopia Echo - List of Changes
 
 ## v1.2.1 (in development)
+### Bugfixes
+- **BufferedReplyMessage** parsing was previously bugged
+- **Tool** names were previously missing from the Ollama requests
 ### New methods
 - **OllamaClient**
   - Added `.bufferedResponseFor(...)`, a utility function for performing a **GenerateBuffered** request
