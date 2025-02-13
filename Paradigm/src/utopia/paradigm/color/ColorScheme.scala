@@ -53,7 +53,7 @@ object ColorScheme
   * @param default Default colors to use when no other color is specified
   * @param colors Defined color values
   */
-case class ColorScheme(default: ColorSet, colors: Map[ColorRole, ColorSet])
+case class ColorScheme(default: ColorSet, colors: Map[ColorRole, ColorSet]) extends FromColorRoleFactory[ColorSet]
 {
 	// ATTRIBUTES	--------------------------
 	
@@ -70,48 +70,18 @@ case class ColorScheme(default: ColorSet, colors: Map[ColorRole, ColorSet])
 	  */
 	def definedRoles = colors.keySet
 	
-	/**
-	  * @return Gray colors available
-	  */
-	def gray = apply(Gray)
 	
-	def primary = apply(Primary)
-	/**
-	  * @return Color to use as secondary standard color
-	  */
-	def secondary = apply(Secondary)
-	/**
-	  * @return Color to use as tertiary standard color
-	  */
-	def tertiary = apply(Tertiary)
-	
-	/**
-	  * @return Color to use in error situations
-	  */
-	def failure = apply(Failure)
-	/**
-	  * @return Color to use when displaying warnings
-	  */
-	def warning = apply(Warning)
-	
-	/**
-	  * @return Color to use when displaying a success state
-	  */
-	def success = apply(Success)
-	/**
-	  * @return Color to use when displaying an info state
-	  */
-	def info = apply(Info)
-	
-	
-	// OTHER	------------------------------
+	// IMPLEMENTED  -------------------------
 	
 	/**
 	  * @param role A color role
 	  * @return A color in this set that should be used for that role
 	  */
-	def apply(role: ColorRole): ColorSet =
+	override def apply(role: ColorRole): ColorSet =
 		(Iterator.single(role) ++ role.alternativesIterator).findMap(colors.get).getOrElse(default)
+	
+	
+	// OTHER	------------------------------
 	
 	/**
 	  * @param color An additional color specification

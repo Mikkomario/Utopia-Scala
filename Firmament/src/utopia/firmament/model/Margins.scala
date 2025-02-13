@@ -1,5 +1,6 @@
 package utopia.firmament.model
 
+import utopia.firmament.factory.FromSizeCategoryFactory
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Small, VerySmall}
 import utopia.firmament.model.stack.StackLength
@@ -26,22 +27,23 @@ object Margins
   *                   such as the medium and the large margin.
   *                   Default = Decrease by 38.2%, increase by 61.8%
   */
-case class Margins(medium: Double, adjustment: Adjustment = Adjustment(0.382)) extends LinearScalable[Margins]
+case class Margins(override val medium: Double, adjustment: Adjustment = Adjustment(0.382))
+	extends LinearScalable[Margins] with FromSizeCategoryFactory[Double]
 {
 	// ATTRIBUTES   ----------------------------
 	
 	/**
 	  * @return A smaller version of margin
 	  */
-	val small = apply(Small)
+	override val small = apply(Small)
 	/**
 	  * @return A very small version of margin
 	  */
-	val verySmall = apply(VerySmall)
+	override val verySmall = apply(VerySmall)
 	/**
 	  * @return A large version of margin
 	  */
-	val large = apply(Large)
+	override val large = apply(Large)
 	
 	lazy val smallOrSmaller = StackLength(0, small, small)
 	lazy val verySmallOrNone = StackLength(0, verySmall, verySmall)
@@ -71,16 +73,17 @@ case class Margins(medium: Double, adjustment: Adjustment = Adjustment(0.382)) e
 	
 	override def self: Margins = this
 	
+	/**
+	  * @param size Targeted margin size level
+	  * @return Margin of that level
+	  */
+	override def apply(size: SizeCategory) = (medium * adjustment(size.impact)).round.toDouble
+	
 	override def *(mod: Double): Margins = copy(medium = (medium * mod).round.toDouble)
 	
 	
 	// OTHER    ------------------------------
 	
-	/**
-	  * @param size Targeted margin size level
-	  * @return Margin of that level
-	  */
-	def apply(size: SizeCategory) = (medium * adjustment(size.impact)).round.toDouble
 	/**
 	  * @param optimal The optimal margin level
 	  * @return Margin of that level, or smaller

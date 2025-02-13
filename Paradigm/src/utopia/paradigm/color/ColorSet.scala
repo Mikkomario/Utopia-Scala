@@ -86,48 +86,21 @@ object ColorSet
   * @param default The default color
   * @param variants Variants of the default color
   */
-case class ColorSet(default: Color, variants: Map[ColorShade, Color])
+case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends FromShadeFactory[Color]
 {
 	import ColorSet.defaultMinimumContrast
 	
-	// COMPUTED	----------------------------
+	// ATTRIBUTES   ------------------------
 	
 	/**
-	  * @return A lighter variant of this color
+	  * @return Color options in this setting in no specific order
 	  */
-	def light = variants.getOrElse(Light, default)
-	/**
-	  * @return A darker variant of this color
-	  */
-	def dark = variants.getOrElse(Dark, default)
+	lazy val values = Single(default) ++ variants.valuesIterator
 	
-	/**
-	  * @return Color options in this setin no specific order
-	  */
-	def values = Single(default) ++ variants.valuesIterator
 	
-	/*
-	  * @param context Color context
-	  * @return A color from this set most suited for that context (preferring default shade)
-	  */
-	// def inContext(implicit context: ColorContextLike) = forBackground(context.containerBackground)
+	// IMPLEMENTED  ------------------------
 	
-	/*
-	  * @param context Color context
-	  * @return A color from this set most suited for that context (preferring light shade)
-	  */
-	/*
-	def lightInContext(implicit context: ColorContextLike) =
-		forBackgroundPreferringLight(context.containerBackground)
-	 */
-	/*
-	  * @param context Color context
-	  * @return A color from this set most suited for that context (preferring dark shade)
-	  */
-	/*
-	def darkInContext(implicit context: ColorContextLike) =
-		forBackgroundPreferringDark(context.containerBackground)
-	*/
+	override def apply(shade: ColorShade): Color = variants.getOrElse(shade, default)
 	
 	
 	// OTHER	----------------------------
@@ -136,18 +109,10 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color])
 	  * @param shade Target color shade
 	  * @return A color from this set that matches that shade
 	  */
-	def apply(shade: ColorLevel) = shade match {
+	def apply(shade: ColorLevel): Color = shade match {
 		case Standard => default
-		case variant: ColorShade => variants.getOrElse(variant, default)
+		case variant: ColorShade => apply(variant)
 	}
-	
-	/*
-	  * @param shade   Preferred color shade
-	  * @param context Component color context
-	  * @return A color from this set most suited for that context, preferring the specified shade
-	  */
-	// def inContextPreferring(shade: ColorShade)(implicit context: ColorContextLike) =
-	//	forBackgroundPreferring(context.containerBackground, shade)
 	
 	/**
 	  * Picks the color in this set that is suitable for the specified background color

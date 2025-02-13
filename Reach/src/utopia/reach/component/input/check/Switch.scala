@@ -304,6 +304,7 @@ object Switch extends SwitchSetup()
   * @author Mikko Hilpinen
   * @since 19.11.2020, v0.1
   */
+// TODO: Utilize ProgressAnimator and possibly SliderSettings
 class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger),

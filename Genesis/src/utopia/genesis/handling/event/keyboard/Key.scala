@@ -1,6 +1,6 @@
 package utopia.genesis.handling.event.keyboard
 
-import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
@@ -227,6 +227,17 @@ object Key
 		override def index = java.awt.event.KeyEvent.getExtendedKeyCodeForChar(char)
 	}
 	
+	object DigitKey
+	{
+		/**
+		  * All regular digit keys
+		  */
+		lazy val values = (0 to 9).map { d => apply(d.toByte) }
+		/**
+		  * All digit keys, including numpad keys
+		  */
+		lazy val valuesIncludingNumpad = values.flatMap { k => Pair(k, k.onNumpad) }
+	}
 	case class DigitKey(digit: Byte) extends CharKey
 	{
 		// CHECKS   --------------------------

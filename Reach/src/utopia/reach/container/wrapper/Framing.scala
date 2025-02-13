@@ -5,9 +5,9 @@ import utopia.firmament.context.base.{BaseContextCopyable, BaseContextPropsView}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory, RoundedBackgroundDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.RoundedBackgroundViewDrawer
-import utopia.firmament.factory.VariableFramedFactory
+import utopia.firmament.factory.{FromSizeCategoryFactory, VariableFramedFactory}
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
+import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.EitherExtensions._
@@ -123,32 +123,13 @@ case class ContextualFramingFactory[N <: BaseContextPropsView](hierarchy: Compon
 	extends FramingFactoryLike[ContextualFramingFactory[N]]
 		with ContextualWrapperContainerFactory[N, BaseContextPropsView, Framing, ReachComponent, ContextualFramingFactory]
 		with ContextualFramedFactory[ContextualFramingFactory[N]]
+		with FromSizeCategoryFactory[ContextualFramingFactory[N]]
 {
 	// ATTRIBUTES   ------------------------
 	
 	override lazy val insetsPointer: Changing[StackInsets] = customInsets.rightOrMap { sizePointer =>
 		context.scaledStackMarginPointer(sizePointer).map { _.toInsets }
 	}
-	
-	
-	// COMPUTED ----------------------------
-	
-	/**
-	  * @return Copy of this factory that places very small insets
-	  */
-	def verySmall = withInsets(VerySmall)
-	/**
-	  * @return Copy of this factory that places small insets
-	  */
-	def small = withInsets(Small)
-	/**
-	  * @return Copy of this factory that places large insets
-	  */
-	def large = withInsets(Large)
-	/**
-	  * @return Copy of this factory that places very large insets
-	  */
-	def veryLarge = withInsets(VeryLarge)
 	
 	
 	// IMPLEMENTED	------------------------
@@ -161,6 +142,8 @@ case class ContextualFramingFactory[N <: BaseContextPropsView](hierarchy: Compon
 	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualFramingFactory[N] =
 		copy(customDrawers = drawers)
+	
+	override def apply(size: SizeCategory): ContextualFramingFactory[N] = withInsets(size)
 	
 	override def withInsets(insetSize: SizeCategory) =
 		copy(customInsets = Left(Fixed(insetSize)))

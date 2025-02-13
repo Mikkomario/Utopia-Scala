@@ -1,7 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{Filter, RejectAll}
-import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, CharKey, Control, DownArrow, LeftArrow, RightArrow, Shift, UpArrow}
+import utopia.genesis.handling.event.keyboard.Key._
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D, HorizontalDirection, VerticalDirection}
 
@@ -49,6 +49,11 @@ object KeyEvent
 		def anyArrow = apply(ArrowKey.values.toSet)
 		
 		/**
+		  * @return An item that accepts digit key -related events
+		  */
+		def anyDigit = digitRange(0, 9)
+		
+		/**
 		  * An item that only applies while the control key (at any location) is down
 		  */
 		def whileControlDown = whileKeyDown(Control)
@@ -94,6 +99,23 @@ object KeyEvent
 		  * @return An item that only accepts events concerning the specified character-keys
 		  */
 		def chars(char1: Char, char2: Char, moreChars: Char*): A = chars(Set(char1, char2) ++ moreChars)
+		
+		/**
+		  * @param digit A digit
+		  * @return An item that only accepts events concerning that digit key
+		  */
+		def digit(digit: Byte) = apply(DigitKey(digit))
+		/**
+		  * @param digits n Digits
+		  * @return An item that only accepts events concerning those digit keys
+		  */
+		def digits(digits: IterableOnce[Byte]) = apply(digits.iterator.map(DigitKey.apply))
+		/**
+		  * @param min Smallest accepted digit
+		  * @param max Largest accepted digit
+		  * @return An item that only accepts events concerning digits within the specified range
+		  */
+		def digitRange(min: Byte, max: Byte): A = digits((min to max).iterator.map { _.toByte })
 		
 		/**
 		  * @param direction Arrow key direction
@@ -205,6 +227,12 @@ trait KeyEvent
 	 *         None if the change didn't affect an arrow key.
 	 */
 	def arrow = ArrowKey(index).map { _.direction }
+	
+	/**
+	  * @return The digit which this event concerns.
+	  *         Note: Doesn't recognize numpad keys.
+	  */
+	def digit = DigitKey.values.find { _.index == index }.map { _.digit }
 	
 	@deprecated("Please use .keyboardState instead", "v4.0")
 	def keyStatus = keyboardState

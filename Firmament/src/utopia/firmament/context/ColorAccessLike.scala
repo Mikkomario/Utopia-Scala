@@ -1,8 +1,6 @@
 package utopia.firmament.context
 
-import utopia.paradigm.color.ColorRole._
-import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
+import utopia.paradigm.color._
 
 /**
   * Common trait for access point to contextual colors
@@ -11,7 +9,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
   * @author Mikko Hilpinen
   * @since 27.09.2024, v1.4
   */
-trait ColorAccessLike[+C, +Repr]
+trait ColorAccessLike[+C, +Repr] extends FromColorRoleFactory[C] with FromShadeFactory[Repr]
 {
 	// ABSTRACT --------------------------
 	
@@ -41,11 +39,6 @@ trait ColorAccessLike[+C, +Repr]
 	def apply(color: ColorSet): C
 	/**
 	  * @param role A color role
-	  * @return Color to use for that role in this context
-	  */
-	def apply(role: ColorRole): C
-	/**
-	  * @param role A color role
 	  * @param competingColor A color the resulting color should not resemble
 	  * @param moreColors More excluded colors
 	  * @return A color of the specified role that is as different as possible
@@ -54,49 +47,7 @@ trait ColorAccessLike[+C, +Repr]
 	def differentFrom(role: ColorRole, competingColor: Color, moreColors: Color*): C
 	
 	
-	// COMPUTED -------------------------
+	// IMPLEMENTED  ---------------------
 	
-	/**
-	  * @return Access to light colors
-	  */
-	def light = preferring(Light)
-	/**
-	  * @return Access to dark colors
-	  */
-	def dark = preferring(Dark)
-	
-	/**
-	  * @return Gray color to use
-	  */
-	def gray = apply(Gray)
-	
-	/**
-	  * @return Primary color to use
-	  */
-	def primary = apply(Primary)
-	/**
-	  * @return Secondary color to use
-	  */
-	def secondary = apply(Secondary)
-	/**
-	  * @return Tertiary color to use
-	  */
-	def tertiary = apply(Tertiary)
-	
-	/**
-	  * @return Color to use to represent success
-	  */
-	def success = apply(Success)
-	/**
-	  * @return Color to use to represent an error situation or a failure
-	  */
-	def failure = apply(Failure)
-	/**
-	  * @return Color to use to represent a warning or danger
-	  */
-	def warning = apply(Warning)
-	/**
-	  * @return Color to use to represent additional information or notifications
-	  */
-	def info = apply(Info)
+	override def apply(shade: ColorShade): Repr = preferring(shade)
 }

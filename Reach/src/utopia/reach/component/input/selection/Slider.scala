@@ -452,6 +452,7 @@ object Slider extends SliderSetup()
   * @author Mikko Hilpinen
   * @since 16.08.2024, v1.4
   */
+// TODO: Refactor to accept settings. Also, utilize ProgressBarSettings. However, this requires support for variable color context.
 class Slider[A](override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, initialValue: A,
                 stackWidth: StackLength, optimalKnobDiameter: Double,
                 colorFunction: Either[SliderColors, Either[Double => SliderColors, A => SliderColors]],
@@ -521,6 +522,7 @@ class Slider[A](override val hierarchy: ComponentHierarchy, actorHandler: ActorH
 	}
 	
 	// Used for directing the animator to visualize progress changes
+	// TODO: Refactor to use ProgressAnimator
 	private val animatorInstructionPointer = progressPointer.incrementalMap(AnimatorInstruction.fixed) { (_, event) =>
 		// Case: The change in progress is so small that no animation is needed
 		if (draggingFlag.isSet || keyDownFlag.isSet || event.values.merge { _ - _ }.abs < maxJumpProgressPointer.value)

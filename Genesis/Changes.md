@@ -2,6 +2,11 @@
 
 ## v4.2.1 (in development)
 Supports **Flow v2.6**
+### New methods
+- Key event listeners can now target digit keys, specifically
+### New methods
+- **DigitKey** (object)
+  - Added `.values` and `.valuesIncludingNumpad`
 
 ## v4.2 - 23.01.2025
 This update largely modifies how the **Image** interface is implemented. 

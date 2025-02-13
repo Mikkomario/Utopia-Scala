@@ -16,6 +16,11 @@
 ### New features
 - Added **AnimatedImageLabel** and **LoadingOrImageLabel** classes
 - **ViewImageAndTextLabel**, as well as **ViewImageAndTextButton** now support a loading state
+- Added **LoadingBar** and **ProgressBar** components
+- Added **ProgressAnimator** object for facilitating animated progress changes
+### New methods
+- **ConcreteReachComponent**
+  - Added `.widthPointer` and `.heightPointer`
 ### Other changes
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated

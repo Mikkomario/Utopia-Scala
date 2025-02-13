@@ -83,5 +83,5 @@ case class KeyTypedEvent(typedChar: Char, index: Int, keyboardState: KeyboardSta
 	/**
 	  * @return The digit typed, if the typed character was a digit. None otherwise.
 	  */
-	def digit = if (typedChar.isDigit) Some(typedChar.asDigit) else None
+	override def digit = if (typedChar.isDigit) Some(typedChar.asDigit.toByte) else None
 }

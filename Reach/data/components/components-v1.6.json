@@ -508,6 +508,109 @@
           ]
         }
       ],
+      "visualization": [
+        {
+          "name": "Bar",
+          "context": "color-variable",
+          "only_contextual": true,
+          "props": [
+            {
+              "name": "colorRolePointer",
+              "param": "p",
+              "type": "p[cRole]",
+              "default": {
+                "code": "Fixed(ColorRole.Secondary)",
+                "references": ["cRole", "fixed"]
+              },
+              "doc": "A pointer that contains the primary color of this bar",
+              "map": true
+            },
+            {
+              "name": "customColorsPointer",
+              "param": "p",
+              "type": "Option[p[pair[color]]]",
+              "default": "None",
+              "doc": "If specified, overrides this bar's active & inactive colors"
+            },
+            {
+              "name": "height",
+              "param": "height",
+              "type": "sizeC",
+              "default": {
+                "code": "SizeCategory.Medium",
+                "ref": "sizeC"
+              },
+              "map": true,
+              "doc": "General height of this bar"
+            },
+            {
+              "name": "activeToInactiveHeightRatio",
+              "param": "ratio",
+              "type": "Double",
+              "default": 1.0,
+              "doc": "The ratio between the heights of this bar's active and inactive parts (as active/inactive). \nIf 1.0, both sides are the same height. Should always be >= 1."
+            },
+            {
+              "name": "rounds",
+              "param": "round",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the ends of this bar should be rounded (true) or rectangular (false)."
+            }
+          ]
+        },
+        {
+          "name": "LoadingBar",
+          "context": "color-variable",
+          "only_contextual": true,
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "ref": "Bar",
+              "prefix": "bar",
+              "prefix_properties": false
+            }
+          ]
+        },
+        {
+          "name": "ProgressBar",
+          "context": "color-variable",
+          "parents": ["customDrawable"],
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "Bar",
+              "prefix": "bar",
+              "prefix_properties": false
+            },
+            {
+              "name": "colorFunction",
+              "param": "f",
+              "type": "Option[(Double, Color) => pair[color]]",
+              "default": "None",
+              "doc": "A custom function which converts a progress value [0,1], plus a background color, to bar colors (left & right)."
+            },
+            {
+              "name": "animationDuration",
+              "param": "duration",
+              "type": "duration",
+              "default": {
+                "code": "0.2.seconds",
+                "ref": "times"
+              },
+              "map": true,
+              "doc": "The amount of time it takes for an individual transition animation to complete"
+            },
+            {
+              "name": "maxJumpWithoutAnimation",
+              "param": "maxJump",
+              "type": "Double",
+              "default": "2.0",
+              "doc": "Maximum distance the knob may \"jump\" without an animated transition"
+            }
+          ]
+        }
+      ],
       "input": [
         {
           "name": "Field",

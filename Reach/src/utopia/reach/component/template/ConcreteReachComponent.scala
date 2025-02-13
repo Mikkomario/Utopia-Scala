@@ -20,6 +20,14 @@ trait ConcreteReachComponent extends ReachComponent with CachingStackable
 	override val boundsPointer = EventfulPointer(Bounds.zero)
 	override lazy val positionPointer = boundsPointer.lightMap { _.position }
 	override lazy val sizePointer = boundsPointer.lightMap { _.size }
+	/**
+	  * A pointer that contains the current width of this component
+	  */
+	lazy val widthPointer = sizePointer.lightMap { _.width }
+	/**
+	  * A pointer that contains the current height of this component
+	  */
+	lazy val heightPointer = sizePointer.lightMap { _.height }
 	
 	override lazy val mouseButtonHandler = MouseButtonStateHandler()
 	override lazy val mouseMoveHandler = MouseMoveHandler()
