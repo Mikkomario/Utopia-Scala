@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.async.Volatile
 
 /**
   * Common abstract class for pointer that behave differently while they are being listened to,
@@ -17,8 +17,8 @@ abstract class OptimizedChanging[A]
 {
 	// ATTRIBUTES   -------------------------
 	
-	// Stores the listeners in a pointer, because this mirror functions differently while there are listeners assigned
-	private val listenersPointer = EventfulPointer[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
+	// Stores the listeners in a pointer, because this pointer functions differently while there are listeners assigned
+	private val listenersPointer = Volatile.eventful[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */

@@ -104,7 +104,6 @@ trait ConditionElement
 		else
 			Condition(toSqlSegment + "BETWEEN" + min.toSqlSegment + "AND" + max.toSqlSegment)
 	}
-	
 	/**
 	  * @param minMax Minimum and maximum allowed values (inclusive), as a pair
 	  * @return A condition that returns true if the tested value is

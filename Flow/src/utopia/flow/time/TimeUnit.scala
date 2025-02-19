@@ -12,6 +12,7 @@ import java.util.concurrent
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 /**
   * An advanced version of Java's TimeUnit enumeration
@@ -84,14 +85,20 @@ sealed trait TimeUnit extends SelfComparable[TimeUnit] with Steppable[TimeUnit]
 		// Checks whether this unit is too inaccurate to exactly represent the specified value
 		val (multiplier, jUnit) = toJava
 		val multipliedCount = count * multiplier
-		val scale = BigDecimal.decimal(multipliedCount).scale
-		// Case: This unit is accurate enough (i.e. no decimal places are being used)
-		if (scale <= 0 || isMin)
-			FiniteDuration(multipliedCount.toLong, jUnit)
-		// Case: This unit is too inaccurate => Represents the specified number in a smaller unit (recursive)
-		else {
-			val smaller = less
-			smaller.apply(count * toModifier(smaller))
+		Try { BigDecimal.decimal(multipliedCount).scale } match {
+			case Success(scale) =>
+				// Case: This unit is accurate enough (i.e. no decimal places are being used)
+				if (scale <= 0 || isMin)
+					FiniteDuration(multipliedCount.toLong, jUnit)
+				// Case: This unit is too inaccurate => Represents the specified number in a smaller unit (recursive)
+				else {
+					val smaller = less
+					smaller.apply(count * toModifier(smaller))
+				}
+			// TODO: Add better logging
+			case Failure(error) =>
+				error.printStackTrace()
+				FiniteDuration(multipliedCount.toLong, jUnit)
 		}
 	}
 	

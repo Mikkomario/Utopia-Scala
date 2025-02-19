@@ -312,7 +312,7 @@ trait Changing[+A] extends View[A]
 		// Case: There is a possibility that this pointer will mutate => Starts waiting for the next change event
 		if (mayChange) {
 			val promise = Promise[ChangeEvent[A]]()
-			onNextChange(promise.success)
+			onNextChange(promise.trySuccess)
 			promise.future
 		}
 		// Case: It's impossible for this pointer to change anymore => Returns a future that never resolves

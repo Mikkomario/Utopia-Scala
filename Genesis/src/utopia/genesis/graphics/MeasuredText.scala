@@ -65,6 +65,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 					else {
 						// Measures the width of all parts of this line
 						val parts = line.split(Regex.whiteSpace).map { s => s -> context.widthOf(s) }
+						val viewParts = parts.view
 						val whiteSpaceWidth = context.widthOf(' ')
 						
 						val resultBuilder = new VectorBuilder[String]()
@@ -73,14 +74,18 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 						// Assigns each sequence of parts into a line
 						while (nextStartIndex < parts.size) {
 							// Takes the maximum number of words until the threshold is met
-							val takeCount = parts.drop(nextStartIndex + 1)
+							val takeCount = viewParts.drop(nextStartIndex + 1)
 								// 1: Total width, 2: Number of parts included
 								.foldLeftIterator(parts(nextStartIndex)._2 -> 1) { case ((width, takeCount), (_, partWidth)) =>
 									// Includes a whitespace between consecutive parts
 									(width + whiteSpaceWidth + partWidth) -> (takeCount + 1)
 								}
 								.takeWhile { _._1 <= t }
-								.last._2
+								.lastOption match
+							{
+								case Some((_, takeCount)) => takeCount
+								case None => 1
+							}
 							resultBuilder += parts.slice(nextStartIndex, nextStartIndex + takeCount)
 								.iterator.map { _._1 }.mkString(" ")
 							// Moves to the next sequence

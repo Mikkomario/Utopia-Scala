@@ -9,6 +9,8 @@
 - **MultiLazyLike** now requires the implementation of `def existingCacheFor(key: K): Option[P]`
 ### Deprecations
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
+### Bugfixes
+- **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 ### New features
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
@@ -26,6 +28,7 @@
   that were previously vulnerable to asynchronous state changes.
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
+- Number-to-time conversion now catches for number format exceptions
 - Changed **Pair**'s `.toString` implementation
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**

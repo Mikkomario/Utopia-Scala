@@ -172,9 +172,14 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  * @return The duration it takes to stop when specified acceleration is applied consistently.
 	  *         May be infinite.
 	  */
-	def durationUntilStopWith(acceleration: LinearAcceleration) =
-		if (isZero) Duration.Zero else if (acceleration.sign != sign.opposite) Duration.Inf else
+	def durationUntilStopWith(acceleration: LinearAcceleration) = {
+		if (isZero)
+			Duration.Zero
+		else if (acceleration.sign != sign.opposite)
+			Duration.Inf
+		else
 			(perMilliSecond / acceleration.perMilliSecond.perMilliSecond).abs.millis
+	}
 	
 	/**
 	  * Calculates amount of transition over a period of time when consistent acceleration is also applied

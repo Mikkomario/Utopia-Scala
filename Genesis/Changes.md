@@ -2,6 +2,8 @@
 
 ## v4.2.1 (in development)
 Supports **Flow v2.6**
+### Bugfixes
+- **MeasuredText** would previously throw if line split -threshold was smaller than the width of a single word
 ### New methods
 - Key event listeners can now target digit keys, specifically
 ### New methods
