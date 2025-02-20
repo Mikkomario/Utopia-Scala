@@ -18,22 +18,19 @@ object BasicJsonValueConverter extends ValueConverter[String]
 	override val supportedTypes = HashSet(StringType, VectorType, ModelType, IntType, DoubleType,
 		FloatType, LongType, BooleanType, InstantType)
 	
-	override def apply(value: Value, dataType: DataType) =
-	{
-		dataType match {
-			case StringType =>
-				s"\"${ value.getString
-					.escapeBackSlashes
-					.replace("\"", "\\\"")
-					.replace("\n", "\\n")
-				}\""
-			case VectorType => s"[${ value.getVector.map { _.toJson }.mkString(", ") }]"
-			case ModelType => value.getModel.toJson
-			// Handles instant type separately to format it correctly
-			case InstantType => s"\"${ value.getString }\""
-			// Same treatment is given to dates
-			case LocalDateType => s"\"${ value.getString }\""
-			case _ => value.getString
-		}
+	override def apply(value: Value, dataType: DataType) = dataType match {
+		case StringType =>
+			s"\"${ value.getString
+				.escapeBackSlashes
+				.replace("\"", "\\\"")
+				.replace("\n", "\\n")
+			}\""
+		case VectorType => s"[${ value.getVector.map { _.toJson }.mkString(", ") }]"
+		case ModelType => value.getModel.toJson
+		// Handles instant type separately to format it correctly
+		case InstantType => s"\"${ value.getString }\""
+		// Same treatment is given to dates
+		case LocalDateType => s"\"${ value.getString }\""
+		case _ => value.getString
 	}
 }

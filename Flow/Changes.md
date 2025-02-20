@@ -10,6 +10,7 @@
 ### Deprecations
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
+- Fixed **OptimizedMirror**'s change event generation when listening resumes.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 ### New features
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively

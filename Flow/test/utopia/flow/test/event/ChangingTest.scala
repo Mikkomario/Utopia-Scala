@@ -365,5 +365,54 @@ object ChangingTest extends App
 	assert(divided.lastUpdatedSidePointer.destiny == Sealed)
 	assert(divided.lastUpdatedPointerPointer.destiny == Sealed)
 	
+	// Tests viewWhile
+	private val vo = Pointer.eventful(1)
+	private val viewing = ResettableFlag(initialValue = true)
+	private val v = vo.viewWhile(viewing)
+	private var lastViewEvent = -1
+	v.addListener { e => lastViewEvent = e.newValue }
+	
+	assert(v.value == 1)
+	
+	vo.value = 2
+	
+	assert(v.value == 2)
+	assert(lastViewEvent == 2)
+	
+	vo.value = 3
+	
+	assert(v.value == 3)
+	assert(lastViewEvent == 3)
+	
+	viewing.reset()
+	
+	vo.value = 4
+	
+	assert(v.value == 3)
+	assert(lastViewEvent == 3)
+	
+	vo.value = 5
+	
+	assert(v.value == 3)
+	assert(lastViewEvent == 3)
+	
+	viewing.set()
+	
+	assert(v.value == 5)
+	assert(lastViewEvent == 5)
+	
+	vo.value = 6
+	
+	assert(v.value == 6)
+	assert(lastViewEvent == 6)
+	
+	viewing.reset()
+	
+	vo.value = 1
+	
+	assert(v.value == 6)
+	assert(lastViewEvent == 6)
+	
+	
 	println("Done!")
 }

@@ -3,7 +3,10 @@ package utopia.flow.view.immutable.eventful
 import utopia.flow.event.model.{ChangeResponse, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
+
+import scala.util.Try
 
 object OptimizedMirror
 {
@@ -70,8 +73,13 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 	// Whenever stops listening to the origin pointer,
 	// stores the last known value, so that it may be used as a placeholder
 	condition.addListenerAndSimulateEvent(true) { event =>
-		if (event.newValue)
+		// Case: Mirroring continues => Clears the placeholder value and fires a change event, if necessary
+		if (event.newValue) {
+			val oldPlaceholder = placeholder
 			placeholder = None
+			oldPlaceholder.foreach { p => fireEventIfNecessary(oldValue = p).foreach { a => Try { a() }.log } }
+		}
+		// Case: Mirroring stops => Prepares to return the last value until mirroring is enabled again
 		else
 			placeholder = Some(f(origin.value))
 			
@@ -83,6 +91,7 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 		declareChangingStopped()
 		bridge.detach()
 	}
+	// Checks if mirroring should be permanently disabled
 	onceSourceStopsAt(condition, false) {
 		declareChangingStopped()
 		bridge.detach()
