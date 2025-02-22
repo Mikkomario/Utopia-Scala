@@ -3,6 +3,7 @@ package utopia.logos.database.access.many.text.statement
 import com.vdurmont.emoji.EmojiParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.operator.Identity
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters

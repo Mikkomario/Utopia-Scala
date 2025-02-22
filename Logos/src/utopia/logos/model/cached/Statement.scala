@@ -1,7 +1,7 @@
 package utopia.logos.model.cached
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
@@ -18,11 +18,51 @@ object Statement
 	private val _delimiter = 2
 	private val _word = 3
 	
-	private lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
+	/**
+	 * A regular expression for separating words from each other
+	 */
+	lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
+	
+	/**
+	 * An empty statement
+	 */
+	lazy val empty = apply(Empty)
 	
 	
 	// OTHER    ----------------------------
 	
+	/**
+	 * Converts a statement string into a statement instance.
+	 * Only expects a singular statement. Won't split into multiple, even if delimiters are found.
+	 * @param statement A statement string
+	 * @return A statement from the specified string
+	 */
+	def singleFrom(statement: String) = {
+		if (statement.isEmpty)
+			empty
+		else {
+			// Checks for links
+			val parts = Link.regex.divide(statement)
+			val (lastPart, delimiter) = parts.last match {
+				case Left(text) =>
+					val (textPart, delimiter) = Delimiter.anyDelimiterRegex.rangesIteratorIn(text)
+						.lastOption.filter { _.end == text.length } match
+					{
+						case Some(delimiterRange) =>
+							text.take(delimiterRange.start) -> text.slice(delimiterRange)
+						case None => text -> ""
+					}
+					textPart.split(wordSplitRegex).map(WordOrLink.word) -> delimiter
+				
+				case Right(link) => Single(WordOrLink.link(link)) -> ""
+			}
+			val otherParts = parts.dropRight(1).flatMap {
+				case Left(text) => text.split(wordSplitRegex).map(WordOrLink.word)
+				case Right(link) => Single(WordOrLink.link(link))
+			}
+			apply(otherParts ++ lastPart, delimiter)
+		}
+	}
 	/**
 	 * Finds all statements made within a text
 	 * @param text A text
