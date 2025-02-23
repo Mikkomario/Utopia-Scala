@@ -482,6 +482,27 @@ object CollectionExtensions
 		  * @return Whether the specified function returns false for all items in this collection
 		  */
 		def forNone(f: A => Boolean) = i.iterator.forall { !f(_) }
+		/**
+		 * Checks whether a condition holds true for all paired items between 2 collections
+		 * @param other Another collection
+		 * @param f A condition checked for items from both collections
+		 * @tparam B Type of items in the second collection
+		 * @return True if these collections have the same size
+		 *         and if 'f' yields true for all paired items between these collections.
+		 */
+		def forAllWith[B](other: IterableOnce[B])(f: (A, B) => Boolean) = {
+			if (isKnownToHaveDifferentSizeAs(other))
+				false
+			else {
+				val myIter = i.iterator
+				val theirIter = other.iterator
+				var holdsTrue = true
+				while (holdsTrue && myIter.hasNext && theirIter.hasNext) {
+					holdsTrue = f(myIter.next(), theirIter.next())
+				}
+				holdsTrue && myIter.isEmpty && theirIter.isEmpty
+			}
+		}
 		
 		/**
 		  * Checks whether there exists at least 'requiredCount' items in this collection where the specified
@@ -525,6 +546,25 @@ object CollectionExtensions
 		  * @return The first item that was mapped to Some. None if all items were mapped to None.
 		  */
 		def findMap[B](map: A => Option[B]) = i.iterator.map(map).find { _.isDefined }.flatten
+		
+		/**
+		 * @param other Another collection
+		 * @return Whether it is known (using only knownSize) that these two collections have the same size
+		 */
+		def isKnownToHaveSameSizeAs(other: IterableOnce[_]) = {
+			val kn = i.knownSize
+			lazy val otherKn = other.knownSize
+			kn >= 0 && kn == otherKn
+		}
+		/**
+		 * @param other Another collection
+		 * @return Whether it is known (using only knownSize) that these two collections have a different size
+		 */
+		def isKnownToHaveDifferentSizeAs(other: IterableOnce[_]) = {
+			val kn = i.knownSize
+			lazy val otherKn = other.knownSize
+			kn >= 0 && otherKn >= 0 && kn != otherKn
+		}
 		
 		/**
 		  * @param f A mapping function

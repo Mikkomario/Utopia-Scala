@@ -18,6 +18,8 @@
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.headPair`
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.forAllWith(...)`
 - **Lockable**
   - Added `def unlocked = !locked`
 - **Seq** (**CollectionExtensions**)
