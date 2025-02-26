@@ -29,7 +29,9 @@ object Link
 	/**
 	 * A regular expression that matches to links
 	 */
-	lazy val regex = Domain.regex + pathCharacterRegex.anyTimes + paramPartRegex.noneOrOnce
+	lazy val regex = Domain.regex +
+		(Domain.forwardSlashRegex + pathCharacterRegex.anyTimes).withinParentheses.noneOrOnce +
+		paramPartRegex.noneOrOnce
 	
 	private lazy val parameterSeparatorRegex = Regex.escape('&').ignoringQuotations
 	private lazy val parameterAssignmentRegex = Regex.escape('=').ignoringQuotations
@@ -45,7 +47,7 @@ object Link
 	def apply(link: String): Option[Link] = Domain.regex.firstRangeFrom(link).map { domainRange =>
 		// Removes the / from domain, if present
 		val domainPart = link.slice(domainRange).notEndingWith("/")
-		val remainingPart = link.drop(domainRange.last + 1)
+		val remainingPart = link.drop(domainRange.last + 2)
 		paramPartRegex.firstRangeFrom(remainingPart) match {
 			// Case: Parameters are specified => Extracts them from the path
 			case Some(paramsRange) =>
@@ -54,7 +56,7 @@ object Link
 				apply(domainPart, pathPart, paramsPart)
 				
 			// Case: No parameters specified
-			case None => apply(domainPart, remainingPart, "")
+			case None => apply(domainPart, remainingPart)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package utopia.logos.model.cached
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
@@ -22,6 +22,11 @@ object Statement
 	 * A regular expression for separating words from each other
 	 */
 	lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
+	/**
+	 * These characters may appear within a link, but if they appear at the end,
+	 * should be considered delimiters instead.
+	 */
+	private lazy val linkEndingDelimiterChars = Set(')', ']', ',', '.', '?', ':', ';', '\'')
 	
 	/**
 	 * An empty statement
@@ -52,12 +57,12 @@ object Statement
 							text.take(delimiterRange.start) -> text.slice(delimiterRange)
 						case None => text -> ""
 					}
-					textPart.split(wordSplitRegex).map(WordOrLink.word) -> delimiter
+					textPart.split(wordSplitRegex).filter { _.nonEmpty }.map(WordOrLink.word) -> delimiter
 				
 				case Right(link) => Single(WordOrLink.link(link)) -> ""
 			}
 			val otherParts = parts.dropRight(1).flatMap {
-				case Left(text) => text.split(wordSplitRegex).map(WordOrLink.word)
+				case Left(text) => text.split(wordSplitRegex).filter { _.nonEmpty }.map(WordOrLink.word)
 				case Right(link) => Single(WordOrLink.link(link))
 			}
 			apply(otherParts ++ lastPart, delimiter)
@@ -76,9 +81,16 @@ object Statement
 				Delimiter.anyDelimiterRegex.divide(text).flatMap {
 					case Left(text) =>
 						wordSplitRegex.split(text).view.map { _.trim }.filter { _.nonEmpty }.map { _ -> _word }
+						
 					case Right(delimiter) => delimiter.notEmpty.map { _ -> _delimiter }
 				}
-			case Right(link) => Some(link -> _link)
+			case Right(link) =>
+				// May extract certain delimiter characters from the end of the link path
+				val delimiterPart = link.takeRightWhile(linkEndingDelimiterChars.contains)
+				if (delimiterPart.nonEmpty)
+					Pair(link.dropRight(delimiterPart.length) -> _link, delimiterPart -> _delimiter)
+				else
+					Single(link -> _link)
 		}
 		
 		// Groups words and links to delimiter-separated groups

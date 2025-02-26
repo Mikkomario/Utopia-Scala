@@ -3,11 +3,9 @@ package utopia.logos.model.stored.url
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.url.domain.DbSingleDomain
-import utopia.logos.model.factory.url.{DomainFactory, DomainFactoryWrapper}
+import utopia.logos.model.factory.url.DomainFactoryWrapper
 import utopia.logos.model.partial.url.DomainData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
-
-import java.time.Instant
 
 object Domain extends StoredFromModelFactory[DomainData, Domain]
 {
@@ -21,7 +19,7 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
 	private lazy val httpRegex = 
 		(Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
-	private lazy val wwwRegex = Regex("w").times(3)
+	private lazy val wwwRegex = (Regex("w").times(3) + Regex.escape('.')).withinParentheses
 	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
@@ -30,9 +28,8 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	  * For example, matches: "https://api.example.com/", "http://128.0.0.1:8080/" and "www.palvelu.fi"
 	  */
 	lazy val regex = 
-		(httpRegex || wwwRegex).withinParentheses +domainCharacterRegex.oneOrMoreTimes +
-			Regex.escape('.') +domainCharacterRegex.oneOrMoreTimes + portNumberRegex.noneOrOnce + 
-			forwardSlashRegex.noneOrOnce
+		(httpRegex || wwwRegex).withinParentheses + domainCharacterRegex.oneOrMoreTimes +
+			Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes + portNumberRegex.noneOrOnce
 	
 	
 	// IMPLEMENTED	--------------------
