@@ -42,6 +42,12 @@ trait ChronoRowFactoryView[+A, +Sub] extends RowFactoryView[A] with FilterableVi
 		filter(factory.beforeCondition(threshold, inclusive))
 	/**
 	  * @param threshold A time threshold
+	  * @return A copy of this access point targeting only items which were created before
+	  *         or at the specified time threshold
+	  */
+	def until(threshold: Instant) = before(threshold, inclusive = true)
+	/**
+	  * @param threshold A time threshold
 	  * @param inclusive Whether that threshold is inclusive (true) or exclusive (false, default)
 	  * @return A copy of this access point targeting only items which were created before the specified time threshold
 	  */
@@ -53,6 +59,12 @@ trait ChronoRowFactoryView[+A, +Sub] extends RowFactoryView[A] with FilterableVi
 	  * @return A copy of this access point targeting only items which were created after the specified time threshold
 	  */
 	def after(threshold: Instant, inclusive: Boolean = false) = filter(factory.afterCondition(threshold, inclusive))
+	/**
+	  * @param threshold A time threshold
+	  * @return A copy of this access point targeting only items which were created
+	  *         at or after the specified time threshold
+	  */
+	def since(threshold: Instant) = after(threshold, inclusive = true)
 	/**
 	  * @param threshold A time threshold
 	  * @param inclusive Whether that threshold is inclusive (true) or exclusive (false, default)

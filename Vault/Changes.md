@@ -1,6 +1,9 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.2 (in development)
+### New methods
+- **ChronoRowFactoryView**
+  - Added `.until(Instant)` and `.since(Instant)`
 ### Other changes
 - Minor refactoring within **DatabaseCache**
 
