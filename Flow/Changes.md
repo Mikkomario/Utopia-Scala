@@ -7,6 +7,9 @@
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
   since that one had confusing effects.
 - **MultiLazyLike** now requires the implementation of `def existingCacheFor(key: K): Option[P]`
+- Multiple changes to **WeakList**:
+  - **WeakListBuilder** and **WeakListFactory** are now private and nested within the companion object
+  - Changed the companion object's `implicit def factory` to an implicit conversion from the companion object to a factory
 ### Deprecations
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
@@ -32,6 +35,9 @@
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Number-to-time conversion now catches for number format exceptions
+- Smaller improvements to **WeakList**
+  - `.from(...)` now checks whether the parameter is already of type **WeakList**
+  - `:+` will no longer include released items in the resulting list
 - Changed **Pair**'s `.toString` implementation
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**

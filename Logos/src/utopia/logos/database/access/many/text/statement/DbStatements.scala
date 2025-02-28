@@ -1,23 +1,28 @@
 package utopia.logos.database.access.many.text.statement
 
 import com.vdurmont.emoji.EmojiParser
+import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.operator.Identity
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
+import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
 import utopia.logos.database.access.many.text.word.placement.DbWordPlacements
 import utopia.logos.database.access.many.url.link.DbLinks
 import utopia.logos.database.access.many.url.link.placement.DbLinkPlacements
 import utopia.logos.database.access.single.text.statement.DbStatement
-import utopia.logos.model.cached.{PreparedWordOrLinkPlacement, Statement}
+import utopia.logos.model.cached.{Link, PreparedWordOrLinkPlacement, Statement}
 import utopia.logos.model.combined.text.{DetailedStatement, StatedWord}
 import utopia.logos.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import utopia.logos.model.stored.text.StoredStatement
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * The root access point when targeting multiple statements at a time
@@ -27,17 +32,26 @@ import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 object DbStatements 
 	extends ManyStatementsAccess with UnconditionalView with ViewManyByIntIds[ManyStatementsAccess]
 {
+	// ATTRIBUTES   --------------------
+	
+	private val storeLock = new AnyRef
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	 * Attaches textual details to a set of statements
 	 * @param statements Statements to enhance
 	 * @param connection Implicit DB connection
 	 * @return Detailed copies of the specified statements
 	 */
+	 // TODO: Add a variant of this function that converts the statements to text
 	def attachDetailsTo(statements: Seq[StoredStatement])(implicit connection: Connection) = {
 		if (statements.isEmpty)
 			Empty
 		else {
 			// Pulls words involved
+			// TODO: Rather, pull placed words
 			val statementIds = statements.view.map { _.id }.toIntSet
 			val wordPlacements = DbWordPlacements.withinStatements(statementIds).pull
 			val wordMap = DbWords(wordPlacements.view.map { _.wordId }.toIntSet).toMapBy { _.id }
@@ -46,9 +60,11 @@ object DbStatements
 				.groupBy { _.useCase.statementId }.withDefaultValue(Empty)
 			
 			// Pulls links involved
+			// TODO: Pull placed links
 			val linkPlacements = DbLinkPlacements.withinStatements(statementIds).pull
 			val linkMap = NotEmpty(linkPlacements) match {
 				case Some(placements) =>
+					// TODO: Use .detailed.pull instead of .pullDetailed
 					DbLinks(placements.view.map { _.linkId }.toIntSet).pullDetailed.view.map { l => l.id -> l }.toMap
 				case None => Map[Int, DetailedLink]()
 			}
@@ -76,7 +92,8 @@ object DbStatements
 	 * @param connection Implicit DB connection
 	 * @return A sequence of text id + statement id group pairs.
 	 */
-	def storeLinked(texts: Seq[(Int, String)])(implicit connection: Connection) =
+	def storeLinked(texts: Seq[(Int, String)])
+	               (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
 		storeFrom(texts) { _._2 } { case (statements, (textId, _)) => textId -> statements }
 			.map { case (textId, statements) => textId -> statements.map { _.id } }
 	/**
@@ -89,7 +106,7 @@ object DbStatements
 	 * @return Copy of the 'texts' sequence, where each item is accompanied by the statements matching that text
 	 */
 	def storeFrom[O, R](texts: Seq[O])(extractText: O => String)(mergeBack: (Seq[StoredStatement], O) => R)
-	                   (implicit connection: Connection) =
+	                   (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
 	{
 		val groupedStatements = texts.map { text =>
 			text -> Statement.allFrom(EmojiParser.parseToAliases(extractText(text)))
@@ -108,7 +125,8 @@ object DbStatements
 	  * @return Stored statements, where each entry is either right, if it existed already, or left,
 	  * if it was newly inserted
 	  */
-	def store(text: String)(implicit connection: Connection): Seq[Sided[StoredStatement]] =
+	def store(text: String)
+	         (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool): Seq[Sided[StoredStatement]] =
 		store(Statement.allFrom(EmojiParser.parseToAliases(text)))
 	/**
 	  * Stores the specified text to the database as a sequence of statements.
@@ -119,30 +137,86 @@ object DbStatements
 	 *         if it existed already, or left, if it was newly inserted.
 	 *         There are as many returned statements as there are entries in 'statementData'
 	  */
-	def store(statementData: Seq[Statement])(implicit connection: Connection) = {
-		// Stores the delimiters first
-		val delimiterMap = DbDelimiters.store(statementData.map { _.delimiter }.toSet.filterNot { _.isEmpty })
-		
-		// Next stores the words, the links and the statements
-		// First element is words, second is links
-		val wordMap = DbWords.store(statementData.view.flatMap { _.standardizedWords.map { _._1 } }.toSet)
-		val linkMap = DbLinks.store(statementData.view.flatMap { _.links }.toSet)
-			.merge { _ ++ _ }.map { l => l.toString.toLowerCase -> l.id }.toMap
-		
-		statementData.map { statement =>
-			val words = statement.words.flatMap { word =>
-				val result = {
-					if (word.isLink)
-						linkMap.get(word.text.toLowerCase).map(PreparedWordOrLinkPlacement.link)
-					else
-						wordMap.get(word.standardizedText).map { PreparedWordOrLinkPlacement(_, word.style) }
-				}
-				if (result.isEmpty)
-					println(s"Warning: Failed to match $word with options: ${
-						(if (word.isLink) linkMap else wordMap).keys.mkString(", ")}")
-				result
+	def store(statementData: Seq[Statement])
+	         (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
+	{
+		if (statementData.isEmpty)
+			Empty
+		else {
+			storeLock.synchronized {
+				// Stores the delimiters, the words and the links in parallel
+				storeParts(statementData)
+					.map { case (wordMap, linkMap, delimiterMap) =>
+						// Stores one statement at a time
+						statementData.map { statement =>
+							val words = statement.words.flatMap { word =>
+								val result = {
+									word.data match {
+										case Left(_) =>
+											wordMap.get(word.standardizedText).map { case (wordId, inserted) =>
+												PreparedWordOrLinkPlacement(wordId, word.style) -> inserted
+											}
+										case Right(link) =>
+											linkMap.get(link).map { case (linkId, inserted) =>
+												PreparedWordOrLinkPlacement.link(linkId) -> inserted
+											}
+									}
+								}
+								if (result.isEmpty)
+									log(s"Warning: Failed to match $word with options: ${
+										(if (word.isLink) linkMap else wordMap).keys.mkString(", ")}")
+								result
+							}
+							// If the words, the links or the delimiter contained new entries,
+							// it is known that this statement doesn't yet exist, and it may be inserted instead
+							val delimiter = delimiterMap.get(statement.delimiter)
+							if (delimiter.exists { _._2 } || words.exists { _._2 })
+								Left(DbStatement.insert(words.map { _._1 }, delimiter.map { _._1 }))
+							else
+								DbStatement.store(words.map { _._1 }, delimiter.map { _._1 })
+						}
+					}
+					.logWithMessage("Unexpected failure during statement part -storing").getOrElse(Empty)
 			}
-			DbStatement.store(words, delimiterMap.get(statement.delimiter))
 		}
 	}
+	
+	/**
+	 * Stores the delimiters, words and links utilizing parallelism
+	 * @param statementData Statements to store
+	 * @param exc Implicit execution context
+	 * @param log Implicit logging implementation
+	 * @param cPool Implicit connection pool
+	 * @return Stored words, stored links and stored delimiters
+	 */
+	private def storeParts(statementData: Seq[Statement])
+	                      (implicit exc: ExecutionContext, log: Logger, cPool: ConnectionPool) =
+	{
+		// Processes the delimiters, the words and the links in parallel
+		val delimiterFuture = processAsync { implicit c =>
+			DbDelimiters.store(statementData.map { _.delimiter }.toSet.filterNot { _.isEmpty })
+		}
+		val wordFuture = processAsync { implicit c =>
+			DbWords.store(statementData.view.flatMap { _.standardizedWords.map { _._1 } }.toSet).toMap
+		}
+		val linkFuture = statementData.view.flatMap { _.links }.toSet.notEmpty match {
+			case Some(links) =>
+				processAsync { implicit c =>
+					DbLinks.store(links).view.mapValues { case (link, inserted) => link.id -> inserted }.toMap
+				}
+			case None => TryFuture.success(Map[Link, (Int, Boolean)]())
+		}
+		
+		// Combines the information, once each process has finished
+		delimiterFuture.waitForResult().flatMap { delimiters =>
+			wordFuture.waitForResult().flatMap { words =>
+				linkFuture.waitForResult().map { links =>
+					(words, links, delimiters)
+				}
+			}
+		}
+	}
+	
+	private def processAsync[R](f: Connection => R)(implicit exc: ExecutionContext, cPool: ConnectionPool) =
+		Future { cPool.tryWith(f) }
 }

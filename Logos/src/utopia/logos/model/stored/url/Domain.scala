@@ -3,6 +3,7 @@ package utopia.logos.model.stored.url
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.url.domain.DbSingleDomain
+import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.factory.url.DomainFactoryWrapper
 import utopia.logos.model.partial.url.DomainData
 import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
@@ -60,12 +61,20 @@ case class Domain(id: Int, data: DomainData)
 	
 	// IMPLEMENTED	--------------------
 	
-	override def toString = data.url
-	
 	override protected def wrappedFactory = data
 	
-	override def withId(id: Int) = copy(id = id)
+	override def toString = data.url
 	
+	override def withId(id: Int) = copy(id = id)
 	override protected def wrap(data: DomainData) = copy(data = data)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	 * @param path Path to wrap
+	 * @return Specified path with this domain attached
+	 */
+	def apply(path: RequestPath) = DetailedRequestPath(path, this)
 }
 

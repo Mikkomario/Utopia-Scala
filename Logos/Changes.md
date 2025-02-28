@@ -2,6 +2,7 @@
 
 ## v0.5 (in development)
 ### Breaking changes
+- Rewrote delimiter, word, domain, request path, link and statement storing interfaces
 - **UniqueTextPlacementAccessLike** now extends **UniqueModelAccess**, which changes the abstract property from 
   `accessCondition: Option[Condition]` to `condition: Condition`
 - **PlacedStatement** now expects a **StatementPlacement** instead of a **TextPlacement**
@@ -9,6 +10,8 @@
 - **PlacedStatementDbFactory**
   - Added a new utility constructor: `def apply(placementModel: StatementPlacementDbProps with HasTable)`
 - **DetailedStatement** is now a trait
+### Bugfixes
+- Bugfixes to link-extraction
 ### New features
 - Added **DetailedPlacedStatement** model
 - Added **ManyPlacedStatementsAccess** trait

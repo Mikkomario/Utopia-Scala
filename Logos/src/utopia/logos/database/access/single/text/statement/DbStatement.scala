@@ -94,19 +94,31 @@ object DbStatement extends SingleRowModelAccess[StoredStatement] with Unconditio
 				// Only accepts statements of specific length
 				.flatMap { remaining => DbStatements(remaining).findShorterThan(words.size + 1).headOption }
 				// If no such statement exists, inserts it
-				.toRight {
-					val statement = model.insert(StatementData(delimiterId))
-					val (linkData, wordData) = words.zipWithIndex.divideWith { case (word, index) =>
-						if (word.isLink)
-							Left(LinkPlacementData(statement.id, word.id, index))
-						else
-							Right(WordPlacementData(statement.id, word.id, index, word.style))
-					}
-					linkLinkModel.insert(linkData)
-					wordLinkModel.insert(wordData)
-					statement
-				}
+				.toRight { insert(words, delimiterId) }
 		}
+	}
+	/**
+	 * Inserts a statement to the database. Assumes that this statement doesn't yet exist in the DB.
+	 * @param words Words that form this statement
+	 * @param delimiterId Id of the delimiter that ends this statement.
+	 *                    None if this statement doesn't end with a delimiter.
+	 * @param connection Implicit DB connection
+	 * @return The inserted statement
+	 * @see [[store]]
+	 */
+	def insert(words: Seq[PreparedWordOrLinkPlacement], delimiterId: Option[Int])
+	          (implicit connection: Connection) =
+	{
+		val statement = model.insert(StatementData(delimiterId))
+		val (linkData, wordData) = words.zipWithIndex.divideWith { case (word, index) =>
+			if (word.isLink)
+				Left(LinkPlacementData(statement.id, word.id, index))
+			else
+				Right(WordPlacementData(statement.id, word.id, index, word.style))
+		}
+		linkLinkModel.insert(linkData)
+		wordLinkModel.insert(wordData)
+		statement
 	}
 	
 	/**

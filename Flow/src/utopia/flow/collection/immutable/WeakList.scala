@@ -1,8 +1,12 @@
 package utopia.flow.collection.immutable
 
+import utopia.flow.collection.immutable.WeakList.WeakListBuilder
+
 import scala.annotation.unchecked.uncheckedVariance
+import scala.annotation.unused
 import scala.collection.immutable.VectorBuilder
-import scala.collection.{Factory, IterableOps, SpecificIterableFactory, mutable}
+import scala.collection.{Factory, IterableOps, SpecificIterableFactory, View, mutable}
+import scala.language.implicitConversions
 import scala.ref.WeakReference
 
 object WeakList
@@ -38,10 +42,8 @@ object WeakList
 	  * @tparam A Type of items
 	  * @return A new weak list with provided items
 	  */
-    def apply[A <: AnyRef](first: A, second: A, more: A*) = {
-        val items = Pair(first, second) ++ more
-        new WeakList[A](items.map { WeakReference(_) })
-    }
+    def apply[A <: AnyRef](first: A, second: A, more: A*) =
+        new WeakList[A]((Pair(first, second) ++ more).map { WeakReference(_) })
 	
 	/**
 	  * Creates a new weak list with multiple items
@@ -50,19 +52,46 @@ object WeakList
 	  * @return A new weak list with specified items
 	  */
 	def from[A <: AnyRef](items: IterableOnce[A]) = items match {
-		case s: IndexedSeq[A] => new WeakList(s.map(WeakReference.apply))
-		case i => new WeakList(i.iterator.map { WeakReference(_) }.toVector)
+		case w: WeakList[A] => w
+		case v: View[A] => new WeakList(OptimizedIndexedSeq.from(v.map(WeakReference.apply)))
+		case i: Iterable[A] => new WeakList(OptimizedIndexedSeq.from(i.view.map(WeakReference.apply)))
+		case i => new WeakList(OptimizedIndexedSeq.from(i.iterator.map { WeakReference(_) }))
 	}
     
 	
     // IMPLICIT --------------------
     
-    /**
-      * Implicit canBuildFrom for this class
-      * @tparam A type of item contained in the final list
-      * @return A can build from that will build weak lists of target type
-      */
-    implicit def factory[A <: AnyRef]: Factory[A, WeakList[A]] = new WeakListFactory[A]
+	implicit def objectToFactory[A <: AnyRef](@unused o: WeakList.type): Factory[A, WeakList[A]] =
+		new WeakListFactory[A]
+    
+	
+	// NESTED   -------------------
+	
+	private class WeakListBuilder[A <: AnyRef] extends mutable.Builder[A, WeakList[A]]
+	{
+		// ATTRIBUTES    ---------------------
+		
+		private val builder = new VectorBuilder[WeakReference[A]]()
+		
+		
+		// IMPLEMENTED    --------------------
+		
+		override def addOne(elem: A) = {
+			builder += WeakReference(elem)
+			this
+		}
+		
+		override def clear() = builder.clear()
+		override def result() = new WeakList(builder.result())
+	}
+	
+	private class WeakListFactory[A <: AnyRef] extends SpecificIterableFactory[A, WeakList[A]]
+	{
+		override def empty = WeakList.empty
+		override def newBuilder = new WeakListBuilder[A]
+		
+		override def fromSpecific(it: IterableOnce[A]) = WeakList.from(it)
+	}
 }
 
 /**
@@ -72,8 +101,8 @@ object WeakList
 * @author Mikko Hilpinen
 * @since 31.3.2019
 **/
-class WeakList[+A <: AnyRef](private val refs: IndexedSeq[WeakReference[A]])
-	extends IterableOps[A, Iterable, WeakList[A]] with Iterable[A]
+class WeakList[+A <: AnyRef](refs: Iterable[WeakReference[A]])
+	extends Iterable[A] with IterableOps[A, Iterable, WeakList[A]]
 {
     // COMPUTED    -----------------
 	
@@ -87,52 +116,19 @@ class WeakList[+A <: AnyRef](private val refs: IndexedSeq[WeakReference[A]])
 	
 	override def iterator = refs.iterator.flatMap { _.get }
 	
-	override def empty = WeakList[A]()
-	override def seq = this
+	override def empty = WeakList.empty
 	
-	override protected def newSpecificBuilder: WeakListBuilder[A @uncheckedVariance] = new WeakListBuilder[A]
+	override protected def newSpecificBuilder: mutable.Builder[A @uncheckedVariance, WeakList[A]] = new WeakListBuilder[A]
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) = WeakList.from(coll)
     
     
-    // OPERATORS    ----------------------
+    // OTHER    ----------------------
     
     /**
       * @param item new item
       * @tparam B Type of resulting list
       * @return A new list with the specified item added (weakly referenced)
       */
-    def :+[B >: A <: AnyRef](item: B) = new WeakList(refs :+ WeakReference(item))
-    
-    /*
-      * @param items new items
-      * @tparam B Type of resulting list
-      * @return A new list with specified items added (weakly referenced)
-      */
-    // def ++[B >: A <: AnyRef](items: IterableOnce[B]) = new WeakList(refs ++ items.map { WeakReference(_) })
-}
-
-class WeakListBuilder[A <: AnyRef] extends mutable.Builder[A, WeakList[A]]
-{
-    // ATTRIBUTES    ---------------------
-    
-    private val builder = new VectorBuilder[WeakReference[A]]()
-    
-    
-    // IMPLEMENTED    --------------------
-	
-	override def addOne(elem: A) = {
-		builder += WeakReference(elem)
-		this
-	}
-	
-	override def clear() = builder.clear()
-    override def result() = new WeakList(builder.result())
-}
-
-class WeakListFactory[A <: AnyRef] extends SpecificIterableFactory[A, WeakList[A]]
-{
-	override def empty = WeakList[A]()
-	override def newBuilder = new WeakListBuilder[A]
-	
-	override def fromSpecific(it: IterableOnce[A]) = WeakList.from(it)
+    def :+[B >: A <: AnyRef](item: B) =
+	    new WeakList(OptimizedIndexedSeq.concat(refs.view.filter { _.isEnqueued }, Single(WeakReference(item))))
 }

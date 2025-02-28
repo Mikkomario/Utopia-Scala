@@ -1,5 +1,6 @@
 package utopia.logos.database.access.many.text.delimiter
 
+import utopia.logos.database.CachingVolatileMapStore
 import utopia.logos.model.partial.text.DelimiterData
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
@@ -10,25 +11,16 @@ import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
   * @since 27.08.2024, v0.3
   */
 object DbDelimiters 
-	extends ManyDelimitersAccess with UnconditionalView with ViewManyByIntIds[ManyDelimitersAccess]
+	extends CachingVolatileMapStore[String, String, Int] with ManyDelimitersAccess with UnconditionalView
+		with ViewManyByIntIds[ManyDelimitersAccess]
 {
-	/**
-	  * Stores the specified delimiters to the database. Avoids inserting duplicates.
-	  * @param delimiters Delimiters to insert
-	  * @param connection Implicit DB connection
-	  * @return Map where keys are the specified delimiters and values are their matching ids
-	  */
-	def store(delimiters: Set[String])(implicit connection: Connection) = {
-		if (delimiters.isEmpty)
-			Map[String, Int]()
-		else {
-			val existingDelimiterMap = matchingDelimiters(delimiters).toMap
-			val newDelimiters = delimiters -- existingDelimiterMap.keySet
-			if (newDelimiters.isEmpty)
-				existingDelimiterMap
-			else
-				existingDelimiterMap ++
-					model.insert(newDelimiters.toVector.map { DelimiterData(_) }).map { d => d.text -> d.id }
-		}
-	}
+	// IMPLEMENTED  -------------------------
+	
+	override protected def standardize(value: String): String = value
+	override protected def diff(proposed: Set[String], existing: Set[String]): Set[String] = proposed -- existing
+	
+	override protected def pullMatchMap(values: Set[String])(implicit connection: Connection): Map[String, Int] =
+		matchingDelimiters(values).toMap
+	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Int] =
+		model.insert(values.sorted.map { DelimiterData(_) }).view.map { d => d.text -> d.id }.toMap
 }

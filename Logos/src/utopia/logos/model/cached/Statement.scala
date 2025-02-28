@@ -59,11 +59,11 @@ object Statement
 					}
 					textPart.split(wordSplitRegex).filter { _.nonEmpty }.map(WordOrLink.word) -> delimiter
 				
-				case Right(link) => Single(WordOrLink.link(link)) -> ""
+				case Right(link) => WordOrLink.link(link).emptyOrSingle -> ""
 			}
 			val otherParts = parts.dropRight(1).flatMap {
 				case Left(text) => text.split(wordSplitRegex).filter { _.nonEmpty }.map(WordOrLink.word)
-				case Right(link) => Single(WordOrLink.link(link))
+				case Right(link) => WordOrLink.link(link).emptyOrSingle
 			}
 			apply(otherParts ++ lastPart, delimiter)
 		}
@@ -107,7 +107,7 @@ object Statement
 						.flatMap { case (str, role) =>
 							// Case: Link => Removes the terminating /-character, if present
 							if (role == _link)
-								Some(WordOrLink.link(str.notEndingWith("/")))
+								WordOrLink.link(str.notEndingWith("/"))
 							// Case: Word or words => Splits into separate words
 							else
 								wordSplitRegex.split(str).filter { _.nonEmpty }
@@ -120,8 +120,17 @@ object Statement
 					nextStartIndex = delimiterStartIndex + delimiterParts.size
 				// Case: No delimiter found => Extracts text part without delimiter
 				case None =>
-					statementsBuilder += apply(
-						parts.drop(nextStartIndex).map { case (str, role) => WordOrLink(str, isLink = role == _link) })
+					val lastParts = parts.view.drop(nextStartIndex)
+						.flatMap { case (str, role) =>
+							if (role == _link)
+								WordOrLink.link(str.notEndingWith("/"))
+							else if (str.length > maxWordLength)
+								Some(WordOrLink.word(s"${str.take(18)}..."))
+							else
+								Some(WordOrLink.word(str))
+						}
+						.toOptimizedSeq
+					statementsBuilder += apply(lastParts)
 					nextStartIndex = parts.size
 			}
 		}
@@ -148,18 +157,7 @@ case class Statement(words: Seq[WordOrLink], delimiter: String = "")
 	/**
 	 * Links that appear within this statement, as text
 	 */
-	lazy val links = words.flatMap { word => if (word.isLink) Some(word.text) else None }
-	
-	
-	// COMPUTED ---------------------------
-	
-	/**
-	 * @return A pair containing:
-	 *              1. The words within this statement
-	 *              1. The links within this statement
-	 */
-	@deprecated("Deprecated for removal. Please use .standardizedWords and .links instead", "v0.4")
-	def wordsAndLinks = words.divideBy { _.isLink }.map { _.map { _.text } }
+	lazy val links = words.flatMap { _.link }
 	
 	
 	// OTHER    -------------------------
@@ -170,5 +168,5 @@ case class Statement(words: Seq[WordOrLink], delimiter: String = "")
 	 * @return A mutated copy of this statement text
 	 */
 	def mapWordText(f: Mutate[String]) =
-		copy(words = words.view.map { _.mapText(f) }.filterNot { _.text.isEmpty }.toOptimizedSeq)
+		copy(words = words.view.map { _.mapIfWord(f) }.filter { _.nonEmpty }.toOptimizedSeq)
 }
