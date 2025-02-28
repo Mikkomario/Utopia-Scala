@@ -13,6 +13,8 @@
 ### Bugfixes
 - Bugfixes to link-extraction
 ### New features
+- Added **WordInText** model, DB factory and many access trait, providing an easier (and more efficient) 
+  interface for pulling text (string) content.
 - Added **DetailedPlacedStatement** model
 - Added **ManyPlacedStatementsAccess** trait
 ### New methods

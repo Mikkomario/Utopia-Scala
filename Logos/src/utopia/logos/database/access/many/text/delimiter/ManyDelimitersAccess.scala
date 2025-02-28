@@ -57,6 +57,12 @@ trait ManyDelimitersAccess
 	  */
 	def toMap(implicit connection: Connection) =
 		pullColumnMap(model.text.column, index).map { case (text, id) => text.getString -> id.getInt }
+	/**
+	 * @param connection Implicit DB connection
+	 * @return A map where keys are delimiter ids and values are their text formats
+	 */
+	def idToTextMap(implicit connection: Connection) =
+		pullColumnMap(index, model.text).map { case (k, v) => k.getInt -> v.getString }
 	
 	/**
 	  * Model which contains the primary database properties interacted with in this access point

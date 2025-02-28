@@ -45,7 +45,6 @@ object DbStatements
 	 * @param connection Implicit DB connection
 	 * @return Detailed copies of the specified statements
 	 */
-	 // TODO: Add a variant of this function that converts the statements to text
 	def attachDetailsTo(statements: Seq[StoredStatement])(implicit connection: Connection) = {
 		if (statements.isEmpty)
 			Empty

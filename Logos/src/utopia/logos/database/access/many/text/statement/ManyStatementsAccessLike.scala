@@ -40,6 +40,13 @@ trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexe
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
 	/**
+	 * @param connection Implicit DB connection
+	 * @return A map where keys are statement ids and values are ids of the delimiters ending those statements.
+	 */
+	def delimiterIdMap(implicit connection: Connection) =
+		pullColumnMap(index, model.delimiterId).flatMap { case (k, v) => v.int.map { k.getInt -> _ } }
+	
+	/**
 	  * Model which contains the primary database properties interacted with in this access point
 	  */
 	protected def model = StatementDbModel
