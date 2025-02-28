@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.20.2 (in development)
+### New features
+- Added **EqualsById EqualsFunction** object
 ### New methods
 - **ChronoRowFactoryView**
   - Added `.until(Instant)` and `.since(Instant)`

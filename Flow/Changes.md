@@ -29,6 +29,8 @@
   - Added `.lastPair`, `.lastPairOption`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
+- **TreeLike**
+  - Added `.allNodesWithDepthIterator` and `.nodesBelowWithDepthIterator`
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
@@ -38,6 +40,7 @@
 - Smaller improvements to **WeakList**
   - `.from(...)` now checks whether the parameter is already of type **WeakList**
   - `:+` will no longer include released items in the resulting list
+- `Tree.iterate(...)` now accepts an implicit **EqualsFunction**
 - Changed **Pair**'s `.toString` implementation
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**

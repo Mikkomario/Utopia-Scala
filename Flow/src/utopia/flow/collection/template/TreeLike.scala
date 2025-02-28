@@ -6,6 +6,7 @@ import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDept
 import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.view.template.Extender
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
@@ -31,7 +32,7 @@ object TreeLike
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
   * @tparam Repr Types of nodes in this tree
   */
-trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
+trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Extender[A]
 {
 	// ABSTRACT   --------------------
 	
@@ -92,12 +93,28 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	  */
 	def allNodesIterator: Iterator[Repr] = self +: nodesBelowIterator
 	/**
+	 * @return An iterator that returns this node, every child node, their children and so on.
+	 *         With each node, includes the level of depth, starting from 0 (for this node).
+	 *         Each branch is fully traversed before moving to its sibling.
+	 *         Starts with this node.
+	 */
+	def allNodesWithDepthIterator = (self -> 0) +: nodesBelowWithDepthIterator
+	/**
 	  * @return An iterator that goes over all the nodes below this node.
 	  *         Will not include this node.
 	  *         Each branch is fully traversed before moving to its sibling.
 	  *         I.e. every child of the first child is returned before the second child of this node is returned.
 	  */
 	def nodesBelowIterator: Iterator[Repr] = children.iterator.flatMap { c => c +: c.nodesBelowIterator }
+	/**
+	 * @return An iterator that goes over all the nodes below this node and includes their depth, starting from 1.
+	 *         Will not include this node.
+	 *         Each branch is fully traversed before moving to its sibling.
+	 *         I.e. every child of the first child is returned before the second child of this node is returned.
+	 */
+	def nodesBelowWithDepthIterator: Iterator[(Repr, Int)] = _nodesBelowWithDepthIterator(1)
+	private def _nodesBelowWithDepthIterator(currentDepth: Int): Iterator[(Repr, Int)] =
+		children.iterator.flatMap { c => (c -> currentDepth) +: c._nodesBelowWithDepthIterator(currentDepth + 1) }
 	/**
 	  * @return All nodes that belong to this tree structure, including this node, as an iterable collection.
 	  */
@@ -247,6 +264,8 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr]
 	
 	
 	// IMPLEMENTED  ----------------
+	
+	override def wrapped: A = nav
 	
 	/**
 	  * Whether this tree is empty and doesn't contain a single node below it

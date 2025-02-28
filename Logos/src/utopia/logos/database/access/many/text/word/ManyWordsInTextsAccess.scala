@@ -76,7 +76,8 @@ trait ManyWordsInTextsAccess
 	
 	/**
 	 * @param connection Implicit DB connection
-	 * @return A map where keys are text ids and values are their contents as strings
+	 * @return A map where keys are text ids and values are their contents as strings.
+	 *         Defines an empty string as the default value.
 	 */
 	def textPerId(implicit connection: Connection) = {
 		// Pulls the targeted words
@@ -98,7 +99,7 @@ trait ManyWordsInTextsAccess
 					// Orders and combines the text content within the text
 					.toVector.sortBy { _._1 }.iterator.map { _._2 }.mkString
 			}
-			.toMap
+			.toMap.withDefaultValue("")
 	}
 	
 	
