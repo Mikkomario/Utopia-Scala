@@ -2,6 +2,8 @@
 
 ## v2.6 (in development)
 ### Breaking changes
+- **TimedTasks** now, by default, doesn't clear the queued tasks when stopped (as it did previously)
+  - You can still enable this behavior by passing `clearTasksOnStop = true` to the constructor
 - Converted **SettableOnce** into a trait called **AssignableOnce**
   - **SettableOnce** is still available as a deprecated type alias
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 

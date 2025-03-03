@@ -26,7 +26,8 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 24.2.2022, v1.15
   */
-class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
+class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
+                 clearTasksOnStop: Boolean = false)
                 (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, Some(shutdownReaction)) with MaybeEmpty[TimedTasks]
 {
@@ -121,8 +122,8 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 				}
 			}
 		}
-		// Purges the queue if hurried
-		if (shouldHurry || state.isBroken)
+		// Purges the queue if hurried (optional feature)
+		if (clearTasksOnStop && (shouldHurry || state.isBroken))
 			queue.popAll().foreach { _._1.removeListener(scheduleTimeChangeListener) }
 	}
 	
