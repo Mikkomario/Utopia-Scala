@@ -1,10 +1,10 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
-import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.template.Extender
 
@@ -340,6 +340,45 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	def containsNav(nav: A): Boolean = (this.nav ~== nav) || navsBelowIterator.exists { _ ~== nav }
 	
 	/**
+	 * Finds the shared parent of the specified nav elements. Assumes that this tree contains unique nav elements.
+	 * @param navs Searched navigational elements
+	 * @return Node within this tree structure that's the shared parent of all the specified elements.
+	 *         None if one or more of the specified elements could not be found from this tree
+	 */
+	def commonParentOf(navs: Iterable[A]) = findCommonParentOf(navs) { _.nav ~== _ }
+	/**
+	 * Finds the shared parent of nodes matching the specified elements.
+	 * @param elements Searched elements that match individual nodes
+	 * @param contains A function that checks whether a tree node (directly) contains/matches the specified element
+	 * @return Node within this tree structure that's the shared parent
+	 *         of all nodes represented with the specified elements.
+	 *         None if one or more of the specified elements could not be found from this tree
+	 */
+	def findCommonParentOf[B](elements: Iterable[B])(contains: (Repr, B) => Boolean) = elements.emptyOneOrMany.flatMap {
+		// Case: Targeting only a single element => Finds that element from this tree
+		case Left(only) => allNodesIterator.find { contains(_, only) }
+		// Case: Targeting multiple elements
+		case Right(elements) =>
+			// Searches for each element, including their full paths
+			val pathFindResults = elements.iterator.map { elem => findWithPath { contains(_, elem) } }.caching
+			// Case: All the elements were not found from this tree => No common parent
+			if (pathFindResults.exists { _.isEmpty })
+				None
+			else {
+				// Checks the common part within the element paths
+				val paths = pathFindResults.view.map { _.get }.toOptimizedSeq
+				paths.tail
+					.foldLeftIterator(paths.head) { (commonPath, nextPath) =>
+						val commonElementsCount = commonPath.iterator.zip(nextPath)
+							.takeWhile { case (p1, p2) => p1 == p2 }.size
+						commonPath.take(commonElementsCount)
+					}
+					// Finds the last common element (assumes that this appears as the first element in all paths)
+					.takeTo { _.hasSize <= 1 }.last.lastOption
+			}
+	}
+	
+	/**
 	 * @param filter A filter/search function
 	 * @return An iterator that returns all top level nodes which satisfy the specified filter.
 	 *         Top level means that children of the returned nodes are not included separately.
@@ -365,48 +404,66 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	}
 	
 	/**
+	 * Finds The location of a specific nav element within this tree structure.
+	 * Assumes that this tree contains unique nav elements.
+	 * @param nav Searched nav element
+	 * @return A path to a node containing the specified nav element.
+	 *         Returns None if there doesn't exist any node in this tree with the specified nav element.
+	 *         The path, if found, consists of actual nodes that need to be traversed, starting with this node.
+	 *         The node containing the specified nav element is located at the end of this path.
+	 */
+	def pathTo(nav: A) = findWithPath { _.nav ~== nav }
+	/**
 	  * Finds the first child node from this entire tree that matches the specified condition.
 	  * Returns the path to that node.
 	  * @param filter A search condition
 	  * @return Path to the first node matching the specified condition.
 	  *         None if no such node was found.
-	  *         The path contains all nodes that need to be traversed in order to reach the target node.
+	  *         The path starts with this node
+	  *         and contains all nodes that need to be traversed in order to reach the target node.
 	  *         The node that first fulfilled the specified search condition always lies at the end of the path.
-	  *         This node is always located at the beginning of the resulting path.
 	  */
 	def findWithPath(filter: Repr => Boolean): Option[IndexedSeq[Repr]] = {
-		if (filter(self))
-			Some(Single(self))
+		val builder = new VectorBuilder[Repr]()
+		if (_findWithPath(builder, filter))
+			Some(builder.result().reverse)
 		else
-			children.findMap { _.findWithPath(filter) }.map { self +: _ }
+			None
 	}
+	private def _findWithPath(builder: VectorBuilder[Repr @uncheckedVariance], filter: Repr => Boolean): Boolean = {
+		val result = filter(self) || children.exists { _._findWithPath(builder, filter) }
+		if (result)
+			builder += self
+		result
+	}
+	
 	/**
 	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
-	 * specified filter. Includes the "path" to all of the selected nodes as well.
+	 * specified filter. Includes the "path" to all the selected nodes as well.
 	 * If a node is selected, it's children are not tested anymore.
 	 * @param filter A filter function
-	 * @return Returns paths to all of the nodes that satisfy the specified filter function.
+	 * @return An iterator that returns paths to all the nodes that satisfy the specified filter function.
+	 *         Every path will start with this node and end with the node that fulfilled the specified function.
+	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
+	 */
+	def pathsToRootsWhere(filter: Repr => Boolean) = pathsToRootsWhereIterator(filter).caching
+	/**
+	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
+	 * specified filter. Includes the "path" to all the selected nodes as well.
+	 * If a node is selected, it's children are not tested anymore.
+	 * @param filter A filter function
+	 * @return Returns paths to all the nodes that satisfy the specified filter function.
 	 *         Every path will start with this node and end with the node that fulfilled the specified function.
 	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
 	 *         The result is lazily computed and cached.
 	 */
 	def pathsToRootsWhereIterator(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }
 	/**
-	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
-	 * specified filter. Includes the "path" to all of the selected nodes as well.
-	 * If a node is selected, it's children are not tested anymore.
-	 * @param filter A filter function
-	 * @return An iterator that returns paths to all of the nodes that satisfy the specified filter function.
-	 *         Every path will start with this node and end with the node that fulfilled the specified function.
-	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
-	 */
-	def pathsToRootsWhere(filter: Repr => Boolean) = pathsToRootsWhereIterator(filter).caching
-	/**
 	  * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
-	  * specified filter. Includes the "path" to all of the selected nodes as well.
+	  * specified filter. Includes the "path" to all the selected nodes as well.
 	  * If a node is selected, it's children are not tested anymore.
 	  * @param filter A filter function
-	  * @return Paths to all of the nodes that satisfy the specified filter function.
+	  * @return Paths to all the nodes that satisfy the specified filter function.
 	  *         Every path will start with this node and end with the node that fulfilled the specified function.
 	  *         If this node fulfills the specified function, returns a single path consisting only of this node.
 	  *         The result is lazily computed and cached.
@@ -424,15 +481,4 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 		else
 			children.iterator.flatMap { _._filterWithPaths(filter) }.map { _ += self }
 	}
-	/**
-	  * Finds The location of a specific nav element within this tree structure.
-	  * Assumes that this tree contains unique nav elements.
-	  * @param nav Searched nav element
-	  * @return A path to a node containing the specified nav element.
-	  *         Returns None if there doesn't exist any node in this tree with the specified nav element.
-	  *         The path consists of actual nodes that need to be traversed.
-	  *         This node is always the first element in the returned path.
-	  *         The node containing the specified nav element is located at the end of this path.
-	  */
-	def pathTo(nav: A) = if (this.nav ~== nav) Some(Empty) else findWithPath { _.nav ~== nav }
 }

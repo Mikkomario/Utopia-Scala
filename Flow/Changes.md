@@ -2,6 +2,8 @@
 
 ## v2.6 (in development)
 ### Breaking changes
+- **TreeLike**`.pathTo(...)` now yields `Some(Single(self))` if targeting the node on which it is called. 
+  - Previously, unlike all other path-based functions, yielded `Some(Empty)`
 - **TimedTasks** now, by default, doesn't clear the queued tasks when stopped (as it did previously)
   - You can still enable this behavior by passing `clearTasksOnStop = true` to the constructor
 - Converted **SettableOnce** into a trait called **AssignableOnce**
@@ -33,6 +35,7 @@
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 - **TreeLike**
   - Added `.allNodesWithDepthIterator` and `.nodesBelowWithDepthIterator`
+  - Added `.commonParentOf(...)` and `.findCommonParentOf(...)`
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.

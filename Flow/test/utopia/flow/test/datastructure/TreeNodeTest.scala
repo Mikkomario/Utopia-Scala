@@ -1,6 +1,6 @@
 package utopia.flow.test.datastructure
 
-import utopia.flow.collection.immutable.Tree
+import utopia.flow.collection.immutable.{Pair, Tree}
 import utopia.flow.collection.mutable.MutableTree
 import utopia.flow.collection.template.TreeLike
 import utopia.flow.operator.equality.EqualsFunction
@@ -102,6 +102,11 @@ object TreeNodeTest extends App
 	assert(bt.next().nav == 6)
 	assert(bt.next().nav == 1)
 	assert(!bt.hasNext)
+	
+	// Tests common parent -finding
+	assert(copy.commonParentOf(Pair(3, 5)).get.nav == 2)
+	assert(copy.commonParentOf(Pair(3, 6)).get.nav == 1)
+	assert(copy.commonParentOf(Pair(3, 8)).isEmpty)
 	
 	// Mutates mutable tree & tests
 	root.removeChild(secondChild)
