@@ -195,6 +195,7 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 		override def clear() = {
 			first = None
 			second = None
+			nextIndex = 0
 			lazyBuilder.reset()
 		}
 		override def result() = nextIndex match {

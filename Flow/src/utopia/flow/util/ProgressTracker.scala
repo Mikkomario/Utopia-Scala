@@ -53,7 +53,7 @@ object ProgressTracker
 /**
  * An interface for converting progress into progress events
  * @param pointer The wrapped mutable process value pointer
- * @param progressFrom A function which converts the current process value to a progress from 0 to 1, where
+ * @param progressFrom A function which converts the current process value to progress from 0 to 1, where
  *                     1 represents process completion.
  * @tparam A Type of process values used
  * @author Mikko Hilpinen

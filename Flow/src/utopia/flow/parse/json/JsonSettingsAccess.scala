@@ -4,6 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.json.JsonSettingsAccess.defaultSettingsRegex
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.logging.Logger
@@ -39,7 +40,7 @@ object JsonSettingsAccess
  * @param log           A logging implementation notified in case settings reading fails
  *                      (e.g. if no settings file may be found or if json parsing fails)
  */
-class JsonSettingsAccess(rootDirectory: Path = "", fileNameRegex: Regex = defaultSettingsRegex,
+class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileNameRegex: Regex = defaultSettingsRegex,
                          schema: ModelDeclaration = ModelDeclaration.empty)
                         (implicit jsonReader: JsonParser, log: Logger)
 {

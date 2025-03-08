@@ -17,6 +17,7 @@
 ### Deprecations
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
+- Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
 - Fixed **OptimizedMirror**'s change event generation when listening resumes.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 ### New features
