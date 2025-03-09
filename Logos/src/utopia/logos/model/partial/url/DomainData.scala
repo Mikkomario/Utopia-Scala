@@ -40,11 +40,9 @@ case class DomainData(url: String, created: Instant = Now)
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Pair("url" -> url, "created" -> created))
-	
 	override def toString = url
 	
 	override def withCreated(created: Instant) = copy(created = created)
-	
 	override def withUrl(url: String) = copy(url = url)
 }
 

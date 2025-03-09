@@ -22,7 +22,6 @@ object DbDetailedRequestPath
 	  * A database model (factory) used for interacting with the linked domain
 	  */
 	protected def domainModel = DomainDbModel
-	
 	/**
 	  * A database model (factory) used for interacting with linked request paths
 	  */
