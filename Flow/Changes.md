@@ -35,6 +35,7 @@
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 - **TreeLike**
+  - Added `.allPathsIterator`
   - Added `.allNodesWithDepthIterator` and `.nodesBelowWithDepthIterator`
   - Added `.commonParentOf(...)` and `.findCommonParentOf(...)`
 ### Other changes

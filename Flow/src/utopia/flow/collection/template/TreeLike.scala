@@ -1,8 +1,9 @@
 package utopia.flow.collection.template
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
+import utopia.flow.collection.template.TreeLike.AllPathsIterator
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
 import utopia.flow.operator.equality.EqualsFunction
@@ -13,6 +14,8 @@ import scala.collection.immutable.VectorBuilder
 
 object TreeLike
 {
+	// TYPES    -------------------------
+	
 	/**
 	  * Any implementation of TreeLike, regardless of the type of individual nodes
 	  */
@@ -21,6 +24,32 @@ object TreeLike
 	  * Any implementation of TreeLike, regardless of type
 	  */
 	type AnyTree = TreeLike[_, _]
+	
+	
+	// NESTED   -------------------------
+	
+	private class AllPathsIterator[N <: TreeLike[_, N]](parents: Seq[N], node: N) extends Iterator[Seq[N]]
+	{
+		// ATTRIBUTES   -----------------
+		
+		private lazy val path = parents :+ node
+		private lazy val delegate = node.children.iterator.flatMap { new AllPathsIterator[N](path, _) }
+		private var rootConsumed = false
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def hasNext: Boolean = !rootConsumed || delegate.hasNext
+		
+		override def next(): Seq[N] = {
+			if (rootConsumed)
+				delegate.next()
+			else {
+				rootConsumed = true
+				path
+			}
+		}
+	}
 }
 
 /**
@@ -261,6 +290,15 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         As the size of the tree increases, the number of resulting branches increases exponentially.
 	  */
 	def branchesBelow = branchesBelowIterator.toVector
+	
+	/**
+	 * @return An iterator that yields all unique paths within this tree.
+	 *         This means that a path to every tree node is returned once.
+	 *
+	 *         A path, in this context, is a sequence of nodes that starts with this node and ends with the
+	 *         targeted node.
+	 */
+	def allPathsIterator: Iterator[Seq[Repr]] = new AllPathsIterator[Repr](Empty, self)
 	
 	
 	// IMPLEMENTED  ----------------
