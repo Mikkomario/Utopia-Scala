@@ -7,6 +7,10 @@ This small update introduces new customization / constructors for **PullSchrodin
   - Added new `.resolved(...)` and `.failed(...)` variants which support local values
 - **ResponseParser** (**ResponseParseExtensions**)
   - Added `.unwrapToResponseLogging(...)`
+- **Schrodinger**
+  - Added `.finalStateFuture`
+- **SchrodingerState**
+  - Added `.mayBeAlive` and `.mayBeDead`
 ### Other changes
 - Added `expectation: Flux` parameter to **PullSchrodinger**'s constructors
 

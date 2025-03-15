@@ -172,6 +172,14 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)])
 	lazy val statePointer = fullStatePointer.mapUntil { _._3 } { _.isFinal }
 	
 	/**
+	 * A future that resolves once this schrodinger has been finalized.
+	 * Yields the final schrödinger state (Dead or Alive)
+	 */
+	lazy val finalStateFuture = statePointer.findMapFuture {
+		case state: Final => Some(state)
+		case _ => None
+	}
+	/**
 	  * @return A future of the eventual server result
 	  */
 	lazy val finalResultFuture = resultPointer.futureWhere { _.isFinal }

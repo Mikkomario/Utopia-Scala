@@ -161,6 +161,31 @@ object StringExtensions
 			indexOfIterator(searched).existsCount(minimumOccurrences) { _ => true }
 		
 		/**
+		 * Checks whether this string contains all the specified sub-strings
+		 * in the same order in which they're listed.
+		 * @return Whether this string contains the specified sub-strings in order.
+		 */
+		def containsInOrder(first: String, second: String, more: String*): Boolean =
+			containsInOrder(Pair(first, second) ++ more)
+		/**
+		 * Checks whether this string contains all the specified sub-strings
+		 * in the same order in which they're listed.
+		 * @param searched The sub-strings that are searched from this string
+		 * @return Whether this string contains the specified sub-strings in order.
+		 */
+		def containsInOrder(searched: Seq[String]) = searched
+			.foldLeftIterator[Option[Int]](Some(0)) { (from, searched) =>
+				from.flatMap { from =>
+					val index = s.indexOf(searched, from)
+					if (index < 0)
+						None
+					else
+						Some(index + searched.length)
+				}
+			}
+			.forall { _.isDefined }
+		
+		/**
 		 * Checks whether this string contains all the same characters as the specified string.
 		 * This string may be longer, however, and the specified characters may appear in different order.
 		 *

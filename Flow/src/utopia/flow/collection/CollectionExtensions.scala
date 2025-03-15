@@ -16,6 +16,7 @@ import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{HasSize, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
@@ -372,28 +373,61 @@ object CollectionExtensions
 		  * @param f A function that accepts an item in this collection.
 		  *          Called asynchronously. Not expected to throw. Thrown errors are delegated to the 'exc'.
 		  * @param exc Implicit execution context to use.
-		  * @tparam U Arbitrary function result type
+		  * @param log Implicit logging implementation for recording asynchronous failures
+		 * @tparam U Arbitrary function result type
+		 * @return A future that resolves once all items have been fully processed
 		  */
-		def foreachParallel[U](maxWidth: Int)(f: iter.A => U)(implicit exc: ExecutionContext) = {
+		def foreachParallel[U](maxWidth: Int)(f: iter.A => U)(implicit exc: ExecutionContext, log: Logger) = {
 			val iter = ops.iterator
 			if (iter.hasNext) {
-				// Case: No multi-threading allowed => Uses normal foreach instead
+				// Case: No multi-threading allowed => Uses asynchronous foreach instead
 				if (maxWidth <= 1)
-					iter.foreach(f)
+					Future { iter.foreach(f) }
 				else {
 					val knownSize = ops.knownSize
+					// Case: Only one item to process => Simply processes it asynchronously
+					if (knownSize == 1)
+						Future { iter.foreach(f) }
 					// Case: Known to be smaller than the thread limit => Processes all items in parallel
-					if (knownSize >= 0 && knownSize <= maxWidth)
-						iter.foreach { a => Future { f(a) } }
+					if (knownSize >= 0 && knownSize <= maxWidth) {
+						val completionsP = Volatile.eventful(0)
+						iter.foreach { a => Future {
+							Try { f(a) } match {
+								case Failure(error) => log(error, "Failure during parallel processing")
+								case _ => ()
+							}
+							completionsP.update { _ + 1 }
+						} }
+						completionsP.findMapFuture { c => if (c >= knownSize) Some(()) else None }
+					}
 					// Case: May be larger than the thread limit
 					//       => Utilizes an action queue to limit the number of parallel processes
-					else {
-						implicit val log: Logger = SysErrLogger
-						val queue = new ActionQueue(maxWidth)
-						iter.foreach { a => queue.push { f(a) }.waitUntilStarted() }
-					}
+					else
+						Future {
+							val queue = new ActionQueue(maxWidth)
+							// Initiates as many processes as allowed
+							// and collects the completion futures into a separate vector
+							val completions = iter
+								.flatMap { a =>
+									queue.push { f(a) }.waitUntilStarted() match {
+										case Success(action) => Some(action.future)
+										case Failure(error) =>
+											log(error, "Failure during parallel action initiation")
+											None
+									}
+								}
+								.toVector
+							// Waits for all the actions to complete
+							completions.foreach { _.waitFor() match {
+								case Failure(error) => log(error, "Failure during parallel processing")
+								case _ => ()
+							} }
+						}
 				}
 			}
+			// Case: Nothing to process
+			else
+				Future.successful(())
 		}
 	}
 	

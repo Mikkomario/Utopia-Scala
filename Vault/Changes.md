@@ -6,6 +6,8 @@
 ### New methods
 - **ChronoRowFactoryView**
   - Added `.until(Instant)` and `.since(Instant)`
+- **References**
+  - Added `.linkGraph`, `.reverseLinkGraph` and `.biDirectionalLinkGraph`
 ### Other changes
 - Minor refactoring within **DatabaseCache**
 

@@ -46,6 +46,9 @@ object StringUtilsTest extends App
 	assert("nana".endingWith("apple", enablePartialReplacement = true) == "nanapple")
 	assert("nana".endingWith("na") == "nana")
 	assert("nana".endingWith("nas") == "nananas")
+	assert(s.containsInOrder("is", "test"))
+	assert(s.containsInOrder("This", "a", "string"))
+	assert(!s.containsInOrder("this", "string"))
 	
 	assert("a,b,\"c,d,e\",f,,h".split(",".ignoringQuotations).toVector ==
 		Vector("a", "b", "\"c,d,e\"", "f", "", "h"))

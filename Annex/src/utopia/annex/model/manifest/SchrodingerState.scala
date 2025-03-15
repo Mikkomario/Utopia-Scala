@@ -51,6 +51,15 @@ sealed trait SchrodingerState
 	  */
 	def isSigned = estimate.isExact
 	
+	/**
+	 * @return Whether it is possible that the represented entity may (now or eventually) be "alive"
+	 */
+	def mayBeAlive = isAlive.mayBeTrue
+	/**
+	 * @return Whether it is possible that the represented entity may (now or eventually) be "dead"
+	 */
+	def mayBeDead = isDead.mayBeTrue
+	
 	@deprecated("Replaced with estimate", "v1.6")
 	def signOption = estimate.exact
 	

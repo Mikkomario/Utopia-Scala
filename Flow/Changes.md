@@ -6,6 +6,10 @@
   - Previously, unlike all other path-based functions, yielded `Some(Empty)`
 - **TimedTasks** now, by default, doesn't clear the queued tasks when stopped (as it did previously)
   - You can still enable this behavior by passing `clearTasksOnStop = true` to the constructor
+- `ViewGraphNode.iterate(...)` no longer accepts the starting node, and instead of returning a graph, 
+  returns a function for constructing graphs based on starting nodes.
+- `.foreachParallel(...)` in **CollectionExtensions** 
+  now always operates asynchronously and also returns a completion **Future**
 - Converted **SettableOnce** into a trait called **AssignableOnce**
   - **SettableOnce** is still available as a deprecated type alias
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
@@ -21,6 +25,7 @@
 - Fixed **OptimizedMirror**'s change event generation when listening resumes.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 ### New features
+- Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 ### New methods
@@ -32,12 +37,16 @@
   - Added `def unlocked = !locked`
 - **Seq** (**CollectionExtensions**)
   - Added `.lastPair`, `.lastPairOption`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
+- **String** (**StringExtensions**)
+  - Added `.containsInOrder(...)`
 - **ThreadPool**
   - Added `.stop()`, which may be used for clearing all threads (including the core threads) as soon as they're freed
 - **TreeLike**
   - Added `.allPathsIterator`
   - Added `.allNodesWithDepthIterator` and `.nodesBelowWithDepthIterator`
   - Added `.commonParentOf(...)` and `.findCommonParentOf(...)`
+- **ViewGraphNode**
+  - Added `.flatMapNodes(...)`
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
@@ -47,6 +56,7 @@
 - Smaller improvements to **WeakList**
   - `.from(...)` now checks whether the parameter is already of type **WeakList**
   - `:+` will no longer include released items in the resulting list
+- **TwoThreadBuffer**'s **Output** now limits the size values to non-negative numbers
 - `Tree.iterate(...)` now accepts an implicit **EqualsFunction**
 - Changed **Pair**'s `.toString` implementation
 - Internal refactoring within **MutableOnce**

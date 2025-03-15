@@ -1,9 +1,9 @@
 package utopia.vault.database
 
-import utopia.flow.collection.immutable.{Pair, ViewGraphNode}
-import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.collection.immutable.{Pair, ViewGraphNode}
+import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.sign.Sign
 import utopia.flow.view.immutable.View
@@ -15,7 +15,7 @@ import scala.collection.immutable.{HashMap, HashSet}
 /**
  * The references object keeps track of all references between different tables in a multiple
  * databases. The object is used for accessing the reference data. The actual data must be set
- * into the object before if can be properly used
+ * into the object before it can be properly used
  * @author Mikko Hilpinen
  * @since 28.5.2017
  */
@@ -24,6 +24,39 @@ object References
     // ATTRIBUTES    ---------------------
     
     private var referenceData = HashMap[String, Set[Reference]]()
+    
+    
+    // COMPUTED --------------------------
+    
+    /**
+     * Creates a new reference graph that only contains direct links from the origin table to the target table.
+     * I.e. the edges point the same direction as the table references.
+     * @return A function that accepts a table and yields a reference graph node representing the specified table
+     *         (lazily initialized)
+     */
+    def linkGraph = ViewGraphNode
+        .iterate { table: Table => from(table).map { ref => View.fixed(ref) -> View.fixed(ref.to.table) } }
+    /**
+     * Creates a new reference graph where leaving edges are the references coming **to** the node table.
+     * I.e. all the references are associated with the tables they point towards, not where they originate from.
+     * @return A function that accepts a table and yields a reference graph node representing the specified table
+     *         (lazily initialized)
+     */
+    def reverseLinkGraph = ViewGraphNode
+        .iterate { table: Table => to(table).map { ref => View.fixed(ref) -> View.fixed(ref.from.table) } }
+    /**
+     * Creates a new reference graph that contains each reference twice:
+     * Once in the table from which the reference originates and once in the table to which the reference points to.
+     * In other words, all the edges in the resulting graph go both ways.
+     * @return A function that accepts a table and yields a reference graph
+     *         node representing the specified table (lazily initialized).
+     *         Edges containing true as the second value are pointing in the same direction as the reference,
+     *         and those with false to the opposite.
+     */
+    def biDirectionalLinkGraph = ViewGraphNode.iterate { table: Table =>
+        from(table).map { ref => View.fixed(ref -> true) -> View.fixed(ref.to.table) } ++
+            to(table).map { ref => View.fixed(ref -> false) -> View.fixed(ref.from.table) }
+    }
     
     
     // IMPLEMENTED  ----------------------
@@ -206,16 +239,14 @@ object References
       * @param table The origin node table
       * @return A reference graph node representing the specified table (lazily initialized)
       */
-    def toLinkGraphFrom(table: Table) = ViewGraphNode
-        .iterate(table) { table => from(table).map { ref => View.fixed(ref) -> View.fixed(ref.to.table) } }
+    def toLinkGraphFrom(table: Table) = linkGraph(table)
     /**
       * Creates a new reference graph where leaving edges are the references coming **to** the node table.
       * I.e. all the references are associated with the tables they point towards, not where they originate from.
       * @param table The origin node table
       * @return A reference graph node representing the specified table (lazily initialized)
       */
-    def toReverseLinkGraphFrom(table: Table) = ViewGraphNode
-        .iterate(table) { table => to(table).map { ref => View.fixed(ref) -> View.fixed(ref.from.table) } }
+    def toReverseLinkGraphFrom(table: Table) = reverseLinkGraph(table)
     /**
       * Creates a new reference graph that contains each reference twice:
       * Once in the table from which the reference originates and once in the table to which the reference points to.
@@ -225,10 +256,7 @@ object References
       *         Edges containing true as the second value are pointing in the same direction as the reference,
       *         and those with false to the opposite.
       */
-    def toBiDirectionalLinkGraphFrom(table: Table) = ViewGraphNode.iterate(table) { table =>
-        from(table).map { ref => View.fixed(ref -> true) -> View.fixed(ref.to.table) } ++
-            to(table).map { ref => View.fixed(ref -> false) -> View.fixed(ref.from.table) }
-    }
+    def toBiDirectionalLinkGraphFrom(table: Table) = biDirectionalLinkGraph(table)
     
     /**
      * Forms a tree based on table references where the root is the specified table and node children are based on
