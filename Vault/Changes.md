@@ -1,14 +1,22 @@
 # Utopia Vault - List of Changes
 
-## v1.20.2 (in development)
+## v1.21 (in development)
+### Breaking changes
+- **ConnectionPool** now requires access to an implicit `ExecutionContext` instance upon construction, 
+  but no longer at every method call.
+- **NoConnectionException** is no longer a case class
 ### New features
 - Added **EqualsById EqualsFunction** object
 ### New methods
 - **ChronoRowFactoryView**
   - Added `.until(Instant)` and `.since(Instant)`
+- **Connection**
+  - Added `.validate()`
 - **References**
   - Added `.linkGraph`, `.reverseLinkGraph` and `.biDirectionalLinkGraph`
 ### Other changes
+- Refactored **ConnectionPool**, adding connection validation and better connection reuse logic
+- Minor refactoring within **Connection**'s opening & closing logic
 - Minor refactoring within **DatabaseCache**
 
 ## v1.20.1 - 23.01.2025

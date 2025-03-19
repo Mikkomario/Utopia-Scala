@@ -7,4 +7,4 @@ import utopia.vault.database.ConnectionPool
   * @author Mikko Hilpinen
   * @since 28.1.2020, v1.4
   */
-object TestConnectionPool extends ConnectionPool
+object TestConnectionPool extends ConnectionPool()(TestThreadPool)
