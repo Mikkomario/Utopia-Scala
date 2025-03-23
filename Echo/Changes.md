@@ -1,12 +1,35 @@
 # Utopia Echo - List of Changes
 
-## v1.2.1 (in development)
+## v1.3 (in development)
+### Breaking changes
+- `EstimateTokenCount.in(String)` now yields an **EstimatedTokenCount** instead of **Int**
+- Multiple potentially breaking changes to **Chat**
+  - Modified **Chat** model conversions. Previously stored **Chat** instances might not behave exactly the same anymore.
+  - Estimated default system message size is now 0 instead of 256 tokens
+  - System message tokens and chat history tokens 
+    are now measured in **PartiallyEstimatedTokenCount** instead of **Int**
+  - Used context size is now measured in **PartiallyEstimatedTokenCount** instead of **UncertainInt**
 ### Bugfixes
 - **BufferedReplyMessage** parsing was previously bugged
 - **Tool** names were previously missing from the Ollama requests
+- **Chat**`.conversationHistoryTokens` was previously bugged
+### New features
+- **EstimateTokenCount** now adjusts the estimations based on the feedback it receives. 
+  **Chat** automatically provides feedback to **EstimateTokenCount**, when it receives statistics from the server.
+- **Chat** now supports customized summarization prompting via 
+  `.summarizationPromptPointer`, `.summarizationPrompt` and a new `.summarize(...)` parameter
 ### New methods
+- **EstimateTokenCount**
+  - Added `.feedback(Int, Int)` and `.train(String, Int)` for adjusting future estimations based on chat query results
+  - Added `.continuallyIn(...)`, which reacts to feedback
 - **OllamaClient**
   - Added `.bufferedResponseFor(...)`, a utility function for performing a **GenerateBuffered** request
+### Other changes
+- Multiple changes to **Chat** behavior:
+  - Modified how chat history size is calculated, and how those calculations are updated as new information is received
+  - `.push(...)` now fails if `maxContextSize` is reached, and no space remains for a response
+  - Modified how `num_predict` is assigned when a custom `num_ctx` is specified via model parameters
+  - Modified how a custom `num_predict` value is handled
 
 ## v1.2 - 23.01.2025
 This update adds saving & loading to the **Chat** interface, improving it in other ways as well. 

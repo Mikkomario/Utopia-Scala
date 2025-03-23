@@ -94,7 +94,7 @@ object ChatTest extends App
 			}
 		}
 		
-		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage)
+		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage).corrected
 		newSystemMessage.foreach(chat.appendSystemMessage)
 		
 		// Starts the interaction loop
