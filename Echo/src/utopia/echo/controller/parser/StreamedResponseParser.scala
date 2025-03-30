@@ -1,6 +1,7 @@
 package utopia.echo.controller.parser
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 import utopia.echo.controller.EchoContext

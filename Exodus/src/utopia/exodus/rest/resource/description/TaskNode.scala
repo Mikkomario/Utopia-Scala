@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.access.http.Method.Get
-import utopia.access.http.Status.{NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.Get
+import utopia.access.model.enumeration.Status.{NotFound, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.organization.DbTask
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData

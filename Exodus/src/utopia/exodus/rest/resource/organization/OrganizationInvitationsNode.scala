@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{Forbidden, Unauthorized}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.{Forbidden, Unauthorized}
 import utopia.citadel.database.access.id.single.DbUserId
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser

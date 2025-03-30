@@ -1,10 +1,10 @@
 package utopia.access.test
 
+import utopia.access.model.ContentType
 import scala.collection.immutable.HashMap
-import utopia.access.http.ContentCategory.Application
-import utopia.access.http.ContentCategory
-import utopia.access.http.ContentCategory.Custom
-import utopia.access.http.ContentType
+import utopia.access.model.enumeration.ContentCategory.Application
+import utopia.access.model.enumeration.ContentCategory.Custom
+import utopia.access.model.enumeration.ContentCategory
 
 /**
  * This app tests parsing of different content types

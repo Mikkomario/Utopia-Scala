@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{Created, NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.{Created, NotFound, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.single.language.DbLanguage
 import utopia.citadel.database.access.single.organization.DbOrganization

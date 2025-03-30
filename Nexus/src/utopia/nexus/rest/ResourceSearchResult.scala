@@ -1,7 +1,7 @@
 package utopia.nexus.rest
 
-import utopia.access.http.Status
-import utopia.access.http.Status._
+import utopia.access.model.enumeration.Status._
+import utopia.access.model.enumeration.Status
 import utopia.nexus.http.Path
 import utopia.nexus.result.Result.Failure
 

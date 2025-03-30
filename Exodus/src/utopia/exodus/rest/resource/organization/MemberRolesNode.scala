@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.{Delete, Post, Put}
-import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.{Delete, Post, Put}
+import utopia.access.model.enumeration.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.many.organization.DbUserRoleRights
 import utopia.citadel.database.access.single.organization.{DbMembership, DbOrganization}
 import utopia.citadel.database.access.single.user.DbUser

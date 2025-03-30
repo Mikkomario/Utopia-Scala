@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method.{Delete, Post}
-import utopia.access.http.Status.Unauthorized
+import utopia.access.model.enumeration.Method.{Delete, Post}
+import utopia.access.model.enumeration.Status.Unauthorized
 import utopia.exodus.database.access.many.auth.{DbScopes, DbTokens, DbTypedTokens}
 import utopia.exodus.database.access.single.auth.DbToken
 import utopia.exodus.model.combined.auth.DetailedToken

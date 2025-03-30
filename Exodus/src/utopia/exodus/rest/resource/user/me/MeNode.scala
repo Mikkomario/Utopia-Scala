@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method.Get
-import utopia.access.http.Status.{NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.Get
+import utopia.access.model.enumeration.Status.{NotFound, Unauthorized}
 import utopia.exodus.model.enumeration.ExodusScope.ReadPersonalData
 import utopia.exodus.rest.resource.scalable.{ExtendableSessionResource, SessionUseCaseImplementation}
 import utopia.exodus.rest.util.AuthorizedContext

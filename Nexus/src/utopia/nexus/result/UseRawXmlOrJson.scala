@@ -1,7 +1,7 @@
 package utopia.nexus.result
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.Status
+import utopia.access.model.enumeration.ContentCategory._
+import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.http.Request
 

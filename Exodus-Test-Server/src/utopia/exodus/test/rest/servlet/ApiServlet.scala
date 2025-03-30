@@ -1,6 +1,6 @@
 package utopia.exodus.test.rest.servlet
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.util.CitadelContext
 import utopia.exodus.model.enumeration.ExodusScope._

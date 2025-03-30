@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user
 
-import utopia.access.http.Method.Get
-import utopia.access.http.Status.{Forbidden, NotFound}
+import utopia.access.model.enumeration.Method.Get
+import utopia.access.model.enumeration.Status.{Forbidden, NotFound}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.ExodusScope.{ReadOrganizationData, ReadPersonalData}
 import utopia.exodus.rest.util.AuthorizedContext

@@ -1,7 +1,7 @@
 package utopia.ambassador.rest.resource.service.auth
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.{BadRequest, NotFound, Unauthorized}
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.process.{AuthCompletionRedirectTargetModel, AuthPreparationModel, AuthPreparationScopeLinkModel}
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default

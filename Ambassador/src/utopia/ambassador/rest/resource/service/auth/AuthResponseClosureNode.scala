@@ -1,7 +1,7 @@
 package utopia.ambassador.rest.resource.service.auth
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{BadRequest, NotFound, ServiceUnavailable, Unauthorized}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.{BadRequest, NotFound, ServiceUnavailable, Unauthorized}
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.database.access.single.process.DbIncompleteAuth
 import utopia.ambassador.database.access.single.service.DbAuthService

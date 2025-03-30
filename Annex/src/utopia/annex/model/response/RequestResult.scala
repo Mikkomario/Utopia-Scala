@@ -1,8 +1,9 @@
 package utopia.annex.model.response
 
-import utopia.access.http.Status.{InternalServerError, OK}
-import utopia.access.http.StatusGroup.ServerError
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status.{InternalServerError, OK}
+import utopia.access.model.enumeration.StatusGroup.ServerError
+import utopia.access.model.enumeration.Status
 import utopia.disciple.model.error.RequestFailedException
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value

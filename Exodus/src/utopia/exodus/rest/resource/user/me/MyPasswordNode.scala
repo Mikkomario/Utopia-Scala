@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Put
-import utopia.access.http.Status.Unauthorized
+import utopia.access.model.enumeration.Method.Put
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status.Unauthorized
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.database.UserDbExtensions._
 import utopia.exodus.model.enumeration.ExodusScope.{ChangeKnownPassword, ReplaceForgottenPassword}

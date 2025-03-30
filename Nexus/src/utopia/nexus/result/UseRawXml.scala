@@ -1,10 +1,10 @@
 package utopia.nexus.result
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.Status
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.ContentCategory._
 import utopia.nexus.http.Request
 import utopia.nexus.http.Response
-import utopia.access.http.Headers
+import utopia.access.model.enumeration.Status
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
 

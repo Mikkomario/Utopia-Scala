@@ -1,6 +1,7 @@
 package utopia.annex.controller
 
-import utopia.access.http.{Headers, Method}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.disciple.http.request.Request

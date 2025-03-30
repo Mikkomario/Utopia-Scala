@@ -1,6 +1,6 @@
 package utopia.ambassador.rest.util
 
-import utopia.access.http.Status.Unauthorized
+import utopia.access.model.enumeration.Status.Unauthorized
 import utopia.ambassador.database.access.single.process.DbAuthPreparation
 import utopia.ambassador.model.combined.scope.TaskScope
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default

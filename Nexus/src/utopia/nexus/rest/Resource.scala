@@ -1,8 +1,8 @@
 package utopia.nexus.rest
 
+import utopia.access.model.enumeration.Method
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
-import utopia.access.http.Method
 
 trait Resource[-C <: Context]
 {

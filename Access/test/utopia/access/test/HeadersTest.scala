@@ -1,8 +1,8 @@
 package utopia.access.test
 
-import utopia.access.http.ContentCategory.Text
-import utopia.access.http.Headers
-import utopia.access.http.Method.{Delete, Get, Post}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.ContentCategory.Text
+import utopia.access.model.enumeration.Method.{Delete, Get, Post}
 
 import java.time.Instant
 

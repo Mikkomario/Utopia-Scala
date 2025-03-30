@@ -1,7 +1,6 @@
 package utopia.disciple.http.request
 
-import utopia.access.http.ContentType
-
+import utopia.access.model.ContentType
 import java.io.{File, FileInputStream}
 import scala.util.Try
 

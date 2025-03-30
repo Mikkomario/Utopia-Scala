@@ -1,7 +1,7 @@
 package utopia.echo.controller
 
-import utopia.access.http.Status
-import utopia.access.http.Status.InternalServerError
+import utopia.access.model.enumeration.Status.InternalServerError
+import utopia.access.model.enumeration.Status
 
 /**
   * Used for specifying and accessing Echo-specific context variables

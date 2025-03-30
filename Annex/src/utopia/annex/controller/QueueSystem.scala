@@ -1,6 +1,6 @@
 package utopia.annex.controller
 
-import utopia.access.http.Status.ServiceUnavailable
+import utopia.access.model.enumeration.Status.ServiceUnavailable
 import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, RequestQueueable, Retractable}
 import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}

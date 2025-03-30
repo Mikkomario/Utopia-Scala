@@ -1,6 +1,6 @@
 package utopia.annex.model.request
 
-import utopia.access.http.Method
+import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.http.request.Body

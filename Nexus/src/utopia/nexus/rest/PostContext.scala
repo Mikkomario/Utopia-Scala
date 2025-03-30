@@ -1,8 +1,8 @@
 package utopia.nexus.rest
 
-import utopia.access.http.ContentCategory.{Application, Text}
-import utopia.access.http.Status.BadRequest
-import utopia.access.http.error.ContentTypeException
+import utopia.access.model.enumeration.ContentCategory.{Application, Text}
+import utopia.access.model.enumeration.Status.BadRequest
+import utopia.access.model.error.ContentTypeException
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._

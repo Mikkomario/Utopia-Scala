@@ -1,7 +1,7 @@
 package utopia.annex.model.request
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.Spirit

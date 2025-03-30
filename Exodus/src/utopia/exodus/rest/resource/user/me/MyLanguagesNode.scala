@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method
-import utopia.access.http.Method.{Delete, Get, Post, Put}
-import utopia.access.http.Status.{BadRequest, Forbidden, Unauthorized}
+import utopia.access.model.enumeration.Method.{Delete, Get, Post, Put}
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status.{BadRequest, Forbidden, Unauthorized}
 import utopia.citadel.database.access.many.description.DbDescriptionRoles
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.user.DbUser

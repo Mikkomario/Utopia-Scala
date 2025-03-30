@@ -1,7 +1,7 @@
 package utopia.nexus.rest
 
-import utopia.access.http.Method
-import utopia.access.http.Status.NotImplemented
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status.NotImplemented
 import utopia.flow.collection.immutable.Empty
 import utopia.nexus.http.Path
 import utopia.nexus.result.Result

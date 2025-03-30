@@ -1,6 +1,7 @@
 package utopia.disciple.test
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.disciple.apache.Gateway
 import utopia.disciple.controller.AccessLogger
 import utopia.disciple.http.request.Request

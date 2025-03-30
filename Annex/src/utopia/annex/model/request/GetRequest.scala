@@ -1,6 +1,6 @@
 package utopia.annex.model.request
 
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.model.immutable.Value

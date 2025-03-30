@@ -1,6 +1,6 @@
 package utopia.nexus.rest.scalable
 
-import utopia.access.http.Method
+import utopia.access.model.enumeration.Method
 import utopia.flow.collection.immutable.Empty
 import utopia.nexus.rest.Context
 

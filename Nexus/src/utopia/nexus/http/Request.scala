@@ -1,8 +1,7 @@
 package utopia.nexus.http
 
-import utopia.access.http.Method
-import utopia.access.http.Cookie
-import utopia.access.http.Headers
+import utopia.access.model.{Cookie, Headers}
+import utopia.access.model.enumeration.Method
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.time.Now

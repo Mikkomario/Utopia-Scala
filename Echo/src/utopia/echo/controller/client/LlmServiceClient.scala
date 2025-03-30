@@ -1,6 +1,7 @@
 package utopia.echo.controller.client
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{ApiClient, PreparingResponseParser, QueueSystem, RequestQueue}
 import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}

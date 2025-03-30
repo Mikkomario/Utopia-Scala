@@ -1,6 +1,6 @@
 package utopia.annex.test
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{QueueSystem, RequestQueue}
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.json.{JsonParser, JsonReader}

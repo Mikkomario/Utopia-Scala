@@ -1,8 +1,8 @@
 package utopia.nexus.test
 
-import utopia.access.http.Method
-import utopia.access.http.Method._
-import utopia.access.http.Status._
+import utopia.access.model.enumeration.Method._
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType

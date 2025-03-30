@@ -1,7 +1,8 @@
 package utopia.annex.test
 
-import utopia.access.http.Status.OK
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status.OK
+import utopia.access.model.enumeration.Status
 import utopia.annex.controller.ContainerUpdateLoop
 import utopia.annex.model.response.Response
 import utopia.flow.async.process.Wait

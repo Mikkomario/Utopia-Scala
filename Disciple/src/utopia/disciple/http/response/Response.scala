@@ -1,6 +1,7 @@
 package utopia.disciple.http.response
 
-import utopia.access.http.{Headers, Status, StatusGroup}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.{Status, StatusGroup}
 
 /**
 * Responses are sent by a server. Responses have a specific status and may contain a body

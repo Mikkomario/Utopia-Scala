@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.{Get, Put}
-import utopia.access.http.Status.NotFound
+import utopia.access.model.enumeration.Method.{Get, Put}
+import utopia.access.model.enumeration.Status.NotFound
 import utopia.citadel.database.access.id.many.DbDescriptionRoleIds
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, DbOrganizationDescriptions}
 import utopia.citadel.database.access.single.language.DbLanguage

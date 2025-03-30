@@ -1,6 +1,6 @@
 package utopia.nexus.test
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.immutable.{Pair, Single}

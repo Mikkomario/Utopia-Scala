@@ -1,5 +1,21 @@
 # Utopia Access - List of Changes
 
+## v1.6 (in development)
+### Breaking changes
+- Refactored the package structure
+  - Moved all files to `utopia.access.model`
+    - Enumeration files were moved further to `.enumeration`
+- **Status**, **Method** and **ContentCategory** now extend **OpenEnumeration** / **OpenEnumerationValue**
+- `StatusGroup.neutral` and `.failure` now yield **Pair** instead of **Vector**
+### Deprecations
+- Deprecated `Method.parse(String)` in favor of `.findFor(String)` and `.apply(String)`
+- Deprecated `ContentCategory.parse(String)` in favor of `.apply(String)`
+- Deprecated `ContentCategory.existingOptions` in favor of `.values`
+- Deprecated `Status.setup()`, since all predefined values are now set up from the beginning
+### New methods
+- StatusGroup (object)
+  - Added `.values`
+
 ## v1.5.3 - 23.01.2025
 This small update makes calling `Status.setup()` optional. The "failures" to do so will now be handled automatically, 
 instead of throwing exceptions.

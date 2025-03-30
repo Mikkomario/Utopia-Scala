@@ -1,6 +1,6 @@
 package utopia.exodus.util
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.citadel.util.CitadelContext
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.util.logging.{Logger, SysErrLogger}

@@ -1,7 +1,7 @@
 package utopia.nexus.servlet
 
-import utopia.access.http.Status
-import utopia.access.http.StatusGroup.ServerError
+import utopia.access.model.enumeration.StatusGroup.ServerError
+import utopia.access.model.enumeration.Status
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now

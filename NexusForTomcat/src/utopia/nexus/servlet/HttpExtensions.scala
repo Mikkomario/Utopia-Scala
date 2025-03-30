@@ -1,7 +1,8 @@
 package utopia.nexus.servlet
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.{ContentType, Cookie, Headers, Method}
+import utopia.access.model.enumeration.ContentCategory._
+import utopia.access.model.{ContentType, Cookie, Headers}
+import utopia.access.model.enumeration.Method
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.nexus.http.{Path, Request, Response, ServerSettings, StreamedBody}

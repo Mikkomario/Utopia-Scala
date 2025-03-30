@@ -1,12 +1,12 @@
 package utopia.nexus.test
 
-import utopia.access.http.Method._
+import utopia.access.model.enumeration.Method._
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
 import utopia.nexus.http.ServerSettings
 import utopia.nexus.rest.Resource
 import utopia.flow.generic.casting.ValueConversions.ValueOfString
-import utopia.access.http.Status._
+import utopia.access.model.enumeration.Status._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.nexus.rest.Context

@@ -1,6 +1,6 @@
 package utopia.disciple.http.request
 
-import utopia.access.http.ContentType
+import utopia.access.model.ContentType
 import utopia.flow.parse.AutoClose._
 
 import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}

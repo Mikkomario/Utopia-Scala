@@ -1,8 +1,8 @@
 package utopia.annex.test
 
-import utopia.access.http.Method.Post
-import utopia.access.http.{Method, Status}
-import utopia.access.http.Status.OK
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.OK
+import utopia.access.model.enumeration.{Method, Status}
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult

@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method.{Get, Patch, Put}
-import utopia.access.http.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.{Get, Patch, Put}
+import utopia.access.model.enumeration.Status.{BadRequest, Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.single.user.DbUser
 import utopia.exodus.model.enumeration.ExodusScope.{ChangeEmail, PersonalActions, ReadPersonalData}
 import utopia.exodus.model.stored.auth.Token

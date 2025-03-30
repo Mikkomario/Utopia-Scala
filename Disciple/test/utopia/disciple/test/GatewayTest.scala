@@ -1,8 +1,8 @@
 package utopia.disciple.test
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.Method._
-import utopia.access.http.Status
+import utopia.access.model.enumeration.ContentCategory._
+import utopia.access.model.enumeration.Method._
+import utopia.access.model.enumeration.Status
 import utopia.disciple.apache.Gateway
 import utopia.disciple.http.request.{FileBody, Request}
 import utopia.flow.async.AsyncExtensions._

@@ -1,7 +1,7 @@
 package utopia.nexus.http
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.{ContentType, Headers}
+import utopia.access.model.enumeration.ContentCategory._
+import utopia.access.model.{ContentType, Headers}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.error.DataTypeException

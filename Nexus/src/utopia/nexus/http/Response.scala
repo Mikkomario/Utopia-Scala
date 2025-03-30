@@ -1,18 +1,16 @@
 package utopia.nexus.http
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.access.http.Status._
-import utopia.access.http.ContentCategory._
+import utopia.access.model.enumeration.Status._
+import utopia.access.model.enumeration.ContentCategory._
 
 import java.io.OutputStream
 import java.nio.file
 import java.nio.file.Files
 import java.nio.charset.StandardCharsets
 import java.nio.charset.Charset
-import utopia.access.http.Status
-import utopia.access.http.Cookie
-import utopia.access.http.Headers
-import utopia.access.http.ContentType
+import utopia.access.model.{ContentType, Cookie, Headers}
+import utopia.access.model.enumeration.Status
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.Mutate

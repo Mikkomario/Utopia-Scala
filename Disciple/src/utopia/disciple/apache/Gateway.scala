@@ -12,8 +12,9 @@ import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
 import org.apache.hc.core5.ssl.SSLContexts
-import utopia.access.http.Method._
-import utopia.access.http.{Headers, Method, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method._
+import utopia.access.model.enumeration.{Method, Status}
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
 import utopia.disciple.http.request.{Body, Request, Timeout}

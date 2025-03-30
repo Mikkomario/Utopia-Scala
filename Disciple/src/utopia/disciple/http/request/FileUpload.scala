@@ -1,9 +1,9 @@
 package utopia.disciple.http.request
 
+import utopia.access.model.ContentType
+
 import java.io.File
 import java.nio.charset.Charset
-
-import utopia.access.http.ContentType
 
 object FileUpload
 {

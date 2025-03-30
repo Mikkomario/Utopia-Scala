@@ -1,6 +1,6 @@
 package utopia.echo.test
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.AccessLogger

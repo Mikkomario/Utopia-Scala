@@ -1,7 +1,7 @@
 package utopia.echo.model.request.llm
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult

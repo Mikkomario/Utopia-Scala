@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.Delete
+import utopia.access.model.enumeration.Method.Delete
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.model.enumeration.ExodusTask.CancelOrganizationDeletion
 import utopia.exodus.rest.util.AuthorizedContext

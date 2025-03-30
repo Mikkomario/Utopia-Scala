@@ -1,7 +1,8 @@
 package utopia.annex.controller
 
-import utopia.access.http.Method.{Get, Post}
-import utopia.access.http.{Headers, Method, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method.{Get, Post}
+import utopia.access.model.enumeration.{Method, Status}
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed

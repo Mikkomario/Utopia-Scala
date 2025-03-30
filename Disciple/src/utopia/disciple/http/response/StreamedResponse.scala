@@ -1,6 +1,7 @@
 package utopia.disciple.http.response
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.flow.parse.AutoClose._
 import utopia.flow.view.mutable.async.Volatile
 

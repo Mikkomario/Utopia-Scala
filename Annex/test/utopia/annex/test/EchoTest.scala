@@ -1,6 +1,6 @@
 package utopia.annex.test
 
-import utopia.access.http.Status.OK
+import utopia.access.model.enumeration.Status.OK
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.test.TestClientContext._
 import utopia.flow.async.AsyncExtensions._

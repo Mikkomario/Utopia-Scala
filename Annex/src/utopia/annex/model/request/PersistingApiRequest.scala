@@ -1,6 +1,6 @@
 package utopia.annex.model.request
 
-import utopia.access.http.Method
+import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue}
 import utopia.annex.model.request.ApiRequest.Send

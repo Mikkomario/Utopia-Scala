@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.organization
 
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
 import utopia.citadel.database.access.single.organization.DbOrganization
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.flow.collection.immutable.Single

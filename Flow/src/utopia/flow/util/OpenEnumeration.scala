@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.equality.EqualsFunction
 
 /**
@@ -33,6 +33,12 @@ class OpenEnumeration[V <: OpenEnumerationValue[A], A](initialValues: Seq[V] = E
 	// OTHER    ------------------------------
 	
 	/**
+	  * Introduces a new value to this enumeration
+	  * @param value A new value to introduce
+	  */
+	def introduce(value: V): Unit = introduce(Single(value))
+	def introduce(first: V, second: V, more: V*): Unit = introduce(Pair(first, second) ++ more)
+	/**
 	 * Introduces new values to this enumeration
 	 * @param values Values to introduce
 	 */
@@ -44,4 +50,12 @@ class OpenEnumeration[V <: OpenEnumerationValue[A], A](initialValues: Seq[V] = E
 	 *         None if no matching value was found.
 	 */
 	def findFor(identifier: A) = values.find { v => identifiersMatch(identifier, v.identifier) }
+	/**
+	  * @param identifier An enumeration identifier
+	  * @return A value which matches the specified identifier.
+	  *         Failure if no match was found.
+	  */
+	def tryFindFor(identifier: A) =
+		findFor(identifier)
+			.toTry { new NoSuchElementException(s"No ${ getClass.getSimpleName } matches \"$identifier\"") }
 }

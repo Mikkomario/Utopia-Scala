@@ -1,7 +1,6 @@
 package utopia.nexus.http
 
-import utopia.access.http.Headers
-import utopia.access.http.ContentType
+import utopia.access.model.{ContentType, Headers}
 
 /**
 * This trait represents a request body or a part of that body (in case of multipart requests)

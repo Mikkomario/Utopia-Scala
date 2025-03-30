@@ -1,7 +1,7 @@
 package utopia.nexus.test
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
+import utopia.access.model.enumeration.Method
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.immutable.Single
 import utopia.flow.time.TimeExtensions._

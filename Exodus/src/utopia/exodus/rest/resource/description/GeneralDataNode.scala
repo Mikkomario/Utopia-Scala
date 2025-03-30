@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.description
 
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
 import utopia.citadel.database.access.many.description.{DbDescriptionRoles, ManyDescribedAccess}
 import utopia.exodus.model.enumeration.ExodusScope.ReadGeneralData
 import utopia.exodus.rest.util.AuthorizedContext

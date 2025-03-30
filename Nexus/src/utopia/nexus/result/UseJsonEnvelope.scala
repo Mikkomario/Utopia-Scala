@@ -1,6 +1,6 @@
 package utopia.nexus.result
 
-import utopia.access.http.{Status, StatusGroup}
+import utopia.access.model.enumeration.{Status, StatusGroup}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.StringExtensions._

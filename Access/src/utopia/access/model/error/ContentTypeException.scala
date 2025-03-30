@@ -1,7 +1,7 @@
-package utopia.access.http.error
+package utopia.access.model.error
 
+import utopia.access.model.ContentType
 import utopia.flow.collection.CollectionExtensions._
-import utopia.access.http.ContentType
 import utopia.flow.collection.immutable.Empty
 
 object ContentTypeException

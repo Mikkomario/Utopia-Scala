@@ -1,7 +1,7 @@
 package utopia.scribe.client.controller.logging
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Method
 import utopia.annex.controller.{ApiClient, PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
 import utopia.annex.model.request.{ApiRequest, Persisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated

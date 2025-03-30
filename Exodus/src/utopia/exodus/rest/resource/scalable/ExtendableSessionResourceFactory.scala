@@ -1,6 +1,6 @@
 package utopia.exodus.rest.resource.scalable
 
-import utopia.access.http.Method
+import utopia.access.model.enumeration.Method
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.rest.util.AuthorizedContext
 import utopia.exodus.rest.util.AuthorizedContext.SessionParams

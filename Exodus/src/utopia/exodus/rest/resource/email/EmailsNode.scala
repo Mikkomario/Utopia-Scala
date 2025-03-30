@@ -1,8 +1,8 @@
 package utopia.exodus.rest.resource.email
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{Accepted, BadRequest, InternalServerError, NotImplemented}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status.{Accepted, BadRequest, InternalServerError, NotImplemented}
 import utopia.citadel.database.access.many.user.DbManyUserSettings
 import utopia.citadel.database.access.single.user.DbUserSettings
 import utopia.exodus.model.enumeration.ExodusEmailValidationPurpose.{EmailChange, PasswordReset, UserCreation}

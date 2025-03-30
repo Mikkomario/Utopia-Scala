@@ -1,6 +1,6 @@
 package utopia.ambassador.rest.resource.service
 
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.many.service.DbAuthServices

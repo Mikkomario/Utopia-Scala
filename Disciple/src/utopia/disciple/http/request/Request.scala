@@ -1,7 +1,8 @@
 package utopia.disciple.http.request
 
-import utopia.access.http.{Headers, Method}
-import utopia.access.http.Method._
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method._
+import utopia.access.model.enumeration.Method
 import utopia.flow.generic.model
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 

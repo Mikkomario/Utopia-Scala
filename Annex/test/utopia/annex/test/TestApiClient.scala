@@ -1,8 +1,9 @@
 package utopia.annex.test
 
-import utopia.access.http.ContentCategory.Application
-import utopia.access.http.Status.InternalServerError
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.ContentCategory.Application
+import utopia.access.model.enumeration.Status.InternalServerError
+import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
 import utopia.annex.util.ResponseParseExtensions._

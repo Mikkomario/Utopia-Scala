@@ -1,6 +1,6 @@
 package utopia.exodus.rest.util
 
-import utopia.access.http.Status.{Forbidden, InternalServerError, Unauthorized}
+import utopia.access.model.enumeration.Status.{Forbidden, InternalServerError, Unauthorized}
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.single.organization.DbMembership
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}

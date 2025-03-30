@@ -1,7 +1,7 @@
 package utopia.nexus.test
 
-import utopia.access.http.Status.{NoContent, OK}
-import utopia.access.http.{Method, Status}
+import utopia.access.model.enumeration.Status.{NoContent, OK}
+import utopia.access.model.enumeration.{Method, Status}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version

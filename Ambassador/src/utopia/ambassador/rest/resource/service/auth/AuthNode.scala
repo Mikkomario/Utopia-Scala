@@ -1,7 +1,7 @@
 package utopia.ambassador.rest.resource.service.auth
 
-import utopia.access.http.Method.Get
-import utopia.access.http.Status.{InternalServerError, NotFound}
+import utopia.access.model.enumeration.Method.Get
+import utopia.access.model.enumeration.Status.{InternalServerError, NotFound}
 import utopia.ambassador.controller.implementation.AcquireTokens
 import utopia.ambassador.controller.template.AuthRedirector
 import utopia.ambassador.database.access.single.process.DbAuthPreparation

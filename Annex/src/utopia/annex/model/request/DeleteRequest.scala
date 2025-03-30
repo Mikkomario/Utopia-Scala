@@ -1,6 +1,6 @@
 package utopia.annex.model.request
 
-import utopia.access.http.Method.Delete
+import utopia.access.model.enumeration.Method.Delete
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.immutable.Pair

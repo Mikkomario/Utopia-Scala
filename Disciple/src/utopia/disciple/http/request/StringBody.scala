@@ -2,8 +2,8 @@ package utopia.disciple.http.request
 
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.net.URLEncodedUtils
-import utopia.access.http.ContentCategory._
-import utopia.access.http.ContentType
+import utopia.access.model.ContentType
+import utopia.access.model.enumeration.ContentCategory._
 import utopia.flow.generic.model.template.{ModelLike, Property}
 
 import java.io.ByteArrayInputStream

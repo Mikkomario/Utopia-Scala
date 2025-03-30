@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user.me
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.{Forbidden, NotFound, Unauthorized}
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.{Forbidden, NotFound, Unauthorized}
 import utopia.citadel.database.access.single.organization.DbInvitation
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}
 import utopia.citadel.database.model.organization.InvitationResponseModel

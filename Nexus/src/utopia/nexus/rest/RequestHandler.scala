@@ -1,6 +1,6 @@
 package utopia.nexus.rest
 
-import utopia.access.http.Status._
+import utopia.access.model.enumeration.Status._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model

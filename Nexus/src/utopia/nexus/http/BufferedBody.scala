@@ -1,8 +1,7 @@
 package utopia.nexus.http
 
-import utopia.access.http.ContentCategory._
-import utopia.access.http.ContentType
-import utopia.access.http.Headers
+import utopia.access.model.enumeration.ContentCategory._
+import utopia.access.model.{ContentType, Headers}
 
 /**
 * This type of body holds the whole data in memory

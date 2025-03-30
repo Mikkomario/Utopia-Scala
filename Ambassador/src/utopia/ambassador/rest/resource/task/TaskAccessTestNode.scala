@@ -1,6 +1,6 @@
 package utopia.ambassador.rest.resource.task
 
-import utopia.access.http.Method.Get
+import utopia.access.model.enumeration.Method.Get
 import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.access.many.description.DbScopeDescriptions
 import utopia.ambassador.database.access.many.service.DbAuthServices

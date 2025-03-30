@@ -1,8 +1,8 @@
 package utopia.scribe.api.rest.logging
 
-import utopia.access.http.Method
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.Accepted
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Status.Accepted
 import utopia.flow.operator.Identity
 import utopia.flow.util.Mutate
 import utopia.nexus.http.{Path, Response}

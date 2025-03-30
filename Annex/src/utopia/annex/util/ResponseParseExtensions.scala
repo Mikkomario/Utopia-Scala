@@ -1,6 +1,6 @@
 package utopia.annex.util
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}

@@ -1,6 +1,7 @@
 package utopia.annex.controller
 
-import utopia.access.http.{Headers, Status}
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.Response
 import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
 import utopia.flow.operator.Identity

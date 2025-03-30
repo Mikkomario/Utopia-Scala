@@ -1,7 +1,8 @@
 package utopia.nexus.result
 
-import utopia.access.http.{Headers, Status, StatusGroup}
-import utopia.access.http.Status._
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status._
+import utopia.access.model.enumeration.{Status, StatusGroup}
 import utopia.flow.generic.model.immutable.Value
 import utopia.nexus.rest.Context
 

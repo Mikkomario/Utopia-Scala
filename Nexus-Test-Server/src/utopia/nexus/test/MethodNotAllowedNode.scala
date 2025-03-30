@@ -1,7 +1,7 @@
 package utopia.nexus.test
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status.NoContent
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status.NoContent
 import utopia.flow.collection.immutable.Single
 import utopia.nexus.http.{Path, Response}
 import utopia.nexus.rest.{Context, LeafResource}

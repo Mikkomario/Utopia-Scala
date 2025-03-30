@@ -1,7 +1,7 @@
 package utopia.exodus.rest.resource.user
 
-import utopia.access.http.Method.Post
-import utopia.access.http.Status._
+import utopia.access.model.enumeration.Method.Post
+import utopia.access.model.enumeration.Status._
 import utopia.citadel.database.access.many.language.DbLanguages
 import utopia.citadel.database.access.many.user.DbManyUserSettings
 import utopia.citadel.database.access.single.user.{DbUser, DbUserSettings}

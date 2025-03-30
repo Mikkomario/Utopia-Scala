@@ -1,7 +1,7 @@
 package utopia.annex.controller
 
-import utopia.access.http.Status
-import utopia.access.http.Status.NotModified
+import utopia.access.model.enumeration.Status.NotModified
+import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess

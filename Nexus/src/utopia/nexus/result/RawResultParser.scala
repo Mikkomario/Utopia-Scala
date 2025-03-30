@@ -1,6 +1,6 @@
 package utopia.nexus.result
 
-import utopia.access.http.Status
+import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
 import utopia.nexus.http.{Request, Response}

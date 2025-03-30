@@ -1,27 +1,17 @@
-package utopia.access.http
+package utopia.access.model.enumeration
 
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsBy
-import utopia.flow.util.UncertainBoolean
-import utopia.flow.view.mutable.Settable
+import utopia.flow.util.{OpenEnumeration, OpenEnumerationValue, UncertainBoolean}
 
-object Status
+object Status extends OpenEnumeration[Status, Int]
 {
-	// ATTRIBUTES   -----------------------------
+	// INITIAL CODE -----------------------------
 	
-	private var _values = Vector[Status]()
-	private val setupFlag = Settable()
-	
-	
-	// COMPUTED ---------------------------------
-	
-	/**
-	 * All Values listed in this project
-	 */
-	def values = {
-		setup()
-		_values
-	}
+	introduce(OK, Created, Accepted,
+		NoContent, MovedPermanently, Found, NotModified,
+		BadRequest, Unauthorized, Forbidden, NotFound, MethodNotAllowed,
+		InternalServerError, NotImplemented, ServiceUnavailable)
 	
 	
 	// OTHER    ---------------------------------
@@ -32,38 +22,11 @@ object Status
 	 */
 	def apply(code: Int) = values.find { _.code == code }.getOrElse { new Status("Other", code) }
 	
-	/**
-	 * Sets up the initial status codes. This must be called before using other methods in this object.
-	 */
-	def setup() = {
-		if (setupFlag.set())
-			_values = Vector(OK, Created, Accepted,
-				NoContent, MovedPermanently, Found, NotModified,
-				BadRequest, Unauthorized, Forbidden, NotFound, MethodNotAllowed,
-				InternalServerError, NotImplemented, ServiceUnavailable)
-	}
-	
-	/**
-	 * Introduces a new known status
-	 * @param status New status to register
-	 */
-	def introduce(status: Status) = {
-		setup()
-		if (_values.forall { _.code != status.code })
-			_values :+= status
-	}
-	
-	/**
-	 * Introduces new known statuses
-	 * @param statuses Statuses to register
-	 */
-	def introduce(statuses: IterableOnce[Status]) = {
-		setup()
-		_values ++= statuses.iterator.filterNot { s => _values.exists { _.code == s.code } }
-	}
+	@deprecated("This function doesn't do anything anymore.", "v1.6")
+	def setup() = ()
 	
 	
-	// NESTED   ---------------------------------
+	// VALUES   ---------------------------------
 	
 	/**
 	 * The request has succeeded.
@@ -239,14 +202,14 @@ object Status
  */
 class Status(val name: String, val code: Int, val isTemporary: UncertainBoolean = UncertainBoolean,
              val doNotRepeat: UncertainBoolean = UncertainBoolean)
-	extends EqualsBy
+	extends EqualsBy with OpenEnumerationValue[Int]
 {
 	// ATTRIBUTES    -----------------------
 	
 	/**
 	 * The status group this particular status belongs to
 	 */
-	val group = StatusGroup.forCode(code)
+	lazy val group = StatusGroup.forCode(code)
 	
 	
 	// COMPUTED -------------------------
@@ -256,12 +219,14 @@ class Status(val name: String, val code: Int, val isTemporary: UncertainBoolean 
 	 */
 	def isSuccess = code < 400
 	/**
-	 * @return Whether this status represents a failure (code range 400-)
+	 * @return Whether this status represents a failure (code range 400+)
 	 */
 	def isFailure = code >= 400
 	
 	
 	// IMPLEMENTED    ----------------------
+	
+	override def identifier: Int = code
 	
 	protected override def equalsProperties = Single(code)
 	

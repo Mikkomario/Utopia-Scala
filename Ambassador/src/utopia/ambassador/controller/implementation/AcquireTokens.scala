@@ -1,7 +1,7 @@
 package utopia.ambassador.controller.implementation
 
-import utopia.access.http.Headers
-import utopia.access.http.Method.Post
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method.Post
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.access.single.token.DbAuthToken
