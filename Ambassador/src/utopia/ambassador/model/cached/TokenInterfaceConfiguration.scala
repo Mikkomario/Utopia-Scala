@@ -1,7 +1,6 @@
 package utopia.ambassador.model.cached
 
-import utopia.disciple.apache.Gateway
-
+import utopia.disciple.controller.Gateway
 import scala.concurrent.duration.Duration
 
 /**

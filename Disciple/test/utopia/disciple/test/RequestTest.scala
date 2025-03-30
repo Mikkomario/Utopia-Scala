@@ -2,9 +2,9 @@ package utopia.disciple.test
 
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status
-import utopia.disciple.apache.Gateway
-import utopia.disciple.controller.AccessLogger
-import utopia.disciple.http.request.Request
+import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.interceptor.AccessLogger
+import utopia.disciple.model.request.Request
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.test.TestContext._

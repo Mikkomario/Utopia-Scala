@@ -8,9 +8,9 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{Body, Request, Timeout}
-import utopia.disciple.http.response.ResponseParser
+import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser

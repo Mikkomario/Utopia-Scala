@@ -1,7 +1,7 @@
 # Utopia Annex - List of Changes
 
 ## v1.9.2 (in development)
-Supports Access v1.6
+Supports Access v1.6 & Disciple v1.9
 
 ## v1.9.1 - 23.01.2025
 This small update introduces new customization / constructors for **PullSchrodinger**s.

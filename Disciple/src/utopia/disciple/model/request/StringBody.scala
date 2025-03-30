@@ -1,4 +1,4 @@
-package utopia.disciple.http.request
+package utopia.disciple.model.request
 
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.net.URLEncodedUtils

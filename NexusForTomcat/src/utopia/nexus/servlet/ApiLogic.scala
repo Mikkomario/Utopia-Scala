@@ -1,7 +1,6 @@
 package utopia.nexus.servlet
 
 import utopia.access.model.enumeration.StatusGroup.ServerError
-import utopia.access.model.enumeration.Status
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
@@ -31,11 +30,6 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[RequestInter
               (implicit override val jsonParser: JsonParser, override val settings: ServerSettings, logger: Logger)
 	extends ServletLogic
 {
-	// INITIAL CODE ------------------------
-	
-	Status.setup()
-	
-	
 	// IMPLEMENTED  ------------------------
 	
 	override def apply(request: Request) = {

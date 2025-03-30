@@ -6,7 +6,7 @@ import utopia.access.model.enumeration.{Method, Status}
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.http.request.Body
+import utopia.disciple.model.request.Body
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
 

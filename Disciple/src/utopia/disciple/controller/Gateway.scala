@@ -1,4 +1,4 @@
-package utopia.disciple.apache
+package utopia.disciple.controller
 
 import org.apache.hc.client5.http.classic.methods._
 import org.apache.hc.client5.http.config.RequestConfig
@@ -15,10 +15,11 @@ import org.apache.hc.core5.ssl.SSLContexts
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method._
 import utopia.access.model.enumeration.{Method, Status}
-import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
-import utopia.disciple.http.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
-import utopia.disciple.http.request.{Body, Request, Timeout}
-import utopia.disciple.http.response.{ResponseParser, StreamedResponse}
+import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInterceptor}
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
+import utopia.disciple.model.request.{Body, Request, Timeout}
+import utopia.disciple.model.response.StreamedResponse
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.Identity

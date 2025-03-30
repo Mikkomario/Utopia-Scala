@@ -1,4 +1,4 @@
-package utopia.disciple.http.request
+package utopia.disciple.model.request
 
 import utopia.access.model.ContentType
 

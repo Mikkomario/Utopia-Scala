@@ -1,10 +1,10 @@
 package utopia.echo.controller.client
 
 import utopia.annex.util.RequestResultExtensions._
-import utopia.disciple.apache.Gateway
-import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
-import utopia.disciple.http.request.Timeout
+import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInterceptor}
+import utopia.disciple.controller.Gateway
 import utopia.disciple.model.error.RequestFailedException
+import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.Chat
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.generate.Prompt

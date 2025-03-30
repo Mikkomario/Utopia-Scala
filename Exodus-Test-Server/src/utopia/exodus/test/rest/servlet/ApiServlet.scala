@@ -1,6 +1,5 @@
 package utopia.exodus.test.rest.servlet
 
-import utopia.access.model.enumeration.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.util.CitadelContext
 import utopia.exodus.model.enumeration.ExodusScope._
@@ -63,8 +62,6 @@ class ApiServlet extends LogicWrappingServlet
 	
 	
 	// INITIAL CODE	----------------------------
-	
-	Status.setup()
 	
 	ExodusContext.setup(exc, connectionPool,
 		dbSettings("db_name", "db").stringOr("exodus_db")) {

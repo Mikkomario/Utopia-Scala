@@ -1,7 +1,7 @@
-package utopia.disciple.controller
+package utopia.disciple.controller.interceptor
 
-import utopia.disciple.http.request.Request
-import utopia.disciple.http.response.StreamedResponse
+import utopia.disciple.model.request.Request
+import utopia.disciple.model.response.StreamedResponse
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}

@@ -1,7 +1,14 @@
 # Utopia Disciple - List of Changes
 
-## v1.8.1 (in development)
+## v1.9 (in development)
 Supports **Flow v2.6** & **Access v1.6**
+### Breaking changes
+- Refactored the package structure
+  - Moved **Gateway** from `apache` to `controller`
+  - Moved `request` & `response` packages from `http` to `model`
+  - Moved **ResponseParser** and **ResponseParseResult** from `response` to `controller.parse`
+  - Moved **NoContentException** from `response` to `model.error`
+  - Moved **RequestInterceptor**, **ResponseInterceptor** and **AccessLogger** to `interceptor` -sub-package
 
 ## v1.8 - 23.01.2025
 This update makes response parsing more reliable, handling better edge cases such as empty responses and 

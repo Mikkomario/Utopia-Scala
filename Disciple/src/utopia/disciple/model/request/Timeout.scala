@@ -1,4 +1,4 @@
-package utopia.disciple.http.request
+package utopia.disciple.model.request
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import utopia.flow.collection.CollectionExtensions._

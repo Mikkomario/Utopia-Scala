@@ -4,8 +4,8 @@ import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestResult, Response}
-import utopia.disciple.http.request.Request
-import utopia.disciple.http.response.ResponseParser
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.request.Request
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 import scala.concurrent.Future

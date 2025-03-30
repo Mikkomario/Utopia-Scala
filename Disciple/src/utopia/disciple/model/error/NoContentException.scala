@@ -1,4 +1,4 @@
-package utopia.disciple.http.response
+package utopia.disciple.model.error
 
 /**
   * Thrown when trying to read an entity without content

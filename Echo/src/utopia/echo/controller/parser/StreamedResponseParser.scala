@@ -3,7 +3,7 @@ package utopia.echo.controller.parser
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
+import utopia.disciple.controller.parse.{ResponseParseResult, ResponseParser}
 import utopia.echo.controller.EchoContext
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.Identity

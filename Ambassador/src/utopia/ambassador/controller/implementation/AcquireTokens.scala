@@ -17,8 +17,8 @@ import utopia.ambassador.model.partial.token.{AuthTokenData, AuthTokenScopeLinkD
 import utopia.ambassador.model.stored.scope.Scope
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.citadel.database.access.single.organization.DbTask
-import utopia.disciple.http.request.{Request, StringBody}
 import utopia.disciple.model.error.RequestFailedException
+import utopia.disciple.model.request.{Request, StringBody}
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.template.MapAccess

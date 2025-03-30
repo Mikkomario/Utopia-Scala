@@ -1,6 +1,5 @@
 package utopia.nexus.test
 
-import utopia.access.model.enumeration.Status
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.immutable.{Pair, Single}
@@ -31,11 +30,6 @@ import scala.io.Codec
   */
 class TestApiServlet extends LogicWrappingServlet
 {
-	// INITIAL CODE ---------------------------
-	
-	Status.setup()
-	
-	
 	// ATTRIBUTES   ---------------------------
 	
 	implicit val codec: Codec = Codec.UTF8

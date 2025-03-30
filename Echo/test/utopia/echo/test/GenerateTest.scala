@@ -3,7 +3,7 @@ package utopia.echo.test
 import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.disciple.controller.AccessLogger
+import utopia.disciple.controller.interceptor.AccessLogger
 import utopia.echo.controller.client.OllamaClient
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.generate.{GenerateBufferedOrStreamed, Prompt, Query}

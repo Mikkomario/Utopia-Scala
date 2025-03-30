@@ -66,7 +66,7 @@ object HttpExtensions
          */
         def toRequest(implicit settings: ServerSettings, jsonParser: JsonParser) =
         {
-            Option(r.getMethod).flatMap(Method.parse).map { method =>
+            Option(r.getMethod).map(Method.apply).map { method =>
                 val path = Option(r.getRequestURI).flatMap(Path.parse)
     
                 val paramValues = r.getParameterNames.asScala.map { pName =>

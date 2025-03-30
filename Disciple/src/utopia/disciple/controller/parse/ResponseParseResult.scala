@@ -1,7 +1,7 @@
-package utopia.disciple.http.response
+package utopia.disciple.controller.parse
 
-import utopia.flow.view.template.Extender
 import utopia.flow.parse.AutoClose._
+import utopia.flow.view.template.Extender
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions

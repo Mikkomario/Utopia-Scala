@@ -3,7 +3,8 @@ package utopia.annex.controller
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.Response
-import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
+import utopia.disciple.controller.parse.{ResponseParseResult, ResponseParser}
+import utopia.disciple.model.response.StreamedResponse
 import utopia.flow.operator.Identity
 import utopia.flow.util.EitherExtensions._
 
@@ -167,7 +168,7 @@ object PreparingResponseParser
 }
 
 /**
-  * Used for converting [[utopia.disciple.http.response.StreamedResponse]]s to
+  * Used for converting [[StreamedResponse]]s to
   * [[utopia.annex.model.response.Response]]s by utilizing a preparing [[ResponseParser]]
   * @tparam M Type of the preliminary parse result utilized
   * @tparam A Type of the final parsed success response body

@@ -1,10 +1,10 @@
-package utopia.disciple.http.response
+package utopia.disciple.controller.parse
 
 import utopia.access.model.enumeration.ContentCategory.{Application, Text}
 import utopia.access.model.enumeration.StatusGroup.{ClientError, Redirect, ServerError}
-import utopia.access.model.{ContentType, Headers}
 import utopia.access.model.enumeration.{ContentCategory, Status, StatusGroup}
-import utopia.disciple.http.response.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
+import utopia.access.model.{ContentType, Headers}
+import utopia.disciple.controller.parse.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._

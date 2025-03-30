@@ -1,7 +1,7 @@
-package utopia.disciple.controller
+package utopia.disciple.controller.interceptor
 
-import utopia.disciple.http.request.Request
-import utopia.disciple.http.response.{Response, StreamedResponse}
+import utopia.disciple.model.request.Request
+import utopia.disciple.model.response.{Response, StreamedResponse}
 import utopia.flow.async.context.CloseHook
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty

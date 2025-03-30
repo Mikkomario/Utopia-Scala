@@ -7,9 +7,9 @@ import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{Body, StringBody}
-import utopia.disciple.http.response.ResponseParser
+import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.request.{Body, StringBody}
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.{JsonParser, JsonReader}

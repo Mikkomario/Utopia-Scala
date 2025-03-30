@@ -1,4 +1,4 @@
-package utopia.disciple.http.request
+package utopia.disciple.model.request
 
 /**
   * An enumeration for the supported timeout types

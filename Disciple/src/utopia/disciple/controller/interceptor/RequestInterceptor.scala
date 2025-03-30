@@ -1,6 +1,6 @@
-package utopia.disciple.controller
+package utopia.disciple.controller.interceptor
 
-import utopia.disciple.http.request.Request
+import utopia.disciple.model.request.Request
 
 import scala.language.implicitConversions
 

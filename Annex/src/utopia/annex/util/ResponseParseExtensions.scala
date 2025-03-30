@@ -3,7 +3,7 @@ package utopia.annex.util
 import utopia.access.model.enumeration.Status
 import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
-import utopia.disciple.http.response.{ResponseParseResult, ResponseParser}
+import utopia.disciple.controller.parse.{ResponseParseResult, ResponseParser}
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.{Logger, NoOpLogger}
 

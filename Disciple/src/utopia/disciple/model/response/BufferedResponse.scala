@@ -1,4 +1,4 @@
-package utopia.disciple.http.response
+package utopia.disciple.model.response
 
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status

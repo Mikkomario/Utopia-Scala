@@ -3,8 +3,8 @@ package utopia.disciple.test
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Method._
 import utopia.access.model.enumeration.Status
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{FileBody, Request}
+import utopia.disciple.controller.Gateway
+import utopia.disciple.model.request.{FileBody, Request}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._

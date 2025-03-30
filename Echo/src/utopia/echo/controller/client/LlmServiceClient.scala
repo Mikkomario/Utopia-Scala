@@ -7,9 +7,9 @@ import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.disciple.apache.Gateway
-import utopia.disciple.http.request.{Body, StringBody}
-import utopia.disciple.http.response.ResponseParser
+import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.request.{Body, StringBody}
 import utopia.echo.controller.EchoContext
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.generic.model.immutable.Value

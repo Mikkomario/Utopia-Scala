@@ -3,7 +3,7 @@ package utopia.echo.model.request
 import utopia.access.model.enumeration.Method.Post
 import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.ApiRequest
-import utopia.disciple.http.request.Body
+import utopia.disciple.model.request.Body
 import utopia.echo.model.llm.{HasModelSettings, LlmDesignator}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}

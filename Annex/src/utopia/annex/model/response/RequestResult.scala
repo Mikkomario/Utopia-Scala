@@ -5,6 +5,7 @@ import utopia.access.model.enumeration.Status.{InternalServerError, OK}
 import utopia.access.model.enumeration.StatusGroup.ServerError
 import utopia.access.model.enumeration.Status
 import utopia.disciple.model.error.RequestFailedException
+import utopia.disciple.model.response
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.NotEmpty
@@ -257,7 +258,7 @@ object RequestNotSent
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed trait Response[+A] extends RequestResult[A] with utopia.disciple.http.response.Response
+sealed trait Response[+A] extends RequestResult[A] with response.Response
 {
 	// IMPLEMENTED  ---------------------------
 	

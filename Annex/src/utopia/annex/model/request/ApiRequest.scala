@@ -3,7 +3,7 @@ package utopia.annex.model.request
 import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.http.request.Body
+import utopia.disciple.model.request.Body
 import utopia.flow.generic.model.immutable.Value
 
 import scala.concurrent.Future
