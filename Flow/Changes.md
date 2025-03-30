@@ -29,6 +29,8 @@
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 ### New methods
+- **Changing**
+  - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
 - **Iterable** (**CollectionExtensions**)
   - Added `.headPair`
 - **IterableOnce** (**CollectionExtensions**)

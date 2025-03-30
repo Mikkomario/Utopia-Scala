@@ -152,6 +152,15 @@ object Changing
 		 * @return Whether this item is or may become empty
 		 */
 		def mayBeEmpty = !isAlwaysNonEmpty
+		
+		/**
+		  * @return A flag that contains true while this pointer contains a non-empty value
+		  */
+		def nonEmptyFlag: Flag = wrapped.map { !_isEmpty(_) }
+		/**
+		  * @return A flag that contains true while this pointer contains an empty value
+		  */
+		def emptyFlag: Flag = wrapped.map(_isEmpty)
 	}
 	
 	

@@ -12,6 +12,8 @@
 - Deprecated `ContentCategory.parse(String)` in favor of `.apply(String)`
 - Deprecated `ContentCategory.existingOptions` in favor of `.values`
 - Deprecated `Status.setup()`, since all predefined values are now set up from the beginning
+### New features
+- Added **ServerSentEvent** and **StreamedServerSentEvent**
 ### New methods
 - StatusGroup (object)
   - Added `.values`
