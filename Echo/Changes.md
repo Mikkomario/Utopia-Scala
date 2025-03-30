@@ -9,6 +9,7 @@
   - System message tokens and chat history tokens 
     are now measured in **PartiallyEstimatedTokenCount** instead of **Int**
   - Used context size is now measured in **PartiallyEstimatedTokenCount** instead of **UncertainInt**
+  - The name of the first parameter is now `requestQueue` instead of `ollama`
 ### Bugfixes
 - **BufferedReplyMessage** parsing was previously bugged
 - **Tool** names were previously missing from the Ollama requests
@@ -30,6 +31,7 @@
   - `.push(...)` now fails if `maxContextSize` is reached, and no space remains for a response
   - Modified how `num_predict` is assigned when a custom `num_ctx` is specified via model parameters
   - Modified how a custom `num_predict` value is handled
+  - **Chat** now accepts a **RequestQueue** instead of only **OllamaClient**
 
 ## v1.2 - 23.01.2025
 This update adds saving & loading to the **Chat** interface, improving it in other ways as well. 

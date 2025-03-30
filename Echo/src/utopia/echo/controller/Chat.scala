@@ -1,10 +1,12 @@
 package utopia.echo.controller
 
+import utopia.annex.controller.RequestQueue
 import utopia.annex.model.manifest.SchrodingerState._
 import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
+import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.{Assistant, System}
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
@@ -14,7 +16,6 @@ import utopia.echo.model.request.chat.tool.{Tool, ToolFactory}
 import utopia.echo.model.response.ResponseStatistics
 import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
-import utopia.echo.model.ChatMessage
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
@@ -48,7 +49,7 @@ object Chat
 	/**
 	  * Parses a chat from a model, applying that model's state (system messages, message history, settings, etc.)
 	  * Note: Non-critical failures are logged.
-	  * @param client Client used by this chat interface
+	  * @param requestQueue Request queue used by this chat interface
 	  * @param model Model representing chat state
 	  * @param toolFactory Factory used for defining tool functionality.
 	  *                    Default = not implemented.
@@ -58,11 +59,11 @@ object Chat
 	  * @param jsonParser Json parser used in response-processing
 	  * @return Parsed chat interface. Failure if the specified model didn't specify the targeted LLM.
 	  */
-	def parseFrom(client: OllamaClient, model: AnyModel, toolFactory: ToolFactory = ToolFactory.notImplemented)
+	def parseFrom(requestQueue: RequestQueue, model: AnyModel, toolFactory: ToolFactory = ToolFactory.notImplemented)
 	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser) =
 	{
 		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>
-			val chat = new Chat(client, LlmDesignator(llm))
+			val chat = new Chat(requestQueue, LlmDesignator(llm))
 			
 			model("maxContextSize").int.foreach { chat.maxContextSize = _ }
 			model("minContextSize").int.foreach { chat.minContextSize = _ }
@@ -118,14 +119,14 @@ object Chat
   * @since 16.09.2024, v1.1
   *
   * @constructor Initializes a new chat interface
-  * @param ollama Ollama client utilized by this interface
+  * @param requestQueue Queue to which chat requests will be pushed
   * @param initialLlm The initially targeted LLM
   * @param exc Implicit execution context used in asynchronous processing
   * @param log Implicit logging implementation for handling pointer-related failures and for
   *            recording chat request failures
   * @param jsonParser Json parser for interpreting Ollama's responses
   */
-class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
+class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
           (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser)
 	extends HasSchrodingerState with HasMutableModelSettings with ModelConvertible with ScopeUsable[Chat]
 {
@@ -609,7 +610,7 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 	 * @return A copy of this chat at its current state
 	 */
 	def copy = {
-		val copy = new Chat(ollama, llm)
+		val copy = new Chat(requestQueue, llm)
 		
 		copy.maxContextSize = maxContextSize
 		copy.minContextSize = minContextSize
@@ -936,7 +937,7 @@ class Chat(ollama: OllamaClient, initialLlm: LlmDesignator)
 				val tools = defaultTools ++ extraTools.view.filterNot(defaultTools.contains)
 				val systemMessage = NotEmpty(systemMessages).map { _.mkString("\n\n") }.map { System(_) }
 				// Sends the chat request
-				val replyFuture = ollama.push(
+				val replyFuture = requestQueue.push(
 					ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1),
 						tools, settings)
 						.toRequest(stream = allowStreaming && tools.isEmpty)).future

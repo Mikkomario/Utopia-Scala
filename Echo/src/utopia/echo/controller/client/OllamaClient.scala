@@ -1,27 +1,18 @@
-package utopia.echo.controller
+package utopia.echo.controller.client
 
-import utopia.access.http.{Headers, Status}
-import utopia.annex.controller.{ApiClient, PreparingResponseParser, QueueSystem, RequestQueue}
-import utopia.annex.model.request.RequestQueueable
-import utopia.annex.model.response.{RequestResult, Response}
-import utopia.annex.util.ResponseParseExtensions._
 import utopia.annex.util.RequestResultExtensions._
-import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.apache.Gateway
 import utopia.disciple.controller.{RequestInterceptor, ResponseInterceptor}
-import utopia.disciple.http.request.{Body, StringBody, Timeout}
-import utopia.disciple.http.response.ResponseParser
+import utopia.disciple.http.request.Timeout
 import utopia.disciple.model.error.RequestFailedException
+import utopia.echo.controller.Chat
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.request.generate.{Generate, Prompt}
+import utopia.echo.model.request.generate.Prompt
 import utopia.echo.model.request.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
 import utopia.echo.model.response.llm.StreamedStatus
 import utopia.flow.async.TryFuture
-import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -37,14 +28,11 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
                    requestInterceptors: Seq[RequestInterceptor] = Empty,
                    responseInterceptors: Seq[ResponseInterceptor] = Empty)
                   (implicit log: Logger, exc: ExecutionContext)
-	extends RequestQueue
+	extends LlmServiceClient(
+		Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
+			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors),
+		serverAddress)
 {
-	// ATTRIBUTES   ------------------------
-	
-	private lazy val queueSystem = new QueueSystem(OllamaApiClient, 7.minutes, minOfflineDelay = 10.seconds)
-	private lazy val queue = RequestQueue(queueSystem)
-	
-	
 	// COMPUTED ----------------------------
 	
 	/**
@@ -57,11 +45,6 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	  * @return Future that resolves into the implicitly targeted model's information, if successful
 	  */
 	def showModel(implicit llm: LlmDesignator) = push(ShowModelRequest())
-	
-	
-	// IMPLEMENTED  ------------------------
-	
-	override def push[A](request: RequestQueueable[A]): ActionQueue.QueuedAction[RequestResult[A]] = queue.push(request)
 	
 	
 	// OTHER    ----------------------------
@@ -123,34 +106,4 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 					} }
 			}
 		}
-	
-	
-	// NESTED   ----------------------------
-	
-	private object OllamaApiClient extends ApiClient
-	{
-		// ATTRIBUTES   -----------------------
-		
-		override protected lazy val gateway = Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
-			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors)
-		
-		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
-			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v => v("error").stringOr(v.getString) }
-		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
-			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
-		
-		
-		// IMPLEMENTED  -----------------------
-		
-		override protected implicit def jsonParser: JsonParser = JsonBunny
-		override protected implicit def log: Logger = OllamaClient.this.log
-		override protected implicit def exc: ExecutionContext = OllamaClient.this.exc
-		
-		override protected def rootPath: String = serverAddress
-		
-		override protected def responseParseFailureStatus: Status = EchoContext.parseFailureStatus
-		
-		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
-		override protected def modifyOutgoingHeaders(original: Headers): Headers = original
-	}
 }

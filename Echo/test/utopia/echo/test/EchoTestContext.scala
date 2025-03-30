@@ -3,7 +3,7 @@ package utopia.echo.test
 import utopia.access.http.Status
 import utopia.annex.util.RequestResultExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.echo.controller.OllamaClient
+import utopia.echo.controller.client.OllamaClient
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.TryExtensions._
