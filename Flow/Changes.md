@@ -10,6 +10,7 @@
   returns a function for constructing graphs based on starting nodes.
 - `.foreachParallel(...)` in **CollectionExtensions** 
   now always operates asynchronously and also returns a completion **Future**
+- Removed `.destiny` and `._addChangingStoppedListener(...)` implementations from **ResettableFlag**
 - Converted **SettableOnce** into a trait called **AssignableOnce**
   - **SettableOnce** is still available as a deprecated type alias
 - Removed the implicit conversion from Java **Duration** **Option** to a Scala **Duration** instance, 
@@ -25,12 +26,15 @@
 - Fixed **OptimizedMirror**'s change event generation when listening resumes.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 ### New features
+- Added **LockableFlag** and **LockableResettableFlag**
 - Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 ### New methods
 - **Changing**
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
+- **Flag** (object)
+  - Added new utility functions for accessing lockable, settable & resettable constructors
 - **Iterable** (**CollectionExtensions**)
   - Added `.headPair`
 - **IterableOnce** (**CollectionExtensions**)
@@ -61,6 +65,7 @@
 - **TwoThreadBuffer**'s **Output** now limits the size values to non-negative numbers
 - `Tree.iterate(...)` now accepts an implicit **EqualsFunction**
 - Changed **Pair**'s `.toString` implementation
+- `new FlagView(...)` now accepts any **Flag**, not just **SettableFlag**
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**
 

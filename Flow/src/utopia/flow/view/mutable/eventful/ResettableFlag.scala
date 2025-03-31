@@ -13,6 +13,14 @@ import scala.util.Try
 
 object ResettableFlag
 {
+	// COMPUTED ------------------------
+	
+	/**
+	  * @return Access to resettable lockable flag constructors
+	  */
+	def lockable = ResettableLockableFlag
+	
+	
 	// OTHER    ------------------------
 	
 	/**
@@ -30,6 +38,7 @@ object ResettableFlag
 		// ATTRIBUTES   -----------------------
 		
 		private var _value = initialValue
+		override val destiny: Destiny = ForeverFlux
 		
 		override lazy val view = new FlagView(this)
 		
@@ -42,6 +51,8 @@ object ResettableFlag
 			_value = newValue
 			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 		}
+		
+		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}
 }
 
@@ -58,11 +69,4 @@ trait ResettableFlag extends SettableFlag with Switch with EventfulPointer[Boole
 	  * @return A future that resolves when this flag is reset the next time
 	  */
 	def nextResetFuture = findMapNextFuture { if (_) None else Some(()) }
-	
-	
-	// IMPLEMENTED  ----------------------
-	
-	override def destiny: Destiny = ForeverFlux
-	
-	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 }

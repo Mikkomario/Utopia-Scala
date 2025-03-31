@@ -9,12 +9,29 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.mutable.eventful.{LockableFlag, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.MaybeSet
 
 import scala.language.implicitConversions
 
 object Flag
 {
+	// COMPUTED    ------------------
+	
+	/**
+	  * @return Access to settable flag constructors
+	  */
+	def settable = SettableFlag
+	/**
+	  * @return Access to resettable flag constructors
+	  */
+	def resettable = ResettableFlag
+	/**
+	  * @return Access to lockable flag constructors
+	  */
+	def lockable = LockableFlag
+	
+	
 	// IMPLICIT ------------------
 	
 	// Wraps any Changing[Boolean] into a more specific FlagLike

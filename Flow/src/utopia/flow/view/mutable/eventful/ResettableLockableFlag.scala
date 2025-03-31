@@ -1,0 +1,61 @@
+package utopia.flow.view.mutable.eventful
+
+import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
+import utopia.flow.view.immutable.eventful.FlagView
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
+
+import scala.util.Try
+
+object ResettableLockableFlag
+{
+	// OTHER    -------------------------------
+	
+	/**
+	  * @param initialState Initial state to assign for this flag
+	  * @param log Implicit logging implementation used for handling errors during event-handling
+	  * @return A new flag that may be reset and/or locked
+	  */
+	def apply(initialState: Boolean = false)(implicit log: Logger): ResettableLockableFlag =
+		new _ResettableLockableFlag(initialState)
+	
+	
+	// NESTED   -------------------------------
+	
+	private class _ResettableLockableFlag(initialValue: Boolean)(implicit log: Logger)
+		extends AbstractMayStopChanging[Boolean] with ResettableLockableFlag
+	{
+		// ATTRIBUTES   -----------------------
+		
+		private var _value = initialValue
+		private var _locked = false
+		
+		override lazy val view: Flag = new FlagView(this)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def value: Boolean = _value
+		override def locked: Boolean = _locked
+		
+		override def lock(): Unit = {
+			if (!locked) {
+				_locked = true
+				declareChangingStopped()
+			}
+		}
+		
+		override protected def assignToUnlocked(newValue: Boolean): Unit = {
+			val oldValue = _value
+			_value = newValue
+			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
+		}
+	}
+}
+
+/**
+  * Common traits that may be reset and locked.
+  * @author Mikko Hilpinen
+  * @since 30.03.2025, v2.6
+  */
+trait ResettableLockableFlag extends ResettableFlag with LockableFlag with LockablePointer[Boolean]

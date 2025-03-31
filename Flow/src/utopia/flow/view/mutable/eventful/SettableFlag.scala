@@ -23,6 +23,15 @@ object SettableFlag
 	  */
 	def alreadySet: SettableFlag = AlreadySetFlag
 	
+	/**
+	  * @return Access to resettable flag constructors
+	  */
+	def resettable = ResettableFlag
+	/**
+	  * @return Access to lockable flag constructors
+	  */
+	def lockable = LockableFlag
+	
 	
 	// OTHER    ------------------------
 	
@@ -51,15 +60,14 @@ object SettableFlag
 	
 	private object AlreadySetFlag extends SettableFlag
 	{
-		override implicit def listenerLogger: Logger = SysErrLogger
+		override implicit val listenerLogger: Logger = SysErrLogger
+		override val value: Boolean = true
+		override val destiny: Destiny = Sealed
+		
+		override val hasListeners: Boolean = false
+		override val numberOfListeners: Int = 0
 		
 		override def view: Flag = this
-		
-		override def value: Boolean = true
-		override def destiny: Destiny = Sealed
-		
-		override def hasListeners: Boolean = false
-		override def numberOfListeners: Int = 0
 		
 		override def removeListener(changeListener: Any): Unit = ()
 		

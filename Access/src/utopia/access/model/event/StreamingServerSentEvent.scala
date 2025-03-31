@@ -12,16 +12,18 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
   * @author Mikko Hilpinen
   * @since 30.03.2025, v1.6
   * @param typePointer A pointer that contains this event's type
-  * @param dataPointer A pointer that contains all this event's data entries
+  * @param dataPointer A pointer that contains all this event's data entries as a single value.
+  *                    If there are multiple data entries, this value is of type VectorType or PairType.
   * @param lastDataPointer A pointer that contains the latest data entry within this event.
   *                        Contains an empty value while no data has been read.
+  * @param dataEntryCountPointer A pointer that contains the number of collected data entries
   * @param nonEmptyFlag A flag that is set to true once this event contains data
-  * @param completionFlag A flag that is set to true once this event is fully built
   * @param idPointer A pointer that contains this event's id. Contains an empty string while no id has been assigned.
+  * @param completionFlag A flag that is set to true once this event is fully built
   */
-class StreamingServerSentEvent(val typePointer: Changing[String], val dataPointer: Changing[Seq[Value]],
-                               val lastDataPointer: Changing[Value], val nonEmptyFlag: Flag, val completionFlag: Flag,
-                               val idPointer: Changing[String])
+class StreamingServerSentEvent(val typePointer: Changing[String], val dataPointer: Changing[Value],
+                               val lastDataPointer: Changing[Value], val dataEntryCountPointer: Changing[Int],
+                               val nonEmptyFlag: Flag, val idPointer: Changing[String], val completionFlag: Flag)
 	extends MaybeEmpty[StreamingServerSentEvent]
 {
 	// ATTRIBUTES   ----------------------
@@ -37,7 +39,7 @@ class StreamingServerSentEvent(val typePointer: Changing[String], val dataPointe
 	/**
 	  * @return The current state of this event
 	  */
-	def current = ServerSentEvent(eventType, data, id, completed)
+	def current = ServerSentEvent(eventType, data, dataEntryCount, id, completed)
 	
 	/**
 	  * @return The current type of this event
@@ -53,6 +55,10 @@ class StreamingServerSentEvent(val typePointer: Changing[String], val dataPointe
 	  *         Empty if this event doesn't yet contain any data.
 	  */
 	def lastData = lastDataPointer.value
+	/**
+	  * @return Current number of collected data entries
+	  */
+	def dataEntryCount = dataEntryCountPointer.value
 	
 	/**
 	  * @return Current id of this event. Empty string if no id has been assigned.

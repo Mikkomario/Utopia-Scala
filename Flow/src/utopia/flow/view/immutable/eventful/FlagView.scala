@@ -1,7 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
 
 /**
@@ -9,7 +8,7 @@ import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-class FlagView(flag: SettableFlag) extends Flag with ChangingWrapper[Boolean]
+class FlagView(flag: Flag) extends Flag with ChangingWrapper[Boolean]
 {
 	// IMPLEMENTED  -------------------
 	

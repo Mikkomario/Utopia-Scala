@@ -1,5 +1,8 @@
 package utopia.flow.view.mutable.async
 
+import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.eventful.ResettableFlag
@@ -26,6 +29,7 @@ class VolatileFlag(initialState: Boolean = false)(implicit listenerLogger: Logge
 	// ATTRIBUTES   -----------
 	
 	@volatile private var _value: Boolean = initialState
+	override val destiny: Destiny = ForeverFlux
 	
 	override lazy val view: Flag = new FlagView(this)
 	
@@ -35,6 +39,8 @@ class VolatileFlag(initialState: Boolean = false)(implicit listenerLogger: Logge
 	override def value: Boolean = _value
 	
 	override protected def assignWithoutEvents(newValue: Boolean): Unit = _value = newValue
+	
+	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	
 	
 	// OTHER    ---------------
