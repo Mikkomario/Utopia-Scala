@@ -24,7 +24,6 @@ object IterateLines
 	  */
 	def fromStream[A](stream: InputStream, encoding: String)(f: Iterator[String] => A) =
 		withSource(Source.fromInputStream(stream, encoding))(f)
-	
 	/**
 	  * Iterates over lines read from a stream.
 	  * @param stream An input stream
@@ -34,7 +33,6 @@ object IterateLines
 	  */
 	def fromStream[A](stream: InputStream)(f: Iterator[String] => A)(implicit codec: Codec) =
 		withSource(Source.fromInputStream(stream)(codec))(f)
-	
 	/**
 	  * Iterates over lines read from a stream.
 	  * @param stream   An input stream
@@ -54,7 +52,6 @@ object IterateLines
 	  */
 	def fromFile[A](file: File, encoding: String)(f: Iterator[String] => A) =
 		withSource(Source.fromFile(file, encoding))(f)
-	
 	/**
 	  * Iterates over lines read from a file.
 	  * @param file  An input file
@@ -64,7 +61,6 @@ object IterateLines
 	  */
 	def fromFile[A](file: File)(f: Iterator[String] => A)(implicit codec: Codec) =
 		withSource(Source.fromFile(file)(codec))(f)
-	
 	/**
 	  * Iterates over lines read from a file.
 	  * @param file     An input file
@@ -73,7 +69,6 @@ object IterateLines
 	  * @return Parse function result
 	  */
 	def fromFile[A](file: File, encoding: Charset)(f: Iterator[String] => A): Try[A] = fromFile(file)(f)(Codec(encoding))
-	
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path     Path to target file
@@ -82,7 +77,6 @@ object IterateLines
 	  * @return Parse function result
 	  */
 	def fromPath[A](path: Path, encoding: String)(f: Iterator[String] => A) = fromFile(path.toFile, encoding)(f)
-	
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path  Path to target file
@@ -92,7 +86,6 @@ object IterateLines
 	  */
 	def fromPath[A](path: Path)(f: Iterator[String] => A)(implicit codec: Codec) =
 		fromFile(path.toFile)(f)(codec)
-	
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path     Path to target file
