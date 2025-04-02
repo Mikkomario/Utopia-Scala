@@ -2,6 +2,7 @@ package utopia.genesis.handling.action
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
@@ -9,6 +10,7 @@ import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory
 import scala.annotation.unused
 import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
+import scala.util.Try
 
 object ActorHandler
 {
@@ -46,7 +48,19 @@ class ActorHandler(initialItems: IterableOnce[Actor] = Empty, additionalConditio
                   (implicit log: Logger)
 	extends DeepHandler[Actor](initialItems, additionalCondition) with Actor
 {
-	override def act(duration: FiniteDuration) = items.foreach { _.act(duration) }
+	// IMPLEMENTED  ----------------------
+	
+	override def act(duration: FiniteDuration) = {
+		// Delivers the action event to all active listeners
+		// Catches and logs thrown errors, and removes any actor that threw an exception
+		val actorsToRemove = items.filter { actor =>
+			val result = Try { actor.act(duration) }
+			result.logWithMessage(s"Actor $actor threw a failure during act()")
+			result.isFailure
+		}
+		if (actorsToRemove.nonEmpty)
+			removeWhere(actorsToRemove.contains)
+	}
 	
 	override protected def asHandleable(item: Handleable): Option[Actor] = item match {
 		case a: Actor => Some(a)

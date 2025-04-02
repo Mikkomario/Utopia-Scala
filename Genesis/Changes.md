@@ -9,6 +9,10 @@ Supports **Flow v2.6**
 ### New methods
 - **DigitKey** (object)
   - Added `.values` and `.valuesIncludingNumpad`
+### Other changes
+- If an **Actor** throws an exception during its `.act()` call, 
+  the hosting **ActorHandler** automatically removes it from itself.
+  - Previously these errors would interrupt the whole **ActionLoop**.
 
 ## v4.2 - 23.01.2025
 This update largely modifies how the **Image** interface is implemented. 

@@ -9,6 +9,7 @@
 - Added additional rounding to scaling **ButtonImageEffect**
 - **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary
 - **ColorAccessLike** now extends **FromShadeFactory**
+- Minor internal refactoring within **ContentDisplayer**
 
 ## v1.4 - 23.01.2025
 This major update overhauls the context class implementations, adding new variable context classes that replace 

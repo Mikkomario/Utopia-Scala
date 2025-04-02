@@ -118,8 +118,9 @@ trait ContentDisplayer[A, +C <: Refreshable[A], +P <: Changing[Seq[A]]] extends 
 			val sizeDifference = newContentSize - oldContentSize
 			
 			// Finds similar start and end portions (if present)
-			val identicalStart = d.zip(newValues).takeWhile { case (display, newVal) =>
-				representSameItem(display.content, newVal) }
+			val identicalStart = d.iterator.zip(newValues)
+				.takeWhile { case (display, newVal) => representSameItem(display.content, newVal) }
+				.toVector
 			val identicalEnd = {
 				// Compared parts (old vs new) must have identical size
 				val comparedPart = {
