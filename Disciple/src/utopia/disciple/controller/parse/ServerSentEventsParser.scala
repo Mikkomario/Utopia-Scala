@@ -1,6 +1,9 @@
 package utopia.disciple.controller.parse
 
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.access.model.event.StreamingServerSentEvent
+import utopia.flow.async.TryFuture
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.mutable.iterator.OptionsIterator
@@ -36,6 +39,26 @@ object ServerSentEventsParser
 	
 	
 	// OTHER    -------------------------------
+	
+	/**
+	  * @param listeners Listeners to inform of the read events
+	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation used for non-critical errors
+	  * @return A new events parser, implementing the [[ResponseParser]] trait.
+	  */
+	def withListeners(listeners: Iterable[ServerSentEventListener])
+	                 (implicit exc: ExecutionContext, log: Logger) =
+		preparingListenersWith { (_, _) => Success(listeners) }
+	/**
+	  * @param prepare A function that accepts a response status + headers and yields the listeners to register to
+	  *                listen for events, or a failure
+	  * @param exc Implicit execution context
+	  * @param log Implicit logging implementation used for non-critical errors
+	  * @return A new events parser, implementing the [[ResponseParser]] trait.
+	  */
+	def preparingListenersWith(prepare: (Status, Headers) => Try[Iterable[ServerSentEventListener]])
+	                          (implicit exc: ExecutionContext, log: Logger) =
+		new PreparedServerSentEventsParser(prepare)
 	
 	/**
 	  * Asynchronously parses server-sent events from an input stream
@@ -190,6 +213,49 @@ object ServerSentEventsParser
 	
 	
 	// NESTED   -------------------------------
+	
+	class PreparedServerSentEventsParser(prepareListeners: (Status, Headers) => Try[Iterable[ServerSentEventListener]],
+	                                     retry: Option[String => Try[InputStream]] = None)
+	                                    (implicit log: Logger, exc: ExecutionContext)
+		extends ResponseParser[Future[Try[Unit]]]
+	{
+		// IMPLEMENTED  -----------------------
+		
+		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) = {
+			// Prepares the listeners based on status & headers
+			prepareListeners(status, headers) match {
+				case Success(listeners) =>
+					stream match {
+						case Some(stream) =>
+							// Default: Listeners prepared => Processes the server-sent events from the stream
+							if (listeners.nonEmpty)
+								ResponseParseResult.future(ServerSentEventsParser(stream, listeners, retry))
+							// Case: No listeners assigned => Immediately closes the stream and returns
+							else {
+								Try { stream.close() }.logWithMessage("Failed to close the response stream")
+								ResponseParseResult.buffered(TryFuture.successCompletion)
+							}
+						
+						// Case: No stream available => Completes immediately
+						case None => ResponseParseResult.buffered(TryFuture.successCompletion)
+					}
+				
+				// Case: Listener-preparation yielded a failure => Yields a failure result
+				case Failure(error) => ResponseParseResult.buffered(TryFuture.failure(error))
+			}
+		}
+		
+		
+		// OTHER    ---------------------------
+		
+		/**
+		  * @param retry A retry function that accepts the latest event id (which may be empty) and yields,
+		  *              if successful, a new input stream to process.
+		  * @return Copy of this parser which utilizes the specified retry logic
+		  */
+		def withRetryLogic(retry: String => Try[InputStream]) =
+			new PreparedServerSentEventsParser(prepareListeners, Some(retry))
+	}
 	
 	private class EventBuilder(implicit log: Logger)
 	{

@@ -2,6 +2,8 @@
 
 ## v1.9 (in development)
 Supports **Flow v2.6** & **Access v1.6**
+### New features
+- Added **ServerSentEventsParser**, an interface for processing event streams from response bodies
 ### Breaking changes
 - Refactored the package structure
   - Moved **Gateway** from `apache` to `controller`
