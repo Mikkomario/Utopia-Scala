@@ -8,7 +8,7 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed, LogicalMirror}
 import utopia.flow.view.mutable.eventful.{LockableFlag, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.MaybeSet
 
@@ -102,42 +102,12 @@ trait Flag extends Changing[Boolean] with MaybeSet
 	  * @param other Another flag
 	  * @return A flag that contains true when both of these flags contain true
 	  */
-	def &&(other: Changing[Boolean]): Flag = {
-		// If one of the pointers is always false, returns always false
-		// If one of the pointers is always true, returns the other pointer
-		// If both are changing, returns a combination of these pointers
-		fixedValue match {
-			case Some(fixed) => if (fixed) other else AlwaysFalse
-			case None =>
-				other.fixedValue match {
-					case Some(fixed) => if (fixed) this else AlwaysFalse
-					case None =>
-						// Stops merging if either pointer gets stuck at false
-						withState.lightMergeWithUntil(other.withState) { _ && _ } {
-							(a, b, _) => a.containsFinal(false) || b.containsFinal(false) }
-				}
-		}
-	}
+	def &&(other: Changing[Boolean]): Flag = LogicalMirror.and(this, other)
 	/**
 	  * @param other Another flag
 	  * @return A flag that contains true when either one of these flags contains true
 	  */
-	def ||(other: Changing[Boolean]): Flag = {
-		// If one of the pointers is always false, returns the other pointer
-		// If one of the pointers is always true, returns always true
-		// If both are changing, returns a combination of these pointers
-		fixedValue match {
-			case Some(fixed) => if (fixed) AlwaysTrue else other
-			case None =>
-				other.fixedValue match {
-					case Some(fixed) => if (fixed) AlwaysTrue else this
-					case None =>
-						// Stops merging if either pointer gets stuck at true
-						withState.lightMergeWithUntil(other.withState) { _ || _ } {
-							(a, b, _) => a.containsFinal(true) || b.containsFinal(true) }
-				}
-		}
-	}
+	def ||(other: Changing[Boolean]): Flag = LogicalMirror.or(this, other)
 	
 	/**
 	  * @param falseState Function that returns the viewed value when this flag is not set

@@ -33,6 +33,8 @@
 ### New methods
 - **Changing**
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
+- **Destiny** (object)
+  - Added `.maySealIf(Boolean)`
 - **Flag** (object)
   - Added new utility functions for accessing lockable, settable & resettable constructors
 - **Iterable** (**CollectionExtensions**)
@@ -64,6 +66,7 @@
   - `:+` will no longer include released items in the resulting list
 - **TwoThreadBuffer**'s **Output** now limits the size values to non-negative numbers
 - `Tree.iterate(...)` now accepts an implicit **EqualsFunction**
+- Further optimized **Flag**'s `||` and `&&` functions
 - Changed **Pair**'s `.toString` implementation
 - `new FlagView(...)` now accepts any **Flag**, not just **SettableFlag**
 - Internal refactoring within **MutableOnce**

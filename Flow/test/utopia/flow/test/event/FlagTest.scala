@@ -24,12 +24,12 @@ object FlagTest extends App
 	
 	assert(and1.isNotSet)
 	assert(i1.numberOfListeners == 1)
-	assert(ri1.numberOfListeners == 1)
+	assert(ri1.numberOfListeners == 0)
 	
 	ri1.set()
 	
 	assert(and1.isNotSet)
-	assert(ri1.hasListeners)
+	assert(ri1.hasNoListeners)
 	assert(i1.hasListeners)
 	
 	i1.set()

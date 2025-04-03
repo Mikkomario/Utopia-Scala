@@ -80,6 +80,15 @@ object Destiny
 	lazy val values = Vector[Destiny](Sealed, MaySeal, ForeverFlux)
 	
 	
+	// OTHER    --------------------------
+	
+	/**
+	  * @param condition A condition that, if met, means that this destiny may be sealed
+	  * @return A destiny that may be sealed if the specified condition is met
+	  */
+	def maySealIf(condition: Boolean): Destiny = if (condition) MaySeal else ForeverFlux
+	
+	
 	// VALUES   --------------------------
 	
 	/**

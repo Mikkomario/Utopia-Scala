@@ -18,6 +18,7 @@ abstract class OptimizedChanging[A]
 	// ATTRIBUTES   -------------------------
 	
 	// Stores the listeners in a pointer, because this pointer functions differently while there are listeners assigned
+	// TODO: Make this lockable (clears once/if stops changing)
 	private val listenersPointer = Volatile.eventful[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
