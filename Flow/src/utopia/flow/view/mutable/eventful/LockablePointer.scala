@@ -1,5 +1,6 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.util.Mutate
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{LoggingPointerFactory, MaybeAssignable}
@@ -92,6 +93,24 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 			false
 		else {
 			assignToUnlocked(value)
+			true
+		}
+	}
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * Attempts to update/mutate the value of this pointer.
+	  * Won't modify this pointer if already locked.
+	  * @param f A function that modifies the held value of this pointer
+	  * @return Whether this pointer was still unlocked and 'f' was called.
+	  */
+	def tryUpdate(f: Mutate[A]) = {
+		if (locked)
+			false
+		else {
+			update(f)
 			true
 		}
 	}

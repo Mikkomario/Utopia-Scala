@@ -18,8 +18,7 @@ abstract class OptimizedChanging[A]
 	// ATTRIBUTES   -------------------------
 	
 	// Stores the listeners in a pointer, because this pointer functions differently while there are listeners assigned
-	// TODO: Make this lockable (clears once/if stops changing)
-	private val listenersPointer = Volatile.eventful[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
+	private val listenersPointer = Volatile.lockable[Pair[Seq[ChangeListener[A]]]](Pair.twice(Empty))
 	/**
 	  * A pointer that contains true while this pointer has listeners attached
 	  */
@@ -35,16 +34,22 @@ abstract class OptimizedChanging[A]
 	override protected def listenersByPriority: Pair[Iterable[ChangeListener[A]]] = listenersPointer.value
 	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
-		listenersPointer.update {
+		listenersPointer.tryUpdate {
 			_.mapSide(priority) { q => if (q.contains(lazyListener.value)) q else q :+ lazyListener.value }
 		}
-	override def removeListener(changeListener: Any): Unit =
-		listenersPointer.update { _.map { _.filterNot { _ == changeListener } } }
-	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit =
-		listenersPointer.update { _.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } } }
+	
+	override def removeListener(changeListener: Any): Unit = {
+		if (listenersPointer.unlocked)
+			listenersPointer.update { _.map { _.filterNot { _ == changeListener } } }
+	}
+	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit = {
+		if (listenersPointer.unlocked)
+			listenersPointer.update { _.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } } }
+	}
 	
 	override protected def declareChangingStopped(): Unit = {
 		clearListeners()
+		listenersPointer.lock()
 		if (stopListeners.nonEmpty) {
 			stopListeners.foreach { _.onChangingStopped() }
 			stopListeners = Empty

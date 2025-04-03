@@ -67,6 +67,7 @@
 - **TwoThreadBuffer**'s **Output** now limits the size values to non-negative numbers
 - `Tree.iterate(...)` now accepts an implicit **EqualsFunction**
 - Further optimized **Flag**'s `||` and `&&` functions
+- **OptimizedChanging** now locks its `listenerPointer` (and consequently `hasListenersFlag`) once it stops changing
 - Changed **Pair**'s `.toString` implementation
 - `new FlagView(...)` now accepts any **Flag**, not just **SettableFlag**
 - Internal refactoring within **MutableOnce**
