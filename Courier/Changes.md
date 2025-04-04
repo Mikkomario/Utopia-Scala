@@ -1,5 +1,8 @@
 # Utopia Courier - List of Changes
 
+## v1.1.4 (in development)
+New build in order to support Flow v2.6
+
 ## v1.1.3 - 23.01.2025
 This small update fixes some more rarely occurring bugs / issues.
 ### Bugfixes

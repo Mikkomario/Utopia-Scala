@@ -102,12 +102,12 @@ trait Flag extends Changing[Boolean] with MaybeSet
 	  * @param other Another flag
 	  * @return A flag that contains true when both of these flags contain true
 	  */
-	def &&(other: Changing[Boolean]): Flag = LogicalMirror.and(this, other)
+	def &&(other: Flag): Flag = LogicalMirror.and(this, other)
 	/**
 	  * @param other Another flag
 	  * @return A flag that contains true when either one of these flags contains true
 	  */
-	def ||(other: Changing[Boolean]): Flag = LogicalMirror.or(this, other)
+	def ||(other: Flag): Flag = LogicalMirror.or(this, other)
 	
 	/**
 	  * @param falseState Function that returns the viewed value when this flag is not set

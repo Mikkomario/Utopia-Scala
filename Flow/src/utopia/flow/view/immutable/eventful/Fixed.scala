@@ -43,8 +43,8 @@ object AlwaysTrue extends Fixed(true) with Flag
 {
 	override def unary_! = AlwaysFalse
 	
-	override def &&(other: Changing[Boolean]) = other
-	override def ||(other: Changing[Boolean]) = this
+	override def &&(other: Flag) = other
+	override def ||(other: Flag) = this
 }
 /**
   * A pointer that always contains 'false'
@@ -53,6 +53,6 @@ object AlwaysFalse extends Fixed(false) with Flag
 {
 	override def unary_! = AlwaysTrue
 	
-	override def &&(other: Changing[Boolean]) = this
-	override def ||(other: Changing[Boolean]) = other
+	override def &&(other: Flag) = this
+	override def ||(other: Flag) = other
 }
