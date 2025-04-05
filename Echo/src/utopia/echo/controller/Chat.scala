@@ -13,8 +13,8 @@ import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
 import utopia.echo.model.request.chat.ChatParams
 import utopia.echo.model.request.chat.tool.{Tool, ToolFactory}
-import utopia.echo.model.response.ResponseStatistics
-import utopia.echo.model.response.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
+import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.model.response.ollama.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture

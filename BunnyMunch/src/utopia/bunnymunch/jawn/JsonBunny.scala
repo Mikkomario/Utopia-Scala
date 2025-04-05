@@ -1,9 +1,10 @@
 package utopia.bunnymunch.jawn
 
 import org.typelevel.jawn.Parser
+import utopia.flow.generic.casting.BasicValueCaster
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.string.StringFrom
 
 import java.io.{File, InputStream}
@@ -25,6 +26,13 @@ object JsonBunny extends JsonParser
 	  */
 	implicit val defaultEncoding: Codec = Codec.UTF8
 	private implicit val facade: ValueFacade.type = ValueFacade
+	
+	
+	// INITIAL CODE ----------------------------
+	
+	// Replaces the Flow's JsonReader as the default JSON parser when handling value conversions
+	if (BasicValueCaster.jsonParser == JsonReader)
+		BasicValueCaster.jsonParser = this
 	
 	
 	// COMPUTED --------------------------------

@@ -1,6 +1,6 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.{OllamaResponseLike, ResponseStatistics}
+import utopia.echo.model.response.ollama.{OllamaResponseLike, ResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.async.Volatile

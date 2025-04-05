@@ -1,6 +1,6 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.llm.StreamedStatus
+import utopia.echo.model.response.ollama.llm.StreamedStatus
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger

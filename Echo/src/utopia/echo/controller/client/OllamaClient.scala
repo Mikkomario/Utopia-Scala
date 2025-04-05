@@ -9,7 +9,7 @@ import utopia.echo.controller.Chat
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.generate.Prompt
 import utopia.echo.model.request.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
-import utopia.echo.model.response.llm.StreamedStatus
+import utopia.echo.model.response.ollama.llm.StreamedStatus
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsExtensions._

@@ -6,7 +6,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.EchoContext
 import utopia.echo.controller.parser.StreamedReplyResponseParser
-import utopia.echo.model.response.generate.{BufferedReply, StreamedOrBufferedReply}
+import utopia.echo.model.response.ollama.generate.{BufferedReply, StreamedOrBufferedReply}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 

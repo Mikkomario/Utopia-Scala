@@ -8,7 +8,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
 import utopia.echo.controller.parser.StreamedPullResponseParser
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.response.llm.StreamedPullStatus
+import utopia.echo.model.response.ollama.llm.StreamedPullStatus
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser

@@ -6,7 +6,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.EchoContext
 import utopia.echo.controller.parser.StreamedReplyMessageResponseParser
-import utopia.echo.model.response.chat.{BufferedReplyMessage, StreamedOrBufferedReplyMessage}
+import utopia.echo.model.response.ollama.chat.{BufferedReplyMessage, StreamedOrBufferedReplyMessage}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 

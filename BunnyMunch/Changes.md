@@ -1,5 +1,10 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.7 (in development)
+### Other changes
+- **JsonBunny**, when initialized, 
+  now replaces the **JsonReader** as the default **JsonParser** in **BasicValueCaster** (in **Flow**).
+
 ## v1.0.6 - 04.10.2024
 A new build with Scala v2.13.14. No other changes.
 

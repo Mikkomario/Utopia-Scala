@@ -3,7 +3,7 @@ package utopia.echo.model.request.chat
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.echo.controller.parser.StreamedReplyMessageResponseParser
-import utopia.echo.model.response.chat.StreamedReplyMessage
+import utopia.echo.model.response.ollama.chat.StreamedReplyMessage
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 

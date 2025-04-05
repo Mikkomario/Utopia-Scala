@@ -30,6 +30,7 @@
 - Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
+- **BasicValueCaster** now allows one to change the **JsonParser** used when converting string values to model values.
 ### New methods
 - **Changing**
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**

@@ -4,7 +4,7 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.echo.controller.parser.StreamedStatusParser
 import utopia.echo.model.request.llm.CreateModelRequest.CreateModelRequestFactory
-import utopia.echo.model.response.llm.StreamedStatus
+import utopia.echo.model.response.ollama.llm.StreamedStatus
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View

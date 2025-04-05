@@ -3,7 +3,7 @@ package utopia.echo.model.request.llm
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.response.llm.GeneralOllamaModelInfo
+import utopia.echo.model.response.ollama.llm.GeneralOllamaModelInfo
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template.{ModelLike, Property}
 

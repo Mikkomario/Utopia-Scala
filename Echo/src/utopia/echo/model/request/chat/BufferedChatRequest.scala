@@ -2,7 +2,7 @@ package utopia.echo.model.request.chat
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.response.chat.BufferedReplyMessage
+import utopia.echo.model.response.ollama.chat.BufferedReplyMessage
 
 import scala.concurrent.Future
 

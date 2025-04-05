@@ -1,7 +1,7 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.ResponseStatistics
-import utopia.echo.model.response.chat.StreamedReplyMessage
+import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.model.response.ollama.chat.StreamedReplyMessage
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger

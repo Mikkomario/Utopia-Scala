@@ -2,7 +2,7 @@ package utopia.echo.model.request.generate
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.response.generate.BufferedReply
+import utopia.echo.model.response.ollama.generate.BufferedReply
 
 import scala.concurrent.Future
 

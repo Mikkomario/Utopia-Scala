@@ -8,7 +8,7 @@ import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
-import utopia.flow.parse.json.JsonReader
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.{Days, Today}
 import utopia.flow.time.TimeExtensions._
@@ -124,6 +124,11 @@ object BasicValueCaster extends ValueCaster
 		immutable.Conversion(DurationType, ModelType, ContextLoss),
 		immutable.Conversion(StringType, ModelType, Dangerous)
 	)
+	
+	/**
+	  * The JSON parser used by this interface (variable).
+	  */
+	var jsonParser: JsonParser = JsonReader
 	
 	
 	// IMPLEMENTED METHODS    ----
@@ -417,7 +422,7 @@ object BasicValueCaster extends ValueCaster
 				case None => d.toMillis
 			}
 			Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
-		case StringType => JsonReader.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
+		case StringType => jsonParser.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
 		case _ => None
 	}
 	

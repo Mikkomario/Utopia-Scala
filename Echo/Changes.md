@@ -1,7 +1,10 @@
 # Utopia Echo - List of Changes
 
 ## v1.3 (in development)
+Adding support for Open AI
 ### Breaking changes
+- Package restructuring:
+  - Moved classes from `model.response` to `model.response.ollama`
 - `EstimateTokenCount.in(String)` now yields an **EstimatedTokenCount** instead of **Int**
 - Multiple potentially breaking changes to **Chat**
   - Modified **Chat** model conversions. Previously stored **Chat** instances might not behave exactly the same anymore.

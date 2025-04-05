@@ -1,6 +1,6 @@
 package utopia.flow.util
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -208,19 +208,23 @@ object TryExtensions
 		  * @return Success containing all success results or Failure containing the encountered error
 		  */
 		def toTry = {
-			val successesBuilder = new VectorBuilder[A]()
 			val iter = tries.iterator
-			var failure: Option[Throwable] = None
-			while (failure.isEmpty && iter.hasNext) {
-				iter.next() match {
-					case Success(item) => successesBuilder += item
-					case Failure(error) => failure = Some(error)
+			if (iter.hasNext) {
+				val successesBuilder = new VectorBuilder[A]()
+				var failure: Option[Throwable] = None
+				do {
+					iter.next() match {
+						case Success(item) => successesBuilder += item
+						case Failure(error) => failure = Some(error)
+					}
+				} while (failure.isEmpty && iter.hasNext)
+				failure match {
+					case Some(error) => Failure(error)
+					case None => Success(successesBuilder.result())
 				}
 			}
-			failure match {
-				case Some(error) => Failure(error)
-				case None => Success(successesBuilder.result())
-			}
+			else
+				Success(Empty)
 		}
 		/**
 		  * @return Failure if all attempts in this collection failed, containing the first encountered error.
@@ -248,7 +252,7 @@ object TryExtensions
 		  */
 		def divided = {
 			val successesBuilder = new VectorBuilder[A]
-			val failuresBuilder = new VectorBuilder[Throwable]
+			val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
 			tries.iterator.foreach {
 				case Success(a) => successesBuilder += a
 				case Failure(error) => failuresBuilder += error
