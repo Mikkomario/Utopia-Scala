@@ -15,6 +15,9 @@
 - **References**
   - Added `.linkGraph`, `.reverseLinkGraph` and `.biDirectionalLinkGraph`
 ### Other changes
+- The following functions no longer limit the results to unique **primary** instances: 
+  - **FromRowFactory**: `getIncluding(...)`, `getWithColumn(...)`
+  - **ManyRowModelAccess**: `pullWithColumn(...)`, `groupByColumn(...)`
 - Refactored **ConnectionPool**, adding connection validation and better connection reuse logic
 - Minor refactoring within **Connection**'s opening & closing logic
 - Minor refactoring within **DatabaseCache**

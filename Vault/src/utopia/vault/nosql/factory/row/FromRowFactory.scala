@@ -89,19 +89,27 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param joinType Type of joins to apply (default = inner)
 	  * @param condition Search condition to apply (default = None)
 	  * @param order Ordering to apply (default = None = use default ordering)
+	  * @param uniquePrimaryEntries Whether to limit the results into one row / entry per single primary instance
+	  *                             (i.e. 'A').
+	  *                             Default = false = supports one-to-many links,
+	  *                             returning multiple copies of individual instances.
 	  * @param parse A function for parsing the additional data from row information
 	  * @param connection Implicit DB connection
 	  * @tparam B Type of parsed additional data
 	  * @return Accessible data, including additional parsed data
 	  */
 	def getIncluding[B](extraTarget: SelectTarget, joins: Seq[Joinable], joinType: JoinType = Inner,
-	                    condition: Option[Condition] = None, order: Option[OrderBy] = None)
+	                    condition: Option[Condition] = None, order: Option[OrderBy] = None,
+	                    uniquePrimaryEntries: Boolean = false)
 	                   (parse: Row => B)(implicit connection: Connection) =
 	{
 		val rows = connection(expandedSelect(joins, joinType, Some(extraTarget)) + condition.map(Where.apply) +
 			order.orElse(defaultOrdering))
 			.rows
-		fromUniqueRows(rows) { row => parseIfPresent(row).map { _ -> parse(row) } }
+		if (uniquePrimaryEntries)
+			fromUniqueRows(rows) { row => parseIfPresent(row).map { _ -> parse(row) } }
+		else
+			rows.flatMap { row => parseIfPresent(row).map { _ -> parse(row) } }
 	}
 	/**
 	  * Reads accessible data from the DB. Includes an additional column outside the default selection.
@@ -110,15 +118,20 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param joinType Type of joins to apply (default = inner)
 	  * @param condition Search condition to apply (default = None)
 	  * @param order Ordering to apply (default = None = use default ordering)
+	  * @param uniquePrimaryEntries Whether to limit the results into one row / entry per single primary instance
+	  *                             (i.e. 'A').
+	  *                             Default = false = supports one-to-many links,
+	  *                             returning multiple copies of individual instances.
 	  * @param parse A function for parsing the column value
 	  * @param connection Implicit DB connection
 	  * @tparam B Type of parsed additional data
 	  * @return Accessible data, including additional parsed data
 	  */
 	def getWithColumn[B](column: Column, joins: Seq[Joinable], joinType: JoinType = Inner,
-	                     condition: Option[Condition] = None, order: Option[OrderBy] = None)
+	                     condition: Option[Condition] = None, order: Option[OrderBy] = None,
+	                     uniquePrimaryEntries: Boolean = false)
 	                    (parse: Value => B)(implicit connection: Connection) =
-		getIncluding(column, joins, joinType, condition, order) { row => parse(row(column)) }
+		getIncluding(column, joins, joinType, condition, order, uniquePrimaryEntries) { row => parse(row(column)) }
 	
 	/**
 	  * Takes a number of items with this factory

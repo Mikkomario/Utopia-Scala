@@ -43,13 +43,17 @@ trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 	  * @param joins Joins to apply. Default = Empty = Automatically join the targeted column.
 	  * @param joinType Type of joins to apply. Default = Inner.
 	  * @param condition An additional search condition to apply (optional)
+	  * @param uniquePrimaryEntries Whether to limit the results into one row / entry per single primary instance
+	  *        (i.e. 'A').
+	  *        Default = false = supports one-to-many links,
+	  *        returning multiple copies of individual instances.
 	  * @param parse A function for parsing the column value into the desired data type
 	  * @param connection Implicit DB connection
 	  * @tparam B Type of column value parse results
 	  * @return Accessible items, coupled together with the parsed column value
 	  */
 	def pullWithColumn[B](column: Column, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner,
-	                      condition: Option[Condition] = None)
+	                      condition: Option[Condition] = None, uniquePrimaryEntries: Boolean = false)
 	                     (parse: Value => B)
 	                     (implicit connection: Connection) =
 	{
@@ -60,7 +64,8 @@ trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 		else {
 			// Joins the column, unless a custom join has been specified already
 			val appliedJoins = if (joins.isEmpty) Single(column) else joins
-			factory.getWithColumn(column, appliedJoins, joinType, appliedCondition.filterNot { _.isAlwaysTrue })(parse)
+			factory.getWithColumn(column, appliedJoins, joinType, appliedCondition.filterNot { _.isAlwaysTrue },
+				uniquePrimaryEntries = uniquePrimaryEntries)(parse)
 		}
 	}
 	/**
@@ -68,14 +73,19 @@ trait ManyRowModelAccess[+A] extends ManyModelAccess[A] with RowFactoryView[A]
 	  * @param joins Joins to apply. Default = Empty = Automatically join the targeted column.
 	  * @param joinType Type of joins to apply. Default = Inner.
 	  * @param condition An additional search condition to apply (optional)
+	  * @param uniquePrimaryEntries Whether to limit the results into one row / entry per single primary instance
+	  *                             (i.e. 'A').
+	  *                             Default = false = supports one-to-many links,
+	  *                             returning multiple copies of individual instances.
 	  * @param parse A function for parsing the column value into the desired data type
 	  * @param connection Implicit DB connection
 	  * @tparam B Type of column value parse results
 	  * @return Accessible items, grouped together based on the linked column value
 	  */
 	def groupByColumn[B](column: Column, joins: Seq[Joinable] = Empty, joinType: JoinType = Inner,
-	                     condition: Option[Condition] = None)
+	                     condition: Option[Condition] = None, uniquePrimaryEntries: Boolean = false)
 	                    (parse: Value => B)
 	                    (implicit connection: Connection) =
-		pullWithColumn(column, joins, joinType)(parse).groupMap { _._2 } { _._1 }
+		pullWithColumn(column, joins, joinType, uniquePrimaryEntries = uniquePrimaryEntries)(parse)
+			.groupMap { _._2 } { _._1 }
 }

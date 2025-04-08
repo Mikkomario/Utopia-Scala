@@ -4,7 +4,7 @@ import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.CanAttachImages
-import utopia.echo.model.request.chat.ChatParams
+import utopia.echo.model.request.ollama.chat.ChatParams
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Model

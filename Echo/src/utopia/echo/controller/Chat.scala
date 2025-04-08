@@ -11,8 +11,8 @@ import utopia.echo.model.enumeration.ChatRole.{Assistant, System}
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
 import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
-import utopia.echo.model.request.chat.ChatParams
-import utopia.echo.model.request.chat.tool.{Tool, ToolFactory}
+import utopia.echo.model.request.ollama.chat.ChatParams
+import utopia.echo.model.request.ollama.chat.tool.{Tool, ToolFactory}
 import utopia.echo.model.response.ollama.ResponseStatistics
 import utopia.echo.model.response.ollama.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
 import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
