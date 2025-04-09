@@ -9,7 +9,6 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -285,6 +284,9 @@ trait ViewStackFactoryLike[+Repr]
 		}
 	}
 	
+	override protected def _apply(contentPointer: Changing[Seq[ReachComponent]]): Stack =
+		new ViewStack(hierarchy, contentPointer, settings, marginPointer)
+	
 	override def pointer(content: Changing[SeparateOpenComponents[ReachComponent, _]]): Stack = {
 		content.fixedValue match {
 			// Case: Displayed content doesn't change
@@ -310,42 +312,12 @@ trait ViewStackFactoryLike[+Repr]
 								
 							stack
 							
-						// Case: No segmentation is applied
-						case None =>
-							val stack = new ViewStack(hierarchy, Fixed(staticContent.map { _.component }), settings,
-								marginPointer)
-							
-							// Attaches the components to this new stack using a single hierarchy block
-							val mergedContent = merge(staticContent)
-							mergedContent.attachTo(stack)
-							
-							stack
+						// Case: No segmentation is applied => Default constructor logic
+						case None => super.pointer(content)
 					}
 					
-			// Case: Displayed content changes
-			case None =>
-				// Creates the stack
-				val componentsP = content.map { _.map { _.component } }
-				val stack = new ViewStack(hierarchy, componentsP, settings, marginPointer)
-				
-				// Adds attachment management
-				// Tracks visible components as hashcodes
-				val visibleHashesP = componentsP.map { _.view.map { _.hashCode() }.toSet }
-				// For each encountered component (hashcode), creates a new link pointer
-				val attachmentPointers =
-					Cache[Int, Flag] { componentHash => visibleHashesP.map { _.contains(componentHash) } }
-				
-				// When new components are introduced, makes sure they get attached to this stack
-				content.addListenerWhileAndSimulateEvent(hierarchy.linkedFlag, Empty) { change =>
-					change.newValue.foreach { open =>
-						val hash = open.component.hashCode()
-						// Case: Not previously attached => Creates a new link pointer and attaches the component
-						if (!attachmentPointers.isValueCached(hash))
-							open.attachTo(stack, attachmentPointers(hash))
-					}
-				}
-				
-				stack
+			// Case: Displayed content changes => Default logic
+			case None => super.pointer(content)
 		}
 	}
 	

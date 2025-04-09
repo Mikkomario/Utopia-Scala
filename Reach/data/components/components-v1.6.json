@@ -1327,6 +1327,94 @@
               "doc": "A pointer flag that signals whether the items in the created stacks should be considered closely related to each other, resulting in a smaller margin placed between them."
             }
           ]
+        },
+        {
+          "name": "Collection",
+          "container": "Combining",
+          "context": "base",
+          "parents": ["customDrawable"],
+          "props": [
+            {
+              "name": "primaryAxis",
+              "param": "axis",
+              "type": "axis",
+              "default": {
+                "code": "Axis.X",
+                "ref": "pEnum/Axis"
+              },
+              "doc": "The direction the components are laid first. \nIf X, the components form vertically stacking rows. If Y, the components form horizontally stacked columns."
+            },
+            {
+              "name": "insideRowLayout",
+              "param": "layout",
+              "type": "fEnum/StackLayout",
+              "default": {
+                "code": "StackLayout.Fit",
+                "ref": "fEnum/StackLayout"
+              },
+              "doc": "Layout within individual rows or columns (first layer)."
+            },
+            {
+              "name": "betweenRowsLayout",
+              "param": "layout",
+              "type": "fEnum/StackLayout",
+              "default": {
+                "code": "StackLayout.Fit",
+                "ref": "fEnum/StackLayout"
+              },
+              "doc": "Layout between the rows or columns (second layer)"
+            },
+            {
+              "name": "splitThresholdPointer",
+              "param": "thresholdPointer",
+              "type": "p[Option[Double]]",
+              "default": {
+                "code": "Fixed(None)",
+                "references": ["fixed"]
+              },
+              "doc": "Maximum length of individual rows / columns, at which they are automatically split. \nContains none if all elements should be stacked in a single row/column."
+            },
+            {
+              "name": "outerMarginPointer",
+              "param": "p",
+              "type": "p[len]",
+              "default": {
+                "code": "Fixed(StackLength.fixedZero)",
+                "references": ["len", "fixed"]
+              },
+              "map": true,
+              "doc": "A pointer that specifies the margin placed around the items at the edges of this collection."
+            }
+          ],
+          "non_contextual_props": [
+            {
+              "name": "innerMarginPointer",
+              "param": "p",
+              "type": "p[len]",
+              "default": {
+                "code": "Fixed(StackLength.any)",
+                "references": ["len", "fixed"]
+              },
+              "map": true,
+              "doc": "A pointer that specifies the margin placed between the in this collection."
+            }
+          ],
+          "contextual_props": [
+            {
+              "name": "customInnerMarginPointer",
+              "param": "p",
+              "setter": "withInnerMarginPointer",
+              "type": "Option[p[len]]",
+              "doc": "A user-specified pointer that determines the margin placed between the items in this collection. \nNone if default margin should be applied instead."
+            },
+            {
+              "name": "areRelated",
+              "param": "related",
+              "type": "Boolean",
+              "default": "false",
+              "doc": "Whether the items in this collection should be considered closely related to each other,\nresulting in a smaller margin placed between them."
+            }
+          ]
         }
       ]
     }

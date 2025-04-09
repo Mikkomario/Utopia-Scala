@@ -11,7 +11,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
@@ -29,7 +29,7 @@ import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.container.multi.Collection.{StackBoundsWrapper, layoutPriorities}
 
-import scala.collection.immutable.VectorBuilder
+import scala.collection.mutable
 
 object Collection extends Cff[CollectionFactory]
 {
@@ -39,6 +39,15 @@ object Collection extends Cff[CollectionFactory]
 	private def takeMin(s: StackLength) = s.min
 	private def takeMinIfShrinks(s: StackLength) = if (s.priority.shrinksFirst) s.min else s.optimal
 	
+	/**
+	  * A list of different layout options.
+	  * Each entry contains 2 values:
+	  *     1. Function for taking the length of an item, based on its stack length (e.g. take optimal length)
+	  *     1. Function for taking the length of a margin, based on the default (stack) margin (e.g. take minimum margin)
+	  *
+	  * These layouts are ordered in terms of their priority, from most to least preferred.
+	  * Size constraints may force smaller layouts to be used.
+	  */
 	private val layoutPriorities = Vector[(StackLength => Double, StackLength => Double)](
 		{ takeOptimal _ } -> { takeOptimal },
 		{ takeMinIfShrinks _ } -> { takeMinIfShrinks },
@@ -121,7 +130,7 @@ trait CollectionFactoryLike[+Repr]
 	  */
 	def withoutInnerMargin = withInnerMargin(StackLength.fixedZero)
 	/**
-	  * @return Copy of this factory that builds vertrical columns and places them left to right
+	  * @return Copy of this factory that builds vertical columns and places them left to right
 	  */
 	def columns = withPrimaryAxis(Y)
 	
@@ -248,6 +257,7 @@ case class ContextualCollectionFactory[+N <: BaseContextPropsView](hierarchy: Co
   * @author Mikko Hilpinen
   * @since 3.5.2023, v1.1
   */
+// TODO: We need a view-based version as well
 trait Collection extends ReachComponent with MultiContainer[ReachComponent] with StackSizeCalculating
 {
 	// ABSTRACT --------------------------
@@ -320,6 +330,7 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 						betweenRowsLayout)
 						.mapDimension(primaryAxis) { _.lowPriority }
 						.mapDimension(secondaryAxis) { _.expanding }
+					
 				// Case: No split threshold specified => Places all items on the same row, if possible
 				case None =>
 					val base = Stacker.calculateStackSize(componentSizes, primaryAxis, innerMargin, outerMargin,
@@ -342,8 +353,8 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 			val outerMargin = margins.second
 			// Finds which layout to use, based on how many rows may be fit into this collection's current state
 			val layouts = layoutPriorities.lazyMap { case (lengthOfItem, lengthOfMargin) =>
-				val layout = buildRows(componentsWithSizes, lengthOfMargin(innerMargin),
-					maxLength) { c => lengthOfItem(c._2(primaryAxis)) }
+				val layout = buildRows(componentsWithSizes, lengthOfMargin(innerMargin), maxLength) {
+					case (_, componentSize) => lengthOfItem(componentSize(primaryAxis)) }
 				val breadth = layout.foldLeft(0.0) { _ + _.iterator.map { _._2(secondaryAxis).min }.max } +
 					innerMargin.min * layout.size + outerMargin.min * 2
 				layout -> breadth
@@ -398,19 +409,25 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 		
 		// Then places the components within the rows
 		// The bounds updates are delayed
-		layout.iterator.zip(rowWrappers).flatMap { case (row, rowWrapper) =>
-			val itemWrappers = row.map { case (component, stackSize) => new DelayedBoundsUpdate(component, stackSize) }
-			Stacker(itemWrappers, rowWrapper.bounds, rowWrapper.stackSize(primaryAxis).optimal,
-				primaryAxis, innerMargin, outerMargin, insideRowLayout)
-			itemWrappers
-		}.foreach { _() }
+		layout.iterator.zip(rowWrappers)
+			.flatMap { case (row, rowWrapper) =>
+				val itemWrappers = row.map { case (component, stackSize) =>
+					new DelayedBoundsUpdate(component, stackSize)
+				}
+				Stacker(itemWrappers, rowWrapper.bounds, rowWrapper.stackSize(primaryAxis).optimal,
+					primaryAxis, innerMargin, outerMargin, insideRowLayout)
+				
+				itemWrappers
+			}
+			// Applies the bounds updates
+			.foreach { _() }
 	}
 	
 	// Places items in rows, respecting the specified length threshold
 	private def buildRows[A](items: Iterable[A], margin: Double, threshold: Double)(lengthOf: A => Double) = {
-		val rowsBuilder = new VectorBuilder[Vector[A]]()
+		val rowsBuilder = OptimizedIndexedSeq.newBuilder[IndexedSeq[A]]
 		val (lastRowBuilder, _) = items
-			.foldLeft((new VectorBuilder[A](), 0.0)) { case ((rowBuilder, rowLength), item) =>
+			.foldLeft((OptimizedIndexedSeq.newBuilder[A], 0.0)) { case ((rowBuilder, rowLength), item) =>
 				placeOnLine(rowsBuilder, rowBuilder, rowLength, item, margin, threshold)(lengthOf)
 			}
 		rowsBuilder += lastRowBuilder.result()
@@ -418,8 +435,10 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 	}
 	
 	// Intended to be used in foldLeft
-	private def placeOnLine[A](rowsBuilder: VectorBuilder[Vector[A]], rowBuilder: VectorBuilder[A],
-	                           rowLength: Double, item: A, margin: Double, threshold: Double)(lengthOf: A => Double) =
+	private def placeOnLine[A](rowsBuilder: mutable.Growable[IndexedSeq[A]],
+	                           rowBuilder: mutable.Builder[A, IndexedSeq[A]], rowLength: Double, item: A,
+	                           margin: Double, threshold: Double)
+	                          (lengthOf: A => Double) =
 	{
 		// Checks whether to place the item on the same line, or on a different line
 		val length = lengthOf(item)
@@ -427,7 +446,7 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 		// Case: Too long to place on the same line => Starts a new line
 		if (rowLength > 0.0 && wouldBeRowLength > threshold) {
 			rowsBuilder += rowBuilder.result()
-			val newRowBuilder = new VectorBuilder[A]()
+			val newRowBuilder = OptimizedIndexedSeq.newBuilder[A]
 			newRowBuilder += item
 			newRowBuilder -> length
 		}

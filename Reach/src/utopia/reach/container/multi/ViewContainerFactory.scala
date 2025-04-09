@@ -1,27 +1,78 @@
 package utopia.reach.container.multi
 
+import utopia.firmament.context.ComponentCreationDefaults
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, LockablePointer}
 import utopia.flow.view.template.eventful.Changing
+import utopia.reach.component.hierarchy.SeedHierarchyBlock
+import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
+import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
-import utopia.reach.component.wrapper.{ComponentCreationResult, OpenComponent}
 import utopia.reach.container.ContainerFactory
+
+import scala.collection.mutable
 
 /**
   * Common trait for initialized container factories that create containers that switch some of their content on or off
   * @author Mikko Hilpinen
   * @since 5.5.2023, v1.1
   */
-trait ViewContainerFactory[+Container, -Top]
+trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	extends ContainerFactory[Container, Top, SwitchableOpenComponents, SwitchableComponentsWrapResult]
 {
+	// ABSTRACT ------------------------
+	
+	/**
+	  * Creates a new container by wrapping a content pointer.
+	  * The content attachment logic is handled outside of this function.
+	  * @param contentPointer A pointer that contains the currently displayed content.
+	  * @return A new container
+	  */
+	protected def _apply(contentPointer: Changing[Seq[Top]]): Container
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	  * Creates a new container that changes its contents dynamically, based on a content pointer
 	  * @param content A pointer that contains the currently displayed content.
 	  * @return A new container
 	  */
-	def pointer(content: Changing[SeparateOpenComponents[Top, _]]): Container
+	def pointer(content: Changing[SeparateOpenComponents[Top, _]]): Container = {
+		// Creates the container
+		val componentsP = content.map { _.map { _.component } }
+		val container = _apply(componentsP)
+		
+		content.fixedValue match {
+			// Case: Content is static => Permanently attaches the components to the container
+			case Some(staticContent) => staticContent.foreach { _.hierarchy.complete(container) }
+			// Case: Content is dynamic => Adds attachment management
+			case None =>
+				// Tracks visible components as hashcodes
+				val visibleHashesP = componentsP.map { _.view.map { _.hashCode() }.toSet }
+				
+				// When new components are introduced, makes sure they get attached to this stack
+				// For each encountered component (hashcode), creates a new link pointer
+				val trackedHashes = mutable.Set[Int]()
+				content.addListenerWhileAndSimulateEvent(hierarchy.linkedFlag, Empty) { change =>
+					change.newValue.foreach { open =>
+						val hash = open.component.hashCode()
+						// Case: Not previously attached => Creates a new link pointer and attaches the component
+						if (!trackedHashes.contains(hash)) {
+							trackedHashes += hash
+							open.attachTo(container, visibleHashesP.map { _.contains(hash) })
+						}
+					}
+				}
+		}
+		
+		container
+	}
 	
 	/**
 	  * Builds a new container which reflects the contents of a multi-value pointer.
@@ -68,5 +119,79 @@ trait ViewContainerFactory[+Container, -Top]
 		}
 		
 		container
+	}
+	
+	/**
+	  * Creates a new container from a set of component-visibility-flag -pairs
+	  * @param content Content to display
+	  * @return A newly created container
+	  */
+	protected def fromVisibilityFlags(content: SwitchableOpenComponents[Top, _]) = {
+		// Checks which components have dynamic linking and which have static linking
+		val (staticComponents, dynamicComponents) = content.zipWithIndex.divideBy { _._1.result.mayChange }.toTuple
+		val alwaysVisibleComponents = staticComponents.view.filter { _._1.result.value }.toOptimizedSeq
+		
+		// Case: No dynamic linking applied => Creates a container with fixed content
+		if (dynamicComponents.isEmpty) {
+			val container = _apply(Fixed(alwaysVisibleComponents.map { _._1.component }))
+			joinUnconditionalHierarchiesTo(alwaysVisibleComponents.map { _._1.hierarchy }, container)
+			
+			container
+		}
+		// Case: Dynamic linking applied => Creates a dynamic container
+		else {
+			implicit val log: Logger = ComponentCreationDefaults.componentLogger
+			// A manually updated pointer that contains all components that are visible at that time
+			val visibleContentP = {
+				// Case: All components are dynamic => No extra sorting is required
+				if (alwaysVisibleComponents.isEmpty) {
+					val displayedComponents = dynamicComponents.map { _._1 }
+					CopyOnDemand {
+						displayedComponents.view.filter { _.result.value }.map { _.component }.toOptimizedSeq
+					}
+				}
+				// Case: A mixture of static and dynamic components
+				//       => Applies custom sorting in order to ensure that the ordering is preserved
+				else {
+					lazy val justAlwaysVisibleComponents = alwaysVisibleComponents.map { _._1.component }
+					CopyOnDemand {
+						val visibleDynamicComponents = dynamicComponents.filter { _._1.result.value }
+						// Case: Only static components visible at this time
+						if (visibleDynamicComponents.isEmpty)
+							justAlwaysVisibleComponents
+						else
+							OptimizedIndexedSeq
+								.concat(alwaysVisibleComponents, visibleDynamicComponents)
+								.sortBy { _._2 }.map { _._1.component }
+					}
+				}
+			}
+			// Updates this pointer whenever one of the component visibility pointers changes
+			dynamicComponents.foreach { case (component, _) =>
+				component.result.addListenerWhile(hierarchy.linkedFlag) { _ => visibleContentP.update() }
+			}
+			
+			// Creates the container and attaches the components to it
+			val container = _apply(visibleContentP)
+			joinUnconditionalHierarchiesTo(alwaysVisibleComponents.map { _._1.hierarchy }, container)
+			dynamicComponents.foreach { case (component, _) => component.attachTo(container, component.result) }
+			
+			container
+		}
+	}
+	
+	/**
+	  * Merges and joins n component hierarchies to a single container
+	  * @param hierarchies Hierarchies to merge & attach
+	  * @param container Container to which these hierarchies will be attached
+	  */
+	protected def joinUnconditionalHierarchiesTo(hierarchies: Iterable[SeedHierarchyBlock], container: ReachComponent) = {
+		if (hierarchies.hasSize > 1) {
+			val combinedHierarchy = hierarchies.head
+			hierarchies.view.tail.foreach { _.replaceWith(combinedHierarchy) }
+			combinedHierarchy.complete(container)
+		}
+		else
+			hierarchies.foreach { _.complete(container) }
 	}
 }
