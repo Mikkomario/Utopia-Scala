@@ -25,6 +25,8 @@
 - Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
 - Fixed **OptimizedMirror**'s change event generation when listening resumes.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
+- **Lazy**`.valueIterator` would previously yield an iterator of infinite length. 
+  Now yields an iterator of length 1, as expected.
 ### New features
 - Added **LockableFlag** and **LockableResettableFlag**
 - Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
