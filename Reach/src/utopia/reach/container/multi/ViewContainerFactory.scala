@@ -11,7 +11,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.hierarchy.SeedHierarchyBlock
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
 import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
 import utopia.reach.container.ContainerFactory
 
@@ -34,6 +34,14 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	  * @return A new container
 	  */
 	protected def _apply(contentPointer: Changing[Seq[Top]]): Container
+	
+	
+	// IMPLEMENTED  --------------------
+	
+	override def apply[C <: Top, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Container, C, R] = {
+		val container = fromVisibilityFlags(content)
+		ComponentWrapResult(container, content.map { _.componentAndResult }, content.result)
+	}
 	
 	
 	// OTHER    ------------------------

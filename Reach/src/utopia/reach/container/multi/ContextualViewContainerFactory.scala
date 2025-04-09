@@ -18,7 +18,7 @@ import utopia.reach.component.wrapper.Open
   * @tparam TopC Highest accepted component to wrap (typically ReachComponentLike)
   * @tparam Repr This factory type
   */
-trait ContextualViewContainerFactory[+N, TopN, +Container, -TopC <: ReachComponent, +Repr[N2 <: TopN]]
+trait ContextualViewContainerFactory[+N, TopN, +Container <: ReachComponent, -TopC <: ReachComponent, +Repr[N2 <: TopN]]
 	extends ViewContainerFactory[Container, TopC] with GenericContextualFactory[N, TopN, Repr]
 {
 	/**

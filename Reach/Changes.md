@@ -9,11 +9,16 @@
 - In **ReachComponent**, renamed `.linkPointer` to `.linkedFlag`
 - In multiple components and component factories, renamed -pointer properties to -flag properties
   - Especially, changed `enabledPointer`s to `enabledFlag`s and changed their type to **Flag**
+- **ViewContainer** now requires the implementation of `_apply(Changing[Seq[Top]])` 
+  instead of the more complex `apply[C <: Top, R](content: Content[C, R])`
+- **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
   would not manage the linked flags / attachment states correctly (initially)
 ### New features
+- Added **ViewCollection** container type
+- **Collection**s now support a pointer-based split threshold
 - Added **AnimatedImageLabel** and **LoadingOrImageLabel** classes
 - **ViewImageAndTextLabel**, as well as **ViewImageAndTextButton** now support a loading state
 - Added **LoadingBar** and **ProgressBar** components
@@ -21,6 +26,9 @@
 ### New methods
 - **ConcreteReachComponent**
   - Added `.widthPointer` and `.heightPointer`
+- **ViewContainer**
+  - Moved a number of functions from **ViewStack** to this trait, 
+    making the subclass implementation considerably more straightforward.
 ### Other changes
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated

@@ -7,7 +7,6 @@ import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.controller.Stacker
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
@@ -16,22 +15,427 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.enumeration.Axis.{X, Y}
-import utopia.paradigm.enumeration.Axis2D
+import utopia.paradigm.enumeration.Axis.Y
+import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.contextual.GenericContextualFactory
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
 import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
 import utopia.reach.container.multi.Collection.{StackBoundsWrapper, layoutPriorities}
 
 import scala.collection.mutable
 
-object Collection extends Cff[CollectionFactory]
+/**
+  * Common trait for collection factories and settings
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait CollectionSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * The direction the components are laid first.
+	  * If X, the components form vertically stacking rows. If Y, the components form horizontally
+	  * stacked columns.
+	  */
+	def primaryAxis: Axis2D
+	/**
+	  * Layout within individual rows or columns (first layer).
+	  */
+	def insideRowLayout: StackLayout
+	/**
+	  * Layout between the rows or columns (second layer)
+	  */
+	def betweenRowsLayout: StackLayout
+	/**
+	  * Maximum length of individual rows / columns, at which they are automatically split.
+	  * Contains none if all elements should be stacked in a single row/column.
+	  */
+	def splitThresholdPointer: Changing[Option[Double]]
+	/**
+	  * A pointer that specifies the margin placed around the items at the edges of this collection.
+	  */
+	def outerMarginPointer: Changing[StackLength]
+	
+	/**
+	  * Layout between the rows or columns (second layer)
+	  * @param layout New between rows layout to use.
+	  *               Layout between the rows or columns (second layer)
+	  * @return Copy of this factory with the specified between rows layout
+	  */
+	def withBetweenRowsLayout(layout: StackLayout): Repr
+	/**
+	  * Layout within individual rows or columns (first layer).
+	  * @param layout New inside row layout to use.
+	  *               Layout within individual rows or columns (first layer).
+	  * @return Copy of this factory with the specified inside row layout
+	  */
+	def withInsideRowLayout(layout: StackLayout): Repr
+	/**
+	  * A pointer that specifies the margin placed around the items at the edges of this collection.
+	  * @param p New outer margin pointer to use.
+	  *          A pointer that specifies the margin placed around the items at the edges of this
+	  *          collection.
+	  * @return Copy of this factory with the specified outer margin pointer
+	  */
+	def withOuterMarginPointer(p: Changing[StackLength]): Repr
+	/**
+	  * The direction the components are laid first.
+	  * If X, the components form vertically stacking rows. If Y, the components form horizontally
+	  * stacked columns.
+	  * @param axis New primary axis to use.
+	  *             The direction the components are laid first.
+	  *             If X, the components form vertically stacking rows. If Y, the components form
+	  *             horizontally stacked columns.
+	  * @return Copy of this factory with the specified primary axis
+	  */
+	def withPrimaryAxis(axis: Axis2D): Repr
+	/**
+	  * Maximum length of individual rows / columns, at which they are automatically split.
+	  * Contains none if all elements should be stacked in a single row/column.
+	  * @param thresholdPointer New split threshold pointer to use.
+	  *                         Maximum length of individual rows / columns, at which they are
+	  *                         automatically split.
+	  *                         Contains none if all elements should be stacked in a single
+	  *                         row/column.
+	  * @return Copy of this factory with the specified split threshold pointer
+	  */
+	def withSplitThresholdPointer(thresholdPointer: Changing[Option[Double]]): Repr
+	
+	
+	// COMPUTED --------------------
+	
+	/**
+	  * @return Copy of this factory that builds vertical columns and places them left to right
+	  */
+	def columns = withPrimaryAxis(Y)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param threshold Threshold after which this collection prepares to split contents to a new line
+	  * @return Copy of this factory with that threshold in place
+	  */
+	def withSplitThreshold(threshold: Double): Repr = withSplitThresholdPointer(Fixed(Some(threshold)))
+	
+	/**
+	  * @param margin Margin placed at the edges of this collection
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withOuterMargin(margin: StackLength): Repr = withOuterMarginPointer(Fixed(margin))
+	
+	def mapOuterMarginPointer(f: Mutate[Changing[StackLength]]) =
+		withOuterMarginPointer(f(outerMarginPointer))
+	def mapOuterMargin(f: Mutate[StackLength]) = mapOuterMarginPointer { _.map(f) }
+}
+
+object CollectionSettings
+{
+	// ATTRIBUTES	--------------------
+	
+	val default = apply()
+}
+/**
+  * Combined settings used when constructing collections
+  * @param customDrawers         Custom drawers to assign to created components
+  * @param primaryAxis           The direction the components are laid first.
+  *                              If X, the components form vertically stacking rows. If Y, the
+  *                              components form horizontally stacked columns.
+  * @param insideRowLayout       Layout within individual rows or columns (first layer).
+  * @param betweenRowsLayout     Layout between the rows or columns (second layer)
+  * @param splitThresholdPointer Maximum length of individual rows / columns, at which they are
+  *                              automatically split.
+  *                              Contains none if all elements should be stacked in a single
+  *                              row/column.
+  * @param outerMarginPointer    A pointer that specifies the margin placed around the items at
+  *                              the edges of this collection.
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+case class CollectionSettings(customDrawers: Seq[CustomDrawer] = Empty, primaryAxis: Axis2D = Axis.X,
+                              insideRowLayout: StackLayout = StackLayout.Fit,
+                              betweenRowsLayout: StackLayout = StackLayout.Fit,
+                              splitThresholdPointer: Changing[Option[Double]] = Fixed(None),
+                              outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero))
+	extends CollectionSettingsLike[CollectionSettings]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def withBetweenRowsLayout(layout: StackLayout) = copy(betweenRowsLayout = layout)
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
+	override def withInsideRowLayout(layout: StackLayout) = copy(insideRowLayout = layout)
+	override def withOuterMarginPointer(p: Changing[StackLength]) = copy(outerMarginPointer = p)
+	override def withPrimaryAxis(axis: Axis2D) = copy(primaryAxis = axis)
+	
+	override def withSplitThresholdPointer(thresholdPointer: Changing[Option[Double]]) =
+		copy(splitThresholdPointer = thresholdPointer)
+}
+
+/**
+  * Common trait for factories that wrap a collection settings instance
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait CollectionSettingsWrapper[+Repr] extends CollectionSettingsLike[Repr]
+{
+	// ABSTRACT	--------------------
+	
+	/**
+	  * Settings wrapped by this instance
+	  */
+	protected def settings: CollectionSettings
+	/**
+	  * @return Copy of this factory with the specified settings
+	  */
+	def withSettings(settings: CollectionSettings): Repr
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def betweenRowsLayout = settings.betweenRowsLayout
+	override def customDrawers = settings.customDrawers
+	override def insideRowLayout = settings.insideRowLayout
+	override def outerMarginPointer = settings.outerMarginPointer
+	override def primaryAxis = settings.primaryAxis
+	override def splitThresholdPointer = settings.splitThresholdPointer
+	
+	override def withBetweenRowsLayout(layout: StackLayout) = mapSettings { _.withBetweenRowsLayout(layout) }
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = mapSettings { _.withCustomDrawers(drawers) }
+	override def withInsideRowLayout(layout: StackLayout) = mapSettings { _.withInsideRowLayout(layout) }
+	override def withOuterMarginPointer(p: Changing[StackLength]) =
+		mapSettings { _.withOuterMarginPointer(p) }
+	override def withPrimaryAxis(axis: Axis2D) = mapSettings { _.withPrimaryAxis(axis) }
+	override def withSplitThresholdPointer(thresholdPointer: Changing[Option[Double]]) =
+		mapSettings { _.withSplitThresholdPointer(thresholdPointer) }
+	
+	
+	// OTHER	--------------------
+	
+	def mapSettings(f: CollectionSettings => CollectionSettings) = withSettings(f(settings))
+}
+
+/**
+  * Common trait for factories that are used for constructing collections (whether they be static or view-based)
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait AnyCollectionFactoryLike[+Repr] extends CollectionSettingsWrapper[Repr] with PartOfComponentHierarchy
+{
+	// ABSTRACT ------------------------
+	
+	/**
+	  * @return A pointer that contains the margin placed between the items in this collection.
+	  */
+	def innerMarginPointer: Changing[StackLength]
+	/**
+	  * @param p A pointer that indicates the margin to place between items within this collection
+	  * @return Copy of this factory using the specified pointer
+	  */
+	def withInnerMarginPointer(p: Changing[StackLength]): Repr
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	  * @return Copy of this factory that doesn't allow any margins between items
+	  */
+	def withoutInnerMargin = withInnerMargin(StackLength.fixedZero)
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	  * @param margin Margin placed between the items in this collection
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withInnerMargin(margin: StackLength): Repr = withInnerMarginPointer(Fixed(margin))
+	def mapInnerMarginPointer(f: Mutate[Changing[StackLength]]) = withInnerMarginPointer(f(innerMarginPointer))
+	def mapInnerMargin(f: Mutate[StackLength]) = mapInnerMarginPointer { _.map(f) }
+}
+/**
+  * Common trait for factories that are used for constructing collections
+  * @tparam Repr Implementing factory/settings type
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait CollectionFactoryLike[+Repr]
+	extends AnyCollectionFactoryLike[Repr] with CombiningContainerFactory[Collection, ReachComponent]
+{
+	// IMPLEMENTED  -------------------
+	
+	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
+		val collection: Collection = new _Collection(hierarchy, content.component,
+			primaryAxis, insideRowLayout, betweenRowsLayout, innerMarginPointer, outerMarginPointer,
+			splitThresholdPointer, customDrawers)
+		content attachTo collection
+	}
+}
+
+/**
+  * Factory class used for constructing some type of collection containers using contextual component creation
+  * information
+  * @tparam N Type of context used and passed along by this factory
+  * @tparam Repr Type of implementing (generic) factory class
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait AnyContextualCollectionFactory[+N <: BaseContextPropsView, +Repr[+_ <: BaseContextPropsView]]
+	extends AnyCollectionFactoryLike[Repr[N]] with GenericContextualFactory[N, BaseContextPropsView, Repr]
+{
+	// ABSTRACT --------------------------
+	
+	/**
+	  * @return A user-specified pointer that determines the margin placed between the items in this collection.
+	  *         None if default margin should be applied instead.
+	  */
+	def customInnerMarginPointer: Option[Changing[StackLength]]
+	/**
+	  * @return Whether the items in this collection should be considered closely related to each other,
+	  *         resulting in a smaller margin placed between them.
+	  */
+	def areRelated: Boolean
+	
+	/**
+	  * @param p A user-specified pointer that determines the margin placed between the items in this
+	  *          collection.
+	  *          None if default margin should be applied instead.
+	  * @return Copy of this factory with the specified custom inner margin pointer
+	  */
+	def withInnerMarginPointer(p: Option[Changing[StackLength]]): Repr[N]
+	/**
+	  * @param related Whether the items in this collection should be considered closely related to
+	  *                each other,
+	  *                resulting in a smaller margin placed between them.
+	  * @return Copy of this factory with the specified are related
+	  */
+	def withAreRelated(related: Boolean): Repr[N]
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return Copy of this factory that places the components closer to each other
+	  */
+	def related = withAreRelated(true)
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def innerMarginPointer: Changing[StackLength] = customInnerMarginPointer
+		.getOrElse { if (areRelated) context.smallStackMarginPointer else context.stackMarginPointer }
+	override def withInnerMarginPointer(p: Changing[StackLength]): Repr[N] = withInnerMarginPointer(Some(p))
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	  * @param margin Margin to place between the components in this collection (general)
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withInnerMargin(margin: SizeCategory): Repr[N] =
+		withInnerMarginPointer(context.scaledStackMarginPointer(margin))
+	/**
+	  * @param margin Margin to place at the edges of this collection (general)
+	  * @return Copy of this factory with the specified margin
+	  */
+	def withOuterMargin(margin: SizeCategory) = withOuterMarginPointer(context.scaledStackMarginPointer(margin))
+}
+/**
+  * Factory class used for constructing collections using contextual component creation
+  * information
+  * @param customInnerMarginPointer A user-specified pointer that determines the margin placed
+  *                                 between the items in this collection.
+  *                                 None if default margin should be applied instead.
+  * @param areRelated               Whether the items in this collection should be considered
+  *                                 closely related to each other,
+  *                                 resulting in a smaller margin placed between them.
+  * @tparam N Type of context used and passed along by this factory
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+case class ContextualCollectionFactory[+N <: BaseContextPropsView](hierarchy: ComponentHierarchy,
+                                                                   context: N, settings: CollectionSettings,
+                                                                   customInnerMarginPointer: Option[Changing[StackLength]] = None,
+                                                                   areRelated: Boolean = false)
+	extends CollectionFactoryLike[ContextualCollectionFactory[N]]
+		with AnyContextualCollectionFactory[N, ContextualCollectionFactory]
+		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Collection, ReachComponent, ContextualCollectionFactory]
+{
+	// IMPLEMENTED  ----------------------
+	
+	override def withContext[N2 <: BaseContextPropsView](context: N2) =
+		copy(context = context)
+	override def withSettings(settings: CollectionSettings) = copy(settings = settings)
+	
+	def withAreRelated(related: Boolean) = copy(areRelated = related)
+	def withInnerMarginPointer(p: Option[Changing[StackLength]]) = copy(customInnerMarginPointer = p)
+}
+/**
+  * Factory class that is used for constructing collections without using contextual information
+  * @param innerMarginPointer A pointer that specifies the margin placed between the in this
+  *                           collection.
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+case class CollectionFactory(hierarchy: ComponentHierarchy,
+                             settings: CollectionSettings = CollectionSettings.default,
+                             innerMarginPointer: Changing[StackLength] = Fixed(StackLength.any))
+	extends CollectionFactoryLike[CollectionFactory]
+		with FromGenericContextFactory[BaseContextPropsView, ContextualCollectionFactory]
+		with NonContextualCombiningContainerFactory[Collection, ReachComponent]
+{
+	// IMPLEMENTED  ------------------------
+	
+	override def withContext[N <: BaseContextPropsView](context: N) =
+		ContextualCollectionFactory(hierarchy, context, settings)
+	override def withSettings(settings: CollectionSettings) = copy(settings = settings)
+	
+	/**
+	  * @param p A pointer that specifies the margin placed between the in this collection.
+	  * @return Copy of this factory with the specified inner margin pointer
+	  */
+	def withInnerMarginPointer(p: Changing[StackLength]) = copy(innerMarginPointer = p)
+}
+
+/**
+  * Used for defining collection creation settings outside the component building process
+  * @tparam F Type of non-contextual factories created
+  * @tparam CF Type of (generic) contextual factories created
+  * @tparam Repr Type of the concrete implementing setup
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+trait AnyCollectionSetup[+F, +CF[_ <: BaseContextPropsView], +Repr]
+	extends CollectionSettingsWrapper[Repr] with ComponentFactoryFactory[F]
+		with FromGenericContextComponentFactoryFactory[BaseContextPropsView, CF]
+/**
+  * Used for defining collection creation settings outside the component building process
+  * @author Mikko Hilpinen
+  * @since 09.04.2025, v1.6
+  */
+case class CollectionSetup(settings: CollectionSettings = CollectionSettings.default)
+	extends AnyCollectionSetup[CollectionFactory, ContextualCollectionFactory, CollectionSetup]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def apply(hierarchy: ComponentHierarchy) = CollectionFactory(hierarchy, settings)
+	
+	override def withContext[N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N) =
+		ContextualCollectionFactory(hierarchy, context, settings)
+	override def withSettings(settings: CollectionSettings) = copy(settings = settings)
+}
+
+object Collection extends CollectionSetup()
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -56,9 +460,9 @@ object Collection extends Cff[CollectionFactory]
 	)
 	
 	
-	// IMPLEMENTED    -----------------------
+	// OTHER    -----------------------------
 	
-	override def apply(hierarchy: ComponentHierarchy): CollectionFactory = CollectionFactory(hierarchy)
+	def apply(settings: CollectionSettings) = withSettings(settings)
 	
 	
 	// NESTED   -----------------------------
@@ -76,181 +480,6 @@ object Collection extends Cff[CollectionFactory]
 		override def size_=(s: Size): Unit = bounds = bounds.withSize(s)
 	}
 }
-
-trait CollectionFactoryLike[+Repr]
-	extends CombiningContainerFactory[Collection, ReachComponent] with CustomDrawableFactory[Repr]
-{
-	// ABSTRACT ------------------------
-	
-	def primaryAxis: Axis2D
-	def insideRowLayout: StackLayout
-	def betweenRowsLayout: StackLayout
-	def innerMarginPointer: Changing[StackLength]
-	def outerMarginPointer: Changing[StackLength]
-	def splitThreshold: Option[Double]
-	
-	/**
-	  * @param axis The axis along which the components are laid out first (i.e. direction of rows / lines).
-	  *             X = Build left to right first
-	  *             Y = Build top to bottom first
-	  * @return Copy of this factory with the specified axis
-	  */
-	def withPrimaryAxis(axis: Axis2D): Repr
-	/**
-	  * @param layout Layout to use inside or rows / columns
-	  * @return Copy of this factory with specified row layout
-	  */
-	def withInsideRowLayout(layout: StackLayout): Repr
-	/**
-	  * @param layout Layout to use when placing the rows / columns
-	  * @return Copy of this factory with the specified layout
-	  */
-	def withBetweenRowsLayout(layout: StackLayout): Repr
-	/**
-	  * @param p A pointer that indicates the margin to place between items within this collection
-	  * @return Copy of this factory using the specified pointer
-	  */
-	def withInnerMarginPointer(p: Changing[StackLength]): Repr
-	/**
-	  * @param p A pointer that indicates the margin to place around this collection
-	  * @return Copy of this factory using the specified pointer
-	  */
-	def withOuterMarginPointer(p: Changing[StackLength]): Repr
-	/**
-	  * @param threshold Threshold after which this collection prepares to split contents to a new line
-	  * @return Copy of this factory with that threshold in place
-	  */
-	def withSplitThreshold(threshold: Double): Repr
-	
-	
-	// COMPUTED -----------------------
-	
-	/**
-	  * @return Copy of this factory that doesn't allow any margins between items
-	  */
-	def withoutInnerMargin = withInnerMargin(StackLength.fixedZero)
-	/**
-	  * @return Copy of this factory that builds vertical columns and places them left to right
-	  */
-	def columns = withPrimaryAxis(Y)
-	
-	
-	// IMPLEMENTED  -------------------
-	
-	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
-		val collection: Collection = new _Collection(hierarchy, content.component,
-			primaryAxis, insideRowLayout, betweenRowsLayout, innerMarginPointer, outerMarginPointer, splitThreshold,
-			customDrawers)
-		content attachTo collection
-	}
-	
-	
-	// OTHER    -----------------------
-	
-	/**
-	  * @param margin Margin placed between the items in this collection
-	  * @return Copy of this factory with the specified margin
-	  */
-	def withInnerMargin(margin: StackLength): Repr = withInnerMarginPointer(Fixed(margin))
-	/**
-	  * @param margin Margin placed at the edges of this collection
-	  * @return Copy of this factory with the specified margin
-	  */
-	def withOuterMargin(margin: StackLength): Repr = withOuterMarginPointer(Fixed(margin))
-	
-	def mapInnerMarginPointer(f: Mutate[Changing[StackLength]]) = withInnerMarginPointer(f(innerMarginPointer))
-	def mapOuterMarginPointer(f: Mutate[Changing[StackLength]]) = withOuterMarginPointer(f(outerMarginPointer))
-	
-	def mapInnerMargin(f: Mutate[StackLength]) = mapInnerMarginPointer { _.map(f) }
-	def mapOuterMargin(f: Mutate[StackLength]) = mapOuterMarginPointer { _.map(f) }
-}
-
-case class CollectionFactory(hierarchy: ComponentHierarchy, primaryAxis: Axis2D = X,
-                             insideRowLayout: StackLayout = Fit, betweenRowsLayout: StackLayout = Leading,
-                             innerMarginPointer: Changing[StackLength] = Fixed(StackLength.any),
-                             outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                             splitThreshold: Option[Double] = None, customDrawers: Seq[CustomDrawer] = Empty)
-	extends CollectionFactoryLike[CollectionFactory]
-		with NonContextualCombiningContainerFactory[Collection, ReachComponent]
-		with FromGenericContextFactory[BaseContextPropsView, ContextualCollectionFactory]
-{
-	// IMPLEMENTED  ------------------------
-	
-	override def withPrimaryAxis(axis: Axis2D): CollectionFactory = copy(primaryAxis = axis)
-	override def withInsideRowLayout(layout: StackLayout): CollectionFactory = copy(insideRowLayout = layout)
-	override def withBetweenRowsLayout(layout: StackLayout): CollectionFactory = copy(betweenRowsLayout = layout)
-	override def withInnerMarginPointer(p: Changing[StackLength]): CollectionFactory = copy(innerMarginPointer = p)
-	override def withOuterMarginPointer(p: Changing[StackLength]): CollectionFactory = copy(outerMarginPointer = p)
-	override def withSplitThreshold(threshold: Double): CollectionFactory = copy(splitThreshold = Some(threshold))
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]): CollectionFactory = copy(customDrawers = drawers)
-	
-	override def withContext[N <: BaseContextPropsView](context: N): ContextualCollectionFactory[N] =
-		ContextualCollectionFactory[N](hierarchy, context, primaryAxis, insideRowLayout, betweenRowsLayout,
-			outerMarginPointer, splitThreshold, customDrawers)
-}
-
-case class ContextualCollectionFactory[+N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N,
-                                                                   primaryAxis: Axis2D = X,
-                                                                   insideRowLayout: StackLayout = Fit,
-                                                                   betweenRowsLayout: StackLayout = Leading,
-                                                                   outerMarginPointer: Changing[StackLength] = Fixed(StackLength.fixedZero),
-                                                                   splitThreshold: Option[Double] = None,
-                                                                   customDrawers: Seq[CustomDrawer] = Empty,
-                                                                   customInnerMarginPointer: Option[Changing[StackLength]] = None,
-                                                                   areRelated: Boolean = false)
-	extends CollectionFactoryLike[ContextualCollectionFactory[N]]
-		with ContextualCombiningContainerFactory[N, BaseContextPropsView, Collection, ReachComponent, ContextualCollectionFactory]
-{
-	// ATTRIBUTES   ----------------------
-	
-	override lazy val innerMarginPointer: Changing[StackLength] = customInnerMarginPointer
-		.getOrElse { if (areRelated) context.smallStackMarginPointer else context.stackMarginPointer }
-	
-	
-	// COMPUTED --------------------------
-	
-	/**
-	  * @return Copy of this factory that places the components closer to each other
-	  */
-	def related = copy(areRelated = true)
-	
-	
-	// IMPLEMENTED  ----------------------
-	
-	override def withContext[N2 <: BaseContextPropsView](newContext: N2): ContextualCollectionFactory[N2] =
-		copy(context = newContext)
-	
-	override def withInnerMarginPointer(p: Changing[StackLength]): ContextualCollectionFactory[N] =
-		copy(customInnerMarginPointer = Some(p))
-	override def withOuterMarginPointer(p: Changing[StackLength]): ContextualCollectionFactory[N] =
-		copy(outerMarginPointer = p)
-	override def withPrimaryAxis(axis: Axis2D): ContextualCollectionFactory[N] = copy(primaryAxis = axis)
-	override def withInsideRowLayout(layout: StackLayout): ContextualCollectionFactory[N] =
-		copy(insideRowLayout = layout)
-	override def withBetweenRowsLayout(layout: StackLayout): ContextualCollectionFactory[N] =
-		copy(betweenRowsLayout = layout)
-	override def withSplitThreshold(threshold: Double): ContextualCollectionFactory[N] =
-		copy(splitThreshold = Some(threshold))
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualCollectionFactory[N] =
-		copy(customDrawers = drawers)
-	
-	
-	// OTHER    --------------------------
-	
-	/**
-	  * @param margin Margin to place between the components in this collection (general)
-	  * @return Copy of this factory with the specified margin
-	  */
-	def withInnerMargin(margin: SizeCategory): ContextualCollectionFactory[N] =
-		withInnerMarginPointer(context.scaledStackMarginPointer(margin))
-	/**
-	  * @param margin Margin to place at the edges of this collection (general)
-	  * @return Copy of this factory with the specified margin
-	  */
-	def withOuterMargin(margin: SizeCategory) =
-		copy(outerMarginPointer = context.scaledStackMarginPointer(margin))
-}
-
 /**
   * A view that presents items within rows and columns, forming a 2D matrix.
   * Only splits the rows/columns when necessary.
@@ -463,10 +692,17 @@ private class _Collection(override val hierarchy: ComponentHierarchy,
                           override val insideRowLayout: StackLayout, override val betweenRowsLayout: StackLayout,
                           override val innerMarginPointer: Changing[StackLength],
                           override val outerMarginPointer: Changing[StackLength],
-                          override val splitThreshold: Option[Double], override val customDrawers: Seq[CustomDrawer])
+                          splitThresholdPointer: Changing[Option[Double]],
+                          override val customDrawers: Seq[CustomDrawer])
 	extends ConcreteCustomDrawReachComponent with Collection
 {
 	// INITIAL CODE ----------------------------
 	
 	setupMarginListeners()
+	splitThresholdPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	
+	
+	// IMPLEMENTED  ----------------------------
+	
+	override def splitThreshold: Option[Double] = splitThresholdPointer.value
 }

@@ -1405,6 +1405,7 @@
               "param": "p",
               "setter": "withInnerMarginPointer",
               "type": "Option[p[len]]",
+              "default": "None",
               "doc": "A user-specified pointer that determines the margin placed between the items in this collection. \nNone if default margin should be applied instead."
             },
             {

@@ -272,14 +272,12 @@ trait ViewStackFactoryLike[+Repr]
 					val wrappers = Open
 						.many { hierarchies => group.wrap(content) { hierarchies.next() }.map { _.parentAndResult } }
 						.component
-					val stack = fromVisiblePointers(wrappers)
+					val stack = fromVisibilityFlags(wrappers)
 					// Still returns the components as the children and not the wrappers
 					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
 				
-				// Case: No segmentation used
-				case None =>
-					val stack = fromVisiblePointers(content)
-					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
+				// Case: No segmentation used => Applies the default implementation
+				case None => super.apply(content)
 			}
 		}
 	}
@@ -334,23 +332,6 @@ trait ViewStackFactoryLike[+Repr]
 	  * @return Copy of this factory with mapped margin pointer
 	  */
 	def mapMargin(f: StackLength => StackLength) = withMarginPointer(marginPointer.map(f))
-	
-	private def fromVisiblePointers[C <: ReachComponent, R](content: SwitchableOpenComponents[C, R]) = {
-		// Adds visible components -tracking
-		val components = content.map { _.componentAndResult }
-		val visibleContentP =
-			CopyOnDemand { components.view.filter { _._2.value }.map { _._1 }.toOptimizedSeq }(
-				ComponentCreationDefaults.componentLogger)
-		
-		components.foreach { case (_, visibleFlag) =>
-			visibleFlag.addListenerWhile(hierarchy.linkedFlag) { _ => visibleContentP.update() }
-		}
-		
-		val stack = new ViewStack(hierarchy, visibleContentP, settings, marginPointer)
-		content.foreach { open => open.attachTo(stack, open.result) }
-		
-		stack
-	}
 	
 	/**
 	  * Creates a fixed stack with this factory's settings.
