@@ -2,8 +2,10 @@ package utopia.flow.test.collection
 
 import utopia.flow.collection.CollectionExtensions.{iterableOperations, _}
 import utopia.flow.collection.immutable.range.NumericSpan
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.ordering.SomeBeforeNone
+
+import scala.collection.View
 
 /**
  * A test for Flow collections / collection extensions
@@ -101,6 +103,13 @@ object CollectionTest extends App
 	
 	assert(Vector().groupConsecutiveWith { (_, _) => true }.isEmpty)
 	assert(Vector(1).groupConsecutiveWith { (_, _) => true }.only.contains(Single(1)))
+	
+	// Tests OptimizedIndexedSeq.concat(...)
+	
+	assert(OptimizedIndexedSeq.concat(Pair(1, 2), Pair(3, 4)) == Vector(1, 2, 3, 4))
+	assert(OptimizedIndexedSeq.concat(Single(1), Single(2)) == Pair(1, 2))
+	assert(OptimizedIndexedSeq.concat(Single(1), Iterator.iterate(2) { _ + 1 }.takeTo { _ == 4 }.caching) == Vector(1, 2, 3, 4))
+	assert(OptimizedIndexedSeq.concat(Single(1), View.fromIteratorProvider { () => Iterator.empty }) == Single(1))
 	
 	println("Success!")
 }
