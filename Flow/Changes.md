@@ -71,6 +71,7 @@
 - **OptimizedChanging** now locks its `listenerPointer` (and consequently `hasListenersFlag`) once it stops changing
 - Changed **Pair**'s `.toString` implementation
 - `new FlagView(...)` now accepts any **Flag**, not just **SettableFlag**
+- Optimized `OptimizedIndexedSeq.concat(...)`
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**
 

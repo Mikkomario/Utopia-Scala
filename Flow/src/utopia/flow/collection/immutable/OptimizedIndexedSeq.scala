@@ -1,5 +1,6 @@
 package utopia.flow.collection.immutable
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
@@ -92,6 +93,41 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 		case 1 => Single(f(0))
 		case x if x <= 0 => Empty
 		case _ => Vector.tabulate(n)(f)
+	}
+	
+	override def concat[A](xss: Iterable[A]*) = {
+		// Case: No collections to join
+		if (xss.isEmpty)
+			Empty
+		// Case: Only a single collection specified => Uses from(...)
+		else if (xss.hasSize <= 1)
+			from(xss.head)
+		// Case: Multiple collections specified => Checks whether to immediately build to Vector
+		else {
+			// Checks as many known sizes as is necessary
+			val knownSizes = xss.iterator.map { _.knownSize }.caching
+			// Calculates the total lazily
+			val knownTotalSizeFoldResult = xss.iterator.map { _.knownSize }
+				.foldLeftIterator(0) { (total, size) => if (size > 0) total + size else size }.caching
+			
+			// Case: The source contains at least 3 items => Builds a Vector directly
+			if (knownTotalSizeFoldResult.exists { _ >= 3 })
+				Vector.concat(xss: _*)
+			else {
+				// Case: Total size is known => Builds the correct collection type
+				if (knownSizes.forall { _ >= 0 }) {
+					lazy val iterator = xss.foldLeft(Iterator.empty[A]) { _ ++ _ }
+					knownTotalSizeFoldResult.last match {
+						case 2 => Pair(iterator.next(), iterator.next())
+						case 1 => Single(iterator.next())
+						case _ => Empty
+					}
+				}
+				// Case: Total size is not known => Uses from(...)
+				else
+					from(xss.foldLeft(View.empty[A]) { _ ++ _ })
+			}
+		}
 	}
 	
 	
