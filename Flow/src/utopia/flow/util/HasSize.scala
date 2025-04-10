@@ -31,6 +31,11 @@ class HasSize(c: Iterable[_]) extends RichComparable[Int]
 	  * @return Whether this collection has the same size as the other collection
 	  */
 	def of(coll: Iterable[_]): Boolean = c.sizeCompare(coll) == 0
+	/**
+	  * @param coll Another collection
+	  * @return Whether this collection has a different size from that of the other collection
+	  */
+	def differentFrom(coll: Iterable[_]) = !of(coll)
 	
 	/**
 	  * @param coll A collection

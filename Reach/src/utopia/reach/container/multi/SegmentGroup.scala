@@ -55,13 +55,21 @@ object SegmentGroup
   * @since 10.6.2020, v0.1
   * @param rowDirection Direction of the component rows in this group. Eg. X when used with horizontal stacks.
   *                     Default = X.
-  * @param layouts Layouts to be used with different segments, ordered. Default = all use Fit.
+  * @param layouts Layouts to be used with different segments, ordered. Default = all use the 'defaultLayout'.
+  * @param defaultLayout Layout used for segments not fitting within 'layouts'.
+  *                      E.g. If layouts has 2 elements, this layout will be used for the third-nth elements.
+  *                      Default = Fit.
   */
-class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty)
+class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty, defaultLayout: StackLayout = Fit)
 {
 	// ATTRIBUTES	---------------------------
 	
 	private var segments: Seq[Segment] = Empty
+	
+	
+	// COMPUTED -------------------------------
+	
+	private def segmentDirection = rowDirection.perpendicular
 	
 	
 	// OTHER	-------------------------------
@@ -76,7 +84,6 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 		val parentsIterator = row.iterator.map { _._1 }
 		wrap(row.map { _._2 }) { parentsIterator.next() }
 	}
-	
 	/**
 	  * Registers a new row of items into this group, producing wrapped components
 	  * @param hierarchy Component hierarchy that will hold the created wrappers
@@ -95,14 +102,16 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	  */
 	def wrap[C <: ReachComponent, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
 	{
-		// Adds each piece of the row into its own segment (creates new segments if necessary)
-		if (row.size > segments.size) {
-			val newSegmentLayouts = layouts.drop(segments.size)
-			val newSegments = (0 until (row.size - segments.size)).map { idx =>
-				new Segment(rowDirection.perpendicular, newSegmentLayouts.getOrElse(idx, Fit))
-			}
-			segments ++= newSegments
-		}
-		row.indices.map { i => segments(i).wrap(nextHierarchy, row(i), i + 1) }
+		// Creates more segments, if necessary
+		val existingSegmentCount = segments.size
+		val missingSegmentCount = row.size - existingSegmentCount
+		if (missingSegmentCount > 0)
+			segments ++= layouts.drop(existingSegmentCount).view.padTo(missingSegmentCount, defaultLayout)
+				.map { new Segment(segmentDirection, _) }
+		
+		// Adds each piece of the row into its own segment
+		row.view.zip(segments).zipWithIndex
+			.map { case ((row, segment), index) => segment.wrap(nextHierarchy, row, index) }
+			.toOptimizedSeq
 	}
 }

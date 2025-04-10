@@ -32,6 +32,7 @@
 ### Other changes
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
+- Internal refactoring within **Segment** and **SegmentGroup**
 
 ## v1.5 - 23.01.2025
 This update focuses on the following main areas:

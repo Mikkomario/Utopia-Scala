@@ -29,6 +29,7 @@
   Now yields an iterator of length 1, as expected.
 ### New features
 - Added **LockableFlag** and **LockableResettableFlag**
+- Added lazy fixed pointers. May be constructed with `Fixed.lazily(...)`
 - Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
@@ -40,6 +41,8 @@
   - Added `.maySealIf(Boolean)`
 - **Flag** (object)
   - Added new utility functions for accessing lockable, settable & resettable constructors
+- **HasSize**
+  - Added `.differentFrom(Iterable)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.headPair`
 - **IterableOnce** (**CollectionExtensions**)
