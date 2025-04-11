@@ -381,10 +381,14 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	val boundsUpdatingFlag = positionUpdatingFlag || sizeUpdatingFlag
 	
 	/**
+	  * Contains true while this window has not been closed
+	  */
+	val notClosedFlag = !_closedFlag
+	/**
 	  * A flag that contains true whenever this window is fully visible
 	  * (i.e. open, visible and not minimized)
 	  */
-	val fullyVisibleFlag = (_visibleFlag && (!_minimizedFlag)) && (!_closedFlag)
+	val fullyVisibleFlag = (_visibleFlag && (!_minimizedFlag)) && notClosedFlag
 	/**
 	  * A flag that contains true when (and only when) this window is fully visible (open, not minimized) and has focus
 	  */
@@ -401,7 +405,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * From first visible = true to the closing of this window, this flag contains true.
 	  * After the closing of this window, this flag contains false.
 	  */
-	lazy val openFlag = _openedFlag && (!_closedFlag)
+	lazy val openFlag = _openedFlag && notClosedFlag
 	
 	// Merges the position and size in order to form bounds
 	// Provides a separate interface for users

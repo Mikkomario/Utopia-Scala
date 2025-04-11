@@ -1,8 +1,9 @@
 package utopia.flow.test.event
 
-import utopia.flow.test.TestContext._
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.view.mutable.eventful.{EventfulPointer, SettableFlag, ResettableFlag}
+import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.test.TestContext._
+import utopia.flow.view.mutable.eventful.{ResettableFlag, SettableFlag}
 import utopia.flow.view.template.eventful.Flag
 
 /**
@@ -25,12 +26,14 @@ object FlagTest extends App
 	assert(and1.isNotSet)
 	assert(i1.numberOfListeners == 1)
 	assert(ri1.numberOfListeners == 0)
+	assert(and1.mayChange)
 	
 	ri1.set()
 	
 	assert(and1.isNotSet)
 	assert(ri1.hasNoListeners)
 	assert(i1.hasListeners)
+	assert(and1.mayChange)
 	
 	i1.set()
 	
@@ -38,11 +41,13 @@ object FlagTest extends App
 	assert(and1.isSet)
 	assert(i1.hasNoListeners)
 	assert(ri1.hasListeners)
+	assert(and1.mayChange)
 	
 	ri1.reset()
 	
 	assert(and1.isNotSet)
 	assert(!lastEvent)
+	assert(and1.mayChange)
 	
 	// Tests listener-clearing
 	and1.removeListener(updateLastEventListener)
@@ -71,7 +76,7 @@ object FlagTest extends App
 	// Tests && with ! - Optimized
 	val i3 = SettableFlag()
 	val ni3 = !i3 // Initially true
-	val pi1 = EventfulPointer(false)
+	val pi1 = ResettableFlag()
 	val piv1: Flag = pi1.readOnly // Initially false
 	val and2 = piv1 && ni3 // Initially false
 	ni2.removeListener(updateLastEventListener)
@@ -100,6 +105,7 @@ object FlagTest extends App
 	assert(!lastEvent)
 	assert(!ni3.mayChange)
 	assert(!and2.mayChange)
+	assert(and2.destiny == Sealed)
 	assert(ni3.hasNoListeners)
 	assert(i3.hasNoListeners)
 	assert(and2.hasNoListeners)
@@ -132,6 +138,7 @@ object FlagTest extends App
 	assert(or1.isSet)
 	assert(!i4.mayChange)
 	assert(!or1.mayChange)
+	assert(or1.destiny == Sealed)
 	assert(i4.hasNoListeners)
 	assert(or1.hasNoListeners)
 	assert(piv1.hasNoListeners)

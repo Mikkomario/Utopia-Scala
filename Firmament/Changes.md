@@ -5,6 +5,9 @@
 - Added content scaling support to **AlignFrameLike**
 - Added **MinOptimalLengthModifier** and **MinOptimalSizeModifier** (new stack size modifiers)
 - Added **FromSizeCategoryFactory** trait
+### New methods
+- **Window**
+  - Added `.notClosedFlag`
 ### Other changes
 - Added additional rounding to scaling **ButtonImageEffect**
 - **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary

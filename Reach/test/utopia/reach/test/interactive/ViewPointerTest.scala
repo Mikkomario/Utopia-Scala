@@ -29,10 +29,15 @@ object ViewPointerTest extends App
 	window.setToCloseOnEsc()
 	// window.setToExitOnClose()
 	
+	window.notClosedFlag.addContinuousListener { e => println(s"Window closed state changed to ${ !e.newValue } (destiny = ${ window.notClosedFlag.destiny })") }
 	window.fullyVisibleFlag.addContinuousListener { e => println(s"Window visible state $e (destiny = ${window.fullyVisibleFlag.destiny})") }
 	window.openFlag.addContinuousListener { e => println(s"Window open state $e (destiny = ${window.openFlag.destiny})") }
 	window.canvas.linkedFlag.addContinuousListener { e => println(s"Canvas attachment state $e (destiny = ${window.canvas.linkedFlag.destiny})") }
 	window.result.hierarchy.linkedFlag.addContinuousListener { e => println(s"Label attachment $e (destiny = ${window.result.hierarchy.linkedFlag.destiny})") }
+	
+	window.fullyVisibleFlag.addChangingStoppedListener {
+		println(s"Window visibility state stabilized (${ window.fullyVisibleFlag.destiny })")
+	}
 	
 	start()
 	window.display(centerOnParent = true)
