@@ -3,7 +3,7 @@ package utopia.reach.container.multi
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -12,64 +12,146 @@ import utopia.reach.component.wrapper.OpenComponent
 
 object SegmentGroup
 {
+	// COMPUTED -----------------------
+	
 	/**
 	  * @return A segmented group that produces rows
 	  */
-	def rows = new SegmentGroup()
+	def rows = apply(X)
 	/**
 	  * @return A segmented group that produces columns
 	  */
-	def columns = new SegmentGroup(Y)
+	def columns = apply(Y)
+	
+	
+	// OTHER    ----------------------
 	
 	/**
 	  * @param layouts Layouts to use in row segments (ordered)
 	  * @return A new segmented group that produces rows
 	  */
-	def rowsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(layouts = layouts)
+	def rowsWithLayouts(layouts: Seq[StackLayout]) = apply(X, layouts)
 	/**
 	  * @param first First segment layout
-	  * @param second Second segment layout
 	  * @param more More segment layouts
 	  * @return A new segmented group that produces rows
 	  */
-	def rowsWithLayouts(first: StackLayout, second: StackLayout, more: StackLayout*): SegmentGroup =
-		rowsWithLayouts(Pair(first, second) ++ more)
+	def rowsWithLayouts(first: StackLayout, more: StackLayout*): SegmentGroup = rowsWithLayouts(first +: more)
 	/**
 	  * @param layouts Layouts to use in column segments (ordered)
 	  * @return A new segmented group that produces columns
 	  */
-	def columnsWithLayouts(layouts: Seq[StackLayout]) = new SegmentGroup(Y, layouts)
+	def columnsWithLayouts(layouts: Seq[StackLayout]) = apply(Y, layouts)
 	/**
 	  * @param first First segment layout
-	  * @param second Second segment layout
 	  * @param more More segment layouts
 	  * @return A new segmented group that produces columns
 	  */
-	def columnsWithLayouts(first: StackLayout, second: StackLayout, more: StackLayout*): SegmentGroup =
-		columnsWithLayouts(Pair(first, second) ++ more)
+	def columnsWithLayouts(first: StackLayout, more: StackLayout*): SegmentGroup =
+		columnsWithLayouts(first +: more)
+	
+	/**
+	  * @param rowDirection Direction in which the component rows are laid out.
+	  *                     Should match the direction of the segmented stacks.
+	  * @param layouts Layouts to use for each segment.
+	  *                If a layout is not specified, Fit is used.
+	  *                The last layout entry will be used for all the remaining segments.
+	  * @return A new segment group
+	  */
+	def apply(rowDirection: Axis2D, layouts: Seq[StackLayout] = Empty): SegmentGroup =
+		new RootSegmentGroup(rowDirection, layouts)
+	def apply(rowDirection: Axis2D, firstLayout: StackLayout, moreLayouts: StackLayout*): SegmentGroup =
+		apply(rowDirection, firstLayout +: moreLayouts)
+		
+	
+	// NESTED   --------------------
+	
+	private class RootSegmentGroup(override val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty)
+		extends SegmentGroup
+	{
+		// ATTRIBUTES	---------------------------
+		
+		private var segments: Seq[Segment] = Empty
+		
+		private lazy val defaultLayout = layouts.lastOption.getOrElse(Fit)
+		
+		
+		// COMPUTED -------------------------------
+		
+		override def drop(n: Int): SegmentGroup = if (n <= 0) this else new SegmentSlice(n)
+		
+		override protected def acquireSegments(count: Int): IterableOnce[(Segment, Int)] =
+			ensureSegmentCount(count).zipWithIndex
+		
+		
+		// OTHER    -----------------------------
+		
+		private def ensureSegmentCount(count: Int) = {
+			// Creates more segments, if necessary
+			val existingSegmentCount = segments.size
+			val missingSegmentCount = count - existingSegmentCount
+			if (missingSegmentCount > 0) {
+				segments ++= layouts.drop(existingSegmentCount).view.padTo(missingSegmentCount, defaultLayout)
+					.map { new Segment(segmentDirection, _) }
+				segments.view
+			}
+			else
+				segments.view.take(count)
+		}
+		
+		
+		// NESTED   -----------------------------
+		
+		private class SegmentSlice(start: Int) extends SegmentGroup
+		{
+			// IMPLEMENTED  ---------------------
+			
+			override def rowDirection: Axis2D = RootSegmentGroup.this.rowDirection
+			
+			override def drop(n: Int): SegmentGroup = RootSegmentGroup.this.drop(start + n)
+			
+			override protected def acquireSegments(count: Int): IterableOnce[(Segment, Int)] =
+				ensureSegmentCount(start + count).zipWithIndex.drop(start)
+		}
+	}
 }
 
 /**
   * Used for managing grid-like layouts that consist of rows or columns of segments
   * @author Mikko Hilpinen
   * @since 10.6.2020, v0.1
-  * @param rowDirection Direction of the component rows in this group. Eg. X when used with horizontal stacks.
-  *                     Default = X.
-  * @param layouts Layouts to be used with different segments, ordered. Default = all use the 'defaultLayout'.
-  * @param defaultLayout Layout used for segments not fitting within 'layouts'.
-  *                      E.g. If layouts has 2 elements, this layout will be used for the third-nth elements.
-  *                      Default = Fit.
   */
-class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty, defaultLayout: StackLayout = Fit)
+trait SegmentGroup
 {
-	// ATTRIBUTES	---------------------------
+	// ABSTRACT -------------------------------
 	
-	private var segments: Seq[Segment] = Empty
+	/**
+	  * @return Direction of the component rows in this group.
+	  *         E.g. X when used with horizontal stacks.
+	  */
+	def rowDirection: Axis2D
+	
+	/**
+	  * @param n The number of segments to remove from the beginning of this group
+	  * @return A subregion of this segment group, skipping the first 'n' segments in this group
+	  */
+	def drop(n: Int): SegmentGroup
+	
+	/**
+	  * Acquires n segments for wrapping components
+	  * @param count Number of segments to acquire
+	  * @return 'count' segments, each accompanied by its index.
+	  */
+	protected def acquireSegments(count: Int): IterableOnce[(Segment, Int)]
 	
 	
 	// COMPUTED -------------------------------
 	
-	private def segmentDirection = rowDirection.perpendicular
+	/**
+	  * @return Direction in which the segments are align themselves with.
+	  *         E.g. if Y, similar segments are placed on top of each other.
+	  */
+	def segmentDirection: Axis2D = rowDirection.perpendicular
 	
 	
 	// OTHER	-------------------------------
@@ -102,24 +184,8 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 	  */
 	def wrap[C <: ReachComponent, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
 	{
-		// Creates more segments, if necessary
-		val existingSegmentCount = segments.size
-		val missingSegmentCount = row.size - existingSegmentCount
-		if (missingSegmentCount > 0)
-			segments ++= layouts.drop(existingSegmentCount).view.padTo(missingSegmentCount, defaultLayout)
-				.map { new Segment(segmentDirection, _) }
-		
 		// Adds each piece of the row into its own segment
-		row.view.zip(segments).zipWithIndex
-			.map { case ((row, segment), index) => segment.wrap(nextHierarchy, row, index) }
-			.toOptimizedSeq
+		row.view.zip(acquireSegments(row.size))
+			.map { case (row, (segment, index)) => segment.wrap(nextHierarchy, row, index) }.toOptimizedSeq
 	}
-	
-	// TODO: Implement take, drop & slice. Keep the segments intact.
-	/*
-	private def copy(rowDirection: Axis2D = rowDirection, layouts: Seq[StackLayout] = layouts,
-	         defaultLayout: StackLayout = defaultLayout) =
-		new SegmentGroup(rowDirection, layouts, defaultLayout)
-		
-	 */
 }

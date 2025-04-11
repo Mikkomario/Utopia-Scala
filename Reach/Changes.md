@@ -29,6 +29,8 @@
 ### New methods
 - **ConcreteReachComponent**
   - Added `.widthPointer` and `.heightPointer`
+- **SegmentGroup**
+  - Added `.drop(Int)`, which may be used for forming groups that span multiple stacks
 - **ViewContainer**
   - Moved a number of functions from **ViewStack** to this trait, 
     making the subclass implementation considerably more straightforward.
