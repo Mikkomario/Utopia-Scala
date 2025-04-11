@@ -50,7 +50,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  * @tparam B Type of compared values
 	  * @return This pair ordered with the specified ordering, so that the smaller item appears before the larger item
 	  */
-	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(first, second)) self else -this
+	def minMax[B >: A](implicit ord: Ordering[B]) = if (ord.lt(second, first)) -this else self
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -84,7 +84,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	}
 	override def sortWith(lt: (A, A) => Boolean) = if (lt(first, second)) reverse else self
 	override def sortBy[B](f: A => B)(implicit ord: Ordering[B]) =
-		if (ord.lt(f(first), f(second))) reverse else self
+		if (ord.lt(f(second), f(first))) reverse else self
 	
 	override def max[B >: A](implicit ord: Ordering[B]) = super[HasTwoSides].max[B]
 	override def min[B >: A](implicit ord: Ordering[B]) = super[HasTwoSides].min[B]

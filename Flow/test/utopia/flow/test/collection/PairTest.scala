@@ -3,6 +3,7 @@ package utopia.flow.test.collection
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazyPair
 import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End
 
 /**
@@ -12,10 +13,10 @@ import utopia.flow.operator.enumeration.End
   */
 object PairTest extends App
 {
-	val p1 = Pair(1, 2)
+	private val p1 = Pair(1, 2)
 	
 	// Tests iteration
-	val iter = p1.iterator
+	private val iter = p1.iterator
 	
 	assert(iter.hasNext)
 	assert(iter.next() == 1)
@@ -34,8 +35,8 @@ object PairTest extends App
 	assert(p1.flatMap { i => Vector.fill(i - 1)(i) } == Single(2))
 	
 	// Tests lazy pair
-	val counter = Iterator.iterate(1) { _ + 1 }.pollable
-	val p2 = LazyPair.fill { counter.next() }
+	private val counter = Iterator.iterate(1) { _ + 1 }.pollable
+	private val p2 = LazyPair.fill { counter.next() }
 	
 	assert(p2.current.isEmpty)
 	assert(p2.second == 1)
@@ -47,6 +48,12 @@ object PairTest extends App
 	End.values.foreach(println)
 	println("---")
 	End.values.flatMap { e => println(e); None }
+	
+	// Tests sort
+	assert(p1.sorted == p1)
+	assert(p1.reverseSorted == Pair(2, 1))
+	assert(p1.sortBy(Identity) == p1)
+	assert(p1.sortBy { -_ } == Pair(2, 1))
 	
 	println("Success!")
 }
