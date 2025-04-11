@@ -3,7 +3,7 @@ package utopia.reach.test.interactive
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.view.mutable.eventful.AssignableOnce
-import utopia.reach.component.input.selection.Slider
+import utopia.reach.component.interactive.input.selection.Slider
 import utopia.reach.container.wrapper.{Framing, Rotated}
 import utopia.reach.window.ReachWindow
 

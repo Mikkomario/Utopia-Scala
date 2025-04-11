@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.Matrix2D
-import utopia.reach.component.input.selection.DropDown
+import utopia.reach.component.interactive.input.selection.DropDown
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing

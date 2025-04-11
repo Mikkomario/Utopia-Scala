@@ -11,10 +11,10 @@ import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.{Primary, Secondary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.button.image.ImageAndTextButton
-import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.text.EditableTextLabel
+import utopia.reach.component.interactive.button.image.ImageAndTextButton
+import utopia.reach.component.interactive.button.text.TextButton
+import utopia.reach.component.interactive.input.text.EditableTextLabel
 import utopia.reach.component.label.text.{MutableTextLabel, TextLabel}
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing

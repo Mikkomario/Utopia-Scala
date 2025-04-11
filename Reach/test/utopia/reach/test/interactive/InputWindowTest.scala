@@ -24,9 +24,9 @@ import utopia.paradigm.enumeration.Alignment.BottomLeft
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.input.check.CheckBox
-import utopia.reach.component.input.selection.RadioButtonGroup
-import utopia.reach.component.input.text.{DurationField, TextField}
+import utopia.reach.component.interactive.input.check.CheckBox
+import utopia.reach.component.interactive.input.selection.RadioButtonGroup
+import utopia.reach.component.interactive.input.text.{DurationField, TextField}
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{Stack, ViewStack}

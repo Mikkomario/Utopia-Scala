@@ -7,7 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.check.{ContextualSwitchFactory, Switch}
+import utopia.reach.component.interactive.input.check.{ContextualSwitchFactory, Switch}
 import utopia.reach.component.label.text.{TextLabel, ViewTextLabel}
 import utopia.reach.container.multi.{SegmentGroup, Stack}
 import utopia.reach.container.wrapper.Framing

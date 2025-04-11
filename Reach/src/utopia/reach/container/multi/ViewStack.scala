@@ -1,18 +1,15 @@
 package utopia.reach.container.multi
 
-import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.base.BaseContextPropsView
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout.{Center, Leading, Trailing}
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.X
@@ -472,6 +469,10 @@ case class ContextualViewStackFactory[+N <: BaseContextPropsView](hierarchy: Com
 	  * @return Copy of this factory with those margins
 	  */
 	def withMargin(margin: SizeCategory) = withMarginSizePointer(Fixed(margin))
+	def withMargin(margin: Option[SizeCategory]): ContextualViewStackFactory[N] = margin match {
+		case Some(margin) => withMargin(margin)
+		case None => withoutMargin
+	}
 	/**
 	  * @param p A pointer for margin sizes (general)
 	  * @return Copy of this factory with that pointer in use

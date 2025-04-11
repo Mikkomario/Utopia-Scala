@@ -6,7 +6,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.generic.ParadigmDataType
-import utopia.reach.component.input.text.TextField
+import utopia.reach.component.interactive.input.text.TextField
 import utopia.reflection.component.swing.button.TextButton
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Frame

@@ -8,9 +8,9 @@ import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
 import utopia.paradigm.color.Color
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.color.ColorShade.Light
-import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.selection.SelectionList
+import utopia.reach.component.interactive.button.text.TextButton
+import utopia.reach.component.interactive.input.selection.SelectionList
 import utopia.reach.component.label.text.MutableViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing

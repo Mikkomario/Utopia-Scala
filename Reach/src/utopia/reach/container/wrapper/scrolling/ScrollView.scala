@@ -1,20 +1,14 @@
 package utopia.reach.container.wrapper.scrolling
 
 import utopia.firmament.component.container.single.ScrollViewLike
-import utopia.firmament.context.{ComponentCreationDefaults, ScrollingContext}
-import utopia.firmament.drawing.template.{CustomDrawer, ScrollBarDrawerLike}
-import utopia.flow.collection.immutable.Empty
+import utopia.firmament.context.ScrollingContext
 import utopia.flow.event.listener.ChangeListener
-import utopia.genesis.graphics.{DrawSettings, Drawer, StrokeSettings}
-import utopia.genesis.handling.action.ActorHandler
-import utopia.paradigm.angular.Angle
-import utopia.paradigm.color.Hsl
+import utopia.genesis.graphics.Drawer
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.paradigm.shape.template.Dimensions
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
@@ -25,17 +19,14 @@ import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonCon
 
 import scala.language.implicitConversions
 
-object ScrollView extends Cff[ScrollViewFactory]
-{
-	override def apply(hierarchy: ComponentHierarchy) = ScrollViewFactory(hierarchy)
-}
-
 trait ScrollViewFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollView, Repr]
 {
 	// ABSTRACT ---------------------------
 	
+	/**
+	  * @return Axis along which the scrolling occurs
+	  */
 	def axis: Axis2D
-	
 	/**
 	  * @param axis The axis along which the content is scrolled
 	  * @return Copy of this factory with the specified axis
@@ -54,10 +45,7 @@ trait ScrollViewFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollView, 
 	// IMPLEMENTED  -------------------------
 	
 	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[ScrollView, C, R] = {
-		val view = new ScrollView(hierarchy, content.component, scrollContext.actorHandler,
-			scrollContext.scrollBarDrawer, axis, scrollContext.scrollBarWidth, scrollBarMargin,
-			scrollContext.scrollPerWheelClick, scrollContext.scrollFriction,
-			customDrawers, limitsToContentSize, scrollContext.scrollBarIsInsideContent)
+		val view = new ScrollView(hierarchy, content.component, settings, axis)
 		applyLengthConstraintsTo(view)
 		content.attachTo(view)
 	}
@@ -69,30 +57,29 @@ trait ScrollViewFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollView, 
 	  * @param max Largest allowed optimal length for this view
 	  * @return Copy of this factory with the specified maximum applied
 	  */
-	def withMaxOptimalLength(max: Double) = mapMaxOptimalLengths { _.withDimension(axis, Some(max)) }
+	def withMaxOptimalLength(max: Double) = withMaxOptimalLengthAlong(axis, max)
 }
 
-case class ScrollViewFactory(hierarchy: ComponentHierarchy)
-	extends UninitializedScrollAreaFactory[InitializedScrollViewFactory]
+case class ScrollViewFactory(hierarchy: ComponentHierarchy, settings: ScrollingSettings = ScrollingSettings.default)
+	extends UninitializedScrollAreaFactory[InitializedScrollViewFactory, ScrollViewFactory]
 		with FromGenericContextFactory[Any, ContextualScrollViewFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------
 	
+	override def withSettings(settings: ScrollingSettings) = copy(settings = settings)
 	override def withContext[N <: Any](context: N): ContextualScrollViewFactory[N] =
-		ContextualScrollViewFactory(hierarchy, context)
+		ContextualScrollViewFactory(hierarchy, context, settings)
 	
 	/**
 	  * @param scrollContext Scrolling context to use
 	  * @return An initialized version of this factory
 	  */
 	override def withScrollContext(scrollContext: ScrollingContext) =
-		InitializedScrollViewFactory(hierarchy)(scrollContext)
+		InitializedScrollViewFactory(hierarchy, settings)(scrollContext)
 }
 
-case class InitializedScrollViewFactory(hierarchy: ComponentHierarchy, axis: Axis2D = Y, scrollBarMargin: Size = Size.zero,
-                                        maxOptimalLengths: Dimensions[Option[Double]] = Dimensions(None).empty,
-                                        customDrawers: Seq[CustomDrawer] = Empty,
-                                        limitsToContentSize: Boolean = false)
+case class InitializedScrollViewFactory(hierarchy: ComponentHierarchy,
+                                        settings: ScrollingSettings = ScrollingSettings.default, axis: Axis2D = Y)
                                        (implicit override val scrollContext: ScrollingContext)
 	extends ScrollViewFactoryLike[InitializedScrollViewFactory]
 		with NonContextualWrapperContainerFactory[ScrollView, ReachComponent]
@@ -100,27 +87,25 @@ case class InitializedScrollViewFactory(hierarchy: ComponentHierarchy, axis: Axi
 {
 	// IMPLEMENTED	------------------------------
 	
+	override def withSettings(settings: ScrollingSettings): InitializedScrollViewFactory = copy(settings = settings)
 	override def withContext[N <: Any](context: N) =
-		InitializedContextualScrollViewFactory(hierarchy, context, axis, scrollBarMargin, maxOptimalLengths,
-			customDrawers, limitsToContentSize)
+		InitializedContextualScrollViewFactory(hierarchy, context, settings, axis)
 	
 	
 	// OTHER	-----------------------------------
 	
 	override def withAxis(axis: Axis2D) = copy(axis = axis)
-	override def withScrollBarMargin(margin: Size) = copy(scrollBarMargin = margin)
-	override def withMaxOptimalLengths(maxOptimalLengths: Dimensions[Option[Double]]) =
-		copy(maxOptimalLengths = maxOptimalLengths)
-	override def withLimitsToContentSize(limits: Boolean) = copy(limitsToContentSize = limits)
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]) = copy(customDrawers = drawers)
 }
 
-case class ContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N)
+case class ContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N,
+                                          settings: ScrollingSettings = ScrollingSettings.default)
 	extends GenericContextualFactory[N, Any, ContextualScrollViewFactory]
-		with UninitializedScrollAreaFactory[InitializedContextualScrollViewFactory[N]] with PartOfComponentHierarchy
+		with UninitializedScrollAreaFactory[InitializedContextualScrollViewFactory[N], ContextualScrollViewFactory[N]]
+		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  -----------------------
 	
+	override def withSettings(settings: ScrollingSettings): ContextualScrollViewFactory[N] = copy(settings = settings)
 	override def withContext[N2 <: Any](newContext: N2): ContextualScrollViewFactory[N2] = copy(context = newContext)
 	
 	/**
@@ -128,68 +113,62 @@ case class ContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context
 	  * @return An initialized version of this factory
 	  */
 	override def withScrollContext(scrollContext: ScrollingContext) =
-		InitializedContextualScrollViewFactory(hierarchy, context)(scrollContext)
+		InitializedContextualScrollViewFactory(hierarchy, context, settings)(scrollContext)
 }
 
-case class InitializedContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N, axis: Axis2D = Y,
-                                                     scrollBarMargin: Size = Size.zero,
-                                                     maxOptimalLengths: Dimensions[Option[Double]] = Dimensions(None).empty,
-                                                     customDrawers: Seq[CustomDrawer] = Empty,
-                                                     limitsToContentSize: Boolean = false)
+case class InitializedContextualScrollViewFactory[N](hierarchy: ComponentHierarchy, context: N,
+                                                     settings: ScrollingSettings = ScrollingSettings.default,
+                                                     axis: Axis2D = Y)
                                                     (implicit override val scrollContext: ScrollingContext)
 	extends ScrollViewFactoryLike[InitializedContextualScrollViewFactory[N]]
 		with ContextualWrapperContainerFactory[N, Any, ScrollView, ReachComponent, InitializedContextualScrollViewFactory]
 {
 	// IMPLEMENTED  --------------------------
 	
+	override def withSettings(settings: ScrollingSettings): InitializedContextualScrollViewFactory[N] =
+		copy(settings = settings)
 	override def withContext[N2 <: Any](newContext: N2) =
 		copy(context = newContext)
-	
 	override def withAxis(axis: Axis2D) = copy(axis = axis)
-	override def withScrollBarMargin(margin: Size) =
-		copy(scrollBarMargin = margin)
-	override def withMaxOptimalLengths(maxOptimalLengths: Dimensions[Option[Double]]) =
-		copy(maxOptimalLengths = maxOptimalLengths)
-	override def withLimitsToContentSize(limits: Boolean) =
-		copy(limitsToContentSize = limits)
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]) =
-		copy(customDrawers = drawers)
 }
 
+object ScrollView extends Cff[ScrollViewFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = ScrollViewFactory(hierarchy)
+}
 /**
   * A component wrapper which allows scrolling along one axis
   * @author Mikko Hilpinen
   * @since 9.12.2020, v0.1
   */
 class ScrollView(override val hierarchy: ComponentHierarchy, override val content: ReachComponent,
-                 actorHandler: ActorHandler, barDrawer: ScrollBarDrawerLike, override val axis: Axis2D = Y,
-                 override val scrollBarWidth: Double = ComponentCreationDefaults.scrollBarWidth,
-                 override val scrollBarMargin: Size = Size.zero,
-                 scrollPerWheelClick: Double = ComponentCreationDefaults.scrollAmountPerWheelClick,
-                 override val friction: LinearAcceleration = ComponentCreationDefaults.scrollFriction,
-                 additionalDrawers: Seq[CustomDrawer] = Empty,
-                 override val limitsToContentSize: Boolean = false,
-                 override val scrollBarIsInsideContent: Boolean = true)
+                 settings: ScrollingSettings = ScrollingSettings.default, override val axis: Axis2D = Y)
+                (implicit context: ScrollingContext)
 	extends ConcreteCustomDrawReachComponent with ScrollViewLike[ReachComponent]
 {
 	// ATTRIBUTES	----------------------------
 	
-	override val customDrawers = scrollBarDrawerToCustomDrawer(barDrawer) +: additionalDrawers
+	override val customDrawers = scrollBarDrawerToCustomDrawer(context.scrollBarDrawer) +: settings.customDrawers
 	
 	
 	// INITIAL CODE	----------------------------
 	
 	// WET WET (see ScrollArea)
-	setupMouseHandling(actorHandler, scrollPerWheelClick)
+	setupMouseHandling(context.actorHandler, context.scrollPerWheelClick)
 	sizePointer.addListener(ChangeListener.onAnyChange { updateScrollBarBounds() })
 	content.sizePointer.addContinuousAnyChangeListener { updateScrollBarBounds(repaintAfter = true) }
 	
 	
 	// IMPLEMENTED	----------------------------
 	
+	override def scrollBarMargin: Size = settings.barMargin
+	override def limitsToContentSize: Boolean = settings.limitsToContentSize
+	override def scrollBarIsInsideContent: Boolean = context.scrollBarIsInsideContent
+	override def scrollBarWidth: Double = context.scrollBarWidth
+	override def friction: LinearAcceleration = context.scrollFriction
+	
 	// WET WET (from ScrollArea)
 	override def paintWith(drawer: Drawer, clipZone: Option[Bounds]) = {
-		implicit val ds: DrawSettings = StrokeSettings(Hsl(Angle.degrees(math.random() * 360)))
 		clipZone match {
 			case Some(clip) =>
 				clip.overlapWith(bounds).foreach { c =>

@@ -14,9 +14,9 @@ import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.genesis.handling.event.keyboard.Key.Enter
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.button.image.ImageAndTextButton
-import utopia.reach.component.button.text.TextButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
+import utopia.reach.component.interactive.button.image.ImageAndTextButton
+import utopia.reach.component.interactive.button.text.TextButton
 import utopia.reach.component.template.{ButtonLike, ReachComponent}
 import utopia.reach.component.wrapper.WindowCreationResult
 import utopia.reach.container.multi.{Stack, StackFactory}

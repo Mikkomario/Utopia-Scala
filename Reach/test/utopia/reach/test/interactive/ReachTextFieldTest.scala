@@ -6,9 +6,9 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.range.Span
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.InputValidationResult
-import utopia.reach.component.input.InputValidationResult.Default
-import utopia.reach.component.input.text.{ContextualTextFieldFactory, TextField}
+import utopia.reach.component.interactive.input.InputValidationResult.Default
+import utopia.reach.component.interactive.input.InputValidationResult
+import utopia.reach.component.interactive.input.text.{ContextualTextFieldFactory, TextField}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing

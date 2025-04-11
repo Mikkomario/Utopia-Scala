@@ -19,8 +19,8 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
-import utopia.reach.component.button.image.ImageButton
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
+import utopia.reach.component.interactive.button.image.ImageButton
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.template.focus.Focusable

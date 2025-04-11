@@ -2,6 +2,7 @@
 
 ## v1.6 (in development)
 ### Breaking changes
+- Moved `button` and `input` packages from `component` to `component.interactive`
 - Renamed **ReachComponent** to **ConcreteReachComponent**
   - Applied similar renaming to **CustomDrawReachComponent** and **MutableCustomDrawReachComponent**
 - Renamed **ReachComponentLike** to **ReachComponent**
@@ -13,6 +14,8 @@
   instead of the more complex `apply[C <: Top, R](content: Content[C, R])`
 - **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
+### Deprecated
+- Renamed scroll bar margin setter functions in **ScrollArea** & **ScrollView** factories
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
   would not manage the linked flags / attachment states correctly (initially)
@@ -30,6 +33,7 @@
   - Moved a number of functions from **ViewStack** to this trait, 
     making the subclass implementation considerably more straightforward.
 ### Other changes
+- Refactored **ScrollArea** and **ScrollView** factories to utilize new **ScrollingSettings**
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
 - Internal refactoring within **Segment** and **SegmentGroup**

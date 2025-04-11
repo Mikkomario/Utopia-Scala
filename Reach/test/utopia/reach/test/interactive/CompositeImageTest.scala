@@ -9,7 +9,7 @@ import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.image.{CompositeScalingImage, Image}
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.input.selection.Slider
+import utopia.reach.component.interactive.input.selection.Slider
 import utopia.reach.component.label.image.ViewImageLabel
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing

@@ -40,6 +40,7 @@
     "cRole": "color.ColorRole",
     "align": "pEnum/Alignment",
     "axis": "pEnum/Axis2D",
+    "dimensions": "paradigm/shape.template.Dimensions",
     "size": "shapes/vector.size.Size",
     "sizeC": "fEnum/SizeCategory",
     "velocity": "paradigm/motion.motion1d.LinearVelocity",
@@ -1414,6 +1415,39 @@
               "type": "Boolean",
               "default": "false",
               "doc": "Whether the items in this collection should be considered closely related to each other,\nresulting in a smaller margin placed between them."
+            }
+          ]
+        }
+      ],
+      "wrapper.scrolling": [
+        {
+          "name": "Scrolling",
+          "container": "Wrapper",
+          "context": "any",
+          "parents": ["drawable"],
+          "props": [
+            {
+              "name": "barMargin",
+              "param": "margin",
+              "type": "size",
+              "default": "StackLength.fixedZero",
+              "mapping": true,
+              "doc": "Margin placed between the scroll bar and the content, assuming that the bar is not drawn over the content."
+            },
+            {
+              "name": "maxOptimalLengths",
+              "param": "lengths",
+              "type": "dimensions[Option[Double]]",
+              "default": "Dimensions.optional[Double].empty",
+              "mapping": true,
+              "doc": "May specify maximum optimal content width and/or height"
+            },
+            {
+              "name": "limitsToContentSize",
+              "param": "limit",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether this scroll area's size should never expand past that of the content's"
             }
           ]
         }

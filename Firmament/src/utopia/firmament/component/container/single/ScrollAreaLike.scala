@@ -32,7 +32,6 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import java.awt.event.KeyEvent
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable.HashMap
 import scala.concurrent.duration.FiniteDuration
 
 /**
@@ -40,11 +39,12 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 15.5.2019, Reflection v1+
   */
+// TODO: Revalidate upper layers only if necessary
 trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 {
 	// ATTRIBUTES	----------------
 	
-	private var barBounds: Map[Axis2D, ScrollBarBounds] = HashMap()
+	private var barBounds: Map[Axis2D, ScrollBarBounds] = Map()
 	private var scroller: Option[AnimatedScroller] = None
 	
 	
@@ -331,6 +331,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * @param actorHandler The actor handler that will deliver action events
 	  */
 	private def setupAnimatedScrolling(actorHandler: ActorHandler) = {
+		// TODO: Needs refactoring
 		if (scroller.isEmpty) {
 			val newScroller = new AnimatedScroller
 			scroller = Some(newScroller)
@@ -417,32 +418,34 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	protected def updateScrollBarBounds(repaintAfter: Boolean = false) = {
 		if (contentSize.area == 0) {
 			if (barBounds.nonEmpty)
-				barBounds = HashMap()
+				barBounds = Map()
 		}
 		else {
-			barBounds = axes.map { axis =>
-				// Calculates the size of the scroll area
-				val barAreaSize = axis match {
-					case X => Size(width - edgeScrollBarMargin * 2, scrollBarWidth)
-					case Y => Size(scrollBarWidth, height - edgeScrollBarMargin * 2)
+			barBounds = axes.view
+				.map { axis =>
+					// Calculates the size of the scroll area
+					val barAreaSize = axis match {
+						case X => Size(width - edgeScrollBarMargin * 2, scrollBarWidth)
+						case Y => Size(scrollBarWidth, height - edgeScrollBarMargin * 2)
+					}
+					
+					val length = lengthAlong(axis)
+					val contentLength = content.lengthAlong(axis)
+					val myBreadth = lengthAlong(axis.perpendicular)
+					
+					// Calculates scroll bar size
+					val barLengthMod = (length / contentLength) min 1.0
+					val barSize = barAreaSize.scaledAlong(axis(barLengthMod))
+					
+					// Calculates the positions of scroll bar area + bar itself
+					val barAreaPosition = Point(myBreadth - scrollBarWidth - wideScrollBarMargin, edgeScrollBarMargin,
+						axis.perpendicular)
+					
+					axis -> ScrollBarBounds(Bounds(
+						barAreaPosition + axis(barAreaSize(axis) * scrollPercents(axis)), barSize),
+						Bounds(barAreaPosition, barAreaSize), axis)
 				}
-				
-				val length = lengthAlong(axis)
-				val contentLength = content.lengthAlong(axis)
-				val myBreadth = lengthAlong(axis.perpendicular)
-				
-				// Calculates scroll bar size
-				val barLengthMod = (length / contentLength) min 1.0
-				val barSize = barAreaSize.scaledAlong(axis(barLengthMod))
-				
-				// Calculates the positions of scroll bar area + bar itself
-				val barAreaPosition = Point(myBreadth - scrollBarWidth - wideScrollBarMargin, edgeScrollBarMargin,
-					axis.perpendicular)
-				
-				axis -> ScrollBarBounds(Bounds(
-					barAreaPosition + axis(barAreaSize(axis) * scrollPercents(axis)), barSize),
-					Bounds(barAreaPosition, barAreaSize), axis)
-			}.toMap
+				.toMap
 			
 			// Repaints scroll area and content
 			if (repaintAfter)

@@ -9,7 +9,7 @@ import utopia.flow.view.mutable.eventful.{ResettableFlag, SettableFlag}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.transform.Adjustment
-import utopia.reach.component.button.image.ViewImageButton
+import utopia.reach.component.interactive.button.image.ViewImageButton
 import utopia.reach.container.multi.Stack
 import utopia.reach.test.ReachTestContext
 import utopia.reach.window.ReachWindow

@@ -40,6 +40,12 @@ object Dimensions
 	// COMPUTED -----------------------
 	
 	/**
+	  * @tparam A Type of dimension values, when specified
+	  * @return A factory for constructing new optional dimensions
+	  */
+	def optional[A] = apply[Option[A]](None)
+	
+	/**
 	  * @return A factory for constructing distance-based dimensions (not predefining any distance unit)
 	  * @see [[in]]
 	  */

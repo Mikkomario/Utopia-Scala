@@ -5,6 +5,9 @@
 - Fixed some illogical string to value conversions
 ### New features
 - Added **FromColorRoleFactory**
+### New methods
+- **Dimensions** (object)
+  - Added `.optional` (factory constructor)
 ### Other changes
 - Modified `toString` implementations of **Vector2D**, **Vector3D**, **Point** and **Size**
 - Made some modifications to data type conversion priorities

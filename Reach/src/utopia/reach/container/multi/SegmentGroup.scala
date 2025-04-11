@@ -114,4 +114,12 @@ class SegmentGroup(val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Emp
 			.map { case ((row, segment), index) => segment.wrap(nextHierarchy, row, index) }
 			.toOptimizedSeq
 	}
+	
+	// TODO: Implement take, drop & slice. Keep the segments intact.
+	/*
+	private def copy(rowDirection: Axis2D = rowDirection, layouts: Seq[StackLayout] = layouts,
+	         defaultLayout: StackLayout = defaultLayout) =
+		new SegmentGroup(rowDirection, layouts, defaultLayout)
+		
+	 */
 }
