@@ -54,12 +54,11 @@ object Table
   * @since 10.04.2025, v1.6
   */
 // TODO: Continue implementation
-// TODO: Add support for borders
 class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, contentP: Changing[Seq[A]],
                selectionEnabledFlag: Flag, scrollingSettings: Option[(ScrollingSettings, ScrollingContext)],
                betweenRowsMargin: Option[SizeCategory], headerBackground: ColorRole,
                background: Option[Either[Color, ColorRole]], selectionBackground: Option[ColorRole],
-               columnSeparatorWidth: Double, additionalDrawers: Seq[CustomDrawer],
+               columnSeparatorWidth: Double, borderWidth: Double, additionalDrawers: Seq[CustomDrawer],
                focusListeners: Seq[FocusListener], alternateBackground: Boolean)
 	extends ReachComponentWrapper
 {
@@ -92,7 +91,7 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 	private def createContentView(listF: ContextualViewStackFactory[VariableTextContext]) = {
 		val (coloredListF, altBgP) = determineContentColors(listF)
 		val appliedSelectionBgP = selectionBackground.map { role => coloredListF.context.colorPointer(role) }
-		// TODO: Add separator drawer
+		// TODO: Add separator drawer and border drawer
 		coloredListF.withMargin(betweenRowsMargin).mapPointer(contentP, Mixed) { (rowF, valueP, index) =>
 			createRowView(rowF, valueP, index, altBgP, appliedSelectionBgP)
 		}

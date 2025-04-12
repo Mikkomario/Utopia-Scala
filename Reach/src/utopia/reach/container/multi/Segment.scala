@@ -71,7 +71,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		else
 			containers.iterator.map { _.wrappedComponent.stackSize.along(alignAxis) }.reduce { (a, b) =>
 				val min = a.min max b.min
-				val max = (a.max ++ b.max).reduceOption { _ min _ }
+				val maxLimits = a.max ++ b.max
+				val max = if (layout == Fit) maxLimits.minOption else maxLimits.maxOption
 				val optimal = {
 					val baseOptimal = a.optimal max b.optimal
 					if (baseOptimal < min)

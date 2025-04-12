@@ -40,6 +40,7 @@
     making the subclass implementation considerably more straightforward.
 ### Other changes
 - Refactored **ScrollArea** and **ScrollView** factories to utilize new **ScrollingSettings**
+- **Segment** now better calculates maximum stack length when using **Leading** or **Trailing** stack layout
 - **AlignFrame** now supports content-scaling
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
 - Internal refactoring within **Segment** and **SegmentGroup**
