@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -67,7 +68,7 @@ trait Flag extends Changing[Boolean] with MaybeSet
 	/**
 	  * @return Whether this flag will always remain true
 	  */
-	def isAlwaysTrue = existsFixed { b => b }
+	def isAlwaysTrue = existsFixed(Identity)
 	/**
 	  * @return Whether this flag will always remain false
 	  */

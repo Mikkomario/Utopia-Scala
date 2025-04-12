@@ -23,8 +23,8 @@ object PointerViewStackTest extends App
 	// Sets up the GUI
 	private val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
 		framingF.build(ViewStack) { stackF =>
-			stackF.centered.mapPointer(p, ViewTextLabel) { (labelF, p) =>
-				println("Constructing a new label")
+			stackF.centered.mapPointer(p, ViewTextLabel) { (labelF, p, i) =>
+				println(s"Constructing label $i")
 				labelF.mapContext { _.larger }(p)
 			}
 		}

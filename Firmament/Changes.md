@@ -2,10 +2,13 @@
 
 ## v1.4.1 (in development)
 ### New features
+- Added **InconsistentDrawer** for optional custom drawing
 - Added content scaling support to **AlignFrameLike**
 - Added **MinOptimalLengthModifier** and **MinOptimalSizeModifier** (new stack size modifiers)
 - Added **FromSizeCategoryFactory** trait
 ### New methods
+- **CustomDrawer**
+  - Added `.conditional(View)` and `.conditional(=> Boolean)`
 - **Window**
   - Added `.notClosedFlag`
 ### Other changes

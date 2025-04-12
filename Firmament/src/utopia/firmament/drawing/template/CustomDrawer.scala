@@ -1,5 +1,7 @@
 package utopia.firmament.drawing.template
 
+import utopia.firmament.drawing.immutable.InconsistentDrawer
+import utopia.flow.view.immutable.View
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -38,7 +40,6 @@ trait CustomDrawer
 	  *         (blocks line of sight to background elements)
 	  */
 	def opaque: Boolean
-	
 	/**
 	  * @return The level where this drawer will be drawn
 	  */
@@ -60,4 +61,15 @@ trait CustomDrawer
 	  *         (I.e. some of the background elements can still be seen afterwards)
 	  */
 	def transparent = !opaque
+	
+	/**
+	  * @param conditionView A view that contains true when this drawer should perform its drawing
+	  * @return A copy of this drawer that draws only when the specified condition is met
+	  */
+	def conditional(conditionView: View[Boolean]) = new InconsistentDrawer(this, conditionView)
+	/**
+	  * @param condition A function that yields true when this drawer should perform drawing
+	  * @return A copy of this drawer that only performs drawing when the specified function yields true
+	  */
+	def conditional(condition: => Boolean): InconsistentDrawer = conditional(View(condition))
 }

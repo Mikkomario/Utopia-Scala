@@ -86,12 +86,15 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	  * Builds a new container which reflects the contents of a multi-value pointer.
 	  * This is best used in combination with view-based components.
 	  * @param pointer Pointer whose value is reflected in the container contents
-	  * @param construct A function that accepts a pointer that contains the value to display on that component
+	  * @param construct A function that accepts:
+	  *                     1. A pointer that contains the value to display on that component
+	  *                     1. Index of this component
+	  *
 	  *                  and yields a new open component based on that pointer
 	  * @tparam A Type of values displayed on individual components
 	  * @return A new container
 	  */
-	protected def _mapPointer[A](pointer: Changing[Seq[A]])(construct: Changing[A] => OpenComponent[Top, _]): Container =
+	protected def _mapPointer[A](pointer: Changing[Seq[A]])(construct: (Changing[A], Int) => OpenComponent[Top, _]): Container =
 	{
 		// Creates one component for each slot in the display values, adding more components as needed
 		val componentCache = Cache.clearable { index: Int =>
@@ -108,7 +111,7 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 					EventfulPointer(initialValue) -> None
 			}
 			// Creates the new (open) component and remembers its pointer
-			construct(valueP.readOnly).withResult(valueP -> lockableP)
+			construct(valueP.readOnly, index).withResult(valueP -> lockableP)
 		}
 		// The components themselves are added or removed only when the number of displayed values changes
 		// In other situations, their individual value pointers are updated instead

@@ -39,13 +39,15 @@ trait NonContextualViewContainerFactory[+Container <: ReachComponent, -Top <: Re
 	  * @param pointer Pointer whose value is reflected in the container contents
 	  * @param contentFactory A factory used for constructing the individual components
 	  * @param construct A function that accepts
-	  *                  1) an initialized component-creation factory and
-	  *                  2) a pointer that contains the value to display on that component,
+	  *                     1. an initialized component-creation factory
+	  *                     1. A pointer that contains the value to display on that component
+	  *                     1. Index of the row to construct
+	  *
 	  *                  and yields a new component
 	  * @tparam A Type of values displayed on individual components
 	  * @tparam F Type of component factories to use
 	  * @return A new container
 	  */
-	def mapPointer[A, F](pointer: Changing[Seq[A]], contentFactory: Cff[F])(construct: (F, Changing[A]) => Top): Container =
-		_mapPointer(pointer) { p => Open.using(contentFactory) { construct(_, p) } }
+	def mapPointer[A, F](pointer: Changing[Seq[A]], contentFactory: Cff[F])(construct: (F, Changing[A], Int) => Top): Container =
+		_mapPointer(pointer) { (p, i) => Open.using(contentFactory) { construct(_, p, i) } }
 }

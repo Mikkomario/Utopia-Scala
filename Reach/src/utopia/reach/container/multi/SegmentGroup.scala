@@ -1,14 +1,21 @@
 package utopia.reach.container.multi
 
+import utopia.firmament.context.HasContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
+import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.multi.SegmentGroup.ContextualSegmentedBuilder
 
 object SegmentGroup
 {
@@ -66,6 +73,31 @@ object SegmentGroup
 	
 	// NESTED   --------------------
 	
+	case class ContextualSegmentedBuilder[N](private val group: SegmentGroup, context: N)
+		extends HasContext[N]
+	{
+		/**
+		  * Builds a segmented sequence of (open) components
+		  * @param hierarchy Component hierarchy, to which the created segments are attached
+		  * @param contentFactory Factory used for constructing the component-creation factories
+		  * @param fill A function that accepts an iterator yielding a factory for each component.
+		  *             Yields the components to wrap, plus an optional additional result.
+		  * @param canvas Implicit ReachCanvas access
+		  * @tparam F Type of prepared component factories used
+		  * @tparam C Type of components constructed
+		  * @tparam R Type of the additional result
+		  * @return Segment wrappers, including the additional result from 'fill'.
+		  */
+		def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Ccff[N, F])
+		                                               (fill: Iterator[F] => ComponentsResult[C, R])
+		                                               (implicit canvas: ReachCanvas) =
+		{
+			val content = Open.withContext(context).many(contentFactory) { fill(_) }
+			val result = group.wrapUnderSingle(hierarchy, content)
+			result.map { _.parent } -> content.result
+		}
+	}
+	
 	private class RootSegmentGroup(override val rowDirection: Axis2D = X, layouts: Seq[StackLayout] = Empty)
 		extends SegmentGroup
 	{
@@ -121,7 +153,7 @@ object SegmentGroup
   * @author Mikko Hilpinen
   * @since 10.6.2020, v0.1
   */
-trait SegmentGroup
+trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBuilder]
 {
 	// ABSTRACT -------------------------------
 	
@@ -154,6 +186,12 @@ trait SegmentGroup
 	def segmentDirection: Axis2D = rowDirection.perpendicular
 	
 	
+	// IMPLEMENTED  ---------------------------
+	
+	override def withContext[N <: Any](context: N): ContextualSegmentedBuilder[N] =
+		ContextualSegmentedBuilder(this, context)
+	
+	
 	// OTHER	-------------------------------
 	
 	/**
@@ -174,6 +212,27 @@ trait SegmentGroup
 	  */
 	def wrapUnderSingle[C <: ReachComponent, R](hierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
 		wrap(row)(hierarchy)
+	
+	/**
+	  * Builds a segmented sequence of (open) components
+	  * @param hierarchy Component hierarchy, to which the created segments are attached
+	  * @param contentFactory Factory used for constructing the component-creation factories
+	  * @param fill A function that accepts an iterator yielding a factory for each component.
+	  *             Yields the components to wrap, plus an optional additional result.
+	  * @param canvas Implicit ReachCanvas access
+	  * @tparam F Type of prepared component factories used
+	  * @tparam C Type of components constructed
+	  * @tparam R Type of the additional result
+	  * @return Segment wrappers, including the additional result from 'fill'.
+	  */
+	def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Cff[F])
+	                                               (fill: Iterator[F] => ComponentsResult[C, R])
+	                                               (implicit canvas: ReachCanvas) =
+	{
+		val content = Open.manyUsing(contentFactory) { fill(_) }
+		val result = wrapUnderSingle(hierarchy, content)
+		result.map { _.parent } -> content.result
+	}
 	
 	/**
 	  * Registers a new row of items into this group, producing wrapped components

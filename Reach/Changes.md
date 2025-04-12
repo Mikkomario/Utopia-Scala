@@ -10,9 +10,11 @@
 - In **ReachComponent**, renamed `.linkPointer` to `.linkedFlag`
 - In multiple components and component factories, renamed -pointer properties to -flag properties
   - Especially, changed `enabledPointer`s to `enabledFlag`s and changed their type to **Flag**
-- **ViewContainer** now requires the implementation of `_apply(Changing[Seq[Top]])` 
-  instead of the more complex `apply[C <: Top, R](content: Content[C, R])`
-- **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
+- Multiple changes to **ViewContainer** / **ViewStack**
+  - `.mapPointer(...)`'s accepted function now receives the row index as its third parameter
+  - **ViewContainer** now requires the implementation of `_apply(Changing[Seq[Top]])` 
+    instead of the more complex `apply[C <: Top, R](content: Content[C, R])`
+  - **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Deprecated
 - Renamed scroll bar margin setter functions in **ScrollArea** & **ScrollView** factories
@@ -31,6 +33,8 @@
   - Added `.widthPointer` and `.heightPointer`
 - **SegmentGroup**
   - Added `.drop(Int)`, which may be used for forming groups that span multiple stacks
+  - Added `.buildUnderSingle(...)` and `.withContext(...).buildUnderSingle(...) `
+    for facilitating segmented component creation outside of stacks
 - **ViewContainer**
   - Moved a number of functions from **ViewStack** to this trait, 
     making the subclass implementation considerably more straightforward.
