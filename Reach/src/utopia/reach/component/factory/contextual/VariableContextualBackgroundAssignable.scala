@@ -13,7 +13,7 @@ import utopia.paradigm.color.{ColorLevel, ColorRole, ColorSet}
   * @tparam Repr Type of this factory
   */
 trait VariableContextualBackgroundAssignable[+N <: VariableColorContext, +Repr]
-	extends ContextualVariableBackgroundAssignable[N, Repr]
+	extends Any with ContextualVariableBackgroundAssignable[N, Repr]
 {
 	// OTHER    ---------------------------------
 	

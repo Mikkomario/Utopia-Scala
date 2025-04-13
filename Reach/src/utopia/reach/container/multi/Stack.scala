@@ -213,7 +213,6 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @return A pointer that determines the margin to place between the items in created stacks
 	  */
 	def marginPointer: Changing[StackLength]
-	
 	/**
 	  * @param p Pointer that determines the margin to place between the items in this stack
 	  * @return A copy of this factory with the specified margin
@@ -530,7 +529,6 @@ object Stack extends StackSetup()
 	
 	def apply(settings: StackSettings) = withSettings(settings)
 }
-
 /**
   * Common trait for all Reach stack implementations, regardless of implementation style
   */

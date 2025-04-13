@@ -7,19 +7,25 @@ import utopia.firmament.drawing.view.BackgroundViewDrawer
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.util.RangeExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.genesis.graphics.DrawLevel.Background
+import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.paradigm.color.{Color, ColorRole}
+import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.{Bounds, HasBounds}
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
+import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.Table.Column
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
-import utopia.reach.container.multi.{ContextualViewStackFactory, SegmentGroup, Stack}
-import utopia.reach.container.wrapper.scrolling.ScrollingSettings
+import utopia.reach.container.multi.{ContextualStackFactory, ContextualViewStackFactory, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.wrapper.Framing
+import utopia.reach.container.wrapper.scrolling.{ScrollView, ScrollingSettings}
 import utopia.reach.focus.FocusListener
 
 object Table
@@ -46,6 +52,52 @@ object Table
 			f(factories, valuePointer, drawer, selectedFlag)
 		override def createHeader(factories: ContextualMixed[VariableTextContext]): ReachComponent = hf(factories)
 	}*/
+	
+	private class AlternatingBackgroundDrawer(primaryBgView: View[Color], secondaryBgView: View[Color],
+	                                          componentsView: View[Seq[HasBounds]])
+		extends CustomDrawer
+	{
+		override val opaque: Boolean = true
+		override val drawLevel: DrawLevel = Background
+		
+		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
+			val components = componentsView.value
+			val componentCount = components.size
+			if (componentCount > 0) {
+				val maxIndex = componentCount - 1
+				if (componentCount == 1)
+					DrawSettings.onlyFill(secondaryBgView.value).use { implicit ds => drawer.draw(bounds) }
+				else
+					drawer.clippingBounds match {
+						case Some(clip) => ???
+						case None =>
+							DrawSettings.onlyFill(primaryBgView.value).use { implicit ds => drawer.draw(bounds) }
+							DrawSettings.onlyFill(secondaryBgView.value).use { implicit ds =>
+								// TODO: Generalize this and use in the clip version
+								val localD = drawer.translated(bounds.position)
+								components.indices.foreach { i =>
+									if (i % 2 == 0) {
+										val main = components(i).bounds
+										val topY = {
+											if (i == 0)
+												main.topY
+											else
+												(components(i - 1).bottomY + main.topY) / 2
+										}
+										val bottomY = {
+											if (i == maxIndex)
+												main.bottomY
+											else
+												(main.bottomY + components(i + 1).topY) / 2
+										}
+										localD.draw(bounds.withY(topY spanTo bottomY))
+									}
+								}
+							}
+					}
+			}
+		}
+	}
 }
 /**
   * A component that displays n rows of items with n columns for each, all of which are aligned to form a table.
@@ -54,11 +106,12 @@ object Table
   * @since 10.04.2025, v1.6
   */
 // TODO: Continue implementation
-class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, contentP: Changing[Seq[A]],
-               selectionEnabledFlag: Flag, scrollingSettings: Option[(ScrollingSettings, ScrollingContext)],
+class Table[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext, columns: Seq[Seq[Column[A]]],
+               contentP: Changing[Seq[A]], selectionEnabledFlag: Flag,
+               scrollingSettings: Option[(ScrollingSettings, ScrollingContext)],
                betweenRowsMargin: Option[SizeCategory], headerBackground: ColorRole,
                background: Option[Either[Color, ColorRole]], selectionBackground: Option[ColorRole],
-               columnSeparatorWidth: Double, borderWidth: Double, additionalDrawers: Seq[CustomDrawer],
+               columnSeparatorWidth: Double, borderWidth: Double, customDrawers: Seq[CustomDrawer],
                focusListeners: Seq[FocusListener], alternateBackground: Boolean)
 	extends ReachComponentWrapper
 {
@@ -69,10 +122,37 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 	// TODO: Add locking based on selectionEnabledFlag and possibly link state
 	private val selectedIndexP = Pointer.eventful(-1)
 	
-	override protected lazy val wrapped: ReachComponent = ???
+	private lazy val headerColorP = background match {
+		case None => context.colorPointer.dark(headerBackground)
+		case Some(Left(bgColor)) => context.colorPointer.dark.differentFrom(headerBackground, bgColor)
+		case Some(Right(bgColorRole)) =>
+			if (bgColorRole == headerBackground) {
+				val background = context.colors(bgColorRole).light
+				context.colorPointer.dark.differentFrom(headerBackground, background)
+			}
+			else
+				context.colorPointer.dark(headerBackground)
+	}
+	
+	override protected lazy val wrapped: ReachComponent = {
+		// If borders are applied, the whole component is wrapped in a colored Framing
+		if (borderWidth >= 0.5) {
+			val component = Framing.withContext(hierarchy, context)
+				.withBackground(headerColorP).withCustomDrawers(customDrawers)
+				.build(Stack) { stackF => createHeaderAndContentView(stackF, hasHeaderBackground = true) }.parent
+			
+			// Adds automated repaint when header/border color changes
+			headerColorP.addListenerWhile(linkedFlag) { _ => component.repaint() }
+			
+			component
+		}
+		else
+			createHeaderAndContentView(
+				Stack.withContext(hierarchy, context).withCustomDrawers(customDrawers), hasHeaderBackground = false)
+	}
 	
 	
-	// TODO: Add auto-repaint when some pointers are updated
+	// TODO: Add auto-repaint when some pointers are updated (if needed. BG already handled)
 	
 	
 	// COMPUTED -------------------------------
@@ -82,35 +162,78 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 	
 	// OTHER    -------------------------------
 	
+	private def createHeaderAndContentView(factory: ContextualStackFactory[VariableTextContext],
+	                                       hasHeaderBackground: Boolean) =
+	{
+		factory.withoutMargin.build(Mixed) { factories =>
+			val header = createHeaderView(factories, if (hasHeaderBackground) None else Some(headerColorP))
+			// The content may be wrapped in a scroll view
+			val content = scrollingSettings match {
+				case Some((scrollingSettings, scrollContext)) =>
+					implicit val c: ScrollingContext = scrollContext
+					factories(ScrollView).withSettings(scrollingSettings)
+						.build(ViewStack) { createContentView(_, headerColorP, hasHeaderBackground) }.parent
+				
+				case None => createContentView(factories(ViewStack), headerColorP, hasHeaderBackground)
+			}
+			
+			// Adds automated repaints when the header color changes, either here or for the wrapper
+			// TODO: If we have separators, needs content repaint, also
+			if (!hasHeaderBackground)
+				headerColorP.addListenerWhile(linkedFlag) { _ => header.repaint() }
+			
+			Pair(header, content)
+		}
+	}
+	
+	private def createHeaderView(rowF: ContextualMixed[VariableTextContext], appliedBgP: Option[Changing[Color]]) =
+		viewFromColumnGroups(rowF, appliedBgP) { _.createHeader(_) }
 	/**
 	  * Creates the main content view, which consists of 0-n row components within a view stack.
 	  * @param listF A factory for constructing the stack
 	  * @return The stack that contains the table rows
 	  */
-	// TODO: Add required contrast against header & borders
-	private def createContentView(listF: ContextualViewStackFactory[VariableTextContext]) = {
-		val (coloredListF, altBgP) = determineContentColors(listF)
+	private def createContentView(listF: ContextualViewStackFactory[VariableTextContext],
+	                              headerColorP: Changing[Color], hasHeaderBackground: Boolean) =
+	{
+		val (coloredListF, altBgP, repaintTriggeringBgP) = determineContentColors(
+			listF, if (hasHeaderBackground) None else Some(headerColorP))
 		val appliedSelectionBgP = selectionBackground.map { role => coloredListF.context.colorPointer(role) }
-		// TODO: Add separator drawer and border drawer
-		coloredListF.withMargin(betweenRowsMargin).mapPointer(contentP, Mixed) { (rowF, valueP, index) =>
+		// TODO: Add separator drawer
+		val contentView = coloredListF.withMargin(betweenRowsMargin).mapPointer(contentP, Mixed) { (rowF, valueP, index) =>
 			createRowView(rowF, valueP, index, altBgP, appliedSelectionBgP)
 		}
+		
+		// Adds automated repaints on background color changes
+		repaintTriggeringBgP.foreach { _.addListenerWhile(linkedFlag) { _ => contentView.repaint() } }
+		
+		contentView
 	}
 	
 	/**
 	  * Determines the background and/or context color to apply when creating content
 	  * @param contentF Content factory that needs color handling
-	  * @return A copy of the specified factory with color handling included,
-	  *         plus a pointer that contains the applied alternating row background color, if applicable.
+	  * @param additionalHeaderColorP A pointer that contains the applied header color.
+	  *                               None if the header color is already the current context's background color.
+	  * @return Returns 3 values:
+	  *             1. A copy of the specified factory with color handling included,
+	  *             1. A pointer that contains the applied alternating row background color, if applicable.
+	  *             1. A color pointer that should trigger content repaint when changed, if applicable
 	  */
-	private def determineContentColors(contentF: ContextualViewStackFactory[VariableTextContext]) =
+	private def determineContentColors(contentF: ContextualViewStackFactory[VariableTextContext],
+	                                   additionalHeaderColorP: Option[Changing[Color]]) =
 		background match {
 			// Case: Draws a custom background
 			//       => Applies it to the context, and uses it to determine the alternating color, if applicable
 			case Some(bg) =>
 				val bgColorP = bg match {
 					case Left(color) => Fixed(color)
-					case Right(role) => contentF.context.colorPointer.light(role)
+					case Right(role) =>
+						val colorF = contentF.context.colorPointer.light
+						additionalHeaderColorP match {
+							case Some(headerColorP) => colorF.differentFromVariable(Fixed(role), headerColorP)
+							case None => colorF(role)
+						}
 				}
 				val coloredListF = contentF.withCustomBackgroundDrawer(BackgroundViewDrawer(bgColorP))
 				// Case: Alternating color also requested
@@ -119,10 +242,10 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 				if (alternateBackground) {
 					val altBgP = bgColorP.map(alternativeBackgroundWith)
 					val avgColorP = bgColorP.mergeWith(altBgP) { _.average(_) }
-					coloredListF.mapContext { _.withBackgroundPointer(avgColorP) } -> Some(altBgP)
+					(coloredListF.mapContext { _.withBackgroundPointer(avgColorP) }, Some(altBgP), Some(bgColorP))
 				}
 				else
-					coloredListF.mapContext { _.withBackgroundPointer(bgColorP) } -> None
+					(coloredListF.mapContext { _.withBackgroundPointer(bgColorP) }, None, Some(bgColorP))
 			
 			// Case: No custom background => Checks whether alternating background should still be applied
 			case None =>
@@ -131,11 +254,12 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 					val bgP = contentF.context.backgroundPointer
 					val altBgP = bgP.map(alternativeBackgroundWith)
 					val avgColorP = bgP.mergeWith(altBgP) { _.average(_) }
-					contentF.mapContext { _.withBackgroundPointer(avgColorP) } -> Some(altBgP)
+					
+					(contentF.mapContext { _.withBackgroundPointer(avgColorP) }, Some(altBgP), Some(altBgP))
 				}
 				// Case: No background used
 				else
-					contentF -> None
+					(contentF, None, None)
 		}
 	
 	/**
@@ -149,6 +273,7 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 	  *                     None if selection shouldn't be visualized this way.
 	  * @return A new row component
 	  */
+	// TODO: Alternating background drawing doesn't work correctly when there's margin between rows
 	private def createRowView(rowF: ContextualMixed[VariableTextContext], valueP: Changing[A], index: Int,
 	                          altBgP: Option[Changing[Color]], selectionBgP: Option[Changing[Color]]) =
 	{
@@ -184,59 +309,83 @@ class Table[A](columns: Seq[Seq[Column[A]]], context: VariableTextContext, conte
 						lazySelectedFlag -> drawer
 				}
 		}
+		viewFromColumnGroups(rowF) { _.actualize(_, valueP, lazySelectedFlag, rowBgDrawer) }
+	}
+	
+	// TODO: Return access to locations where the separators would be placed
+	private def viewFromColumnGroups(rowF: ContextualMixed[VariableTextContext],
+	                                 backgroundP: Option[Changing[Color]] = None)
+	                                (construct: (Column[A], ContextualMixed[VariableTextContext]) => ReachComponent) =
+	{
 		// Simplifies the row construction if there's only a single column group to display
 		columns.oneOrMany match {
 			// Case: Only a single column group => Wraps it directly
 			case Left(onlyColumnGroup) =>
-				createColumnGroupView(rowF, segmentGroup, onlyColumnGroup, valueP, lazySelectedFlag, rowBgDrawer)
+				viewFromColumnGroup(rowF, segmentGroup, onlyColumnGroup, backgroundP)(construct)
+				
 			// Case: Multiple column groups => Wraps them in a stack
 			case Right(columnGroups) =>
-				rowF(Stack).row
+				val appliedRowF = {
+					val base = rowF(Stack).row
+					backgroundP match {
+						case Some(bgP) => base.withBackground(bgP)
+						case None => base
+					}
+				}
+				appliedRowF
 					.build(Mixed) { groupF =>
 						// Shifts the segment group in order to span all columns
 						var actualizedColumnCount = 0
 						columnGroups.map { columnGroup =>
 							val localSegmentGroup = segmentGroup.drop(actualizedColumnCount)
 							actualizedColumnCount += columnGroup.size
-							createColumnGroupView(groupF, localSegmentGroup, columnGroup, valueP, lazySelectedFlag,
-								rowBgDrawer)
+							viewFromColumnGroup(groupF, localSegmentGroup, columnGroup)(construct)
 						}
 					}
 					.parent
 		}
 	}
-	
 	/**
 	  * Creates a view component for a column group (i.e. a related sequence of columns)
 	  * @param groupF A factory for constructing this component
 	  * @param segmentGroup A segment group that will manage the segmentation for these columns
 	  * @param columns Columns to create components for
-	  * @param valueP A pointer that contains this row's current value
-	  * @param lazySelectedFlag A flag that contains true while this row is selected. Lazily constructed.
-	  * @param rowBgDrawer A drawer for setting row background (optional)
+	  * @param construct A function that creates a view component for a single column
 	  * @return A new component to represent this column group
 	  */
-	private def createColumnGroupView(groupF: ContextualMixed[VariableTextContext], segmentGroup: SegmentGroup,
-	                                  columns: Seq[Column[A]], valueP: Changing[A], lazySelectedFlag: Lazy[Flag],
-	                                  rowBgDrawer: Option[CustomDrawer]) =
-		columns.emptyOneOrMany match {
-			// Case: No columns on this group (unexpected) => Creates a placeholder component
-			case None => groupF.withoutContext(EmptyLabel)(StackSize.any)
-			// Case: Only a single column in this group => Wraps it using segmentation, but not using a Stack
-			case Some(Left(onlyColumn)) =>
-				segmentGroup.contextual(groupF.context)
-					.buildUnderSingle(groupF.hierarchy, Mixed) { factories =>
-						Single(onlyColumn.actualize(factories.next(), valueP, lazySelectedFlag, rowBgDrawer))
-					}
-					._1.head
-			// Case: Multiple columns => Wraps them in a stack
-			case Some(Right(columns)) =>
-				groupF(Stack).row.related
-					.buildSegmented(Mixed, segmentGroup) { factories =>
-						columns.map { _.actualize(factories.next(), valueP, lazySelectedFlag, rowBgDrawer) }
-					}
-					.parent
+	private def viewFromColumnGroup(groupF: ContextualMixed[VariableTextContext], segmentGroup: SegmentGroup,
+	                                columns: Seq[Column[A]], backgroundP: Option[Changing[Color]] = None)
+	                               (construct: (Column[A], ContextualMixed[VariableTextContext]) => ReachComponent) =
+	{
+		// Case: No columns on this group (unexpected) => Creates a placeholder component
+		if (columns.isEmpty) {
+			val labelF = groupF.withoutContext(EmptyLabel)
+			backgroundP match {
+				case Some(bgP) => labelF.withBackground(bgP)(StackSize.any)
+				case None => labelF(StackSize.any)
+			}
 		}
+		// Case: Only a single column in this group (with no custom background)
+		//       => Wraps it using segmentation, but not using a Stack
+		else if (backgroundP.isEmpty && columns.hasSize(1))
+			segmentGroup.contextual(groupF.context)
+				.buildUnderSingle(groupF.hierarchy, Mixed) { factories =>
+					Single(construct(columns.head, factories.next()))
+				}
+				._1.head
+		// Case: Multiple columns => Wraps them in a stack
+		else {
+			val rowF = {
+				val base = groupF(Stack).row.related
+				backgroundP match {
+					case Some(bgP) => base.withBackground(bgP)
+					case None => base
+				}
+			}
+			rowF.buildSegmented(Mixed, segmentGroup) { factories => columns.map { construct(_, factories.next()) } }
+				.parent
+		}
+	}
 	
 	/**
 	  * Determines an alternating background color

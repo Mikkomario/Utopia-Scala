@@ -16,16 +16,12 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
-
-object Framing extends Cff[FramingFactory]
-{
-	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
-}
 
 trait FramingFactoryLike[+Repr]
 	extends WrapperContainerFactory[Framing, ReachComponent] with CustomDrawableFactory[Repr]
@@ -149,6 +145,13 @@ case class ContextualFramingFactory[N <: BaseContextPropsView](hierarchy: Compon
 		copy(customInsets = Left(Fixed(insetSize)))
 }
 
+object Framing extends Cff[FramingFactory] with Gccff[BaseContextPropsView, ContextualFramingFactory]
+{
+	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
+	
+	override def withContext[N <: BaseContextPropsView](hierarchy: ComponentHierarchy, context: N): ContextualFramingFactory[N] =
+		ContextualFramingFactory(hierarchy, context)
+}
 /**
   * A reach implementation of the framing trait which places insets or margins around a wrapped component
   * @author Mikko Hilpinen

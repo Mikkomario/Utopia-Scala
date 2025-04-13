@@ -14,6 +14,8 @@
 ### Other changes
 - Added additional rounding to scaling **ButtonImageEffect**
 - **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary
+- **VariableColorContext**`.differentFromVariable(...)` now checks whether the specified pointers be static 
+  and optimizes accordingly.
 - **ColorAccessLike** now extends **FromShadeFactory**
 - Minor internal refactoring within **ContentDisplayer**
 

@@ -359,10 +359,15 @@ object VariableColorContext
 		  * @return A pointer that contains the most suitable version of that role's color
 		  *         in the targeted variable context
 		  */
-		def differentFromVariable(rolePointer: Changing[ColorRole], competingColorPointer: Changing[Color]) =
-			colorSetAgainstManyCache(rolePointerToSetPointerCache(context.colors)(rolePointer))(
-				competingColorPointer)(context.backgroundPointer)(
-				(context.contrastStandard, expectsLargeObjectsFlag, preferredLevel))
+		def differentFromVariable(rolePointer: Changing[ColorRole], competingColorPointer: Changing[Color]) = {
+			// Case: Specified pointers are fixed => Uses a more simple function
+			if (rolePointer.isFixed && competingColorPointer.isFixed)
+				differentFrom(rolePointer.value, competingColorPointer.value)
+			else
+				colorSetAgainstManyCache(rolePointerToSetPointerCache(context.colors)(rolePointer))(
+					competingColorPointer)(context.backgroundPointer)(
+					(context.contrastStandard, expectsLargeObjectsFlag, preferredLevel))
+		}
 		
 		/**
 		  * @param f A flag that determines whether to expect larger text or other color areas

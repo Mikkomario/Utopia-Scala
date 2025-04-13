@@ -1,8 +1,10 @@
 package utopia.reach.component.factory.contextual
 
 import utopia.firmament.context.HasContext
-import utopia.firmament.context.color.StaticColorContextLike
+import utopia.firmament.context.color.{StaticColorContextLike, VariableColorContext, VariableColorContextLike}
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
+import utopia.firmament.drawing.view.BackgroundViewDrawer
+import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 
 object GenericContextualFactory
@@ -26,6 +28,20 @@ object GenericContextualFactory
 		  */
 		override def withBackground(background: Color): F[N] =
 			f.mapContext { _.against(background) }.withCustomDrawer(BackgroundDrawer(background))
+	}
+	
+	implicit class GenericVariableColorContextualFactory[N <: VariableColorContextLike[N, _] with VariableColorContext,
+		Top >: N, F[N2 <: Top] <: CustomDrawableFactory[F[N2]]](val f: GenericContextualFactory[N, Top, F])
+		extends AnyVal with VariableContextualBackgroundAssignable[N, F[N]]
+	{
+		// IMPLEMENTED  -----------------------
+		
+		override def context: N = f.context
+		
+		override protected def withBackground(background: Either[Color, Changing[Color]]): F[N] = background match {
+			case Left(bg) => f.mapContext { _.against(bg) }.withCustomDrawer(BackgroundDrawer(bg))
+			case Right(bgP) => f.mapContext { _.withBackgroundPointer(bgP) }.withCustomDrawer(BackgroundViewDrawer(bgP))
+		}
 	}
 }
 

@@ -18,6 +18,7 @@
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Deprecated
 - Renamed scroll bar margin setter functions in **ScrollArea** & **ScrollView** factories
+- Deprecated some functions in **EmptyLabelFactory** in favor of new functions based on **CustomDrawableFactory**
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
   would not manage the linked flags / attachment states correctly (initially)
@@ -31,6 +32,8 @@
 ### New methods
 - **ConcreteReachComponent**
   - Added `.widthPointer` and `.heightPointer`
+- **GenericContextualFactory**
+  - Added `.withBackground(Changing)` for factories using variable color context (implicitly added).
 - **SegmentGroup**
   - Added `.drop(Int)`, which may be used for forming groups that span multiple stacks
   - Added `.buildUnderSingle(...)` and `.withContext(...).buildUnderSingle(...) `
@@ -42,6 +45,7 @@
 - Refactored **ScrollArea** and **ScrollView** factories to utilize new **ScrollingSettings**
 - **Segment** now better calculates maximum stack length when using **Leading** or **Trailing** stack layout
 - **AlignFrame** now supports content-scaling
+- **EmptyLabelFactory** now extends **CustomDrawableFactory**
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
 - Internal refactoring within **Segment** and **SegmentGroup**
 
