@@ -2,6 +2,8 @@
 
 ## v2.2.3 (in development)
 Supports latest **Firmament** version.
+### Other changes
+- **TextField** now uses `ComponentCreationDefaults.hintAlphaMod` when determining prompt text color
 
 ## v2.2.2 - 23.01.2025
 This update merely adds support for the latest **Flow**, **Genesis** and **Firmament** versions.

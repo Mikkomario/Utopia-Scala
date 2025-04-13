@@ -126,6 +126,11 @@ trait EditableTextLabelSettingsLike[+Repr] extends SelectableTextLabelSettingsLi
 	  */
 	def onlyAlphaNumeric = withInputFilter(Regex.letterOrDigit)
 	
+	/**
+	  * @return Copy of this factory that allows text selection for disabled fields
+	  */
+	def allowingSelectionWhileDisabled = withAllowsSelectionWhileDisabled(true)
+	
 	@deprecated("Replaced with enabledFlag", "v1.6")
 	def enabledPointer = enabledFlag
 	
@@ -200,7 +205,7 @@ object EditableTextLabelSettings
 case class EditableTextLabelSettings(labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                      enabledFlag: Flag = AlwaysTrue, inputFilter: Option[Regex] = None,
                                      maxLength: Option[Int] = None,
-                                     allowsSelectionWhileDisabled: Boolean = true)
+                                     allowsSelectionWhileDisabled: Boolean = false)
 	extends EditableTextLabelSettingsLike[EditableTextLabelSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -329,8 +334,8 @@ class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: Var
                         val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger))
 	extends AbstractSelectableTextLabel(hierarchy, context,
 		textPointer.strongMap { _.noLanguageLocalizationSkipped },
-		if (settings.allowsSelectionWhileDisabled) AlwaysTrue else settings.enabledFlag, settings.labelSettings,
-		settings.enabledFlag)
+		if (settings.allowsSelectionWhileDisabled) settings.enabledFlag || textPointer.map { _.nonEmpty } else settings.enabledFlag,
+		settings.labelSettings, settings.enabledFlag)
 {
 	// ATTRIBUTES	-------------------------------
 	
@@ -339,7 +344,7 @@ class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: Var
 	/**
 	  * A flag that contains true while this label is receiving text input (having focus)
 	  */
-	val editingFlag = if (settings.allowsSelectionWhileDisabled) focusPointer && enabledPointer else interactiveFlag
+	val editingFlag = if (settings.allowsSelectionWhileDisabled) focusFlag && enabledFlag else interactiveFlag
 	
 	
 	// INITIAL CODE	-------------------------------
@@ -356,13 +361,10 @@ class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: Var
 	// COMPUTED	-----------------------------------
 	
 	/**
-	  * @return Pointer that contains true while this lable is enabled
+	  * @return Pointer that contains true while this label is enabled
 	  */
+	@deprecated("Please use .enabledFlag instead", "v1.6")
 	def enabledPointer = settings.enabledFlag
-	/**
-	  * @return Whether this label is currently enabled
-	  */
-	def enabled = enabledPointer.value
 	
 	def text = textPointer.value
 	def text_=(newText: String) = textPointer.value = newText
@@ -371,6 +373,8 @@ class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: Var
 	
 	
 	// IMPLEMENTED	-------------------------------
+	
+	override def allowsFocusEnter = if (settings.allowsSelectionWhileDisabled) selectable else super.allowsFocusEnter
 	
 	override def allowsFocusLeave = {
 		// Checks with focus leave conditions

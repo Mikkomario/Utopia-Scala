@@ -29,6 +29,15 @@ object ComponentCreationDefaults
 	implicit var componentLogger: Logger = SysErrLogger
 	
 	/**
+	  * Alpha modifier used for hint elements
+	  */
+	var hintAlphaMod = 0.66
+	/**
+	  * Alpha modifier used for disabled elements
+	  */
+	var disabledAlphaMod = 0.4
+	
+	/**
 	  * The maximum refresh rate for animations by default. This limits the amount of component hierarchy revalidations
 	  * and repaint calls from animated components inside the action loop. Default value is 90 Hz (times per second).
 	  */

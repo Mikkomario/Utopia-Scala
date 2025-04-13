@@ -30,6 +30,7 @@ import utopia.flow.view.mutable.caching.ListenableResettableLazy
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.mutable.{Pointer, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Enter, Esc, Shift, Space, Tab}
 import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListener, KeyboardEvents}
@@ -39,10 +40,10 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import FieldWithSelectionPopup.ignoreFocusAfterCloseDuration
+import utopia.reach.component.interactive.input.FieldWithSelectionPopup.ignoreFocusAfterCloseDuration
 import utopia.reach.component.interactive.input.selection.{SelectionList, SelectionListFactory, SelectionListSettings}
 import utopia.reach.component.label.image.ViewImageLabelSettings
-import utopia.reach.component.template.focus.{Focusable, FocusableWithPointerWrapper}
+import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.OpenComponent
 import utopia.reach.container.multi.{StackSettings, ViewStack}
@@ -199,6 +200,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	
 	// IMPLEMENTED	--------------------
 	
+	override def enabledFlag: Flag = fieldSettings.enabledFlag
 	override def errorMessagePointer = fieldSettings.errorMessagePointer
 	override def fieldNamePointer = fieldSettings.fieldNamePointer
 	override def fillBackground = fieldSettings.fillBackground
@@ -210,6 +212,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	override def imageSettings = fieldSettings.imageSettings
 	override def promptPointer = fieldSettings.promptPointer
 	
+	override def withEnabledFlag(flag: Flag): Repr = mapFieldSettings { _.withEnabledFlag(flag) }
 	override def withErrorMessagePointer(p: Changing[LocalizedString]) =
 		withFieldSettings(fieldSettings.withErrorMessagePointer(p))
 	override def withFieldNamePointer(p: Changing[LocalizedString]) =
@@ -486,7 +489,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
 (implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
-	extends ReachComponentWrapper with FocusableWithPointerWrapper
+	extends ReachComponentWrapper with FocusableWithStateWrapper
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P]
 {
 	// ATTRIBUTES	------------------------------
@@ -497,29 +500,28 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	private var lastPopupCloseTime = Now.toInstant
 	
 	// Tracks the last selected value in order to return selection when content is updated
-	private val lastSelectedValuePointer = Pointer.empty[A]
+	private val lastSelectedValueP = Pointer.empty[A]
 	
 	private val lazyPopup = ListenableResettableLazy[Window] { createPopup() }
-	// Follows the pop-up visibility state with a pointer
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	val popUpVisiblePointer: Flag = lazyPopup.stateView.flatMap {
+	val popUpVisibleFlag: Flag = lazyPopup.stateView.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
 	/**
 	  * A pointer which contains true while a pop-up is hidden
 	  */
-	val popUpHiddenPointer = !popUpVisiblePointer
+	val popUpHiddenFlag = !popUpVisibleFlag
 	/**
 	  * A pointer that contains a timestamp of the latest pop-up visibility change event
 	  */
-	val popUpVisibilityLastChangedPointer = popUpVisiblePointer.strongMap { _ => Now.toInstant }
+	val popUpVisibilityLastChangedPointer = popUpVisibleFlag.strongMap { _ => Now.toInstant }
 	// Merges the expand and the collapse icons, if necessary
-	private val rightIconPointer: Changing[SingleColorIcon] = {
+	private val rightIconP: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
-		// => Uses only the right-side icon from settings
+		//       => Uses only the right-side icon from settings
 		if (settings.rightIconPointer.existsFixed { _.nonEmpty } || settings.expandAndCollapseIcon.forall { _.isEmpty })
 			settings.rightIconPointer
 		// Case: Expand and/or collapse icon defined => Uses those icons, and possibly right-side icon also
@@ -532,7 +534,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 							case Some(collapseIcon) =>
 								// Makes sure both icons have the same size
 								if (expandIcon.size == collapseIcon.size)
-									popUpVisiblePointer.strongMap { visible => if (visible) collapseIcon else expandIcon }
+									popUpVisibleFlag.strongMap { visible => if (visible) collapseIcon else expandIcon }
 								else {
 									val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 									val targetSize = smaller.size
@@ -541,7 +543,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 									
 									val (newExpandIcon, newCollapseIcon) =
 										if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
-									popUpVisiblePointer.strongMap { visible => if (visible) newCollapseIcon else newExpandIcon }
+									popUpVisibleFlag.strongMap { visible => if (visible) newCollapseIcon else newExpandIcon }
 								}
 							// Case: Only expand icon is defined => Doesn't use collapse icon
 							case None => Fixed(expandIcon)
@@ -558,13 +560,13 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	  * Field wrapped by this field
 	  */
 	val field = Field.withContext(hierarchy, context)
-		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconPointer))
+		.withSettings(settings.fieldSettings.withRightIconPointer(rightIconP))
 		.apply(emptyFlag)(makeField)(makeRightHintLabel)
 	
 	/**
 	  * A pointer that contains true while the pop-up window is NOT displayed, but only while this field has focus
 	  */
-	val popUpHiddenWhileFocusedFlag = popUpHiddenPointer && field.focusPointer
+	val popUpHiddenWhileFocusedFlag = popUpHiddenFlag && field.focusFlag
 	
 	private lazy val popUpContext = context.withBackgroundPointer(field.innerBackgroundPointer)
 	
@@ -577,15 +579,15 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 		// Tracks last selected value in order to return in on content changes
 		val updateLastValueListener = ChangeListener[Option[A]] { e =>
 			if (e.newValue.isEmpty)
-				lastSelectedValuePointer.value = e.oldValue
+				lastSelectedValueP.value = e.oldValue
 			else
-				lastSelectedValuePointer.clear()
+				lastSelectedValueP.clear()
 		}
 		// May deselect the current value or select the previously selected value on content changes
 		val contentUpdateListener = ChangeListener[Seq[A]] { e =>
 			valuePointer.update {
 				// Case: No value currently selected => Attempts to select the previously selected value
-				case None => lastSelectedValuePointer.value.filter { e.newValue.containsEqual(_) }
+				case None => lastSelectedValueP.value.filter { e.newValue.containsEqual(_) }
 				// Case: Value is selected => Deselects it if it no longer appears among the options
 				case s: Some[A] => s.filter { e.newValue.containsEqual(_) }
 			}
@@ -606,7 +608,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	}
 	
 	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
-	focusPointer.addContinuousListenerAndSimulateEvent(false) { e =>
+	focusFlag.addContinuousListenerAndSimulateEvent(false) { e =>
 		if (e.newValue) {
 			if (Now - lastPopupCloseTime > ignoreFocusAfterCloseDuration)
 				openPopup()
@@ -617,6 +619,11 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	
 	
 	// COMPUTED	---------------------------------
+	
+	@deprecated("Renamed to .popUpVisibleFlag", "v1.6")
+	def popUpVisiblePointer = popUpVisibleFlag
+	@deprecated("Renamed to .popUpHiddenFlag", "v1.6")
+	def popUpHiddenPointer = popUpHiddenFlag
 	
 	private def cachedPopup = lazyPopup.current
 	
@@ -725,10 +732,14 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	
 	// NESTED	---------------------------------
 	
+	/**
+	  * Listens for mouse events inside the pop-up and closes it if necessary.
+	  */
 	private object PopupHideMouseListener extends MouseButtonStateListener
 	{
 		// ATTRIBUTES   ----------------------
 		
+		override val handleCondition: Flag = AlwaysTrue
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.left
 		
 		// Only closes the pop-up on mouse release if it was visible on the previous mouse press
@@ -737,9 +748,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def handleCondition: Flag = AlwaysTrue
-		
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
 			if (event.pressed) {
 				closeOnReleaseFlag.value = cachedPopup.exists { _.isFullyVisible }
@@ -755,15 +764,18 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 		}
 	}
 	
+	/**
+	  * Listens to keyboard events inside the wrapped field and opens the pop-up when appropriate
+	  */
 	private object FieldKeyListener extends KeyStateListener
 	{
 		// ATTRIBUTES	-------------------------
 		
 		// Is interested in key events while the field has focus and pop-up is not open
-		override def handleCondition: Flag = popUpHiddenWhileFocusedFlag
+		override val handleCondition: Flag = popUpHiddenWhileFocusedFlag && field.enabledFlag
 		
 		// Listens to down arrow presses
-		// Also supports additional key-strokes (based on the 'additionalActivationKeys' parameter)
+		// Also supports additional keystrokes (based on the 'additionalActivationKeys' parameter)
 		override val keyStateEventFilter = {
 			val arrowFilter = KeyStateEvent.filter.arrow(settings.listAxis(Positive))
 			val keyFilter = NotEmpty(settings.activationKeys) match {

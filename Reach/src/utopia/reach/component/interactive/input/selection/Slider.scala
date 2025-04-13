@@ -478,7 +478,7 @@ class Slider[A](override val hierarchy: ComponentHierarchy, actorHandler: ActorH
 	}
 	
 	private val _focusPointer = ResettableFlag()
-	override def focusPointer: Flag = _focusPointer.readOnly
+	override val focusFlag: Flag = _focusPointer.readOnly
 	
 	private val enabledAndFocusedFlag = _focusPointer && enabledFlag
 	

@@ -27,10 +27,10 @@ import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.FocusableWithState
-import utopia.reach.component.template.{CursorDefining, ConcreteCustomDrawReachComponent}
+import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, CursorDefining}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Text}
-import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener}
+import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener, HasFocusFlag}
 
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, StringSelection, Transferable}
@@ -48,7 +48,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
                                            context: VariableTextContext, textPointer: Changing[LocalizedString],
                                            val selectableFlag: Flag,
                                            settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                           enabledFlag: Flag = AlwaysTrue)
+                                           val enabledFlag: Flag = AlwaysTrue)
 	extends ConcreteCustomDrawReachComponent with TextComponent with FocusableWithState with CursorDefining
 {
 	// ATTRIBUTES	-------------------------------
@@ -112,7 +112,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	/**
 	  * A pointer that contains true while this label allows text selection (being in focus)
 	  */
-	protected lazy val interactiveFlag = FocusHandler.focusPointer && selectableFlag
+	protected lazy val interactiveFlag = focusFlag && selectableFlag
 	
 	
 	// COMPUTED	-----------------------------------
@@ -121,6 +121,10 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	  * @return Whether text in this label can currently be selected
 	  */
 	def selectable: Boolean = selectableFlag.value
+	/**
+	  * @return Whether this component is currently enabled
+	  */
+	def enabled = enabledFlag.value
 	
 	/**
 	  * @return Current index of the text caret
@@ -149,12 +153,12 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def focusPointer = FocusHandler.focusPointer
+	override def focusFlag = FocusHandler.focusFlag
 	
 	override def measuredText = measuredTextPointer.value
 	override def textDrawContext = stylePointer.value
 	
-	override def allowsFocusEnter = selectable
+	override def allowsFocusEnter = selectable && enabled
 	override def allowTextShrink: Boolean = context.allowTextShrink
 	
 	override def cursorType = if (selectable) Text else Default
@@ -319,21 +323,21 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	  * The main focus handler of this label. Needs to be registered as a focus listener
 	  * in order to work properly
 	  */
-	protected object FocusHandler extends FocusChangeListener
+	protected object FocusHandler extends FocusChangeListener with HasFocusFlag
 	{
 		// ATTRIBUTES	--------------------------
 		
-		private val _focusPointer = EventfulPointer(false)
+		private val _focusFlag = ResettableFlag()
 		/**
 		  * A pointer that contains true while this component is in focus
 		  */
-		val focusPointer: Flag = _focusPointer.readOnly
+		override val focusFlag: Flag = _focusFlag.view
 		
 		
 		// COMPUTED	------------------------------
 		
-		def focus = _focusPointer.value
-		private def focus_=(newState: Boolean) = _focusPointer.value = newState
+		def focus = _focusFlag.value
+		private def focus_=(newState: Boolean) = _focusFlag.value = newState
 		
 		
 		// IMPLEMENTED	--------------------------
@@ -393,7 +397,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		
 		var keyStatus = KeyboardState.default
 		
-		override val handleCondition: Flag = focusPointer && selectableFlag
+		override val keyStateEventFilter: KeyStateEventFilter = AcceptAll
 		
 		
 		// COMPUTED	------------------------------
@@ -404,7 +408,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		
 		// IMPLEMENTED	--------------------------
 		
-		override def keyStateEventFilter: KeyStateEventFilter = AcceptAll
+		override def handleCondition: Flag = interactiveFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
 			keyStatus = event.keyboardState

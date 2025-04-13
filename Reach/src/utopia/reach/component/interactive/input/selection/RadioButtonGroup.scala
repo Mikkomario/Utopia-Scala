@@ -265,7 +265,7 @@ class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: V
 	/**
 	  * Pointer that contains true while any button in this group has focus
 	  */
-	lazy val focusPointer = focusTargets.map { _.focusPointer }.reduceOption { _ || _ }.getOrElse(AlwaysFalse)
+	lazy val focusPointer = focusTargets.map { _.focusFlag }.reduceOption { _ || _ }.getOrElse(AlwaysFalse)
 	
 	
 	// INITIAL CODE	------------------------

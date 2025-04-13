@@ -10,7 +10,6 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
@@ -20,14 +19,14 @@ import utopia.paradigm.color.ColorShade
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import FieldFocusMouseListener.visibilityChangeThreshold
+import utopia.reach.component.interactive.input.selection.FieldFocusMouseListener.visibilityChangeThreshold
 import utopia.reach.component.interactive.input.{FieldWithSelectionPopup, FieldWithSelectionPopupSettings, FieldWithSelectionPopupSettingsWrapper}
 import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.context.VariableReachContentWindowContext
-import utopia.reach.cursor.CursorType.Interactive
+import utopia.reach.cursor.CursorType.{Default, Interactive}
 
 import scala.concurrent.ExecutionContext
 
@@ -58,8 +57,6 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	override def withContext(p: VariableReachContentWindowContext): ContextualDropDownFactory = copy(context = p)
 	override def withSettings(settings: FieldWithSelectionPopupSettings): ContextualDropDownFactory =
 		copy(settings = settings)
-	
-	// TODO: Add enabled pointer parameter
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
@@ -122,9 +119,9 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 					Focusable.wrap(label, Single(fieldContext.focusListener))
 				}(makeDisplay) { _ => None }
 		// Adds mouse interaction to the field
-		field.addMouseButtonListener(new FieldFocusMouseListener(field))
-		CursorDefining.defineCursorFor(field, View(Interactive), field.field.innerBackgroundPointer.lazyMap { c =>
-			ColorShade.forLuminosity(c.luminosity) })
+		field.addMouseButtonListener(new FieldFocusMouseListener(field, enabledFlag))
+		CursorDefining.defineCursorFor(field, View { if (enabledFlag.value) Interactive else Default },
+			field.field.innerBackgroundPointer.lazyMap { c => ColorShade.forLuminosity(c.luminosity) })
 		field
 	}
 	
@@ -174,7 +171,8 @@ private object FieldFocusMouseListener
 	// Time before pop-up visibility may be swapped
 	private val visibilityChangeThreshold = 0.2.seconds
 }
-private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]) extends MouseButtonStateListener
+private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _], enabledFlag: Flag)
+	extends MouseButtonStateListener
 {
 	// ATTRIBUTES	-------------------
 	
@@ -184,7 +182,7 @@ private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]
 	
 	// IMPLEMENTED	-------------------
 	
-	override def handleCondition: Flag = AlwaysTrue
+	override def handleCondition: Flag = enabledFlag
 	
 	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		// Requests focus or opens the field, except when the pop-up was just closed

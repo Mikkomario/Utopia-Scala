@@ -675,6 +675,17 @@
               "doc": "Pointer that determines external highlight state/style to apply"
             },
             {
+              "name": "enabledFlag",
+              "param": "flag",
+              "type": "flag",
+              "default": {
+                "code": "AlwaysTrue",
+                "ref": "true!"
+              },
+              "mapping": true,
+              "doc": "A flag that contains true while this field may be interacted with"
+            },
+            {
               "name": "focusColorRole",
               "param": "color",
               "type": "cRole",
@@ -986,17 +997,6 @@
               "prefix": "label",
               "prefix_props": false,
               "doc": "Settings that apply to each of the input text fields that form this component."
-            },
-            {
-              "name": "enabledFlag",
-              "param": "p",
-              "type": "flag",
-              "default": {
-                "code": "AlwaysTrue",
-                "ref": "true!"
-              },
-              "map": true,
-              "doc": "A pointer that determines whether this field is interactive or not"
             },
             {
               "name": "initialValue",

@@ -5,6 +5,7 @@ import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.range.Span
+import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.interactive.input.InputValidationResult.Default
 import utopia.reach.component.interactive.input.InputValidationResult
@@ -29,7 +30,7 @@ import utopia.reach.window.ReachWindow
   * @author Mikko Hilpinen
   * @since 18.11.2020, v0.1
   */
-object ReachTextFieldTest extends App
+object TextFieldTest extends App
 {
 	import ReachTestContext._
 	
@@ -49,6 +50,11 @@ object ReachTextFieldTest extends App
 						Vector(field, summary)
 					}.parent
 				}
+				// A pointer based on field #3, which contains true when that field contains a value > 0.
+				val intLargerThanZeroP = OnceFlatteningPointer(false)
+				intLargerThanZeroP.addListenerAndSimulateEvent(false) { e =>
+					println(s"Int is larger than zero: ${ e.newValue }")
+				}
 				
 				// Contains 5 rows
 				Vector(
@@ -63,9 +69,15 @@ object ReachTextFieldTest extends App
 						_.withFieldName("Text").withMaxLength(32).outlined
 							.string(StackLength(160, 320))
 					},
-					makeRow[Option[Int]](DisplayFunction.rawOption) { _.withFieldName("Int").outlined.int() },
+					makeRow[Option[Int]](DisplayFunction.rawOption) { factory =>
+						val field = factory.withFieldName("Int").outlined.int()
+						intLargerThanZeroP.complete(field.valuePointer.map { _.exists { _ > 0 } })
+						field
+					},
 					makeRow[Option[Int]](DisplayFunction.rawOption) {
-						_.withFieldName("Int+").outlined.int(Span.numeric(0, 10))
+						_.withFieldName("Int+")
+							.allowingSelectionWhileDisabled.withEnabledFlag(intLargerThanZeroP)
+							.int(Span.numeric(0, 10))
 					},
 					makeRow[Option[Double]](DisplayFunction.rawOption) {
 						_.withFieldName("Double").withPrompt("0.".noLanguageLocalizationSkipped)

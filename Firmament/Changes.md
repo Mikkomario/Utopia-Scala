@@ -12,6 +12,7 @@
 - **Window**
   - Added `.notClosedFlag`
 ### Other changes
+- **ComponentCreationDefaults** now contains `.hintAlphaMod` and `.disabledAlphaMod`
 - Added additional rounding to scaling **ButtonImageEffect**
 - **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary
 - **VariableColorContext**`.differentFromVariable(...)` now checks whether the specified pointers be static 

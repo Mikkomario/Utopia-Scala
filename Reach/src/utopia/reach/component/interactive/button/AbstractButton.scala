@@ -18,18 +18,18 @@ abstract class AbstractButton(settings: ButtonSettingsLike[_], triggerKeys: Set[
 {
 	// ATTRIBUTES   ------------------------
 	
-	override val enabledPointer: Flag = settings.enabledFlag
+	override val enabledFlag: Flag = settings.enabledFlag
 	
 	private val baseStatePointer = EventfulPointer(GuiElementStatus.identity)
 	override val statePointer: Changing[GuiElementStatus] = {
-		if (enabledPointer.isAlwaysTrue)
+		if (enabledFlag.isAlwaysTrue)
 			baseStatePointer.readOnly
 		else
-			baseStatePointer.mergeWith(enabledPointer) { (state, enabled) => state + (Disabled -> !enabled) }
+			baseStatePointer.mergeWith(enabledFlag) { (state, enabled) => state + (Disabled -> !enabled) }
 	}
 	
 	override val focusId: Int = hashCode()
-	override val focusPointer: Flag = statePointer.map { _ is Focused }
+	override val focusFlag: Flag = statePointer.map { _ is Focused }
 	override val focusListeners: Seq[FocusListener] =
 		new ButtonDefaultFocusListener(baseStatePointer) +: settings.focusListeners
 		

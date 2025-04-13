@@ -38,9 +38,9 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 	  */
 	def statePointer: Changing[GuiElementStatus]
 	/**
-	  * @return A pointer that contains true while this button may be interacted with
+	  * @return A flag that contains true while this button may be interacted with
 	  */
-	def enabledPointer: Flag
+	def enabledFlag: Flag
 	
 	/**
 	  * Triggers the actions associated with this button
@@ -55,6 +55,9 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 	  */
 	def isPressed = state is Activated
 	
+	@deprecated("Renamed to enabledFlag", "v1.6")
+	def enabledPointer: Flag = enabledFlag
+	
 	
 	// IMPLEMENTED	--------------------------
 	
@@ -64,12 +67,10 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 	override def state = statePointer.value
 	
 	override def cursorType: CursorType = if (enabled) Interactive else Default
-	
 	override def cursorBounds = boundsInsideTop
 	
 	// By default, buttons always allow focus enter as long as they're enabled
 	override def allowsFocusEnter = enabled
-	
 	// By default, buttons always allow focus leave
 	override def allowsFocusLeave = true
 	
@@ -144,23 +145,14 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 		// Listens to keys involved in the hotkeys. Doesn't necessarily mean that any key is triggered.
 		override val keyStateEventFilter = KeyStateEventFilter(hotKeys.flatMap { _.keys })
 		
-		override val handleCondition: Flag = {
-			if (requiresFocus)
-				enabledPointer && focusPointer
-			else
-				enabledPointer
-		}
+		override val handleCondition: Flag = if (requiresFocus) enabledFlag && focusFlag else enabledFlag
 		
 		
 		// COMPUTED	-------------------------------
 		
 		def down = statePointer.value is Activated
-		def down_=(newState: Boolean) = statePointer.update { state =>
-			if (newState)
-				state + Activated
-			else
-				state - Activated
-		}
+		def down_=(newState: Boolean) =
+			statePointer.update { state => if (newState) state + Activated else state - Activated }
 		
 		
 		// IMPLEMENTED	---------------------------
@@ -196,7 +188,7 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 		
 		// IMPLEMENTED	----------------------------
 		
-		override def handleCondition: Flag = enabledPointer
+		override def handleCondition: Flag = enabledFlag
 		
 		// On left mouse within bounds, brightens color, gains focus and remembers, on release, returns
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {

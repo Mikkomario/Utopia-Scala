@@ -28,7 +28,7 @@ import utopia.reach.focus.FocusListener
 
 object MutableTextButton extends Cff[MutableTextButtonFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new MutableTextButtonFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = MutableTextButtonFactory(hierarchy)
 }
 
 case class MutableTextButtonFactory(hierarchy: ComponentHierarchy)
@@ -144,8 +144,8 @@ class MutableTextButton(override val hierarchy: ComponentHierarchy, initialText:
 	// ATTRIBUTES	---------------------------------
 	
 	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
-	override val enabledPointer: Flag = _statePointer.map { _ isNot Disabled }
-	override val focusPointer: Flag = _statePointer.map { _ is Focused }
+	override val enabledFlag: Flag = _statePointer.map { _ isNot Disabled }
+	override val focusFlag: Flag = _statePointer.map { _ is Focused }
 	
 	protected val wrapped = new MutableTextLabel(hierarchy, initialText, initialStyle, allowTextShrink)
 	/**

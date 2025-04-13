@@ -1,12 +1,13 @@
 package utopia.reach.component.template.focus
 
+import utopia.flow.view.template.eventful.Flag
+
 /**
   * A wrapper for a focusable component which tracks its focus state with a pointer
   * @author Mikko Hilpinen
   * @since 6.2.2021, v0.1
   */
-// TODO: Rename
-trait FocusableWithPointerWrapper extends FocusableWrapper with FocusableWithState
+trait FocusableWithStateWrapper extends FocusableWrapper with FocusableWithState
 {
 	// ABSTRACT	-----------------------------
 	
@@ -15,5 +16,5 @@ trait FocusableWithPointerWrapper extends FocusableWrapper with FocusableWithSta
 	
 	// IMPLEMENTED	-------------------------
 	
-	override def focusPointer = focusable.focusPointer
+	override def focusFlag: Flag = focusable.focusFlag
 }

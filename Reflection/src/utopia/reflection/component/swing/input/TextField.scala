@@ -2,6 +2,7 @@ package utopia.reflection.component.swing.input
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.TextDrawerLike
@@ -509,7 +510,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 		private val emptyText = MeasuredText("", component.getFontMetrics(font.toAwt))
 		
 		override val insets = StackInsets.symmetric(insideMargins * 2)
-		override val color: Color = textColor.timesAlpha(0.66)
+		override val color: Color = textColor.timesAlpha(ComponentCreationDefaults.hintAlphaMod)
 		
 		
 		// IMPLEMENTED	-----------------------

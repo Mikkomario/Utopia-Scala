@@ -22,7 +22,7 @@ import utopia.reach.focus.FocusListener
 
 object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new MutableImageButtonFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = MutableImageButtonFactory(hierarchy)
 }
 
 case class MutableImageButtonFactory(override val hierarchy: ComponentHierarchy) extends PartOfComponentHierarchy
@@ -102,8 +102,8 @@ class MutableImageButton(override val hierarchy: ComponentHierarchy, initialImag
 	val alignmentPointer = EventfulPointer[Alignment](initialAlignment)
 	
 	private val _statePointer = EventfulPointer(GuiElementStatus.identity)
-	override val enabledPointer: Flag = _statePointer.map { _ isNot Disabled }
-	override val focusPointer: Flag = _statePointer.map { _ is Focused }
+	override val enabledFlag: Flag = _statePointer.map { _ isNot Disabled }
+	override val focusFlag: Flag = _statePointer.map { _ is Focused }
 	
 	/**
 	  * A pointer to this button's currently displayed image

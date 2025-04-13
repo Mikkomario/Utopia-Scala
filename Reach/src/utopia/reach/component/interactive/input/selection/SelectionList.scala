@@ -33,12 +33,12 @@ import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
-import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ConcreteReachComponent, ReachComponent, ReachComponentWrapper}
+import utopia.reach.component.template.{ConcreteReachComponent, CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.{MutableStack, StackSettings, StackSettingsLike}
 import utopia.reach.cursor.Cursor
 import utopia.reach.cursor.CursorType.{Default, Interactive}
-import utopia.reach.focus.{FocusListener, FocusStateTracker}
+import utopia.reach.focus.{FocusListener, FocusStateTracker, HasFocusFlag}
 
 /**
   * Common trait for selection list factories and settings
@@ -382,6 +382,7 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P] with CursorDefining
+		with HasFocusFlag
 {
 	// ATTRIBUTES	---------------------------------
 	
@@ -454,7 +455,7 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	}
 	
 	// Repaints selected area when focus changes
-	focusPointer.addContinuousAnyChangeListener { selectedAreaPointer.value.foreach { repaintArea(_) } }
+	focusFlag.addContinuousAnyChangeListener { selectedAreaPointer.value.foreach { repaintArea(_) } }
 	
 	// Listens to local mouse events
 	addMouseButtonListener(LocalMouseListener)
@@ -473,15 +474,6 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	def nonEmpty = content.nonEmpty
 	
 	/**
-	  * @return A pointer to this list's focus state
-	  */
-	def focusPointer = focusTracker.focusPointer
-	/**
-	  * @return Whether this list has currently focus
-	  */
-	def hasFocus = focusPointer.value
-	
-	/**
 	  * @return The currently selected item display
 	  */
 	def selectedDisplay = manager.selectedDisplay.headOption
@@ -491,6 +483,8 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	
 	override protected def wrapped: ConcreteReachComponent = stack
 	override protected def drawable: MutableCustomDrawable = stack
+	
+	override def focusFlag = focusTracker.focusFlag
 	
 	// Focus may enter if there are items to select
 	override def allowsFocusEnter = nonEmpty

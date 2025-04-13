@@ -10,6 +10,8 @@
 - In **ReachComponent**, renamed `.linkPointer` to `.linkedFlag`
 - In multiple components and component factories, renamed -pointer properties to -flag properties
   - Especially, changed `enabledPointer`s to `enabledFlag`s and changed their type to **Flag**
+  - Also, in multiple components, changed `.focusPointer` to `.focusFlag`
+- Renamed **FocusableWithPointerWrapper** to **FocusableWithStateWrapper**
 - Multiple changes to **ViewContainer** / **ViewStack**
   - `.mapPointer(...)`'s accepted function now receives the row index as its third parameter
   - **ViewContainer** now requires the implementation of `_apply(Changing[Seq[Top]])` 
@@ -29,6 +31,10 @@
 - **ViewImageAndTextLabel**, as well as **ViewImageAndTextButton** now support a loading state
 - Added **LoadingBar** and **ProgressBar** components
 - Added **ProgressAnimator** object for facilitating animated progress changes
+- **Field** components now support `enabledFlag` in their settings, and visualize accordingly
+  - This also affects **TextField** visualization while disabled
+  - **DropDown** and **FieldWithSelectionPopUp** now also apply this flag to enable or disable functionality
+- Added **HasFocusFlag** trait
 ### New methods
 - **ConcreteReachComponent**
   - Added `.widthPointer` and `.heightPointer`
@@ -42,12 +48,15 @@
   - Moved a number of functions from **ViewStack** to this trait, 
     making the subclass implementation considerably more straightforward.
 ### Other changes
+- **SelectableTextLabel** is no longer focusable while disabled
+  - Note: This feature may be overridden in **EditableTextLabel** with the `allowSelectionWhileDisabled` -setting.
 - Refactored **ScrollArea** and **ScrollView** factories to utilize new **ScrollingSettings**
 - **Segment** now better calculates maximum stack length when using **Leading** or **Trailing** stack layout
 - **AlignFrame** now supports content-scaling
 - **EmptyLabelFactory** now extends **CustomDrawableFactory**
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
 - Internal refactoring within **Segment** and **SegmentGroup**
+- Internal refactoring within **Field**
 
 ## v1.5 - 23.01.2025
 This update focuses on the following main areas:

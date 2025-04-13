@@ -16,6 +16,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -31,7 +32,7 @@ import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
-import utopia.reach.component.template.focus.FocusableWithPointerWrapper
+import utopia.reach.component.template.focus.FocusableWithStateWrapper
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reach.focus.FocusListener
@@ -117,7 +118,7 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 	override def imageSettings = fieldSettings.imageSettings
 	override def promptPointer = fieldSettings.promptPointer
 	override def allowsSelectionWhileDisabled = editingSettings.allowsSelectionWhileDisabled
-	override def enabledFlag: Flag = editingSettings.enabledFlag
+	override def enabledFlag: Flag = fieldSettings.enabledFlag
 	override def focusListeners = labelSettings.focusListeners
 	override def inputFilter = editingSettings.inputFilter
 	override def maxLength = editingSettings.maxLength
@@ -142,8 +143,7 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 		withFieldSettings(fieldSettings.withPromptPointer(p))
 	override def withAllowsSelectionWhileDisabled(allow: Boolean) =
 		withEditingSettings(editingSettings.withAllowsSelectionWhileDisabled(allow))
-	override def withEnabledFlag(p: Flag): Repr =
-		withEditingSettings(editingSettings.withEnabledFlag(p))
+	override def withEnabledFlag(p: Flag): Repr = mapFieldSettings { _.withEnabledFlag(p) }
 	override def withInputFilter(filter: Option[Regex]) =
 		withEditingSettings(editingSettings.withInputFilter(filter))
 	override def withLabelSettings(settings: SelectableTextLabelSettings) =
@@ -158,6 +158,7 @@ trait TextFieldSettingsLike[+Repr] extends FieldSettingsLike[Repr] with Editable
 	def mapFieldSettings(f: FieldSettings => FieldSettings) = withFieldSettings(f(fieldSettings))
 	def mapEditingSettings(f: EditableTextLabelSettings => EditableTextLabelSettings) =
 		withEditingSettings(f(editingSettings))
+	override def mapEnabledFlag(f: Mutate[Flag]) = super[FieldSettingsLike].mapEnabledFlag(f)
 	
 	def mapResultFilter(f: Option[Regex] => Option[Regex]) = withResultFilter(f(resultFilter))
 	
@@ -677,7 +678,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
                    textContentPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
                    inputValidation: Option[A => InputValidationResult] = None)
 				  (parseResult: String => A)
-	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithPointerWrapper
+	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithStateWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -748,6 +749,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 			val appliedLabelSettings = settings.editingSettings
 				.withAdditionalFocusListeners(Pair(fieldContext.focusListener, mainFocusListener))
 				.withAdditionalCustomDrawers(fieldContext.promptDrawers)
+				.withEnabledFlag(settings.enabledFlag)
 			EditableTextLabel.withContext(fieldContext.hierarchy, labelContext)
 				.withSettings(appliedLabelSettings)
 				.apply(textContentPointer)

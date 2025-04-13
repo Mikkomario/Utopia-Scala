@@ -382,7 +382,8 @@ class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHand
 		
 		override def draw(drawer: Drawer, bounds: Bounds) = {
 			if (bounds.size.sign.isPositive) {
-				val actualDrawer = (if (enabled) drawer else drawer.withAlpha(0.66)).antialiasing
+				val actualDrawer =
+					(if (enabled) drawer else drawer.withAlpha(ComponentCreationDefaults.disabledAlphaMod)).antialiasing
 				val baseColor = shade match {
 					case Light => Color.white
 					case Dark => Color.black
@@ -476,7 +477,7 @@ class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHand
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def handleCondition: Flag = focusPointer
+		override def handleCondition: Flag = focusFlag
 		
 		override def onKeyState(event: KeyStateEvent) = value = event.index == KeyEvent.VK_RIGHT
 	}

@@ -148,7 +148,7 @@ case class ListFactory(hierarchy: ComponentHierarchy)
 			val focusTracker = new FocusStateTracker(false)
 			Focusable.wrap(stack, focusTracker +: focusListeners)
 			val keyListener = new SelectionKeyListener(selectedRowIndexPointer, keyPressedPointer, maxRowIndex,
-				focusTracker.focusPointer,
+				focusTracker.focusFlag,
 				rowsWithResults.map { case (_, result) => result.context.rowIndex -> result.action }.toMap)
 			stack.addHierarchyListener { isAttached =>
 				if (isAttached)

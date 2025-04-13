@@ -374,7 +374,7 @@ class CheckBox(override val hierarchy: ComponentHierarchy,
 	  */
 	val imagePointer = valuePointer.mergeWith(settings.enabledFlag) { (selected, enabled) =>
 		val base = if (selected) images.second else images.first
-		if (enabled) base else base.timesAlpha(0.66)
+		if (enabled) base else base.timesAlpha(ComponentCreationDefaults.disabledAlphaMod)
 	}
 	override protected val wrapped = {
 		ViewImageLabel(hierarchy)
