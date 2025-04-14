@@ -53,8 +53,9 @@ object Table
 		override def createHeader(factories: ContextualMixed[VariableTextContext]): ReachComponent = hf(factories)
 	}*/
 	
-	private class AlternatingBackgroundDrawer(primaryBgView: View[Color], secondaryBgView: View[Color],
-	                                          componentsView: View[Seq[HasBounds]])
+	private class TableBackgroundDrawer(primaryBgView: Option[View[Color]], secondaryBgView: Option[View[Color]],
+	                                    selectedRowBgView: Option[View[Color]], selectedIndexView: Option[View[Int]],
+	                                    componentsView: View[Seq[HasBounds]])
 		extends CustomDrawer
 	{
 		override val opaque: Boolean = true
@@ -65,37 +66,66 @@ object Table
 			val componentCount = components.size
 			if (componentCount > 0) {
 				val maxIndex = componentCount - 1
-				if (componentCount == 1)
-					DrawSettings.onlyFill(secondaryBgView.value).use { implicit ds => drawer.draw(bounds) }
+				if (componentCount == 1) {
+					secondaryBgView.orElse(primaryBgView).foreach { c =>
+						DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
+					}
+					selectedRowBgView.foreach { c =>
+						selectedIndexView.foreach { indexP =>
+							if (indexP.value == 0)
+								DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
+						}
+					}
+				}
 				else
 					drawer.clippingBounds match {
 						case Some(clip) => ???
 						case None =>
-							DrawSettings.onlyFill(primaryBgView.value).use { implicit ds => drawer.draw(bounds) }
-							DrawSettings.onlyFill(secondaryBgView.value).use { implicit ds =>
-								// TODO: Generalize this and use in the clip version
-								val localD = drawer.translated(bounds.position)
-								components.indices.foreach { i =>
-									if (i % 2 == 0) {
-										val main = components(i).bounds
-										val topY = {
-											if (i == 0)
-												main.topY
-											else
-												(components(i - 1).bottomY + main.topY) / 2
-										}
-										val bottomY = {
-											if (i == maxIndex)
-												main.bottomY
-											else
-												(main.bottomY + components(i + 1).topY) / 2
-										}
-										localD.draw(bounds.withY(topY spanTo bottomY))
+							primaryBgView.foreach { c =>
+								DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
+							}
+							secondaryBgView.foreach { c =>
+								DrawSettings.onlyFill(c.value).use { implicit ds =>
+									// TODO: Generalize this and use in the clip version
+									components.indices.foreach { i =>
+										if (i % 2 == 0)
+											drawRowBackground(drawer, bounds, components, i, maxIndex)
+									}
+								}
+							}
+							selectedRowBgView.foreach { c =>
+								selectedIndexView.map { _.value }.filter { _ >= 0 }.foreach { index =>
+									DrawSettings.onlyFill(c.value).use { implicit ds =>
+										drawRowBackground(drawer, bounds, components, index, maxIndex)
 									}
 								}
 							}
 					}
 			}
+		}
+		
+		
+		// OTHER    --------------------------
+		
+		// NB: Assumes that there are >1 rows
+		private def drawRowBackground(drawer: Drawer, bounds: Bounds, components: Seq[HasBounds], index: Int,
+		                              maxIndex: Int)
+		                             (implicit ds: DrawSettings) =
+		{
+			val main = components(index).bounds
+			val topY = {
+				if (index == 0)
+					main.topY
+				else
+					(components(index - 1).bottomY + main.topY) / 2
+			}
+			val bottomY = {
+				if (index == maxIndex)
+					main.bottomY
+				else
+					(main.bottomY + components(index + 1).topY) / 2
+			}
+			drawer.draw(bounds.withY(topY spanTo bottomY))
 		}
 	}
 }
