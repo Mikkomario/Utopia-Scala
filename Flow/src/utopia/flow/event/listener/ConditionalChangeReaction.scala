@@ -144,17 +144,23 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 {
 	// ATTRIBUTES   ------------------------
 	
-	// Contains true while this listener has been scheduled to detach
-	// The detachment is appropriated upon a change event received from the 'origin' pointer
-	// This flag is set when the 'listenConditionPointer' is set to false
+	/**
+	  * A flag that is set while this listener has been scheduled to detach.
+	  * The detachment is appropriated upon a change event received from the [[origin]] pointer.
+	  * This flag is set when the [[conditionPointer]] is set to false.
+	  */
 	private val detachmentQueuedFlag = Switch()
 	
-	// Contains a value while detached
-	// Used for simulating a change event upon reattachment
-	private val memorizedValuePointer = Pointer.empty[A]
+	/**
+	  * Contains a value while detached.
+	  * Used for simulating a change event upon reattachment.
+	  */
+	private val memorizedValueP = Pointer.empty[A]
 	
-	// Contains true after this listener has permanently ended its listening functions
-	// due to a DetachmentChoice received from 'effect'
+	/**
+	  * Contains true after this listener has permanently ended its listening functions
+	  * due to a DetachmentChoice received from [[effect]].
+	  */
 	private var ended = false
 	
 	
@@ -168,7 +174,7 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 			case None => origin.addListenerOfPriority(priority)(Delegate)
 		}
 	else
-		memorizedValuePointer.value = simulatedInitialValue
+		memorizedValueP.value = Some(simulatedInitialValue.getOrElse(origin.value))
 	
 	// Starts listening to the listening condition
 	conditionPointer.addListener { e =>
@@ -181,14 +187,15 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 			if (e.newValue) {
 				// Case: Listening had not yet stopped => Cancels the previously queued detachment
 				if (detachmentQueuedFlag.reset())
-					memorizedValuePointer.clear()
+					memorizedValueP.clear()
 				// Case: Detachment had been appropriated already => Reattaches to the 'origin' pointer
 				else
-					memorizedValuePointer.pop() match {
+					memorizedValueP.pop() match {
 						// Case: Simulated value had been queued (expected) =>
 						// Uses that to possibly generate a new change event
 						case Some(memorized) =>
 							origin.addListenerAndSimulateEvent(memorized, isHighPriority = priority == First)(Delegate)
+							
 						// Case: No simulated value queued (unexpected) => Starts listening again
 						case None => origin.addListenerOfPriority(priority)(Delegate)
 					}
@@ -211,7 +218,7 @@ class ConditionalChangeReaction[A](origin: Changing[A], conditionPointer: Changi
 			// Case: Detachment was queued => Actuates it
 			if (detachmentQueuedFlag.reset()) {
 				// Remembers the last informed state for event simulation upon reattachment
-				memorizedValuePointer.value = Some(event.oldValue)
+				memorizedValueP.value = Some(event.oldValue)
 				Detach
 			}
 			// Case: No detachment queued => Reacts to this change by forwarding it to the 'effect'

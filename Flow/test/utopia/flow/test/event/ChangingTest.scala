@@ -11,7 +11,7 @@ import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
-import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
+import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
 
 import scala.util.Try
 
@@ -413,6 +413,66 @@ object ChangingTest extends App
 	assert(v.value == 6)
 	assert(lastViewEvent == 6)
 	
+	// Tests map + mapWhile + CopyOnDemand
+	
+	private val activeFlag = ResettableFlag()
+	private val v1 = Pointer.eventful(1)
+	private val v2 = Pointer.eventful(2)
+	private val f1 = v1.map { _ > 1 }
+	private val f2 = v2.map { _ > 1 }
+	private val countP = CopyOnDemand {
+		val v1v = if (f1.value) 1 else 0
+		val v2v = if (f2.value) 1 else 0
+		v1v + v2v
+	}
+	f1.addListenerWhile(activeFlag) { _ => countP.update() }
+	f2.addListenerWhile(activeFlag) { _ => countP.update() }
+	
+	assert(countP.value == 1)
+	
+	activeFlag.set()
+	assert(countP.value == 1)
+	
+	v2.value = 0
+	assert(countP.value == 0)
+	
+	activeFlag.reset()
+	
+	v1.value = 3
+	assert(countP.value == 0)
+	
+	activeFlag.set()
+	assert(countP.value == 1)
+	
+	activeFlag.reset()
+	v1.value = 0
+	assert(countP.value == 1)
+	
+	activeFlag.set()
+	assert(countP.value == 0)
+	
+	activeFlag.reset()
+	v1.value = 3
+	v2.value = 3
+	assert(countP.value == 0)
+	
+	activeFlag.set()
+	assert(countP.value == 2)
+	
+	// Tests that addListenerWhile generates change events
+	
+	private val sw1 = Pointer.eventful(1)
+	private val sw1On = ResettableFlag()
+	private var lastSw1 = -1
+	
+	sw1.addListenerWhile(sw1On) { e => lastSw1 = e.newValue }
+	assert(lastSw1 == -1)
+	
+	sw1.value = 2
+	assert(lastSw1 == -1)
+	
+	sw1On.set()
+	assert(lastSw1 == 2)
 	
 	println("Done!")
 }

@@ -267,7 +267,9 @@ trait ViewStackFactoryLike[+Repr]
 					// WET WET
 					// Wraps the components into segments before placing them in this stack
 					val wrappers = Open
-						.many { hierarchies => group.wrap(content) { hierarchies.next() }.map { _.parentAndResult } }
+						.manyConditional { hierarchies =>
+							group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
+						}
 						.component
 					val stack = fromVisibilityFlags(wrappers)
 					// Still returns the components as the children and not the wrappers
@@ -558,4 +560,6 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	
 	override def components = componentsP.value
+	
+	
 }

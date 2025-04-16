@@ -501,7 +501,7 @@ class DurationField(override val hierarchy: ComponentHierarchy, context: Variabl
 						inputFields
 				}
 			}
-			components.map { ComponentCreationResult(_, AlwaysTrue) } -> (inputFields, valuePointer)
+			components.map { _ -> AlwaysTrue } -> (inputFields, valuePointer)
 		}.parentAndResult
 	
 	

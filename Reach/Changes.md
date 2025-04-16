@@ -17,6 +17,8 @@
   - **ViewContainer** now requires the implementation of `_apply(Changing[Seq[Top]])` 
     instead of the more complex `apply[C <: Top, R](content: Content[C, R])`
   - **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
+- Replaced **SwitchableCreations** -type with a new **SwitchableComponents** in most places, 
+  in order to simplify conditional content creation
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Deprecated
 - Renamed scroll bar margin setter functions in **ScrollArea** & **ScrollView** factories

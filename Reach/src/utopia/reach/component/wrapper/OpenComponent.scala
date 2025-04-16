@@ -12,12 +12,14 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentCreationResult.CreationsResult
+import utopia.reach.component.wrapper.ComponentCreationResult.{CreationsResult, SwitchableComponents}
+import utopia.reach.component.wrapper.OpenComponent.SwitchableOpenComponents
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.layered.LayerPositioning
 import utopia.reach.container.multi.{Stack, StackSettings}
@@ -83,6 +85,9 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 			}.toVector
 		}
 	}
+	def manyConditional[C <: ReachComponent, R](creation: Iterator[ComponentHierarchy] => SwitchableComponents[C, R])
+	                                           (implicit canvas: ReachCanvas): SwitchableOpenComponents[C, R] =
+		many[C, Changing[Boolean], R] { creation(_) }
 	
 	/**
 	  * Creates a new open component
@@ -104,6 +109,23 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * apply(...) should be used instead.
 	  * @param factory A factory that produces component factories
 	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
+	  *                 Returns the created components, along with some optional creation results.
+	  *                 The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam F Type of component factory
+	  * @tparam C Type of created components
+	  * @return New open components, with their creation results included (if defined)
+	  */
+	def manyUsing[F, C <: ReachComponent, CR, R](factory: ComponentFactoryFactory[F])
+	                                            (creation: Iterator[F] => CreationsResult[C, CR, R])
+	                                            (implicit canvas: ReachCanvas) =
+		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
+	/**
+	  * Creates a number of new conditionally displayed open components at once.
+	  * @param factory A factory that produces component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
 	  *                 Returns the created components, along with pointers that indicate whether those components
 	  *                 should be attached to the parent component or not. The number of returned items should match
 	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
@@ -113,10 +135,10 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenComponentFactor
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def manyUsing[F, C <: ReachComponent, CR, R](factory: ComponentFactoryFactory[F])
-	                                            (creation: Iterator[F] => CreationsResult[C, CR, R])
-	                                            (implicit canvas: ReachCanvas) =
-		many[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
+	def manyConditionalUsing[F, C <: ReachComponent, R](factory: Cff[F])
+	                                                   (creation: Iterator[F] => SwitchableComponents[C, R])
+	                                                   (implicit canvas: ReachCanvas): SwitchableOpenComponents[C, R] =
+		manyUsing[F, C, Changing[Boolean], R](factory) { creation(_) }
 	
 	/**
 	  * Creates a new open component using a contextual component factory
@@ -238,8 +260,7 @@ case class ContextualOpenComponentFactory[N](context: N)
 	  * apply(...) should be used instead.
 	  * @param factory  A factory that produces context-aware component factories
 	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
-	  *                 Returns the created components, along with pointers that indicate whether those components
-	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 Returns the created components, along with optional results. The number of returned items should match
 	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
 	  *                 to share a created hierarchy between multiple components.
 	  * @param canvas   Canvas element that will ultimately host these components (implicit)
@@ -247,21 +268,19 @@ case class ContextualOpenComponentFactory[N](context: N)
 	  * @tparam C  Type of created components
 	  * @tparam CR Additional creation result type for individual components
 	  * @tparam R  Additional (reduced) creation result type
-	  * @return New open components, with their connection pointers as results (if defined)
+	  * @return New open components, with their results (if defined)
 	  */
 	def many[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
 	                                               (creation: Iterator[F[N]] => CreationsResult[C, CR, R])
 	                                               (implicit canvas: ReachCanvas) =
 		Open.many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
-	
 	/**
 	  * Creates a number of new open components at once. This method should be used only when the components won't
 	  * share the same container. If the components will be placed in identical container hierarchies,
 	  * apply(...) should be used instead.
 	  * @param factory  A factory that produces context-aware component factories
 	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
-	  *                 Returns the created components, along with pointers that indicate whether those components
-	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 Returns the created components, along with optional results. The number of returned items should match
 	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
 	  *                 to share a created hierarchy between multiple components.
 	  * @param canvas   Canvas element that will ultimately host these components (implicit)
@@ -269,13 +288,21 @@ case class ContextualOpenComponentFactory[N](context: N)
 	  * @tparam C  Type of created components
 	  * @tparam CR Additional creation result type for individual components
 	  * @tparam R  Additional (reduced) creation result type
-	  * @return New open components, with their connection pointers as results (if defined)
+	  * @return New open components, with their results (if defined)
 	  */
-	def many[F, C <: ReachComponent, CR, R](factory: FromContextComponentFactoryFactory[N, F])
+	def many[F, C <: ReachComponent, CR, R](factory: Ccff[N, F])
 	                                       (creation: Iterator[F] => CreationsResult[C, CR, R])
 	                                       (implicit canvas: ReachCanvas) =
 		Open.many { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
-	
+		
+	def manyConditional[F[X <: N], C <: ReachComponent, R](factory: Gccff[N, F])
+	                                                      (creation: Iterator[F[N]] => SwitchableComponents[C, R])
+	                                                      (implicit canvas: ReachCanvas): SwitchableOpenComponents[C, R] =
+		many[F, C, Changing[Boolean], R](factory) { creation(_) }
+	def manyConditional[F, C <: ReachComponent, R](factory: Ccff[N, F])
+	                                              (creation: Iterator[F] => SwitchableComponents[C, R])
+	                                              (implicit canvas: ReachCanvas): SwitchableOpenComponents[C, R] =
+		many[F, C, Changing[Boolean], R](factory) { creation(_) }
 }
 
 object OpenComponent

@@ -52,7 +52,7 @@ object Flag
 		extends Flag with ChangingWrapper[Boolean]
 	{
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
-		override def toString = s"FlagLike($wrapped)"
+		override def toString = s"Flag($wrapped)"
 	}
 }
 

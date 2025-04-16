@@ -24,6 +24,7 @@
 ### Bugfixes
 - Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
 - Fixed **OptimizedMirror**'s change event generation when listening resumes.
+- Fixed **ConditionalChangeReaction**'s event generation when the listening resumes after being initially disabled.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 - **Lazy**`.valueIterator` would previously yield an iterator of infinite length. 
   Now yields an iterator of length 1, as expected.

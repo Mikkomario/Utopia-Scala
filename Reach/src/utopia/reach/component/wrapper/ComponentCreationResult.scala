@@ -37,6 +37,10 @@ object ComponentCreationResult
 	  * Component creation result wrapping multiple components that have individual visibility states
 	  */
 	type SwitchableCreations[+C, +R] = CreationsResult[C, Changing[Boolean], R]
+	/**
+	  * Component creation result wrapping multiple components that have individual visibility states
+	  */
+	type SwitchableComponents[+C, +R] = ComponentsResult[(C, Changing[Boolean]), R]
 	
 	
 	// IMPLICIT	------------------------------
@@ -59,8 +63,11 @@ object ComponentCreationResult
 		new ComponentCreationResult[Seq[C], Unit](components, ())
 	
 	implicit def componentAndVisibilityPointersToResult[C <: ReachComponent]
-	(components: IterableOnce[(C, Changing[Boolean])]): SwitchableCreations[C, Unit] =
-		apply(components.iterator.map { case (c, p) => apply(c, p) })
+	(components: Seq[(C, Changing[Boolean])]): SwitchableComponents[C, Unit] =
+		apply(components)
+		
+	implicit def switchableComponentsToCreations[C, R](components: SwitchableComponents[C, R]): SwitchableCreations[C, R] =
+		components.mapComponent { _.map { case (c, vp) => apply[C, Changing[Boolean]](c, vp) } }
 	
 	implicit def autoWrapSwitchableComponents[C](c: Seq[OpenComponent[C, Changing[Boolean]]]): SwitchableOpenComponents[C, Unit] =
 		ComponentCreationResult(c)

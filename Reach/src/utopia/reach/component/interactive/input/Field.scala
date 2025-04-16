@@ -32,7 +32,7 @@ import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSetting
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.{Focusable, FocusableWithState, FocusableWrapper}
 import utopia.reach.component.template.{ConcreteReachComponent, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.{Open, OpenComponent}
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeListener, FocusStateTracker}
@@ -854,8 +854,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 					contentContext, focusTracker, Single(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items
-				Pair(ComponentCreationResult(nameLabel, nameVisibilityPointer),
-					ComponentCreationResult(wrappedField, AlwaysTrue)) -> wrappedField
+				Pair(nameLabel -> nameVisibilityPointer, wrappedField -> AlwaysTrue) -> wrappedField
 			}
 		}
 	}
