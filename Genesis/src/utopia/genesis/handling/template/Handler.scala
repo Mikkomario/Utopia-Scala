@@ -1,7 +1,7 @@
 package utopia.genesis.handling.template
 
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import scala.collection.mutable
 
@@ -80,13 +80,13 @@ trait Handler[A <: Handleable] extends mutable.Growable[A]
 	  * Conditionally attaches an item to this handler
 	  * @param item An item to attach to this handler + condition that is required for keeping that item attached
 	  */
-	def +=(item: (A, Changing[Boolean])): Unit = handleWhile(item._1, item._2)
+	def +=(item: (A, Flag)): Unit = handleWhile(item._1, item._2)
 	/**
 	  * Conditionally attaches an item to this handler
 	  * @param item An item to attach to this handler
 	  * @param condition Condition that is required for keeping that item attached
 	  */
-	def handleWhile(item: A, condition: Changing[Boolean]) = _handleWhile(item, item.handleCondition && condition)
+	def handleWhile(item: A, condition: Flag) = _handleWhile(item, item.handleCondition && condition)
 	
 	/**
 	  * Adds the specified item to this handler, provided this handler supports / accepts that item

@@ -291,8 +291,7 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	             textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	             inputValidation: Option[A => InputValidationResult] = None)
 	            (parseResult: String => A) =
-		new TextField[A](hierarchy, context, defaultWidth, settings, textPointer,
-			inputValidation)(parseResult)
+		new TextField[A](hierarchy, context, defaultWidth, settings, textPointer, inputValidation)(parseResult)
 	
 	/**
 	  * Creates a new text field

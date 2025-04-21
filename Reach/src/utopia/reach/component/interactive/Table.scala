@@ -58,14 +58,20 @@ object Table
 	                                    componentsView: View[Seq[HasBounds]])
 		extends CustomDrawer
 	{
+		// ATTRIBUTES   -------------------------
+		
 		override val opaque: Boolean = true
 		override val drawLevel: DrawLevel = Background
+		
+		
+		// IMPLEMENTED  -------------------------
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
 			val components = componentsView.value
 			val componentCount = components.size
 			if (componentCount > 0) {
 				val maxIndex = componentCount - 1
+				// Case: Only one component => Simplifies the drawing
 				if (componentCount == 1) {
 					secondaryBgView.orElse(primaryBgView).foreach { c =>
 						DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
@@ -77,41 +83,51 @@ object Table
 						}
 					}
 				}
-				else
-					drawer.clippingBounds match {
-						case Some(clip) => ???
-						case None =>
-							primaryBgView.foreach { c =>
-								DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
-							}
-							secondaryBgView.foreach { c =>
-								DrawSettings.onlyFill(c.value).use { implicit ds =>
-									// TODO: Generalize this and use in the clip version
-									components.indices.foreach { i =>
-										if (i % 2 == 0)
-											drawRowBackground(drawer, bounds, components, i, maxIndex)
-									}
-								}
-							}
-							selectedRowBgView.foreach { c =>
-								selectedIndexView.map { _.value }.filter { _ >= 0 }.foreach { index =>
-									DrawSettings.onlyFill(c.value).use { implicit ds =>
-										drawRowBackground(drawer, bounds, components, index, maxIndex)
-									}
-								}
-							}
+				// Case: Multiple components
+				else {
+					val drawnArea = drawer.clippingBounds match {
+						case Some(clip) => clip.overlapWith(bounds)
+						case None => Some(bounds)
 					}
+					drawnArea.foreach { drawArea(drawer, _, components, maxIndex) }
+				}
 			}
 		}
 		
 		
 		// OTHER    --------------------------
 		
+		private def drawArea(drawer: Drawer, bounds: Bounds, components: Seq[HasBounds], maxIndex: Int) =
+		{
+			// Draws the background, if applicable
+			primaryBgView.foreach { c =>
+				DrawSettings.onlyFill(c.value).use { implicit ds => drawer.draw(bounds) }
+			}
+			// Draws every other row with the secondary background, if applicable
+			secondaryBgView.foreach { c =>
+				DrawSettings.onlyFill(c.value).use { implicit ds =>
+					components.indices.foreach { i =>
+						if (i % 2 == 0)
+							drawRowBackground(drawer, bounds, components, i, maxIndex)
+					}
+				}
+			}
+			// Draws the selected row
+			selectedRowBgView.foreach { c =>
+				selectedIndexView.map { _.value }.filter { _ >= 0 }.foreach { index =>
+					DrawSettings.onlyFill(c.value).use { implicit ds =>
+						drawRowBackground(drawer, bounds, components, index, maxIndex)
+					}
+				}
+			}
+		}
+		
 		// NB: Assumes that there are >1 rows
 		private def drawRowBackground(drawer: Drawer, bounds: Bounds, components: Seq[HasBounds], index: Int,
 		                              maxIndex: Int)
 		                             (implicit ds: DrawSettings) =
 		{
+			// Determines the drawn area y range
 			val main = components(index).bounds
 			val topY = {
 				if (index == 0)
@@ -125,7 +141,9 @@ object Table
 				else
 					(main.bottomY + components(index + 1).topY) / 2
 			}
-			drawer.draw(bounds.withY(topY spanTo bottomY))
+			// If the range fits within the (clipping) bounds, draws it
+			if (bottomY >= bounds.topY && topY <= bounds.bottomY)
+				drawer.draw(bounds.withY(topY spanTo bottomY))
 		}
 	}
 }
