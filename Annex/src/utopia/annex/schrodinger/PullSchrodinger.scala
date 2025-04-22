@@ -102,6 +102,9 @@ object PullSchrodinger
 	  * @param local        Locally cached data. None if no local data is available (which is an impermanent failure case).
 	  * @param resultFuture A future that will contain the server response, if successful
 	  * @param expectancy The applied flux state during the request period (default = positive)
+	  * @param localOnFailure Whether to manifest the 'local' value when failing to acquire remote results
+	  *                       (provided that 'local' has been specified).
+	  *                       Default = false = If fails to acquire the remote value, manifests a failure.
 	  * @param localize     A function that converts a remotely read instance into its local variant
 	  * @param exc          Implicit execution context
 	  * @tparam L Type of locally cached items (spirits)
@@ -110,10 +113,11 @@ object PullSchrodinger
 	  *         Dead if no item could be read from the server response
 	  *         (whether the request itself was successful or not)
 	  */
-	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[R]], expectancy: Flux = PositiveFlux)
+	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[R]], expectancy: Flux = PositiveFlux,
+	                localOnFailure: Boolean = false)
 	                (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
 		_apply(local.toTry { new NoSuchElementException("No local data") }, pendingResultFailure, resultFuture,
-			expectancy)(localize)
+			expectancy, localOnFailure)(localize)
 	
 	/**
 	  * Pulls a local and a remote instance.
@@ -124,6 +128,9 @@ object PullSchrodinger
 	  * @param resultFuture A future that will contain the server response, if successful
 	  * @param parser       A parser used for parsing items from a server response
 	  * @param expectancy The applied flux state during the request period (default = positive)
+	  * @param localOnFailure Whether to manifest the 'local' value when failing to acquire remote results
+	  *                       (provided that 'local' has been specified).
+	  *                       Default = false = If fails to acquire the remote value, manifests a failure.
 	  * @param localize     A function that converts a remotely read instance into its local variant
 	  * @param exc          Implicit execution context
 	  * @tparam L Type of locally cached items (spirits)
@@ -133,14 +140,14 @@ object PullSchrodinger
 	  *         (whether the request itself was successful or not)
 	  */
 	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
-	                       expectancy: Flux = PositiveFlux)
+	                       expectancy: Flux = PositiveFlux, localOnFailure: Boolean = false)
 	                      (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
-		apply(local, resultFuture.map { _.parsingOneWith(parser) }, expectancy)(localize)
+		apply(local, resultFuture.map { _.parsingOneWith(parser) }, expectancy, localOnFailure)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
 	               (localize: R => L)(implicit exc: ExecutionContext, log: Logger): PullSchrodinger[L, R] =
-		pullAndParse(local, resultFuture, parser)(localize)
+		pullAndParse(local, resultFuture, parser, localOnFailure = true)(localize)
 	
 	/**
 	  * Pulls a local instance if accessible. If not, pulls the remote instance instead.
@@ -230,7 +237,8 @@ object PullSchrodinger
 		parseRemote(resultFuture, parser)
 	
 	private def _apply[L, R](initialManifest: Try[L], placeHolderResult: Try[R],
-	                         resultFuture: Future[RequestResult[R]], flux: Flux = Flux)
+	                         resultFuture: Future[RequestResult[R]], flux: Flux = Flux,
+	                         localOnFailure: Boolean = false)
 	                         (localize: R => L)
 	                         (implicit exc: ExecutionContext, log: Logger) =
 	{
@@ -238,7 +246,8 @@ object PullSchrodinger
 			initialManifest, placeHolderResult, resultFuture, flux)(Identity){ (placeHolder, parsed) =>
 			val manifest = parsed match {
 				case Success(res) => Success(localize(res))
-				case Failure(error) => placeHolder.orElse { Failure(error) }
+				case Failure(error) =>
+					if (localOnFailure) placeHolder.orElse { Failure(error) } else Failure(error)
 			}
 			(manifest, parsed, Final(parsed.isSuccess))
 		}

@@ -1,7 +1,12 @@
 # Utopia Annex - List of Changes
 
-## v1.9.2 (in development)
+## v1.10 (in development)
 Supports Access v1.6 & Disciple v1.9
+### Breaking changes
+- **PullSchrodinger** now behaves differently by default: When it fails to acquire server-side results, 
+  it will now manifest a failure by default, and not fall back to the local result.
+  - The previous behavior (i.e. falling back to the local result as a manifest) may be activated by specifying 
+    `localOnFailure=true`
 
 ## v1.9.1 - 23.01.2025
 This small update introduces new customization / constructors for **PullSchrodinger**s.
