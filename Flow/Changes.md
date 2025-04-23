@@ -65,6 +65,7 @@
 ### Other changes
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
+- Modified event-generation in **EventfulVolatile** by ensuring that all generated change events are handled in order
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Number-to-time conversion now catches for number format exceptions

@@ -213,7 +213,7 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	
 	private object MappingProcess extends Process(shutdownReaction = Some(Cancel))
 	{
-		override protected def isRestartable: Boolean = true
+		override protected val isRestartable: Boolean = true
 		
 		override protected def runOnce(): Unit = {
 			// As long as mappings have been prepared, continues to apply them

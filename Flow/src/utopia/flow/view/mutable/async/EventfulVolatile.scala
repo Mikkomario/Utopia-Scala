@@ -1,6 +1,7 @@
 package utopia.flow.view.mutable.async
 
 import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
@@ -56,6 +57,21 @@ object EventfulVolatile extends LoggingPointerFactory[EventfulVolatile]
 abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 	extends AbstractChanging[A] with Volatile[A] with EventfulPointer[A]
 {
+	// ATTRIBUTES   -------------------
+	
+	/**
+	  * Stores all after-effects until they've been actuated.
+	  * Used for assuring that all after-effects get completed in order,
+	  * even when generated from multiple different threads.
+	  */
+	private val effectQueue = Volatile.seq[() => Unit]()
+	/**
+	  * A flag that's set to true while after-effects are being processed.
+	  * Used for preventing duplicate processes.
+	  */
+	private val processingAfterEffectsFlag = Volatile.switch
+	
+	
 	// ABSTRACT -----------------------
 	
 	/**
@@ -79,7 +95,15 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 		// Case: Value changes => Updates the value and prepares to fire a change event
 		else {
 			assignWithoutEvents(newValue)
-			Single(() => fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log })
+			Single(() => {
+				// Fires the change event
+				val effects = fireEventIfNecessary(oldValue, newValue)
+				// Queues and resolves the after-effects, if necessary
+				if (effects.nonEmpty) {
+					effectQueue ++= effects
+					resolveQueuedEffects()
+				}
+			})
 		}
 	}
 	
@@ -101,4 +125,14 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 	// in order to ensure that the wrapped value doesn't change during this process (possibly causing a deadlock)
 	override protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean) =
 		lockWhile { _ => super._findMapFuture(condition, disableImmediateTrigger) }
+		
+	
+	// OTHER    ---------------------
+	
+	private def resolveQueuedEffects(): Unit = {
+		if (processingAfterEffectsFlag.set()) {
+			OptionsIterator.continually { effectQueue.pop() }.foreach { effect => Try { effect() }.log }
+			processingAfterEffectsFlag.reset()
+		}
+	}
 }
