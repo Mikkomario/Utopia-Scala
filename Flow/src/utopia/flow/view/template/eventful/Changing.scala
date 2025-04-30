@@ -1115,8 +1115,7 @@ trait Changing[+A] extends View[A]
 	  * @tparam B Type of values in the resulting items
 	  * @return A pointer to the current value of the last map result
 	  */
-	def flatMap[B](f: A => Changing[B]) =
-		if (mayChange) FlatteningMirror(this)(f) else f(value)
+	def flatMap[B](f: A => Changing[B]) = if (mayChange) FlatteningMirror(this)(f) else f(value)
 	/**
 	  * Maps this changing item with a function that yields other changing items.
 	  * These are wrapped under a single "Changing" interface.
@@ -1131,8 +1130,7 @@ trait Changing[+A] extends View[A]
 	  * @return A new pointer that wraps the mapping result pointers
 	  */
 	def incrementalFlatMap[B](initialMap: A => Changing[B])
-	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B])
-	                          =
+	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
 	{
 		if (mayChange)
 			FlatteningMirror.incremental(this)(initialMap)(incrementMap)

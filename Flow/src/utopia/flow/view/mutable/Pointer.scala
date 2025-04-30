@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.{EventfulPointer, LockablePointer}
+import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
@@ -119,6 +119,10 @@ object Pointer extends PointerFactory[Pointer]
 	  * @return A factory for constructing pointers that only weakly reference their contents after some time
 	  */
 	def releasing = ReleasingPointer
+	/**
+	  * @return A factory for constructing indirectly mutable pointers
+	  */
+	def indirect = IndirectPointer
 	
 	
 	// OTHER    ----------------------------

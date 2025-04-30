@@ -18,7 +18,7 @@ object AsyncViewTest extends App
 {
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("AsyncViewTest")
-	val delay = 0.2.seconds
+	val delay = 0.1.seconds
 	val waitLock = new AnyRef
 	
 	// Controlled pointer
@@ -33,10 +33,10 @@ object AsyncViewTest extends App
 	assert(delayed.value == 0)
 	assert(mirror.value.current == 0)
 	
-	Wait(delay * 1.2, waitLock)
+	Wait(delay * 1.5, waitLock)
 	
 	// Delayed view should now be initialized
-	assert(mirror.value.current == 1)
+	assert(mirror.value.current == 1, mirror.value)
 	
 	// Updates controlled value, other pointers should be unaffected
 	original.value = 1
@@ -50,7 +50,7 @@ object AsyncViewTest extends App
 	assert(delayed.value == 0)
 	assert(mirror.value.current == 1)
 	
-	Wait(delay * 0.7, waitLock)
+	Wait(delay, waitLock)
 	
 	// Makes sure the other pointers have been updated after long enough delay
 	assert(delayed.value == 1)
@@ -70,7 +70,7 @@ object AsyncViewTest extends App
 	assert(mirror.value.current == 2)
 	assert(eventsReceived == 0)
 	
-	Wait(delay * 1.2, waitLock)
+	Wait(delay * 1.5, waitLock)
 	delayed.removeListener(receiveListener)
 	
 	// Makes sure the delayed pointer has reacted only once and that the mirror pointer is yet to fully
@@ -79,7 +79,7 @@ object AsyncViewTest extends App
 	assert(mirror.value.current == 3)
 	assert(eventsReceived == 1)
 	
-	Wait(delay, waitLock)
+	Wait(delay * 1.5, waitLock)
 	
 	// Makes sure the mirror pointer also eventually completes
 	assert(delayed.value == 4)

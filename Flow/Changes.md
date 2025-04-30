@@ -19,6 +19,7 @@
 - Multiple changes to **WeakList**:
   - **WeakListBuilder** and **WeakListFactory** are now private and nested within the companion object
   - Changed the companion object's `implicit def factory` to an implicit conversion from the companion object to a factory
+- Modified **FlatteningMirror**'s `new` keyword constructor
 ### Deprecations
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
@@ -50,6 +51,8 @@
   - Added `.forAllWith(...)`
 - **Lockable**
   - Added `def unlocked = !locked`
+- **Pointer** (object)
+  - Added `.indirect`
 - **Seq** (**CollectionExtensions**)
   - Added `.lastPair`, `.lastPairOption`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
 - **String** (**StringExtensions**)
@@ -66,6 +69,11 @@
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
 - Modified event-generation in **EventfulVolatile** by ensuring that all generated change events are handled in order
+- A couple changes to **FlatteningMirror**
+  - **FlatteningMirror** now uses an **OptimizedMirror** instead of a regular **Mirror** 
+    when performing the mapping of the original input pointer, except when incremental mapping is used.
+  - Refactored the implementation to be more secure in asynchronous environments 
+    (e.g. when used in conjunction with `.mapAsync(...)`)
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Number-to-time conversion now catches for number format exceptions

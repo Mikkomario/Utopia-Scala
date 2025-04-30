@@ -387,6 +387,7 @@ object StackHierarchyManager
 		def root(index: Int) = StackId(Vector(index))
 	}
 	
+	// FIXME: In some circumstances, parts is empty
 	private case class StackId(parts: Vector[Int])
 	{
 		def length = parts.size
