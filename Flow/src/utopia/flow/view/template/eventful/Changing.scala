@@ -186,6 +186,16 @@ object Changing
 		  * @return Copy of this pointer that reflects the value of the wrapped pointer(s)
 		  */
 		def flatten = c.flatMap(Identity)
+		/**
+		  * @param condition A condition for pointer-tracking to occur.
+		  *
+		  *                  Note: The current value of this pointer will always be tracked,
+		  *                  regardless of this condition.
+		  *
+		  * @return An item that contains the value of the latest pointer in this pointer,
+		  *         excluding pointers that were introduced while the 'condition' was not met.
+		  */
+		def flattenWhile(condition: => Flag) = c.flatMapWhile(condition)(Identity)
 	}
 }
 
@@ -1115,28 +1125,105 @@ trait Changing[+A] extends View[A]
 	  * @tparam B Type of values in the resulting items
 	  * @return A pointer to the current value of the last map result
 	  */
-	def flatMap[B](f: A => Changing[B]) = if (mayChange) FlatteningMirror(this)(f) else f(value)
+	def flatMap[B](f: A => Changing[B]) = fixedValue match {
+		case Some(value) => f(value)
+		case None => OptimizedFlatteningMirror(this)(f)
+	}
 	/**
-	  * Maps this changing item with a function that yields other changing items.
+	  * Maps this changing item with a function that yields changing items,
+	  * but only when the specified condition is met.
+	  * The resulting pointer will match the value of the most recent map result.
+	  *
+	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
+	  * will not be carried over to future map results.
+	  *
+	  * @param condition A condition that must be met for mapping to occur.
+	  *                  Call-by-name, called if this pointer may still change.
+	  *
+	  *                  Note: The mapping is always performed at least once if the resulting value is queried,
+	  *                  even if this condition is never met.
+	  *
+	  * @param f A mapping function that yields changing items
+	  * @tparam B Type of values in the resulting items
+	  * @return A pointer to the current value of the last map result
+	  */
+	def flatMapWhile[B](condition: => Flag)(f: A => Changing[B]) = fixedValue match {
+		// Case: This pointer is fixed => No advanced / continuous mapping is necessary
+		case Some(value) => f(value)
+		// Case: This pointer may still mutate
+		case None =>
+			val c = condition
+			// Case: Continuous mapping is never allowed => Performs the mapping only once
+			if (c.isAlwaysFalse)
+				f(value)
+			// Case: Continuous mapping necessary => Creates a new mirror
+			else
+				OptimizedFlatteningMirror(this, c)(f)
+	}
+	/**
+	  * Maps this changing item with a function that yields other changing items,
+	  * but only when the specified condition is met.
 	  * These are wrapped under a single "Changing" interface.
 	  * The specified mapping function receives additional contextual (state) information.
 	  * @param initialMap A mapping function that accepts the current value of this pointer and yields another pointer.
 	  * @param incrementMap A mapping function used for mapping the consecutive values / changes.
+	  *
 	  *                     Accepts:
-	  *                         1) The previous mapping result (a pointer), and
-	  *                         2) The change event that occurred in this pointer
-	  *                     Yields pointers.
+	  *                         1. The previous mapping result (a pointer), and
+	  *                         1. The change event that occurred in this pointer
+	  *
+	  *                     Yields changing items.
+	  *
 	  * @tparam B Type of mapping result pointers' values
 	  * @return A new pointer that wraps the mapping result pointers
 	  */
 	def incrementalFlatMap[B](initialMap: A => Changing[B])
 	                         (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
-	{
-		if (mayChange)
-			FlatteningMirror.incremental(this)(initialMap)(incrementMap)
-		else
-			initialMap(value)
-	}
+		fixedValue match {
+			case Some(value) => initialMap(value)
+			case None => OptimizedFlatteningMirror.incremental(this)(initialMap)(incrementMap)
+		}
+	/**
+	  * Maps this changing item with a function that yields changing items,
+	  * but only when the specified condition is met.
+	  * The resulting pointer will match the value of the most recent map result.
+	  *
+	  * Please note that listeners and dependencies attached to the map results, and not to the result of this function,
+	  * will not be carried over to future map results.
+	  *
+	  * @param condition A condition that must be met for mapping to occur.
+	  *                  Call-by-name, called if this pointer may still change.
+	  *
+	  *                  Note: The mapping is always performed at least once if the resulting value is queried,
+	  *                  even if this condition is never met.
+	  *
+	  * @param initialMap A mapping function that accepts the initial value of this pointer and yields changing items
+	  * @param incrementMap A mapping function used for mapping the consecutive values / changes.
+	  *
+	  *                     Accepts:
+	  *                         1. The previous mapping result (a pointer), and
+	  *                         1. The change event that occurred in this pointer
+	  *
+	  *                     Yields changing items.
+	  *
+	  * @tparam B Type of values in the resulting items
+	  * @return A pointer to the current value of the last map result
+	  */
+	def incrementalFlatMapWhile[B](condition: => Flag)
+	                              (initialMap: A => Changing[B])
+	                              (incrementMap: (Changing[B], ChangeEvent[A]) => Changing[B]) =
+		fixedValue match {
+			// Case: This pointer never changes => Only maps once
+			case Some(value) => initialMap(value)
+			case None =>
+				val c = condition
+				// Case: Continuous mapping not allowed => Only maps once
+				if (c.isAlwaysFalse)
+					initialMap(value)
+				// Case: Continuous mapping expected => Creates a new mirror
+				else
+					OptimizedFlatteningMirror.incremental[A, B](this, c)(initialMap)(incrementMap)
+		}
 	
 	/**
 	  * @param threshold A required pause between changes in this pointer before the view fires a change event

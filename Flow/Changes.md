@@ -21,6 +21,7 @@
   - Changed the companion object's `implicit def factory` to an implicit conversion from the companion object to a factory
 - Modified **FlatteningMirror**'s `new` keyword constructor
 ### Deprecations
+- Deprecated **FlatteningMirror** in favor of the new **OptimizedFlatteningMirror**
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
 - Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
@@ -32,12 +33,14 @@
 ### New features
 - Added **LockableFlag** and **LockableResettableFlag**
 - Added lazy fixed pointers. May be constructed with `Fixed.lazily(...)`
+- Added **OptimizedFlatteningMirror** class, which offers conditional flat-mapping as a new feature
 - Added **OrderBySequence** class, which enables ordering based on a sequence of similar values
 - Added **Assignable** and **MaybeAssignable** traits, providing `.set(...)` and `.trySet(...)` functions, respectively
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 - **BasicValueCaster** now allows one to change the **JsonParser** used when converting string values to model values.
 ### New methods
 - **Changing**
+  - Added `.flatMapWhile(...)` and `.incrementalFlatMapWhile(...)`
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
 - **Destiny** (object)
   - Added `.maySealIf(Boolean)`
@@ -69,11 +72,15 @@
 - Made **EventfulVolatile** more resistant to deadlocks by overriding certain future-generating functions 
   that were previously vulnerable to asynchronous state changes.
 - Modified event-generation in **EventfulVolatile** by ensuring that all generated change events are handled in order
-- A couple changes to **FlatteningMirror**
+- A couple changes to **FlatteningMirror** (also present in the new **OptimizedFlatteningMirror**)
   - **FlatteningMirror** now uses an **OptimizedMirror** instead of a regular **Mirror** 
     when performing the mapping of the original input pointer, except when incremental mapping is used.
   - Refactored the implementation to be more secure in asynchronous environments 
     (e.g. when used in conjunction with `.mapAsync(...)`)
+- **Changing** now uses **OptimizedFlatteningMirror** in its `.flatMap(...)` function implementations
+  - This means that the intermediate pointers (i.e. mapping result-pointers) 
+    receive listeners only when that is necessary, which often affects the original (mapping source) pointer as well 
+  - (if using optimized mapping functions within the flatMap function).
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Number-to-time conversion now catches for number format exceptions

@@ -11,6 +11,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
+@deprecated("Please use OptimizedFlatteningMirror instead", "v2.6")
 object FlatteningMirror
 {
 	// OTHER    ---------------------------
@@ -58,13 +59,13 @@ object FlatteningMirror
 		}
 	}
 }
-
 /**
   * A mirror (i.e. a mapping view to a changing item) that "flattens" result,
   * i.e. handles cases where the mapping function returns changing items.
   * @author Mikko Hilpinen
   * @since 22.9.2022, v1.17
   */
+@deprecated("Please use OptimizedFlatteningMirror instead", "v2.6")
 class FlatteningMirror[+O, R](source: Changing[O], directMap: O => Changing[R],
                               incrementalMap: Option[(Changing[R], ChangeEvent[O]) => Changing[R]])
 	extends ChangingWrapper[R]
