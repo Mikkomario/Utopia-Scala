@@ -2,16 +2,18 @@ package utopia.flow.async.process
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.TimedTask.HurryListener
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.ChangeResult
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult}
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
@@ -291,6 +293,22 @@ object TimedTask
 		override def firstRunTime = firstTime
 		override def run() = f
 	}
+	
+	/**
+	  * A listener used for hurrying a waiting process
+	  * @param waitLock Wait lock to notify to skip waiting
+	  */
+	private class HurryListener(waitLock: AnyRef) extends ChangeListener[Boolean]
+	{
+		override def onChangeEvent(event: ChangeEvent[Boolean]): ChangeResponse = {
+			if (event.newValue) {
+				WaitUtils.notify(waitLock)
+				Detach
+			}
+			else
+				Continue
+		}
+	}
 }
 
 /**
@@ -326,12 +344,13 @@ trait TimedTask
 	  */
 	def toLoop(implicit exc: ExecutionContext, logger: Logger) = {
 		// This pointer contains the next wait target pointer
-		val waitPointerPointer = EventfulPointer[Changing[Option[Instant]]](Fixed(Some(firstRunTime)))
+		val waitPointerPointer = Pointer.eventful[Changing[Option[Instant]]](Fixed(Some(firstRunTime)))
 		// This pointer converts that pointer value into an applicable wait target
-		val waitTargetPointer = waitPointerPointer.flatMap[WaitTarget] { _.map {
+		val waitTargetPointer = waitPointerPointer.flatMap[WaitTarget] { _.lightMap {
 			case Some(nextTime) => Until(nextTime)
 			case None => UntilNotified
 		} }
+		
 		// Creates a process to facilitate the running of this task
 		val process = PostponingProcess(waitTargetPointer, shutdownReaction = Some(Cancel)) { hurryPointer =>
 			val nextTimeFuture = run()
@@ -342,10 +361,15 @@ trait TimedTask
 				case None =>
 					// If has to hurry at any point, terminates the wait
 					val lock = new AnyRef
-					hurryPointer.onNextChange { _ => WaitUtils.notify(lock) }
-					nextTimeFuture.waitWith(lock) match {
+					val hurryListener = new HurryListener(lock)
+					hurryPointer.addListener(hurryListener)
+					
+					val waitResult = nextTimeFuture.waitWith(lock)
+					hurryPointer.removeListener(hurryListener)
+					waitResult match {
 						// Case: Success => Schedules next loop, if necessary
 						case Success(nextTimePointer) => waitPointerPointer.value = nextTimePointer
+						
 						// Case: Failure => Terminates
 						case Failure(error) =>
 							logger(error)
@@ -353,18 +377,18 @@ trait TimedTask
 					}
 			}
 		}
-		// If the latest wait target pointer gets fixed to None,
-		// cancels / stops this process
+		
+		// If the latest wait target pointer gets fixed to None, cancels / stops this process
 		waitPointerPointer.flatMap { _.withState }
 			.addListenerAndSimulateEvent(ChangeResult.temporal(None)) { event =>
-				// println(event)
-				if (event.newValue.containsFinal(None)) {
-					// println("Wait pointer got fixed to None => Stops looping")
+				// Case: Fixed to None => Stops
+				if (event.newValue.containsFinal(None))
 					Detach.and { process.stop() }
-				}
+				// Case: Other state => Continues tracking
 				else
 					Continue
 			}
+		
 		process
 	}
 	

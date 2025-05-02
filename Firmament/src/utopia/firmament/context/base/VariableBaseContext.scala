@@ -49,14 +49,18 @@ object VariableBaseContext
 			}
 		}
 	}
-	// Used for weakly caching stack margin pointers which depend on an "is small" -flag
-	// Keys are:
-	//      1. Is small -flag (changing)
-	//      2. Stack margin pointer
-	//      3. Small stack margin pointer
+	/**
+	  * Used for weakly caching stack margin pointers which depend on an "is small" -flag.
+	  * The keys are:
+	  *     1. Is small -flag (changing)
+	  *     1. Stack margin pointer
+	  *     1. Small stack margin pointer
+	  *
+	  * If the "small flag" is fixed, don't use this cache but a simpler / custom implementation instead
+	  */
 	private val smallOrMediumStackMarginCache = WeakCache.weakKeys { smallFlag: Flag =>
 		WeakCache.weakKeys { marginP: Changing[StackLength] =>
-			WeakCache { smallMarginP: Changing[StackLength] => smallFlag.flatMap { if (_) marginP else smallMarginP } }
+			WeakCache { smallMarginP: Changing[StackLength] => smallFlag.flatMap { if (_) smallMarginP else marginP } }
 		}
 	}
 	

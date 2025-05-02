@@ -4,6 +4,8 @@ import utopia.flow.async.process.ProcessState.Completed
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
 import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.event.model.ChangeResponse
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean
@@ -137,7 +139,9 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 {
 	// ATTRIBUTES   ------------------------
 	
-	// True while the wait target was swapped during wait
+	/**
+	  * Contains true while the wait target was swapped during wait
+	  */
 	private val resetFlag = Volatile.switch
 	
 	
@@ -145,17 +149,26 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 	
 	// Reacts to changes in the target wait time once started
 	statePointer.onNextChange { _ =>
-		waitTargetPointer.addContinuousAnyChangeListener {
+		waitTargetPointer.addAnyChangeListener {
 			val st = state
 			// Case: Running while wait time changes => Updates the wait
 			if (st.isRunning) {
 				resetFlag.set()
 				WaitUtils.notify(waitLock)
+				
+				Continue
 			}
-			// Case: Finished while wait time changes => Runs this process again with the new wait target
-			// (provided that this is allowed by 'isRestartable')
-			else if (st == Completed && isRestartable)
-				runAsync()
+			// Case: Not started or already finished / stopped
+			else {
+				// Case: Finished while wait time changes
+				//       => Runs this process again with the new wait target
+				//          (provided that this is allowed by 'isRestartable')
+				if (st == Completed && isRestartable)
+					runAsync()
+				
+				// If reaches a final state (not being restartable), stops listening to wait time changes
+				ChangeResponse.continueIf(isRestartable || st.hasNotStarted)
+			}
 		}
 	}
 	
@@ -172,41 +185,47 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 	
 	override protected def runOnce() = {
 		// Waits until any of:
-		// a) A wait target is reached successfully
-		// b) This process is broken or scheduled to hurry
-		val shouldRun = Iterator.continually {
-			// Case: Scheduled to hurry => Skips waiting (may also skip the execution)
-			if (shouldHurry)
-				CertainBoolean(state.isNotBroken)
-			else {
-				// Next wait target
-				val target = waitTargetPointer.value.breakable
-				if (target.isPositive) {
-					// Waits on the wait target until wait completes or the wait lock is notified
-					if (Wait(target, waitLock)) {
-						// Case: Scheduled to hurry during waiting => Skips waiting (and possibly execution)
-						if (shouldHurry)
-							CertainBoolean(state.isNotBroken)
-						// Case: Wait target was switched during waiting => Starts over with the new wait target
-						else if (resetFlag.reset())
-							UncertainBoolean
-						// Case: Wait target was reached => Moves to execution
+		//      a) A wait target is reached successfully
+		//      b) This process is broken or scheduled to hurry
+		val shouldRun = Iterator
+			.continually {
+				// Case: Scheduled to hurry => Skips waiting (may also skip the execution)
+				if (shouldHurry)
+					CertainBoolean(state.isNotBroken)
+				else {
+					// Next wait target
+					val target = waitTargetPointer.value.breakable
+					// Case: Scheduled to wait => Waits on the wait target until wait completes or the wait lock is notified
+					if (target.isPositive) {
+						// Case: Wait completed (or notified / skipped) successfully
+						if (Wait(target, waitLock)) {
+							// Case: Scheduled to hurry during waiting => Skips waiting (and possibly execution)
+							if (shouldHurry)
+								CertainBoolean(state.isNotBroken)
+							// Case: Wait target was switched during waiting => Starts over with the new wait target
+							else if (resetFlag.reset())
+								UncertainBoolean
+							// Case: Wait target was reached => Moves to execution
+							else
+								CertainBoolean(true)
+						}
+						// Case: Wait was interrupted with an InterruptedException => Skips wait and execution
 						else
-							CertainBoolean(true)
+							CertainBoolean(false)
 					}
-					// Case: Wait was interrupted with an InterruptedException => Skips wait and execution
+					// Case: No wait was scheduled => Moves immediately to execution
 					else
-						CertainBoolean(false)
+						CertainBoolean(true)
 				}
-				// Case: No wait was scheduled => Moves immediately to execution
-				else
-					CertainBoolean(true)
 			}
-		}.flatMap { _.exact }.next()
+			.flatMap { _.exact }.next()
+		
 		// Case: Execution was allowed => Executes
 		if (shouldRun) {
 			// Executes the wrapped function
 			afterDelay()
+			
+			// If a new execution was scheduled during this execution, immediately loops / starts waiting on it
 			if (resetFlag.reset())
 				runAsync(loopIfRunning = true)
 		}

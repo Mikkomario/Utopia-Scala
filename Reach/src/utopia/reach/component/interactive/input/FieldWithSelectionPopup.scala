@@ -506,9 +506,12 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	val popUpVisibleFlag: Flag = lazyPopup.stateView.flatMap {
-		case Some(window) => window.fullyVisibleFlag
-		case None => AlwaysFalse
+	val popUpVisibleFlag: Flag = {
+		lazy val defaultVisibleFlag = lazyPopup.stateView.flatMap {
+			case Some(window) => window.fullyVisibleFlag
+			case None => AlwaysFalse
+		}
+		linkedFlag.flatMap { linked => if (linked) defaultVisibleFlag else AlwaysFalse }
 	}
 	/**
 	  * A pointer which contains true while a pop-up is hidden
@@ -539,7 +542,8 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 									val (smaller, larger) = Pair(expandIcon, collapseIcon).minMaxBy { _.size.area }.toTuple
 									val targetSize = smaller.size
 									val shrankIcon = SingleColorIcon(
-										larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize), larger.standardSize)
+										larger.original.fittingWithin(targetSize).paintedToCanvas(targetSize),
+										larger.standardSize)
 									
 									val (newExpandIcon, newCollapseIcon) =
 										if (smaller == expandIcon) smaller -> shrankIcon else shrankIcon -> smaller
@@ -637,10 +641,10 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	// OTHER	---------------------------------
 	
 	/**
-	  * Displays the selection pop-up
+	  * Displays the selection pop-up, but only if this component is attached to the main stack hierarchy
 	  */
-	def openPopup() = {
-		if (lazyPopup.current.forall { _.isNotFullyVisible })
+	def openPopup(): Unit = {
+		if (lazyPopup.current.forall { _.isNotFullyVisible } && linkedFlag.value)
 			lazyPopup.value.display()
 	}
 	

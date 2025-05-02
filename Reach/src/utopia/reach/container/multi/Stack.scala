@@ -9,6 +9,7 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.sign.Sign.Negative
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -109,12 +110,13 @@ trait StackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  * @param f A mapping function applied to this stack's cap
 	  * @return Copy of this stack with modified "cap" value(s)
 	  */
-	def mapCap(f: StackLength => StackLength) = withCapPointer(capPointer.map(f))
+	def mapCap(f: StackLength => StackLength) = mapCapPointer { _.map(f) }
 	/**
 	  * @param f A mapping function applied to this stack's cap. Yields potentially variable results.
 	  * @return Copy of this stack with modified "cap" value(s)
 	  */
-	def flatMapCap(f: StackLength => Changing[StackLength]) = withCapPointer(capPointer.flatMap(f))
+	def flatMapCap(f: StackLength => Changing[StackLength]) = mapCapPointer { _.flatMap(f) }
+	def mapCapPointer(f: Mutate[Changing[StackLength]]) = withCapPointer(f(capPointer))
 }
 
 object StackSettings

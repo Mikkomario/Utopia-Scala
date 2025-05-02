@@ -385,9 +385,13 @@ class ViewImageButton(override val hierarchy: ComponentHierarchy, imagesPointer:
 {
 	// ATTRIBUTES	-----------------------------
 	
+	/**
+	  * Contains the image-set actually displayed on this button
+	  */
+	// Only tracks the specified pointer while linked
 	private val appliedImagesPointer = NotEmpty(settings.imageEffects) match {
-		case Some(effects) => imagesPointer.map { _ ++ effects }
-		case None => imagesPointer
+		case Some(effects) => imagesPointer.mapWhile(linkedFlag) { _ ++ effects }
+		case None => imagesPointer.viewWhile(linkedFlag)
 	}
 	
 	override protected val wrapped = ViewImageLabel(hierarchy)

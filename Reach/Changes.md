@@ -26,6 +26,8 @@
 ### Bugfixes
 - In v1.5, **ViewStack** constructed with `.mapPointer(...)` 
   would not manage the linked flags / attachment states correctly (initially)
+- Fixed a bug that resulted in wrong-sized stack margins in variable context implementations, 
+  when matching against a changing "is small flag" (e.g. when stack-relativity was variable)
 ### New features
 - Added **ViewCollection** container type
 - **Collection**s now support a pointer-based split threshold
@@ -46,6 +48,8 @@
   - Added `.drop(Int)`, which may be used for forming groups that span multiple stacks
   - Added `.buildUnderSingle(...)` and `.withContext(...).buildUnderSingle(...) `
     for facilitating segmented component creation outside of stacks
+- **StackSettingsLike**
+  - Added `.mapCapPointer(...)`
 - **ViewContainer**
   - Moved a number of functions from **ViewStack** to this trait, 
     making the subclass implementation considerably more straightforward.
@@ -54,9 +58,13 @@
   - Note: This feature may be overridden in **EditableTextLabel** with the `allowSelectionWhileDisabled` -setting.
 - Refactored **ScrollArea** and **ScrollView** factories to utilize new **ScrollingSettings**
 - **Segment** now better calculates maximum stack length when using **Leading** or **Trailing** stack layout
+- **FieldWithSelectionPopup**'s `.openPopup()` now only opens the pop-up window 
+  while the field is attached to the main component hierarchy
 - **AlignFrame** now supports content-scaling
 - **EmptyLabelFactory** now extends **CustomDrawableFactory**
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
+- **ViewImageAndTextButton** and **ViewImageButton** now apply image effects 
+  only while attached to the main component hierarchy
 - Internal refactoring within **Segment** and **SegmentGroup**
 - Internal refactoring within **Field**
 

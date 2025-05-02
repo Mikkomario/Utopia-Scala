@@ -339,7 +339,7 @@ class ViewImageAndTextButton[A](override val hierarchy: ComponentHierarchy, cont
 		val appliedLabelSettings = settings.labelSettings
 			.mapInsets { _.map { _.mapBoth { _.more } { _ + borderWidth } } }
 		
-		val imagePointer = imagesPointer.mergeWith(statePointer) { _(_) }
+		val imagePointer = imagesPointer.mergeWithWhile(statePointer, linkedFlag) { _(_) }
 		
 		ViewImageAndTextLabel.withContext(hierarchy, context).withSettings(appliedLabelSettings)
 			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)))

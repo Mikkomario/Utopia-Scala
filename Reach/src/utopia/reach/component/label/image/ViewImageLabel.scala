@@ -347,16 +347,13 @@ case class ContextualViewImageLabelFactory(hierarchy: ComponentHierarchy, contex
 	
 	// OTHER    ------------------------------
 	
-	def withInsetSizePointer(sizePointer: Changing[SizeCategory]) = {
-		// TODO: Optimize pointer-creation here
+	def withInsetSizePointer(sizePointer: Changing[SizeCategory]) =
 		withInsetsPointer(sizePointer.flatMap { context.scaledStackMarginPointer(_).map { _.toInsets } })
-	}
 	
 	def withColor(color: ColorSet): ContextualViewImageLabelFactory =
 		withColorOverlayPointer(context.colorPointer(color))
 	def withColor(color: ColorRole): ContextualViewImageLabelFactory =
 		withColorOverlayPointer(context.colorPointer(color))
-	// TODO: Again, optimize pointer-usage
 	def withColorPointer(colorPointer: Changing[ColorRole]) =
 		withColorOverlayPointer(colorPointer.flatMap(context.colorPointer.apply))
 	

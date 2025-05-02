@@ -10,6 +10,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.enumeration.End
@@ -549,27 +550,40 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	  * A pointer that contains the displayed hint text.
 	  * Contains an error, if there is one, otherwise contains the hint, if there is one.
 	  * None if neither are used.
+	  *
+	  * Always tied to this field's linked state, so that no changes occur while not linked.
 	  */
-	private lazy val hintTextP = settings.hintPointer.notFixedWhere { _.isEmpty } match {
-		case Some(hint) =>
+	private lazy val localHintTextP = settings.hintPointer.notFixedWhere { _.isEmpty } match {
+		case Some(hintP) =>
 			settings.errorMessagePointer.notFixedWhere { _.isEmpty } match {
-				case Some(error) => Some(hint.mergeWith(error) { (hint, error) => error.notEmpty getOrElse hint })
-				case None => Some(hint)
+				// Case: May switch between a variable error and a variable hint
+				case Some(errorP) =>
+					val mergedP = errorP.flatMap { error =>
+						if (error.isEmpty)
+							hintP
+						else
+							Fixed(error)
+					}
+					Some(mergedP.viewWhile(linkedFlag))
+					
+				// Case: Only hint is specified
+				case None => Some(hintP.viewWhile(linkedFlag))
 			}
-		case None => settings.errorMessagePointer.notFixedWhere { _.isEmpty }
+		// Case: Hint never specified => May still display the error message, if specified
+		case None => settings.errorMessagePointer.notFixedWhere { _.isEmpty }.map { _.viewWhile(linkedFlag) }
 	}
 	/**
 	  * A flag that contains true while the hint area should be displayed.
 	  */
-	private lazy val hintVisibleFlag: Flag = hintTextP match {
-		case Some(hintTextPointer) => hintTextPointer.strongMap { _.nonEmpty }
+	private lazy val hintVisibleFlag: Flag = localHintTextP match {
+		case Some(hintP) => hintP.strongMap { _.nonEmpty }
 		case None => AlwaysFalse
 	}
 	
 	/**
-	  * A flag that contains true while this field highlights an error / is in the error state
+	  * A flag that contains true while this field highlights an error / is in the error state.
 	  */
-	private val hasErrorFlag: Flag = settings.errorMessagePointer.map { _.nonEmpty }
+	private val hasErrorFlag: Flag = settings.errorMessagePointer.nonEmptyFlag
 	// TODO: Add a state pointer and make error state pointer visible, also
 	/**
 	  * A pointer that contains the currently applied color highlighting.
@@ -577,29 +591,48 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	  *     1. Whether an error message is specified
 	  *     1. Whether custom highlighting is applied
 	  *     1. Whether this field has focus
+	  *
+	  * Might not update actively while not linked
 	  */
-	private val highlightStateP = hasErrorFlag.flatMap { hasError =>
-		// Case: Displays an error message => Error color
-		if (hasError)
-			Fixed(Some(ColorRole.Failure))
-		else
-			settings.highlightPointer.flatMap {
-				// Case: Applies custom highlighting
-				case Some(customHighlighting) => Fixed(Some(customHighlighting))
-				// Case: No custom highlighting => Applies highlighting when focused
-				case None => focusFlag.map { if (_) Some(settings.focusColorRole) else None }
-			}
+	private val highlightStateP = {
+		// Caches the alternative pointers so that they're not recreated when states change
+		lazy val focusColorP = focusFlag.map { if (_) Some(settings.focusColorRole) else None }
+		lazy val highlightColorP = settings.highlightPointer.flatMapWhile(linkedFlag) {
+			// Case: Applies custom highlighting
+			case Some(customHighlighting) => Fixed(Some(customHighlighting))
+			// Case: No custom highlighting => Applies highlighting when focused
+			case None => focusColorP
+		}
+		
+		hasErrorFlag.flatMapWhile(linkedFlag) { hasError =>
+			// Case: Displays an error message => Error color
+			if (hasError) Fixed(Some(ColorRole.Failure)) else highlightColorP
+		}
 	}
 	/**
-	  * A pointer that contains the applied highlighting color
+	  * A pointer that contains the applied highlighting color.
+	  * Contains None while no highlighting should be applied.
 	  */
-	private val highlightColorP = highlightStateP.flatMap {
-		case Some(role) =>
-			// Also applies the enabled state
-			context.colorPointer(role).mergeWith(enabledFlag) { (color, enabled) =>
-				Some(if (enabled) color else color.timesAlpha(ComponentCreationDefaults.disabledAlphaMod))
+	private val highlightColorP: Changing[Option[Color]] = {
+		// Case: Always enabled => Applies contextual coloring with no need to handle the disabled color state
+		if (enabledFlag.isAlwaysTrue)
+			highlightStateP.flatMap {
+				case Some(role) => context.colorPointer(role).lightMap { Some(_) }
+				case None => Fixed.never
 			}
-		case None => Fixed(None)
+		// Case: May become disabled => Creates additional disabled color pointers
+		else {
+			// Caches the generated pointers in order to avoid creating unnecessary replicates
+			val colorPCache = Cache { role: ColorRole =>
+				val defaultColorP = context.colorPointer(role)
+				lazy val disabledColorP = defaultColorP.map { _.timesAlpha(ComponentCreationDefaults.disabledAlphaMod) }
+				enabledFlag.flatMap { if (_) defaultColorP else disabledColorP }.lightMap { Some(_) }
+			}
+			highlightStateP.flatMap {
+				case Some(role) => colorPCache(role)
+				case None => Fixed.never
+			}
+		}
 	}
 	
 	/**
@@ -610,7 +643,9 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 		val base = {
 			// TODO: Handle mouse over state (highlights one more time)
 			if (settings.fillBackground)
-				context.flatMapBackground { bg => focusFlag.map { hasFocus => bg.highlightedBy(if (hasFocus) 2 else 1) } }
+				context.flatMapBackground { bg =>
+					focusFlag.map { hasFocus => bg.highlightedBy(if (hasFocus) 2 else 1) }
+				}
 			else
 				context
 		}
@@ -657,50 +692,55 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	/**
 	  * Context used for the hint area. Applies the correct text color.
 	  */
-	private lazy val hintContext = uncoloredHintContext.flatMapTextColor { originalTextColor =>
-		lazy val defaultColorPointer = enabledFlag.map { enabled =>
-			val alphaMod = {
-				if (enabled)
-					ComponentCreationDefaults.hintAlphaMod
+	private lazy val hintContext = {
+		// The default color (pointer) is determined by the parent color context, and may be variable
+		// The enabled state also affects this
+		lazy val alphaModP = enabledFlag.lightMap {
+			if (_) ComponentCreationDefaults.hintAlphaMod else ComponentCreationDefaults.disabledAlphaMod
+		}
+		lazy val defaultColorP = uncoloredHintContext.textColorPointer.mergeWith(alphaModP) { _.timesAlpha(_) }
+		
+		// May need to cache highlighted color pointers (if using a variable enabled state),
+		// in order to avoid creating unnecessary pointers
+		lazy val enabledAwareHighlightColorPCache = Cache { highlighting: ColorRole =>
+			val enabledColorP = uncoloredHintContext.colorPointer(highlighting)
+			lazy val disabledColorP = enabledColorP.map { _.timesAlpha(ComponentCreationDefaults.disabledAlphaMod) }
+			enabledFlag.flatMap { if (_) enabledColorP else disabledColorP }
+		}
+		
+		// The final color-pointer is determined by a combination of highlighting and the default text color
+		val textColorP = highlightStateP.flatMap {
+			case Some(highlighting) =>
+				// Case: Always enabled => Uses the context's color-pointer feature (which already implements caching)
+				if (enabledFlag.isAlwaysTrue)
+					uncoloredHintContext.colorPointer(highlighting)
+				// Case: May be disabled => Uses a cache for the generated highlighting color -pointers
 				else
-					ComponentCreationDefaults.disabledAlphaMod
-			}
-			originalTextColor.timesAlpha(alphaMod)
+					enabledAwareHighlightColorPCache(highlighting)
+				
+			case None => defaultColorP
 		}
-		highlightStateP.flatMap {
-			// Case: Highlighting applied => Needs to apply the disabled state as well
-			case Some(highlightColor) =>
-				val highlightColorP = uncoloredHintContext.colorPointer(highlightColor)
-				enabledFlag.fixedValue match {
-					case Some(fixedEnabled) =>
-						if (fixedEnabled)
-							highlightColorP
-						else
-							highlightColorP.map { _.timesAlpha(ComponentCreationDefaults.disabledAlphaMod) }
-					
-					case None =>
-						highlightColorP.mergeWith(enabledFlag) { (color, enabled) =>
-							if (enabled) color else color.timesAlpha(ComponentCreationDefaults.disabledAlphaMod)
-						}
-				}
-			
-			// Case: Default hint color
-			case None => defaultColorPointer
-		}
+		
+		// Applies the text-coloring to the context
+		uncoloredHintContext.withTextColorPointer(textColorP)
 	}
 	
 	/**
 	  * A pointer that contains the applied border color
 	  */
-	private val borderColorP: Changing[Color] = highlightColorP.flatMap {
-		case Some(color) => Fixed(color)
-		case None => innerContext.textColorPointer.map { _.timesAlpha(ComponentCreationDefaults.hintAlphaMod) }
+	private val borderColorP: Changing[Color] = {
+		lazy val defaultBorderColorP = innerContext.textColorPointer
+			.map { _.timesAlpha(ComponentCreationDefaults.hintAlphaMod) }
+		highlightColorP.flatMap {
+			case Some(color) => Fixed(color)
+			case None => defaultBorderColorP
+		}
 	}
 	/**
 	  * A pointer that contains the applied border
 	  */
 	private val borderP = {
-		val borderWidthP = focusFlag.map { if (_) focusBorderWidth else defaultBorderWidth }
+		val borderWidthP = focusFlag.lightMap { if (_) focusBorderWidth else defaultBorderWidth }
 		// When using filled background style, only draws the bottom border, which varies in style based state
 		if (settings.fillBackground)
 			borderWidthP.mergeWith(borderColorP)(Border.bottom)
@@ -732,8 +772,8 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	// INITIAL CODE	------------------------------------------
 	
 	focusFlag.addListener(repaintListener)
-	innerBackgroundPointer.addListener(repaintListener)
-	borderP.addListener(repaintListener)
+	innerBackgroundPointer.addListenerWhile(linkedFlag)(repaintListener)
+	borderP.addListenerWhile(linkedFlag)(repaintListener)
 	
 	
 	// COMPUTED	----------------------------------------------
@@ -752,7 +792,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	  */
 	def enabled = enabledFlag.value
 	/**
-	  * @return Whether this field is currently disaled
+	  * @return Whether this field is currently disabled
 	  */
 	def disabled = !enabled
 	
@@ -811,8 +851,8 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 				// Field name is displayed when
 				//      a) it is available AND b) The edit label has focus
 				//      OR c) The edit label is not empty
-				val nameShouldBeSeparatePointer = focusFlag || !emptyFlag
-				val nameVisibilityPointer = fieldNamePointer.mergeWith(nameShouldBeSeparatePointer) { _.nonEmpty && _ }
+				val nameShouldBeSeparateFlag = focusFlag || !emptyFlag
+				val nameVisibleFlag = nameShouldBeSeparateFlag && fieldNamePointer.lightMap { _.nonEmpty }
 				// TODO: Name label might have wrong text color because of background highlighting - Needs a different context if so
 				val nameLabel = factories.next()(ViewTextLabel).withContext(hintContext).text(fieldNamePointer)
 				
@@ -822,39 +862,38 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 					// Text insets used when the field name is displayed on top of the content
 					val comboTextInsets = originalInsets.mapTop { _ / 2 }
 					// Text insets used when only the content is displayed. Scaled so that fills the same area.
-					val aloneTextInsets = {
+					lazy val aloneTextInsets = {
 						val requiredIncrease = comboTextInsets.vertical + nameLabel.stackSize.height -
 							originalInsets.vertical
 						originalInsets.mapVertical { _ + requiredIncrease / 2 }
 					}
-					nameVisibilityPointer.map { if (_) comboTextInsets else aloneTextInsets }
+					nameVisibleFlag.lightMap { if (_) comboTextInsets else aloneTextInsets }
 				}
 				// While only the text label is being displayed, shows the field name as a prompt. Otherwise, may show
 				// the other specified prompt (if defined)
-				val promptStylePointer = contentContext.hintTextDrawContextPointer
+				val promptStyleP = contentContext.hintTextDrawContextPointer
 				// TODO: Should most likely be variable (now uses initial style only)
-				val emptyText = measureText(LocalizedString.empty, promptStylePointer.value)
+				val emptyText = measureText(LocalizedString.empty, promptStyleP.value)
 				// Only draws the name while it is not displayed elsewhere
-				val namePromptPointer = fieldNamePointer
-					.mergeWith(nameShouldBeSeparatePointer, promptStylePointer) { (name, isSeparate, style) =>
-						if (isSeparate) emptyText else measureText(name, style)
-					}
-				val namePromptDrawer = TextViewDrawer(namePromptPointer, promptStylePointer)
+				val namePromptP = {
+					lazy val measuredNameP = fieldNamePointer.mergeWith(promptStyleP)(measureText)
+					nameShouldBeSeparateFlag.flatMap { if (_) Fixed(emptyText) else measuredNameP }
+				}
+				val namePromptDrawer = TextViewDrawer(namePromptP, promptStyleP)
 				
 				// May also display another prompt while the field has focus and is empty / starting with the prompt
 				// (not blocked by name or text)
-				val promptDrawer = settings.promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
-					val promptContentPointer = promptPointer.mergeWith(promptStylePointer)(measureText)
-					val displayedPromptPointer = promptContentPointer.mergeWith(focusFlag) { (prompt, focus) =>
-						if (focus) prompt else emptyText }
-					TextViewDrawer(displayedPromptPointer, promptStylePointer)
+				val promptDrawer = settings.promptPointer.notFixedWhere { _.isEmpty }.map { promptP =>
+					lazy val measuredPromptP = promptP.mergeWith(promptStyleP)(measureText)
+					val displayedPromptP = focusFlag.flatMap { if (_) measuredPromptP else Fixed(emptyText) }
+					TextViewDrawer(displayedPromptP, promptStyleP)
 				}
 				
 				val wrappedField = makeField(FieldCreationContext(factories.next().hierarchy,
 					contentContext, focusTracker, Single(namePromptDrawer) ++ promptDrawer))
 				
 				// Displays one or both of the items
-				Pair(nameLabel -> nameVisibilityPointer, wrappedField -> AlwaysTrue) -> wrappedField
+				Pair(nameLabel -> nameVisibleFlag, wrappedField -> AlwaysTrue) -> wrappedField
 			}
 		}
 	}
@@ -862,6 +901,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	// Returns input area
 	private def makeInputArea() = {
 		// Input part may contain a name label, if enabled
+		// Case: Field name is never displayed => Uses a simplified creation function
 		if (settings.fieldNamePointer.existsFixed { _.isEmpty }) {
 			// May draw a prompt while the field is empty (or starting with the prompt text)
 			val promptDrawer = settings.promptPointer.notFixedWhere { _.isEmpty }.map { promptPointer =>
@@ -870,8 +910,8 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 				TextViewDrawer(displayedPromptPointer, promptStylePointer)
 			}
 			Open { hierarchy =>
-				val field = makeField(FieldCreationContext(hierarchy, innerContext, focusTracker,
-					promptDrawer.emptyOrSingle))
+				val field = makeField(
+					FieldCreationContext(hierarchy, innerContext, focusTracker, promptDrawer.emptyOrSingle))
 				field -> field
 			}
 		}
@@ -884,39 +924,33 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
 		// The right side hint label expands to the left and not right
-		val rightContextPointer = Lazy {
+		val lazyRightContextP = Lazy {
 			hintContext.mapTextInsets { _.mapRight { _.normalPriority }.mapLeft { _.expanding } }
 				.withHorizontalTextAlignment(Far)
 		}
-		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, rightContextPointer)) match {
+		makeRightHintLabel(ExtraFieldCreationContext(wrappedField, lazyRightContextP)) match {
+			// Case: A component displayed on the right side => Applies the hint text as well, if appropriate
 			case Some(rightComponent) =>
-				hintTextP match {
+				localHintTextP match {
 					// Case: Hints are sometimes displayed
 					case Some(hintTextPointer) =>
-						// Places caps to stack equal to horizontal content margin
-						// Removed 19.6.2023, because seemed to look better without - Add back or modify if necessary
-						/*
-						val capPointer = hintContextPointer.map { context =>
-							(context.textInsets.horizontal / 2 +
-								(if (settings.fillBackground) 0 else defaultBorderWidthFrom(context)))
-								.notExpanding
-						}*/
-						val hintLabel = Open.using(ViewTextLabel) { _.withContext(hintContext)(hintTextPointer) }
+						val hintTextLabel = Open.using(ViewTextLabel) { _.withContext(hintContext)(hintTextPointer) }
 						val stack = Open.using(ViewStack) {
 							_.row
 								.apply(Pair(
-									hintLabel.withResult(hintVisibleFlag),
+									hintTextLabel.withResult(hintVisibleFlag),
 									rightComponent.withResult(AlwaysTrue)
 								))
 								.parent
 						}
 						Some(stack.withResult(AlwaysTrue))
+						
 					// Case: Only the right hint element should be displayed
 					case None => Some(rightComponent.withResult(AlwaysTrue))
 				}
 			case None =>
 				// Case: No additional hint should be displayed => May display a hint label still (occasionally)
-				hintTextP.map { hintTextPointer =>
+				localHintTextP.map { hintTextPointer =>
 					Open.using(ViewTextLabel) { _.withContext(hintContext)(hintTextPointer) }
 						.withResult(hintVisibleFlag)
 				}

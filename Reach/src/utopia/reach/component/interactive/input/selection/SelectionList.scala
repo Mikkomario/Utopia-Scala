@@ -408,13 +408,15 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	  * A pointer that contains the currently selected sub-area within this list.
 	  * The origin (0,0) coordinates of the contained bounds are the position of this list.
 	  */
-	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap { d => d.headOption match {
-		case Some(display) =>
-			display.boundsPointer.map { b =>
-				locationTracker.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
-			}
-		case None => Fixed(None)
-	} }
+	lazy val selectedAreaPointer = manager.selectedDisplayPointer.flatMap {
+		_.headOption match {
+			case Some(display) =>
+				display.boundsPointer.map { b =>
+					locationTracker.areaOf(display).filter { _.size.dimensions.forall { _ > 0.0 } }.orElse { Some(b) }
+				}
+			case None => Fixed(None)
+		}
+	}
 	
 	private val keyListener = SelectionKeyListener
 		.along(settings.axis, hasFocus || alternativeKeyCondition)(manager.moveSelection)

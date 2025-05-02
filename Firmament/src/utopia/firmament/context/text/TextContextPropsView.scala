@@ -7,19 +7,22 @@ import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.text.Font
-import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 
 object TextContextPropsView
 {
 	// ATTRIBUTES   -----------------------
 	
-	// A 3 levels deep weak cache for generated text draw context pointers
-	// The keys are:
-	//      1) Is hint -flag
-	//      2) Text draw context pointer
-	//      3) Hint text draw context pointer
-	// NB: It is only recommended to use this cache with mutating hint flags
+	/**
+	  * A 3 levels deep weak cache for generated text draw context pointers.
+	  * The keys are:
+	  *     1. Is hint -flag
+	  *     1. Text draw context pointer
+	  *     1. Hint text draw context pointer
+	  *
+	  * NB: It is only recommended to use this cache with mutating hint flags
+	  */
 	private val hintToTextDrawContextPointerCache = WeakCache.weakKeys { isHintFlag: Flag =>
 		WeakCache.weakKeys { contextPointer: Changing[TextDrawContext] =>
 			WeakCache { hintContextPointer: Changing[TextDrawContext] =>

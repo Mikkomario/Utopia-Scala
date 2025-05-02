@@ -62,6 +62,16 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	// ATTRIBUTES   ------------------------------
 	
 	private val _statePointer = Volatile.eventful[ProcessState](NotStarted)
+	/**
+	  * @return A pointer that holds this wait instance's state
+	  */
+	lazy val statePointer = _statePointer.readOnly
+	/**
+	  * A flag that contains true when this process has been requested to stop.
+	  * Does not necessarily mean that this process has already stopped.
+	  */
+	lazy val brokenFlag: Flag = _statePointer.lightMap { _.isBroken }
+	
 	private val completionFuturePointer = ResettableLazy { _statePointer.futureWhere { _.isFinal } }
 	private val _shutdownFlag = VolatileFlag()
 	
@@ -69,8 +79,13 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  * A pointer which indicates whether this process should be hurried
 	  * (based on stop & shutdown status + shutdown reaction)
 	  */
-	lazy val hurryFlag: Flag = statePointer.mergeWith(shutDownFlag) { case (state, shutdown) =>
-		state.isBroken || (shutdown && shutdownReaction.exists { _.skipWait })
+	lazy val hurryFlag: Flag = {
+		// Case: Hurries on shutdown => Both stop & shutdown trigger hurrying
+		if (shutdownReaction.exists { _.skipWait })
+			brokenFlag || shutDownFlag
+		// Case: Won't hurry during shutdown => Only stop triggers hurrying
+		else
+			brokenFlag
 	}
 	
 	
@@ -130,10 +145,6 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  * @return The current state of this wait instance
 	  */
 	def state = _statePointer.value
-	/**
-	  * @return A pointer that holds this wait instance's state
-	  */
-	def statePointer = _statePointer.readOnly
 	
 	/**
 	  * @return Whether this process should hurry to complete itself

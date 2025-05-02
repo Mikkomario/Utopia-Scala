@@ -1,6 +1,8 @@
 # Utopia Firmament - List of Changes
 
 ## v1.4.1 (in development)
+### Bugfixes
+- Fixed a bug that resulted in wrong-sized margins when using a variable context with an "is small flag"
 ### New features
 - Added **InconsistentDrawer** for optional custom drawing
 - Added content scaling support to **AlignFrameLike**
@@ -9,6 +11,8 @@
 ### New methods
 - **CustomDrawer**
   - Added `.conditional(View)` and `.conditional(=> Boolean)`
+- **VariableFramedFactory**
+  - Added `.mapInsetsPointer(...)`
 - **Window**
   - Added `.notClosedFlag`
 ### Other changes

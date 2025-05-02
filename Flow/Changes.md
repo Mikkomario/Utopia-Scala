@@ -99,6 +99,11 @@
 - Changed **Pair**'s `.toString` implementation
 - `new FlagView(...)` now accepts any **Flag**, not just **SettableFlag**
 - Optimized `OptimizedIndexedSeq.concat(...)`
+- **PostponingProcess** now stops tracking the wait target -pointer after it can't be restarted anymore
+- Smaller optimization / refactoring within **TimedTask**'s `.toLoop` function:
+  - Hurry flag -listening is terminated after wait completes
+  - Wait target -mapping no longer caches results, unless actively listened to
+- Refactored how **Process**'s `hurryFlag` is constructed
 - Internal refactoring within **MutableOnce**
 - Minor refactoring in **ActionQueue**
 

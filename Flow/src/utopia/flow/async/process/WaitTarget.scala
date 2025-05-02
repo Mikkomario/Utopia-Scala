@@ -152,8 +152,13 @@ object WaitTarget
       */
     case class Until(time: Instant, breaksOnNotify: Boolean = true) extends WaitTarget
     {
+        // ATTRIBUTES   ------------------
+        
         protected val targetTime = Right(time)
     
+        
+        // IMPLEMENTED  ------------------
+        
         override def isPositive = time.isFuture
     
         def breakable: Until = if (breaksOnNotify) this else Until(time)

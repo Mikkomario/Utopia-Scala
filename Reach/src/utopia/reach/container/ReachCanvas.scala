@@ -8,7 +8,6 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.operator.Identity
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
@@ -18,7 +17,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue}
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, AssignableOnce}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, IndirectPointer, ResettableFlag}
 import utopia.flow.view.mutable.{Resettable, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
@@ -337,7 +336,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 	  * Contains true while the parent window's bounds are being updated,
 	  * assuming that this canvas is being notified of said updates.
 	  */
-	private val windowUpdatingFlag: Flag = windowUpdatingFlagPointer.flatMap(Identity)
+	private val windowUpdatingFlag: Flag = windowUpdatingFlagPointer.flatten
 	
 	private val revalidatingFlag = VolatileFlag()
 	
