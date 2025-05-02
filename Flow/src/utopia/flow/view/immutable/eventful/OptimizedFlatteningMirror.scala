@@ -1,5 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.caching.cache.Cache
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.Sealed
@@ -12,6 +14,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.util.Try
 
 object OptimizedFlatteningMirror
@@ -77,7 +80,11 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 	  */
 	private val pointerPointer = incrementalMap match {
 		case Some(incrementalMap) => source.viewWhile(condition).incrementalMap(directMap)(incrementalMap)
-		case None => source.mapWhile(condition)(directMap)
+		case None =>
+			// Caches the latest mapping result
+			// in order to avoid forming two different pointers of the same origin value (in certain edge cases)
+			val mapResultCache: MapAccess[O @uncheckedVariance, Changing[R]] = Cache.onlyLatest(directMap)
+			source.mapWhile(condition)(mapResultCache.apply)
 	}
 	/**
 	  * A pointer that contains the currently managed active (mid-pointer) tracker.

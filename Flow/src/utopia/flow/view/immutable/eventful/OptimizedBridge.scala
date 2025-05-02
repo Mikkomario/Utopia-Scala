@@ -92,10 +92,13 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 {
 	// ATTRIBUTES   -------------------------
 	
-	// Set to true once this bridge is no longer allowed to track the origin
+	/**
+	  * Set to true once this bridge is no longer allowed to track the origin
+	  */
 	private var terminated = false
-	
-	// Caches pre-calculated values on demand
+	/**
+	  * Caches pre-calculated values on demand
+	  */
 	private var cachedValue: Option[R] = None
 	
 	private val originListener = ChangeListener[O] { event =>
@@ -119,15 +122,15 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 				val afterEffects = onUpdate(secondaryEvent)
 				
 				// Triggers the after-effects only after all other listeners have been informed as well
-				// TODO: Consider whether this is the optimal approach
 				// Case: Caching is disabled and all listeners detached themselves =>
 				//       Clears the cache and detaches this listener immediately
 				if (cachingDisabled && !trackActivelyFlag.value)
 					cachedValue = None
+					
 				afterEffects
 			}
-			// Case: This pointer doesn't contain listeners =>
-			// Detaches as early as possible, and only invalidates the cache on changes
+			// Case: This pointer doesn't contain listeners
+			//       => Clears the previously cached value and detaches immediately
 			else {
 				cachedValue = None
 				onUpdate(secondaryEvent)
@@ -162,8 +165,10 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 	
 	// COMPUTED ----------------------------
 	
-	// Contains true while this bridge should remain attached to the origin pointer
-	// This is true when cache needs to be cleared and/or when actively tracking the origin
+	/**
+	  * @return True while this bridge should remain attached to the origin pointer.
+	  *         This is true when cache needs to be cleared and/or when actively tracking the origin
+	  */
 	private def shouldListen = cachedValue.isDefined || trackActivelyFlag.value
 	
 	

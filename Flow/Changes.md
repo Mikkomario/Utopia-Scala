@@ -25,7 +25,10 @@
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
 ### Bugfixes
 - Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
-- Fixed **OptimizedMirror**'s change event generation when listening resumes.
+- A couple fixes to **OptimizedMirror**:
+  - Change events now generate when mapping resumes
+  - Change events no longer generate while mapping is disabled
+  - `destiny` is now sealable if the mapping condition is sealable
 - Fixed **ConditionalChangeReaction**'s event generation when the listening resumes after being initially disabled.
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 - **Lazy**`.valueIterator` would previously yield an iterator of infinite length. 
@@ -81,6 +84,8 @@
   - This means that the intermediate pointers (i.e. mapping result-pointers) 
     receive listeners only when that is necessary, which often affects the original (mapping source) pointer as well 
   - (if using optimized mapping functions within the flatMap function).
+- **OptimizedMirror** may now utilize its cached mapping result 
+  when acquiring the value to yield while mapping is disabled, resulting in a fewer mapping calls.
 - **ThreadPool** now occasionally clears finished threads from its pool
   - Previously all threads would just remain in the pool, causing possible memory (and slight performance) issues
 - Number-to-time conversion now catches for number format exceptions

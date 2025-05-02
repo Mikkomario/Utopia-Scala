@@ -1,5 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeResponse, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
@@ -63,7 +65,13 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 {
 	// ATTRIBUTES   -------------------------
 	
-	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f)(fireEvent)
+	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f) { event =>
+		// Only fires change events while allowed to mirror
+		if (condition.value)
+			fireEvent(event)
+		else
+			Empty
+	}
 	// A placeholder value returned while mirroring is not allowed
 	private var placeholder: Option[R] = None
 	
@@ -81,7 +89,7 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 		}
 		// Case: Mirroring stops => Prepares to return the last value until mirroring is enabled again
 		else
-			placeholder = Some(f(origin.value))
+			placeholder = Some(bridge.value)
 			
 		// If the origin doesn't change anymore, it is not needful to track the listening condition
 		ChangeResponse.continueIf(origin.mayChange)
@@ -103,7 +111,15 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 	override implicit def listenerLogger: Logger = origin.listenerLogger
 	
 	override def value: R = placeholder.getOrElse(bridge.value)
-	override def destiny: Destiny = origin.destiny.sealedIf { condition.isAlwaysFalse }
+	// Modifies the origin "destiny" to take into account the mirroring condition
+	override def destiny: Destiny = condition.destiny match {
+		// Case: Fixed condition => Sealed if mirroring is disabled, otherwise always same as origin
+		case Sealed => if (condition.value) origin.destiny else Sealed
+		// Case: Possible to seal => This mirror may always seal, if condition seals to false
+		case MaySeal => origin.destiny.possibleToSeal
+		// Case: Impossible to seal => Only seals if origin seals
+		case ForeverFlux => origin.destiny
+	}
 	
 	override def readOnly = this
 	

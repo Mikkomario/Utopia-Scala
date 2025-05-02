@@ -23,6 +23,7 @@ object FlatteningMirrorTest extends App
 	private val condition = ResettableFlag(initialValue = true)
 	private var mapCalls = 0
 	private val mirror = origin.flatMapWhile(condition) { i =>
+		println(s"Mapping $i")
 		mapCalls += 1
 		if (i >= 0) positiveStepsP.map { i + _ } else negativeStepsP.map { i - _ }
 	}
@@ -165,13 +166,31 @@ object FlatteningMirrorTest extends App
 	assert(lastValue == -2)
 	assert(mirror.value == -2)
 	
-	// Sets back to positive for the next tests
-	assert(mirror.destiny == MaySeal)
-	
+	// Makes sure the mapping condition is respected
+	condition.reset()
 	origin.value = 1
 	
-	assert(mapCalls == 8, mapCalls)
-	assert(lastValue == 2)
+	assert(mapCalls == 7, mapCalls)
+	assert(lastValue == -2)
+	assert(mirror.value == -2)
+	
+	negativeStepsP.value = 2
+	
+	assert(lastValue == -3)
+	assert(mirror.value == -3)
+	
+	positiveStepsP.value = 2
+	
+	assert(lastValue == -3)
+	assert(mirror.value == -3)
+	assert(mirror.destiny == MaySeal)
+	
+	// Reactivates mapping
+	condition.set()
+	
+	assert(mapCalls == 8)
+	assert(lastValue == 3)
+	assert(mirror.value == 3)
 	
 	// Tests locking behavior
 	
@@ -183,12 +202,12 @@ object FlatteningMirrorTest extends App
 	assert(origin.destiny == Sealed)
 	assert(mirror.destiny == MaySeal)
 	assert(mapCalls == 8, mapCalls)
-	assert(lastValue == 2)
-	
-	positiveStepsP.value = 2
-	
 	assert(lastValue == 3)
-	assert(mirror.value == 3)
+	
+	positiveStepsP.value = 1
+	
+	assert(lastValue == 2)
+	assert(mirror.value == 2)
 	
 	// Locks the steps pointer => Expects the mirror to be fixed
 	private var stopEventReceived = false
@@ -199,9 +218,9 @@ object FlatteningMirrorTest extends App
 	positiveStepsP.lock()
 	
 	assert(stopEventReceived)
-	assert(lastValue == 3)
+	assert(lastValue == 2)
 	assert(mirror.destiny == Sealed)
-	assert(mirror.value == 3)
+	assert(mirror.value == 2)
 	
-	println("Done!")
+	println("Success!")
 }
