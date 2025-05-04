@@ -9,12 +9,14 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.genesis.graphics.Priority
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -62,7 +64,14 @@ trait ViewImageButtonSettingsLike[+Repr]
 	override def insetsPointer = imageSettings.insetsPointer
 	override def usesLowPrioritySize = imageSettings.usesLowPrioritySize
 	override def transformationPointer: Changing[Option[Matrix2D]] = imageSettings.transformationPointer
+	override def customSizePointer: Option[Changing[Size]] = imageSettings.customSizePointer
+	override def repaintPriority: Priority = imageSettings.repaintPriority
+	override def allowsShrinking: Boolean = imageSettings.allowsShrinking
 	
+	override def withCustomSizePointer(p: Option[Changing[Size]]): Repr =
+		mapImageSettings { _.withCustomSizePointer(p) }
+	override def withRepaintPriority(priority: Priority): Repr = mapImageSettings { _.withRepaintPriority(priority) }
+	override def withAllowShrinking(allowShrink: Boolean): Repr = mapImageSettings { _.withAllowShrinking(allowShrink) }
 	override def withAlignmentPointer(p: Changing[Alignment]) =
 		withImageSettings(imageSettings.withAlignmentPointer(p))
 	override def withColorOverlayPointer(p: Option[Changing[Color]]) =

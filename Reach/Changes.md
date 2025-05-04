@@ -35,6 +35,10 @@
 - **ViewImageAndTextLabel**, as well as **ViewImageAndTextButton** now support a loading state
 - Added **LoadingBar** and **ProgressBar** components
 - Added **ProgressAnimator** object for facilitating animated progress changes
+- Added the following 3 features to **ViewImageLabel**:
+  - Supports a custom size pointer
+  - Optional "no shrinking" -feature which prevents the label from decreasing in size
+  - Customizable repaint priority
 - **Field** components now support `enabledFlag` in their settings, and visualize accordingly
   - This also affects **TextField** visualization while disabled
   - **DropDown** and **FieldWithSelectionPopUp** now also apply this flag to enable or disable functionality

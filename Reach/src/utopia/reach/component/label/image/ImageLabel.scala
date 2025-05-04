@@ -159,9 +159,7 @@ case class ImageLabelSettings(insets: StackInsets = StackInsets.any, alignment: 
 	/**
 	  * @return A set of view-image-label-settings that match these settings
 	  */
-	def toViewSettings = ViewImageLabelSettings(customDrawers, Fixed(insets), Fixed(alignment),
-		colorOverlay.map(Fixed.apply), Fixed(imageScaling), Fixed(transformation),
-		usesLowPrioritySize = usesLowPrioritySize)
+	def toViewSettings = ViewImageLabelSettings(this)
 	
 	
 	// IMPLEMENTED  ------------------------

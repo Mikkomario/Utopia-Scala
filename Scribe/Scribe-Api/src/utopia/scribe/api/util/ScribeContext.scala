@@ -1,6 +1,5 @@
 package utopia.scribe.api.util
 
-import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -22,12 +21,6 @@ object ScribeContext
 	// ATTRIBUTES   ---------------------
 	
 	private val settingsPointer = Pointer.empty[Settings]
-	
-	
-	// INITIAL CODE ---------------------
-	
-	// Initializes the http status classes
-	Status.setup()
 	
 	
 	// IMPLICIT -------------------------

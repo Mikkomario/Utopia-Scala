@@ -45,7 +45,9 @@ object TimeExtensions
 		/**
 		  * The date time value of this instant in the UTC 'zulu' time zone
 		  */
-		def toUTCDateTime = i.atZone(ZoneOffset.UTC).toLocalDateTime
+		def toUtcDateTime = i.atZone(ZoneOffset.UTC).toLocalDateTime
+		@deprecated("Renamed to .toUtcDateTime", "v2.6")
+		def toUTCDateTime = toUtcDateTime
 		
 		/**
 		 * @return Whether this instant is in the past

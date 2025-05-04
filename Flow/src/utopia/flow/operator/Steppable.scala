@@ -87,6 +87,12 @@ trait Steppable[+Repr <: Steppable[Repr]]
 	// OTHER    ---------------------
 	
 	/**
+	  * @param extreme Targeted extreme (min or max)
+	  * @return Whether this value is NOT the most extreme value available in the specified direction.
+	  */
+	def isNot(extreme: Extreme) = !is(extreme)
+	
+	/**
 	  * @param direction Targeted direction (positive or negative)
 	  * @return The next larger or smaller copy of this item, depending on the specified direction.
 	  *         None if this is the most extreme value in that direction.
@@ -96,6 +102,29 @@ trait Steppable[+Repr <: Steppable[Repr]]
 			None
 		else
 			Some(next(direction))
+	}
+	/**
+	  * @param steps Number of "steps" to take from this value.
+	  *              A negative value steps towards lesser values while a positive value steps towards greater values.
+	  *
+	  *              E.g. Calling steps(-2) would be a potentially more optimal equivalent of calling
+	  *              less.less
+	  *
+	  * @return A value at the end of the specified "step count"
+	  */
+	def step(steps: Int) = Sign.of(steps) match {
+		case sign: Sign =>
+			val extreme = sign.extreme
+			var result = self
+			var remainingSteps = steps.abs
+			while (remainingSteps > 0 && result.isNot(extreme)) {
+				result = result.next(sign)
+				remainingSteps -= 1
+			}
+			result
+			
+		// Case: 0 steps => No change
+		case _ => self
 	}
 	
 	/**

@@ -2,8 +2,6 @@ package utopia.reach.component.label.image
 
 import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.base.BaseContextPropsView
-import utopia.firmament.model.stack.StackLength
-import utopia.firmament.model.stack.modifier.{MinOptimalSizeModifier, NoShrinkingLengthModifier}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.{Actor, ActorHandler}
@@ -12,15 +10,20 @@ import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.label.image.AnimatedImageLabelFactory.defaultSettings
 import utopia.reach.component.template.ReachComponentWrapper
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
+object AnimatedImageLabelFactory
+{
+	// Animated labels don't shrink by default. Repaint speed is also increased by default.
+	private lazy val defaultSettings = ViewImageLabelSettings.default.notShrinking.faster
+}
 case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy, context: BaseContextPropsView,
-                                     settings: ViewImageLabelSettings = ViewImageLabelSettings.default,
+                                     settings: ViewImageLabelSettings = defaultSettings,
                                      loops: Boolean = true)
 	extends ViewImageLabelSettingsWrapper[AnimatedImageLabelFactory]
 {
@@ -70,7 +73,6 @@ case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy, context: Bas
 	def rotating(image: Image, rotation: TimedAnimation[DirectionalRotation], centerOrigin: Boolean = false) =
 	{
 		val appliedImage = if (centerOrigin) image.withCenterOrigin else image
-		val label = transforming(appliedImage, rotation.map(Matrix2D.rotation))
 		// Makes it so that the label won't change in size due to the rotation
 		val imageRadius = {
 			if (centerOrigin)
@@ -78,9 +80,7 @@ case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy, context: Bas
 			else
 				appliedImage.bounds.corners.iterator.map { _.length }.max
 		}
-		label.addConstraint(MinOptimalSizeModifier(Size.square(imageRadius * 2)))
-		// label.addConstraint(new NoShrinkingLengthModifier(StackLength.any(imageRadius * 2)).symmetric)
-		label
+		withCustomSize(Size.square(imageRadius * 2)).transforming(appliedImage, rotation.map(Matrix2D.rotation))
 	}
 }
 

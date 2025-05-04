@@ -145,6 +145,13 @@
                 "map": true
               },
               {
+                "name": "customSizePointer",
+                "param": "p",
+                "type": "Option[p[size]]",
+                "default": "None",
+                "doc": "A pointer that, if specified, overrides the image size for the purposes of component layout. \n'imageScalingPointer' and 'insetsPointer' will be applied after this effect."
+              },
+              {
                 "name": "imageScalingPointer",
                 "param": "p",
                 "type": "p[Double]",
@@ -156,12 +163,28 @@
                 "map": true
               },
               {
+                "name": "repaintPriority",
+                "param": "priority",
+                "type": "graphics.Priority",
+                "default": "Priority.Normal",
+                "doc": "A priority used when requesting label repaints. \nNote: Doesn't affect updates involving label size changes.",
+                "map": true
+              },
+              {
                 "name": "usesLowPrioritySize",
                 "param": "lowPriority",
                 "setter": "withUseLowPrioritySize",
                 "type": "Boolean",
                 "default": "false",
                 "doc": "Whether this label should use low priority size constraints"
+              },
+              {
+                "name": "allowsShrinking",
+                "param": "allowShrink",
+                "setter": "withAllowShrinking",
+                "type": "Boolean",
+                "default": true,
+                "doc": "Whether this label should shrink when the drawn image shrinks"
               }
             ],
             "non_contextual_props": [

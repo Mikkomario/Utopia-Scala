@@ -7,6 +7,17 @@ import scala.language.implicitConversions
 
 object ChangeListener
 {
+	// IMPLICIT ------------------------
+	
+	/**
+	  * @param response A response that's always given for a change event
+	  * @return A listener that always gives the specified response
+	  */
+	implicit def alwaysRespondWith(response: ChangeResponse): ChangeListener[Any] = new FixedResponseListener(response)
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	  * Wraps a function into a change listener
 	  * @param f A function that reacts to changes
@@ -57,6 +68,17 @@ object ChangeListener
 		Continue
 	}
 	
+	/**
+	  * @param f A function called after each change (as an after-effect)
+	  * @return A listener that always requests the specified after-effect
+	  */
+	def triggerAfterEffect(f: => Unit): ChangeListener[Any] = alwaysRespondWith(Continue.and(f))
+	/**
+	  * @param f A function called (as an after-effect) after the first change
+	  * @return A listener that requests the specified function to be called as an after effect and then detaches itself.
+	  */
+	def triggerAfterEffectOnce(f: => Unit) = alwaysRespondWith(Detach.and(f))
+	
 	
 	// NESTED	-----------------------------------
 	
@@ -67,6 +89,10 @@ object ChangeListener
 	private class AnyChangeListener(f: => ChangeResponse) extends ChangeListener[Any]
 	{
 		override def onChangeEvent(event: ChangeEvent[Any]) = f
+	}
+	private class FixedResponseListener(response: ChangeResponse) extends ChangeListener[Any]
+	{
+		override def onChangeEvent(event: ChangeEvent[Any]): ChangeResponse = response
 	}
 }
 

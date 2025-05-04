@@ -11,14 +11,17 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.{WeakKeysCache, WeakValuesCache}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.operator.Identity
 import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
+import utopia.genesis.graphics.Priority
 import utopia.genesis.image.{Image, ImageView}
 import utopia.paradigm.color.{Color, ColorRole, ColorSet}
-import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -40,26 +43,40 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	// ABSTRACT	--------------------
 	
 	/**
+	  * A pointer that, if specified, overrides the image size for the purposes of component layout.
+	  * 'imageScalingPointer' and 'insetsPointer' will be applied after this effect.
+	  */
+	def customSizePointer: Option[Changing[Size]]
+	/**
 	  * Pointer that determines the insets placed around the image
 	  */
-	protected def insetsPointer: Changing[StackInsets]
+	def insetsPointer: Changing[StackInsets]
 	/**
 	  * Pointer that determines the image drawing location within this component
 	  */
-	protected def alignmentPointer: Changing[Alignment]
+	def alignmentPointer: Changing[Alignment]
 	/**
 	  * Pointer that, when defined, places a color overlay over the drawn image
 	  */
-	protected def colorOverlayPointer: Option[Changing[Color]]
+	def colorOverlayPointer: Option[Changing[Color]]
 	/**
 	  * Pointer that determines image scaling, in addition to the original image scaling
 	  */
-	protected def imageScalingPointer: Changing[Double]
+	def imageScalingPointer: Changing[Double]
 	/**
 	  * @return Pointer that determines image transformation to apply.
 	  *         Contains None if no transformation should be applied.
 	  */
 	def transformationPointer: Changing[Option[Matrix2D]]
+	/**
+	  * A priority used when requesting label repaints.
+	  * Note: Doesn't affect updates involving label size changes.
+	  */
+	def repaintPriority: Priority
+	/**
+	  * Whether this label should shrink when the drawn image shrinks
+	  */
+	def allowsShrinking: Boolean
 	
 	/**
 	  * Pointer that determines the image drawing location within this component
@@ -71,6 +88,16 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	  * @return Copy of this factory with the specified color overlay pointer
 	  */
 	def withColorOverlayPointer(p: Option[Changing[Color]]): Repr
+	/**
+	  * A pointer that, if specified, overrides the image size for the purposes of component layout.
+	  * 'imageScalingPointer' and 'insetsPointer' will be applied after this effect.
+	  * @param p New custom size pointer to use.
+	  *          A pointer that, if specified, overrides the image size for the purposes of component
+	  *          layout.
+	  *          'imageScalingPointer' and 'insetsPointer' will be applied after this effect.
+	  * @return Copy of this factory with the specified custom size pointer
+	  */
+	def withCustomSizePointer(p: Option[Changing[Size]]): Repr
 	/**
 	  * Pointer that determines image scaling, in addition to the original image scaling
 	  * @return Copy of this factory with the specified image scaling pointer
@@ -86,9 +113,51 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	  * @return Cop of this factory with the specified transformation pointer
 	  */
 	def withTransformationPointer(p: Changing[Option[Matrix2D]]): Repr
+	/**
+	  * A priority used when requesting label repaints.
+	  * Note: Doesn't affect updates involving label size changes.
+	  * @param priority New repaint priority to use.
+	  *                 A priority used when requesting label repaints.
+	  *                 Note: Doesn't affect updates involving label size changes.
+	  * @return Copy of this factory with the specified repaint priority
+	  */
+	def withRepaintPriority(priority: Priority): Repr
+	/**
+	  * Whether this label should shrink when the drawn image shrinks
+	  * @param allowShrink New allows shrinking to use.
+	  *                    Whether this label should shrink when the drawn image shrinks
+	  * @return Copy of this factory with the specified allows shrinking
+	  */
+	def withAllowShrinking(allowShrink: Boolean): Repr
 	
 	
 	// COMPUTED ------------------------
+	
+	/**
+	  * @return A copy of this factory that allows the created labels to shrink in (optimal image) size
+	  */
+	def allowingShrinking = withAllowShrinking(true)
+	/**
+	  * @return A copy of this factory that creates labels that never shrink in their (optimal) image size
+	  */
+	def notShrinking = withAllowShrinking(false)
+	
+	/**
+	  * @return A copy of this factory that applies a higher repaint priority
+	  */
+	def faster = mapRepaintPriority { _.more }
+	/**
+	  * @return A copy of this factory that applies a much higher repaint priority
+	  */
+	def muchFaster = mapRepaintPriority { _.step(2) }
+	/**
+	  * @return A copy of this factory that applies a lower repaint priority
+	  */
+	def slower = mapRepaintPriority { _.less }
+	/**
+	  * @return A copy of this factory that applies a much lower repaint priority
+	  */
+	def muchSlower = mapRepaintPriority { _.step(-2) }
 	
 	/**
 	  * @return Unchanging copy of these settings, which may be used for constructing immutable image labels.
@@ -121,6 +190,12 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	
 	// OTHER	--------------------
 	
+	def withCustomSizePointer(pointer: Changing[Size]): Repr = withCustomSizePointer(Some(pointer))
+	def withCustomSize(size: Size) = withCustomSizePointer(Fixed(size))
+	
+	def withColorOverlayPointer(pointer: Changing[Color]): Repr = withColorOverlayPointer(Some(pointer))
+	def withColor(color: Changing[Color]): Repr = withColorOverlayPointer(Some(color))
+	
 	def mapAlignmentPointer(f: Changing[Alignment] => Changing[Alignment]) =
 		withAlignmentPointer(f(alignmentPointer))
 	def mapColorOverlayPointer(f: Option[Changing[Color]] => Option[Changing[Color]]) =
@@ -130,9 +205,7 @@ trait ViewImageLabelSettingsLike[+Repr] extends ImageLabelSettingsLike[Repr] wit
 	def mapInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) = withInsetsPointer(f(insetsPointer))
 	def mapTransformationPointer(f: Mutate[Changing[Option[Matrix2D]]]) =
 		withTransformationPointer(f(transformationPointer))
-	
-	def withColorOverlayPointer(pointer: Changing[Color]): Repr = withColorOverlayPointer(Some(pointer))
-	def withColor(color: Changing[Color]): Repr = withColorOverlayPointer(Some(color))
+	def mapRepaintPriority(f: Mutate[Priority]) = withRepaintPriority(f(repaintPriority))
 }
 
 object ViewImageLabelSettings
@@ -150,8 +223,10 @@ object ViewImageLabelSettings
 	  */
 	def apply(staticSettings: ImageLabelSettings): ViewImageLabelSettings =
 		apply(staticSettings.customDrawers, Fixed(staticSettings.insets), Fixed(staticSettings.alignment),
-			staticSettings.colorOverlay.map { Fixed(_) }, Fixed(staticSettings.imageScaling),
-			Fixed(staticSettings.transformation), staticSettings.usesLowPrioritySize)
+			staticSettings.colorOverlay.map { Fixed(_) },
+			imageScalingPointer = Fixed(staticSettings.imageScaling),
+			transformationPointer = Fixed(staticSettings.transformation),
+			usesLowPrioritySize = staticSettings.usesLowPrioritySize)
 }
 /**
   * Combined settings used when constructing view image labels
@@ -168,9 +243,11 @@ case class ViewImageLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
                                   insetsPointer: Changing[StackInsets] = Fixed(StackInsets.any),
                                   alignmentPointer: Changing[Alignment] = Fixed(Alignment.Center),
                                   colorOverlayPointer: Option[Changing[Color]] = None,
+                                  customSizePointer: Option[Changing[Size]] = None,
                                   imageScalingPointer: Changing[Double] = Fixed(1.0),
+                                  repaintPriority: Priority = Priority.Normal,
                                   transformationPointer: Changing[Option[Matrix2D]] = Fixed.never,
-                                  usesLowPrioritySize: Boolean = false)
+                                  usesLowPrioritySize: Boolean = false, allowsShrinking: Boolean = true)
 	extends ViewImageLabelSettingsLike[ViewImageLabelSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -189,6 +266,9 @@ case class ViewImageLabelSettings(customDrawers: Seq[CustomDrawer] = Empty,
 	override def withInsetsPointer(p: Changing[StackInsets]): ViewImageLabelSettings = copy(insetsPointer = p)
 	override def withUseLowPrioritySize(lowPriority: Boolean): ViewImageLabelSettings =
 		copy(usesLowPrioritySize = lowPriority)
+	override def withCustomSizePointer(p: Option[Changing[Size]]) = copy(customSizePointer = p)
+	override def withRepaintPriority(priority: Priority) = copy(repaintPriority = priority)
+	override def withAllowShrinking(allowShrink: Boolean) = copy(allowsShrinking = allowShrink)
 	
 	override def *(mod: Double): ViewImageLabelSettings =
 		copy(insetsPointer = insetsPointer.map { _ * mod }, imageScalingPointer = imageScalingPointer.map { _ * mod })
@@ -223,7 +303,14 @@ trait ViewImageLabelSettingsWrapper[+Repr] extends ViewImageLabelSettingsLike[Re
 	override def insetsPointer: Changing[StackInsets] = settings.insetsPointer
 	override def usesLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	override def transformationPointer: Changing[Option[Matrix2D]] = settings.transformationPointer
+	override def customSizePointer: Option[Changing[Size]] = settings.customSizePointer
+	override def repaintPriority: Priority = settings.repaintPriority
+	override def allowsShrinking: Boolean = settings.allowsShrinking
 	
+	
+	override def withCustomSizePointer(p: Option[Changing[Size]]): Repr = mapSettings { _.withCustomSizePointer(p) }
+	override def withRepaintPriority(priority: Priority): Repr = mapSettings { _.withRepaintPriority(priority) }
+	override def withAllowShrinking(allowShrink: Boolean): Repr = mapSettings { _.withAllowShrinking(allowShrink) }
 	override def withTransformationPointer(p: Changing[Option[Matrix2D]]): Repr =
 		mapSettings { _.withTransformationPointer(p) }
 	override def withAlignmentPointer(p: Changing[Alignment]): Repr =
@@ -462,48 +549,126 @@ object ViewImageLabel extends ViewImageLabelSetup()
   * @author Mikko Hilpinen
   * @since 28.10.2020, v0.1
   */
-class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: Changing[ImageView],
+class ViewImageLabel(override val hierarchy: ComponentHierarchy, imageP: Changing[ImageView],
                      settings: ViewImageLabelSettings, allowUpscalingFlag: Changing[Boolean] = AlwaysTrue)
 	extends ConcreteCustomDrawReachComponent with ImageLabel
 {
 	// ATTRIBUTES	---------------------------------
 	
-	private val localImagePointer = imagePointer.viewWhile(hierarchy.linkedFlag)
-	private val localTransformationPointer = settings.transformationPointer.viewWhile(hierarchy.linkedFlag)
-	private val visualImageSizePointer = localTransformationPointer.fixedValue match {
-		case Some(transformation) =>
-			transformation match {
-				case Some(t) => localImagePointer.map { i => (i.bounds * t).size }
-				case None => localImagePointer.lightMap { _.size }
-			}
-		case None =>
-			val boundsPointer = localImagePointer.lightMap { _.bounds }
-			boundsPointer.mergeWith(localTransformationPointer) { (b, t) =>
-				t match {
-					case Some(t) => (b * t).size
-					case None => b.size
+	private val localImageP = imageP.viewWhile(hierarchy.linkedFlag)
+	private val localTransformationP = settings.transformationPointer.viewWhile(hierarchy.linkedFlag)
+	/**
+	  * A pointer that caches the size of the drawn image, including the effects of a possible transformation.
+	  * Takes into account, whether image size is allowed to decrease.
+	  */
+	private val visualImageSizeP: Changing[Size] = {
+		val allowShrink = settings.allowsShrinking
+		settings.customSizePointer match {
+			// Case: Applies a custom size => Applies the "no shrinking" constraint, if appropriate
+			case Some(customSizeP) =>
+				if (allowShrink || customSizeP.isFixed) customSizeP else noShrinking(customSizeP.viewWhile(linkedFlag))
+			
+			// Case: No custom size => Calculates image size based on image bounds & applied transform,
+			//                         applying "no shrinking" constraint, if appropriate
+			// When applying "no shrinking", uses strongly mapped pointers,
+			// because the constraint's incrementalMap function is not optimized.
+			case None =>
+				localTransformationP.fixedValue match {
+					// Case: Never transforms => Uses image size
+					case Some(None) =>
+						if (allowShrink)
+							localImageP.lightMap { _.size }
+						else
+							noShrinking(localImageP.strongMap { _.size })
+						
+					// Case: Applies a static transformation => Merges image bounds with this transformation
+					case Some(Some(t)) =>
+						if (allowShrink)
+							localImageP.map { _.bounds }.map { b => (b * t).size }
+						else
+							noShrinking(localImageP.strongMap { _.bounds }.strongMap { b => (b * t).size })
+							
+					// Case: Applies a variable transformation => Combines image bounds & transformation
+					case None =>
+						if (allowShrink) {
+							val boundsP = localImageP.map { _.bounds }
+							boundsP.mergeWith(localTransformationP) { (b, t) =>
+								t match {
+									case Some(t) => (b * t).size
+									case None => b.size
+								}
+							}
+						}
+						else {
+							val boundsP = localImageP.strongMap { _.bounds }
+							val transformedBoundsP = boundsP.strongMergeWith(localTransformationP) { (b, t) =>
+								t match {
+									case Some(t) => (b * t).size
+									case None => b.size
+								}
+							}
+							noShrinking(transformedBoundsP)
+						}
 				}
-			}
+		}
 	}
 	
 	override val customDrawers = settings.customDrawers :+
 		ViewImageDrawer.copy(transformationView = settings.transformationPointer, insetsPointer = settings.insetsPointer,
-			alignmentView = settings.alignmentPointer, upscales = allowUpscaling).apply(localImagePointer)
-	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
+			alignmentView = settings.alignmentPointer, upscales = allowUpscaling).apply(localImageP)
+	// Repainting is delayed until all change listeners have been informed
+	private val repaintListener = ChangeListener.triggerAfterEffect { repaint(settings.repaintPriority) }
+	private val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	
 	// INITIAL CODE	---------------------------------
 	
 	// Reacts to changes in the pointers
-	localImagePointer.addListener { change =>
-		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling })
-			repaint()
-		else
-			revalidate()
+	// Applies either a revalidation or a repaint when image, transformation and/or size changes
+	// Case: Using a custom size pointer => Image & transformation -pointers only trigger repaints
+	if (settings.customSizePointer.isDefined) {
+		localImageP.addListener(repaintListener)
+		localTransformationP.addListener(repaintListener)
+		visualImageSizeP.addListener(revalidateListener)
 	}
-	localTransformationPointer.addListener(revalidateListener)
+	// Case: Not using a custom size -pointer
+	//       => Image & transform changes may trigger a repaint or a revalidation
+	else {
+		localImageP.addListener { change =>
+			// Checks whether the image's size is changed, taking the "no shrinking" constraint into account
+			val hasSameSize = {
+				if (settings.allowsShrinking)
+					change.equalsBy { _.size } && change.equalsBy { _.maxScaling }
+				// Case: "No shrinking" applied => Only checks for size increases
+				else {
+					val sizes = change.values.map { _.size }
+					Axis2D.values.forall { axis => sizes.mapAndMerge { _(axis) } { _ >= _ } } &&
+						change.values.mapAndMerge { _.maxScaling } { (before, after) =>
+							before.forall { before => after.exists { _ <= before } }
+						}
+				}
+			}
+			// Case: Size stayed the same => Only repaints
+			if (hasSameSize)
+				Continue.and { repaint(settings.repaintPriority) }
+			// Case: Size changed => Revalidates the component hierarchy
+			else
+				Continue.and { revalidate() }
+		}
+		// Case: Shrinking allowed => Transformation changes are assumed to always trigger size changes
+		if (settings.allowsShrinking)
+			localTransformationP.addListener(revalidateListener)
+		// Case: Shrinking not allowed
+		//       => Handles transformation changes with repaint and only revalidates
+		//          when the size is confirmed to change
+		//          (Has the possible side effect of repainting twice)
+		else {
+			localTransformationP.addListener(repaintListener)
+			visualImageSizeP.addListener(revalidateListener)
+		}
+	}
 	settings.insetsPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
-	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag) { _ => repaint() }
+	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag)(repaintListener)
 	allowUpscalingFlag.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
 	
 	
@@ -519,11 +684,22 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imagePointer: C
 	
 	override def useLowPrioritySize: Boolean = settings.usesLowPrioritySize
 	
-	override def visualImageSize: Size = visualImageSizePointer.value
-	override def maxScaling = localImagePointer.value.maxScaling
+	override def visualImageSize: Size = visualImageSizeP.value
+	override def maxScaling = localImageP.value.maxScaling
 	
 	override def insets = settings.insetsPointer.value
 	override def allowUpscaling: Boolean = allowUpscalingFlag.value
 	
 	override def updateLayout() = ()
+	
+	
+	// OTHER    -------------------------------------
+	
+	/**
+	  * Applies a "no shrinkin" effect to a size pointer
+	  * @param sizePointer Size pointer to map
+	  * @return A mapping of the specified pointer, which never decreases in width or height
+	  */
+	private def noShrinking(sizePointer: Changing[Size]) =
+		sizePointer.incrementalMap(Identity) { (oldSize, change) => oldSize bottomRight change.newValue }
 }

@@ -17,13 +17,13 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 	
 	/**
 	  * @return (Optimal / default) size of the image when drawn on the screen.
-	  *         Determines (for example) how much space this component needs, optimally.
+	  *         Determines how much space this component needs, optimally.
 	  */
 	def visualImageSize: Size
 	/**
 	  * @return Maximum scaling that may be applied on this component.
-	  *         Oftentimes you may want to limit the scaling based on image source resolution,
-	  *         in order to ensure that the image doesn't get too blurry
+	  *         Oftentimes you may want to limit the scaling based on image source resolution
+	  *         in order to ensure that the image doesn't get too blurry,
 	  *         or so that this component doesn't expand beyond image borders (+insets).
 	  *
 	  *         None if no maximum scaling can or should be applied.
@@ -35,7 +35,7 @@ trait ImageComponent extends Component with CustomDrawable with CachingStackable
 	def insets: StackInsets
 	
 	/**
-	  * @return Whether image should be allowed to scale beyond it's original size
+	  * @return Whether image should be allowed to scale beyond its original size
 	  *         (while still respecting image source resolution)
 	  */
 	def allowUpscaling: Boolean

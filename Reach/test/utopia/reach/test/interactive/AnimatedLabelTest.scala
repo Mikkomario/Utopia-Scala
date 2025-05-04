@@ -17,8 +17,8 @@ import utopia.reach.window.ReachWindow
 object AnimatedLabelTest extends App
 {
 	private val window = ReachWindow.contentContextual.borderless.using(AnimatedImageLabel) { (_, labelF) =>
-		labelF.once.rotating(Image.readFrom("Reach/test-images/check-box-selected.png").get,
-			Animation(DirectionalRotation.clockwise.circles).sPathCurved.over(2.seconds), centerOrigin = true)
+		labelF.rotating(Image.readFrom("Reach/test-images/check-box-selected.png").get,
+			Animation(DirectionalRotation.clockwise.circles).over(2.seconds), centerOrigin = true)
 	}
 	
 	window.setToCloseOnEsc()

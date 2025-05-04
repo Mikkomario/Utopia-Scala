@@ -65,7 +65,7 @@ object ReachTestContext
 			.withRevalidationStyle(Delayed(Span(0.05.seconds, 0.15.seconds)))
 			.withContentContext(baseContext)
 	
-	private val actionLoop = new ActionLoop(actorHandler, NumericSpan(5, 60).mapTo(Fps.apply))
+	private val actionLoop = new ActionLoop(actorHandler, NumericSpan(5, 30).mapTo(Fps.apply))
 	
 	
 	// INITIAL CODE -----------------------

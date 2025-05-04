@@ -23,6 +23,7 @@
 ### Deprecations
 - Deprecated **FlatteningMirror** in favor of the new **OptimizedFlatteningMirror**
 - Renamed **Process**'s `hurryPointer` to `hurryFlag` and `shutdownPointer` to `shutDownFlag`
+- In **TimeExtensions**, renamed **Instant**'s `.toUTCDateTime` to `.toUtcDateTime`
 ### Bugfixes
 - Fixed a bug in `OptimizedIndexedSeq.newBuilder`'s `.clear()` function
 - A couple fixes to **OptimizedMirror**:
@@ -42,6 +43,9 @@
   - These are now extended by **AssignableOnce** (previously **SettableOnce**), **MutableOnce** and **LockablePointer**
 - **BasicValueCaster** now allows one to change the **JsonParser** used when converting string values to model values.
 ### New methods
+- **ChangeResponse** (object)
+  - Added `.alwaysRespondWith(ChangeResponse)`, which is also available as an implicit conversion
+  - Added `.triggerAfterEffect(...)` and `.triggerAfterEffectOnce(...)`
 - **Changing**
   - Added `.flatMapWhile(...)` and `.incrementalFlatMapWhile(...)`
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
@@ -61,6 +65,9 @@
   - Added `.indirect`
 - **Seq** (**CollectionExtensions**)
   - Added `.lastPair`, `.lastPairOption`, `.uniquePairsIterator` and `.pairFrom(Int)` utility functions
+- **Steppable**
+  - Added `.isNot(Extreme)`
+  - Added `.step(Int)`
 - **String** (**StringExtensions**)
   - Added `.containsInOrder(...)`
 - **ThreadPool**
