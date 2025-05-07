@@ -1,9 +1,13 @@
 # Utopia Firmament - List of Changes
 
-## v1.4.1 (in development)
+## v1.5 (in development)
+### Breaking changes
+- **Window** constructors now accept a new parameter: positionAfterResize: Option[Bounds => Point]
+  - Also, `getAnchor` is now an **Option**
 ### Bugfixes
 - Fixed a bug that resulted in wrong-sized margins when using a variable context with an "is small flag"
 ### New features
+- **Window**s now support custom-repositioning after each resize (an alternative for the "get anchor" function)
 - Added **InconsistentDrawer** for optional custom drawing
 - Added content scaling support to **AlignFrameLike**
 - Added **MinOptimalLengthModifier** and **MinOptimalSizeModifier** (new stack size modifiers)
@@ -17,6 +21,8 @@
   - Added `.notClosedFlag`
 ### Other changes
 - **ComponentCreationDefaults** now contains `.hintAlphaMod` and `.disabledAlphaMod`
+- Window position-correction function now correctly positions the window 
+  back to where to its original position after the test has completed
 - Added additional rounding to scaling **ButtonImageEffect**
 - **MaxOptimalLengthModifier** now adjusts the minimum length, if necessary
 - **VariableColorContext**`.differentFromVariable(...)` now checks whether the specified pointers be static 

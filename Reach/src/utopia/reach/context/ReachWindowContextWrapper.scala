@@ -22,12 +22,15 @@ trait ReachWindowContextWrapper[Base <: ReachWindowContextCopyable[Base, _], +Re
 	override def windowBackground: Color = windowContext.windowBackground
 	override def cursors: Option[CursorSet] = windowContext.cursors
 	override def revalidationStyle: RevalidationStyle = windowContext.revalidationStyle
-	override def getAnchor: (ReachCanvas, Bounds) => Point = windowContext.getAnchor
+	override def getAnchor: Option[(ReachCanvas, Bounds) => Point] = windowContext.getAnchor
+	override def positionAfterResize: Option[Bounds => Point] = windowContext.positionAfterResize
 	
 	override def withWindowBackground(bg: Color): Repr = mapWindowContext { _.withWindowBackground(bg) }
 	override def withCursors(cursors: Option[CursorSet]): Repr = mapWindowContext { _.withCursors(cursors) }
 	override def withRevalidationStyle(style: RevalidationStyle): Repr =
 		mapWindowContext { _.withRevalidationStyle(style) }
-	override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): Repr =
+	override def withGetAnchor(getAnchor: Option[(ReachCanvas, Bounds) => Point]): Repr =
 		mapWindowContext { _.withGetAnchor(getAnchor) }
+	override def withPositionAfterResize(f: Option[Bounds => Point]): Repr =
+		mapWindowContext { _.withPositionAfterResize(f) }
 }

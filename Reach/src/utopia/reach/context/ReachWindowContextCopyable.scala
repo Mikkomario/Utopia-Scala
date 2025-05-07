@@ -42,10 +42,15 @@ trait ReachWindowContextCopyable[+Repr, +Textual] extends ReachWindowContextProp
 	  */
 	def withRevalidationStyle(style: RevalidationStyle): Repr
 	/**
-	  * @param getAnchor An anchoring function
-	  * @return Context copy that uses the specified anchoring function
+	  * @param getAnchor An anchoring function (optional)
+	  * @return Context copy that uses the specified anchoring function.
 	  */
-	def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): Repr
+	def withGetAnchor(getAnchor: Option[(ReachCanvas, Bounds) => Point]): Repr
+	/**
+	  * @param f A repositioning function applied after each confirmed size change (optional)
+	  * @return A copy of this context which applies the specified positioning function.
+	  */
+	def withPositionAfterResize(f: Option[Bounds => Point]): Repr
 	
 	/**
 	  * @param textContext A text context to add to this context
@@ -159,12 +164,23 @@ trait ReachWindowContextCopyable[+Repr, +Textual] extends ReachWindowContextProp
 	def revalidatingAfter(min: FiniteDuration, max: FiniteDuration): Repr = revalidatingAfter(Span(min, max))
 	
 	/**
+	  * @param getAnchor An anchoring function
+	  * @return Context copy that uses the specified anchoring function
+	  */
+	def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point): Repr = withGetAnchor(Some(getAnchor))
+	/**
 	  * @param alignment Alignment, around which windows should be anchored.
 	  *                  For example, if specifying Alignment.Left, windows will expand to the right and equally to
 	  *                  top and bottom, but not to the left.
 	  * @return Context copy with anchoring logic using that alignment
 	  */
 	def withAnchorAlignment(alignment: Alignment) = withGetAnchor { (_, b) => alignment.origin(b) }
+	
+	/**
+	  * @param f A repositioning function applied after each confirmed size change.
+	  * @return A copy of this context which applies the specified positioning function.
+	  */
+	def withPositionAfterResize(f: Bounds => Point): Repr = withPositionAfterResize(Some(f))
 	
 	/**
 	  * @param context Context to use for creating window contents

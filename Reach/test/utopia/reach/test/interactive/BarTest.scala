@@ -1,6 +1,8 @@
 package utopia.reach.test.interactive
 
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.reach.component.factory.Mixed
@@ -35,6 +37,13 @@ object BarTest extends App
 	
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()
+	private var lastBoundsTime = Now.toInstant
+	window.boundsPointer.addListener { e =>
+		val t = Now.toInstant
+		val prev = lastBoundsTime
+		lastBoundsTime = t
+		println(s"${ e.newValue } (${ window.component.getBounds }) - ${ (t - prev).description }")
+	}
 	
 	KeyboardEvents += KeyStateListener.pressed.anyDigit { _.digit.foreach { d => progressP.value = d * 0.1 } }
 	

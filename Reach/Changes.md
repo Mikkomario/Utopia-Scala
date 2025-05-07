@@ -19,6 +19,9 @@
   - **ViewContainer**'s generic `Container` type parameter is now required to be a subclass of **ReachComponent**
 - Replaced **SwitchableCreations** -type with a new **SwitchableComponents** in most places, 
   in order to simplify conditional content creation
+- **ReachWindowContext** now specifies `positionAfterResize: Option[Bounds => Point]`, 
+  which provides an alternative for window-anchoring
+  - Consequently, `getAnchor` is now an **Option**
 - Changed **ViewImageLabel**'s constructor to use **ViewImageLabelSettings**
 ### Deprecated
 - Renamed scroll bar margin setter functions in **ScrollArea** & **ScrollView** factories

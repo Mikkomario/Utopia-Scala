@@ -180,7 +180,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		
 		// Creates the window
 		val window = Window.contextual(canvas.parent.component, canvas.parent, parent, title,
-			getAnchor = context.getAnchor(canvas, _),
+			getAnchor = context.getAnchor.map { f => f(canvas, _) },
+			positionAfterResize = context.positionAfterResize,
 			prepareForSizeChange = Some(canvas.parent.prepareForWindowSizeChange),
 			disableAutoBoundsUpdates = disableAutoBoundsUpdates)
 		windowPointer.set(window)

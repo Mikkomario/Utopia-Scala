@@ -34,6 +34,14 @@ trait ReachWindowContextPropsView extends WindowContextPropsView
 	  * @return A function that determines the window anchor position.
 	  *         Accepts a canvas instance and window bounds.
 	  *         Returns a point within or outside the bounds that serves as the window "anchor".
+	  *
+	  *         None if anchoring should not be applied.
 	  */
-	def getAnchor: (ReachCanvas, Bounds) => Point
+	def getAnchor: Option[(ReachCanvas, Bounds) => Point]
+	/**
+	  * @return A custom window-repositioning function called after each confirmed window size change.
+	  *         None if repositioning should not be performed.
+	  *         Usually not combined with [[getAnchor]].
+	  */
+	def positionAfterResize: Option[Bounds => Point]
 }

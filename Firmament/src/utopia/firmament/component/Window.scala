@@ -12,8 +12,8 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -94,9 +94,18 @@ object Window
 	  * @param screenBorderMargins Additional margins that are placed on the screen edges, which are not covered by this
 	  *                            window if at all possible.
 	  *                            Default = no margins
-	  * @param getAnchor           A function for determining the so-called anchor position within this window's bounds on screen.
-	  *                            When this window is resized, the anchor position is not moved if at all possible.
-	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
+	  * @param getAnchor A function for determining the so-called anchor position within this window's bounds on screen.
+	  *                  When this window is resized, the anchor position is not moved, if at all possible.
+	  *
+	  *                  This function is optional. If set to None (default),
+	  *                  automated repositioning will be performed only using 'positionAfterResize', if defined.
+	  * @param positionAfterResize A function for repositioning this window after each confirmed size change.
+	  *                             Accepts the current window bounds and yields the new (top left) position to assign.
+	  *                             None (default), if not applied.
+	  *
+	  *                             Note: It is not recommended to use this function together with 'getAnchor'.
+	  *                             However, if both are specified, this function is called
+	  *                             after the anchoring has been initiated.
 	  * @param icon                Icon displayed on this window, initially.
 	  *                            Default = common default (see [[ComponentCreationDefaults]])
 	  * @param maxInitializationWaitDuration The maximum duration this window is allowed to block the current thread
@@ -155,7 +164,8 @@ object Window
 	def apply(container: java.awt.Container, content: Stackable, eventActorHandler: ActorHandler,
 	          parent: Option[java.awt.Window], title: LocalizedString = LocalizedString.empty,
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
-	          getAnchor: Bounds => Point = _.center, icon: Image = ComponentCreationDefaults.windowIcon,
+	          getAnchor: Option[Bounds => Point] = None, positionAfterResize: Option[Bounds => Point] = None,
+	          icon: Image = ComponentCreationDefaults.windowIcon,
 	          maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	          prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
 	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
@@ -167,7 +177,8 @@ object Window
 			case Some(parent) => Left(new JDialog(parent, title.string))
 			case None => Right(new JFrame(title.string))
 		}
-		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins, getAnchor, icon,
+		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins,
+			getAnchor, positionAfterResize, icon,
 			maxInitializationWaitDuration, prepareForSizeChange, !borderless, fullScreen, !disableFocus,
 			!ignoreScreenInsets, enableTransparency, disableAutoBoundsUpdates)
 	}
@@ -181,9 +192,18 @@ object Window
 	  * @param parent              The window that will host this dialog. None if this window shall not have a parent
 	  *                            (will construct a frame). Default = None.
 	  * @param title               Title displayed in the OS header of this window (if applicable). Default = empty.
-	  * @param getAnchor           A function for determining the so-called anchor position within this window's bounds on screen.
-	  *                            When this window is resized, the anchor position is not moved if at all possible.
-	  *                            Default = center = The center of this window will remain in the same place upon resize, if possible.
+	  * @param getAnchor A function for determining the so-called anchor position within this window's bounds on screen.
+	  *                   When this window is resized, the anchor position is not moved, if at all possible.
+	  *
+	  *                   This function is optional. If set to None (default),
+	  *                   automated repositioning will be performed only using 'positionAfterResize', if defined.
+	  *  @param positionAfterResize A function for repositioning this window after each confirmed size change.
+	  *                             Accepts the current window bounds and yields the new (top left) position to assign.
+	  *                             None (default), if not applied.
+	  *
+	  *                             Note: It is not recommended to use this function together with 'getAnchor'.
+	  *                             However, if both are specified, this function is called
+	  *                             after the anchoring has been initiated.
 	  * @param prepareForSizeChange A function called before each window size change.
 	  *                             If specified, accepts 2 values:
 	  *                                 1. The predicted new size of this window
@@ -219,14 +239,15 @@ object Window
 	  * @return A new window
 	  */
 	def contextual(container: java.awt.Container, content: Stackable, parent: Option[java.awt.Window] = None,
-	               title: LocalizedString = LocalizedString.empty, getAnchor: Bounds => Point = _.center,
+	               title: LocalizedString = LocalizedString.empty,
+	               getAnchor: Option[Bounds => Point] = None, positionAfterResize: Option[Bounds => Point] = None,
 	               prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
 	               maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	               disableAutoBoundsUpdates: Boolean = false)
 	              (implicit context: WindowContext, exc: ExecutionContext, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
-			context.screenBorderMargins, getAnchor, context.icon, maxInitializationWaitDuration, prepareForSizeChange,
-			!context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,
+			context.screenBorderMargins, getAnchor, positionAfterResize, context.icon, maxInitializationWaitDuration,
+			prepareForSizeChange, !context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,
 			!context.screenInsetsEnabled, context.transparencyEnabled, disableAutoBoundsUpdates)
 }
 
@@ -242,8 +263,8 @@ object Window
   *
   * @constructor Wraps a window
   * @param wrapped The wrapped window. Either
-  *                     Left: A dialog, or
-  *                     Right: A frame
+  *                     - Left: A dialog, or
+  *                     - Right: A frame
   * @param container The (awt) container that will be used as the root content panel for this window.
   *                  This container is assumed to be associated with the specified 'content' parameter.
   * @param content The root component within this window.
@@ -255,8 +276,17 @@ object Window
   *                            window if at all possible.
   *                            Default = no margins
   * @param getAnchor A function for determining the so-called anchor position within this window's bounds on screen.
-  *                  When this window is resized, the anchor position is not moved if at all possible.
-  *                  Default = center = The center of this window will remain in the same place upon resize, if possible.
+  *                  When this window is resized, the anchor position is not moved, if at all possible.
+  *
+  *                  This function is optional. If set to None (default),
+  *                  automated repositioning will be performed only using 'positionAfterResize', if defined.
+  * @param positionAfterResize A function for repositioning this window after each confirmed size change.
+  *                            Accepts the current window bounds and yields the new (top left) position to assign.
+  *                            None (default), if not applied.
+  *
+  *                            Note: It is not recommended to use this function together with 'getAnchor'.
+  *                            However, if both are specified, this function is called
+  *                            after the anchoring has been initiated.
   * @param initialIcon Icon displayed on this window, initially.
   *                    Default = common default (see [[ComponentCreationDefaults]])
   * @param prepareForSizeChange A function called before each window size change.
@@ -299,8 +329,8 @@ object Window
   *                           Default = false = transparency is always disabled.
   * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
   *                                 This concerns bounds updates that occur at two places:
-  *                                     1) When this window is constructed (once), and
-  *                                     2) Whenever this window becomes visible.
+  *                                     1. When this window is constructed (once), and
+  *                                     1. Whenever this window becomes visible.
   *
   *                                 Set this to false if you intend to perform your own window bounds optimization
   *                                 upon these two cases.
@@ -312,7 +342,8 @@ object Window
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
              eventActorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
-             screenBorderMargins: Insets = Insets.zero, getAnchor: Bounds => Point = _.center,
+             screenBorderMargins: Insets = Insets.zero, getAnchor: Option[Bounds => Point] = None,
+             positionAfterResize: Option[Bounds => Point] = None,
              initialIcon: Image = ComponentCreationDefaults.windowIcon,
              maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
              prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
@@ -604,13 +635,22 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			
 			// Schedules to set up the location adjustment -value, unless set already
 			if (locationAdjustment.isEmpty)
-				Delay(0.5.seconds) {
-					val testPosition = position + X(1)
+				Delay(0.2.seconds) {
+					val positionBeforeTest = position
+					val testPosition = positionBeforeTest + X(1)
 					position = testPosition
 					positionUpdatingFlag.onceNotSet {
-						locationAdjustment = Some((testPosition - position).toVector2D)
+						val positionAfterTest = position
+						val adjustment = (testPosition - positionAfterTest).toVector2D
+						locationAdjustment = Some(adjustment)
+						position = positionAfterResize match {
+							case Some(f) => f(bounds)
+							case None => positionBeforeTest
+						}
 					}
 				}
+			else
+				positionAfterResize.foreach { f => position = f(bounds) }
 			
 			// Quits event listening once this window closes
 			closeFuture.onComplete { _ =>
@@ -804,8 +844,10 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * @return The point which is used as the "anchor" when the size of this window changes.
 	  *         Whenever changes occur, the anchor point is preserved and this window is moved around it instead.
+	  *
+	  *         None if anchoring is disabled.
 	  */
-	private def absoluteAnchorPosition: Point = getAnchor(bounds)
+	private def absoluteAnchorPosition: Option[Point] = getAnchor.map { _(bounds) }
 	
 	
 	// IMPLEMENTED    --------------
@@ -1183,11 +1225,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}
 	private def _setSize(newSize: Size, roundedNewSize: Size, minAndMaxSize: Option[Pair[java.awt.Dimension]] = None) =
 	{
-		// Remembers the anchor position for repositioning
-		if (isFullyVisible) {
-			val anchor = absoluteAnchorPosition
-			pendingAnchor.setOne(anchor)
-		}
+		// Remembers the anchor position for repositioning (optional)
+		if (isFullyVisible)
+			absoluteAnchorPosition.foreach(pendingAnchor.setOne)
 		startSizeUpdate(roundedNewSize)
 		
 		_sizePointer.value = newSize
@@ -1317,13 +1357,16 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			
 			// Repositions based on anchoring, if queued
 			pendingAnchor.pop().foreach { anchor =>
-				val newAnchor = absoluteAnchorPosition
-				// Moves this window so that the anchors overlap.
-				// Makes sure screen borders are respected, also.
-				val adjustment = newAnchor - anchor
-				if (adjustment.nonZero)
-					positionWithinScreen(position - adjustment)
+				absoluteAnchorPosition.foreach { newAnchor =>
+					// Moves this window so that the anchors overlap.
+					// Makes sure screen borders are respected, also.
+					val adjustment = newAnchor - anchor
+					if (adjustment.nonZero)
+						positionWithinScreen(position - adjustment)
+				}
 			}
+			// Applies the custom positioning function, if appropriate
+			positionAfterResize.foreach { f => position = f(bounds) }
 		}
 	}
 	private object WindowStateListener extends WindowAdapter

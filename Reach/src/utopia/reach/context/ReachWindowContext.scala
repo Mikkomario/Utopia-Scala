@@ -22,13 +22,11 @@ object ReachWindowContext
 	  * @param background Background color to use in the created windows
 	  * @param cursors Set of cursors to use (optional)
 	  * @param revalidationStyle Revalidation style to use (default = revalidate immediately in a separate thread)
-	  * @param getAnchor Anchoring function (default = anchor over the focused component, or at the window center)
 	  * @return A new reach window context
 	  */
 	def apply(base: WindowContext, background: Color, cursors: Option[CursorSet] = None,
-	          revalidationStyle: RevalidationStyle = Immediate.async,
-	          getAnchor: (ReachCanvas, Bounds) => Point = _.anchorPosition(_)): ReachWindowContext =
-		_ReachWindowContext(base, background, cursors, revalidationStyle, getAnchor)
+	          revalidationStyle: RevalidationStyle = Immediate.async): ReachWindowContext =
+		_ReachWindowContext(base, background, cursors, revalidationStyle, Some(_.anchorPosition(_)), None)
 	
 	/**
 	  * @param actorHandler The actor handler to wrap
@@ -43,7 +41,8 @@ object ReachWindowContext
 	
 	private case class _ReachWindowContext(windowContext: WindowContext, windowBackground: Color,
 	                                       cursors: Option[CursorSet], revalidationStyle: RevalidationStyle,
-	                                       getAnchor: (ReachCanvas, Bounds) => Point)
+	                                       getAnchor: Option[(ReachCanvas, Bounds) => Point],
+	                                       positionAfterResize: Option[Bounds => Point])
 		extends ReachWindowContext with WindowContextWrapper[WindowContext, ReachWindowContext]
 	{
 		override def self = this
@@ -55,8 +54,11 @@ object ReachWindowContext
 		override def withCursors(cursors: Option[CursorSet]) = copy(cursors = cursors)
 		override def withRevalidationStyle(style: RevalidationStyle) =
 			copy(revalidationStyle = style)
-		override def withGetAnchor(getAnchor: (ReachCanvas, Bounds) => Point) =
-			copy(getAnchor = getAnchor)
+		// Setting the anchor disables custom-positioning and vise versa
+		override def withGetAnchor(getAnchor: Option[(ReachCanvas, Bounds) => Point]) =
+			copy(getAnchor = getAnchor, positionAfterResize = if (getAnchor.isDefined) None else positionAfterResize)
+		override def withPositionAfterResize(f: Option[Bounds => Point]): ReachWindowContext =
+			copy(positionAfterResize = f, getAnchor = if (f.isDefined) None else getAnchor)
 		
 		override def withWindowContext(base: WindowContext) =
 			if (base == windowContext) self else copy(windowContext = base)
