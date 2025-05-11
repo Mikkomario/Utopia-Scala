@@ -72,6 +72,8 @@
 - Buttons are now highlighted more (in terms of color) when in focus and when activated
 - **ViewImageAndTextButton** and **ViewImageButton** now apply image effects 
   only while attached to the main component hierarchy
+- Multiple components now trigger automated revalidations and repaints as pointer after-effects, 
+  rather than from the immediate listeners.
 - Internal refactoring within **Segment** and **SegmentGroup**
 - Internal refactoring within **Field**
 

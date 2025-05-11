@@ -8,6 +8,7 @@ import utopia.firmament.model.enumeration.StackLayout.{Center, Fit, Leading, Tra
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.sign.Sign.Negative
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -558,12 +559,13 @@ private class _Stack(override val hierarchy: ComponentHierarchy,
 	// ATTRIBUTES   ---------------------------
 	
 	override lazy val visibilityPointer: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	
 	// INITIAL CODE ---------------------------
 	
-	marginPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
-	capPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	marginPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
+	capPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED  ---------------------------

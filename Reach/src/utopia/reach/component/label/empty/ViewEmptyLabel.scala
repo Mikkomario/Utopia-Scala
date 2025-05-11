@@ -232,8 +232,8 @@ class ViewEmptyLabel(override val hierarchy: ComponentHierarchy, val stackSizePo
 	// INITIAL CODE -------------------------------
 	
 	// Reacts to pointer changes
-	stackSizePointer.addContinuousAnyChangeListener { revalidate() }
-	customDrawersPointer.addContinuousAnyChangeListener { repaint() }
+	stackSizePointer.afterEachChange { revalidate() }
+	customDrawersPointer.afterEachChange { repaint() }
 	
 	
 	// IMPLEMENTED  -------------------------------

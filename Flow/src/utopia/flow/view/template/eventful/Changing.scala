@@ -542,6 +542,18 @@ trait Changing[+A] extends View[A]
 	  *                 and whether any after effects should be performed.
 	  */
 	def addAnyChangeListener(onChange: => ChangeResponse) = addListener(ChangeListener.onAnyChange(onChange))
+	/**
+	  * Causes the specified function to be fired as an after-effect for each change in this pointer
+	  * @param onChange A function called after each time this pointer changes
+	  */
+	def afterEachChange(onChange: => Unit) = addListener(ChangeListener.triggerAfterEffect(onChange))
+	/**
+	  * @param condition Condition that must be met for the after-effect to be scheduled.
+	  *                  Call-by-name. Not called if this item won't change anymore.
+	  * @param onChange A function called after each change in this item, provided that the specified condition is met.
+	  */
+	def afterEachChangeWhile(condition: => Flag)(onChange: => Unit) =
+		addListenerWhile(condition)(ChangeListener.triggerAfterEffect(onChange))
 	
 	/**
 	  * Assigns a listener to this changing item, which is active only while the specified

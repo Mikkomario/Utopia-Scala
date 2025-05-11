@@ -122,14 +122,14 @@ private class ViewCollection(override val hierarchy: ComponentHierarchy, content
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
+	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	
 	// INITIAL CODE ----------------------------
 	
 	setupMarginListeners()
-	splitThresholdPointer.addListenerWhile(linkedFlag)(revalidateOnChange)
-	contentP.addListenerWhile(linkedFlag)(revalidateOnChange)
+	splitThresholdPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
+	contentP.addListenerWhile(linkedFlag)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED  ----------------------------

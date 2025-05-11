@@ -51,10 +51,9 @@ trait TextComponent extends Component with HasTextDrawContext with StackSizeCalc
 	  * @param style Style to use when measuring text (default = current component style)
 	  * @return A measured copy of that text within this component
 	  */
-	def measure(text: LocalizedString, style: TextDrawContext = textDrawContext) = {
+	def measure(text: LocalizedString, style: TextDrawContext = textDrawContext) =
 		MeasuredText(text.string, fontMetricsWith(style.font), lineSplitThreshold = style.lineSplitThreshold,
 			betweenLinesAdjustment = style.betweenLinesMargin, allowLineBreaks = style.allowLineBreaks)
-	}
 	
 	/**
 	  * @param text Pre-measured text

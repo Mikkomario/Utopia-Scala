@@ -8,6 +8,7 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Flag.wrap
@@ -526,7 +527,7 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val revalidateOnChange = ChangeListener.onAnyChange { revalidate() }
+	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	/**
 	  * A pointer to this stack's visibility state.
@@ -541,14 +542,14 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 	componentsP.addListener { change =>
 		// Also resets the stack sizes of added components
 		change.added.foreach { _.resetEveryCachedStackSize() }
-		revalidate()
+		Continue.and { revalidate() }
 	}
 	
 	// Revalidates this component on other layout changes
-	settings.axisPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
-	settings.layoutPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
-	marginPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
-	settings.capPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateOnChange)
+	settings.axisPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
+	settings.layoutPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
+	marginPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
+	settings.capPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED	-------------------------------
@@ -560,6 +561,4 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 	override def customDrawers: Seq[CustomDrawer] = settings.customDrawers
 	
 	override def components = componentsP.value
-	
-	
 }

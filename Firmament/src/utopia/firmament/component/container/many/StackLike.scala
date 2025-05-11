@@ -73,7 +73,7 @@ trait StackLike[+C <: Stackable] extends MultiContainer[C] with StackSizeCalcula
         val wrappedComponents = components.map { DelayedBoundsUpdate(_) }
         
         // Positions the components using a stacker
-        Stacker(wrappedComponents, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
+        Stacker(wrappedComponents, Bounds(Point.origin, size), direction, margin, cap, layout)
             
         // Finally applies the changes
         wrappedComponents.foreach { _.apply() }

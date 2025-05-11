@@ -48,6 +48,7 @@
   - Added `.triggerAfterEffect(...)` and `.triggerAfterEffectOnce(...)`
 - **Changing**
   - Added `.flatMapWhile(...)` and `.incrementalFlatMapWhile(...)`
+  - Added `.afterEachChange(...)` and `.afterEachChangeWhile(=> Flag)(...)`
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
 - **Destiny** (object)
   - Added `.maySealIf(Boolean)`

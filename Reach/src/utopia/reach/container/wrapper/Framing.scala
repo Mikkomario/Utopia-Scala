@@ -10,6 +10,7 @@ import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.listener.ChangeListener
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
@@ -164,7 +165,7 @@ class Framing(override val hierarchy: ComponentHierarchy, override val content: 
 	// INITIAL CODE -----------------------------
 	
 	// Revalidates this component when applied insets change
-	insetsPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	insetsPointer.addListenerWhile(linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
 	
 	
 	// IMPLEMENTED  -----------------------------

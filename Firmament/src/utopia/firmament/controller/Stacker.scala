@@ -5,7 +5,7 @@ import utopia.firmament.component.stack.HasStackSize
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading, Trailing}
 import utopia.firmament.model.stack.{StackLength, StackSize}
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
 import utopia.flow.view.mutable.Pointer
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -41,9 +41,9 @@ object Stacker
 			val breadths = componentSizes map { _ along stackAxis.perpendicular }
 			
 			// Determines total length & breadth (rounding)
-			val componentsLength = lengths.tail.foldLeft(lengths.head.ceil) { _ + _.ceil }
+			val componentsLength = lengths.view.map { _.ceil }.reduce { _ + _ }
 			// Length has low priority if any of the items has one
-			val numberOfMargins = (componentSizes.size - 1) max 0
+			val numberOfMargins = componentSizes.size - 1
 			val length = componentsLength + margin * numberOfMargins + (cap * 2)
 			
 			// Non-fit stacks don't have max breadth while fit versions do
@@ -70,40 +70,45 @@ object Stacker
 	 * Stacks specified items over the specified area
 	 * @param components Components that are stacked
 	 * @param area Area over which the components are stacked
-	 * @param optimalLength The optimal length of the stack (use calculateStackSize method). Components are shrank or
-	 *                      stretched according to difference between this value and the area's length
 	 * @param stackAxis Axis along which the items are stacked
 	 * @param margin Margin between the items (default = 0 or more)
 	 * @param cap Cap at each end of the stack (default = fixed to 0)
 	 * @param layout How the items are placed perpendicular to target axis (default = Fit = each item has same breadth)
 	 */
-	def apply(components: Seq[HasMutableBounds with HasStackSize], area: Bounds, optimalLength: Double,
+	def apply(components: Seq[HasMutableBounds with HasStackSize], area: Bounds,
 	          stackAxis: Axis2D, margin: StackLength = StackLength.any, cap: StackLength = StackLength.fixed(0),
 	          layout: StackLayout = Fit) =
 	{
 		if (components.nonEmpty) {
+			val componentsWithSizes = components.map { c => c -> c.stackSize }
+			val (lastComponent, lastComponentSize) = componentsWithSizes.last
+			
+			// Calculates the optimal length, so that the applied adjustments can be based on it
+			val numberOfMargins = components.size - 1
+			val optimalLength = componentsWithSizes.view.map { _._2(stackAxis).optimal }.sum +
+				margin.optimal * numberOfMargins + cap.optimal * 2
+			
 			// Calculates the necessary length adjustment
 			val lengthAdjustment = area.size(stackAxis) - optimalLength
 			
-			// Arranges the mutable items in a vector first. Treats margins and caps as separate items
-			val caps = Vector.fill(2)(Pointer(0.0))
-			val numberOfMargins = (components.size - 1) max 0
-			val margins = Vector.fill(numberOfMargins)(Pointer(0.0))
+			// Constructs a sequence of mutable wrappers. Treats margins and caps as separate items.
+			val caps = Pair.fill(Pointer(0.0))
+			val margins = OptimizedIndexedSeq.fill(numberOfMargins)(Pointer(0.0))
 			val targets = {
 				val builder = new VectorBuilder[LengthAdjust]()
 				
 				// Starts with a cap
-				builder += new GapLengthAdjust(caps.head, cap)
+				builder += new GapLengthAdjust(caps.first, cap)
 				
 				// Next adds items with margins
-				components.zip(margins).foreach { case (component, marginPointer) =>
-					builder += new StackableLengthAdjust(component, stackAxis)
+				componentsWithSizes.iterator.zip(margins).foreach { case ((component, size), marginPointer) =>
+					builder += new StackableLengthAdjust(component, size(stackAxis), stackAxis)
 					builder += new GapLengthAdjust(marginPointer, margin)
 				}
 				
 				// Adds final component and final cap
-				builder += new StackableLengthAdjust(components.last, stackAxis)
-				builder += new GapLengthAdjust(caps.last, cap)
+				builder += new StackableLengthAdjust(lastComponent, lastComponentSize(stackAxis), stackAxis)
+				builder += new GapLengthAdjust(caps.second, cap)
 				
 				builder.result()
 			}
@@ -112,8 +117,7 @@ object Stacker
 			val groupedTargets = targets.groupBy { _.isLowPriorityFor(lengthAdjustment) }
 			val lowPrioTargets = groupedTargets.getOrElse(true, Empty)
 			
-			val remainingAdjustment =
-			{
+			val remainingAdjustment = {
 				if (lowPrioTargets.isEmpty)
 					lengthAdjustment
 				else
@@ -127,46 +131,42 @@ object Stacker
 			targets.foreach { _() }
 			
 			// Positions the components length-wise (first components with margin and then the final component)
-			var cursor = area.position.along(stackAxis) + caps.head.value
-			components.zip(margins).foreach { case (component, marginPointer) =>
+			var cursor = area.position.along(stackAxis) + caps.first.value
+			components.iterator.zip(margins).foreach { case (component, marginPointer) =>
 				component.setCoordinate(cursor)
 				cursor += component.lengthAlong(stackAxis) + marginPointer.value
 			}
-			components.last.setCoordinate(cursor)
+			lastComponent.setCoordinate(cursor)
 			
 			// Handles the breadth of the components too, as well as their perpendicular positioning
 			val breadthAxis = stackAxis.perpendicular
 			val newBreadth = area.size(breadthAxis)
-			components.foreach { component =>
-				val breadth = component.stackSize(breadthAxis)
+			componentsWithSizes.foreach { case (component, targetSize) =>
+				val breadth = targetSize(breadthAxis)
 				
 				// Component breadth may be affected by minimum and maximum
 				val newComponentBreadth = {
+					// Case: Minimum reached => Limits to minimum
 					if (breadth.min > newBreadth)
 						breadth.min
-					else if (breadth.max.exists { newBreadth > _ })
-						breadth.max.get
 					else
-					{
-						// In fit-style stacks, stack breadth is used over component optimal
-						// whereas in other styles optimal is prioritized
-						if (layout == Fit)
-							newBreadth
-						else
-							newBreadth min breadth.optimal
-					}
+						breadth.max.filter { newBreadth > _ }.getOrElse {
+							// In fit-style stacks, stack breadth is used over component optimal
+							// whereas in other styles optimal is prioritized
+							if (layout == Fit)
+								newBreadth
+							else
+								newBreadth min breadth.optimal
+						}
 				}
 				
 				component.setLength(breadthAxis(newComponentBreadth))
 				
 				// Component positioning depends on the layout
-				val newComponentPosition = {
-					if (layout == Leading)
-						0
-					else if (layout == Trailing)
-						newBreadth - newComponentBreadth
-					else
-						(newBreadth - newComponentBreadth) / 2
+				val newComponentPosition = layout match {
+					case Leading => 0
+					case Trailing => newBreadth - newComponentBreadth
+					case _ => (newBreadth - newComponentBreadth) / 2
 				}
 				
 				component.setCoordinate(area.position.along(breadthAxis) + newComponentPosition)
@@ -279,14 +279,13 @@ object Stacker
 		def apply() = setLength(length.optimal.ceil + currentAdjust)
 	}
 	
-	private class StackableLengthAdjust(private val target: HasMutableBounds with HasStackSize,
-	                                    private val direction: Axis2D) extends LengthAdjust
+	private class StackableLengthAdjust(target: HasMutableBounds, override val length: StackLength, direction: Axis2D)
+		extends LengthAdjust
 	{
-		def length = target.stackSize(direction)
 		def setLength(length: Double) = target.setLength(direction(length))
 	}
 	
-	private class GapLengthAdjust(val target: Pointer[Double], val length: StackLength) extends LengthAdjust
+	private class GapLengthAdjust(val target: Pointer[Double], override val length: StackLength) extends LengthAdjust
 	{
 		def setLength(length: Double) = target.value = length
 	}

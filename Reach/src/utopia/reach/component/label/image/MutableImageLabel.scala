@@ -3,6 +3,7 @@ package utopia.reach.component.label.image
 import utopia.firmament.drawing.view.ViewImageDrawer
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
@@ -71,7 +72,7 @@ class MutableImageLabel(override val hierarchy: ComponentHierarchy, initialImage
 		}
 	}
 	
-	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
+	private val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	
 	// INITIAL CODE	--------------------------
@@ -84,9 +85,9 @@ class MutableImageLabel(override val hierarchy: ComponentHierarchy, initialImage
 	// Updates and repaints this label when values change
 	imagePointer.addContinuousListener { change =>
 		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling })
-			repaint()
+			Continue.and { repaint() }
 		else
-			revalidate()
+			Continue.and { revalidate() }
 	}
 	transformationPointer.addListener(revalidateListener)
 	insetsPointer.addListener(revalidateListener)

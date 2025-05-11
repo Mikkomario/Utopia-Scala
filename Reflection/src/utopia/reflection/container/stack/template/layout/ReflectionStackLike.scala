@@ -1,17 +1,17 @@
 package utopia.reflection.container.stack.template.layout
 
-import utopia.firmament.component.{AreaOfItems, HasMutableBounds}
 import utopia.firmament.component.stack.StackSizeCalculating
+import utopia.firmament.component.{AreaOfItems, HasMutableBounds}
 import utopia.firmament.controller.Stacker
 import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
-import utopia.reflection.container.stack.template.MultiStackContainer
-import utopia.firmament.model.stack.StackLength
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reflection.component.template.layout.stack.{ReflectionStackable, ReflectionStackableWrapper}
+import utopia.reflection.container.stack.template.MultiStackContainer
 
 /**
 * A stack holds multiple stackable components in a stack-like manner either horizontally or vertically
@@ -98,7 +98,7 @@ trait ReflectionStackLike[C <: ReflectionStackable]
     
     def updateLayout() = {
         // Positions the components using a stacker
-        Stacker(_components, Bounds(Point.origin, size), stackLength.optimal, direction, margin, cap, layout)
+        Stacker(_components, Bounds(Point.origin, size), direction, margin, cap, layout)
             
         // Finally applies the changes
         _components.view.filter { _.visible }.foreach { _.updateBounds() }

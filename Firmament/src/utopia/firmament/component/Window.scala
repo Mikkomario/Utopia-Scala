@@ -635,7 +635,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			
 			// Schedules to set up the location adjustment -value, unless set already
 			if (locationAdjustment.isEmpty)
-				Delay(0.2.seconds) {
+				Delay(0.4.seconds) {
 					val positionBeforeTest = position
 					val testPosition = positionBeforeTest + X(1)
 					position = testPosition

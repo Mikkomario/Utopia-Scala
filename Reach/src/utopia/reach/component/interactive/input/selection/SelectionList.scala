@@ -426,7 +426,7 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 			repaintArea(area.enlarged(settings.axis(marginPointer.value.optimal)), High)
 		}
 	}
-	private val revalidateListener = ChangeListener.continuousOnAnyChange { stack.revalidate() }
+	private val revalidateListener = ChangeListener.triggerAfterEffect { stack.revalidate() }
 	
 	
 	// INITIAL CODE	--------------------------------

@@ -165,7 +165,8 @@ class TextLabel(override val hierarchy: ComponentHierarchy, val text: LocalizedS
 	
 	override val measuredText = measure(text)
 	override val customDrawers = additionalDrawers :+
-		TextDrawer(measuredText, textDrawContext.font, textDrawContext.insets, textDrawContext.color, textDrawContext.alignment)
+		TextDrawer(measuredText, textDrawContext.font, textDrawContext.insets, textDrawContext.color,
+			textDrawContext.alignment)
 	
 	
 	// IMPLEMENTED	-----------------------------

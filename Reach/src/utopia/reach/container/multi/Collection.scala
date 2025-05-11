@@ -610,7 +610,7 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 	protected def setupMarginListeners() = {
 		val pointers = Pair(innerMarginPointer, outerMarginPointer)
 		if (pointers.exists { _.mayChange }) {
-			lazy val revalidateListener = ChangeListener.onAnyChange { revalidate() }
+			lazy val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
 			linkedFlag.addListener { e =>
 				if (e.newValue)
 					pointers.foreach { _.addListener(revalidateListener) }
@@ -631,10 +631,8 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 				insideRowLayout)
 			new StackBoundsWrapper(stackSize)
 		}
-		val simulatedStackSize = Stacker.calculateStackSize(rowWrappers.map { _.stackSize }, secondaryAxis,
-			innerMargin, outerMargin, betweenRowsLayout)
-		Stacker.apply(rowWrappers, Bounds(Point.origin, area), simulatedStackSize(secondaryAxis).optimal,
-			secondaryAxis, innerMargin, outerMargin, betweenRowsLayout)
+		Stacker.apply(rowWrappers, Bounds(Point.origin, area), secondaryAxis, innerMargin, outerMargin,
+			betweenRowsLayout)
 		
 		// Then places the components within the rows
 		// The bounds updates are delayed
@@ -643,8 +641,7 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 				val itemWrappers = row.map { case (component, stackSize) =>
 					new DelayedBoundsUpdate(component, stackSize)
 				}
-				Stacker(itemWrappers, rowWrapper.bounds, rowWrapper.stackSize(primaryAxis).optimal,
-					primaryAxis, innerMargin, outerMargin, insideRowLayout)
+				Stacker(itemWrappers, rowWrapper.bounds, primaryAxis, innerMargin, outerMargin, insideRowLayout)
 				
 				itemWrappers
 			}
@@ -699,7 +696,7 @@ private class _Collection(override val hierarchy: ComponentHierarchy,
 	// INITIAL CODE ----------------------------
 	
 	setupMarginListeners()
-	splitThresholdPointer.addListenerWhile(linkedFlag) { _ => revalidate() }
+	splitThresholdPointer.addListenerWhile(linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
 	
 	
 	// IMPLEMENTED  ----------------------------

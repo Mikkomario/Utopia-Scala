@@ -2,6 +2,10 @@
 
 ## v1.5 (in development)
 ### Breaking changes
+- `Stacker.apply(...)` no longer accepts the optimal length as a parameter, but calculates it instead
+  - This is because the previous implementation assumed that the specified / applied optimal length is based on 
+    `Stacker.calculateStackSize(...)`. This assumption didn't hold in situations where 
+    **StackLengthModifier**s were used (for example).
 - **Window** constructors now accept a new parameter: positionAfterResize: Option[Bounds => Point]
   - Also, `getAnchor` is now an **Option**
 ### Bugfixes
