@@ -1,32 +1,91 @@
 package utopia.firmament.localization
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+
+import scala.annotation.unused
 import scala.language.implicitConversions
 
 object LocalString
 {
-	// ATTRIBUTES	-----------------------------
+	// ATTRIBUTES   ----------------------
 	
 	/**
-	  * An empty local string
+	  * A factory for constructing strings explicitly without language information
 	  */
-	val empty = LocalString("")
+	lazy val noLanguage = in(Language.none)
 	
 	
-	// IMPLICIT CONVERSIONS	---------------------
+	// IMPLICIT --------------------------
 	
 	/**
-	  * Converts a string into a local string using the default language code (implicit)
-	  * @param string A string
-	  * @param defaultLanguageCode An implicit default language code
-	  * @return A string as a local string in default language
+	  * @param string String to wrap
+	  * @param language Language of the specified string
+	  * @return A new local string
 	  */
-	implicit def stringToLocal(string: String)(implicit defaultLanguageCode: String): LocalString =
-		LocalString(string, defaultLanguageCode)
+	implicit def apply(string: String)(implicit language: Language): LocalString = _LocalString(string, language)
+	
+	implicit def objectToFactory(@unused o: LocalString.type)
+	                            (implicit language: Language): LocalStringFactory[LocalString] =
+		in(language)
 	
 	
-	// OPERATORS	-----------------------------
+	// OTHER    --------------------------
 	
-	def apply(string: String, languageCode: String) = new LocalString(string, Some(languageCode))
+	/**
+	  * @param language Applied language
+	  * @return A string factory using that language (as the default)
+	  */
+	def in(language: Language): LocalStringFactory[LocalString] = _LocalStringFactory(language)
+	
+	private def _interpolate(string: String, params: Seq[Any]) = {
+		if (params.isEmpty)
+			string
+		else {
+			val builder = new StringBuilder()
+			
+			var cursor = 0
+			var nextArgIndex = 0
+			
+			while (cursor < string.length) {
+				// Finds the next argument position
+				val nextArgumentPosition = string.indexOf('%', cursor)
+				
+				// After all arguments have been parsed, adds the remaining part of the string
+				if (nextArgumentPosition < 0) {
+					builder.append(string.substring(cursor))
+					cursor = string.length
+				}
+				else {
+					// The part between the arguments is kept as is
+					builder.append(string.substring(cursor, nextArgumentPosition))
+					
+					// Sometimes '%' is used without argument type, in which case it is copied as is
+					// This also happens when there aren't enough arguments provided
+					if (string.length < nextArgumentPosition || params.hasSize <= nextArgIndex) {
+						builder.append('%')
+						cursor = nextArgumentPosition + 1
+					}
+					else {
+						// Checks the argument type
+						val argType = StringArgumentType(string.charAt(nextArgumentPosition + 1))
+						
+						// Parses argument and inserts it to string
+						builder.append(argType.parse(params(nextArgIndex)))
+						nextArgIndex += 1
+						cursor = nextArgumentPosition + 2
+					}
+				}
+			}
+			builder.toString()
+		}
+	}
+	private def _interpolate(string: String, params: Map[String, Any]) = {
+		if (params.isEmpty)
+			string
+		else
+			params.foldLeft(string) { case (str, (paramName, value)) => str.replace(s"$${$paramName}", value.toString) }
+	}
 	
 	
 	// EXTENSIONS	-----------------------------
@@ -34,165 +93,103 @@ object LocalString
 	implicit class StringLocal(val s: String) extends AnyVal
 	{
 		/**
-		  * @param languageCode ISO code of the string's language (implicit)
-		  * @return A local version of string
-		  */
-		def local(implicit languageCode: String) = LocalString(s, languageCode)
-		
-		/**
 		  * @return A local version of string with no language information
 		  */
-		def noLanguage = LocalString(s)
-		
-		/**
-		 * @param languageCode Language code for this string (implicit)
-		 * @param localizer A localizer (implicit)
-		 * @return A localized version of this string
-		 */
-		def autoLocalized(implicit languageCode: String, localizer: Localizer): LocalizedString = s
-		
-		/*
-		  * @param languageCode ISO code of the string's language (implicit)
-		  * @return A local version of string with localization skipped
-		  */
-		// def localizationSkipped(implicit languageCode: String) = local.localizationSkipped
-		
+		def noLanguage = in(Language.none)
 		/**
 		  * @return A local version of string with no language information and localization skipped
 		  */
-		def noLanguageLocalizationSkipped = noLanguage.localizationSkipped
+		@deprecated("Please use .noLanguage.skipLocalization instead", "v1.5")
+		def noLanguageLocalizationSkipped = noLanguage.skipLocalization
+		
+		/**
+		  * @param language Local language (implicit)
+		  * @return A local version of string
+		  */
+		def local(implicit language: Language) = in(language)
+		/**
+		  * @param language Local language (implicit)
+		  * @param localizer A localizer (implicit)
+		  * @return A localized version of this string
+		  */
+		def autoLocalized(implicit language: Language, localizer: Localizer): LocalizedString = in(language).localized
+		
+		/**
+		  * @param language Language of this string
+		  * @return A local string wrapping this string
+		  */
+		def in(language: Language) = LocalString.in(language)(s)
+	}
+	
+	
+	// NESTED   --------------------------
+	
+	private case class _LocalStringFactory(language: Language) extends LocalStringFactory[LocalString]
+	{
+		// IMPLEMENTED  ------------------
+		
+		override def apply(string: String) = _LocalString(string, language)
+		override def apply(string: String, language: Language): LocalString =
+			_LocalString(string, language.nonEmptyOrElse(this.language))
+		
+		override def interpolate(string: String)(params: Any*): LocalString =
+			if (params.isEmpty) apply(string) else InterpolatedWrapper(apply(string), params)
+		override def interpolate(string: String, params: Map[String, Any]): LocalString = {
+			if (params.isEmpty)
+				apply(string)
+			else
+				InterpolatedWrapper(apply(string), namedParams = params)
+		}
+	}
+	
+	private class InterpolatingFactory(override protected val wrapped: LocalStringFactory[LocalString],
+	                                   unnamedParams: Seq[Any], namedParams: Map[String, Any])
+		extends LocalStringFactoryWrapper[LocalString, LocalString]
+	{
+		override protected def wrap(string: LocalString): LocalString =
+			InterpolatedWrapper(string, unnamedParams, namedParams)
+	}
+	
+	private case class _LocalString(wrapped: String, language: Language) extends LocalString
+	{
+		override val isLocalized: Boolean = false
+		
+		override def self: LocalString = this
+		override def factory: LocalStringFactory[LocalString] = LocalString.in(language)
+		override def raw: String = wrapped
+		
+		override def skipLocalization: LocalizedString = LocalizedString.wrap(this)
+		override def localized(implicit localizer: Localizer): LocalizedString = localizer(this)
+	}
+	
+	private case class InterpolatedWrapper(original: LocalString, unnamedParams: Seq[Any] = Empty,
+	                                       namedParams: Map[String, Any] = Map())
+		extends LocalString
+	{
+		// Lazily generates the interpolated version
+		override lazy val wrapped: String = _interpolate(_interpolate(original.wrapped, unnamedParams), namedParams)
+		override lazy val factory: LocalStringFactory[LocalString] =
+			new InterpolatingFactory(original.factory, unnamedParams, namedParams)
+		
+		override def self: LocalString = this
+		
+		override def raw: String = original.raw
+		override def language: Language = original.language
+		
+		override def isLocalized: Boolean = original.isLocalized
+		override def skipLocalization: LocalizedString = LocalizedString.wrap(this)
+		override def localized(implicit localizer: Localizer): LocalizedString = {
+			if (isLocalized)
+				this
+			else
+				LocalizedString.wrap(copy(original = localizer(original)))
+		}
 	}
 }
 
 /**
-  * LocalStrings are simple strings that know the language of their contents
+  * Represents a string in some language
   * @author Mikko Hilpinen
   * @since 22.4.2019, Reflection v1+
-  * @param string A source string
-  * @param languageCode The 2-character ISO code for the language of the string
   */
-case class LocalString(override val string: String, override val languageCode: Option[String] = None)
-	extends LocalStringLike[LocalString]
-{
-	// COMPUTED	--------------------------
-	
-	/**
-	  * @return A version of this string where localization has been skipped
-	  */
-	def localizationSkipped = LocalizedString(this, None)
-	
-	/**
-	 * @param localizer An implicit localizer
-	 * @return A localized version of this local string
-	 */
-	def localized(implicit localizer: Localizer) = localizer.localize(this)
-	
-	
-	// IMPLEMENTED	----------------------
-	
-	override def self = this
-	
-	override def modify(f: String => String) = copy(string = f(string))
-	
-	override def +(other: LocalString) =
-	{
-		val newCode =
-		{
-			if (languageCode.isDefined)
-			{
-				if (other.languageCode.forall { _ == languageCode.get }) languageCode else None
-			}
-			else
-				other.languageCode
-		}
-		
-		LocalString(string + other.string, newCode)
-	}
-	
-	override def split(regex: String) = string.split(regex).toVector.map { LocalString(_, languageCode) }
-	
-	override def interpolated(args: Map[String, Any]) =
-	{
-		LocalString(args.foldLeft(string) { (str, argument) =>
-			str.replace("${" + argument._1 + "}", argument._2.toString) }, languageCode)
-	}
-	
-	override def interpolated(args: Seq[Any]) = LocalString(parseArguments(string, args), languageCode)
-	
-	
-	// OPERATORS	----------------------
-	
-	/**
-	  * Appends a string at the end of this string
-	  * @param str A string to append
-	  * @return An appended local string
-	  */
-	def +(str: String) = LocalString(string + str, languageCode)
-	
-	
-	// OTHER	--------------------------
-	
-	/**
-	  * @param start String start index (inclusive)
-	  * @param end String end index (exclusive, default = end of string)
-	  * @return A sub-section of this string
-	  * @throws IndexOutOfBoundsException If start < 0 or end > length of this string
-	  */
-	@throws[IndexOutOfBoundsException]("If start < 0 or end > length of this string")
-	def subString(start: Int, end: Int = string.length) = copy(string = string.substring(start, end))
-	
-	private def parseArguments(field: String, args: Seq[Any]) =
-	{
-		val str = new StringBuilder()
-		
-		var cursor = 0
-		var nextArgIndex = 0
-		
-		while (cursor < field.length)
-		{
-			// Finds the next argument position
-			val nextArgumentPosition = cursor + field.substring(cursor).indexOf('%')
-			
-			// After all arguments have been parsed, adds the remaining part of the string
-			if (nextArgumentPosition < cursor)
-			{
-				str.append(field.substring(cursor))
-				cursor = field.length
-			}
-			else
-			{
-				// The part between the arguments is kept as is
-				str.append(field.substring(cursor, nextArgumentPosition))
-				
-				// The field may end in '%', in which case the following checks cannot be made
-				if (field.length <= nextArgumentPosition + 1)
-				{
-					str.append('%')
-					cursor = field.length
-				}
-				else
-				{
-					// Checks the argument type
-					val argType = StringArgumentType(field.charAt(nextArgumentPosition + 1))
-					
-					// Sometimes '%' is used without argument type, in which case it is copied as is
-					// This also happens when there aren't enough arguments provided
-					if (argType.isEmpty || nextArgIndex >= args.size)
-					{
-						str.append('%')
-						cursor = nextArgumentPosition + 1
-					}
-					else
-					{
-						// Parses argument and inserts it to string
-						str.append(argType.get.parse(args(nextArgIndex)))
-						nextArgIndex += 1
-						cursor = nextArgumentPosition + 2
-					}
-				}
-			}
-		}
-		
-		str.toString()
-	}
-}
+trait LocalString extends LocalStringLike[LocalString]

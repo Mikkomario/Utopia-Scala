@@ -30,10 +30,10 @@ object DialogTest extends App
 		override def resetCachedSize() = ()
 	}
 
-	private val frame = Frame.windowed(new ContentPanel(640.any x 480.any), "Frame".local.localizationSkipped)
+	private val frame = Frame.windowed(new ContentPanel(640.any x 480.any), "Frame".local.skipLocalization)
 	frame.setToExitOnClose()
 
-	private val dialog = new Dialog(frame.component, new ContentPanel(320.any x 240.any), "Dialog".local.localizationSkipped)
+	private val dialog = new Dialog(frame.component, new ContentPanel(320.any x 240.any), "Dialog".local.skipLocalization)
 	dialog.closeFuture.foreach { _ => frame.background = Color.yellow }
 
 	frame.visible = true

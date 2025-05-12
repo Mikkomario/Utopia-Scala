@@ -38,7 +38,7 @@ object ViewStackTest extends App
 			stackF.mapContext { _.withTextExpandingToRight }.build(TextLabel) { labelFactories =>
 				// 1-9 Labels
 				(1 to 9).map { i =>
-					labelFactories.next().apply(i.toString.noLanguageLocalizationSkipped) ->
+					labelFactories.next().apply(i.toString.noLanguage.skipLocalization) ->
 						numberPointer.map { _ >= i }
 				}.toVector
 			}

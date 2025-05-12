@@ -65,7 +65,8 @@ object StringArgumentType
 	  * @param identifier An identifier
 	  * @return An argument type for the specified identifier
 	  */
-	def apply(identifier: Char) = values.find { _.identifier == identifier }
+	def apply(identifier: Char) =
+		values.find { _.identifier == identifier }.getOrElse(StringType)
 	
 	/**
 	  * Parses an argument to string
@@ -73,7 +74,7 @@ object StringArgumentType
 	  * @param identifier The argument type identifier
 	  * @return A parsed string from the argument
 	  */
-	def parse(arg: Any, identifier: Char) = values.find { _.identifier == identifier }.map { _.parse(arg) } getOrElse ""
+	def parse(arg: Any, identifier: Char) = apply(identifier).parse(arg)
 }
 
 /**

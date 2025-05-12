@@ -9,6 +9,7 @@ import utopia.flow.operator.filter.Filter
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, Tab}
@@ -331,9 +332,8 @@ object EditableTextLabel extends EditableTextLabelSetup()
 // TODO: Should also support input modification (e.g. upper-casing)
 class EditableTextLabel(override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                         settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
-                        val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger))
-	extends AbstractSelectableTextLabel(hierarchy, context,
-		textPointer.strongMap { _.noLanguageLocalizationSkipped },
+                        val textPointer: EventfulPointer[String] = Pointer.eventful("")(ComponentCreationDefaults.componentLogger))
+	extends AbstractSelectableTextLabel(hierarchy, context, textPointer.map { _.noLanguage.skipLocalization },
 		if (settings.allowsSelectionWhileDisabled) settings.enabledFlag || textPointer.map { _.nonEmpty } else settings.enabledFlag,
 		settings.labelSettings, settings.enabledFlag)
 {

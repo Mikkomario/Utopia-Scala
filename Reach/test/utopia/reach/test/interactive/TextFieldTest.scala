@@ -1,6 +1,6 @@
 package utopia.reach.test.interactive
 
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
@@ -41,11 +41,10 @@ object TextFieldTest extends App
 			// Stack (Y)
 			stackF.build(Stack) { rowF =>
 				// Each row contains a text field and a value label
-				def makeRow[A](displayFunction: DisplayFunction[A])(makeField: ContextualTextFieldFactory => TextField[A]) =
-				{
+				def makeRow[A](display: Display[A])(makeField: ContextualTextFieldFactory => TextField[A]) = {
 					rowF.related.row.trailing.build(Mixed) { row =>
 						val field = makeField(row(TextField))
-						val summary = row(ViewTextLabel)(field.valuePointer, displayFunction)
+						val summary = row(ViewTextLabel)(field.valuePointer, display)
 						field.linkedFlag.addListener { e => println(s"Field linked $e") }
 						Vector(field, summary)
 					}.parent
@@ -58,7 +57,7 @@ object TextFieldTest extends App
 				
 				// Contains 5 rows
 				Vector(
-					makeRow[String](DisplayFunction.raw) {
+					makeRow[String](Display.identity) {
 						_.mapContext { _.withLineSplitThreshold(320) }
 							.withFieldName("Text").withMaxLength(999).displayingCharacterCount
 							.validatedString(320.any) { in =>
@@ -66,22 +65,22 @@ object TextFieldTest extends App
 								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default
 							}
 					},
-					makeRow[String](DisplayFunction.raw) {
+					makeRow[String](Display.identity) {
 						_.withFieldName("Text").withMaxLength(32).outlined
 							.string(StackLength(160, 320))
 					},
-					makeRow[Option[Int]](DisplayFunction.rawOption) { factory =>
+					makeRow[Option[Int]](Display.identity.optional) { factory =>
 						val field = factory.withFieldName("Int").outlined.int()
 						intLargerThanZeroP.complete(field.valuePointer.map { _.exists { _ > 0 } })
 						field
 					},
-					makeRow[Option[Int]](DisplayFunction.rawOption) {
+					makeRow[Option[Int]](Display.identity.optional) {
 						_.withFieldName("Int+")
 							.allowingSelectionWhileDisabled.withEnabledFlag(intLargerThanZeroP)
 							.int(Span.numeric(0, 10))
 					},
-					makeRow[Option[Double]](DisplayFunction.rawOption) {
-						_.withFieldName("Double").withPrompt("0.".noLanguageLocalizationSkipped)
+					makeRow[Option[Double]](Display.identity.optional) {
+						_.withFieldName("Double").withPrompt("0.".noLanguage.skipLocalization)
 							.double(Span.numeric(0.0, 1.0), expectedNumberOfDecimals = 2)
 					}
 				)

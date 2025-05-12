@@ -8,5 +8,5 @@ package utopia.firmament.localization
   */
 object NoLocalization extends Localizer
 {
-	override def localize(string: LocalString) = string.localizationSkipped
+	override def apply(string: LocalString) = string.skipLocalization
 }

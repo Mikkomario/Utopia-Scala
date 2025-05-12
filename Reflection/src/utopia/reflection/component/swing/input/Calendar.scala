@@ -23,7 +23,7 @@ import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
@@ -55,10 +55,10 @@ object Calendar
 	  */
 		// TODO: Update to a new version that uses new drop down implementations
 	def apply(monthDropDown: JDropDownWrapper[Month], yearDropDown: JDropDownWrapper[Year], forwardIcon: ButtonImageSet,
-			  backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
-			  dayNameDisplayFunction: DisplayFunction[WeekDay], dayNameFont: Font, dayNameTextColor: Color,
-			  dayNameInsets: StackInsets, dateFont: Font, dateTextColor: Color, dateInsets: StackInsets,
-			  selectionHoverColor: Color, selectedColor: Color)
+	          backwardIcon: ButtonImageSet, headerHMargin: StackLength, afterHeaderMargin: StackLength,
+	          dayNameDisplayFunction: Display[WeekDay], dayNameFont: Font, dayNameTextColor: Color,
+	          dayNameInsets: StackInsets, dateFont: Font, dateTextColor: Color, dateInsets: StackInsets,
+	          selectionHoverColor: Color, selectedColor: Color)
 	         (implicit weekDays: WeekDays) =
 	{
 		def makeDayNameLabel(day: WeekDay) =
@@ -81,7 +81,7 @@ object Calendar
 	{
 		// ATTRIBUTES	-----------------
 		
-		private val label = new ItemLabel[Int](EventfulPointer(date), DisplayFunction.raw, font, textColor,
+		private val label = new ItemLabel[Int](EventfulPointer(date), Display.identity, font, textColor,
 			insets, Alignment.Center)
 		
 		override val valuePointer = EventfulPointer[Boolean](false)

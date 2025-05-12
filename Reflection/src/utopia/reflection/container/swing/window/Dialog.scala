@@ -45,7 +45,7 @@ class Dialog[C <: ReflectionStackable with AwtContainerRelated](owner: java.awt.
 {
     // ATTRIBUTES    -------------------
     
-    private val _component = new JDialog(owner, title.string)
+    private val _component = new JDialog(owner, title.wrapped)
     private var _resizePolicy = startResizePolicy
     
     

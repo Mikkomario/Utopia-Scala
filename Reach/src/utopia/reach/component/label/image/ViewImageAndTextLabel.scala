@@ -4,7 +4,7 @@ import utopia.firmament.component.stack.ConstrainableWrapper
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Medium, Small}
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
@@ -305,15 +305,15 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	  * @param itemPointer             A pointer to this label's (text-determining) content
 	  * @param imagePointer            A pointer to the image displayed on this label.
 	  *                                Left if displaying an icon, Right if displaying an image.
-	  * @param displayFunction         Display function used when converting the item to text (default = toString)
+	  * @param display         Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
 	def iconOrImage[A](itemPointer: Changing[A], imagePointer: Either[Changing[SingleColorIcon], Changing[Image]],
-	                   displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
+	                   display: Display[A] = Display.identity) =
 	{
 		val label = new ViewImageAndTextLabel[A](hierarchy, context, itemPointer, imagePointer,
-			settings, Fixed(resolveInsets), displayFunction)
+			settings, Fixed(resolveInsets), display)
 		if (drawBackground)
 			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
 		label
@@ -322,27 +322,27 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	  * Creates a new label which displays both image and text
 	  * @param itemPointer     A pointer to this label's (text-determining) content
 	  * @param imagePointer    A pointer to the image displayed on this label.
-	  * @param displayFunction Display function used when converting the item to text (default = toString)
+	  * @param display Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
 	def apply[A](itemPointer: Changing[A], imagePointer: Changing[Image],
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		iconOrImage(itemPointer, Right(imagePointer), displayFunction)
+	             display: Display[A] = Display.identity) =
+		iconOrImage(itemPointer, Right(imagePointer), display)
 	/**
 	  * Creates a new label that contains both an image and text
 	  * @param itemPointer             A pointer to this label's (text-determining) content
 	  * @param iconPointer             A pointer to the displayed icon
-	  * @param displayFunction         A function for converting the displayed item to text (default = use toString)
+	  * @param display         A function for converting the displayed item to text (default = use toString)
 	  * @return A new label
 	  */
 	def icon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	            displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		iconOrImage[A](itemPointer, Left(iconPointer), displayFunction)
+	            display: Display[A] = Display.identity) =
+		iconOrImage[A](itemPointer, Left(iconPointer), display)
 	@deprecated("Renamed to .icon(...)", "v1.1")
 	def withIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		icon(itemPointer, iconPointer, displayFunction)
+	                display: Display[A] = Display.identity) =
+		icon(itemPointer, iconPointer, display)
 	
 	/**
 	  * Creates a new label that contains both an image and text
@@ -350,14 +350,14 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	  * @param iconPointer             A pointer to the displayed icon
 	  * @param rolePointer             A pointer to the role the icon serves (determines icon color)
 	  * @param preferredShade          Preferred color shade to use (default = standard)
-	  * @param displayFunction         A function for converting the displayed item to text (default = use toString)
+	  * @param display         A function for converting the displayed item to text (default = use toString)
 	  * @return A new label
 	  */
 	@deprecated("Please use .withImageColorRolePointer(Changing).icon(...) instead", "v1.1")
 	def withColouredIcon[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	                        rolePointer: Changing[ColorRole], preferredShade: ColorLevel = Standard,
-	                        displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withImageColorRolePointer(rolePointer, preferredShade).icon(itemPointer, iconPointer, displayFunction)
+	                        display: Display[A] = Display.identity) =
+		withImageColorRolePointer(rolePointer, preferredShade).icon(itemPointer, iconPointer, display)
 	
 	/**
 	  * Creates a new label which displays both image and text
@@ -365,15 +365,15 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	  * @param iconPointer             A pointer to the displayed icon
 	  * @param rolePointer             A pointer to the color role used in label background
 	  * @param preferredShade          Preferred color shade to use (default = standard)
-	  * @param displayFunction         Display function used when converting the item to text (default = toString)
+	  * @param display         Display function used when converting the item to text (default = toString)
 	  * @tparam A Type of content in this label
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackgroundRolePointer(...).icon(...) instead", "v1.1")
 	def withIconAndChangingBackground[A](itemPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
 	                                     rolePointer: Changing[ColorRole], preferredShade: ColorLevel = Standard,
-	                                     displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withBackgroundRolePointer(rolePointer, preferredShade).icon(itemPointer, iconPointer, displayFunction)
+	                                     display: Display[A] = Display.identity) =
+		withBackgroundRolePointer(rolePointer, preferredShade).icon(itemPointer, iconPointer, display)
 }
 
 /**
@@ -411,7 +411,7 @@ class ViewImageAndTextLabel[A](override val hierarchy: ComponentHierarchy, conte
                                imgPointer: Either[Changing[SingleColorIcon], Changing[Image]],
                                settings: ViewImageAndTextLabelSettings,
                                commonInsetsPointer: Changing[StackInsets],
-                               displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+                               display: Display[A] = Display.identity)
 	extends ReachComponentWrapper with ConstrainableWrapper
 {
 	// ATTRIBUTES	-------------------------------
@@ -446,8 +446,7 @@ class ViewImageAndTextLabel[A](override val hierarchy: ComponentHierarchy, conte
 							.withInsetsPointer(imageInsetsPointer)
 							.iconOrImagePointer(imgPointer)
 				}
-				val textLabel = factories(ViewTextLabel)
-					.apply(itemPointer, displayFunction)
+				val textLabel = factories(ViewTextLabel).apply(itemPointer, display)
 				Pair(imageLabel, textLabel)
 			}
 	}

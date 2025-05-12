@@ -4,7 +4,7 @@ import utopia.firmament.component.display.PoolWithPointer
 import utopia.firmament.component.text.MutableStyleTextComponent
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.event.listener.ChangeListener
@@ -31,7 +31,7 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new item label
 	  */
-	def apply[A](pointer: Changing[A], font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	def apply[A](pointer: Changing[A], font: Font, displayFunction: Display[A] = Display.identity,
 	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
 	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
 		new ViewLabel[A](pointer, displayFunction, font, textColor, insets, alignment, hasMinWidth)
@@ -44,7 +44,7 @@ object ViewLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextual[A](pointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextual[A](pointer: Changing[A], displayFunction: Display[A] = Display.identity)
 					 (implicit context: StaticTextContext) =
 	{
 		new ViewLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
@@ -61,7 +61,7 @@ object ViewLabel
 	  * @return A new label
 	  */
 	def contextualWithBackground[A](color: Color, pointer: Changing[A],
-	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	                                displayFunction: Display[A] = Display.identity)
 								   (implicit context: StaticTextContext) =
 	{
 		val label = contextual(pointer, displayFunction)(context.against(color))
@@ -83,7 +83,7 @@ object ViewLabel
  *  @param initialAlignment The alignment used for this component initially (default = Left)
   * @param hasMinWidth Whether this label should have minimum width (always show all content text) (default = true)
   */
-class ViewLabel[A](override val contentPointer: Changing[A], displayFunction: DisplayFunction[A], initialFont: Font,
+class ViewLabel[A](override val contentPointer: Changing[A], displayFunction: Display[A], initialFont: Font,
                    initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
                    initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
 	extends StackableAwtComponentWrapperWrapper with MutableStyleTextComponent with SwingComponentRelated

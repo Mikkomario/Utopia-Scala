@@ -148,7 +148,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		.map { r => measuredText.caretIndexToCharacterIndex(r.start) until r.end }
 		.map { _text.slice(_) }.filterNot { _.isEmpty }
 	
-	private def _text = textPointer.value.string
+	private def _text = textPointer.value.wrapped
 	
 	
 	// IMPLEMENTED	-------------------------------
@@ -236,7 +236,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		// Clears or limits selected range whenever the text is updated
 		textPointer.addListener { event =>
 			selectedRangePointer.value.foreach { case (start, end) =>
-				val maxIndex = event.newValue.string.length
+				val maxIndex = event.newValue.length
 				if (start >= maxIndex)
 					clearSelection()
 				else if (end > maxIndex)

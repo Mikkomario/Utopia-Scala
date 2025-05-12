@@ -6,7 +6,7 @@ import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, CustomDrawableFactory}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
@@ -74,12 +74,12 @@ case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context
 	/**
 	  * Creates a new text label utilizing contextual information
 	  * @param contentPointer Pointer that is reflected on this label
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
-	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
+	def apply[A](contentPointer: Changing[A], display: Display[A] = Display.identity) = {
 		val label = new ViewTextLabel[A](hierarchy, contentPointer, stylePointer, Always(context.allowTextShrink),
-			displayFunction, customDrawers)
+			display, customDrawers)
 		// If background drawing is enabled, repaints when the background color changes
 		if (drawBackground)
 			context.backgroundPointer.addContinuousAnyChangeListener { label.repaint() }
@@ -91,7 +91,7 @@ case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context
 	  * @return A new label
 	  */
 	def text(contentPointer: Changing[LocalizedString]) =
-		apply[LocalizedString](contentPointer, DisplayFunction.identity)
+		apply[LocalizedString](contentPointer, Display.noOp)
 	/**
 	  * Creates a label that displays static text
 	  * @param content Text to display on this label
@@ -105,13 +105,13 @@ case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context
 	  * Creates a new text label with solid background utilizing contextual information
 	  * @param contentPointer  Pointer that is reflected on this label
 	  * @param background      Label background color
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackground(Color).apply(...) instead", "v1.1")
 	def withCustomBackground[A](contentPointer: Changing[A], background: Color,
-	                            displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withBackground(background)(contentPointer, displayFunction)
+	                            display: Display[A] = Display.identity) =
+		withBackground(background)(contentPointer, display)
 }
 
 /**
@@ -148,19 +148,18 @@ case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Se
 	  * Creates a new text label
 	  * @param contentPointer  Pointer that is reflected on this label
 	  * @param stylePointer    A pointer to this label's styling information
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
 	def apply[A](contentPointer: Changing[A], stylePointer: Changing[TextDrawContext],
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		new ViewTextLabel(hierarchy, contentPointer, stylePointer, Fixed(allowsTextToShrink), displayFunction,
-			customDrawers)
+	             display: Display[A] = Display.identity) =
+		new ViewTextLabel(hierarchy, contentPointer, stylePointer, Fixed(allowsTextToShrink), display, customDrawers)
 	
 	/**
 	  * Creates a new text label
 	  * @param contentPointer     Pointer that is reflected on this label
 	  * @param font               Font used when drawing the text
-	  * @param displayFunction    Function used when converting content to text (default = toString)
+	  * @param display    Function used when converting content to text (default = toString)
 	  * @param textColor          Color used when drawing the text (default = standard black)
 	  * @param alignment          Text alignment (default = left)
 	  * @param insets             Insets around the text (default = any insets, preferring zero)
@@ -170,14 +169,14 @@ case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Se
 	  * @return A new label
 	  */
 	def withStaticStyle[A](contentPointer: Changing[A], font: Font,
-	                       displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                       display: Display[A] = Display.identity,
 	                       textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 	                       insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
 	                       betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true) =
 		apply(contentPointer,
 			Fixed(TextDrawContext(font, textColor, alignment, insets, lineSplitThreshold, betweenLinesMargin,
 				allowLineBreaks)),
-			displayFunction)
+			display)
 	
 	/**
 	  * Creates a new text label
@@ -186,7 +185,7 @@ case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Se
 	  * @return A new label
 	  */
 	def text(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext]) =
-		apply[LocalizedString](contentPointer, stylePointer, DisplayFunction.identity)
+		apply[LocalizedString](contentPointer, stylePointer, Display.noOp)
 	@deprecated("Renamed to .text(...)", "v1.1")
 	def forText(contentPointer: Changing[LocalizedString], stylePointer: Changing[TextDrawContext]) =
 		text(contentPointer, stylePointer)
@@ -209,7 +208,7 @@ case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Se
 	                        insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
 	                        betweenLinesMargin: Double = 0.0,
 	                        allowLineBreaks: Boolean = true) =
-		withStaticStyle[LocalizedString](contentPointer, font, DisplayFunction.identity, textColor, alignment, insets,
+		withStaticStyle[LocalizedString](contentPointer, font, Display.noOp, textColor, alignment, insets,
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks)
 	/**
 	  * Creates a new text label
@@ -246,7 +245,7 @@ object ViewTextLabel extends Cff[ViewTextLabelFactory]
   */
 class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val contentPointer: Changing[A],
                         stylePointer: Changing[TextDrawContext], allowTextShrinkFlag: Changing[Boolean] = AlwaysFalse,
-                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                        display: Display[A] = Display.identity,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
 	extends ConcreteCustomDrawReachComponent with TextComponent with PoolWithPointer[A, Changing[A]]
 {
@@ -256,7 +255,7 @@ class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val
 	  * Pointer containing the current (measured) text
 	  */
 	val textPointer = contentPointer.mergeWithWhile(stylePointer, hierarchy.linkedFlag) { (content, style) =>
-		measure(displayFunction(content), style)
+		measure(display(content), style)
 	}
 	override val customDrawers =  additionalDrawers :+ TextViewDrawer(textPointer, stylePointer)
 	

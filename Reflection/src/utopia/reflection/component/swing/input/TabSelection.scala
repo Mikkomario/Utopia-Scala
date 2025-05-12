@@ -4,7 +4,7 @@ import utopia.firmament.component.input.SelectableWithPointers
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.flow.event.listener.ChangeListener
@@ -29,7 +29,7 @@ import scala.collection.immutable.HashMap
 
 object TabSelection
 {
-	def contextual[A](displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialChoices: Seq[A] = Vector(),
+	def contextual[A](displayFunction: Display[A] = Display.identity, initialChoices: Seq[A] = Vector(),
 	                  background: Option[Color] = None)
 	                 (implicit context: StaticTextContext) =
 	{
@@ -55,8 +55,8 @@ object TabSelection
 	  * @tparam A Type of selected item
 	  * @return A new tab selection
 	  */
-	def contextualWithBackground[A](background: Color, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-									initialChoices: Seq[A] = Vector())(implicit context: StaticTextContext) =
+	def contextualWithBackground[A](background: Color, displayFunction: Display[A] = Display.identity,
+	                                initialChoices: Seq[A] = Vector())(implicit context: StaticTextContext) =
 		contextual(displayFunction, initialChoices, Some(background))
 }
 
@@ -66,8 +66,9 @@ object TabSelection
   * @since 4.5.2019, v1+
   */
 class TabSelection[A](val font: Font, val highlightColor: Color, val optimalHMargin: Double, val vMargin: StackLength,
-					  val selectionLineHeight: Double = 8.0, val displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					  initialChoices: Seq[A] = Vector(), initialTextColor: Color = Color.textBlack)
+                      val selectionLineHeight: Double = 8.0,
+                      val displayFunction: Display[A] = Display.identity,
+                      initialChoices: Seq[A] = Vector(), initialTextColor: Color = Color.textBlack)
 	extends StackableAwtComponentWrapperWrapper with SwingComponentRelated
 	with AwtContainerRelated with SelectableWithPointers[Option[A], Seq[A]] with MutableCustomDrawableWrapper
 {

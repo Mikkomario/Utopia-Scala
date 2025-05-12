@@ -5,7 +5,7 @@ import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.modifier.StackSizeModifier
@@ -56,7 +56,7 @@ object DropDown
 	  */
 	def contextual[A, C <: AwtStackable with Refreshable[A]]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
-	 displayFunction: DisplayFunction[A] = DisplayFunction.raw, displayStackLayout: StackLayout = Fit,
+	 displayFunction: Display[A] = Display.identity, displayStackLayout: StackLayout = Fit,
 	 contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
@@ -100,7 +100,7 @@ object DropDown
 	  */
 	def contextualWithTextOnly[A]
 	(noResultsView: AwtStackable, icon: Image, selectionPromptText: LocalizedString,
-	 displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	 displayFunction: Display[A] = Display.identity,
 	 contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
 	 shouldDisplayPopUpOnFocusGain: Boolean = true,
@@ -121,7 +121,7 @@ object DropDown
 class DropDown[A, C <: AwtStackable with Refreshable[A]]
 (actorHandler: ActorHandler, override protected val noResultsView: AwtStackable, icon: Image,
  selectionDrawer: CustomDrawer, focusColor: Color, selectionPrompt: Prompt, defaultFont: Font,
- defaultTextColor: Color = Color.textBlack, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+ defaultTextColor: Color = Color.textBlack, displayFunction: Display[A] = Display.identity,
  textAlignment: enumeration.Alignment = enumeration.Alignment.Left, textInsets: StackInsets = StackInsets.any,
  imageInsets: StackInsets = StackInsets.any, borderColor: Color = Color.textBlackDisabled,
  borderWidth: Double = 1.0, betweenDisplaysMargin: StackLength = StackLength.any, displayStackLayout: StackLayout = Fit,

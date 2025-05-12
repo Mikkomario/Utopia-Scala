@@ -3,7 +3,7 @@ package utopia.reflection.test.swing
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
@@ -49,7 +49,7 @@ object ScrollViewTest extends App
 	
 	// Label creation function
 	val basicFont = Font("Arial", 12, Plain, 2)
-	val displayFunction = DisplayFunction.interpolating("Label number %i")
+	val displayFunction = Display.interpolateTo("Label number %i")
 	def makeLabel(number: Int) =
 	{
 		val label = new ItemLabel(EventfulPointer(number), displayFunction, basicFont,

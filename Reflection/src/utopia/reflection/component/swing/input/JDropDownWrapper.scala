@@ -4,7 +4,7 @@ import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.input.SelectableWithPointers
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.Border
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
@@ -34,8 +34,8 @@ object JDropDownWrapper
 	  * @tparam A Type of selected item
 	  * @return A new drop down
 	  */
-	def contextual[A](selectText: LocalizedString, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					  initialChoices: Vector[A] = Vector(), maximumOptimalWidth: Option[Int] = None)
+	def contextual[A](selectText: LocalizedString, displayFunction: Display[A] = Display.identity,
+	                  initialChoices: Vector[A] = Vector(), maximumOptimalWidth: Option[Int] = None)
 					 (implicit context: StaticTextContext) =
 	{
 		val background = context.background
@@ -65,9 +65,9 @@ object JDropDownWrapper
   * @param maximumOptimalWidth The maximum optimal widht for this drop down (default = maximum based on text length & margin)
   */
 class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedString, font: Font, backgroundColor: Color,
-						  selectedBackground: Color, textColor: Color = Color.textBlack,
-						  val displayFunction: DisplayFunction[A] = DisplayFunction.raw, initialContent: Vector[A] = Vector(),
-						  val maximumOptimalWidth: Option[Int] = None)
+                          selectedBackground: Color, textColor: Color = Color.textBlack,
+                          val displayFunction: Display[A] = Display.identity, initialContent: Vector[A] = Vector(),
+                          val maximumOptimalWidth: Option[Int] = None)
 	extends SelectableWithPointers[Option[A], Vector[A]] with JWrapper with CachingReflectionStackable
 		with Focusable with ReflectionStackLeaf
 {
@@ -148,7 +148,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 	override def calculatedStackSize = {
 		// If this drop down contains fields, they may affect the width
 		val metrics = fontMetricsWith(font)
-		val maxTextWidth = (selectText +: displayValues).map { s => metrics.widthOf(s.string) }.max
+		val maxTextWidth = (selectText +: displayValues).map { s => metrics.widthOf(s.wrapped) }.max
 		val textW = insets.horizontal + maxTextWidth
 		val textH = insets.vertical + metrics.lineHeight
 		
@@ -196,7 +196,7 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 		val finalDisplayOptions = if (isShowingSelectOption) selectText +: _displayValues else _displayValues
 		
 		field.removeAllItems()
-		finalDisplayOptions.foreach { s => field.addItem(s.string) }
+		finalDisplayOptions.foreach { s => field.addItem(s.wrapped) }
 		
 		// Updates selection
 		field.setSelectedIndex(newSelection.flatMap(newContent.findIndexOf).getOrElse(-1) + indexMod)
@@ -253,11 +253,11 @@ class JDropDownWrapper[A](val insets: StackInsets, val selectText: LocalizedStri
 		
 		// IMPLEMENTED	---------------------
 		
-		override def getListCellRendererComponent(list: JList[_ <: String], value: String, index: Int, isSelected: Boolean, cellHasFocus: Boolean) =
+		override def getListCellRendererComponent(list: JList[_ <: String], value: String, index: Int,
+		                                          isSelected: Boolean, cellHasFocus: Boolean) =
 		{
-			if (value != null)
-			{
-				label.text = value.noLanguageLocalizationSkipped
+			if (value != null) {
+				label.text = value.noLanguage.skipLocalization
 				label.component.setPreferredSize(label.stackSize.optimal.toDimension)
 			}
 			

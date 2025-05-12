@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.drawing.immutable.BoxScrollBarDrawer
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
@@ -40,7 +40,7 @@ object ScrollAreaTest extends App
 	val labels = (1 to 10).toVector.map { row =>
 		(1 to 50).toVector.map { i =>
 			new ItemLabel(EventfulPointer(row * i),
-				DisplayFunction.interpolating("Label number %i"), basicFont, initialInsets = StackInsets.symmetric(16.any, 4.fixed))
+				Display.interpolateTo("Label number %i"), basicFont, initialInsets = StackInsets.symmetric(16.any, 4.fixed))
 		}
 	}
 	val allLabels = labels.flatten

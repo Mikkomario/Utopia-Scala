@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.context.color.StaticColorContext
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.animation.Animation
@@ -41,7 +41,7 @@ object SliderTest extends App
 			s += slider
 			(context/Gray).forTextComponents.use { implicit c =>
 				val label = ItemLabel.contextual(slider.value,
-					DisplayFunction.noLocalization[Double] { p => (p * 100).toInt.toString })
+					Display.skipLocalization[Double] { p => (p * 100).toInt.toString })
 				label.background = c.background
 				// TODO: There should be an itemlabel variation that simply displays a pointer value without
 				//  requiring mutability

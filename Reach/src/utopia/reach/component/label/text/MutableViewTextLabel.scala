@@ -6,7 +6,7 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.TextViewDrawer
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
@@ -23,7 +23,7 @@ import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent,
 
 object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new MutableViewTextLabelFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = MutableViewTextLabelFactory(hierarchy)
 }
 
 case class MutableViewTextLabelFactory(hierarchy: ComponentHierarchy)
@@ -43,7 +43,7 @@ case class MutableViewTextLabelFactory(hierarchy: ComponentHierarchy)
 	  * Creates a new label that uses the specified content pointer
 	  * @param pointer Pointer used by this label
 	  * @param font Font used when drawing text
-	  * @param displayFunction Function used for converting content to text (default = toString)
+	  * @param display Function used for converting content to text (default = toString)
 	  * @param textColor Color used when drawing text (default = standard black)
 	  * @param alignment Alignment used when placing text (default = Left)
 	  * @param insets Insets placed around the text (default = any, preferring 0)
@@ -55,19 +55,19 @@ case class MutableViewTextLabelFactory(hierarchy: ComponentHierarchy)
 	  * @return A new label
 	  */
 	def forPointer[A](pointer: EventfulPointer[A], font: Font,
-	                  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                  display: Display[A] = Display.identity,
 	                  textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
 	                  insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
 	                  betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true,
 	                  allowTextShrink: Boolean = false) =
 		new MutableViewTextLabel[A](hierarchy, pointer, TextDrawContext(font, textColor, alignment, insets,
-			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), displayFunction, allowTextShrink)
+			lineSplitThreshold, betweenLinesMargin, allowLineBreaks), display, allowTextShrink)
 	
 	/**
 	  * Creates a new mutable text view label
 	  * @param initialValue Initially displayed value
 	  * @param font Font used when drawing text
-	  * @param displayFunction Function used for converting content to text (default = toString)
+	  * @param display Function used for converting content to text (default = toString)
 	  * @param textColor Color used when drawing text (default = standard black)
 	  * @param alignment Alignment used when placing text (default = Left)
 	  * @param insets Insets placed around the text (default = any, preferring 0)
@@ -77,11 +77,11 @@ case class MutableViewTextLabelFactory(hierarchy: ComponentHierarchy)
 	  * @tparam A Type of displayed content
 	  * @return A new label
 	  */
-	def apply[A](initialValue: A, font: Font, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-				 textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
-				 insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
-				 betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
-		forPointer[A](EventfulPointer[A](initialValue), font, displayFunction, textColor, alignment, insets,
+	def apply[A](initialValue: A, font: Font, display: Display[A] = Display.identity,
+	             textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left,
+	             insets: StackInsets = StackInsets.any, lineSplitThreshold: Option[Double] = None,
+	             betweenLinesMargin: Double = 0.0, allowLineBreaks: Boolean = true, allowTextShrink: Boolean = false) =
+		forPointer[A](EventfulPointer[A](initialValue), font, display, textColor, alignment, insets,
 			lineSplitThreshold, betweenLinesMargin, allowLineBreaks, allowTextShrink)
 }
 
@@ -115,12 +115,12 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	/**
 	  * Creates a new label that reflects the specified mutable pointer. Uses contextual information.
 	  * @param pointer A pointer this label uses
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @tparam A Type of displayed content
 	  * @return A new label
 	  */
-	def forPointer[A](pointer: EventfulPointer[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw) = {
-		val label = labelFactory.forPointer(pointer, context.font, displayFunction,
+	def forPointer[A](pointer: EventfulPointer[A], display: Display[A] = Display.identity) = {
+		val label = labelFactory.forPointer(pointer, context.font, display,
 			if (isHint) context.hintTextColor else context.textColor, context.textAlignment, context.textInsets,
 			context.lineSplitThreshold,
 			context.betweenLinesMargin.optimal, context.allowLineBreaks, context.allowTextShrink)
@@ -130,61 +130,60 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 	/**
 	  * Creates a new mutable view label. Uses contextual information.
 	  * @param initialValue Initially displayed value on this label
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @tparam A Type of displayed content
 	  * @return A new label
 	  */
-	def apply[A](initialValue: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		forPointer(EventfulPointer[A](initialValue), displayFunction)
+	def apply[A](initialValue: A, display: Display[A] = Display.identity) =
+		forPointer(EventfulPointer[A](initialValue), display)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
 	  * @param contentPointer  Pointer that is reflected on this label
 	  * @param background      Label background color
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackground(Color).forPointer(...) instead", "v1.1")
 	def forPointerWithCustomBackground[A](contentPointer: EventfulPointer[A], background: Color,
-	                                      displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withBackground(background).forPointer(contentPointer, displayFunction)
+	                                      display: Display[A] = Display.identity) =
+		withBackground(background).forPointer(contentPointer, display)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
 	  * @param contentPointer  Pointer that is reflected on this label
 	  * @param role            Label background color role
 	  * @param preferredShade  Preferred color shade (default = standard)
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackground(ColorRole).forPointer(...) instead", "v1.1")
 	def forPointerWithBackground[A](contentPointer: EventfulPointer[A], role: ColorRole,
-	                                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                                display: Display[A] = Display.identity,
 	                                preferredShade: ColorLevel = Standard) =
-		withBackground(role, preferredShade).forPointer(contentPointer, displayFunction)
+		withBackground(role, preferredShade).forPointer(contentPointer, display)
 	
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
 	  * @param initialContent  Content initially displayed on this label
 	  * @param background      Label background color
-	  * @param displayFunction Function used when converting content to text (default = toString)
+	  * @param display Function used when converting content to text (default = toString)
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackground(Color).apply(...) instead", "v1.1")
 	def withCustomBackground[A](initialContent: A, background: Color,
-	                            displayFunction: DisplayFunction[A] = DisplayFunction.raw) =
-		withBackground(background).apply(initialContent, displayFunction)
+	                            display: Display[A] = Display.identity) =
+		withBackground(background).apply(initialContent, display)
 	/**
 	  * Creates a new text label with solid background utilizing contextual information
 	  * @param initialContent  Initially displayed content on this label
 	  * @param role            Label background color role
-	  * @param displayFunction Function used when converting content to text
+	  * @param display Function used when converting content to text
 	  * @return A new label
 	  */
 	@deprecated("Please use .withBackground(ColorRole).apply(...) instead", "v1.1")
-	def withBackground[A](initialContent: A, role: ColorRole,
-	                      displayFunction: DisplayFunction[A]): MutableViewTextLabel[A] =
-		withBackground(role).apply(initialContent, displayFunction)
+	def withBackground[A](initialContent: A, role: ColorRole, display: Display[A]): MutableViewTextLabel[A] =
+		withBackground(role).apply(initialContent, display)
 }
 
 /**
@@ -195,7 +194,7 @@ case class ContextualMutableViewTextLabelFactory(labelFactory: MutableViewTextLa
 class MutableViewTextLabel[A](override val hierarchy: ComponentHierarchy,
                               override val contentPointer: EventfulPointer[A],
                               initialDrawContext: TextDrawContext,
-                              displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                              display: Display[A] = Display.identity,
                               override val allowTextShrink: Boolean = false)
 	extends MutableConcreteCustomDrawReachComponent with MutableStyleTextComponent with TextComponent
 		with RefreshableWithPointer[A]
@@ -209,9 +208,7 @@ class MutableViewTextLabel[A](override val hierarchy: ComponentHierarchy,
 	/**
 	  * Pointer that contains the text currently displayed on this label
 	  */
-	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) =>
-		measure(displayFunction(content), style)
-	}
+	val textPointer = contentPointer.mergeWith(stylePointer) { (content, style) => measure(display(content), style) }
 	
 	
 	// INITIAL CODE	----------------------------------

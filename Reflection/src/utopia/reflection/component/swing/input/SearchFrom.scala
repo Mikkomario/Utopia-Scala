@@ -5,11 +5,11 @@ import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, ImageDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Fit, Leading}
 import utopia.firmament.model.stack.{StackInsets, StackLength}
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
@@ -123,7 +123,7 @@ object SearchFrom
 	  * @return A new search from field
 	  */
 	def contextualWithTextOnly[A](selectionPrompt: LocalizedString, standardWidth: StackLength,
-	                              displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                              displayFunction: Display[A] = Display.identity,
 	                              displayStackLayout: StackLayout = Leading, searchIcon: Option[Image] = None,
 	                              contentPointer: EventfulPointer[Seq[A]] = EventfulPointer[Seq[A]](Empty),
 	                              selectedValuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
@@ -134,7 +134,7 @@ object SearchFrom
 								 (implicit context: StaticTextContext, exc: ExecutionContext) =
 	{
 		def makeField(item: A) = ItemLabel.contextual(item, displayFunction)
-		def itemToSearchString(item: A) = displayFunction(item).string
+		def itemToSearchString(item: A) = displayFunction(item).wrapped
 		
 		contextual(selectionPrompt, standardWidth, displayStackLayout, searchIcon,
 			contentPointer, selectedValuePointer, shouldDisplayPopUpOnFocusGain,
@@ -152,8 +152,7 @@ object SearchFrom
 	  */
 	def noResultsLabel(noResultsText: LocalizedString, searchStringPointer: Changing[String])
 					  (implicit context: StaticTextContext) =
-		ViewLabel.contextual(searchStringPointer,
-			new DisplayFunction[String](s => noResultsText.interpolated(Single(s))))
+		ViewLabel.contextual(searchStringPointer, Display.interpolateTo(noResultsText))
 }
 
 /**

@@ -121,7 +121,7 @@ class Frame[C <: ReflectionStackable with AwtContainerRelated](override val cont
 {
     // ATTRIBUTES    -------------------
     
-    private val _component = new JFrame(title.string)
+    private val _component = new JFrame(title.wrapped)
     
     private var _fullScreen = startFullScreen
     private var _showsToolBar = startWithToolBar

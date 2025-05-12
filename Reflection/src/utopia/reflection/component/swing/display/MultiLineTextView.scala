@@ -3,7 +3,8 @@ package utopia.reflection.component.swing.display
 import utopia.firmament.component.text.HasMutableTextDrawContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.firmament.localization.{LocalString, LocalizedString}
+import utopia.firmament.localization.{Language, LocalString, LocalizedString}
+import LocalString._
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.modifier.StackSizeModifier
@@ -103,7 +104,7 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	def text = _text
 	def text_=(newText: LocalizedString) = {
 		if (_text != newText) {
-			if (_text.string != newText.string) {
+			if (_text.wrapped != newText.wrapped) {
 				_text = newText
 				resetContent()
 			}
@@ -119,17 +120,17 @@ class MultiLineTextView(initialText: LocalizedString, initialFont: Font, initial
 	
 	private def makeNewContent() = {
 		val stack = {
-			if (text.string.isEmpty)
+			if (text.isEmpty)
 				Stack.column[TextLabel](cap = textInsets.vertical / 2)
 			else {
 				// Splits the text whenever target width is exeeded. The resulting lines determine the size constraints
-				val lines = text.lines.flatMap { s => split(s.string) }
+				val lines = text.lines.flatMap { s => split(s.wrapped) }
 				// val maxLineWidth = lines.flatMap { textWidth(_) }.max
 				
 				// Creates new line components
-				val language = text.languageCode
+				implicit val language: Language = text.language
 				val lineComponents = lines.map { line =>
-					new TextLabel(LocalizedString(LocalString(line, language), None), font, textColor,
+					new TextLabel(line.skipLocalization, font, textColor,
 						textInsets.onlyHorizontal, alignment.onlyHorizontal)
 				}
 				

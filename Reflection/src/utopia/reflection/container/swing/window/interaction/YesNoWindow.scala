@@ -2,7 +2,7 @@ package utopia.reflection.container.swing.window.interaction
 
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.localization.{LocalizedString, Localizer}
+import utopia.firmament.localization.{Language, LocalizedString, Localizer}
 import utopia.genesis.util.Screen
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Alignment.Center
@@ -51,7 +51,7 @@ class YesNoWindow(override val standardContext: StaticTextContext, override val 
                  (getButtonContext: (ButtonColor, Boolean) => StaticTextContext) extends InteractionWindow[Boolean]
 {
 	private implicit val context: StaticTextContext = standardContext
-	private implicit val languageCode: String = "en"
+	private implicit val language: Language = Language.english
 	private implicit val localizer: Localizer = standardContext.localizer
 	
 	override protected def buttonContext(buttonColor: ButtonColor, hasIcon: Boolean) =

@@ -2,16 +2,29 @@
 
 ## v1.5 (in development)
 ### Breaking changes
+- Rewrote the localization system, introducing a number of breaking changes:
+  - **DisplayFunction** is now **Display**, and a trait instead of a class
+  - **String** to **LocalString** conversions no longer accept an implicit 
+    `languageCode: String`, but a `language: Language`
+  - **Localizer** now requires the implementation of `.apply(LocalString)` instead of `.localize(LocalString)`
+  - **LocalizedString** no longer contains, nor provides access to, the original (unlocalized) string
+  - `DisplayFunction.identity` now matches the previous `.raw` property
+    - The previous `.identity` functionality is now accessible as `.noOp`
 - `Stacker.apply(...)` no longer accepts the optimal length as a parameter, but calculates it instead
   - This is because the previous implementation assumed that the specified / applied optimal length is based on 
     `Stacker.calculateStackSize(...)`. This assumption didn't hold in situations where 
     **StackLengthModifier**s were used (for example).
 - **Window** constructors now accept a new parameter: positionAfterResize: Option[Bounds => Point]
   - Also, `getAnchor` is now an **Option**
+### Deprecations
+- Deprecated almost all constructors in **DisplayFunction** (now **Display**)
+- Deprecated various **LocalString** and **LocalizedString** functions
+- Deprecated most of the existing string interpolation functions
 ### Bugfixes
 - Fixed a bug that resulted in wrong-sized margins when using a variable context with an "is small flag"
 ### New features
 - **Window**s now support custom-repositioning after each resize (an alternative for the "get anchor" function)
+- Added a number of new localization-related functions
 - Added **InconsistentDrawer** for optional custom drawing
 - Added content scaling support to **AlignFrameLike**
 - Added **MinOptimalLengthModifier** and **MinOptimalSizeModifier** (new stack size modifiers)

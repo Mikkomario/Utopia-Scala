@@ -174,8 +174,8 @@ object Window
 	         (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		val window = parent match {
-			case Some(parent) => Left(new JDialog(parent, title.string))
-			case None => Right(new JFrame(title.string))
+			case Some(parent) => Left(new JDialog(parent, title.wrapped))
+			case None => Right(new JFrame(title.wrapped))
 		}
 		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins,
 			getAnchor, positionAfterResize, icon,

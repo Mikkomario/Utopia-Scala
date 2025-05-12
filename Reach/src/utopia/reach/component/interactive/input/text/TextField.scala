@@ -5,11 +5,11 @@ import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{DisplayFunction, LocalizedString, Localizer}
+import utopia.firmament.localization.{Display, Language, LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.stack.modifier.MaxBetweenLengthModifier
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Detach
 import utopia.flow.generic.casting.ValueConversions._
@@ -31,8 +31,8 @@ import utopia.reach.component.interactive.input.{Field, FieldSettings, FieldSett
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
-import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.component.template.focus.FocusableWithStateWrapper
+import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.focus.FocusEvent.{FocusGained, FocusLost}
 import utopia.reach.focus.FocusListener
@@ -260,9 +260,9 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	extends TextFieldSettingsWrapper[ContextualTextFieldFactory]
 		with ContextualFactory[VariableTextContext, ContextualTextFieldFactory] with PartOfComponentHierarchy
 {
-	// IMPLICIT	------------------------------------
+	// COMPUTED ------------------------
 	
-	private implicit def languageCode: String = "en"
+	private implicit def language: Language = Language.english
 	
 	
 	// IMPLEMENTED	--------------------
@@ -555,12 +555,12 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 				val autoHint = {
 					if (markMinMax.second) {
 						if (markMinMax.first)
-							allowedRange.ends.mkString(" - ").noLanguageLocalizationSkipped
+							allowedRange.ends.mkString(" - ").noLanguage.skipLocalization
 						else
-							s"Up to %s".autoLocalized.interpolated(Single(allowedRange.end))
+							s"Up to %s".autoLocalized.interpolate(allowedRange.end)
 					}
 					else
-						s"${allowedRange.start}+".noLanguageLocalizationSkipped
+						s"${allowedRange.start}+".noLanguage.skipLocalization
 				}
 				hintPointer.notFixedWhere { _.isEmpty } match {
 					case Some(hint) => hint.map { _.notEmpty.getOrElse(autoHint) }
@@ -585,10 +585,10 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 				implicit val ord: Ordering[A] = allowedRange.ordering
 				if (input < allowedRange.start)
 					InputValidationResult
-						.Failure("Minimum value is %i".autoLocalized.interpolated(Single(allowedRange.start)))
+						.Failure("Minimum value is %i".autoLocalized.interpolate(allowedRange.start))
 				else if (input > allowedRange.end)
 					InputValidationResult
-						.Failure("Maximum value is %i".autoLocalized.interpolated(Single(allowedRange.end)))
+						.Failure("Maximum value is %i".autoLocalized.interpolate(allowedRange.end))
 				else
 					validate match {
 						case Some(validation) => validation(Some(input))
@@ -720,7 +720,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 			case Some(promptPointer) =>
 				// Displays the prompt while text starts with the same characters or is empty
 				promptPointer.mergeWith(textContentPointer) { (prompt, text) =>
-					if (text.isEmpty || prompt.string.startsWith(text)) prompt else LocalizedString.empty
+					if (text.isEmpty || prompt.wrapped.startsWith(text)) prompt else LocalizedString.empty
 				}
 			case None => settings.promptPointer
 		}
@@ -762,9 +762,10 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 					Open.using(ViewTextLabel) {
 						_.withContext(fieldContext.context).apply(
 							textLengthPointer,
-							DisplayFunction.functionToDisplayFunction[Int] { length =>
-								s"%i / %i".noLanguage.localized.interpolated(Pair(length, maxLength))
-							})
+							Display { length: Int =>
+								s"%i / %i".noLanguage.localized.interpolateAll(Pair(length, maxLength))
+							}
+						)
 					}(hierarchy.top)
 				}
 			// Case: No bottom right label is required

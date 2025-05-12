@@ -2,7 +2,7 @@ package utopia.reflection.test
 
 import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.{AnimationContext, ScrollingContext}
-import utopia.firmament.localization.{Localizer, NoLocalization}
+import utopia.firmament.localization.{Language, Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -41,6 +41,6 @@ object TestContext
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)
 	
-	implicit val defaultLanguageCode: String = "EN"
+	implicit val defaultLanguage: Language = Language.english
 	
 }

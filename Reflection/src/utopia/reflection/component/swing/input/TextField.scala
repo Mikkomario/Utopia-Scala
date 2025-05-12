@@ -500,7 +500,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 		// ATTRIBUTES	------------------------
 		
 		private val measuredPromptData = prompt.map { p =>
-			MeasuredText(p.text.string, component.getFontMetrics(p.font.toAwt)) -> p.font
+			MeasuredText(p.text.wrapped, component.getFontMetrics(p.font.toAwt)) -> p.font
 		}
 		private val measuredPrompt = measuredPromptData.map { _._1 }
 		override val font = measuredPromptData match {

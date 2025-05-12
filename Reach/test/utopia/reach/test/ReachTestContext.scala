@@ -3,7 +3,7 @@ package utopia.reach.test
 import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.window.WindowContext
 import utopia.firmament.context.{AnimationContext, ScrollingContext}
-import utopia.firmament.localization.{Localizer, NoLocalization}
+import utopia.firmament.localization.{Language, Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.WindowResizePolicy.UserAndProgram
 import utopia.flow.async.context.ThreadPool
@@ -40,7 +40,7 @@ object ReachTestContext
 	
 	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reach")
-	implicit val defaultLanguageCode: String = "EN"
+	implicit val defaultLanguage: Language = Language.english
 	implicit val localizer: Localizer = NoLocalization
 	implicit val adjustment: Adjustment = Adjustment(0.25)
 	

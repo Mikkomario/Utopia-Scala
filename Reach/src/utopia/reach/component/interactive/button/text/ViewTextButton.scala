@@ -4,7 +4,7 @@ import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
@@ -21,7 +21,7 @@ import utopia.reach.cursor.Cursor
 object ViewTextButton extends Cff[ViewTextButtonFactory]
 	with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewTextButtonFactory]
 {
-	override def apply(hierarchy: ComponentHierarchy) = new ViewTextButtonFactory(hierarchy)
+	override def apply(hierarchy: ComponentHierarchy) = ViewTextButtonFactory(hierarchy)
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): ContextualViewTextButtonFactory =
 		ContextualViewTextButtonFactory(hierarchy, context)
@@ -56,15 +56,14 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
 	/**
 	  * Creates a new button
 	  * @param contentPointer           Pointer that contains the displayed button content
-	  * @param displayFunction          A function for converting the displayed value to a localized string (default = toString)
+	  * @param display          A function for converting the displayed value to a localized string (default = toString)
 	  * @param action                   The action performed when this button is pressed (accepts currently displayed content)
 	  * @tparam A Type of displayed content
 	  * @return A new button
 	  */
-	def apply[A](contentPointer: Changing[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def apply[A](contentPointer: Changing[A], display: Display[A] = Display.identity)
 	            (action: A => Unit) =
-		new ViewTextButton[A](hierarchy, context, contentPointer, settings, displayFunction,
-			customDrawers)(action)
+		new ViewTextButton[A](hierarchy, context, contentPointer, settings, display, customDrawers)(action)
 	
 	/**
 	  * @param textPointer Pointer that contains the text to display on this button
@@ -72,7 +71,7 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
 	  * @return A new button
 	  */
 	def text(textPointer: Changing[LocalizedString])(action: => Unit) =
-		apply(textPointer, DisplayFunction.identity) { _ => action }
+		apply(textPointer, Display.noOp) { _ => action }
 	/**
 	  * @param text Text to display on this button
 	  * @param action Action to perform when this button is triggered
@@ -99,7 +98,7 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
   */
 class ViewTextButton[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                         contentPointer: Changing[A], settings: ButtonSettings = ButtonSettings.default,
-                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                        display: Display[A] = Display.identity,
                         additionalDrawers: Seq[CustomDrawer] = Empty)
                        (action: A => Unit)
 	extends AbstractButton(settings) with ReachComponentWrapper
@@ -118,7 +117,7 @@ class ViewTextButton[A](override val hierarchy: ComponentHierarchy, context: Var
 	override protected val wrapped = ViewTextLabel.withContext(hierarchy, appliedContext)
 		.withCustomDrawers(
 			ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)) +: additionalDrawers)
-		.apply[A](contentPointer, displayFunction)
+		.apply[A](contentPointer, display)
 	
 	
 	// INITIAL CODE	---------------------------------

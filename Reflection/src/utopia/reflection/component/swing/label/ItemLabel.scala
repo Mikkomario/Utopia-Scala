@@ -4,7 +4,7 @@ import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.text.MutableStyleTextComponent
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.event.listener.ChangeListener
@@ -33,7 +33,7 @@ object ItemLabel
 	  * @tparam A Type of displayed item
 	  * @return A new item label
 	  */
-	def apply[A](font: Font, initialContent: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	def apply[A](font: Font, initialContent: A, displayFunction: Display[A] = Display.identity,
 	             insets: StackInsets = StackInsets.any, alignment: Alignment = Alignment.Left,
 	             textColor: Color = Color.textBlack, hasMinWidth: Boolean = true) =
 		new ItemLabel[A](EventfulPointer[A](initialContent), displayFunction, font, textColor, insets, alignment,
@@ -47,7 +47,7 @@ object ItemLabel
 	  * @tparam A Type of presented item
 	  * @return A new label
 	  */
-	def contextual[A](content: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextual[A](content: A, displayFunction: Display[A] = Display.identity)
 					 (implicit context: StaticTextContext) = contextualWithPointer(
 		EventfulPointer(content), displayFunction)
 	
@@ -59,7 +59,8 @@ object ItemLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: EventfulPointer[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	def contextualWithPointer[A](pointer: EventfulPointer[A],
+	                             displayFunction: Display[A] = Display.identity)
 								(implicit context: StaticTextContext) =
 	{
 		new ItemLabel[A](pointer, displayFunction, context.font, context.textColor, context.textInsets,
@@ -76,7 +77,7 @@ object ItemLabel
 	  * @return A new label
 	  */
 	def contextualWithBackground[A](color: Color, content: A,
-									displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+									displayFunction: Display[A] = Display.identity)
 								   (implicit context: StaticTextContext) =
 	{
 		val label = contextual(content, displayFunction)(context.against(color))
@@ -98,7 +99,7 @@ object ItemLabel
  *  @param initialAlignment The alignment used for this component initially (default = Left)
   * @param hasMinWidth Whether this label should have minimum width (always show all content text) (default = true)
   */
-class ItemLabel[A](override val contentPointer: EventfulPointer[A], val displayFunction: DisplayFunction[A], initialFont: Font,
+class ItemLabel[A](override val contentPointer: EventfulPointer[A], val displayFunction: Display[A], initialFont: Font,
                    initialTextColor: Color = Color.textBlack, initialInsets: StackInsets = StackInsets.any,
                    initialAlignment: Alignment = Alignment.Left, hasMinWidth: Boolean = true)
 	extends StackableAwtComponentWrapperWrapper with MutableStyleTextComponent with SwingComponentRelated

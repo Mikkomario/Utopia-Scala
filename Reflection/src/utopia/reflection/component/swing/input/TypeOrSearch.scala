@@ -6,7 +6,7 @@ import utopia.firmament.context.{AnimationContext, ScrollingContext}
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{LocalizedString, Localizer}
+import utopia.firmament.localization.{Language, LocalizedString, Localizer}
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
@@ -95,7 +95,7 @@ class TypeOrSearch
 	
 	private val selectedItemsPointer = EventfulPointer(Vector[String]())
 	
-	private implicit val languageCode: String = "en"
+	private implicit val language: Language = Language.english
 	private implicit val localizer: Localizer = parentContext.localizer
 	// private val margin = parentContext.relatedItemsStackMargin
 	private val selectionColor = parentContext.color.light.secondary
@@ -148,6 +148,7 @@ class TypeOrSearch
 		{
 			case Some(selected) => onItemSelected(selected)
 			case None =>
+				//noinspection EmptyCheck
 				if (!text.isEmpty)
 					onItemSelected(text)
 		}
@@ -208,6 +209,7 @@ class TypeOrSearch
 	private def onAddButtonPressed() =
 	{
 		val newItem = textField.value
+		//noinspection EmptyCheck
 		if (!newItem.isEmpty)
 			onItemSelected(newItem)
 		textField.requestFocusInWindow()

@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.localization.Language
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.operator.filter.Filter
@@ -56,7 +57,7 @@ object Popup
 	{
 		// If context isn't in a window (which it should), has to use a Frame instead of a dialog
 		val owner = context.parentWindow
-		val windowTitle = "Popup".local("en").localizationSkipped
+		val windowTitle = "Popup".in(Language.english).skipLocalization
 		val newWindow = Window(content, owner, windowTitle, Program, getAnchor = _.topLeft, borderless = true)
 		
 		// Calculates the absolute target position

@@ -1,7 +1,7 @@
 package utopia.reach.test.interactive
 
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
@@ -32,8 +32,7 @@ object AlignFrameTest extends App
 	
 	val window = ReachWindow.contentContextual.withResizeLogic(User).using(AlignFrame) { (_, frameF) =>
 		frameF.center.build(ViewImageAndTextLabel) {
-			_.withBackground(Secondary).icon(contentPointer, imgPointer,
-				DisplayFunction.noLocalization { i: Any => s"Label $i" })
+			_.withBackground(Secondary).icon(contentPointer, imgPointer, Display.interpolateTo("Label %i"))
 		}
 	}
 	

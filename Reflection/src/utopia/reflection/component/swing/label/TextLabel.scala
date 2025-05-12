@@ -85,11 +85,10 @@ class TextLabel(initialText: LocalizedString, initialFont: Font, initialTextColo
 	/**
 	  * A mutable pointer that contains this label's styling
 	  */
-	val stylePointer = EventfulPointer(TextDrawContext(initialFont, initialTextColor, initialAlignment,
-		initialInsets))
+	val stylePointer = EventfulPointer(TextDrawContext(initialFont, initialTextColor, initialAlignment, initialInsets))
 	
 	private val measuredTextPointer = textPointer.mergeWith(stylePointer) { (text, style) =>
-		MeasuredText(text.string, component.getFontMetrics(style.font.toAwt), allowLineBreaks = style.allowLineBreaks)
+		MeasuredText(text.wrapped, component.getFontMetrics(style.font.toAwt), allowLineBreaks = style.allowLineBreaks)
 	}
 	
 	

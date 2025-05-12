@@ -3,7 +3,7 @@ package utopia.reflection.component.swing.label
 import utopia.firmament.component.display.RefreshableWithPointer
 import utopia.firmament.component.text.MutableStyleTextComponent
 import utopia.firmament.context.text.StaticTextContext
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.{Leading, Trailing}
@@ -33,7 +33,8 @@ object ImageAndTextLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextualWithPointer[A](pointer: EventfulPointer[A], displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	def contextualWithPointer[A](pointer: EventfulPointer[A],
+	                             displayFunction: Display[A] = Display.identity,
 	                             imageInsets: Option[StackInsets] = None)
 								(itemToImage: A => Image)(implicit context: StaticTextContext) =
 	{
@@ -52,8 +53,8 @@ object ImageAndTextLabel
 	  * @tparam A Type of displayed item
 	  * @return A new label
 	  */
-	def contextual[A](item: A, displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-					  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
+	def contextual[A](item: A, displayFunction: Display[A] = Display.identity,
+	                  imageInsets: Option[StackInsets] = None)(itemToImage: A => Image)
 					 (implicit context: StaticTextContext) =
 		contextualWithPointer(EventfulPointer(item), displayFunction, imageInsets)(itemToImage)
 }
@@ -74,7 +75,7 @@ object ImageAndTextLabel
   * @param itemToImageFunction Function used for selecting proper image for each item
   */
 class ImageAndTextLabel[A](override val contentPointer: EventfulPointer[A], initialFont: Font,
-                           displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+                           displayFunction: Display[A] = Display.identity,
                            textInsets: StackInsets = StackInsets.any, imageInsets: StackInsets = StackInsets.any,
                            alignment: Alignment = Alignment.Left,
                            initialTextColor: Color = Color.textBlack, hasMinWidth: Boolean = true,

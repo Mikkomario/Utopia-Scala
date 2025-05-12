@@ -4,7 +4,7 @@ import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageSet, SingleColorIcon}
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.flow.util.EitherExtensions._
@@ -195,38 +195,37 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	  * Creates a new button
 	  * @param contentPointer (Textual) content to display on this button
 	  * @param imagesPointer Pointer to the displayed button images
-	  * @param displayFunction Function which converts the button content to text. Default = use .toString
+	  * @param display Function which converts the button content to text. Default = use .toString
 	  * @param action Action that should be performed when this button is pressed.
 	  *               Accepts the current content of this button.
 	  * @tparam A Type of button content
 	  * @return A new button
 	  */
 	def apply[A](contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
-	             displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	             display: Display[A] = Display.identity)
 	            (action: A => Unit) =
-		new ViewImageAndTextButton[A](hierarchy, context, contentPointer, imagesPointer, settings,
-			displayFunction)(action)
+		new ViewImageAndTextButton[A](hierarchy, context, contentPointer, imagesPointer, settings, display)(action)
 	
 	/**
 	  * Creates a new button
 	  * @param contentPointer  (Textual) content to display on this button
 	  * @param iconPointer Icon to display on this button
-	  * @param displayFunction Function which converts the button content to text. Default = use .toString
+	  * @param display Function which converts the button content to text. Default = use .toString
 	  * @param action          Action that should be performed when this button is pressed.
 	  *                        Accepts the current content of this button.
 	  * @tparam A Type of button content
 	  * @return A new button
 	  */
 	def icon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	            displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	            display: Display[A] = Display.identity)
 	           (action: A => Unit) =
-		apply[A](contentPointer, iconPointer.flatMap { _.inButton.variableContextual }, displayFunction)(action)
+		apply[A](contentPointer, iconPointer.flatMap { _.inButton.variableContextual }, display)(action)
 	
 	@deprecated("Please use .icon(...) instead", "v1.1")
 	def withIcon[A](contentPointer: Changing[A], iconPointer: Changing[SingleColorIcon],
-	                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+	                display: Display[A] = Display.identity)
 	               (action: A => Unit) =
-		icon[A](contentPointer, iconPointer, displayFunction)(action)
+		icon[A](contentPointer, iconPointer, display)(action)
 	
 	/**
 	  * Creates a new button
@@ -238,7 +237,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	  */
 	def text[U](textPointer: Changing[LocalizedString], imagesPointer: Changing[ButtonImageSet])
 	           (action: => U) =
-		apply[LocalizedString](textPointer, imagesPointer, DisplayFunction.identity) { _ => action }
+		apply[LocalizedString](textPointer, imagesPointer, Display.noOp) { _ => action }
 	/**
 	  * Creates a new button
 	  * @param textPointer   Pointer to the text to display
@@ -249,7 +248,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	  */
 	def textAndIcon[U](textPointer: Changing[LocalizedString], iconPointer: Changing[SingleColorIcon])
 	                         (action: => U) =
-		icon(textPointer, iconPointer, DisplayFunction.identity) { _ => action }
+		icon(textPointer, iconPointer, Display.noOp) { _ => action }
 	
 	/**
 	  * Creates a new button
@@ -327,7 +326,7 @@ object ViewImageAndTextButton extends ViewImageAndTextButtonSetup()
 class ViewImageAndTextButton[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                                 contentPointer: Changing[A], imagesPointer: Changing[ButtonImageSet],
                                 settings: ViewImageAndTextButtonSettings,
-                                displayFunction: DisplayFunction[A] = DisplayFunction.raw)
+                                display: Display[A] = Display.identity)
                                (action: A => Unit)
 	extends AbstractButton(settings.appliedButtonSettings) with ReachComponentWrapper
 {
@@ -343,7 +342,7 @@ class ViewImageAndTextButton[A](override val hierarchy: ComponentHierarchy, cont
 		
 		ViewImageAndTextLabel.withContext(hierarchy, context).withSettings(appliedLabelSettings)
 			.withCustomBackgroundDrawer(ButtonBackgroundViewDrawer(colorPointer, statePointer, Fixed(borderWidth)))
-			.apply(contentPointer, imagePointer, displayFunction)
+			.apply(contentPointer, imagePointer, display)
 	}
 	
 	

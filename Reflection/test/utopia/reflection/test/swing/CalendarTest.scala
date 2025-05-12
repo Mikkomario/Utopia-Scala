@@ -1,7 +1,7 @@
 package utopia.reflection.test.swing
 
 import utopia.firmament.image.ButtonImageSet
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
@@ -45,7 +45,7 @@ object CalendarTest extends App
 	val forwardImages = ButtonImageSet.varyingAlpha(buttonImage.flippedHorizontally, 0.66, 1)
 	
 	val calendar = Calendar(monthSelect, yearSelect, forwardImages, backImages, 8.any, StackLength(0, 8, 16),
-		DisplayFunction.raw, smallFont,
+		Display.identity, smallFont,
 		Color.textBlack, StackInsets.symmetric(4.upscaling, 8.upscaling), smallFont, Color.textBlack,
 		StackInsets.symmetric(4.upscaling, 6.upscaling), Color.black.withAlpha(0.33), Color.cyan)
 	

@@ -5,7 +5,7 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.ButtonBackgroundViewDrawer
 import utopia.firmament.image.{ButtonImageEffect, ButtonImageSet, SingleColorIcon}
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.HotKey
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.flow.util.EitherExtensions._
@@ -334,7 +334,7 @@ class ImageAndTextButton(override val hierarchy: ComponentHierarchy, context: St
 			case Left(staticImage) => factory(staticImage, text)
 			// Case: Image is defined as a set and will changed based on the state => Constructs a view-label
 			case Right(imageSet) =>
-				factory.toViewFactory(Fixed(text), statePointer.map(imageSet.apply), DisplayFunction.identity)
+				factory.toViewFactory(Fixed(text), statePointer.map(imageSet.apply), Display.noOp)
 		}
 	}
 	

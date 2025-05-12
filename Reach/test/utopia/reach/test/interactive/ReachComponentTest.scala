@@ -94,6 +94,6 @@ object ReachComponentTest extends App
 	val label = window.result
 	KeyboardEvents += KeyTypedListener.unconditional { event => label.text += event.typedChar.toString }
 	window.focusKeyStateHandler += KeyStateListener.unconditional(BackSpace) { _ =>
-		label.text = label.text.string.drop(1).noLanguageLocalizationSkipped
+		label.text = label.text.wrapped.drop(1).noLanguage.skipLocalization
 	}
 }

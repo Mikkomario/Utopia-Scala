@@ -5,7 +5,7 @@ import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.{LocalizedString, Localizer}
+import utopia.firmament.localization.{Language, LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.async.process
 import utopia.flow.collection.immutable.range.Span
@@ -24,7 +24,6 @@ import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.{SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
-import utopia.reach.component.wrapper.ComponentCreationResult
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.focus.{FocusListener, ManyFocusableWrapper}
 
@@ -236,7 +235,7 @@ case class DurationFieldSettings(fieldSettings: FieldSettings = FieldSettings.de
                                  labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                  initialValue: Duration = Duration.Zero,
                                  maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
-                                 separator: LocalizedString = ":".noLanguageLocalizationSkipped,
+                                 separator: LocalizedString = ":".noLanguage.skipLocalization,
                                  capturesSeconds: Boolean = false, showsLabels: Boolean = false)
 	extends DurationFieldSettingsLike[DurationFieldSettings]
 {
@@ -343,6 +342,7 @@ case class DurationFieldSetup(settings: DurationFieldSettings = DurationFieldSet
 
 object DurationField extends DurationFieldSetup()
 {
+	private implicit def language: Language = Language.english
 	private val focusTransferDelay = 0.05.seconds
 }
 
@@ -356,10 +356,12 @@ class DurationField(override val hierarchy: ComponentHierarchy, context: Variabl
 				   (implicit exc: ExecutionContext)
 	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
 {
+	import DurationField.language
+	
 	// ATTRIBUTES	-------------------------------
 	
 	implicit val logger: Logger = SysErrLogger
-	private implicit val languageCode: String = "en"
+	
 	
 	// Makes sure the passed duration argument is positive
 	if (settings.maxValue <= Duration.Zero)

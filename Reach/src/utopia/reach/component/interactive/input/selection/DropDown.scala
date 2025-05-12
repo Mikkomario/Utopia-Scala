@@ -3,7 +3,7 @@ package utopia.reach.component.interactive.input.selection
 import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.ScrollingContext
 import utopia.firmament.context.text.VariableTextContext
-import utopia.firmament.localization.{DisplayFunction, LocalizedString}
+import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
@@ -62,7 +62,7 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	  * Creates a new field that utilizes a selection pop-up
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
-	  * @param displayFunction Display function to use for converting selectable values to text (default = use toString)
+	  * @param display Display function to use for converting selectable values to text (default = use toString)
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
@@ -82,7 +82,7 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	  */
 	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
-	 displayFunction: DisplayFunction[Option[A]] = DisplayFunction.rawOption,
+	 display: Display[Option[A]] = Display.identity.optional,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
 	(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => C)
 	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
@@ -103,10 +103,10 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 						.withContext(fieldContext.hierarchy, fieldContext.context)
 						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
 						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
-						.apply(valuePointer, displayFunction)
+						.apply(valuePointer, display)
 					// Makes sure the label doesn't have to resize itself when displaying various options
 					val maxContentWidthPointer = contentPointer.lazyMap {
-						_.view.map { c => label.calculatedStackSizeWith(displayFunction(Some(c))) }
+						_.view.map { c => label.calculatedStackSizeWith(display(Some(c))) }
 							.reduceOption { _ max _ }
 					}
 					label.addConstraint { original =>
@@ -129,7 +129,7 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	  * Creates a new field that utilizes a selection pop-up and uses text labels for displaying options
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
-	  * @param displayFunction Display function to use for converting selectable values to text (default = use toString)
+	  * @param display Display function to use for converting selectable values to text (default = use toString)
 	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
 	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param scrollingContext Context used for the created scroll view
@@ -140,23 +140,18 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	  * @return A new field
 	  */
 	def simple[A, P <: Changing[Seq[A]]](contentPointer: P,
-	                                        valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
-	                                        displayFunction: DisplayFunction[A] = DisplayFunction.raw,
-	                                        sameItemCheck: Option[EqualsFunction[A]] = None)
+	                                     valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
+	                                     display: Display[A] = Display.identity,
+	                                     sameItemCheck: Option[EqualsFunction[A]] = None)
 	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,
 	                                        log: Logger) =
 	{
-		val mainDisplayFunction = DisplayFunction.wrap[Option[A]] {
-			case Some(item) => displayFunction(item)
-			case None => LocalizedString.empty
-		}
-		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, mainDisplayFunction,
+		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, display.optional,
 			sameItemCheck) {
 			(hierarchy, context, firstItem) =>
 				val labelContext = context.withTextExpandingToRight
 				// TODO: At this time, uses static context here (modify when possible)
-				val label = MutableViewTextLabel(hierarchy).withContext(labelContext.current)
-					.apply(firstItem, displayFunction)
+				val label = MutableViewTextLabel(hierarchy).withContext(labelContext.current).apply(firstItem, display)
 				labelContext.textDrawContextPointer
 					.addListenerWhile(label.linkedFlag) { e => label.textDrawContext = e.newValue }
 				label

@@ -967,5 +967,5 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	
 	// TODO: This version doesn't take into account margin between lines
 	private def measureText(text: LocalizedString, style: TextDrawContext) =
-		MeasuredText(text.string, hierarchy.fontMetricsWith(style.font), allowLineBreaks = style.allowLineBreaks)
+		MeasuredText(text.wrapped, hierarchy.fontMetricsWith(style.font), allowLineBreaks = style.allowLineBreaks)
 }

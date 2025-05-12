@@ -1,7 +1,7 @@
 package utopia.reach.test.interactive
 
 import utopia.firmament.drawing.immutable.BorderDrawer
-import utopia.firmament.localization.DisplayFunction
+import utopia.firmament.localization.Display
 import utopia.firmament.model.Border
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
@@ -51,7 +51,7 @@ object SelectionListTest extends App
 							MutableViewTextLabel(hierarchy).withContext(listF.context.current)
 								.mapTextInsets { _.mapRight { i => i + margins.large }.expandingToRight }
 								.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))
-								.apply(item, DisplayFunction.interpolating("Label %s"))
+								.apply(item, Display.interpolateTo("Label %s"))
 						}
 						list -> list
 					}
