@@ -1,5 +1,6 @@
 package utopia.firmament.localization
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.view.immutable.eventful.Fixed
 
 /**
@@ -30,7 +31,7 @@ trait LocalStringFactory[+A]
 	  *               Each matches %s, %S, %i or %d in 'string'
 	  * @return An interpolated string
 	  */
-	def interpolate(string: String)(params: Any*): A
+	def interpolate(string: String, params: Seq[Any]): A
 	/**
 	  * @param string A string to interpolate
 	  * @param params Named interpolation parameters.
@@ -59,6 +60,16 @@ trait LocalStringFactory[+A]
 	  * @return Combined string
 	  */
 	def concat(strings: String*) = apply(strings.mkString)
+	
+	/**
+	  * @param string A string to interpolate
+	  * @param firstParam First interpolation parameter.
+	  * @param moreParams More interpolation parameters.
+	  *                   Each matches %s, %S, %i or %d in 'string'
+	  * @return An interpolated string
+	  */
+	def interpolate(string: String)(firstParam: Any, moreParams: Any*): A =
+		interpolate(string, Single(firstParam) ++ moreParams)
 	
 	/**
 	  * @param f A mapping function applied to this factory's results

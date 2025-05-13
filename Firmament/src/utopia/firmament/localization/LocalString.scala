@@ -132,7 +132,7 @@ object LocalString
 		override def apply(string: String, language: Language): LocalString =
 			_LocalString(string, language.nonEmptyOrElse(this.language))
 		
-		override def interpolate(string: String)(params: Any*): LocalString =
+		override def interpolate(string: String, params: Seq[Any]): LocalString =
 			if (params.isEmpty) apply(string) else InterpolatedWrapper(apply(string), params)
 		override def interpolate(string: String, params: Map[String, Any]): LocalString = {
 			if (params.isEmpty)

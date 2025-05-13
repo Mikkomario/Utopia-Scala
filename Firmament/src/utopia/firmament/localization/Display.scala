@@ -1,8 +1,9 @@
 package utopia.firmament.localization
 
-import utopia.firmament.localization.Display.{InterpolatingDisplay, NamedInterpolatingDisplay, OptionDisplay}
+import utopia.firmament.localization.Display.{InterpolatingDisplay, MapInDisplay, MapOutDisplay, NamedInterpolatingDisplay, OptionDisplay}
 import utopia.flow.collection.immutable.Single
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
 
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -281,6 +282,14 @@ object Display
 	{
 		override def apply(item: A): LocalizedString = f(item)
 	}
+	private class MapOutDisplay[-A](original: Display[A], f: Mutate[LocalizedString]) extends Display[A]
+	{
+		override def apply(item: A): LocalizedString = f(original(item))
+	}
+	private class MapInDisplay[-A, -B](original: Display[A], f: B => A) extends Display[B]
+	{
+		override def apply(item: B): LocalizedString = original(f(item))
+	}
 	
 	private class TimeDisplay(formatter: DateTimeFormatter) extends Display[TemporalAccessor]
 	{
@@ -363,4 +372,16 @@ trait Display[-A]
 	  * @return A display function that adds interpolation to this function's results
 	  */
 	def interpolate[B <: A](f: B => Any): Display[B] = interpolateAll { a => Single(f(a)) }
+	
+	/**
+	  * @param f A mapping function applied to the output of this display function
+	  * @return A new display function that yields modified output
+	  */
+	def mapOutput(f: Mutate[LocalizedString]): Display[A] = new MapOutDisplay[A](this, f)
+	/**
+	  * @param f A mapping function applied to the input of this display function
+	  * @tparam B Type of accepted input
+	  * @return A new display function that utilizes this one, but modifies the input before passing it to this one
+	  */
+	def mapInput[B](f: B => A): Display[B] = new MapInDisplay[A, B](this, f)
 }

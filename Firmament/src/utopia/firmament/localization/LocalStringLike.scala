@@ -144,7 +144,7 @@ trait LocalStringLike[+Repr <: LocalString]
 	  * @param args The parsed arguments
 	  * @return A version of this string with parameter segments replaced with the specified values
 	  */
-	def interpolateAll(args: Seq[Any]): Repr = factory.interpolate(raw)(args: _*)
+	def interpolateAll(args: Seq[Any]): Repr = factory.interpolate(raw, args)
 	/**
 	  * Creates an interpolated version of this string where each ${key} is replaced with a matching value from
 	  * the specified map
@@ -152,6 +152,13 @@ trait LocalStringLike[+Repr <: LocalString]
 	  * @return An interpolated version of this string
 	  */
 	def interpolateNamed(args: Map[String, Any]): Repr = factory.interpolate(raw, args)
+	/**
+	  * Creates an interpolated version of this string where each ${key} is replaced with a matching value from
+	  * the specified map
+	  * @return An interpolated version of this string
+	  */
+	def interpolateNamed(first: (String, Any), more: (String, Any)*): Repr =
+		interpolateNamed((Single(first) ++ more).toMap)
 	@deprecated("Please use .interpolateAll(Seq) instead", "v1.5")
 	def interpolated(args: Seq[Any]): Repr = interpolateAll(args)
 	@deprecated("Please use .interpolateNamed(Map) instead", "v1.5")

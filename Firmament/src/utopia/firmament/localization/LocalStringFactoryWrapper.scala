@@ -43,6 +43,6 @@ trait LocalStringFactoryWrapper[A, +B] extends LocalStringFactory[B]
 	override def apply(string: String) = wrap(wrapped(string))
 	override def apply(string: String, language: Language): B = wrap(wrapped(string, language))
 	
-	override def interpolate(string: String)(params: Any*) = wrap(wrapped.interpolate(string)(params))
+	override def interpolate(string: String, params: Seq[Any]) = wrap(wrapped.interpolate(string, params))
 	override def interpolate(string: String, params: Map[String, Any]) = wrap(wrapped.interpolate(string, params))
 }
