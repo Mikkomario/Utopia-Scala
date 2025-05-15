@@ -2,7 +2,7 @@ package utopia.firmament.component
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
-import utopia.firmament.component.Window.{locationAdjustment, minIconSize}
+import utopia.firmament.component.Window.{_locationAdjustment, minIconSize}
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.window.WindowContext
@@ -74,7 +74,16 @@ object Window
 	  *
 	  * This value is set after the first window becomes visible, after which it is used among all created windows.
 	  */
-	private var locationAdjustment: Option[Vector2D] = None
+	private var _locationAdjustment: Option[Vector2D] = None
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	  * @return Adjustment applied to all positioning requests.
+	  *         Used for countering any OS alteration.
+	  */
+	def appliedLocationAdjustment = _locationAdjustment.getOrElse(Vector2D.zero)
 	
 	
 	// OTHER    ----------------------------
@@ -634,21 +643,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			KeyboardEvents ++= keyStateHandlerPointer.current
 			
 			// Schedules to set up the location adjustment -value, unless set already
-			if (locationAdjustment.isEmpty)
-				Delay(0.4.seconds) {
-					val positionBeforeTest = position
-					val testPosition = positionBeforeTest + X(1)
-					position = testPosition
-					positionUpdatingFlag.onceNotSet {
-						val positionAfterTest = position
-						val adjustment = (testPosition - positionAfterTest).toVector2D
-						locationAdjustment = Some(adjustment)
-						position = positionAfterResize match {
-							case Some(f) => f(bounds)
-							case None => positionBeforeTest
-						}
-					}
-				}
+			if (_locationAdjustment.isEmpty)
+				Delay(0.5.seconds) { setupLocationAdjustment() }
 			else
 				positionAfterResize.foreach { f => position = f(bounds) }
 			
@@ -900,7 +896,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			_positionPointer.value = b.position
 			AwtEventThread.async {
 				component.setPreferredSize(roundBounds.size.toDimension)
-				component.setBounds((roundBounds + locationAdjustment.getOrElse(Vector2D.zero)).toAwt)
+				component.setBounds((roundBounds + _locationAdjustment.getOrElse(Vector2D.zero)).toAwt)
 			}
 			Delay(0.2.seconds) {
 				finishPositionUpdate(roundBounds.position)
@@ -1214,12 +1210,46 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			}
 	}
 	
+	/**
+	  * Tests which locationAdjustment value works best for countering any OS messing
+	  * @param originalPosition Original position to restore after testing has completed.
+	  *                         Default = None = Restores to the position at the time when this method is called.
+	  */
+	def setupLocationAdjustment(originalPosition: Option[Point] = None): Unit = {
+		// Adjusts the position by 1 pixel to the right
+		val positionBeforeTest = position
+		val testPosition = positionBeforeTest + X(1)
+		position = testPosition
+		
+		// Waits for the position update to complete
+		positionUpdatingFlag.onceNotSet {
+			// Calculates the discrepancy
+			val positionAfterTest = position
+			val adjustment = (testPosition - positionAfterTest).toVector2D
+			// Applies the adjustment to future positioning events
+			_locationAdjustment = Some(_locationAdjustment match {
+				case Some(previous) => previous + adjustment
+				case None => adjustment
+			})
+			
+			// Continues recursively until no further discrepancy is found
+			// Returns this window to the original location once done
+			if (adjustment.isAboutZero)
+				position = positionAfterResize match {
+					case Some(f) => f(bounds)
+					case None => originalPosition.getOrElse(positionBeforeTest)
+				}
+			else
+				Delay(0.5.seconds) { setupLocationAdjustment(originalPosition.orElse(Some(positionBeforeTest))) }
+		}
+	}
+	
 	private def _setPosition(newPosition: Point, roundedNewPosition: Point) = {
 		startPositionUpdate(roundedNewPosition)
 		pendingAnchor.clear()
 		_positionPointer.value = newPosition
 		AwtEventThread.async {
-			component.setLocation((roundedNewPosition + locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
+			component.setLocation((roundedNewPosition + _locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
 		}
 		queuePositionUpdateFinish(roundedNewPosition)
 	}
