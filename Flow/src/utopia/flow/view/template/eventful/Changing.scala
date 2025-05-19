@@ -996,16 +996,22 @@ trait Changing[+A] extends View[A]
 	def mergeWithWhile[R](others: IterableOnce[Changing[_]], condition: Flag)(mergeResult: A => R): Changing[R] = {
 		if (condition.isAlwaysFalse)
 			Fixed(mergeResult(value))
-		else
-			(Single(this) ++ others).filter { _.mayChange }.emptyOneOrMany match {
-				case None => Fixed(mergeResult(value))
-				case Some(Left(only)) =>
-					if (only == this)
+		else {
+			val othersThatChange = others.iterator.filter { _.mayChange }.toOptimizedSeq
+			fixedValue match {
+				case Some(value) =>
+					if (othersThatChange.isEmpty)
+						Fixed(mergeResult(value))
+					else
+						OptimizedMultiMergeMirror(othersThatChange, condition) { mergeResult(value) }
+					
+				case None =>
+					if (othersThatChange.isEmpty)
 						mapWhile(condition)(mergeResult)
 					else
-						OptimizedMirror(only, condition) { _ => mergeResult(value) }
-				case Some(Right(many)) => OptimizedMultiMergeMirror(many, condition) { mergeResult(value) }
+						OptimizedMultiMergeMirror(this +: othersThatChange, condition) { mergeResult(value) }
 			}
+		}
 	}
 	/**
 	  * Creates a mirror that reflects the merged value of this and another pointer.
@@ -1017,8 +1023,7 @@ trait Changing[+A] extends View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that merges the values from both of these items
 	  */
-	def strongMergeWithWhile[B, R](other: Changing[B], condition: Flag)(f: (A, B) => R): Changing[R] =
-	{
+	def strongMergeWithWhile[B, R](other: Changing[B], condition: Flag)(f: (A, B) => R): Changing[R] = {
 		if (condition.isAlwaysFalse)
 			Fixed(f(value, other.value))
 		else

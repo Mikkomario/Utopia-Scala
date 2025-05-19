@@ -13,7 +13,7 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingWrapper[T <: TargetingLike[O, Val, T], O, +A, +Val, +Repr] extends TargetingLike[A, Val, Repr]
+trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr] extends TargetingLike[R, RV, Repr]
 {
 	// ABSTRACT ------------------------
 	
@@ -21,7 +21,9 @@ trait TargetingWrapper[T <: TargetingLike[O, Val, T], O, +A, +Val, +Repr] extend
 	
 	protected def wrap(newTarget: T): Repr
 	
-	protected def wrapResult(result: O): A
+	protected def wrapResult(result: O): R
+	
+	protected def wrapValue(value: OV): RV
 	
 	
 	// IMPLEMENTED  --------------------
@@ -31,10 +33,10 @@ trait TargetingWrapper[T <: TargetingLike[O, Val, T], O, +A, +Val, +Repr] extend
 	
 	override def accessCondition: Option[Condition] = wrapped.accessCondition
 	
-	override def pull(implicit connection: Connection): A = wrapResult(wrapped.pull)
-	override def apply(column: Column, distinct: Boolean)(implicit connection: Connection): Val =
-		wrapped(column, distinct)
-	override def apply(columns: Seq[Column])(implicit connection: Connection): Seq[Val] = wrapped(columns)
+	override def pull(implicit connection: Connection): R = wrapResult(wrapped.pull)
+	override def apply(column: Column, distinct: Boolean)(implicit connection: Connection): RV =
+		wrapValue(wrapped(column, distinct))
+	override def apply(columns: Seq[Column])(implicit connection: Connection): Seq[RV] = wrapped(columns).map(wrapValue)
 	override def update(column: Column, value: Value)(implicit connection: Connection): Boolean =
 		wrapped(column) = value
 	

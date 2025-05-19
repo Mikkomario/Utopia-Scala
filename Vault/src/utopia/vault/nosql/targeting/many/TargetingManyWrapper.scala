@@ -9,7 +9,7 @@ import utopia.vault.nosql.targeting.TargetingWrapper
   * @since 15.05.2025, v1.21
   */
 trait TargetingManyWrapper[T <: TargetingManyLike[O, T], O, +A, +Repr]
-	extends TargetingManyLike[A, Repr] with TargetingWrapper[T, Seq[O], Seq[A], Seq[Value], Repr]
+	extends TargetingManyLike[A, Repr] with TargetingWrapper[T, Seq[O], Seq[Value], Seq[A], Seq[Value], Repr]
 {
 	// ABSTRACT ---------------------------
 	
@@ -19,4 +19,5 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T], O, +A, +Repr]
 	// IMPLEMENTED  -----------------------
 	
 	override protected def wrapResult(result: Seq[O]): Seq[A] = result.map(mapResult)
+	override protected def wrapValue(value: Seq[Value]): Seq[Value] = value
 }

@@ -9,7 +9,7 @@ object TargetingManyRows
 	
 	// NESTED   ----------------------
 	
-	private class Wrapper[O, R](override val wrapped: TargetingManyRows[O])(f: O => R)
+	private class Wrapper[O, +R](override val wrapped: TargetingManyRows[O])(f: O => R)
 		extends TargetingManyRows[R] with TargetingManyRowsWrapper[TargetingManyRows[O], O, R, TargetingManyRows[R]]
 	{
 		override protected def self: TargetingManyRows[R] = this
@@ -25,3 +25,6 @@ object TargetingManyRows
   * @since 18.05.2025, v1.21
   */
 trait TargetingManyRows[+A] extends TargetingMany[A] with TargetingManyRowsLike[A, TargetingManyRows[A]]
+{
+	override def map[B](f: A => B): TargetingManyRows[B] = TargetingManyRows.map(this)(f)
+}
