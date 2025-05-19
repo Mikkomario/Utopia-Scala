@@ -186,12 +186,12 @@ trait FromResultFactory[+A] extends HasTable
 	protected def expandedSelect(joins: Seq[Joinable] = Empty, joinType: JoinType = Inner,
 	                             additionalSelect: Option[SelectTarget] = None) =
 	{
-		if (joins.isEmpty) {
+		if (joins.isEmpty)
 			additionalSelect match {
 				case Some(additional) => (selectTarget + additional).toSelect(target)
 				case None => select
 			}
-		} else {
+		else {
 			val base = if (selectTarget == All) Tables(tables) else selectTarget
 			val applied = additionalSelect match {
 				case Some(additional) => base + additional

@@ -23,6 +23,12 @@ sealed trait SelectTarget
 	def toSelect(target: SqlTarget): SqlSegment
 	
 	/**
+	  * @param column A column
+	  * @return Whether this selection contains that column
+	  */
+	def contains(column: Column): Boolean
+	
+	/**
 	  * @param other Another target to include, also
 	  * @return Copy of this target, also including the specified target
 	  */
@@ -53,6 +59,8 @@ object SelectTarget
 		
 		
 		// IMPLEMENTED  ------------------
+		
+		override def contains(column: Column): Boolean = columns.contains(column)
 		
 		override def +(other: SelectTarget): SelectTarget = other match {
 			case All => All
@@ -141,6 +149,8 @@ object SelectTarget
 	{
 		override def toSelect(target: SqlTarget): SqlSegment = Select.all(target)
 		
+		override def contains(column: Column): Boolean = true
+		
 		override def +(other: SelectTarget): SelectTarget = this
 	}
 	
@@ -150,6 +160,8 @@ object SelectTarget
 	case object Nothing extends SelectTarget
 	{
 		override def toSelect(target: SqlTarget): SqlSegment = Select.nothing(target)
+		
+		override def contains(column: Column): Boolean = false
 		
 		override def +(other: SelectTarget): SelectTarget = other
 	}
@@ -162,6 +174,8 @@ object SelectTarget
 	{
 		override def columns: Seq[Column] = Single(column)
 		
+		override def contains(column: Column): Boolean = this.column == column
+		
 		override def toSelect(target: SqlTarget): SqlSegment = Select(target, column)
 	}
 	
@@ -172,6 +186,8 @@ object SelectTarget
 	case class DistinctColumnValues(column: Column) extends SelectColumnsTarget
 	{
 		override def columns: Seq[Column] = Single(column)
+		
+		override def contains(column: Column): Boolean = this.column == column
 		
 		override def toSelect(target: SqlTarget): SqlSegment = Select.distinct(target, column)
 	}

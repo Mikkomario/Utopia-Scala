@@ -21,6 +21,5 @@ trait FactoryView[+A] extends View
 	// IMPLEMENTED  -------------------------
 	
 	override def table = factory.table
-	
 	override def target = factory.target
 }

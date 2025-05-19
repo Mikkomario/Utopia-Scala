@@ -14,6 +14,8 @@
   - Added `.validate()`
 - **References**
   - Added `.linkGraph`, `.reverseLinkGraph` and `.biDirectionalLinkGraph`
+- **SelectTarget**
+  - Added `.contains(Column)`
 ### Other changes
 - The following functions no longer limit the results to unique **primary** instances: 
   - **FromRowFactory**: `getIncluding(...)`, `getWithColumn(...)`

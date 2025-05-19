@@ -95,8 +95,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       */
     override def isEmpty = generatedKeys.isEmpty && rows.isEmpty
     
-    override def toString =
-    {
+    override def toString = {
         if (generatedKeys.nonEmpty)
             s"Generated keys: [${ generatedKeys.map { _.getString }.mkString(", ") }]"
         else if (updatedRowCount > 0)

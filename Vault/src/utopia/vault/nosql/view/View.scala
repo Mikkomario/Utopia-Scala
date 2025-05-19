@@ -39,7 +39,6 @@ trait View extends HasTable
 		case Some(condition) => Exists(target, condition)
 		case None => Exists.any(target)
 	}
-	
 	/**
 	  * @param connection DB Connection (implicit)
 	  * @return Whether there doesn't exist a single row visible through this view

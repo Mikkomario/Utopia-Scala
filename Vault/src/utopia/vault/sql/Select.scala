@@ -71,6 +71,14 @@ object Select
       * @return an SQL segment for selecting distinct values of the targeted property
       */
     def distinct(table: Table, propName: String): SqlSegment = distinct(table, table(propName))
+    /**
+      * @param target Target of this query
+      * @param column Selected column
+      * @param condition A condition that, if met, makes this query select only distinct results
+      * @return Either a SELECT DISTINCT or a SELECT query, depending on 'condition'
+      */
+    def distinctIf(target: SqlTarget, column: Column, condition: Boolean) =
+        if (condition) apply(target, column) else distinct(target, column)
     
     /**
      * Creates an sql segment that selects the primary key of a table
