@@ -914,10 +914,25 @@ trait Changing[+A] extends View[A]
 	  * @return A mirror that merges the values of all these items
 	  */
 	def mergeWith[R](others: IterableOnce[Changing[_]])(mergeResult: A => R): Changing[R] = {
-		(Single(this) ++ others).filter { _.mayChange }.emptyOneOrMany match {
-			case None => Fixed(mergeResult(value))
-			case Some(Left(only)) => OptimizedMirror(only) { _ => mergeResult(value) }
-			case Some(Right(many)) => OptimizedMultiMergeMirror(many) { mergeResult(value) }
+		val othersThatChange = others.iterator.filter { _.mayChange }.toOptimizedSeq
+		fixedValue match {
+			// Case: This pointer is fixed
+			case Some(value) =>
+				// Case: Others are also fixed => Generates a fixed pointer
+				if (othersThatChange.isEmpty)
+					Fixed(mergeResult(value))
+				// Case: One or more other pointers change => Uses a multi-merge mirror
+				else
+					OptimizedMultiMergeMirror(othersThatChange) { mergeResult(value) }
+			
+			// Case: This pointer changes
+			case None =>
+				// Case: Others change too => Uses a multi-merge mirror
+				if (othersThatChange.nonEmpty)
+					OptimizedMultiMergeMirror(this +: othersThatChange) { mergeResult(value) }
+				// Case: Others don't => Uses mapping instead
+				else
+					map(mergeResult)
 		}
 	}
 	/**

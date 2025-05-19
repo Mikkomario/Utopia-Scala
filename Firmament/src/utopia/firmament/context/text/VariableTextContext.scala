@@ -4,6 +4,7 @@ import utopia.firmament.context.color.{ColorContext, VariableColorContext, Varia
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
 import utopia.firmament.model.{Margins, TextDrawContext}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.caching.cache.WeakCache
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.view.immutable.View
@@ -34,7 +35,7 @@ object VariableTextContext
 			WeakCache.weakKeys { colorP: Changing[Color] =>
 				WeakCache.weakKeys { thresholdP: Option[Changing[Double]] =>
 					WeakCache.weakValues[(Alignment, Double, Boolean), Changing[TextDrawContext]] { case (alignment, betweenLines, allowLineBreaks) =>
-						colorP.mergeWith(Vector(insetsP, fontP) ++ thresholdP) { color: Color =>
+						colorP.mergeWith(Pair(insetsP, fontP) ++ thresholdP) { color: Color =>
 							TextDrawContext(fontP.value, color, alignment, insetsP.value, thresholdP.map { _.value },
 								betweenLines, allowLineBreaks)
 						}
@@ -220,8 +221,10 @@ object VariableTextContext
 		                                          alignment: Alignment = textAlignment,
 		                                          betweenLines: Double = betweenLinesMargin.optimal,
 		                                          lineBreaks: Boolean = allowLineBreaks) =
-			Lazy { textDrawContextPointerCache(fontP)(insetsP)(colorP)(splitThresholdP)((
-				alignment, betweenLines, lineBreaks)) }
+			Lazy {
+				textDrawContextPointerCache(fontP)(insetsP)(colorP)(splitThresholdP)(
+					(alignment, betweenLines, lineBreaks))
+			}
 	}
 }
 

@@ -31,6 +31,7 @@
   - Change events no longer generate while mapping is disabled
   - `destiny` is now sealable if the mapping condition is sealable
 - Fixed **ConditionalChangeReaction**'s event generation when the listening resumes after being initially disabled.
+- Fixed a bug that caused **Changing**`.mergeWith(...)` to sometimes not generate change events
 - **Changing**`.nextChangeFuture` could previously throw under certain circumstances
 - **Lazy**`.valueIterator` would previously yield an iterator of infinite length. 
   Now yields an iterator of length 1, as expected.

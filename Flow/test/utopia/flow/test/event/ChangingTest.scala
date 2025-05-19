@@ -244,7 +244,7 @@ object ChangingTest extends App
 	private val merge4Lock = SettableFlag()
 	private val otherLmis = Vector(lmi2, lmi3, lmi4)
 	private var merge4Calls = 0
-	private val merge4 = lmi1.mergeWithWhile(Vector(lmi2, lmi3, lmi4), merge4ActiveFlag && !merge4Lock) { v1 =>
+	private val merge4 = lmi1.mergeWithWhile(otherLmis, merge4ActiveFlag && !merge4Lock) { v1 =>
 		merge4Calls += 1
 		v1 + otherLmis.view.map { _.value }.sum
 	}
@@ -473,6 +473,63 @@ object ChangingTest extends App
 	
 	sw1On.set()
 	assert(lastSw1 == 2)
+	
+	// Tests that mergeWhile generates change events
+	
+	private val mw1 = Pointer.eventful(1)
+	private val mw2 = Pointer.eventful(2)
+	private val mergeFlag = ResettableFlag()
+	private val mwr = mw1.mergeWithWhile(mw2, mergeFlag) { _ + _ }
+	
+	private var lastEvent = -1
+	mwr.addListener { e => lastEvent = e.newValue }
+	
+	assert(lastEvent == -1)
+	assert(mwr.value == 3)
+	
+	// Modifies input 1 => No change should occur
+	mw1.value = 3
+	
+	assert(lastEvent == -1)
+	assert(mwr.value == 3)
+	
+	// Activates merging => Expects change with event
+	mergeFlag.set()
+	
+	assert(lastEvent == 5)
+	assert(mwr.value == 5)
+	
+	// Changes input 2 => Expects change
+	mw2.value = 1
+	
+	assert(lastEvent == 4)
+	assert(mwr.value == 4)
+	
+	// Disables changing and changes input 2 => Expects no changes
+	mergeFlag.reset()
+	mw2.value = 2
+	
+	assert(lastEvent == 4)
+	assert(mwr.value == 4)
+	
+	// Enables merging again => Expects change
+	mergeFlag.set()
+	
+	assert(lastEvent == 5)
+	assert(mwr.value == 5)
+	
+	// Tests pointer-merging without conditions and without calling .value
+	
+	private val mp1 = Pointer.eventful(1)
+	private val mp2 = Pointer.eventful(2)
+	private val mpr = mp1.mergeWith(mp2) { _ + _ }
+	private var lastMergeResult = -1
+	
+	mpr.addListener { e => lastMergeResult = e.newValue }
+	
+	mp1.value = 2
+	
+	assert(lastMergeResult == 4)
 	
 	println("Done!")
 }
