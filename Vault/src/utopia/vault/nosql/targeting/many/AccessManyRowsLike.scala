@@ -8,6 +8,7 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Result, Row, Table}
 import utopia.vault.model.template.Joinable
+import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{JoinType, Limit, Offset, SqlSegment}
 
@@ -17,7 +18,8 @@ import utopia.vault.sql.{JoinType, Limit, Offset, SqlSegment}
   * @author Mikko Hilpinen
   * @since 16.05.2025, v1.21
   */
-trait AccessManyRowsLike[+A, +Repr] extends AccessManyLike[A, Repr] with TargetingManyRowsLike[A, Repr]
+trait AccessManyRowsLike[+A, +Repr]
+	extends AccessManyLike[A, Repr] with TargetingManyRowsLike[A, Repr, TargetingOne[Option[A]]]
 {
 	// ABSTRACT ------------------------
 	
@@ -28,13 +30,6 @@ trait AccessManyRowsLike[+A, +Repr] extends AccessManyLike[A, Repr] with Targeti
 	def withLimit(limit: Int): Repr
 	def withOffset(offset: Int, limit: Option[Int] = limit): Repr
 	def withLimitToUniqueIndices(limit: Boolean): Repr
-	
-	def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
-	                joinType: JoinType = Inner)
-	               (f: Seq[(A, Row)] => Seq[B]): AccessMany[B]
-	def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
-	                    joinType: JoinType = Inner)
-	                   (f: Seq[(A, Seq[Row])] => Seq[B]): AccessMany[B]
 	
 	protected def parse(row: Row): Option[A]
 	

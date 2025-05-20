@@ -53,6 +53,8 @@
   - Added `.nonEmptyFlag` and `.emptyFlag` to instances that contain **MayBeEmpty** or **Iterable**
 - **Destiny** (object)
   - Added `.maySealIf(Boolean)`
+- **Extreme**
+  - Added `.toEnd`
 - **Flag** (object)
   - Added new utility functions for accessing lockable, settable & resettable constructors
 - **HasSize**

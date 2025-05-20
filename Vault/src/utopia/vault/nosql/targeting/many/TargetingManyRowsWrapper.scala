@@ -3,15 +3,17 @@ package utopia.vault.nosql.targeting.many
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Column
+import utopia.vault.model.immutable.{Column, Row, Table}
+import utopia.vault.model.template.Joinable
+import utopia.vault.sql.JoinType
 
 /**
   * Common trait for interfaces that implement [[TargetingManyRowsLike]] by wrapping another such instance.
   * @author Mikko Hilpinen
   * @since 18.05.2025, v1.21
   */
-trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T], O, +A, +Repr]
-	extends TargetingManyWrapper[T, O, A, Repr] with TargetingManyRowsLike[A, Repr]
+trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T, OT], OT, O, +A, +Repr, +One]
+	extends TargetingManyWrapper[T, OT, O, A, Repr, One] with TargetingManyRowsLike[A, Repr, One]
 {
 	// IMPLEMENTED  ------------------------
 	
@@ -28,4 +30,16 @@ trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T], O, +A, +Repr]
 	override def pullWithMany[B](columns: Seq[Column])(map: Seq[Seq[Value]] => B)
 	                            (implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWithMany(columns)(map).map { case (a, b) => mapResult(a) -> b }
+	
+	override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+	                         joinType: JoinType)(f: Seq[(A, Row)] => Seq[B]) =
+		wrapped.extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { items =>
+			f(items.map { case (a, row) => mapResult(a) -> row })
+		}
+	override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+	                             joinType: JoinType)
+	                            (f: Seq[(A, Seq[Row])] => Seq[B]) =
+		wrapped.extendToMany(tables, exclusiveColumns, bridgingJoins, joinType) { items =>
+			f(items.map { case (a, rows) => mapResult(a) -> rows })
+		}
 }

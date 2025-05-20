@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Result}
+import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.sql.{Condition, OrderBy, Select, SqlSegment, Update, Where}
 
 /**
@@ -13,7 +14,7 @@ import utopia.vault.sql.{Condition, OrderBy, Select, SqlSegment, Update, Where}
   * @author Mikko Hilpinen
   * @since 16.05.2025, v1.21
   */
-trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr]
+trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[Option[A]]]
 {
 	// ABSTRACT ----------------------
 	

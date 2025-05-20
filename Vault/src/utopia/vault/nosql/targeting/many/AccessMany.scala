@@ -2,11 +2,14 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Identity
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.util.Mutate
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlSegment, SqlTarget}
 
@@ -57,6 +60,33 @@ object AccessMany
 			// Extends the current target to include the specified condition's tables
 			val extendedTarget = (condition.segment.targetTables -- target.tables).foldLeft(target) { _.join(_) }
 			copy(target = extendedTarget, accessCondition = Some(condition))
+		}
+		
+		override def apply(end: End, ordering: Option[OrderBy]) = {
+			// Applies the correct ordering
+			val access = {
+				if (ordering.isEmpty && (end == First || this.ordering.isEmpty))
+					this
+				else
+					ordering match {
+						case Some(ordering) =>
+							withOrdering(end match {
+								case First => ordering
+								case Last => -ordering
+							})
+						case None =>
+							end match {
+								case First => this
+								case Last =>
+									ordering match {
+										case Some(ordering) => withOrdering(-ordering)
+										case None => this
+									}
+							}
+					}
+			}
+			// Creates a view to the first element in this access point
+			TargetingOne.headOf[AccessMany[A], A](access)
 		}
 		
 		override def withOrdering(ordering: OrderBy): AccessMany[A] = copy(ordering = Some(ordering))

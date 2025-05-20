@@ -2,6 +2,7 @@ package utopia.flow.operator.enumeration
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.HasInclusiveOrderedEnds
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 
@@ -13,6 +14,11 @@ import utopia.flow.operator.sign.Sign.{Negative, Positive}
 sealed trait Extreme extends Binary[Extreme]
 {
 	// ABSTRACT -------------------------
+	
+	/**
+	  * @return The end of a collection matching this extreme when no ordering is applied
+	  */
+	def toEnd: End
 	
 	/**
 	  * @param ascendingOrder An ordering that returns items in ascending order (i.e. from the smallest to the greatest)
@@ -201,6 +207,8 @@ object Extreme
 	  */
 	case object Min extends Extreme
 	{
+		override def toEnd: End = First
+		
 		override def unary_- = Max
 		override def compareTo(o: Extreme) = if (o == this) 0 else -1
 		
@@ -215,6 +223,8 @@ object Extreme
 	  */
 	case object Max extends Extreme
 	{
+		override def toEnd: End = Last
+		
 		override def unary_- = Min
 		override def compareTo(o: Extreme) = if (o == this) 0 else 1
 		

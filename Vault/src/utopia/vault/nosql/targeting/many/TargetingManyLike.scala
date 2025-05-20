@@ -1,18 +1,43 @@
 package utopia.vault.nosql.targeting.many
 
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.targeting.TargetingLike
+import utopia.vault.sql.OrderBy
 
 /**
   * Common trait for access points that yield multiple items at a time
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingManyLike[+A, +Repr] extends TargetingLike[Seq[A], Seq[Value], Repr]
+trait TargetingManyLike[+A, +Repr, +One] extends TargetingLike[Seq[A], Seq[Value], Repr]
 {
+	// ABSTRACT ------------------------
+	
+	/**
+	  * @param end The targeted end
+	  * @param ordering End-determining order (optional). Overrides currently applied ordering, if specified.
+	  * @return Access to the item at the specified end of this access' range
+	  */
+	def apply(end: End, ordering: Option[OrderBy] = None): One
+	
+	
+	// COMPUTED ------------------------
+	
+	def head = apply(First)
+	def last = apply(Last)
+	
+	
 	// OTHER    ------------------------
+	
+	def maxBy(ordering: OrderBy) = apply(Max, ordering)
+	def minBy(ordering: OrderBy) = apply(Min, ordering)
+	
+	def apply(extreme: Extreme, by: OrderBy): One = apply(extreme.toEnd, Some(by))
 	
 	/**
 	  * @param f A mapping function

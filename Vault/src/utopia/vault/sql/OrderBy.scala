@@ -1,10 +1,11 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.immutable.{Pair, Single}
-
-import scala.language.implicitConversions
+import utopia.flow.operator.Reversible
 import utopia.vault.model.immutable.Column
 import utopia.vault.sql.OrderDirection.{Ascending, Descending}
+
+import scala.language.implicitConversions
 
 /**
  * This object is used for generating sql segments that determine how the results will be ordered
@@ -62,7 +63,7 @@ object OrderBy
  * Represents ordering in sql query
  * @param keys The keys ordering happens by. Most important order keys come first and less important later.
  */
-case class OrderBy(keys: Seq[(Column, OrderDirection)])
+case class OrderBy(keys: Seq[(Column, OrderDirection)]) extends Reversible[OrderBy]
 {
     // COMPUTED -----------------------
     
@@ -86,6 +87,13 @@ case class OrderBy(keys: Seq[(Column, OrderDirection)])
       * @return A copy of this order that descends (i.e. goes from the greatest to the smallest)
       */
     def descending = withDirection(Descending)
+    
+    
+    // IMPLEMENTED  -------------------
+    
+    override def self: OrderBy = this
+    
+    override def unary_- : OrderBy = OrderBy(keys.map { case (col, dir) => (col, -dir) })
     
     
     // OTHER    -----------------------

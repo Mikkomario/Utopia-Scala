@@ -2,11 +2,14 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Result, Row, Table}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 
@@ -88,6 +91,32 @@ object AccessManyRows
 					.flatMap { rows => parse(rows.head).map { _ -> rows } }
 					.toOptimizedSeq)
 			}
+		
+		override def apply(end: End, ordering: Option[OrderBy]) = {
+			val limited = if (limit.contains(1)) this else withLimit(1)
+			val ordered = {
+				if (ordering.isEmpty && (end == First || limited.ordering.isEmpty))
+					limited
+				else
+					ordering match {
+						case Some(ordering) =>
+							limited.withOrdering(end match {
+								case First => ordering
+								case Last => -ordering
+							})
+						case None =>
+							limited.ordering match {
+								case Some(ordering) =>
+									end match {
+										case First => limited
+										case Last => limited.withOrdering(-ordering)
+									}
+								case None => limited
+							}
+					}
+			}
+			TargetingOne.headOf[AccessManyRows[A], A](ordered)
+		}
 		
 		
 		// OTHER    ------------------------

@@ -1,6 +1,7 @@
 # Utopia Vault - List of Changes
 
 ## v1.21 (in development)
+TODO: Document new access style
 ### Breaking changes
 - **ConnectionPool** now requires access to an implicit `ExecutionContext` instance upon construction, 
   but no longer at every method call.
@@ -20,6 +21,7 @@
 - The following functions no longer limit the results to unique **primary** instances: 
   - **FromRowFactory**: `getIncluding(...)`, `getWithColumn(...)`
   - **ManyRowModelAccess**: `pullWithColumn(...)`, `groupByColumn(...)`
+- **OrderDirection** now extends **BinarySigned** and **OrderBy** now extends **Reversible**
 - Refactored **ConnectionPool**, adding connection validation and better connection reuse logic
 - Minor refactoring within **Connection**'s opening & closing logic
 - Minor refactoring within **DatabaseCache**
