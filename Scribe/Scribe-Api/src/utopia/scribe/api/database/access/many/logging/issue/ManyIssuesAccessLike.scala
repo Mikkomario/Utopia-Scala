@@ -71,8 +71,7 @@ trait ManyIssuesAccessLike[+A, +Repr]
 	
 	/**
 	  * @param context Targeted issue context
-	  * 
-		@param includeSubContexts Whether contexts appearing under the specified context should also be included
+	  * @param includeSubContexts Whether contexts appearing under the specified context should also be included
 	  * (default = false)
 	  * @return Access to issues with that context
 	  */

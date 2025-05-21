@@ -1,10 +1,10 @@
 package utopia.vault.nosql.targeting
 
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.Mutate
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{Column, Table}
+import utopia.vault.model.immutable.Table
 import utopia.vault.model.template.Joinable
+import utopia.vault.nosql.targeting.columns.AccessColumnsWrapper
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 
 /**
@@ -13,7 +13,8 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr] extends TargetingLike[R, RV, Repr]
+trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
+	extends TargetingLike[R, RV, Repr] with AccessColumnsWrapper[OV, RV]
 {
 	// ABSTRACT ------------------------
 	
@@ -22,8 +23,6 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr] exte
 	protected def wrap(newTarget: T): Repr
 	
 	protected def wrapResult(result: O): R
-	
-	protected def wrapValue(value: OV): RV
 	
 	
 	// IMPLEMENTED  --------------------
@@ -34,11 +33,6 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr] exte
 	override def accessCondition: Option[Condition] = wrapped.accessCondition
 	
 	override def pull(implicit connection: Connection): R = wrapResult(wrapped.pull)
-	override def apply(column: Column, distinct: Boolean)(implicit connection: Connection): RV =
-		wrapValue(wrapped(column, distinct))
-	override def apply(columns: Seq[Column])(implicit connection: Connection): Seq[RV] = wrapped(columns).map(wrapValue)
-	override def update(column: Column, value: Value)(implicit connection: Connection): Boolean =
-		wrapped(column) = value
 	
 	override def apply(condition: Condition): Repr = mapWrapped { _(condition) }
 	override def join(joins: Seq[Joinable], joinType: JoinType): Repr = mapWrapped { _.join(joins, joinType) }

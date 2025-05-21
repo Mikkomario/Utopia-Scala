@@ -9,8 +9,7 @@ import utopia.vault.nosql.targeting.one.TargetingOne
   * @since 19.05.2025, v1.21
   */
 trait AccessWrapper[A, +Repr <: TargetingMany[A], +One <: TargetingOne[Option[A]]]
-	extends TargetingMany[A] with TargetingManyLike[A, Repr, One]
-		with TargetingManyWrapper[TargetingMany[A], TargetingOne[Option[A]], A, A, Repr, One]
+	extends TargetingMany[A] with TargetingManyWrapper[TargetingMany[A], TargetingOne[Option[A]], A, A, Repr, One]
 {
 	override protected def mapResult(result: A): A = result
 }
