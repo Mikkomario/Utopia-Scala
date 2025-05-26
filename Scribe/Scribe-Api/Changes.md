@@ -1,6 +1,6 @@
 # Utopia Scribe Api - list of changes
 
-## v1.0.5 (in development)
+## v1.0.5 - 26.05.2025
 Adds support for **Access v1.6**
 
 ## v1.0.4 - 23.01.2025

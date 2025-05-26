@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.6 (in development)
+## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 
 This includes multiple bugfixes. Other classes also received various internal improvements and new methods.
 ### Breaking changes

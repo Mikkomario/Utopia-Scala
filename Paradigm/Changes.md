@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.7.2 (in development)
+## v1.7.2 - 26.05.2025
 A minor update focusing on value conversions between **String**s and Paradigm-specific **Value** types.
 ### Bugfixes
 - Fixed some illogical string-to-value conversions

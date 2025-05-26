@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v4.1.9 (in development)
+## v4.1.9 - 26.05.2025
 Adds support for **Access v1.6**
 
 ## v4.1.8 - 23.01.2025

@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.10 (in development)
+## v1.10 - 26.05.2025
 This update modifies how **PullSchrodinger** handles failure cases.  
 It also adds support for **Access v1.6** & **Disciple v1.9**.
 ### Breaking changes

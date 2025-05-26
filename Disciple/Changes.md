@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.9 (in development)
+## v1.9 - 26.05.2025
 This update adds support for server-sent events. Package structuring is also updated.  
 Supports **Flow v2.6** & **Access v1.6**
 ### New features

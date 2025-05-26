@@ -1,6 +1,6 @@
 # Utopia Echo - List of Changes
 
-## v1.3 (in development)
+## v1.3 - 26.05.2025
 This update improves **Chat** behavior. 
 Notably, it adds support for token count estimation that learns from **Chat** usage.
 

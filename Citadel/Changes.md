@@ -1,5 +1,8 @@
 # Utopia Disciple - List of changes
 
+## v2.1.10 - 26.05.2025
+A new build compatible with the latest **Flow** and **Vault**
+
 ## v2.1.9 - 23.01.2025
 A new build compatible with the latest **Flow** and **Vault**
 

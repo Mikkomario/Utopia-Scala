@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.2.3 (in development)
+## v2.2.3 - 26.05.2025
 Adds supports for **Firmament v1.5**.
 ### Other changes
 - **TextField** now uses `ComponentCreationDefaults.hintAlphaMod` when determining prompt text color

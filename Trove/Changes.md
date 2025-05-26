@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.12 - 26.05.2025
+A new build compatible with the latest **Flow** & **Vault**
+
 ## v1.1.11 - 23.01.2025
 A new build compatible with the latest **Flow** & **Vault**
 

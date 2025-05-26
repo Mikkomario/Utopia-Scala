@@ -1,6 +1,6 @@
 # Utopia Nexus for Tomcat - List of changes
 
-## v1.3.2 (in development)
+## v1.3.2 - 26.05.2025
 This update adds support for **Access v1.6**
 
 ## v1.3.1 - 23.01.2025

@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v2.3.1 (in development)
+## v2.3.1 - 26.05.2025
 Adds support for **Access v1.6** & **Disciple v1.9**
 
 ## v2.3 - 23.01.2025

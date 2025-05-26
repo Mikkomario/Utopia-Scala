@@ -1,6 +1,6 @@
 # Utopia Nexus - List of Changes
 
-## v1.9.5 (in development)
+## v1.9.5 - 26.05.2025
 This update adds support for **Access v1.6**
 
 ## v1.9.4 - 04.10.2024

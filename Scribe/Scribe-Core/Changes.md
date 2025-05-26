@@ -1,5 +1,8 @@
 # Utopia Scribe Core - list of changes
 
+## v1.1.2 - 26.05.2025
+A new build supporting the latest **Flow** & **BunnyMunch** versions.
+
 ## v1.1.1 - 23.01.2025
 This update merely adds support for the latest **Flow** version.
 

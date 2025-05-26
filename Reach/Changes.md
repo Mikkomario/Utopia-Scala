@@ -1,6 +1,6 @@
 # Utopia Reach - List of Changes
 
-## v1.6 (in development)
+## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 
 A number of new loading-related components were added, including animated image labels and loading support in existing 
 **ViewImageAndTextButton**s. **ViewStack** receives major internal improvements and fixes. 

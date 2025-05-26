@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.5 (in development)
+## v1.5 - 26.05.2025
 This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  
 An attempt is also made to improve **Window** positioning, adding support for customized auto-positioning logic.
 ### Breaking changes

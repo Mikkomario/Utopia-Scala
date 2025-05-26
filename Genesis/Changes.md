@@ -1,6 +1,6 @@
 # Utopia Genesis - List of Changes
 
-## v4.2.1 (in development)
+## v4.2.1 - 26.05.2025
 This update improves the reliability of the **Actor** system with better error-handling. 
 It also adds better support for digit-based key events.
 ### Bugfixes

@@ -1,6 +1,6 @@
 # Utopia Terra - list of changes
 
-## v1.3 (in development)
+## v1.3 - 26.05.2025
 A small update fixing a bug in **PointMapLike** (map image projection logic).
 ### Breaking changes
 - **PointMapLike** now requires `imageTransform` instead of `fullTransform`

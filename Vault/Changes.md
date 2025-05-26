@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.21 (in development)
+## v1.21 - 26.05.2025
 This update improves connection management logic in **ConnectionPool** and
 adds a set of (experimental) new database access interfaces.
 ### Breaking changes
