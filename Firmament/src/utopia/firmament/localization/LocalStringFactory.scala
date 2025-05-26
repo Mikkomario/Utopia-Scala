@@ -26,6 +26,12 @@ trait LocalStringFactory[+A]
 	def apply(string: String, language: Language): A
 	
 	/**
+	 * @param string A string to convert to the desired local string type
+	 * @return The specified string in the correct type
+	 */
+	def from(string: LocalString): A
+	
+	/**
 	  * @param string A string to interpolate
 	  * @param params Interpolation parameters.
 	  *               Each matches %s, %S, %i or %d in 'string'

@@ -132,6 +132,8 @@ object LocalString
 		override def apply(string: String, language: Language): LocalString =
 			_LocalString(string, language.nonEmptyOrElse(this.language))
 		
+		override def from(string: LocalString): LocalString = string
+		
 		override def interpolate(string: String, params: Seq[Any]): LocalString =
 			if (params.isEmpty) apply(string) else InterpolatedWrapper(apply(string), params)
 		override def interpolate(string: String, params: Map[String, Any]): LocalString = {
@@ -146,6 +148,8 @@ object LocalString
 	                                   unnamedParams: Seq[Any], namedParams: Map[String, Any])
 		extends LocalStringFactoryWrapper[LocalString, LocalString]
 	{
+		override def from(string: LocalString): LocalString = string
+		
 		override protected def wrap(string: LocalString): LocalString =
 			InterpolatedWrapper(string, unnamedParams, namedParams)
 	}

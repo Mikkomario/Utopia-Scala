@@ -172,19 +172,33 @@ trait LocalStringLike[+Repr <: LocalString]
 	def +:(other: LocalString) = prepend(other)
 	def +:(other: String) = prepend(LocalString.noLanguage(other))
 	/**
+	  * Appends another string to this one. Won't combine empty strings.
 	  * @param other Another string, including language information
 	  * @param separator A separator placed between these strings
 	  * @return A combined copy of these strings, where this string appears first
 	  */
-	def append(other: LocalString, separator: String = "") =
-		join(Pair(raw, other.wrapped), separator, other.language)
+	def append(other: LocalString, separator: String = "") = {
+		if (other.isEmpty)
+			self
+		else if (isEmpty)
+			factory.from(other)
+		else
+			join(Pair(raw, other.wrapped), separator, other.language)
+	}
 	/**
+	  * Prepends another string to this one. Won't combine empty strings.
 	  * @param other Another string, including language information
 	  * @param separator A separator placed between these strings
 	  * @return A combined copy of these strings, where this string appears second
 	  */
-	def prepend(other: LocalString, separator: String = "") =
-		join(Pair(other.wrapped, raw), separator, other.language)
+	def prepend(other: LocalString, separator: String = "") = {
+		if (other.isEmpty)
+			self
+		else if (isEmpty)
+			factory.from(other)
+		else
+			join(Pair(other.wrapped, raw), separator, other.language)
+	}
 	
 	@deprecated("Please use .map(...) instead", "v1.5")
 	def modify(f: Mutate[String]) = map(f)

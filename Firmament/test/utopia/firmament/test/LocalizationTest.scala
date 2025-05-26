@@ -1,4 +1,4 @@
-package utopia.reflection.test
+package utopia.firmament.test
 
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{Language, LocalString, LocalizedString, Localizer}
@@ -29,6 +29,14 @@ object LocalizationTest extends App
 	val localInterpolated2 = localTemplate2.interpolateNamed(Map("name" -> "Mickey", "age" -> 12))
 	println(localInterpolated2)
 	assert(localInterpolated2.wrapped == "Hello Mickey (12) %s")
+	
+	assert(("Hello".autoLocalized + " test".autoLocalized).toString == "HELLO TEST")
+	assert(LocalizedString.empty.nonEmptyOrElse("test".autoLocalized).wrapped == "TEST")
+	val interpolatedCombined = "Hello ${NAME}".autoLocalized.interpolateNamed("NAME" -> "test") + " a!".autoLocalized
+	assert(interpolatedCombined.wrapped == "HELLO test A!", interpolatedCombined)
+	
+	val interpolatedCombined2 = "Hello %s".noLanguage.skipLocalization.interpolate("test") + " a!".autoLocalized
+	assert(interpolatedCombined2.toString == "Hello test A!", interpolatedCombined2)
 	
 	println("Success!")
 }
