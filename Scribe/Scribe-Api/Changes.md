@@ -1,7 +1,7 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.0.5 (in development)
-Supports Access v1.6
+Adds support for **Access v1.6**
 
 ## v1.0.4 - 23.01.2025
 This update merely adds support for the latest **Flow** version.

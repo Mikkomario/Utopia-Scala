@@ -1,7 +1,8 @@
 # Utopia Genesis - List of Changes
 
 ## v4.2.1 (in development)
-Supports **Flow v2.6**
+This update improves the reliability of the **Actor** system with better error-handling. 
+It also adds better support for digit-based key events.
 ### Bugfixes
 - **MeasuredText** would previously throw if line split -threshold was smaller than the width of a single word
 ### New methods

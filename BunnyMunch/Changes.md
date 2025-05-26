@@ -1,6 +1,7 @@
 # Utopia BunnyMunch - List of Changes
 
 ## v1.0.7 (in development)
+This update enables **JsonBunny** to become the default **JsonParser** (for **Value**s) in **Flow**.
 ### Other changes
 - **JsonBunny**, when initialized, 
   now replaces the **JsonReader** as the default **JsonParser** in **BasicValueCaster** (in **Flow**).

@@ -1,7 +1,11 @@
 # Utopia Echo - List of Changes
 
 ## v1.3 (in development)
-Adding support for Open AI
+This update improves **Chat** behavior. 
+Notably, it adds support for token count estimation that learns from **Chat** usage.
+
+There are also some preliminary models added to support Open AI, but these are not usable at this time.  
+Package structure is also updated in order to add future support for Open AI, and possibly other platforms.
 ### Breaking changes
 - Package restructuring:
   - Moved classes from `model.response` to `model.response.ollama`

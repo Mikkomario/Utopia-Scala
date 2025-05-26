@@ -1,7 +1,7 @@
 # Utopia Nexus - List of Changes
 
 ## v1.9.5 (in development)
-Supports Access v1.6
+This update adds support for **Access v1.6**
 
 ## v1.9.4 - 04.10.2024
 A small update adding **RequestInterceptor** & **ResponseInterceptor** traits

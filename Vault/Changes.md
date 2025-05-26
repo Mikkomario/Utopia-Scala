@@ -1,12 +1,15 @@
 # Utopia Vault - List of Changes
 
 ## v1.21 (in development)
-TODO: Document new access style
+This update improves connection management logic in **ConnectionPool** and
+adds a set of (experimental) new database access interfaces.
 ### Breaking changes
 - **ConnectionPool** now requires access to an implicit `ExecutionContext` instance upon construction, 
   but no longer at every method call.
 - **NoConnectionException** is no longer a case class
 ### New features
+- Added an experimental new set of database access interface traits & classes
+  - These can be found from `utopia.vault.nosql.targeting`
 - Added **EqualsById EqualsFunction** object
 ### New methods
 - **ChronoRowFactoryView**

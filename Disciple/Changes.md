@@ -1,6 +1,7 @@
 # Utopia Disciple - List of Changes
 
 ## v1.9 (in development)
+This update adds support for server-sent events. Package structuring is also updated.  
 Supports **Flow v2.6** & **Access v1.6**
 ### New features
 - Added **ServerSentEventsParser**, an interface for processing event streams from response bodies

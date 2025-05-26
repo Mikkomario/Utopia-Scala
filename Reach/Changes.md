@@ -1,6 +1,10 @@
 # Utopia Reach - List of Changes
 
 ## v1.6 (in development)
+This relatively major update renames a number of classes and properties, improving consistency and conciseness. 
+A number of new loading-related components were added, including animated image labels and loading support in existing 
+**ViewImageAndTextButton**s. **ViewStack** receives major internal improvements and fixes. 
+Finally, **Field** classes (i.e. **TextField** and **DropDown**) now (better) support an enabled/disabled state.
 ### Breaking changes
 - Moved `button` and `input` packages from `component` to `component.interactive`
 - Renamed **ReachComponent** to **ConcreteReachComponent**

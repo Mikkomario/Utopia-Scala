@@ -1,8 +1,10 @@
 # Utopia Flow - List of Changes
 
 ## v2.6 (in development)
+This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 
+This includes multiple bugfixes. Other classes also received various internal improvements and new methods.
 ### Breaking changes
-- **TreeLike**`.pathTo(...)` now yields `Some(Single(self))` if targeting the node on which it is called. 
+- **TreeLike**`.pathTo(...)` now yields `Some(Single(self))`, if targeting the node on which it is called. 
   - Previously, unlike all other path-based functions, yielded `Some(Empty)`
 - **TimedTasks** now, by default, doesn't clear the queued tasks when stopped (as it did previously)
   - You can still enable this behavior by passing `clearTasksOnStop = true` to the constructor
@@ -94,7 +96,7 @@
 - **Changing** now uses **OptimizedFlatteningMirror** in its `.flatMap(...)` function implementations
   - This means that the intermediate pointers (i.e. mapping result-pointers) 
     receive listeners only when that is necessary, which often affects the original (mapping source) pointer as well 
-  - (if using optimized mapping functions within the flatMap function).
+    - (if using optimized mapping functions within the flatMap function).
 - **OptimizedMirror** may now utilize its cached mapping result 
   when acquiring the value to yield while mapping is disabled, resulting in a fewer mapping calls.
 - **ThreadPool** now occasionally clears finished threads from its pool

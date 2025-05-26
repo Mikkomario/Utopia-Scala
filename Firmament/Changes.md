@@ -1,6 +1,8 @@
 # Utopia Firmament - List of Changes
 
 ## v1.5 (in development)
+This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  
+An attempt is also made to improve **Window** positioning, adding support for customized auto-positioning logic.
 ### Breaking changes
 - Rewrote the localization system, introducing a number of breaking changes:
   - **DisplayFunction** is now **Display**, and a trait instead of a class

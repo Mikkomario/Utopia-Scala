@@ -1,8 +1,9 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.7.2 (in development)
+A minor update focusing on value conversions between **String**s and Paradigm-specific **Value** types.
 ### Bugfixes
-- Fixed some illogical string to value conversions
+- Fixed some illogical string-to-value conversions
 ### New features
 - Added **FromColorRoleFactory**
 ### New methods

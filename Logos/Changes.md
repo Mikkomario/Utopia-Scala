@@ -1,6 +1,7 @@
 # Utopia Logos - List of Changes
 
 ## v0.5 (in development)
+This update adds major changes to the database access interfaces of the **Logos**-specific models.
 ### Breaking changes
 - Rewrote delimiter, word, domain, request path, link and statement storing interfaces
 - **UniqueTextPlacementAccessLike** now extends **UniqueModelAccess**, which changes the abstract property from 

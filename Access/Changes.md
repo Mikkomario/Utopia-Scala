@@ -1,6 +1,7 @@
 # Utopia Access - List of Changes
 
 ## v1.6 (in development)
+This update brings the **Access** enumeration classes up-to-date and adds models to support server-sent events.
 ### Breaking changes
 - Refactored the package structure
   - Moved all files to `utopia.access.model`

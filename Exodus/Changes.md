@@ -1,7 +1,7 @@
 # Utopia Exodus - List of Changes
 
 ## v4.1.9 (in development)
-Supports Access v1.6
+Adds support for **Access v1.6**
 
 ## v4.1.8 - 23.01.2025
 A new build compatible with the latest **Flow** and **Vault**

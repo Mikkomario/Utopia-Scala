@@ -1,7 +1,8 @@
 # Utopia Annex - List of Changes
 
 ## v1.10 (in development)
-Supports Access v1.6 & Disciple v1.9
+This update modifies how **PullSchrodinger** handles failure cases.  
+It also adds support for **Access v1.6** & **Disciple v1.9**.
 ### Breaking changes
 - **PullSchrodinger** now behaves differently by default: When it fails to acquire server-side results, 
   it will now manifest a failure by default, and not fall back to the local result.
