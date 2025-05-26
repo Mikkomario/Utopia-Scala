@@ -2,6 +2,8 @@ package utopia.echo.model.response.ollama
 
 import utopia.echo.model.request.ollama.generate.GenerateBufferedOrStreamed
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.combine.Combinable.SelfCombinable
 
 object ResponseStatistics
 {
@@ -40,6 +42,7 @@ object ResponseStatistics
   */
 case class ResponseStatistics(context: Value, duration: GenerationDurations,
                               promptTokenCount: Int, responseTokenCount: Int)
+	extends SelfCombinable[ResponseStatistics]
 {
 	// COMPUTED ---------------------------
 	
@@ -54,4 +57,9 @@ case class ResponseStatistics(context: Value, duration: GenerationDurations,
 	
 	override def toString = s"Tokens: $promptTokenCount + $responseTokenCount = ${
 		promptTokenCount + responseTokenCount }; Durations: $duration"
+	
+	override def +(other: ResponseStatistics): ResponseStatistics = ResponseStatistics(
+		context = other.context.nonEmptyOrElse(context), duration = duration + other.duration,
+		promptTokenCount = promptTokenCount + other.promptTokenCount,
+		responseTokenCount = responseTokenCount + other.responseTokenCount)
 }

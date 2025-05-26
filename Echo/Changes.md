@@ -1,5 +1,9 @@
 # Utopia Echo - List of Changes
 
+## v1.3.1 (in development)
+### Other changes
+- **ResponseStatistics** and **GenerationDurations** now extend **Combinable** (i.e. they provide the `+` function)
+
 ## v1.3 - 26.05.2025
 This update improves **Chat** behavior. 
 Notably, it adds support for token count estimation that learns from **Chat** usage.
