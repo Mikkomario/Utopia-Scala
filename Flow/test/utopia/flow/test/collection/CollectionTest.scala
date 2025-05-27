@@ -111,5 +111,14 @@ object CollectionTest extends App
 	assert(OptimizedIndexedSeq.concat(Single(1), Iterator.iterate(2) { _ + 1 }.takeTo { _ == 4 }.caching) == Vector(1, 2, 3, 4))
 	assert(OptimizedIndexedSeq.concat(Single(1), View.fromIteratorProvider { () => Iterator.empty }) == Single(1))
 	
+	// Tests tryReduce
+	
+	assert(numbers.tryReduceIterator { (a, b) =>
+		if (b % a == 0)
+			Some(a + b)
+		else
+			None
+	}.toVector == Vector(6, 4, 5))
+	
 	println("Success!")
 }

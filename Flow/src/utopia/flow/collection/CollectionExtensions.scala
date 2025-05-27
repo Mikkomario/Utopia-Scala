@@ -39,6 +39,43 @@ object CollectionExtensions
 	implicit def pairIsIterable[A]: PairIsIterable[A] = Pair.pairIsIterable
 	
 	
+	// OTHER    -----------------------------
+	
+	private def _tryReduceIterator[A](seq: SeqOps[A, IterableOnce, _])(f: (A, A) => Option[A]) = {
+		// Tracks the indices which have already been merged with other items
+		val skipIndices = mutable.Set[Int]()
+		lazy val withIndexView = seq.view.zipWithIndex
+		seq.iterator.zipWithIndex.flatMap { case (v, i) =>
+			val reduced = {
+				// Case: This item has already been merged with an earlier entry => Won't process it again
+				if (skipIndices.contains(i))
+					None
+				// Case: Unprocessed entry => Attempts to merge it with the following entries
+				else
+					Some(withIndexView.drop(i + 1).foldLeft(v) { case (v1, (v2, i2)) =>
+						// Case: The following entry has already been processed => Skips it
+						if (skipIndices.contains(i2))
+							v1
+						// Case: Unprocessed entry => Attempts to reduce the two entries
+						else
+							f(v1, v2) match {
+								// Case: Reduction succeeded => Remembers that this entry has been processed
+								case Some(merged) =>
+									skipIndices += i2
+									merged
+								
+								// Case: Couldn't reduce / merge => Moves to the next entry
+								case None => v1
+							}
+					})
+			}
+			// One an index has been fully processed, won't track it anymore
+			skipIndices -= i
+			reduced
+		}
+	}
+	
+	
 	// ITERABLE ONCE    ---------------------------------------
 	
 	// TODO: Move (some of) these to Iterator and/or Iterable instead
@@ -167,21 +204,6 @@ object CollectionExtensions
 			builder.result()
 		}
 		
-		// Referenced from: https://stackoverflow.com/questions/22090371/scala-grouping-list-of-tuples [10.10.2018]
-		
-		/**
-		  * Converts this iterable item to a map with possibly multiple values per key
-		  * @param toKey   A function for mapping items to keys
-		  * @param toValue A function for mapping items to values
-		  * @param bf      Implicit build from for the final values collections
-		  * @tparam Key    Type of key in the final map
-		  * @tparam Value  Type of individual values in the final map
-		  * @tparam Values Type of values collections in the final map
-		  * @return A multimap based on this iteration mapping
-		  */
-		@deprecated("Please use .groupMap(...) instead", "v2.4")
-		def toMultiMap[Key, Value, Values](toKey: iter.A => Key)(toValue: iter.A => Value)(
-			implicit bf: BuildFrom[Repr, Value, Values]): Map[Key, Values] = toMultiMap { a => toKey(a) -> toValue(a) }
 		/**
 		  * Converts this iterable item to a map with possibly multiple values per key
 		  * @param f  A function for mapping items to key value pairs
@@ -1743,6 +1765,16 @@ object CollectionExtensions
 				groupsBuilder.result()
 			}
 		}
+		
+		/**
+		 * Attempts to merge / reduce as many items in this collection as possible
+		 * @param f A function that accepts two items. Yields Some if the items could be merged, and None otherwise.
+		 * @return A copy of this collection that contains the reduction results.
+		 *         All items that couldn't be reduced with other entries are kept as separate entries.
+		 */
+		// Forms the reduced iterator and converts it to the target collection
+		def tryReduce[To](f: (seq.A, seq.A) => Option[seq.A])(implicit buildFrom: BuildFrom[Repr, seq.A, To]) =
+			buildFrom.fromSpecific(coll)(_tryReduceIterator(ops)(f))
 	}
 	
 	implicit def seqOperations[Repr](coll: Repr)(implicit seq: IsSeq[Repr]): SeqOperations[Repr, seq.type] =
@@ -2071,6 +2103,14 @@ object CollectionExtensions
 		  */
 		@throws[NoSuchElementException]("If firstIndex is out of bounds or the last element in this collection")
 		def pairFrom(firstIndex: Int) = Pair(s(firstIndex), s(firstIndex + 1))
+		
+		/**
+		 * Attempts to merge / reduce as many items in this collection as possible
+		 * @param f A function that accepts two items. Yields Some if the items could be merged, and None otherwise.
+		 * @return An iterator that contains the reduction results.
+		 *         All items that couldn't be reduced with other entries are kept as separate entries.
+		 */
+		def tryReduceIterator(f: (A, A) => Option[A]) = _tryReduceIterator(s)(f)
 		
 		/**
 		 * @param count Number of items to take
