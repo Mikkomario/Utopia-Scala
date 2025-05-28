@@ -3,6 +3,7 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.invalidArrayRegex
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
@@ -15,11 +16,8 @@ import scala.util.Try
 
 object BufferedOllamaResponseLike
 {
-	private lazy val arrayStartRegex = Regex.escape('[')
-	private lazy val arrayEndRegex = Regex.escape(']')
-	
-	private lazy val objectStartRegex = Regex.escape('{')
-	private lazy val objectEndRegex = Regex.escape('}')
+	private lazy val invalidArrayRegex =
+		Regex.escape(',') + (Regex.whiteSpace || Regex.newLine).anyTimes.withinParentheses + Regex.escape(']')
 }
 
 /**
@@ -82,6 +80,18 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 			.flatMap { start =>
 				Some(text.lastIndexOf(endChar)).filter { _ > start }
 					.toTry { new NoSuchElementException(s"No complete $searchedEntityName is present in '$text'") }
-					.flatMap { end => JsonBunny.munch(text.substring(start, end + 1)) }
+					.flatMap { end =>
+						val parsedPart = text.substring(start, end + 1)
+						val defaultResult = JsonBunny.munch(parsedPart)
+						// Sometimes the parsing fails because of ",]" text entries.
+						// Attempts to remove these, just in case.
+						defaultResult.orElse {
+							val fixedStr = invalidArrayRegex.replaceAll(parsedPart, "]")
+							if (fixedStr.length == parsedPart.length)
+								defaultResult
+							else
+								JsonBunny.munch(fixedStr)
+						}
+					}
 			}
 }

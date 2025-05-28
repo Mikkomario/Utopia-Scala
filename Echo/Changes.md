@@ -2,6 +2,8 @@
 
 ## v1.3.1 (in development)
 ### Other changes
+- When using `.jsonArray` and `.jsonObject` in **BufferedOllamaResponseLike**, 
+  attempts to handle JSON generation errors where there's a comma before the array end.
 - **ResponseStatistics** and **GenerationDurations** now extend **Combinable** (i.e. they provide the `+` function)
 
 ## v1.3 - 26.05.2025
