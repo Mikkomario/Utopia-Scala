@@ -7,7 +7,6 @@ import utopia.annex.model.request.ApiRequest.Send
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, Value}
@@ -110,15 +109,9 @@ object PersistingApiRequest
 	
 	private class PersistingApiRequestFromModel[A](sendFunction: Send[A]) extends FromModelFactory[ApiRequest[A]]
 	{
-		override def apply(model: ModelLike[Property]): Try[ApiRequest[A]] = schema.validate(model).flatMap { model =>
-			Method.parse(model("method").getString)
-				.toTry {
-					new IllegalArgumentException(s"Unsupported method ${ model("method") } in persisted request model")
-				}
-				// NB: These parsed models won't be persisted anymore
-				.map { method =>
-					ApiRequest(method, model("path").getString, model("body"))(sendFunction)
-				}
+		override def apply(model: ModelLike[Property]): Try[ApiRequest[A]] = schema.validate(model).map { model =>
+			// NB: These parsed models won't be persisted anymore
+			ApiRequest(Method(model("method").getString), model("path").getString, model("body"))(sendFunction)
 		}
 	}
 	

@@ -1,5 +1,9 @@
 # Utopia Annex - List of Changes
 
+## v1.10.1 (in development)
+### Other changes
+- `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
+
 ## v1.10 - 26.05.2025
 This update modifies how **PullSchrodinger** handles failure cases.  
 It also adds support for **Access v1.6** & **Disciple v1.9**.

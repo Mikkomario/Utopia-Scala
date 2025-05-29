@@ -120,5 +120,12 @@ object CollectionTest extends App
 			None
 	}.toVector == Vector(6, 4, 5))
 	
+	// Tests groupsUnderSize
+	
+	private val colls = Vector(Single(1), Pair(1, 2), Vector(1, 2, 3), Vector(1, 2, 3, 4), Vector(1, 2, 3, 4, 5))
+	private val grouped = colls.groupsWithinSize(5)
+	
+	assert(grouped == Vector(Vector(1, 2, 3, 4, 5), Vector(1, 2, 3, 4, 1), Vector(1, 2, 3, 1, 2)), grouped)
+	
 	println("Success!")
 }

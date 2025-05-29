@@ -1538,6 +1538,50 @@ object CollectionExtensions
 			items.forall { containsEqual(_) }
 	}
 	
+	// Implicit functions for iterables that contain iterables (and where contents may be copied)
+	implicit class DeepIterable[CC[X] <: IterableOps[X, CC, CC[X]], A](val i: Iterable[CC[A]]) extends AnyVal
+	{
+		/**
+		 * Combines the collections within this collection, keeping the total size of each resulting collection within
+		 * the specified size limit.
+		 * Note: If some of the collections were already larger than the specified limit,
+		 * they are not split but kept as is.
+		 * @param maxSize Maximum size of any single collection within the resulting collection
+		 * @return Copy of this collection where some collections may have been combined (using ++),
+		 *         while keeping the resulting combined collections within 'maxSize' items in total.
+		 */
+		def groupsWithinSize(maxSize: Int) = i.emptyOneOrMany match {
+			// Case: No items to group
+			case None => Empty
+			// Case: Only one group => No grouping needed
+			case Some(Left(only)) => Single(only)
+			// Case: Multiple groups => Grouping may be possible
+			case Some(Right(groups)) =>
+				// Caches the size of each group and orders them to facilitate this operation
+				val groupsWithSizes = groups.view.map { g => g -> g.size }.toOptimizedSeq.sortBy { -_._2 }
+				val minSize = groupsWithSizes.last._2
+				// Finds the first group that may be combined with other group(s)
+				groupsWithSizes.findIndexWhere { _._2 + minSize <= maxSize } match {
+					case Some(firstMixableIndex) =>
+						// Extracts the groups that could not be combined
+						val (fullGroups, mixableGroups) = groupsWithSizes.splitAt(firstMixableIndex)
+						// Combines the groups within the possible range, preferring larger collections
+						val mixedIterator = mixableGroups
+							.tryReduceIterator { case ((building, currentSize), (proposed, additionalSize)) =>
+								val combinedSize = currentSize + additionalSize
+								if (combinedSize <= maxSize)
+									Some((building ++ proposed) -> combinedSize)
+								else
+									None
+							}
+						(fullGroups.view.map { _._1 } ++ mixedIterator.map { _._1 }).toOptimizedSeq
+					
+					// Case: None of the groups may be combined => Yields them separately
+					case None => groupsWithSizes.map { _._1 }
+				}
+		}
+	}
+	
 	
 	// SEQ  --------------------------------------------
 	

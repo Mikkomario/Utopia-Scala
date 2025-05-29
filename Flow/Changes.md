@@ -2,6 +2,8 @@
 
 ## v2.6.1 (in development)
 ### New methods
+- **Iterable** (**CollectionExtensions**)
+  - Added `.groupedWithinSize(Int)` for deep collections
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 
