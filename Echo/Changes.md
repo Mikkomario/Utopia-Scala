@@ -4,6 +4,7 @@
 ### Other changes
 - When using `.jsonArray` and `.jsonObject` in **BufferedOllamaResponseLike**, 
   attempts to handle JSON generation errors where there's a comma before the array end.
+  - Also, `<think>` element is ignored in JSON parsing (affects qwen3, for example)
 - **ResponseStatistics** and **GenerationDurations** now extend **Combinable** (i.e. they provide the `+` function)
 
 ## v1.3 - 26.05.2025
