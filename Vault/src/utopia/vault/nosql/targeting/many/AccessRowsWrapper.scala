@@ -11,3 +11,6 @@ import utopia.vault.nosql.targeting.one.TargetingOne
 trait AccessRowsWrapper[A, +Repr <: TargetingManyRows[A], +One <: TargetingOne[Option[A]]]
 	extends TargetingManyRows[A] with TargetingManyRowsLike[A, Repr, One]
 		with TargetingManyRowsWrapper[TargetingManyRows[A], TargetingOne[Option[A]], A, A, Repr, One]
+{
+	override protected def mapResult(result: A): A = result
+}

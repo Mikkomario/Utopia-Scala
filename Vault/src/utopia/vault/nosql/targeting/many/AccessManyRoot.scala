@@ -5,12 +5,14 @@ import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.view.{ViewFactory, ViewManyByIntIds}
 import utopia.vault.sql.Condition
 
+import scala.language.implicitConversions
+
 object AccessManyRoot
 {
 	// IMPLICIT -------------------------
 	
 	// Provides implicit access to the root property
-	def autoAccessRoot[A <: ViewFactory[A] with HasTable](access: AccessManyRoot[A]): A = access.root
+	implicit def autoAccessRoot[A <: ViewFactory[A] with HasTable](access: AccessManyRoot[A]): A = access.root
 }
 
 /**
