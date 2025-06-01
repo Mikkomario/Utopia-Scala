@@ -1,6 +1,7 @@
 package utopia.logos.database.storable.text
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.logos.model.factory.text.TextPlacementFactory
 import utopia.vault.model.immutable.Storable
@@ -39,7 +40,7 @@ trait TextPlacementDbModelLike[+Repr]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def valueProperties = 
+	override def valueProperties: Seq[(String, Value)] =
 		Vector(dbProps.id.name -> id, dbProps.parentId.name -> parentId, dbProps.placedId.name -> placedId, 
 			dbProps.orderIndex.name -> orderIndex)
 	
