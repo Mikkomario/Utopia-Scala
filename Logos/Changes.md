@@ -1,5 +1,8 @@
 # Utopia Logos - List of Changes
 
+## v0.6 (in development)
+Added new targeting traits (beta)
+
 ## v0.5 - 26.05.2025
 This update adds major changes to the database access interfaces of the **Logos**-specific models.
 ### Breaking changes

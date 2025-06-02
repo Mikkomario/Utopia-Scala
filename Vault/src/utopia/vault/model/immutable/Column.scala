@@ -1,6 +1,6 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.model.immutable.{PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.vault.database.References
@@ -68,10 +68,18 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
     override def toSqlSegment = SqlSegment(columnNameWithTable)
     
     override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) = {
+        // Checks which of the origin tables contains this column
         originTables.find { _.contains(this) } match {
             case Some(table) =>
                 References.from(table, this) match {
-                    case Some(target) => Success(Single(Join(this, target.table, target.column, joinType)))
+                    // Case: This column refers to another table
+                    case Some(target) =>
+                        // Case: The specified table is already part of the original tables => No join is needed
+                        if (originTables.contains(target.table))
+                            Success(Empty)
+                        else
+                            Success(Single(Join(this, target.table, target.column, joinType)))
+                    
                     case None => Failure(new NoReferenceFoundException(
                         s"$columnNameWithTable doesn't refer to any table"))
                 }

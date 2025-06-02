@@ -64,8 +64,13 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = joinType) =
-		Success(Single(this))
+	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = joinType) = {
+		// If the original tables already contain this one, skips this join
+		if (originTables.contains(rightTable))
+			Success(Empty)
+		else
+			Success(Single(this))
+	}
 	
 	
 	// OTHER    --------------------------

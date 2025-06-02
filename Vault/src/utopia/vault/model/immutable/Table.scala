@@ -86,27 +86,32 @@ case class Table(name: String, databaseName: String, columns: Seq[Column]) exten
 	override def tables = Single(this)
 	
 	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner) = {
-		// Finds the first table referencing (or being referenced by) the provided table and uses
-		// that for a join
-		originTables.findMap { left => References.connectionBetween(left, this) } match {
-			case Some(Pair(leftColumn, rightColumn)) => Success(Single(Join(leftColumn, this, rightColumn, joinType)))
-			case None =>
-				// Secondarily, finds indirect references
-				References.toBiDirectionalLinkGraphFrom(this)
-					.shortestRoutesTo { node => originTables.contains(node.value) }.cheapest match
-				{
-					case Some(result) =>
-						Success(result.anyRoute.view.reverse.map { edge =>
-							val (reference, isReversed) = edge.value
-							if (isReversed) reference.reverse.toJoin else reference.toJoin
-						}.toVector)
-					case None =>
-						Failure(new NoReferenceFoundException(
-							s"Cannot find a reference between ${
-								originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
-								(tables :+ this).flatMap(References.from).mkString(", ")}]"))
-				}
-		}
+		// If already part of the origin tables, no join is created
+		if (originTables.contains(this))
+			Success(Empty)
+		else
+			// Finds the first table referencing (or being referenced by) the provided table and uses
+			// that for a join
+			originTables.findMap { left => References.connectionBetween(left, this) } match {
+				case Some(Pair(leftColumn, rightColumn)) =>
+					Success(Single(Join(leftColumn, this, rightColumn, joinType)))
+				case None =>
+					// Secondarily, finds indirect references
+					References.toBiDirectionalLinkGraphFrom(this)
+						.shortestRoutesTo { node => originTables.contains(node.value) }.cheapest match
+					{
+						case Some(result) =>
+							Success(result.anyRoute.view.reverse.map { edge =>
+								val (reference, isReversed) = edge.value
+								if (isReversed) reference.reverse.toJoin else reference.toJoin
+							}.toVector)
+						case None =>
+							Failure(new NoReferenceFoundException(
+								s"Cannot find a reference between ${
+									originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
+									(tables :+ this).flatMap(References.from).mkString(", ")}]"))
+					}
+			}
 	}
 	
 	

@@ -17,7 +17,7 @@ trait Joinable
 	  * @param originTables Tables from which this item is joined
 	  * @param joinType Type of join to use (default = inner join)
 	  * @return Join statements that connect this item to the specified origin tables.
-	  *         May return an empty vector if this item is already contained within the specified origin set.
+	  *         May return an empty sequence if this item is already contained within the specified origin set.
 	  *         Failure if joining is impossible.
 	  */
 	def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner): Try[Seq[Join]]

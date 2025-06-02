@@ -1,5 +1,11 @@
 # Utopia Vault - List of Changes
 
+## v1.21.1 (in development)
+### New features
+- Added **FilterableViewWrapper**
+### Other changes
+- **Joinable**`.toJoinFrom(...)` implementations now yield empty **Seq**s if no join is required
+
 ## v1.21 - 26.05.2025
 This update improves connection management logic in **ConnectionPool** and
 adds a set of (experimental) new database access interfaces.
