@@ -47,13 +47,18 @@ trait SqlTarget
       * @return Copy of this target with the joins included
       */
     def ++(joins: Seq[Join]): SqlTarget = {
-        val existingTables = tables
-        val newJoins = joins.filterNot { join => existingTables.contains(join.rightTable) }
-        if (newJoins.isEmpty)
+        if (joins.isEmpty)
             this
-        else
-            SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
-                existingTables ++ newJoins.map { _.rightTable })
+        else {
+            val existingTables = tables
+            // TODO: This filtering might be unnecessary now that Joinable.toJoinFrom is more carefully implemented
+            val newJoins = joins.filterNot { join => existingTables.contains(join.rightTable) }
+            if (newJoins.isEmpty)
+                this
+            else
+                SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
+                    existingTables ++ newJoins.map { _.rightTable })
+        }
     }
     
     

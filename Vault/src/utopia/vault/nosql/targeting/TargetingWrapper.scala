@@ -41,5 +41,13 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
 	
 	// OTHER    ------------------------
 	
-	protected def mapWrapped(f: Mutate[T]) = wrap(f(wrapped))
+	protected def mapWrapped(f: Mutate[T]) = {
+		// Won't construct a new wrapper if the wrapped access won't change
+		val original = wrapped
+		val mapped = f(wrapped)
+		if (original == mapped)
+			self
+		else
+			wrap(mapped)
+	}
 }

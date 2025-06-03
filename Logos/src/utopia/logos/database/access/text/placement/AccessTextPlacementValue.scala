@@ -13,7 +13,7 @@ trait AccessTextPlacementValue extends AccessValue
 {
 	// ATTRIBUTES	--------------------
 	
-	lazy val id = apply(model.index) { _.getInt }
+	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * Id of the text where the placed text appears

@@ -6,7 +6,8 @@ import utopia.vault.model.immutable.Column
 
 /**
   * An interface that provides access to a single column's values
-  * @tparam A Type of parsed column value
+  * @tparam V Format in which database values are accessed
+ * @tparam A Type of parsed column value
   * @tparam In Type of accepted input when assigning values
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.21

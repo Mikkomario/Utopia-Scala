@@ -53,8 +53,17 @@ object AccessMany
 		
 		override protected def parse(result: Result) = f(result)
 		
-		override def join(joins: Seq[Joinable], joinType: JoinType) =
-			if (joins.isEmpty) this else copy(target = joins.foldLeft(target) { _.join(_, joinType) })
+		override def join(joins: Seq[Joinable], joinType: JoinType) = {
+			if (joins.isEmpty)
+				this
+			else {
+				val newTarget = joins.foldLeft(target) { _.join(_, joinType) }
+				if (newTarget == target)
+					this
+				else
+					copy(target = newTarget)
+			}
+		}
 		
 		override def apply(condition: Condition): AccessMany[A] = {
 			// Extends the current target to include the specified condition's tables

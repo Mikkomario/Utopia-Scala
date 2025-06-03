@@ -65,8 +65,18 @@ object AccessManyRows
 			copy(offset = offset, limit = limit)
 		override def withLimitToUniqueIndices(limit: Boolean) = copy(limitsToUniqueIndices = limit)
 		
-		override def join(joins: Seq[Joinable], joinType: JoinType) =
-			if (joins.isEmpty) this else copy(target = joins.foldLeft(target) { _.join(_, joinType) })
+		override def join(joins: Seq[Joinable], joinType: JoinType) = {
+			// WET WET (from AccessMany)
+			if (joins.isEmpty)
+				this
+			else {
+				val newTarget = joins.foldLeft(target) { _.join(_, joinType) }
+				if (newTarget == target)
+					this
+				else
+					copy(target = newTarget)
+			}
+		}
 		
 		override protected def parse(row: Row) = f(row)
 		

@@ -33,6 +33,15 @@ trait ColumnValueAccessFactory[+A[_, _]]
 	  */
 	def apply[V](f: Value => V)(implicit valueOf: V => Value) = customInput[V, V](f)(valueOf)
 	/**
+	 * Creates an access point to an individual column's values. Yields optional values.
+	 * @param f A function that parses the column values into the desired data type
+	 * @param valueOf Implicit function that converts an input value into a value to store
+	 * @tparam V Type of parsed column value
+	 * @return A new access point
+	 */
+	def optional[V](f: Value => Option[V])(implicit valueOf: V => Value) =
+		customInput[Option[V], V](f)(valueOf)
+	/**
 	  * Creates an access point to an individual column's values.
 	  * @param f A function that parses the column values into the desired data type
 	  * @tparam O Type of parsed column value
