@@ -21,8 +21,23 @@ object AccessColumnValue
 	class AccessColumnValueFactory(access: AccessColumn, column: Column)
 		extends ColumnValueAccessFactory[AccessColumnValue]
 	{
+		// IMPLEMENTED  ------------------
+		
 		override def customInput[O, I](parse: Value => O)(toValue: I => Value): AccessColumnValue[O, I] =
 			new AccessColumnValue[O, I](access, column)(parse)(toValue)
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		 * Creates an access point to an individual column's values. Yields optional values.
+		 * @param f A function that parses the column values into the desired data type
+		 * @param valueOf Implicit function that converts an input value into a value to store
+		 * @tparam V Type of parsed column value
+		 * @return A new access point
+		 */
+		def optional[V](f: Value => Option[V])(implicit valueOf: V => Value) =
+			customInput[Option[V], V](f)(valueOf)
 	}
 }
 
