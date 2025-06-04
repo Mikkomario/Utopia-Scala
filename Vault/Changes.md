@@ -1,6 +1,8 @@
 # Utopia Vault - List of Changes
 
 ## v1.21.1 (in development)
+### Breaking changes
+- Various improvements to the **Targeted** database access interfaces, some of which are breaking changes
 ### New features
 - Added **FilterableViewWrapper**
 ### Other changes
