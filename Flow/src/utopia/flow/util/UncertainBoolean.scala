@@ -1,5 +1,8 @@
 package utopia.flow.util
 
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.Reversible
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 
@@ -10,7 +13,8 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 31.3.2021, v1.9
  */
-sealed trait UncertainBoolean extends utopia.flow.operator.Uncertain[Boolean] with Reversible[UncertainBoolean]
+sealed trait UncertainBoolean
+	extends utopia.flow.operator.Uncertain[Boolean] with Reversible[UncertainBoolean] with ValueConvertible
 {
 	// ABSTRACT --------------------------
 	
@@ -163,6 +167,11 @@ case object UncertainBoolean extends UncertainBoolean
 	def Certain = CertainBoolean
 	
 	
+	// IMPLEMENTED  ---------------------
+	
+	override implicit def toValue: Value = Value.empty
+	
+	
 	// IMPLICIT ------------------------------------
 	
 	implicit def apply(value: Option[Boolean]): UncertainBoolean = value match {
@@ -206,5 +215,6 @@ case object UncertainBoolean extends UncertainBoolean
 		override def unary_- = !this
 		
 		override def toString = knownValue.toString
+		override implicit def toValue: Value = ValueOfBoolean(knownValue)
 	}
 }

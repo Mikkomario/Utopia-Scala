@@ -12,7 +12,7 @@ trait ValueConvertible extends Any
 	// ABSTRACT METHODS / PROPERTIES    ------------------
 	
 	/**
-	  * A value representation of this instance. The casting may be done implicitly.
+	  * A value representation of this instance
 	  */
-	implicit def toValue: Value
+	def toValue: Value
 }
