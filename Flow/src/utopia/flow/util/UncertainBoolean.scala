@@ -165,13 +165,14 @@ case object UncertainBoolean extends UncertainBoolean
 	
 	// IMPLICIT ------------------------------------
 	
-	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.exact
-	implicit def autoConvertFromOption(value: Option[Boolean]): UncertainBoolean = value match {
-		case Some(known) => autoConvertFromBoolean(known)
+	implicit def apply(value: Option[Boolean]): UncertainBoolean = value match {
+		case Some(known) => apply(known)
 		case None => this
 	}
-	implicit def autoConvertFromBoolean(boolean: Boolean): UncertainBoolean =
+	implicit def apply(boolean: Boolean): UncertainBoolean =
 		if (boolean) certainlyTrue else certainlyFalse
+	
+	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.exact
 	
 	
 	// IMPLEMENTED  --------------------------------

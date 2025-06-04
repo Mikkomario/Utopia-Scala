@@ -1,6 +1,9 @@
 # Utopia Flow - List of Changes
 
 ## v2.6.1 (in development)
+### Breaking changes
+- Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
+  `.apply(...)`
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.groupedWithinSize(Int)` for deep collections
