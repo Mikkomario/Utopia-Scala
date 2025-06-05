@@ -2,6 +2,9 @@
 
 ## v2.6.1 (in development)
 ### Breaking changes
+- Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
+  with new classes with these names
+  - These also affect **Quarter** and **YearlyDateRange**
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
 ### New methods

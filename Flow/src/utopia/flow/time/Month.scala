@@ -6,6 +6,7 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Month.February
 
+import java.time.LocalDate
 import scala.language.implicitConversions
 
 /**
@@ -27,6 +28,25 @@ sealed trait Month extends MonthLike[Month]
 	// COMPUTED -----------------------
 	
 	/**
+	  * @return The first day of this month
+	  */
+	def firstDay = apply(1)
+	/**
+	  * @return The last day of this month
+	  */
+	def lastDay = apply(length.length)
+	
+	/**
+	  * @return An iterator that yields all the days of this month
+	  */
+	def daysIterator = Iterator.iterate(firstDay) { _.tomorrow }.take(length.length)
+	
+	/**
+	  * @return The quarter that contains this month
+	  */
+	def quarter = Quarter.containing(this)
+	
+	/**
 	 * @return Whether this month has a different length on leap years
 	 */
 	def isDifferentOnLeapYear = this == February
@@ -46,7 +66,7 @@ sealed trait Month extends MonthLike[Month]
 	override def +(other: Int) = {
 		val newIndex = (value - 1 + other) % 12
 		if (newIndex < 0)
-			Month.values(12 - newIndex)
+			Month.values(12 + newIndex)
 		else
 			Month.values(newIndex)
 	}
@@ -58,6 +78,17 @@ sealed trait Month extends MonthLike[Month]
 	// OTHER    ----------------------
 	
 	/**
+	  * @param year A year
+	  * @return Length of this month that year
+	  */
+	def lengthAt(year: Year): Days = lengthAt(leapYear = year.isLeap)
+	/**
+	  * @param leapYear Whether targeting a leap year
+	  * @return The length of this month at that kind of year
+	  */
+	def lengthAt(leapYear: Boolean) = if (isDifferentOnLeapYear) length + 1 else length
+	
+	/**
 	 * @param dayOfMonth Day of this month
 	 * @param assumeLeapYear Whether to assume a leap year (default = false)
 	 * @return Specified day of this month
@@ -65,15 +96,59 @@ sealed trait Month extends MonthLike[Month]
 	def apply(dayOfMonth: Int, assumeLeapYear: Boolean = false) = MonthDay(this, dayOfMonth, assumeLeapYear)
 	
 	/**
-	 * @param year A year
-	 * @return Length of this month that year
-	 */
-	def lengthAt(year: Year): Days = lengthAt(leapYear = year.isLeap)
+	  * @param leapYear Whether targeting a leap year
+	  * @return First day of this month
+	  */
+	def firstDayAt(leapYear: Boolean) = apply(1, leapYear)
 	/**
-	 * @param leapYear Whether targeting a leap year
-	 * @return The length of this month at that kind of year
-	 */
-	def lengthAt(leapYear: Boolean) = if (isDifferentOnLeapYear) length + 1 else length
+	  * @param year Targeted year
+	  * @return First day of this month at that year
+	  */
+	def firstDayAt(year: Year) = LocalDate.of(year.value, value, 1)
+	/**
+	  * @param leapYear Whether a leap year is targeted
+	  * @return Last day of this month
+	  */
+	def lastDayAt(leapYear: Boolean) = apply(lengthAt(leapYear).length, leapYear)
+	/**
+	  * @param year Targeted year
+	  * @return Last day of this month at that year
+	  */
+	def lastDateAt(year: Year) = LocalDate.of(year.value, value, lengthAt(year).length)
+	
+	/**
+	  * @param leapYear Whether targeting a leap year
+	  * @return An iterator that yields all the days of this month on that kind of year
+	  */
+	def daysIteratorAt(leapYear: Boolean) =
+		Iterator.iterate(firstDayAt(leapYear)) { _.tomorrow }.take(lengthAt(leapYear).length)
+	/**
+	  * @param year Targeted year
+	  * @return An iterator that yields all the days of this month at that year
+	  */
+	def datesIteratorAt(year: Year) =
+		Iterator.iterate(firstDayAt(year)) { _.plusDays(1) }.take(lengthAt(year).length)
+	
+	/**
+	  * @param year Target year
+	  * @return This month at that year
+	  */
+	def atYear(year: Int) = at(year)
+	/**
+	  * @param year Target year
+	  * @return This month at that year
+	  */
+	def at(year: Year) = YearMonth(year, this)
+	/**
+	  * @param year Target year
+	  * @return This month at that year
+	  */
+	def /(year: Year) = at(year)
+	/**
+	  * @param year Target year
+	  * @return This month at that year
+	  */
+	def +(year: Year) = at(year)
 }
 
 object Month

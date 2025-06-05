@@ -2,7 +2,6 @@ package utopia.disciple.test
 
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Method._
-import utopia.access.model.enumeration.Status
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.{FileBody, Request}
 import utopia.flow.async.AsyncExtensions._
@@ -21,8 +20,6 @@ import java.io.File
  */
 object GatewayTest extends App
 {
-    Status.setup()
-    
     val gateway = new Gateway(maxConnectionsPerRoute = 10, maxConnectionsTotal = 70)
     
     val uri = "http://localhost:9999/TestServer/echo"

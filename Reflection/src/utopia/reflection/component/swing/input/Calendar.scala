@@ -1,33 +1,33 @@
 package utopia.reflection.component.swing.input
 
+import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.controller.data.SelectionGroup
+import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
+import utopia.firmament.drawing.view.SelectionCircleViewDrawer
 import utopia.firmament.image.ButtonImageSet
+import utopia.firmament.localization.Display
+import utopia.firmament.model.enumeration.StackLayout.Center
+import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{WeekDay, WeekDays}
+import utopia.flow.time.{Month, WeekDay, WeekDays, Year, YearMonth}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.Y
-import utopia.firmament.drawing.view.SelectionCircleViewDrawer
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.{CustomDrawableButtonLike, ImageButton}
 import utopia.reflection.component.swing.label.ItemLabel
 import utopia.reflection.component.swing.template.{AwtComponentRelated, StackableAwtComponentWrapperWrapper}
-import utopia.firmament.component.input.InteractionWithPointer
-import utopia.firmament.controller.data.SelectionGroup
-import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
-import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
-import utopia.firmament.localization.Display
-import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
-import utopia.paradigm.shape.shape2d.vector.size.Size
 
-import java.time._
+import java.time.LocalDate
 import scala.collection.immutable.HashMap
 
 object Calendar
@@ -179,7 +179,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	// INITIAL CODE	-----------------------
 	
 	// Listens for month & year changes
-	Vector(yearDropDown, monthDropDown)
+	Vector[JDropDownWrapper[_]](yearDropDown, monthDropDown)
 		.foreach { _.valuePointer.addContinuousAnyChangeListener { handleDropDownUpdate() } }
 	
 	// Listens for date changes from outside
@@ -263,7 +263,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	{
 		val newSelected = selectedMonth + adjustment
 		yearDropDown.selectOne(newSelected.year)
-		monthDropDown.selectOne(newSelected.getMonth)
+		monthDropDown.selectOne(newSelected.month)
 	}
 	
 	private def updateSelectionArea() =

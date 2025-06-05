@@ -1,8 +1,8 @@
 package utopia.annex.test
 
 import utopia.access.model.Headers
-import utopia.access.model.enumeration.Status.OK
 import utopia.access.model.enumeration.Status
+import utopia.access.model.enumeration.Status.OK
 import utopia.annex.controller.ContainerUpdateLoop
 import utopia.annex.model.response.Response
 import utopia.flow.async.process.Wait
@@ -28,8 +28,6 @@ import scala.concurrent.duration.FiniteDuration
 object ContainerUpdateIntervalTest extends App
 {
 	import utopia.flow.test.TestContext._
-	Status.setup()
-	
 	
 	// ATTRIBUTES   ----------------
 	

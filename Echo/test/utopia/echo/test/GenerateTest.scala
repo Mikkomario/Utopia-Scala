@@ -1,6 +1,5 @@
 package utopia.echo.test
 
-import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.interceptor.AccessLogger
@@ -21,8 +20,6 @@ import utopia.flow.util.logging.SysErrLogger
   */
 object GenerateTest extends App
 {
-	Status.setup()
-	
 	private implicit val jsonParser: JsonParser = JsonBunny
 	private implicit val model: LlmDesignator = "wizard-vicuna-uncensored"
 	

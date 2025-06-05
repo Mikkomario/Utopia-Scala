@@ -1,11 +1,26 @@
 package utopia.flow.time
 
+import utopia.flow.operator.Steppable
 import utopia.flow.operator.combine.Combinable
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Month.{December, January}
+
+import scala.language.implicitConversions
 
 object MonthDay
 {
+	// TYPES    -------------------------
+	
+	/**
+	  * A Java version of this class
+	  */
+	type JMonthDay = java.time.MonthDay
+	
+	
 	// ATTRIBUTES   ---------------------
 	
 	/**
@@ -16,6 +31,12 @@ object MonthDay
 	 * The last month day in a year (assuming the Gregorian calendar)
 	 */
 	lazy val last = apply(December, 31)
+	
+	
+	// IMPLICIT -------------------------
+	
+	implicit def apply(monthDay: JMonthDay): MonthDay = apply(Month(monthDay.getMonthValue), monthDay.getDayOfMonth)
+	implicit def toJava(monthDay: MonthDay): JMonthDay = monthDay.toJava
 	
 	
 	// OTHER    -------------------------
@@ -31,14 +52,17 @@ object MonthDay
 	def apply(month: Month, day: Int, assumeLeapYear: Boolean = false): MonthDay = {
 		if (day < 1)
 			throw new IndexOutOfBoundsException(s"$day is not a valid day of month")
-		else if (day > month.lengthAt(assumeLeapYear).length)
-			throw new IndexOutOfBoundsException(
-				if (day > 31)
-					s"$day is not a valid day of month"
-				else if (assumeLeapYear && month.isDifferentOnLeapYear)
-					s"$day is not a valid day of $month (on a leap year)"
-				else
-					s"$day is not a valid day of $month")
+		else if (day > month.lengthAt(assumeLeapYear).length) {
+			// Case: Day of month is too large, but not on a leap year => Assumes that this is a leap year value
+			if (!assumeLeapYear && month.isDifferentOnLeapYear && day == month.lengthAt(leapYear = true).length)
+				new MonthDay(month, day, assumeLeapYear = true)
+			else
+				throw new IndexOutOfBoundsException(
+					if (day > 31)
+						s"$day is not a valid day of month"
+					else
+						s"$day is not a valid day of $month")
+		}
 		else
 			new MonthDay(month, day, assumeLeapYear)
 	}
@@ -82,9 +106,23 @@ object MonthDay
  * @since 04.06.2025, v2.7
  */
 case class MonthDay private(month: Month, day: Int, assumeLeapYear: Boolean)
-	extends SelfComparable[MonthDay] with Combinable[Days, MonthDay]
+	extends SelfComparable[MonthDay] with Combinable[Days, MonthDay] with Steppable[MonthDay]
 {
 	// COMPUTED ----------------------------
+	
+	/**
+	  * @return The quarter in which this day belongs
+	  */
+	def quarter = month.quarter
+	
+	/**
+	  * @return The following month day
+	  */
+	def tomorrow = next(Positive)
+	/**
+	  * @return The previous month day
+	  */
+	def yesterday = next(Negative)
 	
 	/**
 	 * @return Copy of this month day, which considers the current year a leap year
@@ -95,14 +133,59 @@ case class MonthDay private(month: Month, day: Int, assumeLeapYear: Boolean)
 	 */
 	def onNormalYear = copy(assumeLeapYear = false)
 	
+	/**
+	  * @return A Java version of this instance
+	  */
+	def toJava = java.time.MonthDay.of(month.value, day)
+	
 	
 	// IMPLEMENTED  ------------------------
 	
 	override def self = this
 	
-	override def +(other: Days) = {
+	override def next(direction: Sign): MonthDay = direction match {
+		case Positive =>
+			if (day == month.lengthAt(assumeLeapYear).length)
+				copy(month = month.next, day = 1)
+			else
+				copy(day = day + 1)
+		
+		case Negative =>
+			if (day <= 1) {
+				val newMonth = month.previous
+				copy(month = newMonth, day = newMonth.lengthAt(assumeLeapYear).length)
+			}
+			else
+				copy(day = day - 1)
+	}
+	override def is(extreme: Extreme): Boolean = {
+		if (month.is(extreme))
+			extreme match {
+				case Min => day <= 1
+				case Max => day >= month.lengthAt(assumeLeapYear).length
+			}
+		else
+			false
+	}
+	
+	override def +(other: Days): MonthDay = this + other.length
+	override def compareTo(o: MonthDay) = {
+		if (month == o.month)
+			day.compareTo(o.day)
+		else
+			month.compareTo(o.month)
+	}
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	  * @param daysAdvance Number of days to advance
+	  * @return An advanced month day
+	  */
+	def +(daysAdvance: Int) = {
 		var month = this.month
-		var days = day + other.length
+		var days = day + daysAdvance
 		
 		// Makes sure the day value stays within a valid range by adjusting the month value
 		while (days < 1) {
@@ -116,10 +199,26 @@ case class MonthDay private(month: Month, day: Int, assumeLeapYear: Boolean)
 		
 		MonthDay(month, days)
 	}
-	override def compareTo(o: MonthDay) = {
-		if (month == o.month)
-			day.compareTo(o.day)
-		else
-			month.compareTo(o.month)
-	}
+	/**
+	  * @param days Number of days to move to the past
+	  * @return A reduced month day
+	  */
+	def -(days: Int) = this + (-days)
+	
+	/**
+	  * @param year Targeted year
+	  * @return This day on that year
+	  */
+	def at(year: Year) = year(this)
+	/**
+	  * @param year Targeted year
+	  * @return This day on that year
+	  */
+	def /(year: Year) = at(year)
+	
+	/**
+	  * @param another Another month day (exclusive)
+	  * @return A yearly date range that starts from this day and ends at the specified date
+	  */
+	def until(another: MonthDay) = YearlyDateRange.exclusive(this, another)
 }

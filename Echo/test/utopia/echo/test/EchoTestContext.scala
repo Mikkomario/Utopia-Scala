@@ -1,6 +1,5 @@
 package utopia.echo.test
 
-import utopia.access.model.enumeration.Status
 import utopia.annex.util.RequestResultExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.echo.controller.client.OllamaClient
@@ -20,12 +19,6 @@ import scala.io.StdIn
   */
 object EchoTestContext
 {
-	// SETUP    ----------------------
-	
-	// Sets up the context
-	Status.setup()
-	
-	
 	// ATTRIBUTES   ------------------
 	
 	implicit val log: Logger = SysErrLogger

@@ -1,7 +1,6 @@
 package utopia.disciple.test
 
 import utopia.access.model.Headers
-import utopia.access.model.enumeration.Status
 import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.interceptor.AccessLogger
 import utopia.disciple.model.request.Request
@@ -19,7 +18,6 @@ import scala.io.StdIn
   */
 object RequestTest extends App
 {
-	Status.setup()
 	implicit val jsonParser: JsonParser = JsonReader
 	
 	val acc = AccessLogger.using(SysErrLogger)

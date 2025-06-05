@@ -1,8 +1,13 @@
 package utopia.flow.time
 
-import TimeExtensions._
-
-import java.time.{Month, MonthDay, Year}
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.combine.{Combinable, Subtractable}
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.operator.sign.Sign
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.time.Month.{April, January, July, October}
 
 /**
  * An enumeration for yearly quarters (Q1, Q2, Q3 and Q4)
@@ -10,9 +15,15 @@ import java.time.{Month, MonthDay, Year}
  * @since 20.11.2021, v1.14.1
  */
 sealed trait Quarter
+	extends SelfComparable[Quarter] with Steppable[Quarter]
+		with Combinable[Int, Quarter] with Subtractable[Int, Quarter]
 {
 	// ATTRIBUTES   -------------------
 	
+	/**
+	  * @return A 0-based index of this quarter
+	  */
+	def index: Int
 	/**
 	 * @return The first month of this quarter
 	 */
@@ -50,6 +61,27 @@ sealed trait Quarter
 	 * @return Yearly dates that belong to this quarter
 	 */
 	def dates = YearlyDateRange.exclusive(firstDay, endMonth.firstDay)
+	
+	
+	// IMPLEMENTED  ------------------
+	
+	override def self = this
+	
+	override def next(direction: Sign): Quarter = direction match {
+		case Positive => next
+		case Negative => previous
+	}
+	
+	override def +(other: Int) = {
+		val newIndex = (index + other) % 4
+		if (newIndex < 0)
+			Quarter.values(4 + newIndex)
+		else
+			Quarter(newIndex)
+	}
+	override def -(other: Int) = this + (-other)
+	
+	override def compareTo(o: Quarter) = index.compareTo(o.index)
 	
 	
 	// OTHER    ----------------------
@@ -104,7 +136,7 @@ object Quarter
 	 * @param month Targeted month
 	 * @return Quarter that contains that month
 	 */
-	def containing(month: Month) = withMonth(month.getValue)
+	def containing(month: Month) = withMonth(month.value)
 	
 	
 	// NESTED   -----------------------
@@ -112,33 +144,53 @@ object Quarter
 	/**
 	 * The first yearly quarter
 	 */
-	case object Q1 extends Quarter {
-		override val firstMonth = Month.of(1)
+	case object Q1 extends Quarter
+	{
+		override val index: Int = 0
+		override val firstMonth = January
+		
 		override def next = Q2
 		override def previous = Q4
+		
+		override def is(extreme: Extreme): Boolean = extreme == Min
 	}
 	/**
 	 * The second yearly quarter
 	 */
-	case object Q2 extends Quarter {
-		override val firstMonth = Month.of(4)
+	case object Q2 extends Quarter
+	{
+		override val index: Int = 1
+		override val firstMonth = April
+		
 		override def next = Q3
 		override def previous = Q1
+		
+		override def is(extreme: Extreme): Boolean = false
 	}
 	/**
 	 * The third yearly quarter
 	 */
-	case object Q3 extends Quarter {
-		override val firstMonth = Month.of(7)
+	case object Q3 extends Quarter
+	{
+		override val index: Int = 2
+		override val firstMonth = July
+		
 		override def next = Q4
 		override def previous = Q2
+		
+		override def is(extreme: Extreme): Boolean = false
 	}
 	/**
 	 * The fourth yearly quarter
 	 */
-	case object Q4 extends Quarter {
-		override val firstMonth = Month.of(10)
+	case object Q4 extends Quarter
+	{
+		override val index: Int = 3
+		override val firstMonth = October
+		
 		override def next = Q1
 		override def previous = Q3
+		
+		override def is(extreme: Extreme): Boolean = extreme == Max
 	}
 }

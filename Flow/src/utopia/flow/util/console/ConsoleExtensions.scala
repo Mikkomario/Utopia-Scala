@@ -6,13 +6,13 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.Span
-import utopia.flow.time.{DateRange, Today, WeekDay}
+import utopia.flow.time.{DateRange, Today, WeekDay, YearMonth}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.WeekDay.{Monday, Sunday}
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
-import java.time.{LocalDate, YearMonth}
+import java.time.LocalDate
 import scala.collection.immutable.VectorBuilder
 import scala.io.StdIn
 import scala.util.Try

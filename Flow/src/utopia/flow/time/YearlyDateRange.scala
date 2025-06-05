@@ -3,7 +3,7 @@ package utopia.flow.time
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
 
-import java.time.{LocalDate, MonthDay, Year}
+import java.time.LocalDate
 
 object YearlyDateRange
 {
@@ -73,8 +73,7 @@ case class YearlyDateRange(start: MonthDay, end: MonthDay)
 	  *         If this range can be expressed as a single complete range of days during that year, returns 1 range.
 	  *         Otherwise returns 2 ranges (one for the beginning of the year and one for the end of the year).
 	  */
-	def atYear(year: Int) = at(Year.of(year))
-	
+	def atYear(year: Int) = at(Year(year))
 	/**
 	  * @param year Target year
 	  * @return This date range during that year. 0-2 separate ranges. 0 ranges if this range is empty.

@@ -1,5 +1,9 @@
 # Utopia Reflection - List of Changes
 
+## v2.2.4 (in development)
+### Other changes
+- The **Calendar** component now supports **Flow**'s new **Year** and **Month** classes
+
 ## v2.2.3 - 26.05.2025
 Adds supports for **Firmament v1.5**.
 ### Other changes

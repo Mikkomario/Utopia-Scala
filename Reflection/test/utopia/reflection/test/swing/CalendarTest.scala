@@ -5,8 +5,8 @@ import utopia.firmament.localization.Display
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
-import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
+import utopia.flow.time.{Month, WeekDays, Year}
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -20,7 +20,6 @@ import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.test.TestContext._
 
 import java.nio.file.Paths
-import java.time.{Month, Year}
 
 /**
   * Tests calendar component visually
@@ -36,9 +35,9 @@ object CalendarTest extends App
 	val smallFont = basicFont * 0.75
 	
 	val yearSelect = new JDropDownWrapper[Year](StackInsets.symmetric(16.any, 4.upscaling), "Year", basicFont,
-		Color.white, Color.magenta, initialContent = (1999 to 2050).map { Year.of }.toVector)
+		Color.white, Color.magenta, initialContent = (1999 to 2050).map { Year.apply }.toVector)
 	val monthSelect = new JDropDownWrapper[Month](StackInsets.symmetric(16.any, 4.upscaling), "Month", basicFont,
-		Color.white, Color.magenta, initialContent = Month.values().toVector)
+		Color.white, Color.magenta, initialContent = Month.values)
 	
 	val buttonImage = Image.readFrom(Paths.get("Reflection/test-images/arrow-back-48dp.png")).get
 	val backImages = ButtonImageSet.varyingAlpha(buttonImage, 0.66, 1)

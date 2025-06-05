@@ -1,8 +1,8 @@
 package utopia.flow.time
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.time
 import utopia.flow.time.TimeUnit.{Day, Hour, JTimeUnit, MicroSecond, MilliSecond, Minute, NanoSecond, Second, Week}
 
 import java.time._
@@ -20,10 +20,15 @@ import scala.util.Try
   * */
 object TimeExtensions
 {
+	// TYPES    ---------------------------
+	
 	/**
 	  * Scala's Duration data type. May be useful in situations where java.time.Duration is imported.
 	  */
 	type SDuration = scala.concurrent.duration.Duration
+	
+	
+	// EXTENSIONS   -----------------------
 	
 	implicit class ExtendedInstant(val i: Instant)
 		extends AnyVal with SelfComparable[Instant] with ApproxEquals[Instant]
@@ -120,7 +125,6 @@ object TimeExtensions
 			case scala.concurrent.duration.Duration.MinusInf => Instant.MIN
 			case _ => throw new IllegalArgumentException(s"Can't add $amount")
 		}
-		
 		/**
 		  * An instant before the specified duration
 		  */
@@ -190,7 +194,6 @@ object TimeExtensions
 		  * @return A time 'length' before this one
 		  */
 		def -(length: TemporalAmount) = d.minus(length)
-		
 		/**
 		  * @param duration A duration of time
 		  * @return Copy of this date time after the specified amount of duration has passed
@@ -206,7 +209,6 @@ object TimeExtensions
 		  * @return Copy of this date time before teh specified amount of duration had passed
 		  */
 		def -(duration: SDuration) = this + (-duration)
-		
 		/**
 		  * @param days A period of days
 		  * @return A date time 'days' days after this one
@@ -217,7 +219,6 @@ object TimeExtensions
 		  * @return A date time 'days' days before this one
 		  */
 		def -(days: Days) = d.minusDays(days.length)
-		
 		/**
 		  * @param other Another local date time
 		  * @return The duration between these two times
@@ -388,18 +389,22 @@ object TimeExtensions
 		def after(date: LocalDateTime) = date + d
 	}
 	
-	implicit class ExtendedLocalDate(val d: LocalDate) extends AnyVal with SelfComparable[LocalDate]
+	implicit class ExtendedLocalDate(val d: LocalDate)
+		extends AnyVal with SelfComparable[LocalDate]
 	{
+		import utopia.flow.time.Month
+		import utopia.flow.time.Year
+		
 		// COMPUTED	-------------------------
 		
 		/**
 		  * @return Year of this date
 		  */
-		def year = Year.of(d.getYear)
+		def year = Year(d.getYear)
 		/**
 		  * @return Month of this date
 		  */
-		def month = d.getMonth
+		def month = Month(d.getMonthValue)
 		/**
 		  * @return The day of month of this date [1, 31]
 		  */
@@ -419,7 +424,7 @@ object TimeExtensions
 		/**
 		  * @return Year + month of this date
 		  */
-		def yearMonth = year + month
+		def yearMonth: utopia.flow.time.YearMonth = year(month)
 		
 		/**
 		  * @return The following date
@@ -606,403 +611,6 @@ object TimeExtensions
 		def +(duration: Duration) = t.plus(duration)
 	}
 	
-	implicit class ExtendedMonth(val m: Month) extends AnyVal with SelfComparable[Month]
-	{
-		// COMPUTED ----------------------
-		
-		/**
-		  * Alias for .getValue
-		  * @return The integer value of this month [1,12]
-		  */
-		def value = m.getValue
-		
-		/**
-		 * @return First day of this month
-		 */
-		def firstDay = apply(1)
-		/**
-		 * @return The quarter where this month belongs
-		 */
-		def quarter = Quarter.containing(m)
-		
-		/**
-		  * @return The month after this one
-		  */
-		def next = this + 1
-		/**
-		  * @return The month previous to this one
-		  */
-		def previous = this - 1
-		
-		
-		// IMPLEMENTED  ------------------
-		
-		override def self = m
-		
-		override def compareTo(o: Month) = m.compareTo(o)
-		
-		
-		// OTHER    ----------------------
-		
-		/**
-		  * @param months Number of months to add
-		  * @return This month advanced by that many months (rolls over at December/January)
-		  */
-		def +(months: Int) = m.plus(months)
-		/**
-		  * @param months Number of months to subtract
-		  * @return This month preceded by that many months (rolls over at December/January)
-		  */
-		def -(months: Int) = m.minus(months)
-		
-		/**
-		  * @param day Targeted day of this month
-		  * @return Specified day on this month [1, 31]
-		  * @throws DateTimeException If specified day is out of range
-		  */
-		@throws[DateTimeException]("Specified day is out of range")
-		def apply(day: Int) = MonthDay.of(m, day)
-		
-		/**
-		  * @param year Target year
-		  * @return This month at that year
-		  */
-		def atYear(year: Int) = YearMonth.of(year, m)
-		/**
-		  * @param year Target year
-		  * @return This month at that year
-		  */
-		def at(year: Year) = year + m
-		/**
-		  * @param year Target year
-		  * @return This month at that year
-		  */
-		def /(year: Year) = at(year)
-		/**
-		  * @param year Target year
-		  * @return This month at that year
-		  */
-		def +(year: Year) = at(year)
-	}
-	
-	implicit class ExtendedYear(val y: Year) extends AnyVal with SelfComparable[Year]
-	{
-		// COMPUTED -------------------------
-		
-		/**
-		  * Alias for .getValue
-		  * @return Integer value of this year
-		  */
-		def value = y.getValue
-		
-		/**
-		  * @return The year following this one
-		  */
-		def next = this + 1
-		/**
-		  * @return The year previous to this one
-		  */
-		def previous = this - 1
-		
-		/**
-		  * @return The first day of this year
-		  */
-		def firstDay: LocalDate = y(1)(1)
-		/**
-		  * @return The last day of this year
-		  */
-		def lastDay: LocalDate = y(12).lastDay
-		/**
-		 * @return Dates of this year
-		 */
-		def dates = DateRange.inclusive(firstDay, lastDay)
-		
-		/**
-		  * @return January (1) of this year
-		  */
-		def january = apply(Month.JANUARY)
-		/**
-		  * @return February (2) of this year
-		  */
-		def february = apply(Month.FEBRUARY)
-		/**
-		  * @return March (3) of this year
-		  */
-		def march = apply(Month.MARCH)
-		/**
-		  * @return April (4) of this year
-		  */
-		def april = apply(Month.APRIL)
-		/**
-		  * @return May (5) of this year
-		  */
-		def may = apply(Month.MAY)
-		/**
-		  * @return June (6) of this year
-		  */
-		def june = apply(Month.JUNE)
-		/**
-		  * @return July (7) of this year
-		  */
-		def july = apply(Month.JULY)
-		/**
-		  * @return August (8) of this year
-		  */
-		def august = apply(Month.AUGUST)
-		/**
-		  * @return September (9) of this year
-		  */
-		def september = apply(Month.SEPTEMBER)
-		/**
-		  * @return October (10) of this year
-		  */
-		def october = apply(Month.OCTOBER)
-		/**
-		  * @return November (11) of this year
-		  */
-		def november = apply(Month.NOVEMBER)
-		/**
-		  * @return December (12) of this year
-		  */
-		def december = apply(Month.DECEMBER)
-		
-		
-		// IMPLEMENTED  ---------------------
-		
-		override def self = y
-		
-		override def compareTo(o: Year) = y.compareTo(o)
-		
-		
-		// OTHER    -------------------------
-		
-		/**
-		  * @param years Number of years to add
-		  * @return That many years after this year
-		  */
-		def +(years: Int) = y.plusYears(years)
-		/**
-		  * @param years Years to subtract
-		  * @return That many years before this year
-		  */
-		def -(years: Int) = y.minusYears(years)
-		
-		/**
-		  * Adds month information to this year
-		  * @param month Targeted month
-		  * @return A monthYear based on this year and specified month
-		  */
-		def +(month: Month) = YearMonth.of(y.getValue, month)
-		/**
-		  * Adds month information (same as this + month)
-		  * @param month targeted month
-		  * @return targeted month on this year
-		  */
-		def /(month: Month) = this + month
-		/**
-		  * @param month targeted month
-		  * @return targeted month on this year
-		  */
-		def /(month: Int) = apply(month)
-		
-		/**
-		  * @param monthDay A month day
-		  * @return That month day during this year
-		  */
-		def /(monthDay: MonthDay) = apply(monthDay)
-		
-		/**
-		  * @param range A range of dates
-		  * @return The portion of that range that overlaps with this year. 0-2 different ranges.
-		  */
-		def /(range: YearlyDateRange) = apply(range)
-		
-		/**
-		  * @param month Targeted month
-		  * @return Specified month on this year
-		  */
-		def apply(month: Month): YearMonth = this + month
-		/**
-		  * @param month Targeted month (number) [1, 12]
-		  * @return Targeted month on this year
-		  * @throws DateTimeException If specified month is out of range
-		  */
-		@throws[DateTimeException]("Specified month is out of range")
-		def apply(month: Int): YearMonth = YearMonth.of(y.getValue, month)
-		
-		/**
-		  * @param day Target month day
-		  * @return Specified month day on this year
-		  */
-		def apply(day: MonthDay): LocalDate = y.atMonthDay(day)
-		
-		/**
-		  * @param range A range of dates
-		  * @return The portion of that range that overlaps with this year. 0-2 different ranges.
-		  */
-		def apply(range: YearlyDateRange): IndexedSeq[DateRange] = range.at(y)
-	}
-	
-	implicit class ExtendedMonthDay(val md: MonthDay) extends AnyVal with SelfComparable[MonthDay]
-	{
-		// COMPUTED ----------------------
-		
-		/**
-		 * @return Quarter to which this day belongs
-		 */
-		def quarter = month.quarter
-		/**
-		  * @return Month portion of this month day
-		  */
-		def month = md.getMonth
-		/**
-		  * @return Day portion of this month day
-		  */
-		def day = md.getDayOfMonth
-		
-		
-		// IMPLEMENTED-------------------
-		
-		override def self = md
-		
-		override def compareTo(o: MonthDay) = md.compareTo(o)
-		
-		
-		// OTHER    ---------------------
-		
-		/**
-		  * @param year Target year
-		  * @return This month day at that year
-		  */
-		def at(year: Year) = md.atYear(year.getValue)
-		/**
-		  * @param year Target year
-		  * @return This month day at that year
-		  */
-		def /(year: Year) = at(year)
-		/**
-		  * @param year Target year
-		  * @return This month day at that year
-		  */
-		def /(year: Int) = md.atYear(year)
-		
-		/**
-		  * @param another Another month day (exclusive)
-		  * @return A yearly date range that starts from this day and ends at the specified date
-		  */
-		def until(another: MonthDay) = YearlyDateRange.exclusive(md, another)
-	}
-	
-	implicit class ExtendedYearMonth(val ym: YearMonth) extends AnyVal with SelfComparable[YearMonth]
-	{
-		// COMPUTED	----------------------
-		
-		/**
-		  * @return Year portion of this year month
-		  */
-		def year = Year.of(ym.getYear)
-		/**
-		  * @return Month part of this year month
-		  */
-		def month = ym.getMonth
-		
-		/**
-		  * @return Number of days within this month
-		  */
-		def length = ym.lengthOfMonth()
-		
-		/**
-		  * @return Dates in this month as a date range
-		  */
-		def dates = firstDay to lastDay
-		
-		/**
-		  * @return The first day of this month
-		  */
-		def firstDay = ym.atDay(1)
-		/**
-		  * @return The last day of this month
-		  */
-		def lastDay = apply(length)
-		
-		/**
-		  * @return The year month previous to this one
-		  */
-		def previous = this - 1
-		/**
-		  * @return The year month following this one
-		  */
-		def next = this + 1
-		
-		/**
-		  * Separates this month to weeks
-		  * @param w Week calendar system to apply
-		  * @return A vector that contains all weeks in this month, first and last week may contain less than 7
-		  *         days.
-		  */
-		def weeks(implicit w: WeekDays) = {
-			val d = dates
-			val firstDay = w.first
-			val weekLength = w.values.size
-			
-			val firstCompleteWeekStartIndex = d.iterator.indexWhere { _.weekDay == firstDay }
-			// The first week and the last week may be incomplete
-			val firstWeek = {
-				if (firstCompleteWeekStartIndex == 0)
-					None
-				else
-					Some(DateRange.exclusive(d.head, d(firstCompleteWeekStartIndex)))
-			}
-			val followingWeeks = Iterator
-				.iterate(Pair(firstCompleteWeekStartIndex,
-					firstCompleteWeekStartIndex + weekLength - 1)) { _.map { _ + weekLength }
-				}
-				.takeWhile { _.first < d.size }
-				.map { _.map { i => d(i min (d.size - 1)) } }
-				.map { p => DateRange.inclusive(p.first, p.last) }
-			
-			(firstWeek.iterator ++ followingWeeks).toVector
-		}
-		
-		
-		// IMPLEMENTED--------------------
-		
-		override def self = ym
-		
-		override def compareTo(o: YearMonth) = ym.compareTo(o)
-		
-		
-		// OTHER	----------------------
-		
-		/**
-		  * Adjusts this month by specified amount
-		  * @param monthAdjust Adjustment to month count
-		  * @return Adjusted month
-		  */
-		def +(monthAdjust: Int) = ym.plusMonths(monthAdjust)
-		/**
-		  * Adjusts this month by specified amount
-		  * @param monthAdjust Adjustment to month count
-		  * @return Adjusted month
-		  */
-		def -(monthAdjust: Int) = ym.minusMonths(monthAdjust)
-		
-		/**
-		  * @param dayNumber Targeted day number
-		  * @return Targeted date [1, 31]
-		  * @throws DateTimeException If specified day is out of range
-		  */
-		@throws[DateTimeException]("If specified day is out of range")
-		def apply(dayNumber: Int) = LocalDate.of(ym.getYear, ym.getMonth, dayNumber)
-		/**
-		  * @param dayOfMonth Targeted day of month
-		  * @return That day on this year month
-		  * @throws DateTimeException If specified day is out of range
-		  */
-		@throws[DateTimeException]("If specified day is out of range")
-		def /(dayOfMonth: Int) = apply(dayOfMonth)
-	}
-	
 	implicit class ExtendedPeriod(val p: Period) extends AnyVal with SelfComparable[Period]
 	{
 		// COMPUTED ---------------------------
@@ -1097,6 +705,8 @@ object TimeExtensions
 	
 	implicit class IntAsTimeNumber(val i: Int) extends AnyVal with TimeNumber
 	{
+		import utopia.flow.time.{Month, Year, YearMonth}
+		
 		// COMPUTED ------------------------
 		
 		/**
@@ -1127,11 +737,11 @@ object TimeExtensions
 		  * @throws DateTimeException If this number was not a valid month (1-12)
 		  */
 		@throws[DateTimeException]("this number was not a valid month (1-12)")
-		def month = Month.of(i)
+		def month = Month(i)
 		/**
 		  * @return This number as a year
 		  */
-		def year = Year.of(i)
+		def year = Year(i)
 		
 		
 		// IMPLEMENTED  --------------------
@@ -1166,18 +776,18 @@ object TimeExtensions
 		  * @param month Target month
 		  * @return This day at that month
 		  */
-		def dayOf(month: Int) = MonthDay.of(month, i)
+		def dayOf(month: Int) = Month(month)(i)
 		
 		/**
 		  * @param year Targeted year
 		  * @return This month at that year
 		  */
-		def of(year: Year) = year(i)
+		def of(year: Year) = year(Month(i))
 		/**
 		  * @param year Targeted year
 		  * @return This month at that year
 		  */
-		def monthOf(year: Int) = YearMonth.of(year, i)
+		def monthOf(year: Int) = YearMonth(Year(year), Month(i))
 		
 		/**
 		  * @param month Targeted month
@@ -1188,7 +798,7 @@ object TimeExtensions
 		  * @param year Targeted year
 		  * @return This month at that year
 		  */
-		def /(year: Year) = year(i)
+		def /(year: Year) = year(Month(i))
 	}
 	
 	implicit class DoubleAsTimeNumber(val d: Double) extends AnyVal with TimeNumber

@@ -1,7 +1,8 @@
 package utopia.flow.test.time
 
+import utopia.flow.time.Month.March
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.WeekDays
+import utopia.flow.time.{WeekDays, Year}
 import utopia.flow.time.WeekDays.MondayToSunday
 
 import scala.concurrent.duration.FiniteDuration
@@ -38,7 +39,7 @@ object TimeNumberTest extends App
 	println(Instant.now().toStringWith(DateTimeFormatter.ISO_DATE_TIME))
 	
 	// Also tests some other time extensions
-	val weeksAtMar2023 = (Year.of(2023) + Month.MARCH).weeks
+	val weeksAtMar2023 = (Year(2023) + March).weeks
 	assert(weeksAtMar2023.head.size == 5, weeksAtMar2023.head)
 	assert(weeksAtMar2023.last.size == 5, weeksAtMar2023.last)
 	// println(LocalDate.now.yearMonth.weeks().map { _.map { d => s"${d.getDayOfMonth} ${d.weekDay}" }.mkString(", ") }.mkString("\n"))
