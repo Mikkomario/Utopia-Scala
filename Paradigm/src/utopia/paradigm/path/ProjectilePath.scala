@@ -1,38 +1,80 @@
 package utopia.paradigm.path
 
-import utopia.paradigm.animation.Animation
+import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.util.Mutate
+import utopia.paradigm.transform.Adjustment
 
-/**
-  * This path increases faster in the beginning and slower at the end. It is like a projectile's vertical coordinate
-  * when thrown. Provides reasonable results between 0 and 1
-  * @author Mikko Hilpinen
-  * @since Genesis 17.4.2020, v2.2.1
-  * @param curvatureModifier A modifier applied to curve shape. [0, 1[. 0 Is maximum curvature where the highest
-  *                          point in the path resides at 1. The closer this value is to 1, the more this path looks like
-  *                          a linear path.
-  * @param end The value provided by this path at progress 1.0 (default = 1.0)
-  */
-case class ProjectilePath(curvatureModifier: Double = 0.0, end: Double = 1.0) extends Animation[Double]
+object ProjectilePath
 {
-	// IMPLEMENTED	----------------------------
-	
-	// Uses function y = (2x - (0.01 - c) * x^2) / (1 + 100c)
-	// Where c is a curvature modifier [0, 1[ and both x and y are percentages [0, 100]
-	def apply(progress: Double) =
-	{
-		val progressPercent = progress * 100
-		val resultPercent = (2 * progressPercent - (0.01 - curvatureModifier) * math.pow(progressPercent, 2)) /
-			(1 + curvatureModifier * 100)
-		resultPercent / 100.0 * end
-	}
-	
-	
-	// OTHER	--------------------------------
+	// ATTRIBUTES   -------------------------
 	
 	/**
-	  * Modifies the "height" (meaning the produced value) of this path
-	  * @param modifier "Height" modifier
-	  * @return A copy of this path that has its output values modified by 'modifier'
+	  * A fully curved path (i.e. Y=X&#94;2)
 	  */
-	def *(modifier: Double) = copy(end = end * modifier)
+	lazy val curved = apply()
+	/**
+	  * A fully linear path (i.e. Y=X)
+	  */
+	lazy val linear = apply(1.0)
+}
+
+/**
+  * A path which starts from (0,0) and advances to (1,'end') in a projectile-like fashion.
+  * I.e. advances faster at first, then reaches 1 slower at the end.
+  * @author Mikko Hilpinen
+  * @since 11.06.2025, v1.7.3
+  * @param linearity A value between 0 and 1, which determines how linear or curved this path is.
+  *                  0 is totally curved (i.e. Y=X&#94;2, default). 1 if totally linear (i.e. Y=X).
+  * @param end The Y value yielded at X=1.
+  */
+case class ProjectilePath(linearity: Double = 0.0, end: Double = 1.0)
+	extends Path[Double] with LinearScalable[ProjectilePath]
+{
+	// ATTRIBUTES   -------------------------
+	
+	override val start: Double = 0.0
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	  * @return The curvature modifier of this path.
+	  *         0 if fully linear. 1 if fully curved.
+	  */
+	def curvature = 1 - linearity
+	
+	/**
+	  * @param adj Implicit adjustment to apply
+	  * @return A more curved version of this path
+	  */
+	def moreCurved(implicit adj: Adjustment) = mapLinearity { _ * adj(-1) }
+	/**
+	  * @param adj Implicit adjustment to apply
+	  * @return A more linear version of this path
+	  */
+	def moreLinear(implicit adj: Adjustment) = mapCurvature { _ * adj(-1) }
+	
+	
+	// IMPLEMENTED    -----------------------
+	
+	override def self: ProjectilePath = this
+	
+	override def apply(progress: Double): Double = {
+		// Takes a weighed average between a curved and a linear path
+		val reverseProgress = 1 - progress
+		val curved = math.pow(reverseProgress, 2)
+		val linear = reverseProgress
+		(1 - (curved * curvature + linear * linearity)) * end
+	}
+	
+	override def *(mod: Double): ProjectilePath = copy(end = end * mod)
+	
+	
+	// OTHER    --------------------------
+	
+	def withLinearity(linearity: Double) = copy(linearity = linearity)
+	def mapLinearity(f: Mutate[Double]) = withLinearity(f(linearity))
+	
+	def withCurvature(curvature: Double) = withLinearity(1 - curvature)
+	def mapCurvature(f: Mutate[Double]) = withCurvature(f(curvature))
 }

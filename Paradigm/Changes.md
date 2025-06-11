@@ -1,5 +1,11 @@
 # Utopia Paradigm - List of Changes
 
+## v1.7.3 (in development)
+### Bugfixes
+- Fixed a bug that caused **ProjectilePath** to transform its shape when its linearity was positive
+### Other
+- Rewrote **ProjectilePath**
+
 ## v1.7.2 - 26.05.2025
 A minor update focusing on value conversions between **String**s and Paradigm-specific **Value** types.
 ### Bugfixes
