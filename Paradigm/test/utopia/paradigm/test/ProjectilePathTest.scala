@@ -17,6 +17,7 @@ object ProjectilePathTest extends App
 		}
 	}
 	
+	test(-0.75)
 	test(-0.5)
 	test(-0.25)
 	test(0.0)
@@ -25,4 +26,6 @@ object ProjectilePathTest extends App
 	test(0.75)
 	test(1.0)
 	test(1.25)
+	test(1.5)
+	test(1.75)
 }

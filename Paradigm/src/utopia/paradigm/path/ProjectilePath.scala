@@ -64,7 +64,12 @@ case class ProjectilePath(linearity: Double = 0.0, end: Double = 1.0)
 		val reverseProgress = 1 - progress
 		val curved = math.pow(reverseProgress, 2)
 		val linear = reverseProgress
-		(1 - (curved * curvature + linear * linearity)) * end
+		val defaultResult = (1 - (curved * curvature + linear * linearity)) * end
+		
+		if (progress >= 0 && progress <= 1)
+			(defaultResult max 0) min end
+		else
+			defaultResult
 	}
 	
 	override def *(mod: Double): ProjectilePath = copy(end = end * mod)
