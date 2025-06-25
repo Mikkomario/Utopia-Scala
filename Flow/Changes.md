@@ -7,6 +7,7 @@
   - These also affect **Quarter** and **YearlyDateRange**
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
+- `.splitMap(...)` in **IterableOnce** (via **CollectionExtensions**) now yields **IndexedSeq**s instead of **Vector**s
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.groupedWithinSize(Int)` for deep collections

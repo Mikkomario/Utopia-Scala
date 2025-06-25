@@ -1,10 +1,10 @@
 package utopia.genesis.graphics
 
 import utopia.flow.util.logging.SysErrLogger
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.Extender
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.transform.JavaAffineTransformConvertible
 
 import java.awt.Graphics2D
@@ -15,7 +15,7 @@ object ClosingGraphics
 	  * @param g A (root level) graphics instance to wrap
 	  * @return A ClosingGraphics instance wrapping that graphics instance
 	  */
-	def apply(g: Graphics2D) = new ClosingGraphics(g, Fixed(false))
+	def apply(g: Graphics2D) = new ClosingGraphics(g, AlwaysFalse)
 }
 
 /**
@@ -23,7 +23,7 @@ object ClosingGraphics
   * @author Mikko Hilpinen
   * @since 15.5.2021, v2.5.1
   */
-class ClosingGraphics(override val wrapped: Graphics2D, parentClosedFlag: => Changing[Boolean])
+class ClosingGraphics(override val wrapped: Graphics2D, parentClosedFlag: => Flag)
 	extends AutoCloseable with Extender[Graphics2D]
 {
 	// ATTRIBUTES   --------------------------------

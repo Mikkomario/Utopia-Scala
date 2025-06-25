@@ -687,7 +687,7 @@ object CollectionExtensions
 		  * @return Left results -> right results
 		  */
 		def splitMap[L, R](f: A => (L, R)) =
-			splitMapInto[L, R, Vector](new VectorBuilder[L](), new VectorBuilder[R]())(f)
+			splitMapInto[L, R, IndexedSeq](OptimizedIndexedSeq.newBuilder[L], OptimizedIndexedSeq.newBuilder[R])(f)
 		/**
 		  * Maps the items in this collection into two separate collections
 		  * @param leftBuilder Builder used for building the left side collection

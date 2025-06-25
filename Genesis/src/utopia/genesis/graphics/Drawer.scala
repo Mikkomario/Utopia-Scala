@@ -26,6 +26,21 @@ object Drawer
 class Drawer(protected override val graphics: LazyGraphics)
 	extends GraphicsContextLike[Drawer] with AutoCloseable with ScopeUsable[Drawer]
 {
+	// COMPUTED ------------------------------
+	
+	/**
+	  * Acquires a graphics instance based on this drawer.
+	  *
+	  * Note: When drawing functions are available from this drawer interface directly,
+	  *       it is recommended to use those instead of calling this function.
+	  *       This function is designed only for edge cases, which are not supported by this interface directly.
+	  *
+	  * @return A new graphics instance copying the one used by this drawer.
+	  *         Changes made to this instance won't affect this drawer.
+	  */
+	def toGraphics = graphics.value.createChild()
+	
+	
 	// IMPLEMENTED  --------------------------
 	
 	override def self = this
@@ -122,11 +137,6 @@ class Drawer(protected override val graphics: LazyGraphics)
 			tp1.x.round.toInt, tp1.y.round.toInt, tp2.x.round.toInt, tp2.y.round.toInt,
 			sp1.x.round.toInt, sp1.y.round.toInt, sp2.x.round.toInt, sp2.y.round.toInt,
 			null)
-		/*
-		// TODO: Remove tests
-		graphics.value.setColor(Color.cyan.toAwt)
-		graphics.value.drawRect(tp1.x.toInt, tp1.y.toInt, (tp2.x - tp1.x).toInt, (tp2.y - tp1.y).toInt)
-		true*/
 	}
 	
 	/**

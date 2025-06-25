@@ -1,5 +1,8 @@
 package utopia.firmament.awt
 
+import utopia.genesis.image.Image
+import utopia.paradigm.shape.shape2d.vector.size.Size
+
 import scala.language.implicitConversions
 
 /**
@@ -55,5 +58,15 @@ object AwtComponentExtensions
 		  */
 		def isInVisibleHierarchy = c.isVisible &&
 			parentsIterator.takeWhile { _.isVisible }.exists { _.isInstanceOf[java.awt.Window] }
+		
+		/**
+		  * Converts this component to an image.
+		  * Note: Might not function correctly for invisible or unattached components.
+		  * @return An image of this component
+		  */
+		def toImage = Size(c.getSize).ifPositive match {
+			case Some(size) => Image.paint(size) { d => c.paintAll(d.toGraphics) }
+			case None => Image.empty
+		}
 	}
 }

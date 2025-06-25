@@ -18,44 +18,30 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	// ABSTRACT -----------------------------
 	
 	/**
-	  * @return The context where this Scribe instance is applied.
-	  *         Should be unique. E.g. The name of the feature this Scribe performs the logging for.
+	  * @param subContext A sub-context within this Scribe instance's context
+	  * @return Copy of this instance with a context modified so that it includes the specified sub-context
 	  */
-	protected def context: String
+	def in(subContext: String): Repr
 	/**
-	  * @return The default issue severity level that is logged
+	  * @param severity Level of severity applicable to this issue
+	  * @return Copy of this logger that uses the specified severity instead of the default severity
 	  */
-	protected def defaultSeverity: Severity
+	def apply(severity: Severity): Repr
 	/**
-	  * @return Details used for differentiating between issue variants,
-	  *         such as the name of the specific location or function where the logging is performed.
+	  * Creates a new variant of this instance with additional details
+	  * @param details Details that separate this issue variant from the others.
+	  *                These details are appended to the existing details in this Scribe instance.
+	  * @return Copy of this logger that logs the specified issue variant
 	  */
-	protected def details: Model
-	
-	/**
-	  * @param context New context to assign
-	  * @return Copy of this Scribe with the new context -property
-	  */
-	def withContext(context: String): Repr
-	/**
-	  * Creates a copy of this Scribe that serves in a specific sub-context
-	  * @param details Details that differentiate the resulting Scribe instance from this one.
-	  *                Different details result in different IssueVariants being created.
-	  * @param severity Appropriate level of severity for this sub-context
-	  * @return Copy of this instance that serves in the specified sub-context
-	  */
-	def apply(details: Model, severity: Severity): Repr
+	def variant(details: Model): Repr
 	
 	/**
 	  * Logs an error
-	  * @param error Error to log (optional)
-	  * @param message Message to record (optional)
-	  * @param occurrenceDetails Details about this issue occurrence (optional)
-	  * @param severity Issue severity level
-	  * @param variantDetails Details about this issue variant
+	  * @param error The error to log (optional)
+	  * @param message Additional message to log (may be empty)
+	  * @param details Additional details to log (may be empty)
 	  */
-	protected def _apply(error: Option[Throwable] = None, message: String = "", occurrenceDetails: Model = Model.empty,
-	                     severity: Severity = defaultSeverity, variantDetails: Model = details): Unit
+	def apply(error: Option[Throwable], message: String, details: Model): Unit
 	
 	
 	// COMPUTED -----------------------------
@@ -96,90 +82,15 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(error: Option[Throwable], message: String) = _apply(error, message)
+	override def apply(error: Option[Throwable], message: String): Unit = apply(error, message, Model.empty)
 	
 	
 	// OTHER    -----------------------------
 	
 	/**
-	  * Logs an error
-	  * @param error The error to log
-	  * @param message Additional error message to record (optional)
-	  * @param details Details about this specific issue occurrence (optional)
-	  * @param severity Error severity (default = default severity of this instance)
-	  * @param variantDetails Details about this issue variant / issue type (optional).
-	  *                       Please note that different values will be recorded as different issue variants.
-	  */
-	def apply(error: Throwable, message: String = "", details: Model = Model.empty,
-	          severity: Severity = defaultSeverity, variantDetails: Model = Model.empty) =
-		_apply(Some(error), message, details, severity, this.details ++ variantDetails)
-	/**
-	  * Logs an error
-	  * @param error Error to log
-	  * @param severity Error severity
-	  */
-	def apply(error: Throwable, severity: Severity) = _apply(Some(error), severity = severity)
-	/**
-	  * Logs an error
-	  * @param error The error to log (optional)
-	  * @param message Additional message to log (may be empty)
-	  * @param details Additional details to log (may be empty)
-	  */
-	def apply(error: Option[Throwable], message: String, details: Model) = _apply(error, message, details)
-	/**
-	  * Logs a message with details
-	  * @param message Message to log
-	  * @param details Details to include
-	  */
-	def apply(message: String, details: Model) = _apply(message = message, occurrenceDetails = details)
-	/**
-	  * Logs an entry with no message but some details instead
-	  * @param details Details to log
-	  */
-	def apply(details: Model) = _apply(occurrenceDetails = details)
-	
-	/**
-	  * @param subContext A sub-context within this Scribe instance's context
-	  * @return Copy of this instance with a context modified so that it includes the specified sub-context
-	  */
-	def in(subContext: String): Repr = {
-		if (subContext.isEmpty)
-			self
-		else {
-			val c = context
-			if (c.isEmpty)
-				withContext(subContext)
-			else {
-				// Selects a separator appropriate for the current context
-				val separator = {
-					if (c.contains(' '))
-						" "
-					else if (c.contains('_'))
-						"_"
-					else
-						"."
-				}
-				withContext(s"$c$separator$subContext")
-			}
-		}
-	}
-	/**
 	  * Alias for [[in]]
 	  */
 	def /(subContext: String) = in(subContext)
-	
-	/**
-	  * @param severity Level of severity applicable to this issue
-	  * @return Copy of this logger that uses the specified severity instead of the default severity
-	  */
-	def apply(severity: Severity): Repr = if (severity == defaultSeverity) self else apply(details, severity)
-	/**
-	  * Creates a new variant of this instance with additional details
-	  * @param details Details that separate this issue variant from the others.
-	  *                These details are appended to the existing details in this Scribe instance.
-	  * @return Copy of this logger that logs the specified issue variant
-	  */
-	def variant(details: Model) = if (details.isEmpty) self else apply(this.details ++ details, defaultSeverity)
 	/**
 	  * Creates a new variant of this instance with an additional detail.
 	  * Please note that different details result in different issue variants.
@@ -187,5 +98,25 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param detail Value to assign for that detail (key)
 	  * @return Copy of this logger that includes the specified detail in logging entries
 	  */
-	def variant(key: String, detail: Value) = apply(details + (key -> detail), defaultSeverity)
+	def variant(key: String, detail: Value) = variant(Model.from(key -> detail))
+	
+	/**
+	  * Logs an error
+	  * @param error The error to log
+	  * @param message Additional error message to record (optional)
+	  * @param details Details about this specific issue occurrence (optional)
+	  */
+	def apply(error: Throwable, message: String = "", details: Model = Model.empty): Unit =
+		apply(Some(error), message, details)
+	/**
+	  * Logs a message with details
+	  * @param message Message to log
+	  * @param details Details to include
+	  */
+	def apply(message: String, details: Model) = apply(None, message, details)
+	/**
+	  * Logs an entry with no message but some details instead
+	  * @param details Details to log
+	  */
+	def apply(details: Model) = apply(None, "", details)
 }

@@ -14,7 +14,7 @@ import utopia.scribe.api.database.access.single.logging.issue.DbIssue
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.api.util.ScribeContext._
 import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
-import utopia.scribe.core.controller.logging.ScribeLike
+import utopia.scribe.core.controller.logging.ConcreteScribeLike
 import utopia.scribe.core.model.cached.event.MaximumLogLimitReachedEvent
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
@@ -173,24 +173,24 @@ object Scribe
   * @author Mikko Hilpinen
   * @since 22.5.2023, v0.1
   * @param context A string representation of the context in which this logger serves
-  * @param defaultSeverity The default level of [[Severity]] recorded by this logger (default = Unrecoverable)
-  * @param details Details that are included in the logging entries. Result in different issue variants.
+  * @param severity The default level of [[Severity]] recorded by this logger (default = Unrecoverable)
+  * @param variantDetails Details that are included in the logging entries. Result in different issue variants.
   */
 // TODO: Add logToConsole and logToFile -options (to ScribeContext) once the basic features have been implemented
 // TODO: Once basic features have been added, consider adding an email integration or other trigger-actions
-case class Scribe(context: String, defaultSeverity: Severity = Severity.default, details: Model = Model.empty)
-	extends ScribeLike[Scribe] with utopia.scribe.core.controller.logging.Scribe
+case class Scribe(context: String, severity: Severity = Severity.default, variantDetails: Model = Model.empty)
+	extends utopia.scribe.core.controller.logging.Scribe with ConcreteScribeLike[Scribe]
 {
 	// IMPLEMENTED  -------------------------
 	
 	override def self = this
 	
 	override def withContext(context: String): Scribe = copy(context = context)
-	override def apply(details: Model, severity: Severity) = copy(details = details, defaultSeverity = severity)
+	override def apply(severity: Severity): Scribe = if (severity == this.severity) this else copy(severity = severity)
+	override def variant(details: Model): Scribe =
+		if (details.isEmpty) this else copy(variantDetails = variantDetails ++ details)
 	
-	override protected def _apply(error: Option[Throwable], message: String, details: Model, severity: Severity,
-	                              variantDetails: Model) =
-	{
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
 		Scribe.log[Unit] { implicit c =>
 			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
 		} { loggingError =>
@@ -198,5 +198,4 @@ case class Scribe(context: String, defaultSeverity: Severity = Severity.default,
 			ScribeContext.backupLogger(error, message)
 			ScribeContext.backupLogger(loggingError, s"Logging failed in $context")
 		}
-	}
 }

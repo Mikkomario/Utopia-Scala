@@ -1,5 +1,12 @@
 # Utopia Scribe Core - list of changes
 
+## v1.2 (in development)
+### Breaking changes
+- Removed a number of functions from the **ScribeLike** trait, somewhat limiting the interface usage options
+### New features
+- Added **LazyScribe** implementation, including implicit conversions from **Lazy** to **Scribe**
+- Added **ScribeWrapper** trait
+
 ## v1.1.2 - 26.05.2025
 A new build supporting the latest **Flow** & **BunnyMunch** versions.
 

@@ -2,16 +2,12 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Identity
-import utopia.flow.operator.enumeration.End
-import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.util.Mutate
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Result, Table}
-import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.FromResultFactory
-import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.nosql.template.Deprecatable
-import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlSegment, SqlTarget}
+import utopia.vault.sql.{Condition, OrderBy, SqlSegment, SqlTarget}
 
 object AccessMany
 {
@@ -43,62 +39,20 @@ object AccessMany
 	private case class _AccessMany[+A](target: SqlTarget, table: Table, selectTarget: SelectTarget, f: Result => Seq[A],
 	                                   accessCondition: Option[Condition] = None, ordering: Option[OrderBy] = None,
 	                                   prepare: Mutate[SqlSegment] = Identity)
-		extends AccessMany[A]
+		extends ConcreteAccessManyLike[A, AccessMany[A]] with AccessMany[A]
 	{
 		// IMPLEMENTED  ----------------------
 		
 		override protected def self: AccessMany[A] = this
+		override protected def limitedToOne = this
 		
 		override protected def finalizeStatement(statement: SqlSegment) = prepare(statement)
 		
 		override protected def parse(result: Result) = f(result)
 		
-		override def join(joins: Seq[Joinable], joinType: JoinType) = {
-			if (joins.isEmpty)
-				this
-			else {
-				val newTarget = joins.foldLeft(target) { _.join(_, joinType) }
-				if (newTarget == target)
-					this
-				else
-					copy(target = newTarget)
-			}
-		}
-		
-		override def apply(condition: Condition): AccessMany[A] = {
-			// Extends the current target to include the specified condition's tables
-			val extendedTarget = (condition.segment.targetTables -- target.tables).foldLeft(target) { _.join(_) }
-			copy(target = extendedTarget, accessCondition = Some(condition))
-		}
-		
-		override def apply(end: End, ordering: Option[OrderBy]) = {
-			// Applies the correct ordering
-			val access = {
-				if (ordering.isEmpty && (end == First || this.ordering.isEmpty))
-					this
-				else
-					ordering match {
-						case Some(ordering) =>
-							withOrdering(end match {
-								case First => ordering
-								case Last => -ordering
-							})
-						case None =>
-							end match {
-								case First => this
-								case Last =>
-									ordering match {
-										case Some(ordering) => withOrdering(-ordering)
-										case None => this
-									}
-							}
-					}
-			}
-			// Creates a view to the first element in this access point
-			TargetingOne.headOf[AccessMany[A], A](access)
-		}
-		
 		override def withOrdering(ordering: OrderBy): AccessMany[A] = copy(ordering = Some(ordering))
+		override protected def copyAccess(target: SqlTarget, accessCondition: Option[Condition]) =
+			copy(target = target, accessCondition = accessCondition)
 	}
 }
 

@@ -2,7 +2,7 @@ package utopia.scribe.client.controller.logging
 
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
-import utopia.scribe.core.controller.logging.ScribeLike
+import utopia.scribe.core.controller.logging.ConcreteScribeLike
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.post.logging.ClientIssue
@@ -28,18 +28,19 @@ object Scribe
   * @author Mikko Hilpinen
   * @since 24.5.2023, v0.1
   */
-case class Scribe(master: MasterScribe, context: String, version: Version, details: Model, defaultSeverity: Severity)
-	extends ScribeLike[Scribe] with utopia.scribe.core.controller.logging.Scribe
+case class Scribe(master: MasterScribe, context: String, version: Version, variantDetails: Model, severity: Severity)
+	extends utopia.scribe.core.controller.logging.Scribe with ConcreteScribeLike[Scribe]
 {
 	// IMPLEMENTED  ------------------------
 	
 	override def self = this
 	
 	override def withContext(context: String): Scribe = copy(context = context)
-	override def apply(details: Model, severity: Severity) = copy(details = details, defaultSeverity = severity)
+	override def variant(details: Model): Scribe =
+		if (details.isEmpty) this else copy(variantDetails = variantDetails ++ details)
+	override def apply(severity: Severity): Scribe = if (this.severity == severity) this else copy(severity = severity)
 	
-	override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model, severity: Severity,
-	                              variantDetails: Model) =
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
 		master.accept(ClientIssue(version, context, severity, variantDetails, error.flatMap { RecordableError(_) },
-			message, occurrenceDetails))
+			message, details))
 }

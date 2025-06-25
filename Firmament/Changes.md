@@ -1,5 +1,10 @@
 # Utopia Firmament - List of Changes
 
+## v1.5.1 (in development)
+### New methods
+- **java.awt.Component** (via **AwtComponentExtensions**)
+  - Added `.toImage`
+
 ## v1.5 - 26.05.2025
 This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  
 An attempt is also made to improve **Window** positioning, adding support for customized auto-positioning logic.
