@@ -81,10 +81,9 @@ object ConsoleScribe
   */
 class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.seconds,
                     logDirectory: Option[Path] = None, backupLogger: Logger = SysErrLogger.includingTime,
-                    override val defaultSeverity: Severity = Severity.default,
-                    override val details: Model = Model.empty)
+                    severity: Severity = Severity.default, variantDetails: Model = Model.empty)
                    (implicit exc: ExecutionContext)
-	extends Scribe
+	extends Scribe with ConcreteScribeLike[Scribe]
 {
 	// ATTRIBUTES   -------------------
 	
@@ -105,12 +104,12 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 	
 	override def self = this
 	
-	override def withContext(context: String): Scribe = new Delegate(context, defaultSeverity, details)
-	override def apply(details: Model, severity: Severity): Scribe = new Delegate(context, severity, details)
+	override def withContext(context: String): Scribe = new Delegate(context, severity, variantDetails)
+	override def apply(severity: Severity): Scribe = new Delegate(context, severity, variantDetails)
+	override def variant(details: Model): Scribe = new Delegate(context, severity, variantDetails ++ details)
 	
-	override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model,
-	                              severity: Severity, variantDetails: Model): Unit =
-		_apply(context, error, message, occurrenceDetails, severity, variantDetails)
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+		_apply(context, error, message, details, severity, variantDetails)
 	
 	
 	// OTHER    ----------------------
@@ -160,17 +159,18 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 	
 	// NESTED   ----------------------
 	
-	private class Delegate(override val context: String, override val defaultSeverity: Severity,
-	                       override val details: Model)
-		extends Scribe
+	private class Delegate(override val context: String, severity: Severity, variantDetails: Model)
+		extends Scribe with ConcreteScribeLike[Scribe]
 	{
 		override def self = this
 		
-		override def withContext(context: String) = new Delegate(context, defaultSeverity, details)
-		override def apply(details: Model, severity: Severity) = new Delegate(context, severity, details)
+		override def withContext(context: String) = new Delegate(context, severity, variantDetails)
+		override def apply(severity: Severity): Scribe =
+			if (severity == this.severity) this else new Delegate(context, severity, variantDetails)
+		override def variant(details: Model): Scribe =
+			if (details.isEmpty) this else new Delegate(context, severity, variantDetails ++ details)
 		
-		override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model,
-		                              severity: Severity, variantDetails: Model) =
-			ConsoleScribe.this._apply(context, error, message, occurrenceDetails, severity, variantDetails)
+		override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+			_apply(context, error, message, details, severity, variantDetails)
 	}
 }

@@ -98,7 +98,7 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param detail Value to assign for that detail (key)
 	  * @return Copy of this logger that includes the specified detail in logging entries
 	  */
-	def variant(key: String, detail: Value) = variant(Model.from(key -> detail))
+	def variant(key: String, detail: Value): Repr = variant(Model.from(key -> detail))
 	
 	/**
 	  * Logs an error
@@ -113,10 +113,10 @@ trait ScribeLike[+Repr] extends Logger with ScopeUsable[Repr]
 	  * @param message Message to log
 	  * @param details Details to include
 	  */
-	def apply(message: String, details: Model) = apply(None, message, details)
+	def apply(message: String, details: Model): Unit = apply(None, message, details)
 	/**
 	  * Logs an entry with no message but some details instead
 	  * @param details Details to log
 	  */
-	def apply(details: Model) = apply(None, "", details)
+	def apply(details: Model): Unit = apply(None, "", details)
 }

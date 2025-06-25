@@ -22,13 +22,13 @@ import scala.util.{Failure, Success, Try}
   * @since 11.7.2023, v1.0
   *
   * @constructor Creates a new empty Synagogue
-  * @param defaultSeverity Default severity for logging entries when no other severity has been specified
-  *                        (default = Unrecoverable)
-  * @param defaultVariantDetails Default variant-specific details to add to all logging entries
+  * @param severity Default severity for logging entries when no other severity has been specified
+  *                 (default = Unrecoverable)
+  * @param variantDetails Default variant-specific details to add to all logging entries
   * @param logLoggingFailures Whether logging failures should be logged using other loggers (default = true)
   */
-class Synagogue(override protected val defaultSeverity: Severity = Severity.default,
-                defaultVariantDetails: Model = Model.empty, logLoggingFailures: Boolean = true)
+class Synagogue(severity: Severity = Severity.default, variantDetails: Model = Model.empty,
+                logLoggingFailures: Boolean = true)
 	extends Scribe
 {
 	// ATTRIBUTES   --------------------------
@@ -45,15 +45,12 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 	
 	override def self = this
 	
-	override protected def context = ""
-	override protected def details = defaultVariantDetails
+	override def in(subContext: String): Scribe = ScribeDelegate(subContext, variantDetails, severity)
+	override def apply(severity: Severity): Scribe = ScribeDelegate("", variantDetails, severity)
+	override def variant(details: Model): Scribe = ScribeDelegate("", variantDetails ++ details, severity)
 	
-	override def withContext(context: String): Scribe = ScribeDelegate(context, details, defaultSeverity)
-	override def apply(details: Model, severity: Severity): Scribe = ScribeDelegate(context, details, severity)
-	
-	override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model,
-	                              severity: Severity, variantDetails: Model): Unit =
-		_apply(context, error, message, occurrenceDetails, severity, variantDetails)
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+		_apply("", error, message, details, severity, variantDetails)
 	
 	
 	// OTHER    ----------------------------
@@ -114,7 +111,7 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 					else
 						occurrenceDetails
 				}
-				scribe.in(context)(variantDetails, severity).apply(error, message, actualDetails)
+				scribe.in(context)(severity).variant(variantDetails).apply(error, message, actualDetails)
 				
 			} { _.in("Synagogue.log").info }
 			
@@ -164,7 +161,9 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 		
 		// Copies the logging entries to the specified Scribe & Logger instances
 		Try {
-			copyToScribes.foreach { _.in(context)(variantDetails, severity).apply(error, message, occurrenceDetails) }
+			copyToScribes.foreach {
+				_.in(context)(severity).variant(variantDetails).apply(error, message, occurrenceDetails)
+			}
 			copyToLoggers.foreach { _(error, message) }
 		}.failure
 			// Prints a warning for failures, but doesn't process them further
@@ -222,15 +221,18 @@ class Synagogue(override protected val defaultSeverity: Severity = Severity.defa
 	
 	// NESTED   ----------------------------
 	
-	private case class ScribeDelegate(context: String, details: Model, defaultSeverity: Severity) extends Scribe
+	private case class ScribeDelegate(context: String, variantDetails: Model, severity: Severity)
+		extends Scribe with ConcreteScribeLike[Scribe]
 	{
 		override def self = this
-		override def withContext(context: String) = copy(context = context)
 		
-		override def apply(details: Model, severity: Severity) =
-			copy(details = details, defaultSeverity = severity)
-		override protected def _apply(error: Option[Throwable], message: String, occurrenceDetails: Model,
-		                              severity: Severity, variantDetails: Model): Unit =
-			Synagogue.this._apply(context, error, message, occurrenceDetails, severity, variantDetails)
+		override def withContext(context: String) = copy(context = context)
+		override def variant(details: Model): Scribe =
+			if (details.isEmpty) this else copy(variantDetails = this.variantDetails ++ details)
+		override def apply(severity: Severity): Scribe =
+			if (severity == this.severity) this else copy(severity = severity)
+		
+		override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+			_apply(context, error, message, details, severity, variantDetails)
 	}
 }
