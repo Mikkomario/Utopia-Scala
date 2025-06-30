@@ -2,8 +2,8 @@ package utopia.vault.nosql.factory
 
 import utopia.vault.database.{Connection, References}
 import utopia.vault.nosql.factory.row.FromRowFactory
-import utopia.vault.sql.{Condition, Exists, JoinType}
 import utopia.vault.sql.JoinType.Inner
+import utopia.vault.sql.{Condition, Exists, JoinType}
 
 /**
   * A common trait for linked factory classes
@@ -37,7 +37,7 @@ trait LinkedFactoryLike[+Parent, +Child] extends FromResultFactory[Parent]
 	  */
 	def childIndex = childTable.primaryColumn.getOrElse {
 		val referenceColumns = References.between(table, childTable).map { ref =>
-			if (ref.from.table == table) ref.to.column else ref.from.column
+			if (ref.from.table == table) ref.to else ref.from
 		}
 		referenceColumns.find { !_.allowsNull }.getOrElse { referenceColumns.head }
 	}

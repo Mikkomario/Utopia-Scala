@@ -1,44 +1,24 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.vault.model.immutable.{Column, ReferencePoint, Table}
+import utopia.vault.model.immutable.{Column, Table, TableColumn}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType._
 
 import scala.util.Success
-
-object Join
-{
-	/**
-	  * Creates a join based on a reference
-	  */
-	def apply(leftColumn: Column, target: ReferencePoint) = new Join(leftColumn, target.table, target.column)
-	
-	/**
-	  * Creates a join based on a reference
-	  * @param leftColumn Left side joined column
-	  * @param target Right side target for that join
-	  * @param joinType Type of join used (default = inner)
-	  * @return A new join
-	  */
-	def apply(leftColumn: Column, target: ReferencePoint, joinType: JoinType): Join =
-		new Join(leftColumn, target.table, target.column, joinType)
-}
 
 /**
   * This object is used for creating join sql segments that allow selection and manipulation of
   * multiple tables at once.
   * @author Mikko Hilpinen
   * @since 30.5.2017
-  * @param leftColumn The column join is made from (in one of existing tables)
-  * @param rightTable The table that is joined
-  * @param rightColumn A column in rightTable that should match the leftColumn
+  * @param from The column join is made from (in one of existing tables)
+  * @param to The table and column that are joined
   * @param joinType The type of join used (default = Inner)
   * @param condition Condition that applies to joining (optional).
   *                  When specified, only rows satisfying the specified condition will participate in a join.
   */
-case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, joinType: JoinType = Inner,
-                condition: Option[Condition] = None)
+case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condition: Option[Condition] = None)
 	extends Joinable
 {
 	// COMPUTED PROPERTIES    ----------------
@@ -47,26 +27,33 @@ case class Join(leftColumn: Column, rightTable: Table, rightColumn: Column, join
 	  * An sql segment based on this join (Eg. "LEFT JOIN table2 ON table1.column1 = table2.column2")
 	  */
 	def toSqlSegment = {
-		val base = SqlSegment(s"$joinType JOIN ${ rightTable.sqlName } ON ${
-			leftColumn.columnNameWithTable } = ${ rightColumn.columnNameWithTable }",
-			Empty, Some(rightTable.databaseName), Set(rightTable))
+		val base = SqlSegment(s"$joinType JOIN ${ to.table.sqlName } ON ${ from.sqlName } = ${ to.sqlName }",
+			Empty, Some(to.table.databaseName), Set(to.table))
 		condition match {
 			case Some(c) => base + "AND" + c.segment
 			case None => base
 		}
 	}
 	
+	@deprecated("Renamed to .from", "v1.22")
+	def leftColumn = from
+	@deprecated("Please use .to.column instead", "v1.22")
+	def rightColumn = to.column
+	@deprecated("Please use .to.table instead", "v1.22")
+	def rightTable = to.table
+	
 	/**
 	  * The point targeted / included by this join
 	  */
-	def targetPoint = ReferencePoint(rightTable, rightColumn)
+	@deprecated("Please use .to instead", "v1.22")
+	def targetPoint = to
 	
 	
 	// IMPLEMENTED  ----------------------
 	
 	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = joinType) = {
 		// If the original tables already contain this one, skips this join
-		if (originTables.contains(rightTable))
+		if (originTables.contains(to.table))
 			Success(Empty)
 		else
 			Success(Single(this))

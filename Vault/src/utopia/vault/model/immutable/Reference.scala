@@ -12,20 +12,20 @@ object Reference
       * @param to Referenced point
       * @return A reference between these two points
       */
-    def apply(from: ReferencePoint, to: ReferencePoint): Reference = apply(Pair(from, to))
-    
+    def apply(from: TableColumn, to: TableColumn): Reference = apply(Pair(from, to))
     /**
      * Creates a new reference
      */
+    @deprecated("Deprecated for removal", "v1.22")
     def apply(fromTable: Table, fromColumn: Column, toTable: Table, toColumn: Column): Reference =
-            apply(ReferencePoint(fromTable, fromColumn), ReferencePoint(toTable, toColumn))
+            apply(TableColumn(fromTable, fromColumn), TableColumn(toTable, toColumn))
     
     /**
      * Creates a new reference by finding the proper columns from the tables
      * @return a reference between the tables. None if no proper column data was found
      */
-    def apply(fromTable: Table, fromPropertyName: String, toTable: Table, toPropertyName: String): Option[Reference] =
-    {
+    @deprecated("Deprecated for removal", "v1.22")
+    def apply(fromTable: Table, fromPropertyName: String, toTable: Table, toPropertyName: String): Option[Reference] = {
         val from = ReferencePoint(fromTable, fromPropertyName)
         val to = ReferencePoint(toTable, toPropertyName)
         
@@ -41,29 +41,29 @@ object Reference
 * @author Mikko Hilpinen
 * @since 21.5.2018
 **/
-case class Reference(points: Pair[ReferencePoint])
+case class Reference(ends: Pair[TableColumn])
 {
     // COMPUTED    ----------------------
     
     /**
       * @return The referencing point
       */
-    def from = points.first
+    def from = ends.first
     /**
       * @return The referenced point
       */
-    def to = points.second
+    def to = ends.second
     
     /**
       * @return A reverse of this reference.
       *         I.e. Starting from the column being pointed to and ending with the origin column.
       */
-    def reverse = Reference(points.reverse)
+    def reverse = Reference(ends.reverse)
     
     /**
      * This reference as a valid sql target that includes two tables
      */
-    def toSqlTarget = from.table + Join(from.column, to)
+    def toSqlTarget = from.table + Join(from, to)
     
     /**
       * @return An inner join based on this reference,
@@ -90,11 +90,15 @@ case class Reference(points: Pair[ReferencePoint])
     /**
      * The tables that are included in this reference
      */
-    def tables = points.map { _.table }
+    def tables = ends.map { _.table }
     /**
      * The columns that are used by this reference
      */
-    def columns = points.map { _.column }
+    @deprecated("Please use .ends instead", "v1.22")
+    def columns = ends.map { _.column }
+    
+    @deprecated("Renamed to .ends", "v1.22")
+    def points = ends
     
     
     // IMPLEMENTED  ---------------------

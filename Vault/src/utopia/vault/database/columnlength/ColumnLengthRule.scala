@@ -54,7 +54,7 @@ object ColumnLengthRule
 		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value) =
 			lengthLimit.test(proposedValue).toOption
 				.getOrElse { throw new MaxLengthExceededException(
-					s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
+					s"${column.sqlName}'s maximum length is exceeded by: $proposedValue") }
 	}
 	
 	/**
@@ -68,7 +68,7 @@ object ColumnLengthRule
 		{
 			lengthLimit.test(proposedValue, allowCrop = true).toOption
 				.getOrElse { throw new MaxLengthExceededException(
-					s"${column.columnNameWithTable}'s maximum length is exceeded by: $proposedValue") }
+					s"${column.sqlName}'s maximum length is exceeded by: $proposedValue") }
 		}
 	}
 	
@@ -139,9 +139,9 @@ object ColumnLengthRule
 							// Case: Required limit is too high => fails
 							else
 								throw new MaxLengthExceededException(
-									s"${ column.columnNameWithTable } can't be extended to required length")
+									s"${ column.sqlName } can't be extended to required length")
 						case None => throw new MaxLengthExceededException(
-							s"${ column.columnNameWithTable } can't fit $proposedValue and can't be expanded")
+							s"${ column.sqlName } can't fit $proposedValue and can't be expanded")
 					}
 			}
 		}

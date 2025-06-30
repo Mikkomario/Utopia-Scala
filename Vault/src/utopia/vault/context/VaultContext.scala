@@ -1,11 +1,32 @@
 package utopia.vault.context
 
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
 
 object VaultContext
 {
+	// ATTRIBUTES   ----------------------
+	
+	private var latest: Option[VaultContext] = None
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	  * @return The last constructed vault context instance.
+	  *         None if no Vault context has been set up.
+	  */
+	private[vault] def ifInitialized = latest
+	
+	/**
+	  * @return An implicit logging implementation, based on the last constructed VaultContext instance.
+	  *         Defaults to a [[SysErrLogger]], if no context has been set up.
+	  */
+	private[vault] implicit def log: Logger = VaultLogger
+	
+	
 	// OTHER    --------------------------
 	
 	/**
@@ -15,15 +36,24 @@ object VaultContext
 	  * @param tables Tables being used
 	  * @return A new context that wraps the specified values
 	  */
-	def apply(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String, tables: Tables): VaultContext =
-		Context(exc, connectionPool, databaseName, tables)
+	def apply(exc: ExecutionContext, connectionPool: ConnectionPool, databaseName: String, tables: Tables,
+	          log: Logger = SysErrLogger): VaultContext =
+		Context(exc, connectionPool, databaseName, tables, log)
 	
 	
 	// NESTED   --------------------------
 	
 	private case class Context(executionContext: ExecutionContext, connectionPool: ConnectionPool, databaseName: String,
-	                           tables: Tables)
+	                           tables: Tables, log: Logger)
 		extends VaultContext
+		
+	private object VaultLogger extends Logger
+	{
+		override def apply(error: Option[Throwable], message: String): Unit = ifInitialized match {
+			case Some(context) => context.log(error, message)
+			case None => SysErrLogger(error, message)
+		}
+	}
 }
 
 /**
@@ -35,6 +65,10 @@ trait VaultContext
 {
 	// ABSTRACT --------------------------
 	
+	/**
+	  * @return Implicit logging implementation used
+	  */
+	implicit def log: Logger
 	/**
 	  * @return Generally available execution context used in certain high-level asynchronous functions
 	  */
@@ -52,6 +86,12 @@ trait VaultContext
 	  * @return Access to the database tables used in this project
 	  */
 	def tables: Tables
+	
+	
+	// INITIAL CODE ---------------------
+	
+	// Remembers that this is the last constructed context instance
+	VaultContext.latest = Some(this)
 	
 	
 	// OTHER    -------------------------

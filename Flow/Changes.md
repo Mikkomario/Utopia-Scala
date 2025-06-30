@@ -16,6 +16,7 @@
 ### Other changes
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
+- **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

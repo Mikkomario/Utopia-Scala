@@ -1,12 +1,43 @@
 # Utopia Vault - List of Changes
 
-## v1.21.1 (in development)
+## v1.22 (in development)
 ### Breaking changes
+- Replaced **ReferencePoint** with **TableColumn**
+- Multiple breaking changes to **References**
+  - `.from(TableColumn)` now yields **Reference** instead of an **Option**
+  - from and to -variants now yield **Reference**s instead of **ReferencePoint**s
+- **Row** no longer contains references to the read **Table**s
+- **Result** and **Row** no longer provide utility functions for accessing table indices
+- Modified **Join** constructor to accept **TableColumn** instead of accepting **Table** and **Column** separately
 - Various improvements to the **Targeted** database access interfaces, some of which are breaking changes
+- **VaultContext** now requires a **Logger**, although a default value is also specified
+### Deprecations
+- Renamed **Table**'s `.columnWithColumnName(String)` to `.columnWithName(String)` 
+  and `.findColumnWithColumnName(String)` to `.findColumnWithName(String)`
+- Deprecated **Column**`.columnNameWithTable` in favor of `.sqlName`
+- Renamed **Row**'s `.otherData` to `.other`
+- Replaced **Join**'s `.leftColumn` with `.from` and `.rightTable` and `.rightColumn` with `.to`
 ### New features
+- Added **TableColumn**, which represents a **Column** in a specific **Table**
+  - **Table**'s functions now yield **TableColumn**s instead of **Column**s
 - Added **FilterableViewWrapper**
+### New methods
+- **Column**
+  - Added `.sqlName`, `.shortSqlName` and `.sqlDescription`
+- **References**
+  - Multiple new methods, including `.findFrom(TableColumn)`
+- **Select**
+  - New constructors utilizing **TableColumn**
 ### Other changes
+- Column name -based look-up in **Table** is now faster
 - **Joinable**`.toJoinFrom(...)` implementations now yield empty **Seq**s if no join is required
+- Refactored **Row** to only refer to tables by name
+  - This improves **Column**-based value look-up efficiency
+  - The `.tableModels` property now contains an empty default value
+- Refactored **References**, improving look-up efficiency
+- Internal refactoring within **DatabaseReferenceReader**
+  - Generated SQL queries are not quite as long anymore
+  - The specified tables in `.apply(Iterable)` no longer have to all belong to the same database
 
 ## v1.21 - 26.05.2025
 This update improves connection management logic in **ConnectionPool** and

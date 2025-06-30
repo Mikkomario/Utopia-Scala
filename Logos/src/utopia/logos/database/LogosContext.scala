@@ -18,15 +18,10 @@ object LogosContext extends VaultContextWrapper
 	
 	private var vaultContext: Option[VaultContext] = None
 	private var _jsonParser: JsonParser = JsonReader
-	private var _log: Logger = SysErrLogger
 	
 	
 	// COMPUTED -------------------------
 	
-	/**
-	 * @return The logging implementation used within this project
-	 */
-	implicit def log: Logger = _log
 	/**
 	  * @return The JSON processor used in this project
 	  */
@@ -44,11 +39,9 @@ object LogosContext extends VaultContextWrapper
 	/**
 	  * @param vaultContext A context that provides the database interaction properties for this interface
 	 * @param jsonParser The JSON-parsing implementation used in this project
-	 * @param log Logging implementation used in this project. Default = write to System.err
 	  */
-	def setup(vaultContext: VaultContext, jsonParser: JsonParser, log: Logger) = {
+	def setup(vaultContext: VaultContext, jsonParser: JsonParser) = {
 		this.vaultContext = Some(vaultContext)
-		_log = log
 		_jsonParser = jsonParser
 	}
 	/**
@@ -61,5 +54,5 @@ object LogosContext extends VaultContextWrapper
 	  */
 	def setup(exc: ExecutionContext, cPool: ConnectionPool, databaseName: String, tables: Tables,
 	          jsonParser: JsonParser, log: Logger = SysErrLogger): Unit =
-		setup(VaultContext(exc, cPool, databaseName, tables), jsonParser, log)
+		setup(VaultContext(exc, cPool, databaseName, tables, log), jsonParser)
 }

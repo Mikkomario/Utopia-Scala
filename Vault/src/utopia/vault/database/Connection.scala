@@ -10,12 +10,12 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.IterateLines
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.vault.database.Connection.settings
-import utopia.vault.model.immutable.{Column, Result, Row, Table}
+import utopia.vault.model.immutable.{Result, Row, Table, TableColumn}
 import utopia.vault.sql.SqlSegment
 
 import java.nio.file.Path
@@ -618,7 +618,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 		val columnIndices = indicesForTables.flatMap { case (tableOption, indices) =>
 			tableOption.map { table =>
 				val columns = indices.flatMap { index =>
-					table.findColumnWithColumnName(meta.getColumnName(index))
+					table.findColumnWithName(meta.getColumnName(index))
 						.map { (_, meta.getColumnType(index), index) }
 				}
 				val (primaryColumn, otherColumns) = columns.findAndPop { _._1.isPrimary }
@@ -641,7 +641,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 		def valueFrom(index: Int, dataType: Int) = Connection.sqlValueGenerator(resultSet.getObject(index), dataType)
 		
 		// Here, colData is same as an entry in columnIndices
-		def constantFrom(colData: (Column, Int, Int)) = Constant(colData._1.name, valueFrom(colData._3, colData._2))
+		def constantFrom(colData: (TableColumn, Int, Int)) = Constant(colData._1.name, valueFrom(colData._3, colData._2))
 		
 		// Parses the rows from the resultSet
 		OptionsIterator
@@ -678,10 +678,10 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 											((primaryColumn, primaryColType, primaryColIndex) +: otherColumnData)
 												.map(constantFrom))
 								}
-								table -> model
+								table.name -> model
 							
 							// Case: Primary key not used in this table => Parses the row into a model normally
-							case None => table -> Model.withConstants(otherColumnData.map(constantFrom))
+							case None => table.name -> Model.withConstants(otherColumnData.map(constantFrom))
 						}
 					}
 					val otherData = {
@@ -691,7 +691,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 						else
 							Model.empty
 					}
-					Some(Row(tableModels, otherData))
+					Some(Row(tableModels.withDefaultValue(Model.empty), otherData))
 				}
 				else
 					None
@@ -700,7 +700,7 @@ class Connection(initialDBName: Option[String] = None) extends AutoCloseable
 	}
 	
 	private def generatedKeysFromResult(statement: Statement, tables: Iterable[Table]) = {
-		// Retrieves keys as integers, if all of the tables (that use indexing) use int as key type
+		// Retrieves keys as integers, if all tables (that use indexing) use int as key type
 		val useInt = tables.forall { _.primaryColumn.forall { _.dataType == IntType } }
 		val results = statement.getGeneratedKeys
 		

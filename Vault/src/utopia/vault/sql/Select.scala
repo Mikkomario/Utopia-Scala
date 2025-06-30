@@ -2,7 +2,7 @@ package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.vault.model.immutable.{Column, Table}
+import utopia.vault.model.immutable.{Column, Table, TableColumn}
 
 /**
  * This object is used for generating select sql segments. If you wish to select all columns from a 
@@ -15,12 +15,16 @@ object Select
     // OTHER    -----------------
     
     /**
+      * @param column Selected column
+      * @return A select statement which only selects the specified column
+      */
+    def apply(column: TableColumn): SqlSegment = apply(column.table, column.column)
+    /**
      * @param target Targeted group of tables, etc.
       * @param columns Selected columns
       * @return A select statement for retrieving the specified columns
      */
     def apply(target: SqlTarget, columns: Iterable[Column]) = _apply(target, columnsTargetFrom(target, columns))
-    
     /**
      * Creates an sql segment that selects a single column from a table
      */
@@ -30,18 +34,17 @@ object Select
      */
     def apply(target: SqlTarget, first: Column, second: Column, more: Column*): SqlSegment = 
             apply(target, Pair(first, second) ++ more)
-    
     /**
       * @param table Targeted table
       * @param propName Name of the targeted DB property in the targeted table
       * @return A select statement for retrieving values of the targeted property
       */
-    def apply(table: Table, propName: String): SqlSegment = apply(table, table(propName))
+    def apply(table: Table, propName: String): SqlSegment = apply(table(propName))
     /**
      * Creates an sql segment that selects one or multiple properties from a single table
      */
     def apply(table: Table, firstName: String, secondName: String, moreNames: String*): SqlSegment =
-            apply(table, table(Pair(firstName, secondName) ++ moreNames))
+        apply(table, table(Pair(firstName, secondName) ++ moreNames).view.map { _.column })
             
     /**
      * Creates an sql segment that selects all columns of a single table from a larger selection target
@@ -49,7 +52,8 @@ object Select
      * @param selectedTable Table whose columns should be included in the final result
      * @return A new select segment
      */
-    def apply(target: SqlTarget, selectedTable: Table): SqlSegment = apply(target, selectedTable.columns)
+    def apply(target: SqlTarget, selectedTable: Table): SqlSegment =
+        apply(target, selectedTable.columns.view.map { _.column })
     
     /**
       * Creates an sql segment that is used for retrieving data from all the columns from the
@@ -58,6 +62,11 @@ object Select
       */
     def all(target: SqlTarget) = _apply(target, "*")
     
+    /**
+      * @param column Selected column
+      * @return An SQL segment for selecting distinct values of the specified column
+      */
+    def distinct(column: TableColumn): SqlSegment = distinct(column.table, column.column)
     /**
       * @param target Target of this query
       * @param column Targeted column
@@ -70,7 +79,14 @@ object Select
       * @param propName Name of the targeted database property
       * @return an SQL segment for selecting distinct values of the targeted property
       */
-    def distinct(table: Table, propName: String): SqlSegment = distinct(table, table(propName))
+    def distinct(table: Table, propName: String): SqlSegment = distinct(table(propName))
+    /**
+      * @param column Targeted column
+      * @param condition A condition that, if met, makes this query select only distinct results
+      * @return Either a SELECT DISTINCT or a SELECT query, depending on 'condition'
+      */
+    def distinctIf(column: TableColumn, condition: Boolean): SqlSegment =
+        distinctIf(column.table, column.column, condition)
     /**
       * @param target Target of this query
       * @param column Selected column
@@ -83,13 +99,13 @@ object Select
     /**
      * Creates an sql segment that selects the primary key of a table
      */
-    def index(table: Table) = apply(table, table.primaryColumn)
+    def index(table: Table) = apply(table, table.primaryColumn.map { _.column })
     /**
      * @param target Selection target
      * @param table Table whose indices are selected
      * @return an sql segment that selects the primary key of a single table
      */
-    def index(target: SqlTarget, table: Table) = apply(target, table.primaryColumn)
+    def index(target: SqlTarget, table: Table) = apply(target, table.primaryColumn.map { _.column })
     
     /**
      * Creates an sql segment that selects nothing from a table
@@ -105,30 +121,7 @@ object Select
         if (target.tables.forall(tables.contains))
             all(target)
         else
-            apply(target, tables.flatMap { _.columns })
-    }
-    
-    // Converts to the optimal select statement
-    @deprecated
-    private def _apply(target: SqlTarget, columns: Iterable[Column]) = {
-        val columnsPart = {
-            // Case: Not targeting any columns => Selects NULL
-            if (columns.isEmpty)
-                "NULL"
-            else {
-                val tables = target.tables
-                // Case: Targeting all columns in the target => Uses * instead of listing all the columns
-                if (columns.hasSize(tables.view.map { _.columns.size }.sum))
-                    "*"
-                // Case: Only targeting a single table => Doesn't use table prefixes
-                else if (tables.hasSize(1))
-                    columns.view.map { c => s"`${ c.columnName }`" }.mkString(", ")
-                // Case: Targets multiple tables => Uses table prefixes
-                else
-                    columns.view.map { _.columnNameWithTable }.mkString(", ")
-            }
-        }
-        SqlSegment(s"SELECT $columnsPart FROM", isSelect = true) + target.toSqlSegment
+            apply(target, tables.flatMap { _.columns.view.map { _.column } })
     }
     
     private def _apply(target: SqlTarget, columnsPart: String) =
@@ -147,17 +140,12 @@ object Select
                 "*"
             // Case: Only targeting a single table => Doesn't use table prefixes
             else if (tables.hasSize(1))
-                columns.view.map { c => s"`${ c.columnName }`" }.mkString(", ")
+                columns.view.map { _.shortSqlName }.mkString(", ")
             // Case: Targets multiple tables => Uses table prefixes
             else
-                columns.view.map { _.columnNameWithTable }.mkString(", ")
+                columns.view.map { _.sqlName }.mkString(", ")
         }
     }
-    
-    private def singleColumnTargetFrom(target: SqlTarget, column: Column) = {
-        if (target.tables.hasSize(1))
-            s"`${ column.columnName }`"
-        else
-            column.columnNameWithTable
-    }
+    private def singleColumnTargetFrom(target: SqlTarget, column: Column) =
+        if (target.tables.hasSize(1)) column.shortSqlName else column.sqlName
 }

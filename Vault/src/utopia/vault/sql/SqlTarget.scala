@@ -35,10 +35,10 @@ trait SqlTarget
     def +(join: Join): SqlTarget = {
         val existingTables = tables
         // Will ignore joins to tables already contained within this target
-        if (existingTables.contains(join.rightTable))
+        if (existingTables.contains(join.to.table))
             this
         else
-            SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, existingTables :+ join.rightTable)
+            SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, existingTables :+ join.to.table)
     }
     
     /**
@@ -52,12 +52,12 @@ trait SqlTarget
         else {
             val existingTables = tables
             // TODO: This filtering might be unnecessary now that Joinable.toJoinFrom is more carefully implemented
-            val newJoins = joins.filterNot { join => existingTables.contains(join.rightTable) }
+            val newJoins = joins.filterNot { join => existingTables.contains(join.to.table) }
             if (newJoins.isEmpty)
                 this
             else
                 SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
-                    existingTables ++ newJoins.map { _.rightTable })
+                    existingTables ++ newJoins.map { _.to.table })
         }
     }
     

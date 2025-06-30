@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.{Column, Result, Row, Table}
+import utopia.vault.model.immutable.{Column, Result, Row, Table, TableColumn}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.template.Deprecatable
@@ -99,7 +99,7 @@ object AccessManyRows
 		
 		private def _extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
 		                         joinType: JoinType)
-		                        (f: (Result, Lazy[Seq[Column]]) => Seq[B]) =
+		                        (f: (Result, Lazy[Seq[TableColumn]]) => Seq[B]) =
 		{
 			val newTarget = tables.foldLeft(
 				bridgingJoins.foldLeft(target) { _.join(_, joinType) }) { _.join(_, joinType) }

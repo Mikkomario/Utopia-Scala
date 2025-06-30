@@ -1,8 +1,8 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.MaybeEmpty
 import utopia.vault.nosql.factory.row.FromRowFactory
 
@@ -41,7 +41,6 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      *         value
      */
     def rowValues = rows.map { _.value }
-    
     /**
      * @return All rows converted into integer values (empty rows excluded). Should only be used for results where each
      *         row consists of a single integer value.
@@ -53,7 +52,6 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * were present in the query and each row contains data from a single table only
      */
     def firstModel = rows.headOption.map { _.toModel }
-    
     /**
       * @return The first value in this result. Should only be used when a single column is selected and query is
       *         limited to 1 row
@@ -64,21 +62,10 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * The generated keys in integer format
      */
     def generatedIntKeys = generatedKeys.flatMap { _.int }
-    
     /**
      * The generated keys in long format
      */
     def generatedLongKeys = generatedKeys.flatMap { _.long }
-    
-    /**
-      * @return All indices within this result. Won't work properly when rows contain indices from multiple tables.
-      */
-    def indices = rows.map { _.index }
-    
-    /**
-      * @return The index of the first result row
-      */
-    def firstIndex = rows.headOption.map { _.index } getOrElse Value.empty
     
     /**
       * @return Whether the query updated any rows
@@ -129,14 +116,18 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * Retrieves row data concerning a certain table
      * @param table The table whose data is returned
      */
-    def rowsForTable(table: Table) = rows.flatMap { _.columnData.get(table) }
+    def rowsForTable(table: String) = rows.flatMap { _.tableModels.get(table) }
+    /**
+      * Retrieves row data concerning a certain table
+      * @param table The table whose data is returned
+      */
+    def rowsForTable(table: Table): Seq[Model] = rowsForTable(table.name)
     
     /**
       * @param table Target table
       * @return Index results for specified table
       */
     def indicesForTable(table: Table) = rows.map { _.indexForTable(table) }
-    
     /**
       * @param table Target table
       * @return The first row index for the specified table

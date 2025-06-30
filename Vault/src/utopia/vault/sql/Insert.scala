@@ -51,7 +51,7 @@ object Insert
             // [ Property name -> Column ]
             val propertiesToInsert = matchingProperties.filterNot { _._2.usesAutoIncrement }
             
-            val columnNames = propertiesToInsert.map { _._2.sqlColumnName }.mkString(", ")
+            val columnNames = propertiesToInsert.map { _._2.shortSqlName }.mkString(", ")
             val singleRowValuesSql = {
                 if (propertiesToInsert.nonEmpty)
                     s"(?${ ", ?" * (propertiesToInsert.size - 1) })"

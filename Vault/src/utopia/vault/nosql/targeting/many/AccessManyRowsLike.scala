@@ -1,16 +1,13 @@
 package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.{Column, Result, Row, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.immutable.{Column, Result, Row}
 import utopia.vault.nosql.targeting.one.TargetingOne
-import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{JoinType, Limit, Offset, SqlSegment}
+import utopia.vault.sql.{Limit, Offset, SqlSegment}
 
 /**
   * Common trait for interfaces that are used for querying multiple row-specific instances from the DB at once,

@@ -1,13 +1,12 @@
 package utopia.vault.sql
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
-import utopia.vault.model.immutable.{Column, Table}
-
-import scala.collection.immutable.HashMap
+import utopia.vault.model.immutable.{Column, Table, TableColumn}
 
 /**
  * This object is used for generating update statements that modify database row contents
@@ -16,8 +15,6 @@ import scala.collection.immutable.HashMap
  */
 object Update
 {
-    // OPERATORS    ----------------------
-    
     /**
      * Creates an sql segment that updates one or multiple tables
      * @param target The target portion for the update segment. This may consist of a single or
@@ -25,13 +22,13 @@ object Update
      * @param set Column value pairs that will be updated
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def columns(target: SqlTarget, set: Map[Column, Value]) = {
+    def columns(target: SqlTarget, set: Seq[(Column, Value)]) = {
         if (set.isEmpty)
             target.toSqlSegment.prepend("SELECT NULL FROM")
         else {
             // Makes sure the specified values conform to the applicable column length limits
             val dbName = target.databaseName
-            val orderedSet = set.toVector.map { case (column, rawValue) =>
+            val orderedSet = set.map { case (column, rawValue) =>
                 val modifiedValue = ColumnLengthLimits(dbName, column) match {
                     case Some(limit) => ColumnLengthRules(dbName, column)(dbName, column, limit, rawValue)
                     case None => rawValue
@@ -40,11 +37,13 @@ object Update
             }
             target.toSqlSegment.prepend("UPDATE") +
                 SqlSegment(s"SET ${
-                    orderedSet.view.map { case (column, _) => s"${ column.columnNameWithTable } = ?" }.mkString(", ")}",
+                    orderedSet.view.map { case (column, _) => s"${ column.sqlName } = ?" }.mkString(", ")}",
                     orderedSet.map { _._2 },
                     // Generates update events for all affected tables
-                    events = Some(result => set.keySet.map { _.tableName }.toVector
-                        .map { tableName => RowsUpdated(tableName, result.updatedRowCount) }))
+                    events = Some(result =>
+                        set.view.map { _._1.tableName }.distinct
+                            .map { tableName => RowsUpdated(tableName, result.updatedRowCount) }
+                            .toOptimizedSeq))
         }
     }
     
@@ -56,23 +55,26 @@ object Update
      * as model keys, they will be converted to column names automatically
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, set: Map[Table, AnyModel]) = {
-        val valueSet = set.flatMap { case (table, model) => model.properties.flatMap {
-                property => table.find(property.name).map { (_, property.value) } } }
+    def apply(target: SqlTarget, set: Iterable[(Table, AnyModel)]) = {
+        val valueSet = set.view
+            .flatMap { case (table, model) =>
+                model.properties.flatMap { property =>
+                    table.find(property.name).map { c => (c.column, property.value) }
+                }
+            }
+            .toOptimizedSeq
         columns(target, valueSet)
     }
     /**
      * Creates an update segment that changes multiple values in a table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, set: AnyModel): SqlSegment = apply(table, HashMap(table -> set))
-    
+    def apply(table: Table, set: AnyModel): SqlSegment = apply(table, Single(table -> set))
     /**
      * Creates an update segment that changes the value of a single column in the table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, Model(Single(key -> value)))
-    
+    def apply(table: Table, key: String, value: Value): SqlSegment = apply(table, Model.from(key -> value))
     /**
      * Creates an update segment that updates the value of an individual column
      * @param target Targeted table / tables
@@ -80,8 +82,7 @@ object Update
      * @param value Value to assign for the column
      * @return A new update segment
      */
-    def apply(target: SqlTarget, column: Column, value: Value) = columns(target, Map(column -> value))
-    
+    def apply(target: SqlTarget, column: Column, value: Value) = columns(target, Single(column -> value))
     /**
      * Creates an update segment that changes multiple values in a table
      * @param target Update target (includes table & other tables used in conditions etc.)
@@ -89,8 +90,7 @@ object Update
      * @param set Set of changes for the table
      * @return An update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, table: Table, set: AnyModel): SqlSegment = apply(target, HashMap(table -> set))
-    
+    def apply(target: SqlTarget, table: Table, set: AnyModel): SqlSegment = apply(target, Single(table -> set))
     /**
      * Creates an update segment that changes a single value in a table
      * @param target Update target (includes table & other tables used in conditions etc.)
@@ -100,5 +100,11 @@ object Update
      * @return An update segment (select nothing segment if there's nothing to update)
      */
     def apply(target: SqlTarget, table: Table, key: String, value: Value): SqlSegment =
-        apply(target, table, Model(Single(key -> value)))
+        apply(target, table, Model.from(key -> value))
+    /**
+      * @param column Updated column
+      * @param value Assigned value
+      * @return An SQL update segment, which performs the specified assignment
+      */
+    def apply(column: TableColumn, value: Value): SqlSegment = columns(column.table, Single(column.column -> value))
 }

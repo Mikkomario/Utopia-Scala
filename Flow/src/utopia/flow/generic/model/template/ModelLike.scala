@@ -89,7 +89,7 @@ trait ModelLike[+P <: Property] extends MapAccess[String, Value] with JsonConver
 	/**
 	  * The properties within this model that have a defined (non-empty) value. Ordered.
 	  */
-	def nonEmptyProperties = nonEmptyPropertiesIterator.toVector
+	def nonEmptyProperties = nonEmptyPropertiesIterator.toOptimizedSeq
 	
 	/**
 	  * @return Whether this model contains no properties.

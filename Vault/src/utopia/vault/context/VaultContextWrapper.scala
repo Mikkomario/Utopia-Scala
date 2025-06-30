@@ -1,4 +1,5 @@
 package utopia.vault.context
+import utopia.flow.util.logging.Logger
 import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
@@ -20,6 +21,7 @@ trait VaultContextWrapper extends VaultContext
 	
 	// IMPLEMENTED  -----------------------
 	
+	override implicit def log: Logger = wrapped.log
 	override implicit def executionContext: ExecutionContext = wrapped.executionContext
 	override implicit def connectionPool: ConnectionPool = wrapped.connectionPool
 	

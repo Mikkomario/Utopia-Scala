@@ -100,7 +100,7 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 				target + Join(reference.to.column, reference.from, JoinType.Left)
 			}
 			// Requires all the joins to fail / not connect
-			val conditions = references.map { ref => ref.from.table.primaryColumn.getOrElse(ref.from.column).isNull }
+			val conditions = references.map { ref => ref.from.table.primaryColumn.getOrElse(ref.from).isNull }
 			// Forms the deletion statement
 			Delete(target, table) + Where(Condition.and(conditions))
 		}

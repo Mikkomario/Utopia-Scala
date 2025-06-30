@@ -2,7 +2,7 @@ package utopia.vault.model.enumeration
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.vault.model.immutable.{Column, Table}
+import utopia.vault.model.immutable.{Column, Table, TableColumn}
 import utopia.vault.sql.{Select, SqlSegment, SqlTarget}
 
 import scala.language.implicitConversions
@@ -33,6 +33,15 @@ sealed trait SelectTarget
 	  * @return Copy of this target, also including the specified target
 	  */
 	def +(other: SelectTarget): SelectTarget
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param column A column
+	  * @return Whether this selection contains that column
+	  */
+	def contains(column: TableColumn): Boolean = contains(column.column)
 }
 
 object SelectTarget
@@ -41,6 +50,7 @@ object SelectTarget
 	
 	implicit def column(column: Column): SelectTarget = SingleColumn(column)
 	implicit def columns(columns: Seq[Column]): SelectTarget = Columns(columns)
+	implicit def tableColumns(columns: Seq[TableColumn]): SelectTarget = Columns(columns.map { _.column })
 	
 	implicit def table(table: Table): SelectTarget = SingleTable(table)
 	implicit def tables(tables: Seq[Table]): SelectTarget = Tables(tables)
@@ -122,7 +132,7 @@ object SelectTarget
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def columns: Seq[Column] = tables.flatMap { _.columns }
+		override def columns: Seq[Column] = tables.flatMap { _.columns.view.map { _.column } }
 		
 		override def +(other: SelectTarget) = other match {
 			case other: SelectTablesTarget =>
@@ -218,7 +228,7 @@ object SelectTarget
 			if (target.tables.forall { _ == table })
 				Select.all(target)
 			else
-				Select(target, table.columns)
+				Select(target, table.columns.view.map { _.column })
 		}
 	}
 	

@@ -74,7 +74,7 @@ case class OrderBy(keys: Seq[(Column, OrderDirection)]) extends Reversible[Order
         if (keys.isEmpty)
             SqlSegment.empty
         else {
-            val sqlParts = keys.map{ case (column, direction) => s"${column.columnNameWithTable} ${direction.toSql}" }
+            val sqlParts = keys.map{ case (column, direction) => s"${column.sqlName} ${direction.toSql}" }
             SqlSegment(s"ORDER BY ${ sqlParts.mkString(", ") }")
         }
     }
