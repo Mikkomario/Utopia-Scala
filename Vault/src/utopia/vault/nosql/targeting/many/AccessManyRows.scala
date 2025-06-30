@@ -34,7 +34,12 @@ object AccessManyRows
 	def tables[A](first: Table, second: Table, more: Table*)(f: Row => Option[A]) =
 		apply(more.foldLeft(first join second) { _ join _ }, first, SelectTarget.tables(Pair(first, second) ++ more))(f)
 	
-	def valid[A](factory: FromRowFactory[A] with Deprecatable) =
+	/**
+	  * @param factory Factory to wrap
+	  * @tparam A Type of parsed items
+	  * @return Access to items targeted by that factory. Limited to active (i.e. non-deprecated) items.
+	  */
+	def active[A](factory: FromRowFactory[A] with Deprecatable) =
 		apply(factory).filter(factory.nonDeprecatedCondition)
 	
 	

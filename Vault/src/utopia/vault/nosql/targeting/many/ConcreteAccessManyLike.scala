@@ -48,7 +48,7 @@ trait ConcreteAccessManyLike[+A, +Repr <: TargetingManyLike[A, Repr, _]] extends
 		copyAccess(target = extendedTarget, accessCondition = Some(condition))
 	}
 	
-	override def apply(end: End, ordering: Option[OrderBy]) = {
+	override def apply(end: End, ordering: Option[OrderBy], filter: Option[Condition]) = {
 		// Applies the correct ordering
 		val access = {
 			if (ordering.isEmpty && (end == First || this.ordering.isEmpty))
@@ -72,6 +72,6 @@ trait ConcreteAccessManyLike[+A, +Repr <: TargetingManyLike[A, Repr, _]] extends
 				}
 		}
 		// Creates a view to the first element in this access point
-		TargetingOne.headOf[Repr, A](access)
+		TargetingOne.headOf[Repr, A](access.filter(filter))
 	}
 }
