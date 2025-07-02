@@ -1,5 +1,6 @@
 package utopia.vault.database
 
+import utopia.flow.util.logging.Logger
 import utopia.vault.model.immutable.Result
 import utopia.vault.sql.{Limit, Offset, SqlSegment}
 
@@ -16,7 +17,8 @@ import utopia.vault.sql.{Limit, Offset, SqlSegment}
  * @param connection Database connection (implicit). The connection must be kept open during the use of
  *                   this iterator.
  */
-class QueryIterator(baseQuery: SqlSegment, rowsPerIteration: Int)(implicit connection: Connection)
+@deprecated("Deprecated for removal. Please use streamed requests instead", "v1.22")
+class QueryIterator(baseQuery: SqlSegment, rowsPerIteration: Int)(implicit connection: Connection, log: Logger)
 	extends Iterator[Result]
 {
 	// ATTRIBUTES   --------------------------

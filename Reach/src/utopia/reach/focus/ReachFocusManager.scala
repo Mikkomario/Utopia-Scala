@@ -3,7 +3,7 @@ package utopia.reach.focus
 import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
@@ -32,7 +32,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	
 	private val targetsPointer = EventfulPointer(Set[Focusable]())
 	private val orderedTargetsPointer = targetsPointer.lazyMap { targets =>
-		sortComponents(targets.map { c => c.hierarchy.toVector -> c }.toVector) }
+		sortComponents(OptimizedIndexedSeq.from(targets.view.map { c => c.hierarchy.toSeq -> c })) }
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }
 	
 	// Focus id -> Owned window
@@ -350,7 +350,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	}
 	
 	// Traverses same container components in sequence before jumping to the container's sibling
-	private def sortComponents(components: Vector[(Vector[ReachComponent], Focusable)]): Vector[Focusable] = {
+	private def sortComponents(components: Seq[(Seq[ReachComponent], Focusable)]): Seq[Focusable] = {
 		val (directTargets, deepTargets) = components.divideWith { case (hierarchy, target) =>
 			if (hierarchy.isEmpty)
 				Left(target)

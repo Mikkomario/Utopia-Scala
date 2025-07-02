@@ -24,6 +24,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	 * @return An iterator to all models accessible through this access point. The iterator is valid
 	 *         only while the connection is kept open.
 	 */
+	@deprecated("Deprecated for removal", "v1.22")
 	def iterator(implicit connection: Connection) = factory.iterator(accessCondition)
 	
 	
@@ -69,6 +70,7 @@ trait ManyModelAccess[+A] extends ManyAccess[A] with DistinctModelAccess[A, Seq[
 	 * @return An iterator to all models accessible from this access point. The iterator is usable
 	 *         only while the connection is kept open.
 	 */
+	@deprecated("Deprecated for removal", "v1.22")
 	def orderedIterator(order: OrderBy)(implicit connection: Connection) =
 		factory.iterator(accessCondition, Some(order))
 	

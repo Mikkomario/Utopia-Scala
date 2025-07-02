@@ -21,6 +21,7 @@ trait ManyColumnAccess[+V] extends ColumnAccess[V, Seq[V]] with ManyAccess[V]
 	 * @return An iterator that returns all ids accessible from this access point. The iterator is usable
 	 *         only while the connection is kept open.
 	 */
+	@deprecated("Deprecated for removal", "v1.22")
 	def iterator(implicit connection: Connection) =
 		connection.iterator(Select.index(target, table) + accessCondition.map { Where(_) })
 			.flatMap { _.rowValues.map(parseValue) }

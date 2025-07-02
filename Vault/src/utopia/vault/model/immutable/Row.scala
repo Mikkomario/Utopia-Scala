@@ -4,6 +4,14 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.MaybeEmpty
 
+object Row
+{
+	/**
+	  * An empty row
+	  */
+	lazy val empty = apply(Map())
+}
+
 /**
   * Represents a single database row pulled with a select query
   * @author Mikko Hilpinen

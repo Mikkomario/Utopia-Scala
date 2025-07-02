@@ -262,6 +262,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param connection DB Connection
 	  * @tparam U Arbitrary result type
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def foreachWhere[U](condition: Option[Condition])(operation: A => U)(implicit connection: Connection) = {
 		val statement = condition match {
 			case Some(condition) => select + Where(condition)
@@ -269,7 +270,6 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 		}
 		connection.foreach(statement) { parseIfPresent(_).foreach(operation) }
 	}
-	
 	/**
 	  * Performs an operation on each of the targeted entities
 	  * @param where      A condition for finding target entities
@@ -277,17 +277,17 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param connection DB Connection
 	  * @tparam U Arbitrary result type
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def foreachWhere[U](where: Condition)(operation: A => U)(implicit connection: Connection): Unit =
 		foreachWhere(Some(where))(operation)
-	
 	/**
 	  * Performs an operation on all entities accessible from this factory
 	  * @param operation  An operation performed for each entity
 	  * @param connection DB Connection
 	  * @tparam U Arbitrary result type
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def foreach[U](operation: A => U)(implicit connection: Connection) = foreachWhere(None)(operation)
-	
 	/**
 	  * Folds entities into a single value
 	  * @param where      A condition for finding targeted entities
@@ -297,11 +297,11 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @tparam B Type of result
 	  * @return result once all entities have been folded
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def fold[B](where: Condition)(start: B)(f: (B, A) => B)(implicit connection: Connection) =
 		connection.fold(select + Where(where))(start) { (v, row) =>
 			parseIfPresent(row).map { f(v, _) }.getOrElse(v)
 		}
-	
 	/**
 	  * Maps entities, then reduces mapped values
 	  * @param where      A condition for finding targeted entities
@@ -311,6 +311,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @tparam B Type of map result
 	  * @return Reduce result. None if no entities where found
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def mapReduce[B](where: Condition)(map: A => B)(reduce: (B, B) => B)(implicit connection: Connection) =
 		connection.flatMapReduce(select + Where(where)) { row => parseIfPresent(row).map(map) }(reduce)
 	

@@ -1,6 +1,7 @@
 package utopia.reach.component.hierarchy
 
 import utopia.firmament.model.CoordinateTransform
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.template.eventful.Flag
@@ -107,7 +108,14 @@ trait ComponentHierarchy
 	  *         placed in the beginning and the last element is the first direct parent component. If this hierarchy
 	  *         doesn't have parents before the canvas, returns an empty vector.
 	  */
+	@deprecated("Please use .toSeq instead", "v1.6.1")
 	def toVector: Vector[ReachComponent] = parentsIterator.toVector.reverse
+	/**
+	  * @return A linear component sequence based on this component hierarchy. The higher hierarchy components are
+	  *         placed in the beginning and the last element is the first direct parent component. If this hierarchy
+	  *         doesn't have parents before the canvas, returns an empty sequence.
+	  */
+	def toSeq: Seq[ReachComponent] = OptimizedIndexedSeq.from(parentsIterator).reverse
 	
 	@deprecated("Deprecated for removal. Please use .linkedFlag instead", "v1.6")
 	def linkPointer: Flag = linkedFlag

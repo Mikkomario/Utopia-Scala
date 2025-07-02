@@ -25,6 +25,7 @@ trait RowFactoryView[+A] extends FactoryView[A]
 	  * @param connection DB Connection (implicit)
 	  * @tparam U Arbitrary result type
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def foreach[U](f: A => U)(implicit connection: Connection) = factory.foreachWhere(accessCondition)(f)
 	/**
 	  * Performs an operation over a subset of items accessible from this accessor
@@ -33,6 +34,7 @@ trait RowFactoryView[+A] extends FactoryView[A]
 	  * @param connection          DB Connection (implicit)
 	  * @tparam U Arbitrary result type
 	  */
+	@deprecated("Deprecated for removal", "v1.22")
 	def foreachWhere[U](additionalCondition: Condition)(f: A => U)(implicit connection: Connection) =
 		factory.foreachWhere(mergeCondition(additionalCondition))(f)
 	

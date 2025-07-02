@@ -1,5 +1,9 @@
 # Utopia Reach - List of Changes
 
+## v1.6.1 (in development)
+### Deprecations
+- Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
+
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 
 A number of new loading-related components were added, including animated image labels and loading support in existing 

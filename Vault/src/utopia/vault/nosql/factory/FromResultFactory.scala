@@ -87,6 +87,7 @@ trait FromResultFactory[+A] extends HasTable
 	 * @param connection DB Connection (implicit)
 	 * @return An iterator to parsed items. The iterator must be used while the connection is still open.
 	 */
+	@deprecated("Deprecated for removal", "v1.22")
 	def iterator(condition: Option[Condition] = None, order: Option[OrderBy] = None,
 	             rowsPerQuery: Int = Connection.settings.maximumAmountOfRowsCached)(implicit connection: Connection) =
 		connection.iterator(select + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)

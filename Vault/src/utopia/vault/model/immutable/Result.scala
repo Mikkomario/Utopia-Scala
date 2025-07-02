@@ -15,7 +15,7 @@ object Result
 }
 
 /**
- * A result is generated based on the data retrieved from a executed database query. 
+ * A result is generated based on the data retrieved from an executed database query.
  * Usually results are used for accessing read database row data, but in case of an insert
  * statement, the generated indices are also available.
  * @author Mikko Hilpinen

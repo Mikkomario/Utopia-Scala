@@ -9,15 +9,26 @@
 - **Row** no longer contains references to the read **Table**s
 - **Result** and **Row** no longer provide utility functions for accessing table indices
 - Modified **Join** constructor to accept **TableColumn** instead of accepting **Table** and **Column** separately
+- **Connection** constructor now requires an implicit **Logger**
+  - Does not affect use-cases where **ConnectionPool** is utilized
+- **SqlValueGenerator** now defines a new abstract function: `conversionFrom(Int)`
 - Various improvements to the **Targeted** database access interfaces, some of which are breaking changes
 - **VaultContext** now requires a **Logger**, although a default value is also specified
 ### Deprecations
+- Deprecated all previous "streaming" functions in **Connection**, **FromResultFactory**, **FromRowFactory**, 
+  **ManyModelAccess**, **ManyColumnAccess** and **RowFactoryView**
+  - It is recommended to start using **Connection**'s new `.stream(...)` function instead
+    - Utility functions will also be available on new **Targeted** access interfaces
+- Deprecated `.tryExec(...)` in **Connection**, as it's mostly redundant
+- Deprecated the **QueryIterator** class
+  - It is recommended to start using streamed database functions instead, as these are more efficient
 - Renamed **Table**'s `.columnWithColumnName(String)` to `.columnWithName(String)` 
   and `.findColumnWithColumnName(String)` to `.findColumnWithName(String)`
 - Deprecated **Column**`.columnNameWithTable` in favor of `.sqlName`
 - Renamed **Row**'s `.otherData` to `.other`
 - Replaced **Join**'s `.leftColumn` with `.from` and `.rightTable` and `.rightColumn` with `.to`
 ### New features
+- Added `.stream(...)` to **Connection**, which utilizes the new **ResultStream** class
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s
 - Added **FilterableViewWrapper**
@@ -29,6 +40,8 @@
 - **Select**
   - New constructors utilizing **TableColumn**
 ### Other changes
+- Rewrote database-query result-processing code to support streaming
+  - Standard queries (i.e. `.apply(Statement)`) now utilize streaming, internally
 - Column name -based look-up in **Table** is now faster
 - **Joinable**`.toJoinFrom(...)` implementations now yield empty **Seq**s if no join is required
 - Refactored **Row** to only refer to tables by name

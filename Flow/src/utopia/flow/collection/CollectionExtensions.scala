@@ -260,7 +260,7 @@ object CollectionExtensions
 		 *         Success contains the mapping results (all successful) and encountered partial failures.
 		 */
 		def tryMapCatching[B, To](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]): TryCatch[To] = {
-			val caughtFailuresBuilder = new VectorBuilder[Throwable]()
+			val caughtFailuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
 			// Maps items until the mapping function fails
 			tryMap[B, To] { a =>
 				val (result, failures) = f(a).separateToTry
@@ -652,8 +652,8 @@ object CollectionExtensions
 		  * @return The Left group and then the Right group (as sequences)
 		  */
 		def divideWith[L, R](f: A => Either[L, R]) = {
-			val lBuilder = new VectorBuilder[L]()
-			val rBuilder = new VectorBuilder[R]()
+			val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+			val rBuilder = OptimizedIndexedSeq.newBuilder[R]
 			i.iterator.map(f).foreach {
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
@@ -671,8 +671,8 @@ object CollectionExtensions
 		 *         Both groups appear in Vector format.
 		  */
 		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
-			val lBuilder = new VectorBuilder[L]()
-			val rBuilder = new VectorBuilder[R]()
+			val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+			val rBuilder = OptimizedIndexedSeq.newBuilder[R]
 			i.iterator.flatMap(f).foreach {
 				case Left(l) => lBuilder += l
 				case Right(r) => rBuilder += r
@@ -718,7 +718,7 @@ object CollectionExtensions
 		  * @return Left side map results, collected together + right side map results, collected together (tuple)
 		  */
 		def splitFlatMap[L, R](f: A => (IterableOnce[L], IterableOnce[R])) =
-			splitFlatMapInto(new VectorBuilder[L], new VectorBuilder[R])(f)
+			splitFlatMapInto(OptimizedIndexedSeq.newBuilder[L], OptimizedIndexedSeq.newBuilder[R])(f)
 		/**
 		  * Maps items in this collection into two groups, where an item maps to
 		  * x left group items and y right group items
@@ -770,7 +770,8 @@ object CollectionExtensions
 		  *         plus a vector consisting only of right side items
 		  * @see [[splitInto]]
 		  */
-		def split = splitInto(new VectorBuilder[A], new VectorBuilder[B])
+		def split =
+			splitInto(OptimizedIndexedSeq.newBuilder[A], OptimizedIndexedSeq.newBuilder[B])
 		/**
 		  * @param leftBuilder Builder used for collecting the left side items in this collection
 		  * @param rightBuilder Builder used for collecting the right side items in this collection
@@ -1770,7 +1771,7 @@ object CollectionExtensions
 		def takeRightWhile[That](f: seq.A => Boolean)(implicit buildFrom: BuildFrom[Repr, seq.A, That]): That = {
 			val seqOps = seq(coll)
 			// Collects the items to a buffer first in order to reverse the order afterwards
-			val bufferBuilder = new VectorBuilder[seq.A]()
+			val bufferBuilder = OptimizedIndexedSeq.newBuilder[seq.A]
 			seqOps.reverseIterator.takeWhile(f).foreach { bufferBuilder += _ }
 			buildFrom.fromSpecific(coll)(bufferBuilder.result().reverse)
 		}
@@ -2425,7 +2426,7 @@ object CollectionExtensions
 		  */
 		def collectNext(n: Int) = {
 			var consumed = 0
-			val builder = new VectorBuilder[A]()
+			val builder = if (n < 3) OptimizedIndexedSeq.newBuilder[A] else new VectorBuilder[A]()
 			while (i.hasNext && consumed < n) {
 				builder += i.next()
 				consumed += 1
@@ -2457,7 +2458,7 @@ object CollectionExtensions
 		  *         iterator if the specified condition was never met.
 		  */
 		def collectTo(stopCondition: A => Boolean) = {
-			val builder = new VectorBuilder[A]()
+			val builder = OptimizedIndexedSeq.newBuilder[A]
 			var found = false
 			while (i.hasNext && !found) {
 				val nextItem = i.next()
@@ -2513,7 +2514,7 @@ object CollectionExtensions
 		  * @param maxGroupSize Maximum number of items for a function call
 		  * @param f            A function that is called for each group of items
 		  */
-		def foreachGroup(maxGroupSize: Int)(f: Vector[A] => Unit) = {
+		def foreachGroup(maxGroupSize: Int)(f: IndexedSeq[A] => Unit) = {
 			while (i.hasNext) {
 				f(collectNext(maxGroupSize))
 			}
@@ -2526,8 +2527,8 @@ object CollectionExtensions
 		  * @tparam B Type of map result
 		  * @return All map results in order
 		  */
-		def groupMap[B](groupSize: Int)(map: Vector[A] => B) = {
-			val resultBuilder = new VectorBuilder[B]()
+		def groupMap[B](groupSize: Int)(map: IndexedSeq[A] => B) = {
+			val resultBuilder = if (groupSize < 3) OptimizedIndexedSeq.newBuilder[B] else new VectorBuilder[B]()
 			foreachGroup(groupSize) { resultBuilder += map(_) }
 			resultBuilder.result()
 		}
@@ -2549,7 +2550,7 @@ object CollectionExtensions
 		  * @return Collected failures
 		  */
 		def foreachCatching[U](f: A => Try[U]) = {
-			val failuresBuilder = new VectorBuilder[Throwable]()
+			val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
 			i.foreach {
 				case Failure(error) => failuresBuilder += error
 				case _ => ()
