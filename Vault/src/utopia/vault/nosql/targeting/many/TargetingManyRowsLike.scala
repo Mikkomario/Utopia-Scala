@@ -125,17 +125,14 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  *                      integral target.
 	  *                      Default = empty, which is appropriate when no joins beside 'tables' need to be performed.
 	  * @param joinType Type of joins applied. Default = [[Inner]].
-	  * @param f A function which receives all pulled data, and combines it to form the extended data-set.
-	  *          Each entry in the input represents a single row. Primary items (accessed by this access point)
-	  *          have already been parsed, and are present as separate values.
+	  * @param f A function which receives a parsed item with a pulled row, and combines them to form a new item.
 	  * @tparam B Type of mapping / extended parsing results.
 	  * @return A copy of this access which performs the necessary joins, includes the extended read target,
 	  *         and performs the specified mapping.
 	  */
-	// TODO: Should this not yield TargetingManyRows[B]?
 	def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
 	                joinType: JoinType = Inner)
-	               (f: Iterator[(A, Row)] => Seq[B]): TargetingMany[B]
+	               (f: (A, Row) => B): TargetingManyRows[B]
 	/**
 	  * Extends this access point to include data from additional tables.
 	  * Assumes that a single primarily accessed row / item may be joined to multiple rows in the targeted tables,
@@ -158,7 +155,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  */
 	def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
 	                    joinType: JoinType = Inner)
-	                   (f: Iterator[(A, Seq[Row])] => Seq[B]): TargetingMany[B]
+	                   (f: Iterator[(A, Seq[Row])] => IterableOnce[B]): TargetingMany[B]
 	
 	
 	// OTHER    --------------------------

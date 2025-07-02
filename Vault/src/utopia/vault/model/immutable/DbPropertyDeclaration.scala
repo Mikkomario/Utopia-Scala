@@ -9,6 +9,7 @@ object DbPropertyDeclaration
 	// Provides implicit access to both values
 	implicit def autoAccessName(d: DbPropertyDeclaration): String = d.name
 	implicit def autoAccessColumn(d: DbPropertyDeclaration): Column = d.column
+	implicit def autoAccessTableColumn(d: DbPropertyDeclaration): TableColumn = d.column
 	
 	
 	// OTHER    -----------------------------
@@ -30,7 +31,7 @@ object DbPropertyDeclaration
   * @param name Name of this database-based property
   * @param column Column being interacted with
   */
-case class DbPropertyDeclaration(name: String, column: Column)
+case class DbPropertyDeclaration(name: String, column: TableColumn)
 {
 	override def toString = name
 }
