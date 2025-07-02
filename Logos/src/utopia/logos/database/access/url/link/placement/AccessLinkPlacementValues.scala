@@ -2,7 +2,7 @@ package utopia.logos.database.access.url.link.placement
 
 import utopia.logos.database.access.text.placement.AccessTextPlacementValues
 import utopia.logos.database.storable.url.LinkPlacementDbModel
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
 
 /**
   * Used for accessing link placement values from the DB

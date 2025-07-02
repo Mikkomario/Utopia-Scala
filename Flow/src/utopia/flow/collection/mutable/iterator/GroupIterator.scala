@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable.iterator
 
-import scala.collection.immutable.VectorBuilder
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 
 object GroupIterator
 {
@@ -21,7 +21,7 @@ object GroupIterator
  * @author Mikko Hilpinen
  * @since 28.3.2021, v1.9
  */
-class GroupIterator[A, G](source: Iterator[A])(group: A => G) extends Iterator[(G, Vector[A])]
+class GroupIterator[A, G](source: Iterator[A])(group: A => G) extends Iterator[(G, IndexedSeq[A])]
 {
 	// ATTRIBUTES   ----------------------------
 	
@@ -33,18 +33,16 @@ class GroupIterator[A, G](source: Iterator[A])(group: A => G) extends Iterator[(
 	
 	override def hasNext = source.hasNext
 	
-	override def next() =
-	{
+	override def next() = {
 		// Starts the group by picking the first item
 		val (firstItem, currentGroup) = polled.getOrElse { nextItem() }
 		
-		val groupBuilder = new VectorBuilder[A]()
+		val groupBuilder = OptimizedIndexedSeq.newBuilder[A]
 		groupBuilder += firstItem
 		
 		// Continues to poll the items until a different group is found
 		var last = _nextOption()
-		while (last.exists { _._2 == currentGroup })
-		{
+		while (last.exists { _._2 == currentGroup }) {
 			groupBuilder += last.get._1
 			last = _nextOption()
 		}
@@ -61,8 +59,7 @@ class GroupIterator[A, G](source: Iterator[A])(group: A => G) extends Iterator[(
 	
 	private def _nextOption(): Option[(A, G)] = if (source.hasNext) Some(nextItem()) else None
 	
-	private def nextItem() =
-	{
+	private def nextItem() = {
 		val item = source.next()
 		item -> group(item)
 	}

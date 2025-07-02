@@ -2,7 +2,7 @@ package utopia.logos.database.access.text.word
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.storable.text.WordDbModel
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
 import utopia.vault.nosql.targeting.columns.AccessValues
 
 /**

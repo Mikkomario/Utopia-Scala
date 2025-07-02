@@ -5,7 +5,6 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.util.TryExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
 
 import scala.util.Try
 
@@ -131,4 +130,32 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 		case Right(map) => value.map(map)
 	}
 	override protected def valueOf(value: In): Value = toValue(value)
+	
+	
+	// OTHER    -----------------
+	
+	/**
+	  * Streams accessible values of this column
+	  * @param f A function for processing streamed values
+	  * @param connection Implicit DB connection
+	  * @tparam B Function result type
+	  * @return Function 'f' results
+	  */
+	def stream[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = false)
+	/**
+	  * Streams accessible distinct values of this column
+	  * @param f A function for processing streamed values
+	  * @param connection Implicit DB connection
+	  * @tparam B Function result type
+	  * @return Function 'f' results
+	  */
+	def streamDistinct[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = true)
+	
+	private def _stream[B](f: Iterator[A] => B, distinct: Boolean)(implicit connection: Connection) =
+		access.streamColumn(column, distinct) { valuesIter =>
+			fromValue match {
+				case Left(flatMap) => f(valuesIter.flatMap(flatMap))
+				case Right(map) => f(valuesIter.map(map))
+			}
+		}
 }

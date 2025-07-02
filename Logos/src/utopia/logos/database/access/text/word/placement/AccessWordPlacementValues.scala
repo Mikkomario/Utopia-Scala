@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.access.text.placement.AccessTextPlacementValues
 import utopia.logos.database.storable.text.WordPlacementDbModel
 import utopia.logos.model.enumeration.DisplayStyle
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
 
 /**
   * Used for accessing word placement values from the DB

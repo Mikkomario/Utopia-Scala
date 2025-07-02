@@ -3,7 +3,7 @@ package utopia.vault.nosql.targeting.many
 import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.{Column, Row, Table}
+import utopia.vault.model.immutable.{Column, Row, Table, TableColumn}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType
 
@@ -21,24 +21,27 @@ trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T, OT], OT, O, +A, 
 	override def drop(n: Int): Repr = mapWrapped { _.drop(n) }
 	override def slice(range: HasInclusiveEnds[Int]): Repr = mapWrapped { _.slice(range) }
 	
-	override def pullWith[B](column: Column)(map: Value => B)(implicit connection: Connection): Seq[(A, B)] =
+	override def stream[B](f: Iterator[A] => B)(implicit connection: Connection): B =
+		wrapped.stream[B] { items => f(items.map(mapResult)) }
+	
+	override def pullWith[B](column: TableColumn)(map: Value => B)(implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWith(column)(map).map { case (a, b) => mapResult(a) -> b }
-	override def pullWith[B](columns: Seq[Column])(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
+	override def pullWith[B](columns: Seq[TableColumn])(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWith(columns)(map).map { case (a, b) => mapResult(a) -> b }
-	override def pullWithMany[B](column: Column)(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
+	override def pullWithMany[B](column: TableColumn)(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWithMany(column)(map).map { case (a, b) => mapResult(a) -> b }
-	override def pullWithMany[B](columns: Seq[Column])(map: Seq[Seq[Value]] => B)
+	override def pullWithMany[B](columns: Seq[TableColumn])(map: Seq[Seq[Value]] => B)
 	                            (implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWithMany(columns)(map).map { case (a, b) => mapResult(a) -> b }
 	
 	override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
-	                         joinType: JoinType)(f: Seq[(A, Row)] => Seq[B]) =
+	                         joinType: JoinType)(f: Iterator[(A, Row)] => Seq[B]) =
 		wrapped.extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { items =>
 			f(items.map { case (a, row) => mapResult(a) -> row })
 		}
 	override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
 	                             joinType: JoinType)
-	                            (f: Seq[(A, Seq[Row])] => Seq[B]) =
+	                            (f: Iterator[(A, Seq[Row])] => Seq[B]) =
 		wrapped.extendToMany(tables, exclusiveColumns, bridgingJoins, joinType) { items =>
 			f(items.map { case (a, rows) => mapResult(a) -> rows })
 		}

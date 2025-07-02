@@ -49,8 +49,15 @@ object SelectTarget
 	// IMPLICIT --------------------------
 	
 	implicit def column(column: Column): SelectTarget = SingleColumn(column)
-	implicit def columns(columns: Seq[Column]): SelectTarget = Columns(columns)
-	implicit def tableColumns(columns: Seq[TableColumn]): SelectTarget = Columns(columns.map { _.column })
+	implicit def tableColumn(column: TableColumn): SelectTarget = SingleColumn(column)
+	implicit def columns(columns: Seq[Column]): SelectTarget = columns.oneOrMany match {
+		case Left(only) => SingleColumn(only)
+		case Right(many) => Columns(many)
+	}
+	implicit def tableColumns(columns: Seq[TableColumn]): SelectTarget = columns.oneOrMany match {
+		case Left(only) => SingleColumn(only)
+		case Right(many) => Columns(many.map { _.column })
+	}
 	
 	implicit def table(table: Table): SelectTarget = SingleTable(table)
 	implicit def tables(tables: Seq[Table]): SelectTarget = Tables(tables)

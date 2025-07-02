@@ -9,10 +9,6 @@ import utopia.vault.nosql.template.Indexed
 object AccessColumns
 {
 	/**
-	  * A type alias for column access points which target multiple rows at a time
-	  */
-	type AccessManyColumns = AccessColumns[Seq[Value]]
-	/**
 	  * A type alias for column access points which target one row at a time
 	  */
 	type AccessColumn = AccessColumns[Value]
@@ -39,6 +35,7 @@ trait AccessColumns[+V] extends Indexed
 	  * @return Data of the targeted columns from the targeted item(s)
 	  */
 	def apply(columns: Seq[Column])(implicit connection: Connection): Seq[V]
+	
 	/**
 	  * Updates the column value(s) of the targeted item(s)
 	  * @param column Targeted column

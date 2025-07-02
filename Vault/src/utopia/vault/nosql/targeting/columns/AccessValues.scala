@@ -1,7 +1,6 @@
 package utopia.vault.nosql.targeting.columns
 
 import utopia.vault.model.immutable.Column
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
 
 /**
   * Common trait for custom interfaces that provide access to parsed column values based on a targeted access point

@@ -5,6 +5,7 @@
 - Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
   with new classes with these names
   - These also affect **Quarter** and **YearlyDateRange**
+- **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
 - `.splitMap(...)` in **IterableOnce** (via **CollectionExtensions**) now yields **IndexedSeq**s instead of **Vector**s

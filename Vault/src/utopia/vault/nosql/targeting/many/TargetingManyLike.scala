@@ -1,13 +1,14 @@
 package utopia.vault.nosql.targeting.many
 
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.targeting.TargetingLike
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
 import utopia.vault.nosql.view.ViewManyByIntIds
 import utopia.vault.sql.{Condition, OrderBy}
 
@@ -16,7 +17,8 @@ import utopia.vault.sql.{Condition, OrderBy}
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingManyLike[+A, +Repr, +One] extends TargetingLike[Seq[A], Seq[Value], Repr] with ViewManyByIntIds[Repr]
+trait TargetingManyLike[+A, +Repr, +One]
+	extends TargetingLike[Seq[A], Seq[Value], Repr] with AccessManyColumns with ViewManyByIntIds[Repr]
 {
 	// ABSTRACT ------------------------
 	

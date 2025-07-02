@@ -45,21 +45,6 @@ class ResultStream(val closedFlag: Flag = AlwaysTrue,
 	// COMPUTED --------------------------
 	
 	/**
-	  * Acquires the number of updated rows.
-	  * NB: Causes all other content to be consumed / discarded.
-	  * Throws if there were any errors during the query.
-	  * @return Number of updated rows
-	  */
-	def updatedRowsCount = tryUpdatedRowsCount.get
-	/**
-	  * Acquires the number of updated rows.
-	  * NB: Causes all other content to be consumed / discarded.
-	  * @return Number of updated rows.
-	  *         Failure if there was an error during statement execution or results-processing.
-	  */
-	def tryUpdatedRowsCount = lazyUpdatedRowsCount.value
-	
-	/**
 	  * Buffers the remaining results.
 	  * Throws if any errors are or were encountered
 	  * @return A buffered result containing the remaining of the available rows.
@@ -88,4 +73,64 @@ class ResultStream(val closedFlag: Flag = AlwaysTrue,
 				}
 			}
 	}
+	
+	/**
+	  * Acquires the number of updated rows.
+	  * NB: Causes all other content to be consumed / discarded.
+	  * Throws if there were any errors during the query.
+	  * @return Number of updated rows
+	  */
+	def updatedRowsCount = tryUpdatedRowsCount.get
+	/**
+	  * Acquires the number of updated rows.
+	  * NB: Causes all other content to be consumed / discarded.
+	  * @return Number of updated rows.
+	  *         Failure if there was an error during statement execution or results-processing.
+	  */
+	def tryUpdatedRowsCount = lazyUpdatedRowsCount.value
+	/**
+	  * Checks whether any rows were updated
+	  * NB: Causes all other content to be consumed / discarded.
+	  * @return Whether the query updated any rows
+	  */
+	def updatedRows = tryUpdatedRowsCount.toOption.exists { _ > 0 }
+	
+	/**
+	  * @return An iterator that yields all remaining rows as models.
+	  *         Should only be used with queries involving individual tables.
+	  */
+	def rowModelsIterator = rowsIterator.map { _.toModel }
+	/**
+	  * @return An iterator that yields all remaining rows as values.
+	  *         Should only be used for queries targeting individual columns.
+	  */
+	def rowValuesIterator = rowsIterator.map { _.value }
+	/**
+	  * @return An iterator that yields all remaining rows as integer values. Empty / NULL values are excluded.
+	  *         Should only be used for queries targeting individual columns.
+	  */
+	def rowIntValuesIterator = rowValuesIterator.flatMap { _.int }
+	
+	/**
+	  * @return A model representing the next available row.
+	  *         None if no more rows are available.
+	  */
+	def nextModel = rowsIterator.nextOption().map { _.toModel }
+	/**
+	  * @return A value read from the next available row.
+	  *         Should only be used with queries targeting individual columns.
+	  */
+	def nextValue = rowsIterator.nextOption() match {
+		case Some(row) => row.value
+		case None => Value.empty
+	}
+	
+	/**
+	  * An iterator that yields the auto-generated keys as integers
+	  */
+	def generatedIntKeysIterator = generatedKeysIterator.flatMap { _.int }
+	/**
+	  * An iterator that yields the auto-generated keys as long numbers
+	  */
+	def generatedLongKeysIterator = generatedKeysIterator.flatMap { _.long }
 }

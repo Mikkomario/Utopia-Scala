@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.BasicValueCaster
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.logos.database.storable.url.LinkDbModel
-import utopia.vault.nosql.targeting.columns.AccessColumns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
 import utopia.vault.nosql.targeting.columns.AccessValues
 
 /**

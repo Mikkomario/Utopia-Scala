@@ -18,7 +18,7 @@
 - Deprecated all previous "streaming" functions in **Connection**, **FromResultFactory**, **FromRowFactory**, 
   **ManyModelAccess**, **ManyColumnAccess** and **RowFactoryView**
   - It is recommended to start using **Connection**'s new `.stream(...)` function instead
-    - Utility functions will also be available on new **Targeted** access interfaces
+    - Advanced streaming functions are available on new **TargetingManyLike** access interfaces
 - Deprecated `.tryExec(...)` in **Connection**, as it's mostly redundant
 - Deprecated the **QueryIterator** class
   - It is recommended to start using streamed database functions instead, as these are more efficient
