@@ -36,7 +36,6 @@ trait TargetingLike[+A, +V, +Repr] extends AccessColumns[V] with FilterableView[
 	  * @param ordering Ordering to apply
 	  * @return A copy of this access point with the specified ordering applied
 	  */
-	// TODO: Also add withOrdering(Option[OrderBy]) and mapping functions
 	def withOrdering(ordering: OrderBy): Repr
 	
 	

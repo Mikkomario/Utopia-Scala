@@ -20,8 +20,15 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
 	
 	protected def wrapped: T
 	
+	/**
+	  * @param newTarget New targeting access to wrap
+	  * @return A new wrapper
+	  */
 	protected def wrap(newTarget: T): Repr
-	
+	/**
+	  * @param result Result acquired from the wrapped access point
+	  * @return Wrapped results
+	  */
 	protected def wrapResult(result: O): R
 	
 	
@@ -41,6 +48,10 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
 	
 	// OTHER    ------------------------
 	
+	/**
+	  * @param f A mapping function applied to the wrapped access point
+	  * @return A wrapper wrapping the mapped access point
+	  */
 	protected def mapWrapped(f: Mutate[T]) = {
 		// Won't construct a new wrapper if the wrapped access won't change
 		val original = wrapped

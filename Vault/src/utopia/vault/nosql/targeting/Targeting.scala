@@ -49,6 +49,13 @@ trait Targeting[+A, +Val] extends TargetingLike[A, Val, Targeting[A, Val]]
 	  * @return An access point that yields mapped values
 	  */
 	def mapValues[V2](f: Val => V2): Targeting[A, V2] = Targeting.mapValues(this)(f)
+	/**
+	  * @param mapResult A mapping function applied to this access point's results
+	  * @param mapValue A mapping function applied to pulled values
+	  * @tparam B Type of result-mapping results
+	  * @tparam V2 Type of value-mapping results
+	  * @return An access point that yields mapped results and values
+	  */
 	def mapResultAndValues[B, V2](mapResult: A => B)(mapValue: Val => V2) =
 		Targeting.mapResultsAndValues(this)(mapResult)(mapValue)
 }
