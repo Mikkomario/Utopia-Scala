@@ -1,6 +1,7 @@
 package utopia.vault.nosql.targeting.one
 
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.targeting.TargetingLike
 
 /**
@@ -9,3 +10,10 @@ import utopia.vault.nosql.targeting.TargetingLike
   * @since 19.05.2025, v1.21
   */
 trait TargetingOneLike[+A, +Repr] extends TargetingLike[A, Value, Repr]
+{
+	/**
+	  * @param id Id / primary key of the targeted item
+	  * @return Access to the item with the specified primary key
+	  */
+	def apply(id: Int): Repr = apply(index <=> id)
+}

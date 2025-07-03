@@ -2,9 +2,8 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.{Column, Row, Table, TableColumn}
+import utopia.vault.model.immutable.{Column, Row, Table}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.template.Deprecatable
@@ -74,19 +73,21 @@ object AccessManyRows
 		
 		override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
 		                         joinType: JoinType)
-		                        (f: (A, Row) => B) =
-			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect, lazyIndices) =>
-				copy(target = newTarget, selectTarget = newSelect, f = row => parse(row).map { f(_, row) })
+		                        (f: (A, Row) => Option[B]) =
+			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect) =>
+				copy(target = newTarget, selectTarget = newSelect, f = row => parse(row).flatMap { f(_, row) })
 			}
 		
 		override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
 		                             joinType: JoinType)
 		                            (f: Iterator[(A, Seq[Row])] => IterableOnce[B]) =
-			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect, indices) =>
+			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect) =>
+				val indices = View.concat(target.tables, tables).flatMap { _.primaryColumn }
+					.filter(newSelect.contains).toOptimizedSeq
 				AccessMany(newTarget, table, newSelect, accessCondition, ordering, prepare = finalizeStatement) {
 					result =>
 						// NB: Assumes that same index rows are consecutive
-						OptimizedIndexedSeq.from(f(result.rowsIterator.groupBy { row => indices.value.map(row.apply) }
+						OptimizedIndexedSeq.from(f(result.rowsIterator.groupBy { row => indices.map(row.apply) }
 							.flatMap { case (_, rows) => parse(rows.head).map { _ -> rows } }))
 				}
 			}
@@ -96,7 +97,7 @@ object AccessManyRows
 		
 		private def _extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
 		                         joinType: JoinType)
-		                        (formAccess: (SqlTarget, SelectTarget, Lazy[IndexedSeq[TableColumn]]) => B) =
+		                        (formAccess: (SqlTarget, SelectTarget) => B) =
 		{
 			val newTarget = tables.foldLeft(
 				bridgingJoins.foldLeft(target) { _.join(_, joinType) }) { _.join(_, joinType) }
@@ -108,12 +109,8 @@ object AccessManyRows
 					SelectTarget.columns(exclusiveCols)
 			}
 			val newSelectTarget = addedSelectTargets.foldLeft(selectTarget) { _ + _ }
-			val lazyKeys = Lazy {
-				View.concat(target.tables, tables).flatMap { _.primaryColumn }.filter(newSelectTarget.contains)
-					.toOptimizedSeq
-			}
 			
-			formAccess(newTarget, newSelectTarget, lazyKeys)
+			formAccess(newTarget, newSelectTarget)
 		}
 	}
 }

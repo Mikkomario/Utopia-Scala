@@ -132,7 +132,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  */
 	def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
 	                joinType: JoinType = Inner)
-	               (f: (A, Row) => B): TargetingManyRows[B]
+	               (f: (A, Row) => Option[B]): TargetingManyRows[B]
 	/**
 	  * Extends this access point to include data from additional tables.
 	  * Assumes that a single primarily accessed row / item may be joined to multiple rows in the targeted tables,
