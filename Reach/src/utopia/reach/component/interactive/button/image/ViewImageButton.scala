@@ -17,7 +17,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
@@ -220,7 +220,7 @@ trait ViewImageButtonFactoryLike[+Repr] extends ViewImageButtonSettingsWrapper[R
 case class ContextualViewImageButtonFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                             settings: ViewImageButtonSettings = ViewImageButtonSettings.default)
 	extends ViewImageButtonFactoryLike[ContextualViewImageButtonFactory]
-		with ContextualFactory[VariableColorContext, ContextualViewImageButtonFactory]
+		with VariableColorContextualFactory[ContextualViewImageButtonFactory]
 {
 	// IMPLEMENTED	-------------------------
 	

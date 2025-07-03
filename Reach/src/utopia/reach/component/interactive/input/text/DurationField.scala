@@ -15,7 +15,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.text.DurationField.focusTransferDelay
@@ -304,9 +304,11 @@ trait DurationFieldSettingsWrapper[+Repr] extends DurationFieldSettingsLike[Repr
 case class ContextualDurationFieldFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                           settings: DurationFieldSettings = DurationFieldSettings.default)
 	extends DurationFieldSettingsWrapper[ContextualDurationFieldFactory]
-		with ContextualFactory[VariableTextContext, ContextualDurationFieldFactory] with PartOfComponentHierarchy
+		with VariableTextContextualFactory[ContextualDurationFieldFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------------
+	
+	override def self: ContextualDurationFieldFactory = this
 	
 	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: DurationFieldSettings) =

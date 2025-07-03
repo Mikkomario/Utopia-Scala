@@ -5,14 +5,14 @@ import utopia.firmament.context.color.VariableColorContext
 import utopia.flow.view.template.eventful.Flag
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.container.wrapper.Swapper
 
 case class LoadingOrImageLabelFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                       settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
-	extends ContextualFactory[VariableColorContext, LoadingOrImageLabelFactory] with PartOfComponentHierarchy
+	extends VariableColorContextualFactory[LoadingOrImageLabelFactory] with PartOfComponentHierarchy
 		with ViewImageLabelSettingsWrapper[LoadingOrImageLabelFactory]
 {
 	// IMPLEMENTED  ----------------------------

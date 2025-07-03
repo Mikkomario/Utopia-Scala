@@ -17,7 +17,7 @@ import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard._
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
-import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.{AbstractSelectableTextLabel, SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
 import utopia.reach.component.template.PartOfComponentHierarchy
@@ -272,11 +272,13 @@ case class ContextualEditableTextLabelFactory(hierarchy: ComponentHierarchy,
                                               settings: EditableTextLabelSettings = EditableTextLabelSettings.default,
                                               drawsBackground: Boolean = false)
 	extends EditableTextLabelSettingsWrapper[ContextualEditableTextLabelFactory]
-		with ContextualFactory[VariableTextContext, ContextualEditableTextLabelFactory]
+		with VariableTextContextualFactory[ContextualEditableTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualEditableTextLabelFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------
+	
+	override def self: ContextualEditableTextLabelFactory = this
 	
 	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: EditableTextLabelSettings) =

@@ -17,7 +17,7 @@ import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.UnresolvedFramedFactory.{UnresolvedStackInsets, sides}
-import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageAndTextLabelSettings.defaultImageSettings
@@ -253,6 +253,7 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
                                                   drawBackground: Boolean = false)
 	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
+		with VariableTextContextualFactory[ContextualViewImageAndTextLabelFactory]
 		with PartOfComponentHierarchy
 {
 	// COMPUTED ----------------------
@@ -261,6 +262,8 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	
 	
 	// IMPLEMENTED  ------------------
+	
+	override def self: ContextualViewImageAndTextLabelFactory = this
 	
 	override def withContext(p: VariableTextContext): ContextualViewImageAndTextLabelFactory = copy(context = p)
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =

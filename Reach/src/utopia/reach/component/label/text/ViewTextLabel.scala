@@ -20,7 +20,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -31,6 +31,7 @@ case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context
                                           drawBackground: Boolean = false)
 	extends VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewTextLabelFactory]
 		with CustomDrawableFactory[ContextualViewTextLabelFactory] with PartOfComponentHierarchy
+		with VariableTextContextualFactory[ContextualViewTextLabelFactory]
 {
 	// ATTRIBUTES   -----------------------------
 	
@@ -51,6 +52,8 @@ case class ContextualViewTextLabelFactory(hierarchy: ComponentHierarchy, context
 	
 	
 	// IMPLEMENTED	-----------------------------
+	
+	override def self: ContextualViewTextLabelFactory = this
 	
 	override def withContext(p: VariableTextContext): ContextualViewTextLabelFactory = copy(context = p)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextLabelFactory =

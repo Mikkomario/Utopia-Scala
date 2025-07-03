@@ -10,7 +10,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
@@ -39,11 +39,13 @@ case class ViewTextButtonFactory(hierarchy: ComponentHierarchy)
 case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                            settings: ButtonSettings = ButtonSettings.default,
                                            customDrawers: Seq[CustomDrawer] = Empty)
-	extends ContextualFactory[VariableTextContext, ContextualViewTextButtonFactory]
+	extends VariableTextContextualFactory[ContextualViewTextButtonFactory]
 		with ButtonSettingsWrapper[ContextualViewTextButtonFactory]
 		with CustomDrawableFactory[ContextualViewTextButtonFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------------
+	
+	override def self: ContextualViewTextButtonFactory = this
 	
 	override def withContext(context: VariableTextContext): ContextualViewTextButtonFactory = copy(context = context)
 	override def withSettings(settings: ButtonSettings): ContextualViewTextButtonFactory = copy(settings = settings)

@@ -26,7 +26,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.insets.Insets
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
@@ -458,9 +458,11 @@ trait FieldSettingsWrapper[+Repr] extends FieldSettingsLike[Repr]
 case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                   settings: FieldSettings = FieldSettings.default)
 	extends FieldSettingsWrapper[ContextualFieldFactory]
-		with ContextualFactory[VariableTextContext, ContextualFieldFactory] with PartOfComponentHierarchy
+		with VariableTextContextualFactory[ContextualFieldFactory] with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
+	
+	override def self: ContextualFieldFactory = this
 	
 	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: FieldSettings) = copy(settings = settings)

@@ -15,7 +15,7 @@ import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.label.image.{LoadingLabelConstructor, ViewImageAndTextLabel, ViewImageAndTextLabelSettings, ViewImageAndTextLabelSettingsLike, ViewImageLabelSettings}
@@ -168,7 +168,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
                                                    context: VariableTextContext,
                                                    settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
-		with ContextualFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
+		with VariableTextContextualFactory[ContextualViewImageAndTextButtonFactory]
 		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED ------------------------------
@@ -177,6 +177,8 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	
 	
 	// IMPLEMENTED  --------------------------
+	
+	override def self: ContextualViewImageAndTextButtonFactory = this
 	
 	override def withContext(context: VariableTextContext) =
 		copy(context = context)

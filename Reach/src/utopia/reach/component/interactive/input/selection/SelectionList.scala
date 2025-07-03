@@ -29,7 +29,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
@@ -285,7 +285,7 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
                                           settings: SelectionListSettings = SelectionListSettings.default,
                                           customMarginPointer: Option[Changing[StackLength]] = None)
 	extends SelectionListFactoryLike[ContextualSelectionListFactory]
-		with ContextualFactory[VariableColorContext, ContextualSelectionListFactory]
+		with VariableColorContextualFactory[ContextualSelectionListFactory]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -294,6 +294,8 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
 	
 	
 	// IMPLEMENTED  -------------------------
+	
+	override def self: ContextualSelectionListFactory = this
 	
 	override def withContext(context: VariableColorContext) = copy(context = context)
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)

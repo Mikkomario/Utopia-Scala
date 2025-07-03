@@ -9,7 +9,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorRole
-import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.PartOfComponentHierarchy
@@ -212,11 +212,13 @@ case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, c
                                                 settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
                                                 drawsBackground: Boolean = false)
 	extends SelectableTextLabelSettingsWrapper[ContextualSelectableTextLabelFactory]
-		with ContextualFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
+		with VariableTextContextualFactory[ContextualSelectableTextLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------------
+	
+	override def self: ContextualSelectableTextLabelFactory = this
 	
 	override def withContext(context: VariableTextContext) =
 		copy(context = context)

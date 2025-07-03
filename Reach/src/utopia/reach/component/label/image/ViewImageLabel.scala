@@ -27,7 +27,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.contextual.VariableBackgroundRoleAssignableFactory
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableColorContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -410,6 +410,7 @@ case class ContextualViewImageLabelFactory(hierarchy: ComponentHierarchy, contex
                                            drawBackground: Boolean = false)
 	extends ViewImageLabelFactoryLike[ContextualViewImageLabelFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableColorContext, ContextualViewImageLabelFactory]
+		with VariableColorContextualFactory[ContextualViewImageLabelFactory]
 {
 	// IMPLEMENTED  ---------------------------
 	

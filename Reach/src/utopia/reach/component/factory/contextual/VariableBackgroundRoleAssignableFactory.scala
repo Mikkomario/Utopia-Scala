@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.firmament.context.color.VariableColorContextLike
+import utopia.firmament.context.color.{VariableColorContextLike, VariableColorContextWrapper}
 import utopia.firmament.drawing.immutable.BackgroundDrawer
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.drawing.view.BackgroundViewDrawer
@@ -9,12 +9,19 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.reach.component.factory.VariableBackgroundRoleAssignable
 
 /**
-  * Common trait for component factories that support variable background colors using contextual information
+  * Common trait for component factories that support variable background colors using contextual information.
+  *
+  * Assumes that these component factories use some version variable of variable color context.
+  * The implementing classes are encouraged to extend either
+  * [[VariableColorContextualFactory]] or [[VariableTextContextualFactory]],
+  * to fulfill the requirements imposed by this trait.
+  *
   * @author Mikko Hilpinen
   * @since 31.5.2023, v1.1
   */
-trait VariableBackgroundRoleAssignableFactory[N <: VariableColorContextLike[N, _], +Repr]
+trait VariableBackgroundRoleAssignableFactory[N <: VariableColorContextLike[N, N], +Repr]
 	extends VariableBackgroundRoleAssignable[Repr] with ContextualFactory[N, Repr]
+		with VariableColorContextWrapper[N, Repr]
 {
 	// ABSTRACT ------------------------------
 	
@@ -42,4 +49,17 @@ trait VariableBackgroundRoleAssignableFactory[N <: VariableColorContextLike[N, _
 		}
 		withVariableBackgroundContext(newContext, drawer)
 	}
+	
+	override def withBackgroundPointer(p: Changing[Color]): Repr =
+		super[VariableBackgroundRoleAssignable].withBackgroundPointer(p)
+	override def withBackgroundRolePointer(p: Changing[ColorRole], preference: ColorLevel) =
+		super[VariableBackgroundRoleAssignable].withBackgroundRolePointer(p, preference)
+	override def withBackground(role: ColorRole, preferredShade: ColorLevel) =
+		super[VariableBackgroundRoleAssignable].withBackground(role, preferredShade)
+	override def withBackground(background: Color) =
+		super[VariableBackgroundRoleAssignable].withBackground(background)
+	override def withBackground(role: ColorRole) = super[VariableBackgroundRoleAssignable].withBackground(role)
+	
+	// TODO: We probably need an extended implementation that covers Changing[ColorSet] and ColorSet as background.
+	//  However, this requires an alternative "withBackgroundPointer" method parameter or version.
 }

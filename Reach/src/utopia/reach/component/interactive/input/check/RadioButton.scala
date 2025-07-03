@@ -17,7 +17,7 @@ import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
@@ -189,7 +189,7 @@ case class ContextualRadioButtonFactory(hierarchy: ComponentHierarchy,
                                         settings: RadioButtonSettings = RadioButtonSettings.default,
                                         scaling: Double = 1.0)
 	extends RadioButtonFactoryLike[ContextualRadioButtonFactory]
-		with ContextualFactory[VariableColorContext, ContextualRadioButtonFactory]
+		with VariableColorContextualFactory[ContextualRadioButtonFactory]
 		with StandardSizeAdjustable[ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED  --------------------------

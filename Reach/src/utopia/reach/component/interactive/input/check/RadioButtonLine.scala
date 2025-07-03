@@ -10,7 +10,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.Mixed
-import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy}
@@ -43,11 +43,13 @@ case class ContextualRadioButtonLineFactory(hierarchy: ComponentHierarchy, conte
                                             settings: RadioButtonSettings = RadioButtonSettings.default,
                                             drawsBackground: Boolean = false)
 	extends RadioButtonSettingsWrapper[ContextualRadioButtonLineFactory]
-		with ContextualFactory[VariableTextContext, ContextualRadioButtonLineFactory]
+		with VariableTextContextualFactory[ContextualRadioButtonLineFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualRadioButtonLineFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ------------------------------------
+	
+	override def self: ContextualRadioButtonLineFactory = this
 	
 	override def withContext(c: VariableTextContext): ContextualRadioButtonLineFactory =
 		copy(context = c)

@@ -22,7 +22,7 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.component.visualization.LoadingBar.animationVelocity
@@ -144,10 +144,12 @@ trait LoadingBarSettingsWrapper[+Repr] extends LoadingBarSettingsLike[Repr]
 case class ContextualLoadingBarFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
                                        settings: LoadingBarSettings = LoadingBarSettings.default)
 	extends LoadingBarSettingsWrapper[ContextualLoadingBarFactory]
-		with ContextualFactory[VariableColorContext, ContextualLoadingBarFactory]
+		with VariableColorContextualFactory[ContextualLoadingBarFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
+	
+	override def self: ContextualLoadingBarFactory = this
 	
 	override def withContext(context: VariableColorContext) = copy(context = context)
 	override def withSettings(settings: LoadingBarSettings) = copy(settings = settings)

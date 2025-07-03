@@ -16,7 +16,7 @@ import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
-import utopia.reach.component.factory.contextual.{ContextualFactory, VariableBackgroundRoleAssignableFactory}
+import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.check.RadioButtonLine
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
@@ -144,11 +144,13 @@ case class ContextualRadioButtonGroupFactory(hierarchy: ComponentHierarchy,
                                              settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                                              drawsBackground: Boolean = false)
 	extends RadioButtonGroupSettingsWrapper[ContextualRadioButtonGroupFactory]
-		with ContextualFactory[VariableTextContext, ContextualRadioButtonGroupFactory]
+		with VariableTextContextualFactory[ContextualRadioButtonGroupFactory]
 		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualRadioButtonGroupFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	------------------------
+	
+	override def self: ContextualRadioButtonGroupFactory = this
 	
 	override def withContext(context: VariableTextContext) = copy(context = context)
 	override def withSettings(settings: RadioButtonGroupSettings) =

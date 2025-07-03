@@ -1,8 +1,15 @@
 # Utopia Reach - List of Changes
 
-## v1.6.1 (in development)
+## v1.7 (in development)
+### Breaking changes
+- **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
+  - The implementing classes should extend either **VariableColorContextualFactory** or 
+    **VariableTextContextualFactory**
 ### Deprecations
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
+### New features
+- Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits
+  - Multiple existing components now extend these, making context-modifications easier
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 
