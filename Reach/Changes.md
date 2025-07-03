@@ -10,6 +10,8 @@
 ### New features
 - Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits
   - Multiple existing components now extend these, making context-modifications easier
+- All text-related contextual button factories now extend **FromColorRoleFactory**, 
+  allowing for easier color assignment
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 

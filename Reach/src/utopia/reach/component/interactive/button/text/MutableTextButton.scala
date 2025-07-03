@@ -13,7 +13,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.text.Font
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
@@ -95,6 +95,7 @@ case class MutableTextButtonFactory(hierarchy: ComponentHierarchy)
 
 case class ContextualMutableTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext)
 	extends TextContextualFactory[ContextualMutableTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ContextualMutableTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------------------
 	
@@ -102,6 +103,8 @@ case class ContextualMutableTextButtonFactory(hierarchy: ComponentHierarchy, con
 	
 	override def withContext(newContext: StaticTextContext) =
 		copy(context = newContext)
+	
+	override def apply(role: ColorRole) = withBackground(role)
 	
 	
 	// OTHER	------------------------------------

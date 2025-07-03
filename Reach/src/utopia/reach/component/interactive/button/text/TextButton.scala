@@ -10,7 +10,7 @@ import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.genesis.text.Font
-import utopia.paradigm.color.Color
+import utopia.paradigm.color.{Color, ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.TextContextualFactory
@@ -50,7 +50,7 @@ case class ContextualTextButtonFactory(hierarchy: ComponentHierarchy, context: S
                                        settings: ButtonSettings = ButtonSettings.default,
                                        customDrawers: Seq[CustomDrawer] = Empty)
 	extends TextButtonFactoryLike[ContextualTextButtonFactory]
-		with TextContextualFactory[ContextualTextButtonFactory]
+		with TextContextualFactory[ContextualTextButtonFactory] with FromColorRoleFactory[ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
@@ -58,8 +58,10 @@ case class ContextualTextButtonFactory(hierarchy: ComponentHierarchy, context: S
 	
 	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	override def withSettings(settings: ButtonSettings) = copy(settings = settings)
+	
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualTextButtonFactory =
 		copy(customDrawers = drawers)
+	override def apply(role: ColorRole) = withBackground(role)
 	
 	
 	// OTHER	----------------------------------

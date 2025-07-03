@@ -11,6 +11,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
@@ -170,6 +171,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
 		with VariableTextContextualFactory[ContextualViewImageAndTextButtonFactory]
 		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ContextualViewImageAndTextButtonFactory]
 {
 	// COMPUTED ------------------------------
 	
@@ -185,6 +187,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	override def withSettings(settings: ViewImageAndTextButtonSettings) =
 		copy(settings = settings)
 	
+	override def apply(role: ColorRole) = withBackground(role)
 	override def apply(alignment: Alignment) = copy(
 		context = context.withTextAlignment(alignment),
 		settings = settings.withImageAlignment(alignment.opposite)

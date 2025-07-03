@@ -13,6 +13,7 @@ import utopia.flow.util.NotEmpty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.image.Image
+import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.TextContextualFactory
@@ -177,6 +178,7 @@ case class ContextualImageAndTextButtonFactory(hierarchy: ComponentHierarchy, co
                                                settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ContextualImageAndTextButtonFactory]
 		with TextContextualFactory[ContextualImageAndTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ContextualImageAndTextButtonFactory]
 {
 	// IMPLEMENTED  ------------------------
 	
@@ -185,6 +187,8 @@ case class ContextualImageAndTextButtonFactory(hierarchy: ComponentHierarchy, co
 	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	override def withSettings(settings: ImageAndTextButtonSettings): ContextualImageAndTextButtonFactory =
 		copy(settings = settings)
+	
+	override def apply(role: ColorRole): ContextualImageAndTextButtonFactory = withBackground(role)
 	
 	
 	// OTHER    ----------------------------

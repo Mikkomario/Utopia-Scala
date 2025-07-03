@@ -8,6 +8,7 @@ import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
+import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
@@ -42,6 +43,7 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
 	extends VariableTextContextualFactory[ContextualViewTextButtonFactory]
 		with ButtonSettingsWrapper[ContextualViewTextButtonFactory]
 		with CustomDrawableFactory[ContextualViewTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ContextualViewTextButtonFactory]
 {
 	// IMPLEMENTED	------------------------------
 	
@@ -51,6 +53,7 @@ case class ContextualViewTextButtonFactory(hierarchy: ComponentHierarchy, contex
 	override def withSettings(settings: ButtonSettings): ContextualViewTextButtonFactory = copy(settings = settings)
 	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualViewTextButtonFactory =
 		copy(customDrawers = drawers)
+	override def apply(role: ColorRole) = withBackground(role)
 	
 	
 	// OTHER	----------------------------------
