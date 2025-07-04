@@ -1,5 +1,6 @@
 package utopia.reach.component.template
 
+import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.caching.LazyTree
@@ -336,6 +337,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  *                           Default = true.
 	  * @param display            Whether the window should be displayed immediately (default = false)
 	  * @param createContent      A function that accepts a component hierarchy and creates the canvas content.
+	  *                           Also receives a pointer that will contain the window, once it has been constructed.
 	  *                           May return an additional result, that will be included in the result of this function.
 	  * @param context            Implicit window creation context
 	  * @param exc                Implicit execution context
@@ -348,7 +350,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	                                         title: LocalizedString = LocalizedString.empty,
 	                                         matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                         display: Boolean = false)
-	                                        (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                        (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R])
 	                                        (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{

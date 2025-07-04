@@ -1,11 +1,13 @@
 package utopia.firmament.context.base
 
+import utopia.firmament.component.Window
 import utopia.firmament.context.DualFormContext
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
 import utopia.firmament.model.stack.{LengthPriority, StackLength}
 import utopia.flow.operator.ScopeUsable
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.ColorContrastStandard
@@ -50,6 +52,13 @@ trait BaseContextCopyable[+Repr, +ColorSensitive]
 	  * @return A copy of this context with that setting
 	  */
 	def withAllowImageUpscaling(allowImageUpscaling: Boolean): Repr
+	
+	/**
+	  * @param p A pointer that contains the window hosting this component hierarchy,
+	  *          once that window has been fully initialized.
+	  * @return A copy of this context with that window pointer.
+	  */
+	def withWindowPointer(p: Changing[Option[Window]]): Repr
 	
 	/**
 	  * @param size New stack margins size category to use

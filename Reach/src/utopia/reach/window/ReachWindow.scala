@@ -19,7 +19,8 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag, AssignableOnce}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, ResettableFlag}
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.Color
@@ -142,7 +143,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  *
 	  *                                 Default = false = window automatically updates its bounds
 	  * @param createContent A function for creating canvas contents.
-	  *                      Accepts the canvas component hierarchy.
+	  *                      Accepts the canvas component hierarchy,
+	  *                      as well as a pointer that will later contain this window.
 	  *                      May return a custom creation result, in addition to the component to wrap.
 	  * @tparam C Type of wrapped component
 	  * @tparam R Type of additional component creation function result
@@ -151,7 +153,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	def apply[C <: ReachComponent, R](parent: Option[java.awt.Window] = None,
 	                                  title: LocalizedString = LocalizedString.empty,
 	                                  disableAutoBoundsUpdates: Boolean = false)
-	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	                                 (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R]) =
 	{
 		// Prepares pointers for the window and canvas
 		val windowPointer = AssignableOnce[Window]()
@@ -175,7 +177,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		// Creates the canvas
 		val canvas = ReachCanvas(attachmentPointer, Right(absoluteWindowPositionPointer),
 			Fixed(context.windowBackground), context.cursors,
-			disableFocus = !context.focusEnabled) { _ => revalidation() }(createContent)
+			disableFocus = !context.focusEnabled) { _ => revalidation() } { createContent(_, windowPointer.readOnly) }
 		canvasPointer.set(canvas)
 		
 		// Creates the window
@@ -227,7 +229,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	def anchoredTo[C <: ReachComponent, R](component: ReachComponent, preferredAlignment: Alignment,
 	                                       margin: Double = 0.0, title: LocalizedString = LocalizedString.empty,
 	                                       matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
-	                                      (createContent: ComponentHierarchy => ComponentCreationResult[C, R]) =
+	                                      (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R]) =
 	{
 		// Full-screen is not supported for anchored windows
 		val factory = windowed.withAnchorAlignment(preferredAlignment)
@@ -460,8 +462,9 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	                                     title: LocalizedString = LocalizedString.empty,
 	                                     disableAutoBoundsUpdates: Boolean = false)
 	                                    (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
-		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { hierarchy =>
-			createContent(hierarchy.top, factory.withContext(hierarchy, context))
+		windowFactory(parent, title, disableAutoBoundsUpdates = disableAutoBoundsUpdates) { (hierarchy, windowP) =>
+			// Applies the window pointer to the context
+			createContent(hierarchy.top, factory.withContext(hierarchy, context.withWindowPointer(windowP)))
 		}
 	
 	/**
@@ -507,7 +510,8 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	                                               title: LocalizedString = LocalizedString.empty,
 	                                               matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
 	                                              (createContent: (ReachCanvas, F) => ComponentCreationResult[C, R]) =
-		windowFactory.anchoredTo(component, preferredAlignment, margin, title, matchEdgeLength, keepAnchored) { hierarchy =>
-			createContent(hierarchy.top, factory.withContext(hierarchy, context))
+		windowFactory.anchoredTo(component, preferredAlignment, margin, title, matchEdgeLength, keepAnchored) {
+			(hierarchy, windowP) =>
+				createContent(hierarchy.top, factory.withContext(hierarchy, context.withWindowPointer(windowP)))
 		}
 }

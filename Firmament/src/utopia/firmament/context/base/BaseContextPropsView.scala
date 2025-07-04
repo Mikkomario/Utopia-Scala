@@ -1,5 +1,6 @@
 package utopia.firmament.context.base
 
+import utopia.firmament.component.Window
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
@@ -40,6 +41,15 @@ trait BaseContextPropsView extends Any
 	  * @return Used margins
 	  */
 	def margins: Margins
+	
+	/**
+	  * @return A pointer that contains the window in which these components appear,
+	  *         once that window has been fully initialized.
+	  *
+	  *         Note: Not all component hierarchies are hosted in a (Firmament-based) window,
+	  *               meaning that this pointer may remain empty.
+	  */
+	def windowPointer: Changing[Option[Window]]
 	
 	/**
 	  * @return A pointer that contains the currently used font

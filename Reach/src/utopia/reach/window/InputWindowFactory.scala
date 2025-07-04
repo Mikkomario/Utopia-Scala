@@ -177,16 +177,17 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		
 		// Creates a warning pop-up
 		val windowPointer = AssignableOnce[Window]()
-		val window = field.createWindow(margin = context.margins.medium) { hierarchy =>
+		val window = field.createWindow(margin = context.margins.medium) { (hierarchy, windowP) =>
 			// The pop-up contains a close button and the warning text
-			Framing(hierarchy).withContext(context: StaticTextContext).small.build(Stack) { stackF =>
-				stackF.centeredRow.build(Mixed) { factories =>
-					Pair(
-						factories(ImageButton).icon(closeIcon) { windowPointer.onceSet { _.close() } },
-						factories(TextLabel)(message)
-					)
+			Framing(hierarchy).withContext(context.withWindowPointer(windowP): StaticTextContext).small
+				.build(Stack) { stackF =>
+					stackF.centeredRow.build(Mixed) { factories =>
+						Pair(
+							factories(ImageButton).icon(closeIcon) { windowPointer.onceSet { _.close() } },
+							factories(TextLabel)(message)
+						)
+					}
 				}
-			}
 		}
 		windowPointer.set(window)
 		// Registers pop-up ownership if possible

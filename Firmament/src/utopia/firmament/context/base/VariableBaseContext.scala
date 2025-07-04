@@ -1,5 +1,6 @@
 package utopia.firmament.context.base
 
+import utopia.firmament.component.Window
 import utopia.firmament.context.color.VariableColorContext
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
@@ -76,7 +77,7 @@ object VariableBaseContext
 		case v: VariableBaseContext => v
 		case c =>
 			apply(c.actorHandler, c.margins, c.colors, c.fontPointer, c.contrastStandard, Some(c.stackMarginPointer),
-				c.allowImageUpscalingFlag)(c.localizer)
+				c.windowPointer, c.allowImageUpscalingFlag)(c.localizer)
 	}
 	
 	
@@ -91,6 +92,9 @@ object VariableBaseContext
 	  * @param contrastStandard The color contrast standard applied (default = always minimum standard)
 	  * @param stackMarginPointer Pointer that contains the applied default stack margin.
 	  *                           None (default) if the default pointer should be generated & used instead.
+	  * @param windowPointer A pointer that will contain the window hosting this component hierarchy,
+	  *                      once it has been initialized.
+	  *                      Default = will never populate.
 	  * @param allowImageUpscalingFlag Flag that determines whether image-upscaling should be allowed.
 	  *                                Default = never allowed.
 	  * @param localizer Implicit localization implementation
@@ -99,11 +103,11 @@ object VariableBaseContext
 	def apply(actorHandler: ActorHandler, margins: Margins, colors: ColorScheme,
 	          fontPointer: Changing[Font], contrastStandard: ColorContrastStandard = Minimum,
 	          stackMarginPointer: Option[Changing[StackLength]] = None,
-	          allowImageUpscalingFlag: Flag = AlwaysFalse)
+	          windowPointer: Changing[Option[Window]] = Fixed.never, allowImageUpscalingFlag: Flag = AlwaysFalse)
 	         (implicit localizer: Localizer): VariableBaseContext =
 		_VariableBaseContext(actorHandler, localizer, margins, colors, contrastStandard, fontPointer,
 			stackMarginPointer.getOrElse { Fixed(defaultStackMarginWith(margins)) },
-			Lazy { createSmallStackMarginPointer(margins, stackMarginPointer) }, allowImageUpscalingFlag,
+			Lazy { createSmallStackMarginPointer(margins, stackMarginPointer) }, windowPointer, allowImageUpscalingFlag,
 			stackMarginPointerIsCustom = false)
 	/**
 	  * Creates a new static base context
@@ -115,16 +119,19 @@ object VariableBaseContext
 	  *                    None (default) if the default margin should be generated & used instead.
 	  * @param colorContrastStandard The color contrast standard applied
 	  *                              (default = minimum standard)
+	  * @param windowPointer A pointer that will contain the window hosting this component hierarchy,
+	  *                      once it has been initialized.
+	  *                      Default = will never populate.
 	  * @param allowImageUpscaling Whether image-upscaling should be allowed. Default = false = no.
 	  * @param localizer Implicit localization implementation
 	  * @return A new static context instance
 	  */
 	def fixed(actorHandler: ActorHandler, colorScheme: ColorScheme, margins: Margins, font: Font,
 	          colorContrastStandard: ColorContrastStandard = Minimum, stackMargin: Option[StackLength] = None,
-	          allowImageUpscaling: Boolean = false)
+	          windowPointer: Changing[Option[Window]] = Fixed.never, allowImageUpscaling: Boolean = false)
 	         (implicit localizer: Localizer): VariableBaseContext =
 		apply(actorHandler, margins, colorScheme, Fixed(font), colorContrastStandard, stackMargin.map { Fixed(_) },
-			Always(allowImageUpscaling))
+			windowPointer, Always(allowImageUpscaling))
 	
 	private def defaultStackMarginWith(margins: Margins) = StackLength(margins.verySmall, margins.medium, margins.large)
 	private def createSmallStackMarginPointer(margins: Margins,
@@ -143,6 +150,7 @@ object VariableBaseContext
 	                                        fontPointer: Changing[Font],
 	                                        stackMarginPointer: Changing[StackLength],
 	                                        smallStackMarginPointerView: View[Changing[StackLength]],
+	                                        windowPointer: Changing[Option[Window]],
 	                                        allowImageUpscalingFlag: Flag,
 	                                        stackMarginPointerIsCustom: Boolean)
 		extends VariableBaseContext
@@ -152,7 +160,7 @@ object VariableBaseContext
 		override def self: VariableBaseContext = this
 		
 		override def current: StaticBaseContext = StaticBaseContext(actorHandler, fontPointer.value, colors, margins,
-			if (stackMarginPointerIsCustom) Some(stackMarginPointer.value) else None, contrastStandard,
+			if (stackMarginPointerIsCustom) Some(stackMarginPointer.value) else None, contrastStandard, windowPointer,
 			allowImageUpscalingFlag.value)(localizer)
 		override def toVariableContext: VariableBaseContext = this
 		
@@ -168,6 +176,7 @@ object VariableBaseContext
 				smallStackMarginPointerView = Lazy { createSmallStackMarginPointer(margins, Some(p)) },
 				stackMarginPointerIsCustom = true)
 		override def withAllowImageUpscalingFlag(f: Flag): VariableBaseContext = copy(allowImageUpscalingFlag = f)
+		override def withWindowPointer(p: Changing[Option[Window]]): VariableBaseContext = copy(windowPointer = p)
 		
 		override def against(backgroundPointer: Changing[Color]) = VariableColorContext(this, backgroundPointer)
 		

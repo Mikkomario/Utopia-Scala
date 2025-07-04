@@ -651,70 +651,73 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 	private def createPopup(): Window = {
 		// Creates the pop-up
 		implicit val windowContext: VariableReachContentWindowContext = popUpContext
-		val popup = field.createOwnedWindow(Alignment.forDirection(settings.listAxis(Positive)), matchEdgeLength = true) { hierarchy =>
-			// The pop-up content resides in a scroll view with custom background drawing
-			ScrollView(hierarchy).withAxis(settings.listAxis)
-				// TODO: Applies fixed cap where it maybe variable
-				.withBarMargin(windowContext.margins.small, settings.listCapPointer.value.optimal)
-				.limitedToContentSize
-				.withCustomDrawer(BackgroundViewDrawer(field.innerBackgroundPointer))
-				.build(Mixed) { factories =>
-					// The scrollable content consists of either:
-					//  1) Main content + additional view, or
-					//  2) Main content only
-					def makeOptionsList(factory: SelectionListFactory) =
-						factory.withContext(popUpContext).withSettings(settings.listSettings)
-							.withMargin(settings.listMargin)
-							.apply(contentPointer, valuePointer, sameItemCheck) { (hierarchy, item) =>
-							makeDisplay(hierarchy, popUpContext, item)
-						}
-					def makeMainContent(factories: Mixed) = {
-						// The main content is either:
-						//   1) Switchable between options and no-options -view
-						//   2) Only the options view
-						settings.noOptionsViewConstructor match {
-							// Case: No options -view used => Switches between the two views
-							case Some(makeNoOptionsView) =>
-								factories(Swapper).build(Mixed)
-									.apply(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
-										// Case: No options -view constructor
-										if (isEmpty)
-											makeNoOptionsView(factories.hierarchy, popUpContext)
-										// Case: List constructor
-										else
-											makeOptionsList(factories(SelectionList))
-									}
-							// Case: No no-options -view used => Always displays the selection list
-							case None => makeOptionsList(factories(SelectionList))
-						}
-					}
-					settings.extraOptionConstructor match {
-						// Case: Additional view used => Places it above or below the main content
-						case Some(makeAdditionalOption) =>
-							factories(ViewStack).withoutMargin.build(Mixed) { factories =>
-								// The main content may be hidden, if empty
-								val mainContentVisiblePointer = {
-									if (settings.noOptionsViewConstructor.isDefined)
-										AlwaysTrue
-									else
-										contentPointer.map { _.nonEmpty }
-								}
-								// Orders the components based on settings
-								val topAndBottomFactories = Pair.fill(factories.next())
-								val mainContent = makeMainContent(topAndBottomFactories(
-									settings.extraOptionLocation.opposite))
-								val additional = makeAdditionalOption(
-									topAndBottomFactories(settings.extraOptionLocation).hierarchy,
-									popUpContext)
-								if (settings.extraOptionLocation == First)
-									Pair(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
-								else
-									Pair(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+		val popup = field.createOwnedWindow(Alignment.forDirection(settings.listAxis(Positive)), matchEdgeLength = true) {
+			(hierarchy, windowP) =>
+				lazy val appliedPopupContext = popUpContext.withWindowPointer(windowP)
+				
+				// The pop-up content resides in a scroll view with custom background drawing
+				ScrollView(hierarchy).withAxis(settings.listAxis)
+					// TODO: Applies fixed cap where it maybe variable
+					.withBarMargin(windowContext.margins.small, settings.listCapPointer.value.optimal)
+					.limitedToContentSize
+					.withCustomDrawer(BackgroundViewDrawer(field.innerBackgroundPointer))
+					.build(Mixed) { factories =>
+						// The scrollable content consists of either:
+						//  1) Main content + additional view, or
+						//  2) Main content only
+						def makeOptionsList(factory: SelectionListFactory) =
+							factory.withContext(appliedPopupContext).withSettings(settings.listSettings)
+								.withMargin(settings.listMargin)
+								.apply(contentPointer, valuePointer, sameItemCheck) { (hierarchy, item) =>
+								makeDisplay(hierarchy, appliedPopupContext, item)
 							}
-						// CAse: No additional view used => Always displays the main content
-						case None => makeMainContent(factories)
+						def makeMainContent(factories: Mixed) = {
+							// The main content is either:
+							//   1) Switchable between options and no-options -view
+							//   2) Only the options view
+							settings.noOptionsViewConstructor match {
+								// Case: No options -view used => Switches between the two views
+								case Some(makeNoOptionsView) =>
+									factories(Swapper).build(Mixed)
+										.apply(contentPointer.map { _.isEmpty }) { (factories, isEmpty: Boolean) =>
+											// Case: No options -view constructor
+											if (isEmpty)
+												makeNoOptionsView(factories.hierarchy, appliedPopupContext)
+											// Case: List constructor
+											else
+												makeOptionsList(factories(SelectionList))
+										}
+								// Case: No no-options -view used => Always displays the selection list
+								case None => makeOptionsList(factories(SelectionList))
+							}
+						}
+						settings.extraOptionConstructor match {
+							// Case: Additional view used => Places it above or below the main content
+							case Some(makeAdditionalOption) =>
+								factories(ViewStack).withoutMargin.build(Mixed) { factories =>
+									// The main content may be hidden, if empty
+									val mainContentVisiblePointer = {
+										if (settings.noOptionsViewConstructor.isDefined)
+											AlwaysTrue
+										else
+											contentPointer.map { _.nonEmpty }
+									}
+									// Orders the components based on settings
+									val topAndBottomFactories = Pair.fill(factories.next())
+									val mainContent = makeMainContent(topAndBottomFactories(
+										settings.extraOptionLocation.opposite))
+									val additional = makeAdditionalOption(
+										topAndBottomFactories(settings.extraOptionLocation).hierarchy,
+										appliedPopupContext)
+									if (settings.extraOptionLocation == First)
+										Pair(additional -> AlwaysTrue, mainContent -> mainContentVisiblePointer)
+									else
+										Pair(mainContent -> mainContentVisiblePointer, additional -> AlwaysTrue)
+								}
+							// CAse: No additional view used => Always displays the main content
+							case None => makeMainContent(factories)
+						}
 					}
-				}
 		}
 		// Remembers when the pop-up closes
 		popup.fullyVisibleFlag.addListener { e =>

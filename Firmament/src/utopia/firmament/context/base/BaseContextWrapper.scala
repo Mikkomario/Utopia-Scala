@@ -1,5 +1,6 @@
 package utopia.firmament.context.base
 
+import utopia.firmament.component.Window
 import utopia.firmament.localization.Localizer
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
@@ -35,6 +36,18 @@ trait BaseContextWrapper[Base <: BaseContextCopyable[Base, _], +Repr] extends Ba
 	
 	// IMPLEMENTED  ---------------------
 	
+	override def actorHandler: ActorHandler = base.actorHandler
+	override def localizer: Localizer = base.localizer
+	override def colors: ColorScheme = base.colors
+	override def contrastStandard: ColorContrastStandard = base.contrastStandard
+	override def margins: Margins = base.margins
+	
+	override def windowPointer: Changing[Option[Window]] = base.windowPointer
+	override def fontPointer: Changing[Font] = base.fontPointer
+	override def stackMarginPointer: Changing[StackLength] = base.stackMarginPointer
+	override def smallStackMarginPointer: Changing[StackLength] = base.smallStackMarginPointer
+	override def allowImageUpscalingFlag: Flag = base.allowImageUpscalingFlag
+	
 	override def withFont(font: Font): Repr = mapBase { _.withFont(font) }
 	override def withColorContrastStandard(standard: ColorContrastStandard): Repr =
 		mapBase { _.withColorContrastStandard(standard) }
@@ -43,20 +56,10 @@ trait BaseContextWrapper[Base <: BaseContextCopyable[Base, _], +Repr] extends Ba
 	override def withAllowImageUpscaling(allowImageUpscaling: Boolean): Repr =
 		mapBase { _.withAllowImageUpscaling(allowImageUpscaling) }
 	override def withStackMargin(size: SizeCategory): Repr = mapBase { _.withStackMargin(size) }
+	override def withWindowPointer(p: Changing[Option[Window]]): Repr = mapBase { _.withWindowPointer(p) }
 	
 	override def mapFont(f: Font => Font): Repr = mapBase { _.mapFont(f) }
 	override def mapStackMargin(f: StackLength => StackLength): Repr = mapBase { _.mapStackMargin(f) }
-	
-	override def actorHandler: ActorHandler = base.actorHandler
-	override def localizer: Localizer = base.localizer
-	override def colors: ColorScheme = base.colors
-	override def contrastStandard: ColorContrastStandard = base.contrastStandard
-	override def margins: Margins = base.margins
-	
-	override def fontPointer: Changing[Font] = base.fontPointer
-	override def stackMarginPointer: Changing[StackLength] = base.stackMarginPointer
-	override def smallStackMarginPointer: Changing[StackLength] = base.smallStackMarginPointer
-	override def allowImageUpscalingFlag: Flag = base.allowImageUpscalingFlag
 	
 	override def scaledStackMarginPointer(scaling: SizeCategory): Changing[StackLength] =
 		base.scaledStackMarginPointer(scaling)
