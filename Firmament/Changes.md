@@ -1,6 +1,11 @@
 # Utopia Firmament - List of Changes
 
 ## v1.5.1 (in development)
+### New features
+- All context implementations now implement a `windowPointer` property, where the intention is to allow 
+  the components to utilize a centralized pointer that will contain the Firmament-based window hosting them.
+  - Please note, that this pointer is never populated by default. 
+    Implementing libraries / code (such as Utopia Reach) will need to populate / specify it themselves.
 ### New methods
 - **java.awt.Component** (via **AwtComponentExtensions**)
   - Added `.toImage`

@@ -34,7 +34,11 @@ class SqlValueGeneratorManager(initialGenerators: Iterable[SqlValueGenerator])
 	  * @return A function for converting SQL values of that type to [[Value]]s.
 	  *         None if this conversion is not supported.
 	  */
-	def conversionFrom(sqlType: Int) = generators.findMap { _.conversionFrom(sqlType) }
+	// Finds a conversion that's possible from the specified SQL data type
+	def conversionFrom(sqlType: Int): Option[Any => Value] =
+		generators.findMap { _.conversionFrom(sqlType) }
+			// Includes handling of null values separately
+			.map { conversion => v: Any => if (v == null) Value.empty else conversion(v) }
 	
 	/**
 	  * Adds a new value generator to the set of available generators. The new generator will take

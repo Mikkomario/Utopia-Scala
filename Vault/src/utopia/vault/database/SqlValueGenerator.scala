@@ -21,6 +21,9 @@ trait SqlValueGenerator
       * @param sqlType An integer representing an SQL data type
       * @return A function which converts a read SQL object into a [[Value]].
       *         None if conversion from the specified type is not implemented / supported.
+      *
+      *         Note: This function is not expected to function with null values.
+      *               These should be handled separately.
       * @see [[java.sql.Types]]
       */
     def conversionFrom(sqlType: Int): Option[Any => Value]
