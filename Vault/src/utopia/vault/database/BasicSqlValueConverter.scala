@@ -11,6 +11,7 @@ import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, FloatType, InstantType, IntType, LocalDateType, LocalTimeType, LongType, StringType}
 
 import java.sql.Time
+import java.time.temporal.ChronoUnit
 
 /**
  * This value converter is able to convert some data types into sql compatible object types. The 
@@ -25,19 +26,17 @@ object BasicSqlValueConverter extends ValueConverter[(Any, Int)]
     override val supportedTypes: Set[DataType] = HashSet(StringType, InstantType, BooleanType, 
             IntType, LongType, FloatType, DoubleType, LocalDateType, LocalTimeType)
     
-    override def apply(value: Value, dataType: DataType) = 
-    {
+    override def apply(value: Value, dataType: DataType) = {
         // NB: Instant into timestamp slot only works with JDBC 4.2 driver or later
-        dataType match 
-        {
+        dataType match {
             case DoubleType => (value.getDouble, Types.DOUBLE)
             case FloatType => (value.getFloat, Types.FLOAT)
             case LongType => (value.getLong, Types.BIGINT)
             case IntType => (value.getInt, Types.INTEGER)
             case BooleanType => (value.getBoolean, Types.BOOLEAN)
-            case InstantType => (Timestamp.from(value.getInstant), Types.TIMESTAMP)
+            case InstantType => (Timestamp.from(value.getInstant.truncatedTo(ChronoUnit.SECONDS)), Types.TIMESTAMP)
             case LocalDateType => (Date.valueOf(value.getLocalDate), Types.DATE)
-            case LocalTimeType => (Time.valueOf(value.getLocalTime), Types.TIME)
+            case LocalTimeType => (Time.valueOf(value.getLocalTime.truncatedTo(ChronoUnit.SECONDS)), Types.TIME)
             case _ => (value.getString, Types.VARCHAR)
         }
     }

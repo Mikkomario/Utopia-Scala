@@ -1,0 +1,29 @@
+{
+  "project": "VaultTest",
+  "version": "v1.22",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.vault.test",
+  "database": "vault_test",
+  "classes": {
+    "item": [
+      {
+        "name": "VersionedTestItem",
+        "name_plural": "TestItems",
+        "access": "versioned",
+        "props": [
+          {
+            "name": "name",
+            "type": "String(12-64)",
+            "doc": "Name of this test item"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "type": "deprecation"
+          }
+        ]
+      }
+    ]
+  }
+}

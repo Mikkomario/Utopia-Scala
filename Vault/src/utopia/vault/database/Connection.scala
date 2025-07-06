@@ -450,7 +450,7 @@ object Connection
 					failureP.trySet {
 						new IllegalArgumentException(s"Can't process generated keys of SQL type $sqlType")
 					}
-					
+				
 				getValue
 				
 			}.getOrMap { error =>
@@ -895,43 +895,37 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 							val failureP = AssignableOnce[Throwable]()
 							lazy val failureViewP = failureP.viewWhile(!closedFlag)
 							val result = {
-								// Case: Results became available => Prepares a streamed result
-								if (containsResults) {
-									// Case: Expecting generated keys
-									if (returnGeneratedKeys) {
-										val keysIter = new GeneratedKeysIterator(statement, failureP, closedFlag)
-										new ResultStream(closedFlag, failureViewP, generatedKeysIterator = keysIter)
-									}
-									// Case: Expecting rows, followed by a possible update count
-									else {
-										// Prepares an iterator for row-reading
-										val rowsIter = new StatementRowsIterator(statement, failureP, closedFlag,
-											selectedTables.view.map { t => t.name -> t }.toMap)
-										// Prepares a lazy interface for acquiring the update count
-										val lazyUpdateCount = Lazy {
-											failureP.value match {
-												// Case: Already failed => Yields a failure
-												case Some(error) => Failure(error)
-												case None =>
-													// Case: Already closed => Yields a failure
-													if (closedFlag.isSet)
-														Failure(new IllegalStateException(
-															"This result stream has already closed"))
-													// Case: Open => Flushes all remaining row content
-													//               and attempts to acquire the update count
-													else
-														rowsIter.flush().flatMap { _ =>
-															Try { statement.getUpdateCount max 0 }
-														}
-											}
-										}
-										new ResultStream(closedFlag, failureViewP, rowsIter,
-											lazyUpdatedRowsCount = lazyUpdateCount)
-									}
+								// Case: Expecting generated keys
+								if (returnGeneratedKeys) {
+									val keysIter = new GeneratedKeysIterator(statement, failureP, closedFlag)
+									new ResultStream(closedFlag, failureViewP, generatedKeysIterator = keysIter)
 								}
-								// Case: No rows present when expecting generated keys => Prepares no content
-								else if (returnGeneratedKeys)
-									new ResultStream(closedFlag, failureViewP)
+								// Case: Results became available => Prepares a streamed result
+								else if (containsResults) {
+									// Prepares an iterator for row-reading
+									val rowsIter = new StatementRowsIterator(statement, failureP, closedFlag,
+										selectedTables.view.map { t => t.name -> t }.toMap)
+									// Prepares a lazy interface for acquiring the update count
+									val lazyUpdateCount = Lazy {
+										failureP.value match {
+											// Case: Already failed => Yields a failure
+											case Some(error) => Failure(error)
+											case None =>
+												// Case: Already closed => Yields a failure
+												if (closedFlag.isSet)
+													Failure(new IllegalStateException(
+														"This result stream has already closed"))
+												// Case: Open => Flushes all remaining row content
+												//               and attempts to acquire the update count
+												else
+													rowsIter.flush().flatMap { _ =>
+														Try { statement.getUpdateCount max 0 }
+													}
+										}
+									}
+									new ResultStream(closedFlag, failureViewP, rowsIter,
+										lazyUpdatedRowsCount = lazyUpdateCount)
+								}
 								// Case: No row content present => Prepares to acquire an update count, if appropriate
 								else {
 									// WET WET

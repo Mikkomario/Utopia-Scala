@@ -4,6 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.generic.model.immutable.Value
 
+import java.sql.Types
+
 /**
   * This class uses multiple sql value generators and generates values that way
   * @author Mikko Hilpinen
@@ -12,6 +14,8 @@ import utopia.flow.generic.model.immutable.Value
 class SqlValueGeneratorManager(initialGenerators: Iterable[SqlValueGenerator])
 {
 	// ATTRIBUTES    --------------------
+	
+	private lazy val alwaysYieldEmpty: Any => Value = { _: Any => Value.empty }
 	
 	private var generators = OptimizedIndexedSeq.from(initialGenerators)
 	
@@ -35,10 +39,14 @@ class SqlValueGeneratorManager(initialGenerators: Iterable[SqlValueGenerator])
 	  *         None if this conversion is not supported.
 	  */
 	// Finds a conversion that's possible from the specified SQL data type
-	def conversionFrom(sqlType: Int): Option[Any => Value] =
-		generators.findMap { _.conversionFrom(sqlType) }
-			// Includes handling of null values separately
-			.map { conversion => v: Any => if (v == null) Value.empty else conversion(v) }
+	def conversionFrom(sqlType: Int): Option[Any => Value] = {
+		if (sqlType == Types.NULL)
+			Some(alwaysYieldEmpty)
+		else
+			generators.findMap { _.conversionFrom(sqlType) }
+				// Includes handling of null values separately
+				.map { conversion => v: Any => if (v == null) Value.empty else conversion(v) }
+	}
 	
 	/**
 	  * Adds a new value generator to the set of available generators. The new generator will take

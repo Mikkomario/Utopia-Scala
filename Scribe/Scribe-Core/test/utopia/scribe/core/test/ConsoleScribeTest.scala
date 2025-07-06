@@ -3,7 +3,7 @@ package utopia.scribe.core.test
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.test.TestContext._
-import utopia.scribe.core.controller.logging.ConsoleScribe
+import utopia.scribe.core.controller.logging.{ConsoleScribe, Scribe}
 import utopia.scribe.core.model.enumeration.Severity.Debug
 
 /**
@@ -13,7 +13,7 @@ import utopia.scribe.core.model.enumeration.Severity.Debug
   */
 object ConsoleScribeTest extends App
 {
-	val log = ConsoleScribe("test", defaultSeverity = Debug)
+	val log = Scribe.lazily { ConsoleScribe("test", defaultSeverity = Debug) }.in("lazy")
 	
 	println("Println before logging")
 	log("Testing logging", Model.from("detail" -> "value"))

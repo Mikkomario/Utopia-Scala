@@ -9,6 +9,14 @@ import utopia.vault.model.immutable.Table
   */
 object VaultTestTables
 {
+	// ATTRIBUTES	--------------------
+	
+	/**
+	  * Table that contains test items
+	  */
+	lazy val versionedTestItem = apply("versioned_test_item")
+	
+	
 	// COMPUTED	--------------------
 	
 	/**

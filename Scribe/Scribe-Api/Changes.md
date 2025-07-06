@@ -1,7 +1,7 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.0.6 (in development)
-Adds support for **Scribe-Core v1.2**
+Adds support for **Scribe-Core v1.2 and Vault v1.22**
 
 ## v1.0.5 - 26.05.2025
 Adds support for **Access v1.6**

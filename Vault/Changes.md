@@ -40,6 +40,9 @@
 - **Select**
   - New constructors utilizing **TableColumn**
 ### Other changes
+- When converting **Instant**s and **LocalTime**s into SQL values, truncates the values to the previous full second. 
+  - This is to avoid instances, for example, where you insert values with timestamp A, 
+    yet SELECT ... WHERE timestamp >= A yields 0 rows.
 - Rewrote database-query result-processing code to support streaming
   - Standard queries (i.e. `.apply(Statement)`) now utilize streaming, internally
 - Column name -based look-up in **Table** is now faster
