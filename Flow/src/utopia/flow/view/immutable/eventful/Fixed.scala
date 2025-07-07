@@ -60,7 +60,7 @@ sealed abstract class Fixed[+A] extends Changing[A] with EqualsBy
 	override def readOnly = this
 	override protected def equalsProperties: Seq[Any] = Single(value)
 	
-	override def toString = s"Fixed($value)"
+	override def toString = s"Always($value)"
 	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = ()
 	override def removeListener(changeListener: Any) = ()
@@ -88,8 +88,8 @@ sealed class LazilyFixed[+A](get: => A) extends Fixed[A] with Lazy[A]
 	override def current: Option[A] = wrapped.current
 	
 	override def toString = current match {
-		case Some(value) => s"LazilyFixed($value)"
-		case None => "LazilyFixed(<uninitialized>)"
+		case Some(value) => s"Always.lazily($value)"
+		case None => "Always.lazily(<unitialized>)"
 	}
 	
 	override def map[B](f: A => B) = new LazilyFixed[B](f(value))

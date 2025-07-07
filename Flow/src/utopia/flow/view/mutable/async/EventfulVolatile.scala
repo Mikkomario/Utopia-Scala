@@ -42,6 +42,8 @@ object EventfulVolatile extends LoggingPointerFactory[EventfulVolatile]
 		override def value: A = _value
 		override def destiny: Destiny = ForeverFlux
 		
+		override def toString = s"Volatile.eventful(${ _value })"
+		
 		override protected def assignWithoutEvents(newValue: A): Unit = _value = newValue
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()

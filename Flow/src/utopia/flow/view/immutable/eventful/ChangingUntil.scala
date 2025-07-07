@@ -68,6 +68,11 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	
 	override def readOnly: Changing[R] = this
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None => s"Mirroring($origin).temporarily"
+	}
+	
 	override def stop(): Future[Any] = {
 		if (!stopped) {
 			stopped = true

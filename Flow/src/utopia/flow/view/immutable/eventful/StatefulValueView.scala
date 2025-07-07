@@ -112,6 +112,11 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	
 	override def readOnly = this
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always(${ value.value }).stateful"
+		case None => s"Mirroring($origin).stateful"
+	}
+	
 	
 	// OTHER    ------------------------
 	

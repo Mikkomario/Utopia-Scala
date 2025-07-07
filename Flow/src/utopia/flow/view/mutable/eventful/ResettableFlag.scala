@@ -52,6 +52,8 @@ object ResettableFlag
 			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 		}
 		
+		override def toString = s"Flag(${ _value }).resettable"
+		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}
 }

@@ -81,6 +81,8 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger)
 		}
 	}
 	
+	override def toString = if (isSet) s"Mutated.to($value)" else s"Mutable.once.from($value)"
+	
 	/**
 	  * Assigns a new value to this item
 	  * @param newValue New value to assign

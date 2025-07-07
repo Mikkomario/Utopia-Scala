@@ -103,6 +103,11 @@ class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: 
 	
 	override def destiny = source.destiny.fluxIf(queuedValuePointer.nonEmpty)
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Viewing.always($value)"
+		case None => s"Viewing.delayed($source)"
+	}
+	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener) =
 		stopListeners :+= listener
 }

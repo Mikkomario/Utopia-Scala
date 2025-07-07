@@ -145,6 +145,11 @@ sealed class LogicalMirror(sources: Pair[Changing[Boolean]], stopValue: Boolean,
 	
 	override def readOnly = this
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Logically.always($value)"
+		case None => s"Mirroring.logically(${ sources.first }).and(${ sources.second })"
+	}
+	
 	
 	// OTHER    ----------------------------
 	

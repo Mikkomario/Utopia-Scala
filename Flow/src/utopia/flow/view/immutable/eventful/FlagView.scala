@@ -16,4 +16,6 @@ class FlagView(flag: Flag) extends Flag with ChangingWrapper[Boolean]
 	override protected def wrapped = flag
 	
 	override def readOnly = this
+	
+	override def toString = wrapped.toString
 }

@@ -36,6 +36,8 @@ object IndirectPointer
 	{
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def value_=(newValue: A): Unit = set(newValue)
+		
+		override def toString = s"$wrapped.indirect"
 	}
 }
 

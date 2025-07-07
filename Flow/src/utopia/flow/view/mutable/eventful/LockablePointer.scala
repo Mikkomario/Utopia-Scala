@@ -40,6 +40,8 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
 		override def value: A = _value
 		override def locked = _locked
 		
+		override def toString = if (_locked) s"Pointer(${ _value }).locked" else s"Pointer(${ _value }).lockable"
+		
 		override def lock() = {
 			_locked = true
 			declareChangingStopped()

@@ -9,6 +9,9 @@
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
 - `.splitMap(...)` in **IterableOnce** (via **CollectionExtensions**) now yields **IndexedSeq**s instead of **Vector**s
+### Bugfixes
+- Under certain conditions, **OptimizedMultiMergeMirror** 
+  and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.groupedWithinSize(Int)` for deep collections
@@ -19,6 +22,7 @@
 - **UncertainBoolean** now extends **ValueConvertible**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
+- Modified `toString` implementations of most **Changing** implementations
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

@@ -38,6 +38,17 @@ object ResettableLockableFlag
 		override def value: Boolean = _value
 		override def locked: Boolean = _locked
 		
+		override def toString = {
+			if (_locked) {
+				if (_value)
+					"Flag.set.locked"
+				else
+					"Flag.locked"
+			}
+			else
+				s"Flag(${ _value }).resettable.lockable"
+		}
+		
 		override def lock(): Unit = {
 			if (!locked) {
 				_locked = true

@@ -148,16 +148,15 @@ object AsyncMirror
 		
 		// IMPLEMENTED  --------------------
 		
-		override def toString = {
-			val originStr = activeOrigin match {
-				case Some(o) => s", mapping $o"
-				case None => ""
-			}
-			val queuedStr = queuedOrigin match {
-				case Some(q) => s", mapping of $q has been queued"
-				case None => ""
-			}
-			s"Currently $current$originStr$queuedStr"
+		override def toString = activeOrigin match {
+			case Some(origin) =>
+				val suffix = queuedOrigin match {
+					case Some(queued) => s".queued($queued)"
+					case None => ""
+				}
+				s"mapping($origin)$suffix"
+			
+			case None => current.toString
 		}
 	}
 }
@@ -226,6 +225,20 @@ class AsyncMirror[Origin, Result, Reflection](val source: Changing[Origin], init
 	override def destiny = source.destiny.fluxIf(value.isProcessing)
 	
 	override def readOnly = this
+	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value).async"
+		case None =>
+			condition.fixedValue match {
+				case Some(isMirroring) =>
+					if (isMirroring)
+						s"Mirroring($source).async"
+					else
+						s"Mirroring($source).async.ending"
+					
+				case None => s"Mirroring($source).while($condition).async"
+			}
+	}
 	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()

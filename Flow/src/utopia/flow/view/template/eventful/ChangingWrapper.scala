@@ -22,6 +22,8 @@ object ChangingWrapper
 	{
 		override def readOnly = this
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
+		
+		override def toString = wrapped.toString
 	}
 }
 

@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
@@ -10,7 +11,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.AbstractChanging
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object ChangeFuture
 {
@@ -102,6 +103,15 @@ class ChangeFuture[A, F](placeHolder: A, val future: Future[F])(mergeResult: (A,
 	override def destiny: Destiny = if (isCompleted) Sealed else MaySeal
 	
 	override def readOnly = this
+	
+	override def toString = future.currentResult match {
+		case Some(result) =>
+			result match {
+				case Success(value) => s"Future.resolved($value)"
+				case Failure(_) => s"Future.failed.from($placeHolder)"
+			}
+		case None => s"Future.change.from($placeHolder)"
+	}
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
 		stopListeners :+= listener

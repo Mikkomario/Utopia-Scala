@@ -100,7 +100,10 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	
 	override def readOnly: Changing[R] = this
 	
-	override def toString = s"Light merge of $origin1 and $origin2; Currently $value $destiny; Stopped = $stopped"
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None => s"Merging($origin1).and($origin2).light"
+	}
 	
 	override def stop(): Future[Any] = {
 		if (!stopped) {

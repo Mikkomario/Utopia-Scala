@@ -107,4 +107,11 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 	}
 	
 	override def readOnly = this
+	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None =>
+			val suffix = if (condition.isFixed) "" else s".while($condition)"
+			s"Merging($firstSource).and($secondSource)$condition"
+	}
 }

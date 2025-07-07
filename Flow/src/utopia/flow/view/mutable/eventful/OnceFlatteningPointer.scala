@@ -94,6 +94,11 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		case None => queuedListeners.map { _.size }.sum
 	}
 	
+	override def toString = pointer match {
+		case Some(p) => p.toString
+		case None => s"Flattening.once.from($placeholderValue)"
+	}
+	
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
 		pointer match {
 			// Case: Pointer already defined => Assigns listeners directly to it

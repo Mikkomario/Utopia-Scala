@@ -64,7 +64,7 @@ object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
 			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
 		}
 		
-		override def toString = s"EventfulPointer(${_value})"
+		override def toString = s"Pointer(${_value}).eventful"
 		
 		// Can never stop changing, so listener assignment is not needed either
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()

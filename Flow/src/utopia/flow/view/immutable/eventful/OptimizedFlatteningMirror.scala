@@ -136,6 +136,17 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 	
 	override def readOnly = this
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None =>
+			pointerPointer.fixedValue match {
+				case Some(p) => p.toString
+				case None =>
+					val suffix = if (condition.isAlwaysTrue) "" else s".while($condition)"
+					s"Mirroring.flattening($source)$suffix"
+			}
+	}
+	
 	
 	// OTHER    -----------------------------
 	
@@ -206,7 +217,11 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 		  */
 		private def assign(newValue: R) = {
 			val oldValue = valueP.getAndSet(newValue)
-			Continue.and { fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log } }
+			val afterEffects = fireEventIfNecessary(oldValue, newValue)
+			if (afterEffects.isEmpty)
+				Continue
+			else
+				Continue.and { afterEffects.foreach { effect => Try { effect() }.log } }
 		}
 		
 		

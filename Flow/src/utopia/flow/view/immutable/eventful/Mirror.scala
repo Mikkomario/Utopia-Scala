@@ -80,5 +80,10 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 	
 	override def readOnly = this
 	
-	override def toString = s"Mirror of $source while $condition; Currently ${_value} $destiny"
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None =>
+			val suffix = if (condition.isFixed) "" else s".while($condition)"
+			s"Mirroring($source)$suffix"
+	}
 }

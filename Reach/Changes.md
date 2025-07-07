@@ -9,6 +9,8 @@
   parameter: a window pointer.
   - This also applies to windows created via **ReachComponent**'s 
     `createWindow(...)` and `createOwnedWindow(...)` functions.
+### Bugfixes
+- The field name -coloring in **Field** now properly adjusts to the changes in the inner field background color
 ### Deprecations
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
 ### New features
@@ -18,6 +20,8 @@
   `windowPointer` property (a new **Firmament** feature) will automatically be specified.
 - All text-related contextual button factories now extend **FromColorRoleFactory**, 
   allowing for easier color assignment
+### Other changes
+- **Field** now visibly reacts to mouse hover
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 

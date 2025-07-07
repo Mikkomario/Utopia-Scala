@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.Sealed
@@ -61,12 +62,16 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 	}
 	
 	private var _value: R = formResult
-	// Boolean flag set to true while _value is not up-to-date.
-	// Only used while this mirror is not being listened to (lazy mode)
+	/**
+	  * Boolean flag set to true while _value is not up-to-date.
+	  * Only used while this mirror is not being listened to (lazy mode)
+	  */
 	private val outOfDateFlag = Switch()
 	
-	// Listener used while this mirror is not actively being listened to
-	// Detaches as soon as the out-of-date status has been updated
+	/**
+	  * Listener used while this mirror is not actively being listened to
+	  * Detaches as soon as the out-of-date status has been updated
+	  */
 	private val lazyLazyListener: Lazy[ChangeListener[Any]] = Lazy {
 		ChangeListener.onAnyChange {
 			outOfDateFlag.set()
@@ -80,15 +85,18 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 		ChangeListener.onAnyChange {
 			val oldValue = _value
 			val newValue = formResult
-			
-			if (newValue == oldValue)
-				Continue
-			else {
+			if (newValue != oldValue) {
 				_value = newValue
-				Continue.and {
-					fireEvent(Lazy { Some(ChangeEvent(oldValue, newValue)) }).foreach { effect => Try { effect() }.log }
-				}
+				// NB: If these events are fired in the Continue.and(...) -code,
+				//     won't always work in the correct order / way
+				val afterEffects = fireEvent(Lazy { Some(ChangeEvent(oldValue, newValue)) })
+				if (afterEffects.isEmpty)
+					Continue
+				else
+					Continue.and { afterEffects.foreach { effect => Try { effect() }.log } }
 			}
+			else
+				Continue
 		}
 	}
 	// A listener that swaps between active and lazy mode based on whether there are listeners attached to this pointer
@@ -102,11 +110,12 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 			updateValue()
 		}
 		// Case: All listeners detached => Enters lazy mode
-		else
+		else {
 			sources.foreach { source =>
 				source.addListener(lazyLazyListener.value)
 				lazyActiveListener.current.foreach(source.removeListener)
 			}
+		}
 	}
 	
 	
@@ -165,6 +174,17 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 	}
 	
 	override def readOnly = this
+	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None =>
+			val base = sources.oneOrMany match {
+				case Left(only) => s"Mirroring($only)"
+				case Right(sources) => s"Merging${ sources.iterator.map { p => s"($p)" }.mkString(".and") }"
+			}
+			val suffix = if (condition.isAlwaysTrue) "" else s".while($condition)"
+			s"$base$suffix"
+	}
 	
 	
 	// OTHER    --------------------------------

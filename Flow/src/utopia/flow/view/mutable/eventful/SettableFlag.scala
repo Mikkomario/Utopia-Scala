@@ -68,6 +68,7 @@ object SettableFlag
 		override val numberOfListeners: Int = 0
 		
 		override def view: Flag = this
+		override def toString = "Flag.always.set"
 		
 		override def removeListener(changeListener: Any): Unit = ()
 		
@@ -101,6 +102,8 @@ object SettableFlag
 		// Can't be set twice, so asking for nextFuture after set is futile
 		override def nextFuture = if (isSet) Future.never else future
 		
+		override def toString = if (_value) "Flag.settable" else "Flag.set"
+		
 		override def set() = {
 			if (isNotSet) {
 				_value = true
@@ -124,6 +127,8 @@ object SettableFlag
 		
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		override def readOnly = view
+		
+		override def toString = s"$wrapped.indirectly"
 		
 		override def set(): Boolean = indirectSet()
 	}

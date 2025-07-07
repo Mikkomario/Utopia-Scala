@@ -14,4 +14,6 @@ class ChangingView[+A](override protected val wrapped: Changing[A]) extends Chan
 	override implicit def listenerLogger: Logger = wrapped.listenerLogger
 	
 	override def readOnly = this
+	
+	override def toString = wrapped.toString
 }

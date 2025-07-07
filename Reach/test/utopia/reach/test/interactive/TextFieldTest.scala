@@ -59,7 +59,7 @@ object TextFieldTest extends App
 				Vector(
 					makeRow[String](Display.identity) {
 						_.mapContext { _.withLineSplitThreshold(320) }
-							.withFieldName("Text").withMaxLength(999).displayingCharacterCount
+							.withFieldName("Text").withMaxLength(999)// .displayingCharacterCount
 							.validatedString(320.any) { in =>
 								println(s"Validating input '$in'")
 								if (in.isEmpty) InputValidationResult.Warning("Should not be empty") else Default

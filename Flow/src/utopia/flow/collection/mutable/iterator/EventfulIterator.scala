@@ -51,6 +51,8 @@ class EventfulIterator[A](initialValue: A, source: Iterator[A])(implicit log: Lo
 	
 	override protected def wrapped: Changing[A] = pointer
 	
+	override def toString() = "Iterator.eventful"
+	
 	override def map[B](f: A => B): Iterator[B] with Changing[B] = new MappingIteratorWithEvents[A, B](this)(f)
 	
 	

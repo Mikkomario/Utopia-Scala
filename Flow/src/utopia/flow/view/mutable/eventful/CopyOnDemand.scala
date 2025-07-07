@@ -93,6 +93,8 @@ object CopyOnDemand
 		override def value: A = cachedValue
 		override def destiny: Destiny = source.destiny
 		
+		override def toString = s"Copy($source).onDemand"
+		
 		override def update() = {
 			val oldValue = cachedValue
 			cachedValue = source.value
@@ -119,6 +121,8 @@ object CopyOnDemand
 		override def value: A = cachedValue
 		override def destiny: Destiny = ForeverFlux
 		
+		override def toString = s"View($cachedValue).onDemand"
+		
 		override def update(): Unit = {
 			val oldValue = cachedValue
 			cachedValue = source.value
@@ -138,6 +142,8 @@ object CopyOnDemand
 		
 		override def hasListeners: Boolean = false
 		override def numberOfListeners: Int = 0
+		
+		override def toString = s"Always($value)"
 		
 		override def update(): Unit = ()
 		

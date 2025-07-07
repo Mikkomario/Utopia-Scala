@@ -24,6 +24,14 @@ object LazilyInitializedChanging
   */
 class LazilyInitializedChanging[+A](initialize: => Changing[A]) extends ChangingWrapper[A]
 {
+	// ATTRIBUTES   ----------------------
+	
 	override protected lazy val wrapped: Changing[A] = initialize
+	
+	
+	// IMPLEMENTED  ----------------------
+	
 	override implicit def listenerLogger: Logger = wrapped.listenerLogger
+	
+	override def toString = s"$wrapped.lazilyInitialized"
 }

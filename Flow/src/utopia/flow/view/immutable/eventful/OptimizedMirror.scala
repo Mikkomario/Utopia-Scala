@@ -123,5 +123,16 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 	
 	override def readOnly = this
 	
-	override def toString = s"Mirroring $origin when $condition, caching = ${!cachingDisabled}, currently $value $destiny"
+	override def toString = fixedValue match {
+		case Some(fixed) => s"Reflecting.always($fixed)"
+		case None =>
+			condition.fixedValue match {
+				case Some(isMirroring) =>
+					if (isMirroring)
+						s"Mirroring($origin)"
+					else
+						s"Reflecting.always($value)"
+				case None => s"Mirroring($origin).while($condition)"
+			}
+	}
 }

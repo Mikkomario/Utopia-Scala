@@ -63,6 +63,11 @@ object AssignableOnce
 		
 		override def value = _value
 		
+		override def toString = _value match {
+			case Some(value) => s"Assigned.once($value)"
+			case None => "Assignable.once"
+		}
+		
 		override protected def _set(value: A): Unit = {
 			_value = Some(value)
 			fireEventIfNecessary(None, _value).foreach { effect => Try { effect() }.log }
@@ -93,6 +98,8 @@ object AssignableOnce
 		override def get = v
 		
 		override def readOnly: Changing[Option[A]] = this
+		
+		override def toString = s"Assigned.always($v)"
 		
 		override protected def _set(value: A): Unit = ()
 		override protected def declareChangingStopped(): Unit = ()

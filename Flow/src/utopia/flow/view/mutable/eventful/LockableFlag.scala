@@ -49,6 +49,19 @@ object LockableFlag
 		override def value: Boolean = _value
 		override def locked: Boolean = _locked
 		
+		override def toString = {
+			if (_locked) {
+				if (_value)
+					"Flag.set.locked"
+				else
+					"Flag.locked"
+			}
+			else if (_value)
+				"Flag.set.lockable"
+			else
+				"Flag.settable.lockable"
+		}
+		
 		override def set(): Boolean = {
 			if (locked) {
 				if (isSet)
@@ -94,6 +107,8 @@ object LockableFlag
 		override def view: Flag = this
 		
 		override def locked: Boolean = _locked
+		
+		override def toString = if (_locked) "Flag.always.set.locked" else "Flat.always.set.lockable"
 		
 		override def set(): Boolean = false
 		override def lock(): Unit = _locked = true

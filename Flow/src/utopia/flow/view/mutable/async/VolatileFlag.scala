@@ -38,6 +38,8 @@ class VolatileFlag(initialState: Boolean = false)(implicit listenerLogger: Logge
 	
 	override def value: Boolean = _value
 	
+	override def toString = s"Flag(${ _value }).resettable.volatile"
+	
 	override protected def assignWithoutEvents(newValue: Boolean): Unit = _value = newValue
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()

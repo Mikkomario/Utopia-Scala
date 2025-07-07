@@ -33,6 +33,8 @@ object LockableVolatile extends LoggingPointerFactory[LockableVolatile]
 		
 		override def value: A = _value
 		
+		override def toString = if (locked) s"Volatile($value).locked" else s"Volatile($value).lockable"
+		
 		override protected def assignWithoutEvents(newValue: A): Unit = _value = newValue
 	}
 }

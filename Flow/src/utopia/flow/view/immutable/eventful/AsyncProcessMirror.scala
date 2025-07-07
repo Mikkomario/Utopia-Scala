@@ -173,6 +173,11 @@ class AsyncProcessMirror[Origin, Result, Reflection](val source: Changing[Origin
 	override def destiny = source.destiny.fluxIf(value.isProcessing)
 	override def readOnly = this
 	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value).async.process"
+		case None => s"Mirroring($source).async.process"
+	}
+	
 	override protected def declareChangingStopped(): Unit = {
 		pointer.clearListeners()
 		stopListeners.foreach { _.onChangingStopped() }

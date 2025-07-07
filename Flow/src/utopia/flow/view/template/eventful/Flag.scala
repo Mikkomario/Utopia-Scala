@@ -52,7 +52,7 @@ object Flag
 		extends Flag with ChangingWrapper[Boolean]
 	{
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
-		override def toString = s"Flag($wrapped)"
+		override def toString = s"$wrapped.flag"
 	}
 }
 
@@ -211,6 +211,8 @@ trait Flag extends Changing[Boolean] with MaybeSet
 		override def numberOfListeners: Int = target.numberOfListeners
 		
 		override def unary_! = target
+		
+		override def toString = s"$target.reversed"
 		
 		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Boolean]]): Unit =
 			target.addListenerOfPriority(priority) { listenerCache(lazyListener.value) }

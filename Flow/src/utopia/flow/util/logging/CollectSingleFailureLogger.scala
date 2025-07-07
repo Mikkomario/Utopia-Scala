@@ -76,6 +76,11 @@ class CollectSingleFailureLogger(failureContainer: EventfulPointer[Option[Throwa
 	override implicit def listenerLogger: Logger = SysErrLogger
 	override protected def wrapped: Changing[Option[Throwable]] = failureContainer.readOnly
 	
+	override def toString = {
+		val suffix = if (failureContainer.value.isDefined) ".failed" else ".empty"
+		s"Logger.single$suffix"
+	}
+	
 	override def apply(error: Option[Throwable], message: String): Unit = {
 		// Stores the encountered error, if one was present and if there is space
 		error.foreach(store)

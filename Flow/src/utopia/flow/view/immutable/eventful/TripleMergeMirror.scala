@@ -138,4 +138,11 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 	}
 	
 	override def readOnly = this
+	
+	override def toString = fixedValue match {
+		case Some(value) => s"Reflecting.always($value)"
+		case None =>
+			val suffix = if (condition.isAlwaysTrue) "" else s".while($condition)"
+			s"Merging($source1).and($source2).and($source3)$suffix"
+	}
 }

@@ -133,6 +133,8 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		override implicit def listenerLogger: Logger = ComponentCreationDefaults.componentLogger
 		override protected def wrapped: Changing[Boolean] = _wrapped
 		
+		override def toString = _wrapped.toString
+		
 		
 		// OTHER	--------------------------
 		
