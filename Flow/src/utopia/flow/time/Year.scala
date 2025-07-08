@@ -85,6 +85,8 @@ case class Year(value: Int)
 	
 	override def unary_- : Year = Year(-value)
 	
+	override def toString = value.toString
+	
 	override def +(other: Int): Year = Year(value + other)
 	override def -(years: Int) = Year(value - years)
 	override def compareTo(o: Year) = value.compareTo(o.value)
