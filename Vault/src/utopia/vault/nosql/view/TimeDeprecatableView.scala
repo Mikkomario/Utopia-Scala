@@ -10,7 +10,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 3.4.2023, v1.15.1
   */
-trait TimeDeprecatableView[+Sub] extends FilterableView[Sub]
+trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 {
 	// ABSTRACT -----------------------
 	
@@ -22,10 +22,8 @@ trait TimeDeprecatableView[+Sub] extends FilterableView[Sub]
 	
 	// COMPUTED ----------------------
 	
-	/**
-	  * @return Access to non-deprecated items
-	  */
-	def nonDeprecated = filter(model.nonDeprecatedCondition)
+	@deprecated("Renamed to .active", "v1.22")
+	def nonDeprecated = active
 	
 	
 	// OTHER    ----------------------

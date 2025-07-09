@@ -27,6 +27,7 @@
 - Deprecated **Column**`.columnNameWithTable` in favor of `.sqlName`
 - Renamed **Row**'s `.otherData` to `.other`
 - Replaced **Join**'s `.leftColumn` with `.from` and `.rightTable` and `.rightColumn` with `.to`
+- Renamed **TimeDeprecatableView**'s `.nonDeprecated` to `.active`
 ### New features
 - Added `.stream(...)` to **Connection**, which utilizes the new **ResultStream** class
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
