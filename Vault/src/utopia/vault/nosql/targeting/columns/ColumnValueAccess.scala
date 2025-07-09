@@ -57,4 +57,15 @@ trait ColumnValueAccess[V, +A, -In]
 	  * @return Whether any row was targeted
 	  */
 	def set(newValue: In)(implicit connection: Connection) = access(column) = valueOf(newValue)
+	/**
+	 * Clears the value of this column, setting it to NULL instead.
+	 *
+	 * Note: Only works for columns which allow a NULL value.
+	 *       The results may vary for other kinds of columns.
+	 *       For example, a database exception may be thrown.
+	 *
+	 * @param connection Implicit DB connection
+	 * @return Whether any row was targeted
+	 */
+	def clear()(implicit connection: Connection) = access(column) = Value.empty
 }
