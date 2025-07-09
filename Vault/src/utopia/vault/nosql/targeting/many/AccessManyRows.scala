@@ -16,7 +16,10 @@ object AccessManyRows
 	// OTHER    --------------------------
 	
 	def apply[A](factory: FromRowFactory[A]): AccessManyRows[A] =
-		apply(factory.target, factory.table, factory.selectTarget, ordering = factory.defaultOrdering)(
+		apply(factory, useDefaultOrdering = false)
+	def apply[A](factory: FromRowFactory[A], useDefaultOrdering: Boolean): AccessManyRows[A] =
+		apply(factory.target, factory.table, factory.selectTarget,
+			ordering = if (useDefaultOrdering) factory.defaultOrdering else None)(
 			factory.parseIfPresent)
 	
 	def apply[A](target: SqlTarget, table: Table, selectTarget: SelectTarget, condition: Option[Condition] = None,

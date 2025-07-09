@@ -14,8 +14,10 @@ object AccessMany
 {
 	// OTHER    ------------------------------
 	
-	def apply[A](factory: FromResultFactory[A]): AccessMany[A] = _AccessMany[A](
-		factory.target, factory.table, factory.selectTarget, s => factory(s.buffer), ordering = factory.defaultOrdering)
+	def apply[A](factory: FromResultFactory[A]): AccessMany[A] = apply(factory, useDefaultOrdering = false)
+	def apply[A](factory: FromResultFactory[A], useDefaultOrdering: Boolean): AccessMany[A] =
+		_AccessMany[A](factory.target, factory.table, factory.selectTarget, s => factory(s.buffer),
+			ordering = if (useDefaultOrdering) factory.defaultOrdering else None)
 	
 	def apply[A](target: SqlTarget, table: Table, selectTarget: SelectTarget, condition: Option[Condition] = None,
 	             ordering: Option[OrderBy] = None, prepare: Mutate[SqlSegment] = Identity)
