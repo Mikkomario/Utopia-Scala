@@ -19,8 +19,7 @@ trait TextPlacementDataLike[+Repr] extends HasTextPlacementProps with TextPlacem
 	  * @param orderIndex New order index to assign. Default = current value.
 	  * @return A copy of this text placement with the specified properties
 	  */
-	def copyTextPlacement(parentId: Int = parentId, placedId: Int = placedId, 
-		orderIndex: Int = orderIndex): Repr
+	def copyTextPlacement(parentId: Int = parentId, placedId: Int = placedId, orderIndex: Int = orderIndex): Repr
 	
 	
 	// IMPLEMENTED	--------------------

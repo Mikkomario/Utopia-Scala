@@ -1,11 +1,15 @@
 package utopia.vault.model.mutable
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.vault.model.immutable.{Result, Row}
+import utopia.vault.model.immutable.{Result, Row, Table}
+import utopia.vault.model.template.HasTable
+import utopia.vault.nosql.read.parse.ParseRow
 
 import scala.util.{Failure, Success, Try}
 
@@ -133,4 +137,26 @@ class ResultStream(val closedFlag: Flag = AlwaysTrue,
 	  * An iterator that yields the auto-generated keys as long numbers
 	  */
 	def generatedLongKeysIterator = generatedKeysIterator.flatMap { _.long }
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	 * @param table Primarily indexed table
+	 * @return An iterator that groups consecutive rows by the index of the specified table,
+	 *         effectively combining related rows together
+	 */
+	def rowsByIndexIterator(table: Table) = table.primaryColumn match {
+		case Some(index) => rowsIterator.groupBy { _(index) }
+		case None => PollableOnce { Value.empty -> rowsIterator.toOptimizedSeq }
+	}
+	
+	/**
+	 * @param parsePrimary A parser for the primary row elements
+	 * @tparam A Type of parsed elements
+	 * @return An iterator that yields parsed elements, plus rows associated with each element
+	 */
+	def withLinkedRowsIterator[A](parsePrimary: ParseRow[A] with HasTable) =
+		rowsByIndexIterator(parsePrimary.table)
+			.flatMap { case (_, rows) => parsePrimary.tryParse(rows.head).map { _ -> rows } }
 }

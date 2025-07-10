@@ -119,6 +119,11 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	  * @return Value of that column
 	  */
 	def apply(column: TableColumn): Value = apply(column.column)
+	/**
+	 * @param prop Targeted database property
+	 * @return Value of that property
+	 */
+	def apply(prop: DbPropertyDeclaration): Value = apply(prop.column)
 	
 	
 	// OTHER METHODS    ----------------------
