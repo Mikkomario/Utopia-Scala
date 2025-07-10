@@ -47,4 +47,10 @@ trait TargetingLike[+A, +V, +Repr] extends AccessColumns[V] with FilterableView[
 	  * @return A copy of this access which applies the specified joins
 	  */
 	def join(join: Joinable, more: Joinable*): Repr = this.join(Single(join) ++ more)
+	/**
+	 * @param join First join to apply
+	 * @param more More joins to apply
+	 * @return A copy of this access which applies the specified joins as left joins
+	 */
+	def leftJoin(join: Joinable, more: Joinable*): Repr = this.join(Single(join) ++ more, JoinType.Left)
 }

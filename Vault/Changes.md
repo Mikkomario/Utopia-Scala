@@ -49,6 +49,8 @@
 ### New methods
 - **Column**
   - Added `.sqlName`, `.shortSqlName` and `.sqlDescription`
+- **Joinable**
+  - Added `.where(Condition)` for constructing conditional joins
 - **References**
   - Multiple new methods, including `.findFrom(TableColumn)`
 - **Select**

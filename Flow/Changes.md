@@ -14,6 +14,7 @@
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
 ### New methods
 - **Iterable** (**CollectionExtensions**)
+  - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`

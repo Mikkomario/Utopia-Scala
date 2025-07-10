@@ -1056,6 +1056,22 @@ object CollectionExtensions
 			zipPad[iter.A, To](other, padding, padding)
 		
 		/**
+		 * Maps the first item in this collection, leaving other items unaffected
+		 * @param f A mapping function to apply to the first item, if available
+		 * @param bf A build-from for the resulting collection
+		 * @tparam B Type of mapping results
+		 * @tparam To Type of constructed collection
+		 * @return A copy of this collection with a modified first item
+		 */
+		def mapHead[B >: iter.A, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, B, To]): To = {
+			val iter = ops.iterator
+			iter.nextOption() match {
+				case Some(head) => bf.fromSpecific(coll)(PollableOnce { f(head) } ++ iter)
+				case None => bf.fromSpecific(coll)(Iterator.empty)
+			}
+		}
+		
+		/**
 		  * Maps a single existing item in this collection, or appends a new item instead
 		  * @param f A mapping function that yields a
 		  *          Some if successful (i.e. if this should be 'the' mapping to apply) and

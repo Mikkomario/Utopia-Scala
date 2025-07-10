@@ -1,10 +1,23 @@
 package utopia.vault.model.template
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.model.immutable.Table
+import utopia.vault.model.template.Joinable.ConditionalJoinable
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Join, JoinType}
+import utopia.vault.sql.{Condition, Join, JoinType}
 
 import scala.util.Try
+
+object Joinable
+{
+	// NESTED   -------------------------
+	
+	private class ConditionalJoinable(original: Joinable, condition: Condition) extends Joinable
+	{
+		override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) =
+			original.toJoinsFrom(originTables, joinType).map { _.mapHead { _.where(condition) } }
+	}
+}
 
 /**
   * Common class for items that may be joined into SqlTargets
@@ -13,6 +26,8 @@ import scala.util.Try
   */
 trait Joinable
 {
+	// ABSTRACT -------------------------
+	
 	/**
 	  * @param originTables Tables from which this item is joined
 	  * @param joinType Type of join to use (default = inner join)
@@ -21,4 +36,13 @@ trait Joinable
 	  *         Failure if joining is impossible.
 	  */
 	def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner): Try[Seq[Join]]
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param condition A condition that must be met for this join to occur
+	 * @return A copy of this joinable item, joined only when the specified condition is met
+	 */
+	def where(condition: Condition): Joinable = new ConditionalJoinable(this, condition)
 }

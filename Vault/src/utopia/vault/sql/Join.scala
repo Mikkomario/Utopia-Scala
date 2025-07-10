@@ -59,6 +59,18 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 			Success(Single(this))
 	}
 	
+	/**
+	 * @param condition A condition that determines whether a join will be performed or not
+	 * @return A copy of this join that only joins cases that satisfy the specified condition
+	 */
+	override def where(condition: Condition): Join = {
+		val newCondition = this.condition match {
+			case Some(c) => c && condition
+			case None => condition
+		}
+		copy(condition = Some(newCondition))
+	}
+	
 	
 	// OTHER    --------------------------
 	
@@ -67,16 +79,4 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 	  * @return A copy of this join with that join type applied
 	  */
 	def withType(joinType: JoinType) = if (this.joinType == joinType) this else copy(joinType = joinType)
-	
-	/**
-	  * @param condition A condition that determines whether a join will be performed or not
-	  * @return A copy of this join that only joins cases that satisfy the specified condition
-	  */
-	def where(condition: Condition) = {
-		val newCondition = this.condition match {
-			case Some(c) => c && condition
-			case None => condition
-		}
-		copy(condition = Some(newCondition))
-	}
 }
