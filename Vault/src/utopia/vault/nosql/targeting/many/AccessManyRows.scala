@@ -16,7 +16,7 @@ object AccessManyRows
 {
 	// OTHER    --------------------------
 	
-	def apply[A](factory: DbRowReader[A] with HasTable): AccessManyRows[A] =
+	def apply[A](factory: DbRowReader[A]): AccessManyRows[A] =
 		apply(factory.target, factory.table, factory.selectTarget)(factory.tryParse)
 	def apply[A](factory: FromRowFactory[A], useDefaultOrdering: Boolean): AccessManyRows[A] =
 		apply(factory.target, factory.table, factory.selectTarget,
@@ -41,7 +41,7 @@ object AccessManyRows
 	  * @tparam A Type of parsed items
 	  * @return Access to items targeted by that factory. Limited to active (i.e. non-deprecated) items.
 	  */
-	def active[A](factory: DbRowReader[A] with HasTable with Deprecatable) =
+	def active[A](factory: DbRowReader[A] with Deprecatable) =
 		apply(factory).filter(factory.nonDeprecatedCondition)
 	
 	

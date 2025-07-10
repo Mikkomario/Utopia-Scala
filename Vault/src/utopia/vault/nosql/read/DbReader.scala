@@ -1,6 +1,6 @@
 package utopia.vault.nosql.read
 
-import utopia.vault.model.template.HasSelectTarget
+import utopia.vault.model.template.{HasSelectTarget, HasTable}
 import utopia.vault.nosql.read.parse.ParseResultStream
 
 /**
@@ -8,4 +8,4 @@ import utopia.vault.nosql.read.parse.ParseResultStream
   * @author Mikko Hilpinen
   * @since 10.07.2025, v1.22
   */
-trait DbReader[+A] extends ParseResultStream[A] with HasSelectTarget
+trait DbReader[+A] extends ParseResultStream[A] with HasSelectTarget with HasTable

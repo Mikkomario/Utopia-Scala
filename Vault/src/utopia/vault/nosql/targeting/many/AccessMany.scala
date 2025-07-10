@@ -17,7 +17,7 @@ object AccessMany
 {
 	// OTHER    ------------------------------
 	
-	def apply[A](factory: DbReader[Seq[A]] with HasTable): AccessMany[A] =
+	def apply[A](factory: DbReader[Seq[A]]): AccessMany[A] =
 		_AccessMany[A](factory.target, factory.table, factory.selectTarget, factory)
 	def apply[A](factory: FromResultFactory[A], useDefaultOrdering: Boolean): AccessMany[A] =
 		_AccessMany[A](factory.target, factory.table, factory.selectTarget, factory,
@@ -37,7 +37,7 @@ object AccessMany
 		apply[A](more.foldLeft(first join second) { _ join _ }, first,
 			SelectTarget.tables(Pair(first, second) ++ more))(parse)
 	
-	def active[A](factory: DbReader[Seq[A]] with HasTable with Deprecatable): AccessMany[A] =
+	def active[A](factory: DbReader[Seq[A]] with Deprecatable): AccessMany[A] =
 		apply(factory).filter(factory.nonDeprecatedCondition)
 	
 	
