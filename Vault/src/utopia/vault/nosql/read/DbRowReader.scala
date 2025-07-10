@@ -2,7 +2,7 @@ package utopia.vault.nosql.read
 
 import utopia.flow.collection.immutable.Empty
 import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
-import utopia.vault.nosql.read.linked.{CombiningDbRowReader, PossiblyCombiningDbRowReader}
+import utopia.vault.nosql.read.linked.{CombiningDbRowReader, MultiLinkedDbReader, PossiblyCombiningDbRowReader}
 import utopia.vault.nosql.read.parse.ParseRow
 
 /**
@@ -38,4 +38,17 @@ trait DbRowReader[+A] extends DbReader[Seq[A]] with ParseRow[A]
 	def leftJoin[R, B](right: DbRowReader[R] with HasTablesAsTarget, bridges: Seq[Joinable] = Empty)
 	                  (merge: (A, Option[R]) => B): DbRowReader[B] =
 		PossiblyCombiningDbRowReader(this, right, bridges)(merge)
+	/**
+	 * Combines this reader with another reader in one-to-many linking
+	 * @param right Reader to join to this one
+	 * @param bridges Joins to perform before joining 'right'
+	 * @param merge A function for merging the results. n right side elements are provided.
+	 * @tparam R Type of parsed joined items
+	 * @tparam B Type of merge results
+	 * @return A reader which combines the results of these two readers
+	 */
+	def multiJoin[R, B](right: DbRowReader[R] with HasTablesAsTarget, bridges: Seq[Joinable] = Empty,
+	                    neverEmptyRight: Boolean = false)
+	                   (merge: (A, Seq[R]) => B): DbReader[Seq[B]] =
+		MultiLinkedDbReader(this, right, bridges, neverEmptyRight)(merge)
 }

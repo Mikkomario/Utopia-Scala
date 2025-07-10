@@ -48,7 +48,7 @@ object PossiblyCombiningDbRowReader
 abstract class PossiblyCombiningDbRowReader[L, R, +A](left: DbRowReader[L],
                                                       right: DbRowReader[R] with HasTablesAsTarget,
                                                       bridges: Seq[Joinable] = Empty)
-	extends JoiningDbRowReader[L, R, A](left, right, bridges, JoinType.Left)
+	extends JoiningDbReader[L, R, A](left, right, bridges, JoinType.Left) with DbRowReader[A]
 {
 	// ABSTRACT -------------------------
 	

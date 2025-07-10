@@ -44,7 +44,7 @@ object CombiningDbRowReader
   */
 abstract class CombiningDbRowReader[L, R, +A](left: DbRowReader[L], right: DbRowReader[R] with HasTablesAsTarget,
                                               bridges: Seq[Joinable] = Empty)
-	extends JoiningDbRowReader[L, R, A](left, right, bridges)
+	extends JoiningDbReader[L, R, A](left, right, bridges) with DbRowReader[A]
 {
 	// ABSTRACT -------------------------
 	

@@ -4,13 +4,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Row, Table}
-import utopia.vault.model.template.{HasTable, Joinable}
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
-
-import scala.collection.View
 
 object AccessManyRows
 {
@@ -85,8 +83,8 @@ object AccessManyRows
 		                             joinType: JoinType)
 		                            (f: Iterator[(A, Seq[Row])] => IterableOnce[B]) =
 			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect) =>
-				val indices = View.concat(target.tables, tables).flatMap { _.primaryColumn }
-					.filter(newSelect.contains).toOptimizedSeq
+				val indices = target.tables.view.flatMap { _.primaryColumn }.filter(selectTarget.contains)
+					.toOptimizedSeq
 				AccessMany(newTarget, table, newSelect, accessCondition, ordering, prepare = finalizeStatement) {
 					result =>
 						// NB: Assumes that same index rows are consecutive
