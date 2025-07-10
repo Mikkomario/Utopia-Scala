@@ -4,8 +4,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Row, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.template.{HasTable, Joinable}
 import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 
@@ -15,12 +16,11 @@ object AccessManyRows
 {
 	// OTHER    --------------------------
 	
-	def apply[A](factory: FromRowFactory[A]): AccessManyRows[A] =
-		apply(factory, useDefaultOrdering = false)
+	def apply[A](factory: DbRowReader[A] with HasTable): AccessManyRows[A] =
+		apply(factory.target, factory.table, factory.selectTarget)(factory.tryParse)
 	def apply[A](factory: FromRowFactory[A], useDefaultOrdering: Boolean): AccessManyRows[A] =
 		apply(factory.target, factory.table, factory.selectTarget,
-			ordering = if (useDefaultOrdering) factory.defaultOrdering else None)(
-			factory.parseIfPresent)
+			ordering = if (useDefaultOrdering) factory.defaultOrdering else None)(factory.tryParse)
 	
 	def apply[A](target: SqlTarget, table: Table, selectTarget: SelectTarget, condition: Option[Condition] = None,
 	             ordering: Option[OrderBy] = None, limit: Option[Int] = None, offset: Int = 0,
@@ -41,7 +41,7 @@ object AccessManyRows
 	  * @tparam A Type of parsed items
 	  * @return Access to items targeted by that factory. Limited to active (i.e. non-deprecated) items.
 	  */
-	def active[A](factory: FromRowFactory[A] with Deprecatable) =
+	def active[A](factory: DbRowReader[A] with HasTable with Deprecatable) =
 		apply(factory).filter(factory.nonDeprecatedCondition)
 	
 	

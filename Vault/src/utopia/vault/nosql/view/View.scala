@@ -4,8 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.vault.database.{Connection, References}
 import utopia.vault.model.immutable.{Column, Storable, Table}
-import utopia.vault.model.template.{HasTable, Joinable}
-import utopia.vault.sql.{Condition, Delete, Exists, Join, SqlTarget, Where}
+import utopia.vault.model.template.{HasTable, HasTarget, Joinable}
+import utopia.vault.sql.{Condition, Delete, Exists, Join, Where}
 
 /**
   * A template trait for all access points. Doesn't specify anything about the read content but specifies the
@@ -13,14 +13,9 @@ import utopia.vault.sql.{Condition, Delete, Exists, Join, SqlTarget, Where}
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   */
-trait View extends HasTable
+trait View extends HasTable with HasTarget
 {
 	// ABSTRACT	----------------------
-	
-	/**
-	  * @return The target segment (table + possible joins) viewed through this view
-	  */
-	def target: SqlTarget
 	
 	/**
 	  * @return Condition applied to all queries that use this access point.

@@ -27,9 +27,22 @@
 - Deprecated **Column**`.columnNameWithTable` in favor of `.sqlName`
 - Renamed **Row**'s `.otherData` to `.other`
 - Replaced **Join**'s `.leftColumn` with `.from` and `.rightTable` and `.rightColumn` with `.to`
+- Multiple deprecations concerning **FromResultFactory** and **FromRowFactory**
+  - Deprecated all previous "streaming" -related functions
+  - Deprecated `.all`
+  - Renamed `.select` to `.toSelect`
+  - Deprecated `.parseIfPresent(Row)` in favor of the new `.tryParse(Row)` implementation
+  - In **Result**, deprecated `.parse(FromResultFactory)` and `.parseSingle(FromRowFactory)`
 - Renamed **TimeDeprecatableView**'s `.nonDeprecated` to `.active`
+- Note: In a future release, **FromResultFactory** and **Access** classes might be deprecated 
+  in favor of newer interfaces
 ### New features
 - Added `.stream(...)` to **Connection**, which utilizes the new **ResultStream** class
+- Added new traits for database-reading and results-parsing, which were handled 
+  by **FromResultFactory** variants until this point.
+  - These are found under `utopia.vault.nosql.read`
+- Added **HasTarget**, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget** and **SelectsTable** traits 
+  for specifying **SqlTarget** and possibly **SelectTarget**
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s
 - Added **FilterableViewWrapper**
@@ -55,6 +68,7 @@
 - Internal refactoring within **DatabaseReferenceReader**
   - Generated SQL queries are not quite as long anymore
   - The specified tables in `.apply(Iterable)` no longer have to all belong to the same database
+- **FromRowFactory**`.tryParse(Row)` now functions exactly as `.parseIfPresent(Row)`
 
 ## v1.21 - 26.05.2025
 This update improves connection management logic in **ConnectionPool** and

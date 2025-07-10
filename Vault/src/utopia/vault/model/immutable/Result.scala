@@ -4,7 +4,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.MaybeEmpty
+import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.factory.row.FromRowFactory
+import utopia.vault.nosql.read.parse.ParseRow
 
 object Result
 {
@@ -102,15 +104,16 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * @tparam A Type of parse result per row
      * @return All successfully parsed models
      */
-    def parse[A](factory: FromRowFactory[A]) = rows.flatMap(factory.parseIfPresent)
-    
+    @deprecated("Please use factory(this) instead", "v1.22")
+    def parse[A](factory: FromRowFactory[A]) = rows.flatMap(factory.tryParse)
     /**
      * Parses data from up to one row
      * @param factory Factory used for parsing data
      * @tparam A Type of parse result
      * @return Parsed result or None if parsing failed or no data was available
      */
-    def parseSingle[A](factory: FromRowFactory[A]) = rows.findMap(factory.parseIfPresent)
+    @deprecated("Deprecated for removal", "v1.22")
+    def parseSingle[A](factory: ParseRow[A]) = rows.findMap(factory.tryParse)
     
     /**
      * Retrieves row data concerning a certain table
@@ -180,6 +183,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of the merge results
       * @return Merge results
       */
+    @deprecated("Please use CombiningDbRowReader instead", "v1.22")
     def combine[P, C, R](f1: FromRowFactory[P], f2: FromRowFactory[C])(merge: (P, C) => R) = {
         val tables = Pair(f1, f2).map { _.table }
         rows.view
@@ -201,15 +205,18 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of the merge results
       * @return Merge results
       */
-    def combine[P, C1, C2, R](f1: FromRowFactory[P], f2: FromRowFactory[C1], f3: FromRowFactory[C2])
+    def combine[P, C1, C2, R](f1: ParseRow[P], f2: ParseRow[C1], f3: ParseRow[C2])
                              (merge: (P, C1, C2) => R) =
     {
-        val tables = Vector(f1.table, f2.table, f3.table)
-        rows.view.filter { row => tables.forall(row.containsDataForTable) }.flatMap { row =>
-            f1.tryParse(row).flatMap { parent =>
-                f2.tryParse(row).flatMap { child1 => f3.tryParse(row).map { merge(parent, child1, _) } }
+        val parsers = Vector(f1, f2, f3)
+        rows.view
+            .filter { row => parsers.forall { _.shouldParse(row) } }
+            .flatMap { row =>
+                f1.tryParse(row).flatMap { parent =>
+                    f2.tryParse(row).flatMap { child1 => f3.tryParse(row).map { merge(parent, child1, _) } }
+                }
             }
-        }.toVector
+            .toOptimizedSeq
     }
     /**
       * Groups the results around unique primary entries.
@@ -222,7 +229,9 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of merge results
       * @return Merge results
       */
-    def group[P, C, R](parentFactory: FromRowFactory[P], childFactory: FromRowFactory[C])(merge: (P, Vector[C]) => R) = {
+    def group[P, C, R](parentFactory: ParseRow[P] with HasTable, childFactory: ParseRow[C] with HasTable)
+                      (merge: (P, Vector[C]) => R) =
+    {
         val tp = parentFactory.table
         val tc = childFactory.table
         // Processes all rows concerning a single parent index as a single group
@@ -261,8 +270,8 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of the upper merge results
       * @return Upper merge results
       */
-    def deepGroup[P, M, E, RM, R](parentFactory: FromRowFactory[P], midFactory: FromRowFactory[M],
-                                  endFactory: FromRowFactory[E])
+    def deepGroup[P, M, E, RM, R](parentFactory: ParseRow[P] with HasTable, midFactory: ParseRow[M] with HasTable,
+                                  endFactory: ParseRow[E] with HasTable)
                                  (mergeBottom: (M, Vector[E]) => RM)
                                  (mergeTop: (P, Iterable[RM]) => R) =
     {
@@ -304,9 +313,9 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of post-processed results
       * @return Post-processed results
       */
-    def parseAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Row) => R) =
-        rows.view.zipFlatMap(parentFactory.parseIfPresent).map { case (row, parsed) => postProcess(parsed, row) }
-            .toVector
+    def parseAnd[P, R](parentFactory: ParseRow[P])(postProcess: (P, Row) => R) =
+        rows.view.zipFlatMap(parentFactory.tryParse).map { case (row, parsed) => postProcess(parsed, row) }
+            .toOptimizedSeq
     /**
       * Groups and parses the rows to those related to specific items.
       * Continues the per-item processing using the specified function.
@@ -317,7 +326,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       * @tparam R Type of the post-processed results
       * @return Post-processed results
       */
-    def groupAnd[P, R](parentFactory: FromRowFactory[P])(postProcess: (P, Seq[Row]) => R) = {
+    def groupAnd[P, R](parentFactory: ParseRow[P] with HasTable)(postProcess: (P, Seq[Row]) => R) = {
         val table = parentFactory.table
         // Groups the rows based on unique indices
         rows.filter { _.containsDataForTable(table) }.groupBy { _.indexForTable(table) }.flatMap { case (_, rows) =>
@@ -348,7 +357,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
       *
       * @return Joined results
       */
-    def deepGroupAnd[P, M, RM, R](parentFactory: FromRowFactory[P], midFactory: FromRowFactory[M])
+    def deepGroupAnd[P, M, RM, R](parentFactory: ParseRow[P] with HasTable, midFactory: ParseRow[M] with HasTable)
                                  (postProcessMid: (M, Seq[Row]) => RM)
                                  (mergeTop: (P, Iterable[RM]) => R) =
     {

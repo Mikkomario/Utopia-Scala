@@ -7,13 +7,12 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.{Column, Result, Row}
+import utopia.vault.model.mutable.ResultStream
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.FromResultFactory
+import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql._
-import utopia.vault.util.ErrorHandling
-
-import scala.util.{Failure, Success, Try}
 
 /**
   * These factories are used for converting database row data into objects. These factories are able to parse an object
@@ -21,18 +20,8 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 10.7.2019, v1.2+
   */
-trait FromRowFactory[+A] extends FromResultFactory[A]
+trait FromRowFactory[+A] extends FromResultFactory[A] with DbRowReader[A]
 {
-	// ABSTRACT	--------------------
-	
-	/**
-	  * Converts a row into an object
-	  * @param row Row to be converted
-	  * @return Parsed object. Failure if no object could be parsed.
-	  */
-	def apply(row: Row): Try[A]
-	
-	
 	// COMPUTED --------------------
 	
 	/**
@@ -41,17 +30,21 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return The first item found
 	  */
 	def any(implicit connection: Connection) =
-		connection(select + defaultOrdering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+		connection.stream(toSelect + defaultOrdering + Limit(1)) { _.rowsIterator.flatMap(tryParse).nextOption() }
 	
 	
 	// IMPLEMENTED	----------------
 	
-	override def apply(result: Result): Seq[A] = fromUniqueRows(result.rows)(parseIfPresent)
+	override def shouldParse(row: Row): Boolean = row.containsDataForTable(table)
+	
+	override def apply(stream: ResultStream) =
+		fromUniqueRows(stream.rowsIterator)(tryParse).toOptimizedSeq
+	override def apply(result: Result): Seq[A] = fromUniqueRows(result.rows)(tryParse).toOptimizedSeq
 	
 	override def find(where: Condition, order: Option[OrderBy] = None, joins: Seq[Joinable] = Empty,
 	                  joinType: JoinType = Inner)(implicit connection: Connection) =
-		connection(expandedSelect(joins, joinType) + Where(where) + order.orElse(defaultOrdering) + Limit(1))
-			.rows.headOption.flatMap(parseIfPresent)
+		connection.stream(expandedSelect(joins, joinType) + Where(where) + order.orElse(defaultOrdering) + Limit(1)) {
+			_.rowsIterator.flatMap(tryParse).nextOption() }
 	
 	
 	// OTHER	--------------------
@@ -60,27 +53,17 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @param propertyName Property name to search
 	  * @return A column used by this factory using that property name
 	  */
-	def column(propertyName: String) = table.find(propertyName)
-		.orElse { joinedTables.findMap { _.find(propertyName) } }
-		.getOrElse { throw new ColumnNotFoundException(s"$target doesn't contain column for property $propertyName") }
+	def column(propertyName: String) =
+		table.find(propertyName).orElse { joinedTables.findMap { _.find(propertyName) } }
+			.getOrElse { throw new ColumnNotFoundException(s"$target doesn't contain column for property $propertyName") }
 	
 	/**
 	  * Parses data from a row, provided that the row contains data for the primary table
 	  * @param row Parsed row
 	  * @return parsed data. None if row didn't contain data for the primary table, or if parsing failed.
 	  */
-	def parseIfPresent(row: Row): Option[A] = if (row.containsDataForTable(table)) tryParse(row) else None
-	/**
-	  * Attempts to parse an item from the specified row.
-	  * Handles parse failures using [[ErrorHandling.modelParsePrinciple]]
-	  * @param row A row to parse the item from
-	  * @return Parsed item. None if no item could be parsed.
-	  */
-	def tryParse(row: Row): Option[A] = apply(row) match {
-		case Success(parsed) => Some(parsed)
-		// Lets ErrorHandling handle the possible errors
-		case Failure(error) => ErrorHandling.modelParsePrinciple.handle(error); None
-	}
+	@deprecated("Replaced with the new implementation of tryParse", "v1.22")
+	def parseIfPresent(row: Row): Option[A] = tryParse(row)
 	
 	/**
 	  * Reads accessible data from the DB. Includes additional information, besides the parsed row entries.
@@ -103,13 +86,14 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	                    uniquePrimaryEntries: Boolean = false)
 	                   (parse: Row => B)(implicit connection: Connection) =
 	{
-		val rows = connection(expandedSelect(joins, joinType, Some(extraTarget)) + condition.map(Where.apply) +
-			order.orElse(defaultOrdering))
-			.rows
-		if (uniquePrimaryEntries)
-			fromUniqueRows(rows) { row => parseIfPresent(row).map { _ -> parse(row) } }
-		else
-			rows.flatMap { row => parseIfPresent(row).map { _ -> parse(row) } }
+		connection.stream(expandedSelect(joins, joinType, Some(extraTarget)) + condition.map(Where.apply) +
+			order.orElse(defaultOrdering)) {
+			result =>
+				if (uniquePrimaryEntries)
+					fromUniqueRows(result.rowsIterator) { row => tryParse(row).map { _ -> parse(row) } }.toOptimizedSeq
+				else
+					result.rowsIterator.flatMap { row => tryParse(row).map { _ -> parse(row) } }.toOptimizedSeq
+		}
 	}
 	/**
 	  * Reads accessible data from the DB. Includes an additional column outside the default selection.
@@ -143,7 +127,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	def take(maxNumberOfItems: Int, order: OrderBy, condition: Option[Condition] = None)
 	        (implicit connection: Connection) =
-		connection(select + condition.map { Where(_) } + order + Limit(maxNumberOfItems)).rows.flatMap(parseIfPresent)
+		connection.stream(toSelect + condition.map { Where(_) } + order + Limit(maxNumberOfItems))(apply)
 	
 	/**
 	  * Finds the top / max row / model based on provided ordering column
@@ -160,7 +144,7 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @return First available result using that ordering
 	  */
 	def firstUsing(ordering: OrderBy)(implicit connection: Connection) =
-		connection(select + ordering + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+		connection.stream(toSelect + ordering + Limit(1)) { _.rowsIterator.flatMap(tryParse).nextOption() }
 	/**
 	  * @param orderColumn Column to base ordering on
 	  * @param connection Implicit DB Connection
@@ -263,13 +247,8 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  * @tparam U Arbitrary result type
 	  */
 	@deprecated("Deprecated for removal", "v1.22")
-	def foreachWhere[U](condition: Option[Condition])(operation: A => U)(implicit connection: Connection) = {
-		val statement = condition match {
-			case Some(condition) => select + Where(condition)
-			case None => select
-		}
-		connection.foreach(statement) { parseIfPresent(_).foreach(operation) }
-	}
+	def foreachWhere[U](condition: Option[Condition])(operation: A => U)(implicit connection: Connection) =
+		connection.stream(toSelect + condition.map(Where.apply)) { _.rowsIterator.flatMap(tryParse).foreach(operation) }
 	/**
 	  * Performs an operation on each of the targeted entities
 	  * @param where      A condition for finding target entities
@@ -299,8 +278,8 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	@deprecated("Deprecated for removal", "v1.22")
 	def fold[B](where: Condition)(start: B)(f: (B, A) => B)(implicit connection: Connection) =
-		connection.fold(select + Where(where))(start) { (v, row) =>
-			parseIfPresent(row).map { f(v, _) }.getOrElse(v)
+		connection.fold(toSelect + Where(where))(start) { (v, row) =>
+			tryParse(row).map { f(v, _) }.getOrElse(v)
 		}
 	/**
 	  * Maps entities, then reduces mapped values
@@ -313,22 +292,56 @@ trait FromRowFactory[+A] extends FromResultFactory[A]
 	  */
 	@deprecated("Deprecated for removal", "v1.22")
 	def mapReduce[B](where: Condition)(map: A => B)(reduce: (B, B) => B)(implicit connection: Connection) =
-		connection.flatMapReduce(select + Where(where)) { row => parseIfPresent(row).map(map) }(reduce)
+		connection.flatMapReduce(toSelect + Where(where)) { row => tryParse(row).map(map) }(reduce)
 	
 	private def getWithOrder(orderBy: OrderBy, where: Option[Condition] = None)
 	                        (implicit connection: Connection) =
 		where match {
 			case Some(condition) => find(condition, Some(orderBy))
-			case None => connection(select + orderBy + Limit(1)).rows.headOption.flatMap(parseIfPresent)
+			case None => connection.stream(toSelect + orderBy + Limit(1)) { _.rowsIterator.flatMap(tryParse).nextOption() }
 		}
 	
 	// Makes sure duplicate rows are not present by only including each index (group) once
 	// (Only works when all included tables use indexing)
-	private def fromUniqueRows[B](rows: Seq[Row])(parse: Row => Option[B]) = {
-		val indices = tables.flatMap { table => table.primaryColumn }
-		if (indices.hasSize.of(tables) && rows.view.take(4).exists { row => indices.forall { row(_).isDefined } })
-			rows.view.distinctBy { row => indices.map(row.apply) }.flatMap(parse).toOptimizedSeq
-		else
-			rows.flatMap(parse)
+	private def fromUniqueRows[B](rows: IterableOnce[Row])(parse: Row => Option[B]): IterableOnce[B] = {
+		val kn = rows.knownSize
+		// Case: 0-1 entries => No uniqueness check required
+		if (kn >= 0 && kn <= 1)
+			rows.iterator.flatMap(parse)
+		else {
+			val indices = tables.flatMap { _.primaryColumn }
+			// Case: Uniqueness check might be possible => Attempts to perform it
+			if (indices.hasSize.of(tables)) {
+				rows match {
+					// Case: Rows may be iterated multiple times
+					//       => Performs a separate check to see whether uniqueness is supported
+					case rows: Iterable[Row] =>
+						if (rows.view.take(4).exists { row => indices.forall { row(_).isDefined } })
+							rows.view.distinctBy { row => indices.map(row.apply) }.flatMap(parse)
+						else
+							rows.view.flatMap(parse)
+					
+					// Case: Rows may be iterated only once => Iterates first items to see if uniqueness is supported
+					case rows =>
+						val iter = rows.iterator
+						var mayBeDistinct = false
+						val firstRows = iter.take(4).collectTo { row =>
+							if (indices.forall { row(_).isDefined }) {
+								mayBeDistinct = true
+								true
+							}
+							else
+								false
+						}
+						if (mayBeDistinct)
+							(firstRows.iterator ++ iter).distinctBy { row => indices.map(row.apply) }.flatMap(parse)
+						else
+							(firstRows.iterator ++ iter).flatMap(parse)
+				}
+			}
+			// Case: Uniqueness not supported
+			else
+				rows.iterator.flatMap(parse)
+		}
 	}
 }

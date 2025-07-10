@@ -5,8 +5,9 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.enumeration.SelectTarget.{All, Tables}
-import utopia.vault.model.immutable.{Result, Table}
-import utopia.vault.model.template.{HasTable, Joinable}
+import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
+import utopia.vault.nosql.read.DbReader
+import utopia.vault.nosql.read.parse.ParseResult
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql._
 
@@ -15,65 +16,31 @@ import utopia.vault.sql._
   * @author Mikko Hilpinen
   * @since 8.7.2019, v1.1.1+
   */
-trait FromResultFactory[+A] extends HasTable
+trait FromResultFactory[+A] extends DbReader[Seq[A]] with HasTablesAsTarget with ParseResult[Seq[A]]
 {
 	// ABSTRACT	---------------
-	
-	/**
-	  * @return The tables that are joined for complete results
-	  */
-	def joinedTables: Seq[Table]
-	/**
-	  * @return Joining style used
-	  */
-	def joinType: JoinType
 	
 	/**
 	  * @return Default ordering to apply by this factory (used when no Order By is specified explicitly)
 	  */
 	def defaultOrdering: Option[OrderBy]
 	
-	/**
-	  * @return Selected columns, etc.
-	  */
-	def selectTarget: SelectTarget
-	
-	/**
-	  * Parses a result into one or multiple (or zero) objects
-	  * @param result A database query result to be parsed
-	  * @return Parsed objects
-	  */
-	def apply(result: Result): Seq[A]
-	
 	
 	// COMPUTED	---------------
-	
-	/**
-	  * @return This factory's target that includes the primary table and possible joined tables
-	  */
-	def target = joinedTables.foldLeft(table: SqlTarget) { (r, t) => r.join(t, joinType) }
-	/**
-	  * @return The table(s) used by this factory (never empty)
-	  */
-	def tables = table +: joinedTables
-	
-	/**
-	 * @return Whether this factory targets a single table only
-	 */
-	def targetsSingleTable = joinedTables.isEmpty
 	
 	/**
 	  * Reads all accessible instances from the database
 	  * @param connection Implicit DB Connection
 	  * @return All accessible items
 	  */
-	def all(implicit connection: Connection) =
-		apply(connection(select + defaultOrdering))
+	@deprecated("It is recommended to use more advanced access interfaces for data-pulling", "v1.22")
+	def all(implicit connection: Connection) = apply(connection(toSelect + defaultOrdering))
 	
 	/**
 	  * @return The select statement applied by default
 	  */
-	protected def select = selectTarget.toSelect(target)
+	@deprecated("Please use .toSelect instead", "v1.22")
+	protected def select = toSelect
 	
 	
 	// OTHER	---------------
@@ -90,7 +57,7 @@ trait FromResultFactory[+A] extends HasTable
 	@deprecated("Deprecated for removal", "v1.22")
 	def iterator(condition: Option[Condition] = None, order: Option[OrderBy] = None,
 	             rowsPerQuery: Int = Connection.settings.maximumAmountOfRowsCached)(implicit connection: Connection) =
-		connection.iterator(select + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
+		connection.iterator(toSelect + condition.map { Where(_) } + order.orElse(defaultOrdering), rowsPerQuery)
 			.flatMap(apply)
 	
 	/**
@@ -141,7 +108,7 @@ trait FromResultFactory[+A] extends HasTable
 	  * @see #getMany(Condition)
 	  */
 	def getAll(order: Option[OrderBy] = None)(implicit connection: Connection) =
-		apply(connection(select + order.orElse(defaultOrdering)))
+		apply(connection(toSelect + order.orElse(defaultOrdering)))
 	
 	/**
 	  * Checks whether an object exists for the specified query
@@ -190,7 +157,7 @@ trait FromResultFactory[+A] extends HasTable
 		if (joins.isEmpty)
 			additionalSelect match {
 				case Some(additional) => (selectTarget + additional).toSelect(target)
-				case None => select
+				case None => toSelect
 			}
 		else {
 			val base = if (selectTarget == All) Tables(tables) else selectTarget
