@@ -2,7 +2,7 @@ package utopia.vault.nosql.read.linked
 
 import utopia.flow.collection.immutable.Empty
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.Row
+import utopia.vault.model.immutable.{Row, Table}
 import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
 import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.sql.JoinType.Inner
@@ -27,6 +27,13 @@ abstract class JoiningDbRowReader[+L, +R, +A](protected val left: DbRowReader[L]
                                               bridges: Seq[Joinable] = Empty, joinType: JoinType = Inner)
 	extends DbRowReader[A]
 {
+	// ATTRIBUTES   ----------------------
+	
 	override lazy val target: SqlTarget = left.target.join(bridges ++ right.tables, joinType)
 	override lazy val selectTarget: SelectTarget = left.selectTarget + right.selectTarget
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def table: Table = left.table
 }

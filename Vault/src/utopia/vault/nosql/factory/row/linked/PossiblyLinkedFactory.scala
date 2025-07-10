@@ -29,9 +29,8 @@ trait PossiblyLinkedFactory[+Parent, Child] extends FromRowFactory[Parent] with 
 	
 	override def isAlwaysLinked = false
 	
-	override def apply(row: Row): Try[Parent] =
-	{
-		val child = childFactory.parseIfPresent(row)
+	override def apply(row: Row): Try[Parent] = {
+		val child = childFactory.tryParse(row)
 		apply(row(table), child)
 	}
 }
