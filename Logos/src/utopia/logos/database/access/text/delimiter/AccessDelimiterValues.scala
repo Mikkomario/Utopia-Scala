@@ -2,13 +2,12 @@ package utopia.logos.database.access.text.delimiter
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.storable.text.DelimiterDbModel
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.columns.AccessValues
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
 /**
   * Used for accessing delimiter values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessDelimiterValues(access: AccessManyColumns) extends AccessValues
 {
@@ -19,6 +18,9 @@ case class AccessDelimiterValues(access: AccessManyColumns) extends AccessValues
 	  */
 	val model = DelimiterDbModel
 	
+	/**
+	  * Access to delimiter ids
+	  */
 	lazy val ids = apply(model.index) { _.getInt }
 	
 	/**

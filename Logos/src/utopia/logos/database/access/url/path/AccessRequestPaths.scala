@@ -1,17 +1,25 @@
 package utopia.logos.database.access.url.path
 
-import utopia.logos.database.factory.url.RequestPathDbFactory
+import utopia.logos.database.LogosTables
+import utopia.logos.database.access.url.domain.{AccessDomainValues, FilterByDomain}
+import utopia.logos.database.reader.url.{DetailedRequestPathDbReader, RequestPathDbReader}
 import utopia.logos.model.stored.url.RequestPath
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, TargetingManyRows}
+import utopia.vault.nosql.targeting.columns.AccessManyColumns
+import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
 
-object AccessRequestPaths extends AccessManyRoot[AccessRequestPaths[RequestPath]]
+object AccessRequestPaths extends AccessManyRoot[AccessRequestPathRows[RequestPath]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(AccessManyRows(RequestPathDbFactory))
+	override lazy val root = AccessRequestPathRows(AccessManyRows(RequestPathDbReader))
+	
+	/**
+	  * Access to request paths in the DB, also including domain information
+	  */
+	lazy val withDomains = AccessRequestPathRows(AccessManyRows(DetailedRequestPathDbReader))
 	
 	
 	// IMPLICIT	--------------------
@@ -20,17 +28,16 @@ object AccessRequestPaths extends AccessManyRoot[AccessRequestPaths[RequestPath]
 	  * Provides implicit access to an access point's .values property
 	  * @param access Access point whose values are accessed
 	  */
-	implicit def accessValues(access: AccessRequestPaths[_]): AccessRequestPathValues = access.values
+	implicit def accessValues(access: AccessRequestPaths[_, _]): AccessRequestPathValues = access.values
 }
 
 /**
   * Used for accessing multiple request paths from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
-case class AccessRequestPaths[A](wrapped: TargetingManyRows[A]) 
-	extends AccessRowsWrapper[A, AccessRequestPaths[A], AccessRequestPath[A]] 
-		with FilterRequestPaths[AccessRequestPaths[A]]
+abstract class AccessRequestPaths[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
+	extends TargetingManyLike[A, Repr, AccessRequestPath[A]] with FilterRequestPaths[Repr]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -39,12 +46,56 @@ case class AccessRequestPaths[A](wrapped: TargetingManyRows[A])
 	  */
 	lazy val values = AccessRequestPathValues(wrapped)
 	
+	/**
+	  * A copy of this access which also targets domain
+	  */
+	lazy val joinedToDomains = join(LogosTables.domain)
 	
+	/**
+	  * Access to the values of linked domains
+	  */
+	lazy val domains = AccessDomainValues(joinedToDomains)
+	
+	/**
+	  * Access to domain -based filtering functions
+	  */
+	lazy val whereDomains = FilterByDomain(joinedToDomains)
+}
+
+/**
+  * Provides access to row-specific request path -like items
+  * @param wrapped The wrapped access point
+  * @author Mikko Hilpinen
+  * @since 10.07.2025, v0.4
+  */
+case class AccessRequestPathRows[A](wrapped: TargetingManyRows[A]) 
+	extends AccessRequestPaths[A, AccessRequestPathRows[A]](wrapped) 
+		with AccessRowsWrapper[A, AccessRequestPathRows[A], AccessRequestPath[A]]
+{
 	// IMPLEMENTED	--------------------
 	
 	override protected def self = this
 	
-	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessRequestPaths(newTarget)
+	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessRequestPathRows(newTarget)
+	
+	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessRequestPath(target)
+}
+
+/**
+  * Used for accessing request path items that have been combined with one-to-many combinations
+  * @param wrapped The wrapped access point
+  * @author Mikko Hilpinen
+  * @since 10.07.2025, v0.4
+  */
+case class AccessCombinedRequestPaths[A](wrapped: TargetingMany[A]) 
+	extends AccessRequestPaths[A, AccessCombinedRequestPaths[A]](wrapped) 
+		with AccessWrapper[A, AccessCombinedRequestPaths[A], AccessRequestPath[A]]
+{
+	// IMPLEMENTED	--------------------
+	
+	override protected def self = this
+	
+	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedRequestPaths(newTarget)
 	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessRequestPath(target)
 }

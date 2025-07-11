@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.FilterableView
 /**
   * Common trait for access points which may be filtered based on link properties
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait FilterLinks[+Repr] extends FilterableView[Repr]
 {
@@ -17,7 +17,7 @@ trait FilterLinks[+Repr] extends FilterableView[Repr]
 	/**
 	  * Model that defines link database properties
 	  */
-	def linkModel = LinkDbModel
+	def model = LinkDbModel
 	
 	
 	// OTHER	--------------------
@@ -26,13 +26,13 @@ trait FilterLinks[+Repr] extends FilterableView[Repr]
 	  * @param pathId path id to target
 	  * @return Copy of this access point that only includes links with the specified path id
 	  */
-	def withPath(pathId: Int) = filter(linkModel.pathId.column <=> pathId)
+	def withPath(pathId: Int) = filter(model.pathId.column <=> pathId)
 	
 	/**
 	  * @param pathIds Targeted path ids
 	  * @return Copy of this access point that only includes links where path id is within the specified 
 	  * value set
 	  */
-	def withPaths(pathIds: IterableOnce[Int]) = filter(linkModel.pathId.column.in(IntSet.from(pathIds)))
+	def withPaths(pathIds: IterableOnce[Int]) = filter(model.pathId.column.in(IntSet.from(pathIds)))
 }
 

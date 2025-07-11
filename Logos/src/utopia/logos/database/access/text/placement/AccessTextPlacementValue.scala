@@ -7,28 +7,31 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual text placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait AccessTextPlacementValue extends AccessValue
 {
 	// ATTRIBUTES	--------------------
 	
+	/**
+	  * Access to text placement id
+	  */
 	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * Id of the text where the placed text appears
 	  */
-	lazy val parentId = apply(model.parentId) { v => v.getInt }
+	lazy val parentId = apply(model.parentId).optional { v => v.int }
 	
 	/**
 	  * Id of the text that is placed within the parent text
 	  */
-	lazy val placedId = apply(model.placedId) { v => v.getInt }
+	lazy val placedId = apply(model.placedId).optional { v => v.int }
 	
 	/**
 	  * 0-based index that indicates the specific location of the placed text
 	  */
-	lazy val orderIndex = apply(model.orderIndex) { v => v.getInt }
+	lazy val orderIndex = apply(model.orderIndex).optional { v => v.int }
 	
 	
 	// ABSTRACT	--------------------

@@ -2,13 +2,12 @@ package utopia.logos.database.access.url.path
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.storable.url.RequestPathDbModel
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.columns.AccessValues
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
 /**
   * Used for accessing request path values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessRequestPathValues(access: AccessManyColumns) extends AccessValues
 {
@@ -19,6 +18,9 @@ case class AccessRequestPathValues(access: AccessManyColumns) extends AccessValu
 	  */
 	val model = RequestPathDbModel
 	
+	/**
+	  * Access to request path ids
+	  */
 	lazy val ids = apply(model.index) { _.getInt }
 	
 	/**

@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual delimiter values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessDelimiterValue(access: AccessColumn) extends AccessValue
 {
@@ -19,7 +19,10 @@ case class AccessDelimiterValue(access: AccessColumn) extends AccessValue
 	  */
 	val model = DelimiterDbModel
 	
-	lazy val id = apply(model.index) { _.getInt }
+	/**
+	  * Access to delimiter id
+	  */
+	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * The characters that form this delimiter
@@ -29,6 +32,6 @@ case class AccessDelimiterValue(access: AccessColumn) extends AccessValue
 	/**
 	  * Time when this delimiter was added to the database
 	  */
-	lazy val created = apply(model.created) { v => v.getInstant }
+	lazy val created = apply(model.created).optional { v => v.instant }
 }
 

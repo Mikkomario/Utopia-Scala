@@ -2,7 +2,7 @@ package utopia.vault.model.enumeration
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.vault.model.immutable.{Column, Table, TableColumn}
+import utopia.vault.model.immutable.{Column, DbPropertyDeclaration, Table, TableColumn}
 import utopia.vault.sql.{Select, SqlSegment, SqlTarget}
 
 import scala.language.implicitConversions
@@ -57,6 +57,10 @@ object SelectTarget
 	implicit def tableColumns(columns: Seq[TableColumn]): SelectTarget = columns.oneOrMany match {
 		case Left(only) => SingleColumn(only)
 		case Right(many) => Columns(many.map { _.column })
+	}
+	implicit def dbProps(props: Seq[DbPropertyDeclaration]): SelectTarget = props.oneOrMany match {
+		case Left(only) => SingleColumn(only)
+		case Right(many) => Columns(many.map { _.column.column })
 	}
 	
 	implicit def table(table: Table): SelectTarget = SingleTable(table)

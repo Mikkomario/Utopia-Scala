@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual request path values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessRequestPathValue(access: AccessColumn) extends AccessValue
 {
@@ -19,12 +19,15 @@ case class AccessRequestPathValue(access: AccessColumn) extends AccessValue
 	  */
 	val model = RequestPathDbModel
 	
-	lazy val id = apply(model.index) { _.getInt }
+	/**
+	  * Access to request path id
+	  */
+	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * Id of the domain part of this url
 	  */
-	lazy val domainId = apply(model.domainId) { v => v.getInt }
+	lazy val domainId = apply(model.domainId).optional { v => v.int }
 	
 	/**
 	  * Part of this url that comes after the domain part. Doesn't include any query parameters, nor 
@@ -35,6 +38,6 @@ case class AccessRequestPathValue(access: AccessColumn) extends AccessValue
 	/**
 	  * Time when this request path was added to the database
 	  */
-	lazy val created = apply(model.created) { v => v.getInstant }
+	lazy val created = apply(model.created).optional { v => v.instant }
 }
 

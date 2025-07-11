@@ -24,7 +24,7 @@ object AccessLinkPlacement extends AccessOneRoot[AccessLinkPlacement[LinkPlaceme
 /**
   * Used for accessing individual link placements from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessLinkPlacement[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessLinkPlacement[A]] 

@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.FilterableView
 /**
   * Common trait for access points which may be filtered based on text placement properties
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 {
@@ -17,7 +17,7 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	/**
 	  * Model that defines text placement database properties
 	  */
-	def textPlacementModel: TextPlacementDbProps
+	def model: TextPlacementDbProps
 	
 	
 	// OTHER	--------------------
@@ -26,7 +26,7 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	  * @param orderIndex order index to target
 	  * @return Copy of this access point that only includes text placements with the specified order index
 	  */
-	def at(orderIndex: Int) = filter(textPlacementModel.orderIndex.column <=> orderIndex)
+	def at(orderIndex: Int) = filter(model.orderIndex.column <=> orderIndex)
 	
 	/**
 	  * @param orderIndices Targeted order indices
@@ -34,34 +34,32 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	  * specified value set
 	  */
 	def atIndices(orderIndices: IterableOnce[Int]) = 
-		filter(textPlacementModel.orderIndex.column.in(IntSet.from(orderIndices)))
+		filter(model.orderIndex.column.in(IntSet.from(orderIndices)))
 	
 	/**
 	  * @param placedId placed id to target
 	  * @return Copy of this access point that only includes text placements with the specified placed id
 	  */
-	def placing(placedId: Int) = filter(textPlacementModel.placedId.column <=> placedId)
+	def placing(placedId: Int) = filter(model.placedId.column <=> placedId)
 	
 	/**
 	  * @param placedIds Targeted placed ids
 	  * @return Copy of this access point that only includes text placements where placed id is within the 
 	  * specified value set
 	  */
-	def placingTexts(placedIds: IterableOnce[Int]) = 
-		filter(textPlacementModel.placedId.column.in(IntSet.from(placedIds)))
+	def placingTexts(placedIds: IterableOnce[Int]) = filter(model.placedId.column.in(IntSet.from(placedIds)))
 	
 	/**
 	  * @param parentId parent id to target
 	  * @return Copy of this access point that only includes text placements with the specified parent id
 	  */
-	def withinText(parentId: Int) = filter(textPlacementModel.parentId.column <=> parentId)
+	def withinText(parentId: Int) = filter(model.parentId.column <=> parentId)
 	
 	/**
 	  * @param parentIds Targeted parent ids
 	  * @return Copy of this access point that only includes text placements where parent id is within the 
 	  * specified value set
 	  */
-	def withinTexts(parentIds: IterableOnce[Int]) = 
-		filter(textPlacementModel.parentId.column.in(IntSet.from(parentIds)))
+	def withinTexts(parentIds: IterableOnce[Int]) = filter(model.parentId.column.in(IntSet.from(parentIds)))
 }
 

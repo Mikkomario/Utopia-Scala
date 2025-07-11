@@ -24,7 +24,7 @@ object AccessDelimiter extends AccessOneRoot[AccessDelimiter[Delimiter]]
 /**
   * Used for accessing individual delimiters from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessDelimiter[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessDelimiter[A]] with FilterDelimiters[AccessDelimiter[A]]

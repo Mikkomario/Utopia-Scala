@@ -24,7 +24,7 @@ object AccessDomain extends AccessOneRoot[AccessDomain[Domain]]
 /**
   * Used for accessing individual domains from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessDomain[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessDomain[A]] with FilterDomains[AccessDomain[A]]

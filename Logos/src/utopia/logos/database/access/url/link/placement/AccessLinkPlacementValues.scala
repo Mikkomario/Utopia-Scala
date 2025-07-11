@@ -7,7 +7,7 @@ import utopia.vault.nosql.targeting.columns.AccessManyColumns
 /**
   * Used for accessing link placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessLinkPlacementValues(access: AccessManyColumns) extends AccessTextPlacementValues
 {

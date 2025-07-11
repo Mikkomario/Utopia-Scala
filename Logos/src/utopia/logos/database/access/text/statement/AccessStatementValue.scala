@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual statement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessStatementValue(access: AccessColumn) extends AccessValue
 {
@@ -19,17 +19,20 @@ case class AccessStatementValue(access: AccessColumn) extends AccessValue
 	  */
 	val model = StatementDbModel
 	
-	lazy val id = apply(model.index) { _.getInt }
+	/**
+	  * Access to statement id
+	  */
+	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * Id of the delimiter that terminates this sentence. None if this sentence is not terminated 
 	  * with any character.
 	  */
-	lazy val delimiterId = apply(model.delimiterId) { v => v.int }
+	lazy val delimiterId = apply(model.delimiterId).optional { v => v.int }
 	
 	/**
 	  * Time when this statement was first made
 	  */
-	lazy val created = apply(model.created) { v => v.getInstant }
+	lazy val created = apply(model.created).optional { v => v.instant }
 }
 

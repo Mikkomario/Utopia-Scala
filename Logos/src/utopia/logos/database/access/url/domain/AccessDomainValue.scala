@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual domain values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessDomainValue(access: AccessColumn) extends AccessValue
 {
@@ -19,7 +19,10 @@ case class AccessDomainValue(access: AccessColumn) extends AccessValue
 	  */
 	val model = DomainDbModel
 	
-	lazy val id = apply(model.index) { _.getInt }
+	/**
+	  * Access to domain id
+	  */
+	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
 	  * Full http(s) address of this domain in string format. Includes protocol, domain name and 
@@ -30,6 +33,6 @@ case class AccessDomainValue(access: AccessColumn) extends AccessValue
 	/**
 	  * Time when this domain was added to the database
 	  */
-	lazy val created = apply(model.created) { v => v.getInstant }
+	lazy val created = apply(model.created).optional { v => v.instant }
 }
 

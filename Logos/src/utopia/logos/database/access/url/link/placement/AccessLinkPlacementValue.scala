@@ -7,7 +7,7 @@ import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 /**
   * Used for accessing individual link placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessLinkPlacementValue(access: AccessColumn) extends AccessTextPlacementValue
 {

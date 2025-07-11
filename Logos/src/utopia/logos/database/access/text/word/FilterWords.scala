@@ -7,7 +7,7 @@ import utopia.vault.nosql.view.FilterableView
 /**
   * Common trait for access points which may be filtered based on word properties
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait FilterWords[+Repr] extends FilterableView[Repr]
 {
@@ -16,7 +16,7 @@ trait FilterWords[+Repr] extends FilterableView[Repr]
 	/**
 	  * Model that defines word database properties
 	  */
-	def wordModel = WordDbModel
+	def model = WordDbModel
 	
 	
 	// OTHER	--------------------
@@ -25,13 +25,13 @@ trait FilterWords[+Repr] extends FilterableView[Repr]
 	  * @param text text to target
 	  * @return Copy of this access point that only includes words with the specified text
 	  */
-	def matching(text: String) = filter(wordModel.text.column <=> text)
+	def matching(text: String) = filter(model.text.column <=> text)
 	
 	/**
 	  * @param text Targeted text
 	  * @return Copy of this access point that only includes words where text is within the specified value 
 	  * set
 	  */
-	def matchingWords(text: Iterable[String]) = filter(wordModel.text.column.in(text))
+	def matchingWords(text: Iterable[String]) = filter(model.text.column.in(text))
 }
 

@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.FilterableView
 /**
   * Common trait for access points which may be filtered based on statement properties
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait FilterStatements[+Repr] extends FilterableView[Repr]
 {
@@ -17,7 +17,7 @@ trait FilterStatements[+Repr] extends FilterableView[Repr]
 	/**
 	  * Model that defines statement database properties
 	  */
-	def statementModel = StatementDbModel
+	def model = StatementDbModel
 	
 	
 	// OTHER	--------------------
@@ -26,7 +26,7 @@ trait FilterStatements[+Repr] extends FilterableView[Repr]
 	  * @param delimiterId delimiter id to target
 	  * @return Copy of this access point that only includes statements with the specified delimiter id
 	  */
-	def endingWith(delimiterId: Int) = filter(statementModel.delimiterId.column <=> delimiterId)
+	def endingWith(delimiterId: Int) = filter(model.delimiterId.column <=> delimiterId)
 	
 	/**
 	  * @param delimiterIds Targeted delimiter ids
@@ -34,6 +34,6 @@ trait FilterStatements[+Repr] extends FilterableView[Repr]
 	  * specified value set
 	  */
 	def endingWithDelimiters(delimiterIds: IterableOnce[Int]) = 
-		filter(statementModel.delimiterId.column.in(IntSet.from(delimiterIds)))
+		filter(model.delimiterId.column.in(IntSet.from(delimiterIds)))
 }
 

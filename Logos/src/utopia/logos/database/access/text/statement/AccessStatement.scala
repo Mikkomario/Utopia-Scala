@@ -24,7 +24,7 @@ object AccessStatement extends AccessOneRoot[AccessStatement[StoredStatement]]
 /**
   * Used for accessing individual statements from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessStatement[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessStatement[A]] with FilterStatements[AccessStatement[A]]

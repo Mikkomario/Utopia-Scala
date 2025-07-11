@@ -24,7 +24,7 @@ object AccessLink extends AccessOneRoot[AccessLink[StoredLink]]
 /**
   * Used for accessing individual links from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessLink[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessLink[A]] with FilterLinks[AccessLink[A]]

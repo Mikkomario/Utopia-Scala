@@ -9,7 +9,7 @@ import utopia.vault.nosql.targeting.columns.AccessManyColumns
 /**
   * Used for accessing word placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessWordPlacementValues(access: AccessManyColumns) extends AccessTextPlacementValues
 {

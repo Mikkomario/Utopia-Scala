@@ -9,7 +9,7 @@ import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 /**
   * Used for accessing individual word placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessWordPlacementValue(access: AccessColumn) extends AccessTextPlacementValue
 {
@@ -23,6 +23,6 @@ case class AccessWordPlacementValue(access: AccessColumn) extends AccessTextPlac
 	/**
 	  * Style in which this word is used in this context
 	  */
-	lazy val style = apply(model.style) { v => DisplayStyle.fromValue(v) }
+	lazy val style = apply(model.style).optional { v => DisplayStyle.findForValue(v) }
 }
 

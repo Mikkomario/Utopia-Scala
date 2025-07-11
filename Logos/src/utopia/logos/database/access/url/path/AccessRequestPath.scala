@@ -1,5 +1,7 @@
 package utopia.logos.database.access.url.path
 
+import utopia.logos.database.LogosTables
+import utopia.logos.database.access.url.domain.{AccessDomainValue, FilterByDomain}
 import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
 
@@ -10,6 +12,11 @@ object AccessRequestPath extends AccessOneRoot[AccessRequestPath[RequestPath]]
 	// ATTRIBUTES	--------------------
 	
 	override lazy val root = AccessRequestPaths.root.head
+	
+	/**
+	  * Access to individual request paths in the DB, also including domain information
+	  */
+	lazy val withDomain = AccessRequestPaths.withDomains.head
 	
 	
 	// IMPLICIT	--------------------
@@ -24,7 +31,7 @@ object AccessRequestPath extends AccessOneRoot[AccessRequestPath[RequestPath]]
 /**
   * Used for accessing individual request paths from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessRequestPath[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessRequestPath[A]] with FilterRequestPaths[AccessRequestPath[A]]
@@ -35,6 +42,21 @@ case class AccessRequestPath[A](wrapped: TargetingOne[Option[A]])
 	  * Access to the values of accessible request path
 	  */
 	lazy val values = AccessRequestPathValue(wrapped)
+	
+	/**
+	  * A copy of this access which also targets domain
+	  */
+	lazy val joinedToDomain = join(LogosTables.domain)
+	
+	/**
+	  * Access to the values of linked domain
+	  */
+	lazy val domain = AccessDomainValue(joinedToDomain)
+	
+	/**
+	  * Access to domain -based filtering functions
+	  */
+	lazy val whereDomain = FilterByDomain(joinedToDomain)
 	
 	
 	// IMPLEMENTED	--------------------

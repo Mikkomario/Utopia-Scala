@@ -24,7 +24,7 @@ object AccessWordPlacement extends AccessOneRoot[AccessWordPlacement[WordPlaceme
 /**
   * Used for accessing individual word placements from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessWordPlacement[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessWordPlacement[A]] 

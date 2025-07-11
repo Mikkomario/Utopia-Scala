@@ -6,7 +6,7 @@ import utopia.logos.database.props.text.StatementPlacementDbProps
 /**
   * Used for accessing individual statement placement values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 trait AccessStatementPlacementValue extends AccessTextPlacementValue
 {

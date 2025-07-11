@@ -4,13 +4,12 @@ import utopia.flow.generic.casting.BasicValueCaster
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.logos.database.storable.url.LinkDbModel
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.columns.AccessValues
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
 /**
   * Used for accessing link values from the DB
   * @author Mikko Hilpinen
-  * @since 01.06.2025, v0.4
+  * @since 10.07.2025, v0.4
   */
 case class AccessLinkValues(access: AccessManyColumns) extends AccessValues
 {
@@ -21,6 +20,9 @@ case class AccessLinkValues(access: AccessManyColumns) extends AccessValues
 	  */
 	val model = LinkDbModel
 	
+	/**
+	  * Access to link ids
+	  */
 	lazy val ids = apply(model.index) { _.getInt }
 	/**
 	  * Id of the targeted internet address, including the specific sub-path
