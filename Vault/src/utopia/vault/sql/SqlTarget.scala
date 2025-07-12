@@ -1,14 +1,14 @@
 package utopia.vault.sql
 
-import utopia.vault.model.immutable.{Column, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.immutable.Column
+import utopia.vault.model.template.{HasTables, Joinable}
 import utopia.vault.sql.JoinType._
 
 /**
   * Sql targets are suited targets for operations like select, update and delete. A target may
   * consist of one or more tables and can always be converted to an sql segment when necessary
   */
-trait SqlTarget
+trait SqlTarget extends HasTables
 {
 	// ABSTRACT METHODS    --------------------
 	
@@ -16,10 +16,6 @@ trait SqlTarget
 	  * @return Name of the targeted database
 	  */
 	def databaseName: String
-	/**
-	  * @return Tables contained within this target
-	  */
-	def tables: Seq[Table]
 	
 	/**
 	  * Converts this sql target into an sql segment

@@ -1,10 +1,15 @@
 package utopia.logos.database.access.text.statement
 
+import utopia.logos.database.LogosTables
+import utopia.logos.database.access.text.word.placement.{AccessWordPlacementValues, FilterByWordPlacement}
+import utopia.logos.database.access.text.word.{AccessWordValues, FilterByWord}
+import utopia.logos.database.factory.text.TextBuildingStatementDbReader
 import utopia.logos.database.reader.text.StatementDbReader
 import utopia.logos.database.storable.text.StatementDbModel
 import utopia.logos.model.stored.text.StoredStatement
+import utopia.vault.nosql.read.{DbReader, DbRowReader}
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, TargetingTimeline}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
@@ -13,7 +18,12 @@ object AccessStatements extends AccessManyRoot[AccessStatementRows[StoredStateme
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessStatementRows(AccessManyRows(StatementDbReader))
+	override lazy val root = apply(StatementDbReader)
+	
+	/**
+	 * Access to text-building statements
+	 */
+	lazy val textBuilding = apply(TextBuildingStatementDbReader)
 	
 	
 	// IMPLICIT	--------------------
@@ -23,6 +33,12 @@ object AccessStatements extends AccessManyRoot[AccessStatementRows[StoredStateme
 	  * @param access Access point whose values are accessed
 	  */
 	implicit def accessValues(access: AccessStatements[_, _]): AccessStatementValues = access.values
+	
+	
+	// OTHER    --------------------
+	
+	def apply[A](reader: DbRowReader[A]) = AccessStatementRows(AccessManyRows(reader))
+	def apply[A](reader: DbReader[Seq[A]]) = AccessCombinedStatements(AccessMany(reader))
 }
 
 /**
@@ -39,6 +55,14 @@ abstract class AccessStatements[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapp
 	  * Access to the values of accessible statements
 	  */
 	lazy val values = AccessStatementValues(wrapped)
+	
+	lazy val joinedToWordPlacements = join(LogosTables.wordPlacement)
+	lazy val whereWordPlacements = FilterByWordPlacement(joinedToWordPlacements)
+	lazy val wordPlacements = AccessWordPlacementValues(joinedToWordPlacements)
+	
+	lazy val joinedToWords = joinedToWordPlacements.join(LogosTables.word)
+	lazy val whereWords = FilterByWord(joinedToWords)
+	lazy val words = AccessWordValues(joinedToWords)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -61,7 +85,6 @@ case class AccessStatementRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessStatementRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessStatement(target)
 }
 
@@ -80,7 +103,6 @@ case class AccessCombinedStatements[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedStatements(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessStatement(target)
 }
 

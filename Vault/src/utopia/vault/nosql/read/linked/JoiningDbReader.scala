@@ -1,14 +1,11 @@
 package utopia.vault.nosql.read.linked
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.{Row, Table}
-import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.read.{DbReader, DbRowReader}
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{JoinType, SqlTarget}
-
-import scala.util.Try
 
 /**
   * Common abstract implementation for DbReaders which are implemented by somehow combining two other DB row readers
@@ -22,13 +19,13 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 10.07.2025, v1.22
   */
-abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L],
-                                           protected val right: DbRowReader[R] with HasTablesAsTarget,
-                                           bridges: Seq[Joinable] = Empty, joinType: JoinType = Inner)
+abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L], protected val right: DbRowReader[R],
+                                           bridges: Seq[Table] = Empty, joinType: JoinType = Inner)
 	extends DbReader[Seq[A]]
 {
 	// ATTRIBUTES   ----------------------
 	
+	override lazy val tables: Seq[Table] = OptimizedIndexedSeq.concat(left.tables, bridges, right.tables)
 	override lazy val target: SqlTarget = left.target.join(bridges ++ right.tables, joinType)
 	override lazy val selectTarget: SelectTarget = left.selectTarget + right.selectTarget
 	

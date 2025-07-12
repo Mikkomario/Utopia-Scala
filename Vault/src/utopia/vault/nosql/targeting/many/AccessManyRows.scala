@@ -72,17 +72,17 @@ object AccessManyRows
 		
 		override protected def parse(row: Row) = f(row)
 		
-		override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+		override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridges: Seq[Joinable],
 		                         joinType: JoinType)
 		                        (f: (A, Row) => Option[B]) =
-			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect) =>
+			_extendTo(tables, exclusiveColumns, bridges, joinType) { (newTarget, newSelect) =>
 				copy(target = newTarget, selectTarget = newSelect, f = row => parse(row).flatMap { f(_, row) })
 			}
 		
-		override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+		override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridges: Seq[Joinable],
 		                             joinType: JoinType)
 		                            (f: Iterator[(A, Seq[Row])] => IterableOnce[B]) =
-			_extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (newTarget, newSelect) =>
+			_extendTo(tables, exclusiveColumns, bridges, joinType) { (newTarget, newSelect) =>
 				val indices = target.tables.view.flatMap { _.primaryColumn }.filter(selectTarget.contains)
 					.toOptimizedSeq
 				AccessMany(newTarget, table, newSelect, accessCondition, ordering, prepare = finalizeStatement) {

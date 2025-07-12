@@ -50,12 +50,10 @@ abstract class AccessRequestPaths[A, +Repr <: TargetingManyLike[_, Repr, _]](wra
 	  * A copy of this access which also targets domain
 	  */
 	lazy val joinedToDomains = join(LogosTables.domain)
-	
 	/**
 	  * Access to the values of linked domains
 	  */
 	lazy val domains = AccessDomainValues(joinedToDomains)
-	
 	/**
 	  * Access to domain -based filtering functions
 	  */

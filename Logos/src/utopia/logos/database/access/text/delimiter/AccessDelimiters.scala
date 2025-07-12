@@ -3,7 +3,7 @@ package utopia.logos.database.access.text.delimiter
 import utopia.logos.database.reader.text.DelimiterDbReader
 import utopia.logos.model.stored.text.Delimiter
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
@@ -55,7 +55,6 @@ case class AccessDelimiterRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessDelimiterRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessDelimiter(target)
 }
 
@@ -74,7 +73,6 @@ case class AccessCombinedDelimiters[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedDelimiters(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessDelimiter(target)
 }
 

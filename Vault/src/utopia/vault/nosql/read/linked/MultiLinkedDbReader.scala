@@ -1,10 +1,11 @@
 package utopia.vault.nosql.read.linked
 
-import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+import utopia.vault.model.immutable.{Row, Table}
 import utopia.vault.model.mutable.ResultStream
-import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
 import utopia.vault.nosql.read.DbRowReader
+import utopia.vault.nosql.read.parse.ParseRows
 import utopia.vault.sql.JoinType
 import utopia.vault.sql.JoinType.Inner
 
@@ -26,16 +27,16 @@ object MultiLinkedDbReader
 	 * @tparam A Type of combined items
 	 * @return A new database reader
 	 */
-	def apply[L, R, A](left: DbRowReader[L], right: DbRowReader[R] with HasTablesAsTarget,
-	                   bridges: Seq[Joinable] = Empty, neverEmptyRight: Boolean = false)
+	def apply[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
+	                   bridges: Seq[Table] = Empty, neverEmptyRight: Boolean = false)
 	                  (f: (L, Seq[R]) => A): MultiLinkedDbReader[L, R, A] =
 		new _MultiLinkedDbReader[L, R, A](left, right, bridges, f, neverEmptyRight)
 	
 	
 	// NESTED   ----------------------------
 	
-	private class _MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R] with HasTablesAsTarget,
-	                                            bridges: Seq[Joinable], f: (L, Seq[R]) => A, neverEmptyRight: Boolean)
+	private class _MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
+	                                            bridges: Seq[Table], f: (L, Seq[R]) => A, neverEmptyRight: Boolean)
 		extends MultiLinkedDbReader[L, R, A](left, right, bridges, neverEmptyRight)
 	{
 		override protected def combine(left: L, right: Seq[R]): A = f(left, right)
@@ -49,9 +50,10 @@ object MultiLinkedDbReader
  * @author Mikko Hilpinen
  * @since 10.07.2025, v1.22
  */
-abstract class MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R] with HasTablesAsTarget,
-                                   bridges: Seq[Joinable] = Empty, neverEmptyRight: Boolean = false)
+abstract class MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
+                                   bridges: Seq[Table] = Empty, neverEmptyRight: Boolean = false)
 	extends JoiningDbReader[L, R, A](left, right, bridges, if (neverEmptyRight) Inner else JoinType.Left)
+		with ParseRows[Seq[A]]
 {
 	// ABSTRACT ----------------------------
 	
@@ -66,7 +68,8 @@ abstract class MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowRe
 	
 	// IMPLEMENTED  ------------------------
 	
+	override def apply(rows: Seq[Row]): Seq[A] = left.parseMultiLinkedWith(rows, right)(combine).toOptimizedSeq
+	
 	override def apply(stream: ResultStream): Seq[A] =
-		stream.withLinkedRowsIterator(left).map { case (left, rows) => combine(left, rows.flatMap(right.tryParse)) }
-			.toOptimizedSeq
+		left.parseMultiLinkedWith(stream.rowsIterator, right)(combine).toOptimizedSeq
 }

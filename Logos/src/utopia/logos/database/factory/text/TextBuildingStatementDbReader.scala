@@ -6,10 +6,11 @@ import utopia.logos.database.storable.text.{WordDbModel, WordPlacementDbModel}
 import utopia.logos.model.combined.text.TextBuildingStatement
 import utopia.logos.model.enumeration.DisplayStyle
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.immutable.Table
+import utopia.vault.model.immutable.{Row, Table}
 import utopia.vault.model.mutable.ResultStream
 import utopia.vault.model.template.HasTablesAsTarget
 import utopia.vault.nosql.read.DbReader
+import utopia.vault.nosql.read.parse.ParseRows
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{JoinType, SqlTarget}
 
@@ -19,7 +20,8 @@ import utopia.vault.sql.{JoinType, SqlTarget}
  * @author Mikko Hilpinen
  * @since 10.07.2025, v0.6
  */
-object TextBuildingStatementDbReader extends DbReader[Seq[TextBuildingStatement]] with HasTablesAsTarget
+object TextBuildingStatementDbReader
+	extends DbReader[Seq[TextBuildingStatement]] with ParseRows[Seq[TextBuildingStatement]] with HasTablesAsTarget
 {
 	// ATTRIBUTES   -------------------
 	
@@ -40,17 +42,23 @@ object TextBuildingStatementDbReader extends DbReader[Seq[TextBuildingStatement]
 	
 	override def table: Table = delegate.table
 	
-	override def apply(stream: ResultStream): Seq[TextBuildingStatement] =
-		stream.withLinkedRowsIterator(delegate)
-			// Parses and combines the text for each statement
-			.map { case (statement, rows) =>
-				val text = rows
-					.map { row =>
-						val style = DisplayStyle.fromValue(row(wordPlacementModel.style))
-						style(row(wordModel.text).getString) -> row(wordPlacementModel.orderIndex).getInt
-					}
-					.sortBy { _._2 }.iterator.map { _._1 }.mkString(" ")
-				TextBuildingStatement(statement, text)
+	override def apply(rows: Seq[Row]): Seq[TextBuildingStatement] = parse(rows)
+	override def apply(stream: ResultStream): Seq[TextBuildingStatement] = parse(stream.rowsIterator)
+	
+	
+	// OTHER    --------------------
+	
+	private def parse(rows: IterableOnce[Row]) =
+		delegate
+			.parseMultiLinked(rows) { (statement, rows) =>
+				TextBuildingStatement(statement, rowsToText(rows))
 			}
 			.toOptimizedSeq
+	
+	private def rowsToText(rows: Iterable[Row]) = rows.view
+		.map { row =>
+			val style = DisplayStyle.fromValue(row(wordPlacementModel.style))
+			style(row(wordModel.text).getString) -> row(wordPlacementModel.orderIndex).getInt
+		}
+		.toOptimizedSeq.sortBy { _._2 }.iterator.map { _._1 }.mkString(" ")
 }

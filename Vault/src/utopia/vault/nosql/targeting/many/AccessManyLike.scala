@@ -7,6 +7,8 @@ import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.mutable.ResultStream
+import utopia.vault.model.template.Joinable
+import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.sql.{Condition, OrderBy, Select, SqlSegment, Update, Where}
 
@@ -57,7 +59,7 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 	/**
 	  * @return A SELECT statement executed by default when pulling data
 	  */
-	protected def select = selectTarget.toSelect(target)
+	protected def toSelect = selectTarget.toSelect(target)
 	
 	/**
 	  * @return Primary key columns included in the default [[selectTarget]].
@@ -70,7 +72,7 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 	
 	// IMPLEMENTED  ------------------
 	
-	override def pull(implicit connection: Connection): Seq[A] = pullManyWith[A](select)(parse)
+	override def pull(implicit connection: Connection): Seq[A] = pullManyWith[A](toSelect)(parse)
 	
 	override def apply(column: Column, distinct: Boolean)(implicit connection: Connection) =
 		pullManyWith(Select.distinctIf(target, column, distinct)) { _.rowValuesIterator.toOptimizedSeq }

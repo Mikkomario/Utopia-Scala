@@ -55,7 +55,6 @@ case class AccessLinkRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessLinkRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLink(target)
 }
 
@@ -74,7 +73,6 @@ case class AccessCombinedLinks[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedLinks(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLink(target)
 }
 

@@ -1,8 +1,7 @@
 package utopia.vault.nosql.read.linked
 
 import utopia.flow.collection.immutable.Empty
-import utopia.vault.model.immutable.Row
-import utopia.vault.model.template.{HasTablesAsTarget, Joinable}
+import utopia.vault.model.immutable.{Row, Table}
 import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.sql.JoinType
 
@@ -22,8 +21,8 @@ object PossiblyCombiningDbRowReader
 	  * @tparam A Type of the merge results
 	  * @return A DB reader that combines the results of the specified two readers
 	  */
-	def apply[L, R, A](left: DbRowReader[L], right: DbRowReader[R] with HasTablesAsTarget,
-	                   bridges: Seq[Joinable] = Empty)
+	def apply[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
+	                   bridges: Seq[Table] = Empty)
 	                  (merge: (L, Option[R]) => A): PossiblyCombiningDbRowReader[L, R, A] =
 		new _PossiblyCombiningDbRowReader[L, R, A](left, right, bridges, merge)
 	
@@ -31,8 +30,8 @@ object PossiblyCombiningDbRowReader
 	// NESTED   ---------------------------
 	
 	private class _PossiblyCombiningDbRowReader[L, R, A](left: DbRowReader[L],
-	                                                     right: DbRowReader[R] with HasTablesAsTarget,
-	                                                     bridges: Seq[Joinable], f: (L, Option[R]) => A)
+	                                                     right: DbRowReader[R],
+	                                                     bridges: Seq[Table], f: (L, Option[R]) => A)
 		extends PossiblyCombiningDbRowReader[L, R, A](left, right, bridges)
 	{
 		override protected def combine(left: L, right: Option[R]): A = f(left, right)
@@ -46,8 +45,8 @@ object PossiblyCombiningDbRowReader
   * @since 10.07.2025, v1.22
   */
 abstract class PossiblyCombiningDbRowReader[L, R, +A](left: DbRowReader[L],
-                                                      right: DbRowReader[R] with HasTablesAsTarget,
-                                                      bridges: Seq[Joinable] = Empty)
+                                                      right: DbRowReader[R],
+                                                      bridges: Seq[Table] = Empty)
 	extends JoiningDbReader[L, R, A](left, right, bridges, JoinType.Left) with DbRowReader[A]
 {
 	// ABSTRACT -------------------------

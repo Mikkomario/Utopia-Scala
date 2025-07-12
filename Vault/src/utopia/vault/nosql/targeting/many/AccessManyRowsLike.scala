@@ -76,7 +76,7 @@ trait AccessManyRowsLike[+A, +Repr]
 	}
 	override protected def parse(result: ResultStream): Seq[A] = _parse[A](result)(parse)
 	override def stream[B](f: Iterator[A] => B)(implicit connection: Connection): B =
-		pullWith(select, f(Iterator.empty)) { processStream(_) { rows => f(rows.flatMap(parse)) } }
+		pullWith(toSelect, f(Iterator.empty)) { processStream(_) { rows => f(rows.flatMap(parse)) } }
 	
 	override def take(n: Int): Repr = withLimit(limit match {
 		case Some(limit) => (limit min n) max 0

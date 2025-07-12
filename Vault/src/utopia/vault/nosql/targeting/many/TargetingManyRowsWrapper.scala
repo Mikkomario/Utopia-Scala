@@ -34,13 +34,13 @@ trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T, OT], OT, O, +A, 
 	                            (implicit connection: Connection): Seq[(A, B)] =
 		wrapped.pullWithMany(columns)(map).map { case (a, b) => mapResult(a) -> b }
 	
-	override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+	override def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridges: Seq[Joinable],
 	                         joinType: JoinType)(f: (A, Row) => Option[B]) =
-		wrapped.extendTo(tables, exclusiveColumns, bridgingJoins, joinType) { (item, row) => f(mapResult(item), row) }
-	override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridgingJoins: Seq[Joinable],
+		wrapped.extendTo(tables, exclusiveColumns, bridges, joinType) { (item, row) => f(mapResult(item), row) }
+	override def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column], bridges: Seq[Joinable],
 	                             joinType: JoinType)
 	                            (f: Iterator[(A, Seq[Row])] => IterableOnce[B]) =
-		wrapped.extendToMany(tables, exclusiveColumns, bridgingJoins, joinType) { items =>
+		wrapped.extendToMany(tables, exclusiveColumns, bridges, joinType) { items =>
 			f(items.map { case (a, rows) => mapResult(a) -> rows })
 		}
 }

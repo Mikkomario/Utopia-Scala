@@ -91,7 +91,7 @@ object AccessColumnValues
   * @since 20.05.2025, v1.21
   */
 class AccessColumnValues[+A, -In](override protected val access: AccessManyColumns, override val column: Column)
-                                 (fromValue: Either[Value => IterableOnce[A], Value => A])
+                                 (val fromValue: Either[Value => IterableOnce[A], Value => A])
                                  (toValue: In => Value)
 	extends ColumnValueAccess[Seq[Value], Seq[A], In]
 {

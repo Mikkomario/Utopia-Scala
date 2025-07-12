@@ -2,11 +2,15 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
+import utopia.vault.model.enumeration.SelectTarget
+import utopia.vault.model.enumeration.SelectTarget.{Columns, SingleColumn}
 import utopia.vault.model.immutable.{Column, Row, Table, TableColumn}
 import utopia.vault.model.template.Joinable
+import utopia.vault.nosql.read.parse.ParseRows
+import utopia.vault.nosql.read.{DbReader, DbRowReader}
 import utopia.vault.sql.JoinType
 import utopia.vault.sql.JoinType.Inner
 
@@ -120,7 +124,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  * @param exclusiveColumns If the additionally read data should be limited to specific columns
 	  *                         (for one or more tables), specify those columns here.
 	  *                         If left empty, all columns in 'tables' are pulled.
-	  * @param bridgingJoins Joins that should be performed to reach 'tables'.
+	  * @param bridges Joins that should be performed to reach 'tables'.
 	  *                      No data is read from these joined tables, but they are used for forming an
 	  *                      integral target.
 	  *                      Default = empty, which is appropriate when no joins beside 'tables' need to be performed.
@@ -130,7 +134,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  * @return A copy of this access which performs the necessary joins, includes the extended read target,
 	  *         and performs the specified mapping.
 	  */
-	def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
+	def extendTo[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridges: Seq[Joinable] = Empty,
 	                joinType: JoinType = Inner)
 	               (f: (A, Row) => Option[B]): TargetingManyRows[B]
 	/**
@@ -141,7 +145,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  * @param exclusiveColumns If the additionally read data should be limited to specific columns
 	  *                         (for one or more tables), specify those columns here.
 	  *                         If left empty, all columns in 'tables' are pulled.
-	  * @param bridgingJoins Joins that should be performed to reach 'tables'.
+	  * @param bridges Joins that should be performed to reach 'tables'.
 	  *                      No data is read from these joined tables, but they are used for forming an
 	  *                      integral target.
 	  *                      Default = empty, which is appropriate when no joins beside 'tables' need to be performed.
@@ -153,7 +157,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  * @return A copy of this access which performs the necessary joins, includes the extended read target,
 	  *         and performs the specified mapping.
 	  */
-	def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridgingJoins: Seq[Joinable] = Empty,
+	def extendToMany[B](tables: Seq[Table], exclusiveColumns: Seq[Column] = Empty, bridges: Seq[Joinable] = Empty,
 	                    joinType: JoinType = Inner)
 	                   (f: Iterator[(A, Seq[Row])] => IterableOnce[B]): TargetingMany[B]
 	
@@ -226,4 +230,60 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	def groupBy[B](firstColumn: TableColumn, secondColumn: TableColumn, moreColumns: TableColumn*)(map: Seq[Value] => B)
 	              (implicit connection: Connection): Map[B, Seq[A]] =
 		groupBy(Pair(firstColumn, secondColumn) ++ moreColumns)(map)
+	
+	/**
+	 * Accesses additional data and combines it with the accessible items in a one-to-one fashion.
+	 * @param reader Reader used for acquiring the right-side items
+	 * @param bridges Bridging joins to apply before joining the 'reader's tables. Default = empty.
+	 * @param combine A function which combines a primary item and a right-side item
+	 * @tparam R Type of right-side items
+	 * @tparam B Type of 'combine' results
+	 * @return Access to combined items
+	 */
+	def combineWith[R, B](reader: DbRowReader[R], bridges: Seq[Joinable] = Empty)
+	                     (combine: (A, R) => B) =
+		extendTo[B](reader.tables, exclusiveColumnsFrom(reader.selectTarget), bridges) { (left, row) =>
+			reader.tryParse(row).map { combine(left, _) }
+		}
+	/**
+	 * Accesses additional data and combines it with the accessible items in a one-to- 0-1 fashion.
+	 * @param reader Reader used for acquiring the right-side items
+	 * @param bridges Bridging joins to apply before joining the 'reader's tables. Default = empty.
+	 * @param combine A function which combines a primary item and a right-side item, if present.
+	 * @tparam R Type of right-side items
+	 * @tparam B Type of 'combine' results
+	 * @return Access to combined items
+	 */
+	def combineWithIfPresent[R, B](reader: DbRowReader[R], bridges: Seq[Joinable] = Empty)
+	                              (combine: (A, Option[R]) => B) =
+		extendTo[B](reader.tables, exclusiveColumnsFrom(reader.selectTarget), bridges, JoinType.Left) { (left, row) =>
+			Some(combine(left, reader.tryParse(row)))
+		}
+	/**
+	 * Accesses additional data and combines it with the accessible items in a one-to-many fashion.
+	 * @param reader Reader used for acquiring the right-side items
+	 * @param bridges Bridging joins to apply before joining the 'reader's tables. Default = empty.
+	 * @param neverEmpty Whether to assume that at least one right-side item will always be linked.
+	 *                   If true, causes inner join to be applied, instead of a left join, which is the default.
+	 * @param combine A function which combines a primary item and the matching right-side items
+	 * @tparam R Type of right-side items
+	 * @tparam B Type of 'combine' results
+	 * @return Access to combined items
+	 */
+	def combineWithMany[R, B](reader: DbReader[_] with ParseRows[R], bridges: Seq[Joinable] = Empty,
+	                          neverEmpty: Boolean = false)
+	                         (combine: (A, R) => B) =
+		extendToMany(reader.tables, exclusiveColumnsFrom(reader.selectTarget), bridges,
+			if (neverEmpty) JoinType.Inner else JoinType.Left) {
+			_.map { case (left, rows) => combine(left, reader(rows)) } }
+	
+	/**
+	 * @param target A select target
+	 * @return Columns which are exclusive to other table columns in that target
+	 */
+	protected def exclusiveColumnsFrom(target: SelectTarget) = target match {
+		case SingleColumn(column) => Single(column)
+		case Columns(columns) => columns
+		case _ => Empty
+	}
 }

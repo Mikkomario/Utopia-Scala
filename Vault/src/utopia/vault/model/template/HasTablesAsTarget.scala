@@ -8,7 +8,7 @@ import utopia.vault.sql.JoinType
   * @author Mikko Hilpinen
   * @since 10.07.2025, v1.22
   */
-trait HasTablesAsTarget extends HasTable with HasTarget
+trait HasTablesAsTarget extends HasTable with HasTables with HasTarget
 {
 	// ABSTRACT -------------------------
 	
@@ -24,10 +24,7 @@ trait HasTablesAsTarget extends HasTable with HasTarget
 	
 	// COMPUTED ------------------------
 	
-	/**
-	  * @return The table(s) used by this class (never empty)
-	  */
-	def tables = table +: joinedTables
+	
 	/**
 	  * @return Whether this class targets a single table only
 	  */
@@ -35,6 +32,11 @@ trait HasTablesAsTarget extends HasTable with HasTarget
 	
 	
 	// IMPLEMENTED  --------------------
+	
+	/**
+	 * @return The table(s) used by this class (never empty)
+	 */
+	override def tables = table +: joinedTables
 	
 	def target = table.join(joinedTables, joinType)
 }

@@ -30,7 +30,7 @@ object ParseRow
  * @author Mikko Hilpinen
  * @since 09.07.2025, v1.22
  */
-trait ParseRow[+A] extends ParseResultStream[Seq[A]] with ParseResult[Seq[A]]
+trait ParseRow[+A] extends ParseRows[Seq[A]]
 {
 	// ABSTRACT ----------------------------
 	
@@ -51,7 +51,7 @@ trait ParseRow[+A] extends ParseResultStream[Seq[A]] with ParseResult[Seq[A]]
 	override def apply(stream: ResultStream) =
 		OptimizedIndexedSeq.from(stream.rowsIterator.flatMap(tryParse))
 	
-	override def apply(result: Result): Seq[A] = result.rows.flatMap(tryParse)
+	override def apply(rows: Seq[Row]): Seq[A] = rows.flatMap(tryParse)
 	
 	
 	// OTHER    ---------------------------
