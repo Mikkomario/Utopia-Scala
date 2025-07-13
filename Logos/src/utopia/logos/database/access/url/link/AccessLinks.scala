@@ -1,9 +1,13 @@
 package utopia.logos.database.access.url.link
 
-import utopia.logos.database.reader.url.LinkDbReader
+import utopia.logos.database.access.url.link.AccessLinks.placementModel
+import utopia.logos.database.access.url.link.placement.{AccessLinkPlacementValues, FilterByLinkPlacement}
+import utopia.logos.database.reader.url.{DetailedLinkDbReader, LinkDbReader}
+import utopia.logos.database.storable.url.LinkPlacementDbModel
 import utopia.logos.model.stored.url.StoredLink
+import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
@@ -12,7 +16,14 @@ object AccessLinks extends AccessManyRoot[AccessLinkRows[StoredLink]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessLinkRows(AccessManyRows(LinkDbReader))
+	protected val placementModel = LinkPlacementDbModel
+	
+	override lazy val root = apply(LinkDbReader)
+	
+	/**
+	 * Access to links, including request path & domain information
+	 */
+	lazy val detailed = apply(DetailedLinkDbReader)
 	
 	
 	// IMPLICIT	--------------------
@@ -22,6 +33,11 @@ object AccessLinks extends AccessManyRoot[AccessLinkRows[StoredLink]]
 	  * @param access Access point whose values are accessed
 	  */
 	implicit def accessValues(access: AccessLinks[_, _]): AccessLinkValues = access.values
+	
+	
+	// OTHER    --------------------
+	
+	def apply[A](reader: DbRowReader[A]) = AccessLinkRows(AccessManyRows(reader))
 }
 
 /**
@@ -38,6 +54,10 @@ abstract class AccessLinks[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: A
 	  * Access to the values of accessible links
 	  */
 	lazy val values = AccessLinkValues(wrapped)
+	
+	lazy val joinedToPlacements = join(placementModel.table)
+	lazy val wherePlacements = FilterByLinkPlacement(joinedToPlacements)
+	lazy val placements = AccessLinkPlacementValues(joinedToPlacements)
 }
 
 /**

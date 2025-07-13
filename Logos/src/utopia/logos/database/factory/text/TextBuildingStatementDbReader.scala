@@ -51,14 +51,14 @@ object TextBuildingStatementDbReader
 	private def parse(rows: IterableOnce[Row]) =
 		delegate
 			.parseMultiLinked(rows) { (statement, rows) =>
-				TextBuildingStatement(statement, rowsToText(rows))
+				TextBuildingStatement(statement, rowsToWords(rows))
 			}
 			.toOptimizedSeq
 	
-	private def rowsToText(rows: Iterable[Row]) = rows.view
+	private def rowsToWords(rows: Iterable[Row]) = rows.view
 		.map { row =>
 			val style = DisplayStyle.fromValue(row(wordPlacementModel.style))
-			style(row(wordModel.text).getString) -> row(wordPlacementModel.orderIndex).getInt
+			row(wordPlacementModel.orderIndex).getInt -> style(row(wordModel.text).getString)
 		}
-		.toOptimizedSeq.sortBy { _._2 }.iterator.map { _._1 }.mkString(" ")
+		.toOptimizedSeq.sortBy { _._1 }
 }

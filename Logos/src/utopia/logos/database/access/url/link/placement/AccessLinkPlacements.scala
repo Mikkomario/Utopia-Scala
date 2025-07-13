@@ -1,7 +1,8 @@
 package utopia.logos.database.access.url.link.placement
 
-import utopia.logos.database.reader.url.LinkPlacementDbReader
+import utopia.logos.database.reader.url.{DetailedLinkPlacementDbReader, LinkPlacementDbReader}
 import utopia.logos.model.stored.url.LinkPlacement
+import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
 import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
 import utopia.vault.nosql.targeting.one.TargetingOne
@@ -12,7 +13,12 @@ object AccessLinkPlacements extends AccessManyRoot[AccessLinkPlacementRows[LinkP
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessLinkPlacementRows(AccessManyRows(LinkPlacementDbReader))
+	override lazy val root = apply(LinkPlacementDbReader)
+	
+	/**
+	 * Access to link placements, including full link information
+	 */
+	lazy val detailed = apply(DetailedLinkPlacementDbReader)
 	
 	
 	// IMPLICIT	--------------------
@@ -22,6 +28,11 @@ object AccessLinkPlacements extends AccessManyRoot[AccessLinkPlacementRows[LinkP
 	  * @param access Access point whose values are accessed
 	  */
 	implicit def accessValues(access: AccessLinkPlacements[_, _]): AccessLinkPlacementValues = access.values
+	
+	
+	// OTHER    --------------------
+	
+	def apply[A](reader: DbRowReader[A]) = AccessLinkPlacementRows(AccessManyRows(reader))
 }
 
 /**
@@ -55,7 +66,6 @@ case class AccessLinkPlacementRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessLinkPlacementRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLinkPlacement(target)
 }
 
@@ -74,7 +84,6 @@ case class AccessCombinedLinkPlacements[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedLinkPlacements(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLinkPlacement(target)
 }
 
