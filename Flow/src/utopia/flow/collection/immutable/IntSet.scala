@@ -6,25 +6,62 @@ import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 
+import scala.collection.mutable
+
 object IntSet extends FromCollectionFactory[Int, IntSet]
 {
 	// ATTRIBUTES   -------------------------
 	
-	override lazy val empty = apply(Empty)
+	override lazy val empty = new IntSet(Empty)
+	
+	
+	// COMPUTED ------------------------------
+	
+	/**
+	 * @return A new IntSet builder
+	 */
+	def newBuilder = new IntSetBuilder
 	
 	
 	// IMPLEMENTED  --------------------------
 	
 	override def from(items: IterableOnce[Int]): IntSet = items match {
+		// Case: Already an IntSet
 		case s: IntSet => s
+		// Case: A span => Wraps it
 		case s: IntSpan => apply(Single(s.ascending))
+		// Case: A span-like element => Converts it to a span and wraps it
 		case s: HasInclusiveEnds[Int] => apply(Single(NumericSpan(s.ends.sorted)))
+		// Case: An inclusive range => Wraps it as a span
 		case r: Range.Inclusive => apply(Single[NumericSpan[Int]](r))
+		// Case: An exclusive range => Wraps it as a span, if not empty
 		case r: Range => if (r.isEmpty) empty else apply(Single(NumericSpan(r.start, r.end - 1)))
-		case s: Seq[Int] => if (s.isEmpty) empty else fromPreparedIterator(s.sorted.iterator)
+		// Case An ordered sequence
+		case s: Seq[Int] =>
+			// Case: Empty => Skips building
+			if (s.isEmpty)
+				empty
+			// Case: Ordered => Builds using a simpler function
+			else if (s.iterator.paired.forall { p => p.first <= p.second })
+				fromPreparedIterator(s.iterator)
+			// Case: Unordered => Uses a builder
+			else {
+				val builder = newBuilder
+				builder ++= s
+				builder.result()
+			}
+		
+		// Case: Other type of collection => Uses a builder
 		case i =>
-			val s = Seq.from(i)
-			if (s.isEmpty) empty else fromPreparedIterator(s.sorted.iterator)
+			i.nonEmptyIterator match {
+				case Some(iterator) =>
+					val builder = newBuilder
+					builder ++= iterator
+					builder.result()
+					
+				// Case: Empty collection => No building is needed
+				case None => empty
+			}
 	}
 	
 	override def apply(item: Int): IntSet = apply(Single(NumericSpan.singleValue(item)))
@@ -60,6 +97,88 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 		builder += NumericSpan(currentStart, currentEnd)
 		
 		apply(builder.result())
+	}
+	
+	
+	// NESTED   ------------------------------
+	
+	/**
+	 * Used for building IntSets, minimizing memory usage
+	 */
+	class IntSetBuilder extends mutable.Builder[Int, IntSet]
+	{
+		// ATTRIBUTES   ----------------------
+		
+		private val ranges = mutable.Buffer[RangeBuilder]()
+		
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def addOne(elem: Int) = {
+			// Finds the following range (index)
+			val nextRangeIndex = ranges.indexWhere { _.start > elem }
+			// Case: There is no following range
+			if (nextRangeIndex == -1)
+				ranges.lastOption match {
+					case Some(lastRange) =>
+						// Case: Not contained within the last range => Extends or adds
+						if (lastRange.end < elem) {
+							// Case: Just after the last range => Extends the last range
+							if (lastRange.end == elem - 1)
+								lastRange.end = elem
+							// Case: Further after the last range => Adds a new range
+							else
+								ranges.append(new RangeBuilder(elem, elem))
+						}
+					
+					// Case: This builder is empty => Adds the first range
+					case None => ranges.append(new RangeBuilder(elem, elem))
+				}
+			// Case: This number is before the first range => Extends or adds
+			else if (nextRangeIndex == 0) {
+				val nextRange = ranges.head
+				// Case: Just before the first range => Extends the first range
+				if (nextRange.start == elem + 1)
+					nextRange.start = elem
+				// Case: Further before the first range => Adds a new range
+				else
+					ranges.insert(0, new RangeBuilder(elem, elem))
+			}
+			// Case: This number is somewhere within this builder
+			else {
+				val previousRange = ranges(nextRangeIndex - 1)
+				val nextRange = ranges(nextRangeIndex)
+				// Case: Not contained within the previous range => Extends or adds
+				if (previousRange.end < elem) {
+					// Case: Just after the previous range
+					if (previousRange.end == elem - 1) {
+						// Case: Also, just before the next range => Combines these two ranges
+						if (nextRange.start == elem + 1) {
+							ranges.remove(nextRangeIndex)
+							previousRange.end = nextRange.end
+						}
+						// Case: Not just before the next range => Extends the previous range
+						else
+							previousRange.end = elem
+					}
+					// Case: Just before the next range => Extends the next range
+					else if (nextRange.start == elem + 1)
+						nextRange.start = elem
+					// Case: Disconnected from surrounding ranges => Adds a new range
+					else
+						ranges.insert(nextRangeIndex, new RangeBuilder(elem, elem))
+				}
+			}
+			this
+		}
+		
+		override def clear() = ranges.clear()
+		override def result() = new IntSet(ranges.view.map { _.toSpan }.toOptimizedSeq)
+	}
+	
+	private class RangeBuilder(var start: Int, var end: Int)
+	{
+		def toSpan = NumericSpan(start, end)
 	}
 }
 

@@ -12,6 +12,8 @@
 ### Bugfixes
 - Under certain conditions, **OptimizedMultiMergeMirror** 
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
+### New features
+- Added builder for **IntSet**s
 ### New methods
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
@@ -23,6 +25,7 @@
 - **UncertainBoolean** now extends **ValueConvertible**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
+- Optimized `IntSet.from(IterableOnce)` implementation
 - Modified `toString` implementations of most **Changing** implementations
 
 ## v2.6 - 26.05.2025

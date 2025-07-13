@@ -1,6 +1,6 @@
 package utopia.flow.test.collection
 
-import utopia.flow.collection.immutable.IntSet
+import utopia.flow.collection.immutable.{IntSet, Pair}
 import utopia.flow.collection.immutable.range.NumericSpan
 
 /**
@@ -22,6 +22,24 @@ object IntSetTest extends App
 	
 	assert(set.contains(6))
 	assert(!set.contains(11))
+	
+	// Tests int-set building
+	private val builder = IntSet.newBuilder
+	
+	builder += 1
+	builder += 2
+	builder += 3
+	
+	builder += 5
+	builder += 7
+	builder += 6
+	
+	builder ++= Pair(9, 10)
+	builder += 4
+	
+	private val set2 = builder.result()
+	
+	assert(set2.ranges == Pair(NumericSpan(1, 7), NumericSpan(9, 10)))
 	
 	println("Done!")
 }
