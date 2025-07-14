@@ -15,17 +15,22 @@
 ### New features
 - Added builder for **IntSet**s
 ### New methods
+- **Future**
+  - Added `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` for **Future**s of type **TryCatch**
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
+- **TryCatch**
+  - Added `.toEither`
 ### Other changes
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
 - Optimized `IntSet.from(IterableOnce)` implementation
+- Added new `++` and `--` implementations to **IntSet**
 - Modified `toString` implementations of most **Changing** implementations
 
 ## v2.6 - 26.05.2025

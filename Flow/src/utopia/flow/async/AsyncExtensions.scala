@@ -343,6 +343,33 @@ object AsyncExtensions
 		 *         if timeout was reached or if result was a failure
 		 */
 		def waitForResult(timeout: Duration = Duration.Inf): TryCatch[A] = f.waitFor(timeout).flattenCatching
+		
+		/**
+		 * @param map Mapping function to apply to a success result
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results, when successful
+		 * @return A copy of this future with the specified function applied to the results before resolving
+		 */
+		def tryMapIfSuccess[B](map: A => TryCatch[B])(implicit exc: ExecutionContext) =
+			f.map { _.flatMap(map) }
+		/**
+		 * If this future resolves successfully, maps it asynchronously
+		 * @param map The mapping function to apply. May yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results, when successful
+		 * @return A future that resolves once the mapping, also, has completed
+		 */
+		def tryFlatMapIfSuccess[B](map: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
+			f.flatMap {
+				case TryCatch.Success(value, failures) =>
+					val resultFuture = map(value)
+					if (failures.nonEmpty)
+						resultFuture.map { _.withAdditionalFailures(failures) }
+					else
+						resultFuture
+					
+				case TryCatch.Failure(error) => Future.successful(TryCatch.Failure(error))
+			}
 	}
 	
 	implicit class TryFutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal

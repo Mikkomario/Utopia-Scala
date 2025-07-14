@@ -1,8 +1,9 @@
 package utopia.vault.nosql.targeting.columns
 
+import utopia.flow.collection.immutable.IntSet
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.logging.Logger
 import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 
@@ -80,6 +81,18 @@ object AccessColumnValues
 		
 		private def _apply[A, I](parse: Either[Value => IterableOnce[A], Value => A])(toValue: I => Value) =
 			new AccessColumnValues[A, I](access, column)(parse)(toValue)
+	}
+	
+	
+	// EXTENSIONS   ---------------------------
+	
+	implicit class AccessColumnIntValues(val a: AccessColumnValues[Int, _]) extends AnyVal
+	{
+		/**
+		 * @param connection Implicit DB connection
+		 * @return All accessible values as an [[IntSet]]
+		 */
+		def toIntSet(implicit connection: Connection) = a.stream(IntSet.from)
 	}
 }
 

@@ -4,9 +4,10 @@ import utopia.flow.collection.immutable.range.{HasInclusiveEnds, NumericSpan}
 import utopia.flow.collection.immutable.range.NumericSpan.IntSpan
 import utopia.flow.collection.template.factory.FromCollectionFactory
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.IntSet.IntSetBuilder
 import utopia.flow.view.immutable.caching.Lazy
 
-import scala.collection.mutable
+import scala.collection.{View, mutable}
 
 object IntSet extends FromCollectionFactory[Int, IntSet]
 {
@@ -105,11 +106,16 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 	/**
 	 * Used for building IntSets, minimizing memory usage
 	 */
-	class IntSetBuilder extends mutable.Builder[Int, IntSet]
+	class IntSetBuilder(startingFrom: Option[IntSet] = None) extends mutable.Builder[Int, IntSet]
 	{
 		// ATTRIBUTES   ----------------------
 		
 		private val ranges = mutable.Buffer[RangeBuilder]()
+		
+		
+		// INITIAL CODE ----------------------
+		
+		startingFrom.foreach { set => ranges ++= set.ranges.view.map(RangeBuilder.from) }
 		
 		
 		// IMPLEMENTED  ----------------------
@@ -176,6 +182,10 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 		override def result() = new IntSet(ranges.view.map { _.toSpan }.toOptimizedSeq)
 	}
 	
+	private object RangeBuilder
+	{
+		def from(range: HasInclusiveEnds[Int]) = new RangeBuilder(range.start, range.end)
+	}
 	private class RangeBuilder(var start: Int, var end: Int)
 	{
 		def toSpan = NumericSpan(start, end)
@@ -377,6 +387,19 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 				case None => IntSet(i)
 			}
 	}
+	/**
+	 * @param values Integers to add to this set
+	 * @return A copy of this set with all specified integers included
+	 */
+	def ++(values: IterableOnce[Int]) = {
+		if (values.knownSize == 0)
+			this
+		else {
+			val builder = new IntSetBuilder(Some(this))
+			builder ++= values
+			builder.result()
+		}
+	}
 	
 	/**
 	  * @param i An integer to remove from this set
@@ -393,8 +416,46 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 				else
 					Pair(targetRange.withEnd(i - 1), targetRange.withStart(i + 1))
 			}
-			IntSet(ranges.take(targetIndex) ++ replacingRanges ++ ranges.drop(targetIndex + 1))
+			IntSet(OptimizedIndexedSeq.concat(ranges.take(targetIndex), replacingRanges, ranges.drop(targetIndex + 1)))
 			
 		case None => this
+	}
+	/**
+	 * @param values Values to remove from this set
+	 * @return Copy of this set with the specified values removed
+	 */
+	def --(values: IterableOnce[Int]) = {
+		if (values.knownSize == 0 || isEmpty)
+			this
+		else {
+			values match {
+				case v: View[Int] =>
+					val values = Set.from(v)
+					if (values.isEmpty)
+						this
+					else
+						filterNot(values.contains)
+					
+				case i: Iterable[Int] =>
+					if (i.isEmpty)
+						this
+					else
+						i match {
+							case s: Set[Int] => filterNot(s.contains)
+							case s: IntSet => filterNot(s.contains)
+							case s: Seq[Int] => filterNot(s.contains)
+							case v =>
+								val values = Set.from(v)
+								filterNot(values.contains)
+						}
+						
+				case i =>
+					val values = Set.from(i)
+					if (values.isEmpty)
+						this
+					else
+						filterNot(values.contains)
+			}
+		}
 	}
 }

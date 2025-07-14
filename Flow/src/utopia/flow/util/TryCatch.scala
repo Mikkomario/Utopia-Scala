@@ -33,6 +33,12 @@ sealed trait TryCatch[+A]
 	 */
 	def toTry: Try[A]
 	/**
+	 * @return Either:
+	 *              - Right: Successfully acquired value, plus partial failures
+	 *              - Left: Failure cause
+	 */
+	def toEither: Either[Throwable, (A, Seq[Throwable])]
+	/**
 	 * @return Successful value acquired, if applicable.
 	 */
 	def success: Option[A]
@@ -201,6 +207,7 @@ object TryCatch
 		
 		override def get: A = value
 		override def toTry = scala.util.Success(value)
+		override def toEither: Either[Throwable, (A, Seq[Throwable])] = Right(value -> failures)
 		
 		override def success = Some(value)
 		override def failure: Option[Throwable] = None
@@ -258,6 +265,7 @@ object TryCatch
 		
 		override def get: A = throw cause
 		override def toTry = scala.util.Failure[A](cause)
+		override def toEither: Either[Throwable, (A, Seq[Throwable])] = Left(cause)
 		
 		override def success = None
 		override def failure: Option[Throwable] = Some(cause)
