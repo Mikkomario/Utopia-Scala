@@ -27,6 +27,10 @@ sealed trait TryCatch[+A]
 	 * @return Whether this is a full or partial success
 	 */
 	def isSuccess: Boolean
+	/**
+	 * @return Whether this is a partial success and a partial failure, both
+	 */
+	def isPartialFailure: Boolean
 	
 	/**
 	 * @return This TryCatch converted to a Try. Removes non-critical error data.
@@ -204,6 +208,7 @@ object TryCatch
 		// IMPLEMENTED  ------------------------
 		
 		override def isSuccess: Boolean = true
+		override def isPartialFailure: Boolean = failures.nonEmpty
 		
 		override def get: A = value
 		override def toTry = scala.util.Success(value)
@@ -262,6 +267,7 @@ object TryCatch
 	case class Failure[+A](cause: Throwable) extends TryCatch[A]
 	{
 		override def isSuccess: Boolean = false
+		override def isPartialFailure: Boolean = false
 		
 		override def get: A = throw cause
 		override def toTry = scala.util.Failure[A](cause)

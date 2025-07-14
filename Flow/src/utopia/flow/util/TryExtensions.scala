@@ -231,7 +231,7 @@ object TryExtensions
 		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
 		  *         caught errors, as well as successes
 		  */
-		def toTryCatch: TryCatch[Vector[A]] = {
+		def toTryCatch: TryCatch[IndexedSeq[A]] = {
 			val (failures, successes) = tries.divided
 			if (successes.isEmpty) {
 				failures.headOption match {
@@ -251,7 +251,7 @@ object TryExtensions
 		  * @return Failures + successes
 		  */
 		def divided = {
-			val successesBuilder = new VectorBuilder[A]
+			val successesBuilder = OptimizedIndexedSeq.newBuilder[A]
 			val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
 			tries.iterator.foreach {
 				case Success(a) => successesBuilder += a

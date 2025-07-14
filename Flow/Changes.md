@@ -23,14 +23,17 @@
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **TryCatch**
+  - Added `.isPartialFailure`
   - Added `.toEither`
 ### Other changes
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
-- Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
-- **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
 - Optimized `IntSet.from(IterableOnce)` implementation
 - Added new `++` and `--` implementations to **IntSet**
+- Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
+- **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
+- When dividing collections containing **Try** (using **TryExtensions**), 
+  the resulting collections are now **IndexedSeq** instead of **Vector**.
 - Modified `toString` implementations of most **Changing** implementations
 
 ## v2.6 - 26.05.2025
