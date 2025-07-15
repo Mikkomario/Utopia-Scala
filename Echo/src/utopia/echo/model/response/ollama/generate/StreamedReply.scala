@@ -3,6 +3,7 @@ package utopia.echo.model.response.ollama.generate
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
 import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.util.ReplyParseUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
 import utopia.flow.view.immutable.eventful.Fixed
@@ -93,7 +94,10 @@ class StreamedReply(val textPointer: Changing[String], val newTextPointer: Chang
 	// ATTRIBUTES   --------------------------
 	
 	override lazy val future: Future[Try[BufferedReply]] =
-		statisticsFuture.mapIfSuccess { statistics => BufferedReply(text, statistics, lastUpdated) }
+		statisticsFuture.mapIfSuccess { statistics =>
+			val (textWithoutThink, thoughts) = ReplyParseUtils.separateThinkFrom(text)
+			BufferedReply(textWithoutThink, thoughts, statistics, lastUpdated)
+		}
 	
 	
 	// IMPLEMENTED ---------------------------

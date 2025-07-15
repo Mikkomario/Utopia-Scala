@@ -1,6 +1,14 @@
 # Utopia Echo - List of Changes
 
-## v1.3.1 (in development)
+## v1.4 (in development)
+### Breaking changes
+- Modified reply constructors to include a new `thoughts` property. This also affects **ChatMessage**.
+### New features
+- Added more advanced support for thinking LLMs:
+  - Context size is maximized in order to ensure that the thinking process fits
+  - `/nothink` may be inserted to the system message, if requested
+  - Think content won't be included in the chat history sent to the LLM
+  - In **buffered** replies, the <think> block contents are now separated to `thoughts` and not included in `text`
 ### Other changes
 - When using `.jsonArray` and `.jsonObject` in **BufferedOllamaResponseLike**, 
   attempts to handle JSON generation errors where there's a comma before the array end.

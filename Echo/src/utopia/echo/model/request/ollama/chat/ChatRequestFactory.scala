@@ -82,5 +82,5 @@ trait ChatRequestFactory[+A] extends RetractableRequestFactory[ChatRequestFactor
 	  * @param messageText Message text to send to the LLM
 	  * @return A request for sending the specified message
 	  */
-	def apply(messageText: String): A = apply(ChatMessage(messageText, User))
+	def apply(messageText: String): A = apply(User(messageText))
 }

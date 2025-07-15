@@ -6,6 +6,7 @@ import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.Assistant
 import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.util.ReplyParseUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
 import utopia.flow.view.immutable.eventful.Fixed
@@ -101,7 +102,8 @@ class StreamedReplyMessage(override val textPointer: Changing[String], val newTe
 	// ATTRIBUTES   -----------------------
 	
 	override lazy val future = statisticsFuture.mapIfSuccess { stats =>
-		BufferedReplyMessage(ChatMessage(text, senderRole), stats)
+		val (textWithoutThink, thoughts) = ReplyParseUtils.separateThinkFrom(text)
+		BufferedReplyMessage(ChatMessage(textWithoutThink, thoughts, senderRole), stats)
 	}
 	
 	

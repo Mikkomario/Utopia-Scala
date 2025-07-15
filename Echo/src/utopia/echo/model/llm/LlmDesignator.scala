@@ -25,12 +25,15 @@ object LlmDesignator
 	 * @param llmName Name of the targeted LLM
 	 * @return An LLM designator targeting that LLM
 	 */
-	def apply(llmName: String): LlmDesignator = _LlmDesignator(llmName)
+	def apply(llmName: String, thinks: Boolean = false): LlmDesignator = _LlmDesignator(llmName, thinks)
 	
 	
 	// NESTED   ---------------------
 	
-	private case class _LlmDesignator(llmName: String) extends LlmDesignator
+	private case class _LlmDesignator(llmName: String, thinks: Boolean) extends LlmDesignator
+	{
+		override def thinking: LlmDesignator = if (thinks) this else copy(thinks = true)
+	}
 }
 
 /**
@@ -46,6 +49,15 @@ trait LlmDesignator extends ScopeUsable[LlmDesignator]
 	 * @return Name of the designated / targeted LLM
 	 */
 	def llmName: String
+	/**
+	  * @return Whether the designated LLM thinks / reflects by default
+	  */
+	def thinks: Boolean
+	
+	/**
+	  * @return A copy of this LLM designator which indicates that the LLM thinks / reflects
+	  */
+	def thinking: LlmDesignator
 	
 	
 	// IMPLEMENTED  -------------------

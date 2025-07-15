@@ -3,11 +3,10 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{invalidArrayRegex, thinkBlockEnd, thinkBlockStart}
+import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.invalidArrayRegex
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -17,8 +16,7 @@ import scala.util.Try
 
 object BufferedOllamaResponseLike
 {
-	private lazy val thinkBlockStart = "<think>"
-	private lazy val thinkBlockEnd = "</think>"
+	// ATTRIBUTES   ------------------------
 	
 	private lazy val invalidArrayRegex =
 		Regex.escape(',') + (Regex.whiteSpace || Regex.newLine).anyTimes.withinParentheses + Regex.escape(']')
@@ -42,6 +40,11 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 	 * @return Statistics concerning this response
 	 */
 	def statistics: ResponseStatistics
+	/**
+	  * @return The reflective content produced by the LLM before the final answer.
+	  *         May be empty.
+	  */
+	def thoughts: String
 	
 	
 	// COMPUTED ------------------------
@@ -81,20 +84,13 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 	private def closedJsonEntity(startChar: Char, endChar: Char, searchedEntityName: => String) = {
 		// Removes the <think> block, if present
 		val text = this.text
-		val withoutThink = {
-			val startIndex = text.indexOf(thinkBlockStart)
-			if (startIndex < 0)
-				text
-			else
-				text.afterFirst(thinkBlockEnd)
-		}
-		Some(withoutThink.indexOf(startChar)).filter { _ >= 0 }
-			.toTry { new NoSuchElementException(s"No $searchedEntityName is present in '$withoutThink'") }
+		Some(text.indexOf(startChar)).filter { _ >= 0 }
+			.toTry { new NoSuchElementException(s"No $searchedEntityName is present in '$text'") }
 			.flatMap { start =>
-				Some(withoutThink.lastIndexOf(endChar)).filter { _ > start }
-					.toTry { new NoSuchElementException(s"No complete $searchedEntityName is present in '$withoutThink'") }
+				Some(text.lastIndexOf(endChar)).filter { _ > start }
+					.toTry { new NoSuchElementException(s"No complete $searchedEntityName is present in '$text'") }
 					.flatMap { end =>
-						val parsedPart = withoutThink.substring(start, end + 1)
+						val parsedPart = text.substring(start, end + 1)
 						val defaultResult = JsonBunny.munch(parsedPart)
 						// Sometimes the parsing fails because of ",]" text entries.
 						// Attempts to remove these, just in case.

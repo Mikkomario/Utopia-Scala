@@ -1,6 +1,7 @@
 package utopia.echo.model.response.ollama.generate
 
 import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, ResponseStatistics}
+import utopia.echo.util.ReplyParseUtils
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 
@@ -13,7 +14,7 @@ object BufferedReply
 	/**
 	  * @return An empty reply
 	  */
-	def empty = apply("", ResponseStatistics.empty, Now)
+	def empty = apply("", "", ResponseStatistics.empty, Now)
 	
 	
 	// OTHER    -----------------------
@@ -24,19 +25,23 @@ object BufferedReply
 	  * @param responseModel A response model returned by the Ollama API
 	  * @return A buffered reply (final) parsed from the response
 	  */
-	def fromOllamaResponse(responseModel: Model) = apply(responseModel("response").getString,
-		ResponseStatistics.fromOllamaResponse(responseModel), responseModel("created_at").getInstant)
+	def fromOllamaResponse(responseModel: Model) = {
+		val (text, think) = ReplyParseUtils.separateThinkFrom(responseModel("response").getString)
+		apply(text, think,
+			ResponseStatistics.fromOllamaResponse(responseModel), responseModel("created_at").getInstant)
+	}
 }
 
 /**
   * A reply from an LLM that has been completely read
   * @param text Text contents of this reply
+  * @param thoughts Reflective content produced by the LLM before giving the final answer
   * @param statistics Statistics concerning this reply
   * @param lastUpdated Origin time of this reply
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   */
-case class BufferedReply(text: String, statistics: ResponseStatistics, lastUpdated: Instant = Now)
+case class BufferedReply(text: String, thoughts: String, statistics: ResponseStatistics, lastUpdated: Instant = Now)
 	extends BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedReply] with Reply
 {
 	// IMPLEMENTED  -----------------------

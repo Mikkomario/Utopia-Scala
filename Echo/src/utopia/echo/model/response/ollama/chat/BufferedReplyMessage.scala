@@ -52,5 +52,6 @@ case class BufferedReplyMessage(message: ChatMessage, statistics: ResponseStatis
 	override def wrapped: ChatMessage = message
 	
 	override def text: String = message.text
+	override def thoughts: String = message.thoughts
 	override def senderRole: ChatRole = message.senderRole
 }

@@ -5,14 +5,15 @@ import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.CanAttachImages
 import utopia.echo.model.request.ollama.chat.ChatParams
+import utopia.echo.util.ReplyParseUtils
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.util.NotEmpty
+import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.util.{Mutate, NotEmpty}
 
 import scala.util.Try
 
@@ -23,9 +24,8 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	override def apply(model: ModelLike[Property]): Try[ChatMessage] =
 		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
 			model("tool_calls").getVector.tryMap { v => ToolCall(v.getModel) }.map { toolCalls =>
-				apply(
-					model("content", "text").getString, role,
-					model("images").getVector.flatMap { _.string }, toolCalls)
+				val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
+				apply(text, thoughts, role, model("images").getVector.flatMap { _.string }, toolCalls)
 			}
 		}
 		
@@ -38,11 +38,13 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	  * @param defaultRole Role of this message's sender, if not specified in the model
 	  * @return A chat message parsed from the specified model
 	  */
-	def parseFrom(model: AnyModel, defaultRole: => ChatRole) =
-		apply(model("content", "text").getString,
+	def parseFrom(model: AnyModel, defaultRole: => ChatRole) = {
+		val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
+		apply(text, thoughts,
 			model("role").string.flatMap(ChatRole.findForName).getOrElse(defaultRole),
 			model("images").getVector.flatMap { _.string },
 			model("tool_calls").getVector.flatMap { v => v.model.flatMap { ToolCall(_).toOption } })
+	}
 }
 
 /**
@@ -54,8 +56,8 @@ object ChatMessage extends FromModelFactory[ChatMessage]
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages: Seq[String] = Empty,
-                       toolCalls: Seq[ToolCall] = Empty)
+case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole = User,
+                       encodedImages: Seq[String] = Empty, toolCalls: Seq[ToolCall] = Empty)
 	extends ModelConvertible with CanAttachImages[ChatMessage]
 {
 	// COMPUTED ----------------------------
@@ -69,6 +71,7 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 	
 	// IMPLEMENTED  ------------------------
 	
+	// NB: Thoughts are not included in this model
 	override def toModel: Model =
 		Model.from("role" -> senderRole.name, "content" -> text.replace("\t", "  "),
 				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
@@ -78,12 +81,13 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 		copy(encodedImages = encodedImages ++ base64EncodedImages)
 	
 	override def toString = {
+		val thoughtsStr = thoughts.mapIfNotEmpty { t => s"(Thinking: $t) " }
 		val toolsStr = NotEmpty(toolCalls) match {
 			case Some(calls) => s" calling ${ calls.mkString(" & ") }"
 			case None => ""
 		}
 		val imagesStr = if (encodedImages.nonEmpty) s" with ${ encodedImages.size } images" else ""
-		s"$senderRole: $text$imagesStr$toolsStr"
+		s"$senderRole: $thoughtsStr$text$imagesStr$toolsStr"
 	}
 	
 	
@@ -93,5 +97,17 @@ case class ChatMessage(text: String, senderRole: ChatRole = User, encodedImages:
 	  * @param message Reply message
 	  * @return A message from the recipient of this message, with the specified text
 	  */
-	def replyWith(message: String) = ChatMessage(message, senderRole.opposite)
+	def replyWith(message: String) = ChatMessage(message, senderRole = senderRole.opposite)
+	
+	/**
+	  * @param moreText More text to add to this message
+	  * @return A copy of this message with appended text
+	  */
+	def +(moreText: String) = mapText { _ + moreText }
+	
+	/**
+	  * @param f A mapping function applied to this message's text
+	  * @return A modified copy of this message
+	  */
+	def mapText(f: Mutate[String]) = copy(text = f(text))
 }

@@ -161,9 +161,10 @@ object ChatTest extends App
 			else if (input.startsWith("/settings")) {
 				println("Which setting do you want to modify?")
 				StdIn.selectFrom(Vector(
-					1 -> "LLM", 2 -> "Maximum context size", 3 -> "Minimum context size",
-					4 -> "Expected reply size", 5 -> "Additional context size",
-					6 -> "System message", 7 -> "Auto summary thresholds"))
+						1 -> "LLM", 2 -> "Maximum context size", 3 -> "Minimum context size",
+						4 -> "Expected reply size", 5 -> "Additional context size", 6 -> "System message",
+						7 -> (if (!chat.llm.thinks) "Mark model as thinking" else if (chat.thinkingEnabled) "Disable thinking" else "Enable thinking"),
+						8 -> "Auto summary thresholds"))
 					.foreach {
 						case 1 => selectModel().foreach(llm_=)
 						case 2 =>
@@ -204,6 +205,12 @@ object ChatTest extends App
 									}
 							}
 						case 7 =>
+							if (chat.llm.thinks)
+								chat.thinkingEnabledFlag.switch()
+							else
+								chat.llmPointer.update { _.thinking }
+							println("Settings updated")
+						case 8 =>
 							StdIn.read("At which context size should auto-summarization trigger?").int.foreach { size =>
 								StdIn.read("How many messages should there least be in the chat history (counting both queries & replies separately)?")
 									.int

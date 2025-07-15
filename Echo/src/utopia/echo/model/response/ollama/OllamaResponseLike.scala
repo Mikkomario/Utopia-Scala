@@ -77,7 +77,7 @@ trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
 	 */
 	def printAsReceived(f: Mutate[String] = Identity) = {
 		println()
-		print(f(textPointer.value))
 		newTextPointer.addContinuousListener { e => print(f(e.newValue)) }
+		print(f(textPointer.value))
 	}
 }
