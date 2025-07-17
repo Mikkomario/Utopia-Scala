@@ -41,7 +41,7 @@
 - Added new traits for database-reading and results-parsing, which were handled 
   by **FromResultFactory** variants until this point.
   - These are found under `utopia.vault.nosql.read`
-- Added **HasTables**, **HasTarget**, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget**, 
+- Added **HasTables**, **HasTarget******, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget**, 
   **SelectsTable** and **SelectsTables** traits for specifying **SqlTarget** and possibly **SelectTarget**
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s

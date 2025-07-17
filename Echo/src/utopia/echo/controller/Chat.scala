@@ -151,6 +151,19 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	  */
 	var minContextSize = 1024
 	/**
+	 * Context size assigned by default in thinking mode, where the LLM produces reflective content.
+	 * Context size may be increased up to [[maxContextSize]], based on other parameters, however.
+	 */
+	var thinkingContextSize = 4096
+	/**
+	 * Additional context size reserved for the `<think>` response element, when thinking is utilized.
+	 * May push the context size past [[thinkingContextSize]] (the default), when combined with other factors,
+	 * such as a high [[expectedReplySize]].
+	 *
+	 * This value is automatically adjusted based on received replies, but may be set manually as well.
+	 */
+	var additionalThinkingContextSize = 800
+	/**
 	  * Number of tokens expected within a reply.
 	  * Used when no appropriate statistical information has been collected yet.
 	  * One token is about 1/2 a word.
@@ -491,10 +504,25 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	implicit def llm: LlmDesignator = llmPointer.value
 	def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
 	
+	/**
+	 * @return Whether thinking mode is currently active.
+	 *         This is based on two factors:
+	 *              1. Whether the used LLM supports thinking
+	 *              1. Whether thinking is enabled in this interface
+	 * @see [[thinkingEnabled]]
+	 */
 	def thinks = thinksFlag.value
 	
+	/**
+	 * @return Whether the LLM should be allowed to enter thinking mode.
+	 *         Only applies to thinking LLMs.
+	 */
 	def thinkingEnabled = thinkingEnabledFlag.value
 	def thinkingEnabled_=(enabled: Boolean) = thinkingEnabledFlag.value = enabled
+	/**
+	 * @return Whether the LLM should be prevented from entering thinking mode.
+	 *         Only affects thinking LLMs.
+	 */
 	def thinkingDisabled = !thinkingEnabled
 	def thinkingDisabled_=(disabled: Boolean) = thinkingEnabled = !disabled
 	
@@ -644,7 +672,10 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 		copy.minContextSize = minContextSize
 		copy.expectedReplySize = expectedReplySize
 		copy.additionalContextSize = additionalContextSize
+		copy.thinkingContextSize = thinkingContextSize
+		copy.additionalThinkingContextSize = additionalThinkingContextSize
 		
+		copy.thinkingEnabled = thinkingEnabled
 		copy._messageHistoryPointer.value = _messageHistoryPointer.value
 		copy.systemMessagesPointer.value = systemMessagesPointer.value
 		copy._lastResultPointer.value = _lastResultPointer.value
@@ -915,6 +946,12 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	  */
 	def mapTools(f: Mutate[Seq[Tool]]) = toolsPointer.update(f)
 	
+	/**
+	 * Marks the currently used LLM as a thinking LLM (wrapping the designator, if necessary).
+	 * @return The LlmDesignator now used.
+	 */
+	def markLlmAsThinking() = llmPointer.updateIf { !_.thinks } { _.thinking }
+	
 	// Assumes that messages is not empty
 	// 'replyIncoming' is called when a streamed reply is acquired. Not called if the reply is buffered.
 	// Final call will be either 'replyCompleted' (on success) or 'handleFailure' (on failure)
@@ -1001,6 +1038,11 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 									val totalResponseSize = reply.statistics.responseTokenCount
 									val responseSize = {
 										if (reply.thoughts.nonEmpty) {
+											// Checks whether to reserve more tokens for the <think> block next time
+											val thinkTokens = EstimateTokenCount.in(reply.thoughts).corrected
+											if (thinkTokens > additionalThinkingContextSize)
+												additionalThinkingContextSize = thinkTokens
+											
 											// Also, if the LLM was not described to think, modifies it accordingly
 											llmPointer.updateIf { !_.thinks } { _.thinking }
 											None
@@ -1171,20 +1213,18 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 		val used = usedContextSizePointer.value
 		
 		val total = {
-			// Case: Thinking used
-			//       => Always maximizes context size in order to ensure that the reflection fits
-			if (thinks)
+			// Attempts to estimate the reply size. Limits the result to the current limits.
+			val raw = used.corrected + messageSize.corrected + expectedReplySize + additionalContextSize
+			val includingThink = if (thinks) raw + additionalThinkingContextSize else raw
+			
+			if (includingThink >= maxContextSize)
 				maxContextSize
-			// Case: No thinking used => Attempts to estimate the reply size. Limits the result to the current limits.
-			else {
-				val raw = used.corrected + messageSize.corrected + expectedReplySize + additionalContextSize
-				if (raw >= maxContextSize)
-					maxContextSize
-				else if (raw <= minContextSize)
-					minContextSize
-				else
-					raw
-			}
+			else if (thinks && includingThink < thinkingContextSize)
+				thinkingContextSize
+			else if (includingThink <= minContextSize)
+				minContextSize
+			else
+				includingThink
 		}
 		TokenCounts(messageSize, used, total)
 	}
