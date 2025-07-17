@@ -20,7 +20,7 @@ trait ViewManyByIntIds[+V] extends ViewFactory[V] with Indexed
 	def apply(ids: IterableOnce[Int]): V = {
 		val condition = ids match {
 			case s: IntSet => index.in(s)
-			case i: Iterable[Int] =>
+			case i: Set[Int] =>
 				val kn = ids.knownSize
 				// Case: Short collection => Won't bother converting to an int set
 				if (kn >= 0 && kn <= 6)

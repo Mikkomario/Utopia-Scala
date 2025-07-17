@@ -37,6 +37,5 @@ trait HasTablesAsTarget extends HasTable with HasTables with HasTarget
 	 * @return The table(s) used by this class (never empty)
 	 */
 	override def tables = table +: joinedTables
-	
-	def target = table.join(joinedTables, joinType)
+	override def target = table.join(joinedTables, joinType)
 }

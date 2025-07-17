@@ -127,5 +127,9 @@ object CollectionTest extends App
 	
 	assert(grouped == Vector(Vector(1, 2, 3, 4, 5), Vector(1, 2, 3, 4, 1), Vector(1, 2, 3, 1, 2)), grouped)
 	
+	// Tests OptimizedIndexedSeq.concat
+	
+	assert(OptimizedIndexedSeq.concat(Single(1), Empty, Single(2)) == Pair(1, 2))
+	
 	println("Success!")
 }

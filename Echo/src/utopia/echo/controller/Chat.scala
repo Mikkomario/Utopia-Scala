@@ -976,7 +976,6 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 						base
 				}
 				// Sends the chat request
-				println(messages.mkString("\n"))
 				val replyFuture = requestQueue.push(
 					ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1),
 						tools, settings)

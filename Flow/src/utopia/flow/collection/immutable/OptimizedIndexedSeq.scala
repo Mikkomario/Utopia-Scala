@@ -107,8 +107,8 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 			// Checks as many known sizes as is necessary
 			val knownSizes = xss.iterator.map { _.knownSize }.caching
 			// Calculates the total lazily
-			val knownTotalSizeFoldResult = xss.iterator.map { _.knownSize }
-				.foldLeftIterator(0) { (total, size) => if (size > 0) total + size else size }.caching
+			val knownTotalSizeFoldResult = knownSizes
+				.foldLeftIterator(0) { (total, size) => if (size > 0) total + size else total }.caching
 			
 			// Case: The source contains at least 3 items => Builds a Vector directly
 			if (knownTotalSizeFoldResult.exists { _ >= 3 })

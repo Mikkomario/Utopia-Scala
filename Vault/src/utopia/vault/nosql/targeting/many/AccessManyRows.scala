@@ -10,6 +10,8 @@ import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 
+import scala.collection.View
+
 object AccessManyRows
 {
 	// OTHER    --------------------------
@@ -100,8 +102,7 @@ object AccessManyRows
 		                         joinType: JoinType)
 		                        (formAccess: (SqlTarget, SelectTarget) => B) =
 		{
-			val newTarget = tables.foldLeft(
-				bridgingJoins.foldLeft(target) { _.join(_, joinType) }) { _.join(_, joinType) }
+			val newTarget = target.join(View.concat(bridgingJoins, tables), joinType)
 			val addedSelectTargets = tables.map { table =>
 				val exclusiveCols = exclusiveColumns.filter(table.contains)
 				if (exclusiveCols.isEmpty)
