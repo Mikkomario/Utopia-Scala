@@ -652,13 +652,18 @@ object CollectionExtensions
 		  * @return The Left group and then the Right group (as sequences)
 		  */
 		def divideWith[L, R](f: A => Either[L, R]) = {
-			val lBuilder = OptimizedIndexedSeq.newBuilder[L]
-			val rBuilder = OptimizedIndexedSeq.newBuilder[R]
-			i.iterator.map(f).foreach {
-				case Left(l) => lBuilder += l
-				case Right(r) => rBuilder += r
+			i.nonEmptyIterator match {
+				case Some(iter) =>
+					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
+					iter.map(f).foreach {
+						case Left(l) => lBuilder += l
+						case Right(r) => rBuilder += r
+					}
+					lBuilder.result() -> rBuilder.result()
+				
+				case None => Empty -> Empty
 			}
-			lBuilder.result() -> rBuilder.result()
 		}
 		/**
 		  * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
@@ -671,13 +676,19 @@ object CollectionExtensions
 		 *         Both groups appear in Vector format.
 		  */
 		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
-			val lBuilder = OptimizedIndexedSeq.newBuilder[L]
-			val rBuilder = OptimizedIndexedSeq.newBuilder[R]
-			i.iterator.flatMap(f).foreach {
-				case Left(l) => lBuilder += l
-				case Right(r) => rBuilder += r
+			i.nonEmptyIterator match {
+				case Some(iter) =>
+					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
+					iter.flatMap(f).foreach {
+						case Left(l) => lBuilder += l
+						case Right(r) => rBuilder += r
+					}
+					lBuilder.result() -> rBuilder.result()
+					
+				// Case: No items to divide
+				case None => Empty -> Empty
 			}
-			lBuilder.result() -> rBuilder.result()
 		}
 		/**
 		  * Maps the items in this collection into two different collections

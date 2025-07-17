@@ -32,6 +32,7 @@
 - Optimized `IntSet.from(IterableOnce)` implementation
 - Added new `++` and `--` implementations to **IntSet**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
+- Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
 - When dividing collections containing **Try** (using **TryExtensions**), 
   the resulting collections are now **IndexedSeq** instead of **Vector**.
