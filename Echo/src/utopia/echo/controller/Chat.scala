@@ -69,12 +69,15 @@ object Chat
 	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser) =
 	{
 		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>
-			val chat = new Chat(requestQueue, LlmDesignator(llm))
+			val chat = new Chat(requestQueue, LlmDesignator(llm, thinks = model("llmThinks").getBoolean))
 			
 			model("maxContextSize").int.foreach { chat.maxContextSize = _ }
 			model("minContextSize").int.foreach { chat.minContextSize = _ }
 			model("expectedReplySize").int.foreach { chat.expectedReplySize = _ }
 			model("additionalContextSize").int.foreach { chat.additionalContextSize = _ }
+			model("thinkingContextSize").int.foreach { chat.thinkingContextSize = _ }
+			model("additionalThinkingContextSize").int.foreach { chat.additionalThinkingContextSize = _ }
+			model("thinkingEnabled").boolean.foreach { chat.thinkingEnabled = _ }
 			
 			model("systemMessages").vector.filter { _.nonEmpty }.foreach { messages =>
 				chat.systemMessages = messages.flatMap { _.string }
@@ -702,8 +705,11 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	override def toModel: Model = {
 		val lastPromptAndReplySize = knownLastPromptAndReplySizePointer.value
 		Model.from(
-			"llm" -> llm.llmName, "maxContextSize" -> maxContextSize, "minContextSize" -> minContextSize,
+			"llm" -> llm.llmName, "llmThinks" -> llm.thinks, "maxContextSize" -> maxContextSize,
+			"minContextSize" -> minContextSize,
 			"expectedReplySize" -> expectedReplySize, "additionalContextSize" -> additionalContextSize,
+			"thinkingContextSize" -> thinkingContextSize,
+			"additionalThinkingContextSize" -> additionalThinkingContextSize, "thinkingEnabled" -> thinkingEnabled,
 			"systemMessages" -> systemMessagesPointer.value,
 			"messageHistory" -> _messageHistoryPointer.value.map { case (message, size) =>
 				message.toModel + Constant("size", size)
