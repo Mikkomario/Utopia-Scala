@@ -3,10 +3,11 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.invalidArrayRegex
+import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{invalidArrayRegex, lineCommentRegex}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -20,6 +21,8 @@ object BufferedOllamaResponseLike
 	
 	private lazy val invalidArrayRegex =
 		Regex.escape(',') + (Regex.whiteSpace || Regex.newLine).anyTimes.withinParentheses + Regex.escape(']')
+	private lazy val lineCommentRegex =
+		Regex.escape('/').times(2) + (!Regex.newLine.anyTimes).withinParentheses + Regex.newLine
 }
 
 /**
@@ -94,8 +97,10 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 						val defaultResult = JsonBunny.munch(parsedPart)
 						// Sometimes the parsing fails because of ",]" text entries.
 						// Attempts to remove these, just in case.
+						// Removes comments as well
 						defaultResult.orElse {
-							val fixedStr = invalidArrayRegex.replaceAll(parsedPart, "]")
+							val fixedStr = parsedPart
+								.replaceEachMatchOf(invalidArrayRegex, "]").replaceEachMatchOf(lineCommentRegex, "\n")
 							if (fixedStr.length == parsedPart.length)
 								defaultResult
 							else

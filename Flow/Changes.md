@@ -16,11 +16,18 @@
 ### New features
 - Added builder for **IntSet**s
 ### New methods
+- **Duration** (**TimeExtensions**)
+  - Added `.finiteOrZero`
 - **Future**
   - Added `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` for **Future**s of type **TryCatch**
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
+- **IterableOnce** (**CollectionExtensions**)
+  - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
+  - Added `.groupReduce(...)`
+- **Iterator** (**CollectionExtensions**)
+  - Added `.groupMapReduce(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **TryCatch**
@@ -34,6 +41,7 @@
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
+- Optimized **Model** constructors. Also, these now accept **IterableOnce** instead of **Iterable**.
 - When dividing collections containing **Try** (using **TryExtensions**), 
   the resulting collections are now **IndexedSeq** instead of **Vector**.
 - Modified `toString` implementations of most **Changing** implementations

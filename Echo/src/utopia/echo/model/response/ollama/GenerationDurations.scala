@@ -2,6 +2,7 @@ package utopia.echo.model.response.ollama
 
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.combine.Combinable.SelfCombinable
+import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.time.TimeExtensions._
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -40,12 +41,16 @@ object GenerationDurations
   * @param evaluation Duration spent evaluating the prompt
   */
 case class GenerationDurations(total: FiniteDuration, load: FiniteDuration, evaluation: FiniteDuration)
-	extends SelfCombinable[GenerationDurations]
+	extends SelfCombinable[GenerationDurations] with LinearScalable[GenerationDurations]
 {
+	override def self: GenerationDurations = this
+	
 	override def toString =
 		s"loaded ${ load.description }, evaluated ${ evaluation.description }, generated ${
 			(total - evaluation - load).description }, total ${ total.description }"
 	
 	override def +(other: GenerationDurations): GenerationDurations =
 		GenerationDurations(total + other.total, load + other.load, evaluation + other.evaluation)
+	override def *(mod: Double): GenerationDurations =
+		GenerationDurations((total * mod).finiteOrZero, (load * mod).finiteOrZero, (evaluation * mod).finiteOrZero)
 }

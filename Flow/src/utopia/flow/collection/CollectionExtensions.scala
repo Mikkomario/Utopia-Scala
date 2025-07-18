@@ -461,6 +461,12 @@ object CollectionExtensions
 		// COMPUTED -----------------------------
 		
 		/**
+		 * @return Known size of this collection.
+		 *         None if the size of this collection is not known without iterating / computation.
+		 */
+		def sizeIfKnown = Some(i.knownSize).filter { _ >= 0 }
+		
+		/**
 		  * @return Empty, Single, Pair or Vector, containing this collection's contents
 		  */
 		def toOptimizedSeq = OptimizedIndexedSeq.from(i)
@@ -643,6 +649,23 @@ object CollectionExtensions
 		  * @return A lazily initialized collection containing the mapping results
 		  */
 		def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazySeq[B](i.iterator.flatMap(f))
+		
+		/**
+		 * @param f A key-mapping function
+		 * @param reduce A function for combining two items mapped to the same key
+		 * @tparam K Type of mapped keys
+		 * @return A map which contains mapped and possibly reduced items
+		 */
+		def groupReduce[K](f: A => K)(reduce: (A, A) => A) = {
+			val builder = mutable.Map.empty[K, A]
+			i.iterator.foreach { a =>
+				builder.updateWith(f(a)) {
+					case Some(prev) => Some(reduce(prev, a))
+					case None => Some(a)
+				}
+			}
+			builder.toMap
+		}
 		
 		/**
 		  * Divides / maps the items in this collection to two groups
@@ -2251,6 +2274,8 @@ object CollectionExtensions
 	
 	implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
 	{
+		// COMPUTED -------------------------------------
+	
 		/**
 		  * @return This iterator if not empty (i.e. has more elements), otherwise None.
 		  */
@@ -2271,6 +2296,24 @@ object CollectionExtensions
 		  *         this resulting iterator would return [1, 2, 1].
 		  */
 		def consecutivelyDistinct = ConsecutivelyDistinctIterator[A](i)
+		
+		/**
+		 * Finds the last item accessible from this iterator. Consumes all items in this iterator.
+		 * @throws NoSuchElementException If this iterator is empty
+		 * @return The last item in this iterator
+		 */
+		@throws[NoSuchElementException]("If this iterator is empty")
+		def last = {
+			var current = i.next()
+			while (i.hasNext) {
+				current = i.next()
+			}
+			current
+		}
+		/**
+		 * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
+		 */
+		def lastOption = if (i.hasNext) Some(last) else None
 		
 		/**
 		  * Retrieves the first and the last item from this iterator.
@@ -2294,12 +2337,20 @@ object CollectionExtensions
 		  *         None if this iterator was empty.
 		  */
 		def endsOption = if (i.hasNext) Some(ends) else None
+		
 		/**
-		  * Finds the minimum and the maximum values from this iterator.
-		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value found from this iterator
+		  * @return A paired copy of this iterator. An empty iterator if this iterator doesn't contain at least 2 items.
+		  *         Consumes the first item within this iterator.
+		  *         This iterator shouldn't be used after calling this function.
 		  */
+		def paired = PairingIterator(i)
+		
+		/**
+		 * Finds the minimum and the maximum values from this iterator.
+		 * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		 * @param ord Implicit ordering
+		 * @return The minimum and the maximum value found from this iterator
+		 */
 		def minMax(implicit ord: Ordering[A]) = {
 			val first = i.next()
 			var currentMin = first
@@ -2313,56 +2364,113 @@ object CollectionExtensions
 			Pair(currentMin, currentMax)
 		}
 		/**
-		  * Finds the minimum and the maximum values from this iterator.
-		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value found from this iterator.
-		  *         None if this iterator didn't contain any more items.
-		  */
+		 * Finds the minimum and the maximum values from this iterator.
+		 * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		 * @param ord Implicit ordering
+		 * @return The minimum and the maximum value found from this iterator.
+		 *         None if this iterator didn't contain any more items.
+		 */
 		def minMaxOption(implicit ord: Ordering[A]) = if (i.hasNext) Some(minMax) else None
-		/**
-		  * Finds the minimum and the maximum values from this iterator.
-		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
-		  * @param f A mapping function that determines the values for ordering
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value found from this iterator
-		  */
-		def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = minMax(Ordering.by(f))
-		/**
-		  * Finds the minimum and the maximum values from this iterator.
-		  * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
-		  * @param f   A mapping function that determines the values for ordering
-		  * @param ord Implicit ordering
-		  * @return The minimum and the maximum value found from this iterator.
-		  *         None if this iterator is empty.
-		  */
-		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) =
-			if (i.hasNext) Some(minMaxBy(f)) else None
+		
+		
+		// OTHER    ------------------------------
 		
 		/**
-		  * Finds the last item accessible from this iterator. Consumes all items in this iterator.
-		  * @throws NoSuchElementException If this iterator is empty
-		  * @return The last item in this iterator
-		  */
-		@throws[NoSuchElementException]("If this iterator is empty")
-		def last = {
-			var current = i.next()
-			while (i.hasNext) {
-				current = i.next()
-			}
-			current
+		 * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
+		 * @param n Number of items to make available
+		 * @return An iterator that provides access to the next 'n' items in this iterator. Wraps this iterator.
+		 */
+		def takeNext(n: Int) = new LimitedLengthIterator[A](i, n)
+		/**
+		 * Creates a copy of this iterator that terminates after the specified condition is met. This differs from
+		 * takeWhile in that this function still returns the item which "terminated" this iterator
+		 * (i.e. the first item for which the specified condition returned true).
+		 * If present, this will be the last item returned by this new iterator.
+		 * @param condition A condition that will terminate this new iterator
+		 * @return A copy of this iterator that will not return items after the terminating item
+		 */
+		def takeTo(condition: A => Boolean) = TerminatingIterator(i)(condition)
+		
+		/**
+		 * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
+		 * The resulting iterator returns items as groups based on the group function result.
+		 * @param f A grouping function
+		 * @tparam G Type of group identifier
+		 * @return An iterator that returns groups of consecutive items, including the group identifiers
+		 */
+		def groupBy[G](f: A => G) = GroupIterator(i)(f)
+		/**
+		 * Maps the items in this iterator, one group at a time
+		 * @param groupSize The maximum size of an individual group of items to map
+		 * @param map       a mapping function applied to groups of items
+		 * @tparam B Type of map result
+		 * @return All map results in order
+		 */
+		def groupMap[B](groupSize: Int)(map: IndexedSeq[A] => B) = {
+			val resultBuilder = if (groupSize < 3) OptimizedIndexedSeq.newBuilder[B] else new VectorBuilder[B]()
+			foreachGroup(groupSize) { resultBuilder += map(_) }
+			resultBuilder.result()
 		}
-		/**
-		  * @return The last item accessible in this iterator. None if this iterator didn't have any items remaining.
-		  */
-		def lastOption = if (i.hasNext) Some(last) else None
 		
 		/**
-		  * @return A paired copy of this iterator. An empty iterator if this iterator doesn't contain at least 2 items.
-		  *         Consumes the first item within this iterator.
-		  *         This iterator shouldn't be used after calling this function.
-		  */
-		def paired = PairingIterator(i)
+		 * @param start The prepended pair start point (call-by-name).
+		 *              This will never be called if this iterator is empty.
+		 * @tparam B Type of pair parts
+		 * @return A copy of this iterator that returns items as pairs, with the 'start' prepended.
+		 *         E.g. If this iterator contained items [A, B, C] and start was X, the resulting iterator would
+		 *         return [XA, AB, BC]
+		 */
+		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
+		/**
+		 * @param end The appended pair end point (call-by-name). I.e. the last value of the last returned pair.
+		 *            This will never be called if this iterator is empty.
+		 * @tparam B Type of pair parts
+		 * @return A copy of this iterator that returns items as pairs, with the 'end' appended.
+		 *         E.g. If this iterator contained items [A, B, C] and end was X, the resulting iterator would
+		 *         return [AB, BC, CX]
+		 */
+		def pairedTo[B >: A](end: => B) = PairingIterator.to(i, end)
+		/**
+		 * Creates an iterator that returns the consecutive items in this collection as pairs.
+		 * @param start  The first element of the first returned Pair
+		 * @param end    The second element of last returned Pair
+		 * @tparam B Type of the returned items
+		 * @return A new pairing iterator based on the elements of this collection.
+		 *         E.g. If this collection contains elements A, B and C, 'start' is S and 'end' is E,
+		 *         the resulting iterator would return SA, AB, BC and CE.
+		 */
+		def pairedBetween[B >: A](start: => B, end: => B) = PairingIterator.between(start, i, end)
+		/**
+		 * Creates an iterator that returns the consecutive items in this collection as pairs.
+		 * @param ends The first element of the first pair and the second element of the last pair
+		 * @tparam B Type of the returned items
+		 * @return A new pairing iterator based on the elements of this collection.
+		 *         E.g. If this collection contains elements A, B and C, and 'ends' is SE,
+		 *         the resulting iterator would return SA, AB, BC and CE.
+		 */
+		def pairedBetween[B >: A](ends: Pair[B]): Iterator[Pair[B]] = pairedBetween(ends.first, ends.second)
+		
+		/**
+		 * Zips this iterator with another, possibly padding one of them.
+		 * Neither of these two source iterators should be used afterwards.
+		 * @param other        Another iterator
+		 * @param myPadding    Padding to use for this iterator (call-by-name)
+		 * @param theirPadding Padding to use for the other iterator (call-by-name)
+		 * @tparam B Type of items in the other iterator
+		 * @return An iterator that takes from both of these iterators and zips the results,
+		 *         padding if one depletes before the other
+		 */
+		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
+			ZipPadIterator(i, other, myPadding, theirPadding)
+		/**
+		 * Zips this iterator with another, possibly padding one of them.
+		 * Neither of these two source iterators should be used afterwards.
+		 * @param other   Another iterator
+		 * @param padding Padding to use for the iterator that depletes first (call-by-name)
+		 * @return An iterator that takes from both of these iterators and zips the results,
+		 *         padding if one depletes before the other
+		 */
+		def zipPad(other: Iterator[A], padding: => A) = ZipPadIterator(i, other, padding)
 		
 		/**
 		 * Creates a copy of this iterator that asynchronously buffers the next n items before they're requested
@@ -2375,40 +2483,9 @@ object CollectionExtensions
 			new PrePollingIterator(i, prePollCount)
 		
 		/**
-		  * @param item An item to prepend (call-by-name)
-		  * @tparam B Type of that item
-		  * @return A copy of this iterator with that item prepended. This iterator is invalidated.
-		  */
-		def +:[B >: A](item: => B): Iterator[B] = PollableOnce(item) ++ i
-		/**
-		  * @param item An item to append (call-by-name)
-		  * @tparam B Type of that item
-		  * @return A copy of this iterator with that item appended. This iterator is invalidated.
-		  */
-		def :+[B >: A](item: => B): Iterator[B] = i ++ PollableOnce(item)
-		
-		/**
-		  * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
-		  * Consumes items within this iterator until the required amount of matches has been found. If not enough
-		  * matches were found, consumes this whole iterator.
-		  * @param count Number of required matches (the minimum amount of times 'f' must return true)
-		  * @param f     A function for testing each item
-		  * @return Whether 'f' returned true for 'count' items. Doesn't test whether 'f' would return true for more
-		  *         than 'count' items.
-		  */
-		def existsCount(count: Int)(f: A => Boolean) = {
-			var found = 0
-			while (found < count && i.hasNext) {
-				if (f(i.next()))
-					found += 1
-			}
-			found >= count
-		}
-		
-		/**
-		  * Skips the next 'n' items in this iterator
-		  * @param n Number of items to skip (default = 1)
-		  */
+		 * Skips the next 'n' items in this iterator
+		 * @param n Number of items to skip (default = 1)
+		 */
 		def skip(n: Int = 1) = {
 			var skipped = 0
 			while (skipped < n && i.hasNext) {
@@ -2416,25 +2493,14 @@ object CollectionExtensions
 				skipped += 1
 			}
 		}
-		
 		/**
-		  * Creates a copy of this iterator that terminates after the specified condition is met. This differs from
-		  * takeWhile in that this function still returns the item which "terminated" this iterator
-		  * (i.e. the first item for which the specified condition returned true).
-		  * If present, this will be the last item returned by this new iterator.
-		  * @param condition A condition that will terminate this new iterator
-		  * @return A copy of this iterator that will not return items after the terminating item
-		  */
-		def takeTo(condition: A => Boolean) = TerminatingIterator(i)(condition)
-		
-		/**
-		  * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
-		  * (although limited by number of available items)
-		  * @param n         The maximum number of iterations / items handled
-		  * @param operation Operation called for each handled item
-		  * @tparam U Arbitrary operation result type (not used)
-		  * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
-		  */
+		 * Performs the specified operation for the next 'n' items. This will advance the iterator n-steps
+		 * (although limited by number of available items)
+		 * @param n         The maximum number of iterations / items handled
+		 * @param operation Operation called for each handled item
+		 * @tparam U Arbitrary operation result type (not used)
+		 * @return Whether the full 'n' items were handled. If false, the end of this iterator was reached.
+		 */
 		def forNext[U](n: Int)(operation: A => U) = {
 			var consumed = 0
 			while (i.hasNext && consumed < n) {
@@ -2444,13 +2510,25 @@ object CollectionExtensions
 			
 			consumed == n
 		}
+		/**
+		 * Groups this iterator and performs the specified operation for each of the collected groups.
+		 * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
+		 * without discarding the possible smaller group at the end
+		 * @param maxGroupSize Maximum number of items for a function call
+		 * @param f            A function that is called for each group of items
+		 */
+		def foreachGroup(maxGroupSize: Int)(f: IndexedSeq[A] => Unit) = {
+			while (i.hasNext) {
+				f(collectNext(maxGroupSize))
+			}
+		}
 		
 		/**
-		  * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
-		  * items may be smaller, in case all remaining items are returned.
-		  * @param n Number of items to collect
-		  * @return Collected items as a vector
-		  */
+		 * Collects the next 'n' items from this iterator, advancing it up to 'n' elements. The number of available
+		 * items may be smaller, in case all remaining items are returned.
+		 * @param n Number of items to collect
+		 * @return Collected items as a vector
+		 */
 		def collectNext(n: Int) = {
 			var consumed = 0
 			val builder = if (n < 3) OptimizedIndexedSeq.newBuilder[A] else new VectorBuilder[A]()
@@ -2462,28 +2540,13 @@ object CollectionExtensions
 			builder.result()
 		}
 		/**
-		  * Collects the next 2 items from this iterator, yielding a pair
-		  * @return The next 2 items from this iterator
-		  * @throws NoSuchElementException If this iterator has less than 2 items remaining
-		  */
-		@throws[NoSuchElementException]("If this iterator has less than 2 items remaining")
-		def nextPair() = Pair.fill(i.next())
-		
-		/**
-		  * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
-		  * @param n Number of items to make available
-		  * @return An iterator that provides access to the next 'n' items in this iterator. Wraps this iterator.
-		  */
-		def takeNext(n: Int) = new LimitedLengthIterator[A](i, n)
-		
-		/**
-		  * Collects the next n items from this iterator until a specified condition is met or until the end of this
-		  * iterator is reached. The item which fulfills the specified condition is included in the result as the
-		  * last item. Advances this iterator but doesn't invalidate it.
-		  * @param stopCondition A condition that marks the last included item
-		  * @return Items to and including the one accepted by the specified condition. All remaining items of this
-		  *         iterator if the specified condition was never met.
-		  */
+		 * Collects the next n items from this iterator until a specified condition is met or until the end of this
+		 * iterator is reached. The item which fulfills the specified condition is included in the result as the
+		 * last item. Advances this iterator but doesn't invalidate it.
+		 * @param stopCondition A condition that marks the last included item
+		 * @return Items to and including the one accepted by the specified condition. All remaining items of this
+		 *         iterator if the specified condition was never met.
+		 */
 		def collectTo(stopCondition: A => Boolean) = {
 			val builder = OptimizedIndexedSeq.newBuilder[A]
 			var found = false
@@ -2495,13 +2558,20 @@ object CollectionExtensions
 			}
 			builder.result()
 		}
+		/**
+		 * Collects the next 2 items from this iterator, yielding a pair
+		 * @return The next 2 items from this iterator
+		 * @throws NoSuchElementException If this iterator has less than 2 items remaining
+		 */
+		@throws[NoSuchElementException]("If this iterator has less than 2 items remaining")
+		def nextPair() = Pair.fill(i.next())
 		
 		/**
-		  * Consumes items until a specific condition is met
-		  * @param condition A search condition
-		  * @return The first item in this iterator that fulfills the condition.
-		  *         None if none of the items in this iterator fulfilled the condition.
-		  */
+		 * Consumes items until a specific condition is met
+		 * @param condition A search condition
+		 * @return The first item in this iterator that fulfills the condition.
+		 *         None if none of the items in this iterator fulfilled the condition.
+		 */
 		def nextWhere(condition: A => Boolean) = {
 			if (i.hasNext) {
 				var current = i.next()
@@ -2518,14 +2588,13 @@ object CollectionExtensions
 			else
 				None
 		}
-		
 		/**
-		  * Returns the next result that can be mapped to a specific value.
-		  * After method call, this iterator will be placed at the item following the successfully mapped item.
-		  * @param map A mapping function
-		  * @tparam B Type of map result when one is found
-		  * @return The first map result found. None if no map result could be acquired.
-		  */
+		 * Returns the next result that can be mapped to a specific value.
+		 * After method call, this iterator will be placed at the item following the successfully mapped item.
+		 * @param map A mapping function
+		 * @tparam B Type of map result when one is found
+		 * @return The first map result found. None if no map result could be acquired.
+		 */
 		def findMapNext[B](map: A => Option[B]) = {
 			var current: Option[B] = None
 			while (current.isEmpty && i.hasNext) {
@@ -2535,47 +2604,71 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * Groups this iterator and performs the specified operation for each of the collected groups.
-		  * Differs from .group(...).foreach(...) in that this method acts on all of the items in this iterator
-		  * without discarding the possible smaller group at the end
-		  * @param maxGroupSize Maximum number of items for a function call
-		  * @param f            A function that is called for each group of items
-		  */
-		def foreachGroup(maxGroupSize: Int)(f: IndexedSeq[A] => Unit) = {
-			while (i.hasNext) {
-				f(collectNext(maxGroupSize))
+		 * Checks whether there exists 'count' instances in this iterator that satisfy the specified predicate.
+		 * Consumes items within this iterator until the required amount of matches has been found. If not enough
+		 * matches were found, consumes this whole iterator.
+		 * @param count Number of required matches (the minimum amount of times 'f' must return true)
+		 * @param f     A function for testing each item
+		 * @return Whether 'f' returned true for 'count' items. Doesn't test whether 'f' would return true for more
+		 *         than 'count' items.
+		 */
+		def existsCount(count: Int)(f: A => Boolean) = {
+			var found = 0
+			while (found < count && i.hasNext) {
+				if (f(i.next()))
+					found += 1
 			}
+			found >= count
 		}
 		
 		/**
-		  * Maps the items in this iterator, one group at a time
-		  * @param groupSize The maximum size of an individual group of items to map
-		  * @param map       a mapping function applied to groups of items
-		  * @tparam B Type of map result
-		  * @return All map results in order
-		  */
-		def groupMap[B](groupSize: Int)(map: IndexedSeq[A] => B) = {
-			val resultBuilder = if (groupSize < 3) OptimizedIndexedSeq.newBuilder[B] else new VectorBuilder[B]()
-			foreachGroup(groupSize) { resultBuilder += map(_) }
-			resultBuilder.result()
+		 * Converts this iterator to a map by using grouping.
+		 * NB: Consumes this whole iterator.
+		 * @param getKey A function for mapping an item to a key
+		 * @param getValue A function for converting an item to a map value
+		 * @param reduce A function for reducing / combining two map values
+		 * @tparam K Type of map keys
+		 * @tparam V Type of map values
+		 * @return A map formed from this iterator
+		 */
+		def groupMapReduce[K, V](getKey: A => K)(getValue: A => V)(reduce: (V, V) => V) = {
+			val builder = mutable.Map[K, V]()
+			i.foreach { a =>
+				val value = getValue(a)
+				builder.updateWith(getKey(a)) {
+					case Some(previous) => Some(reduce(previous, value))
+					case None => Some(value)
+				}
+			}
+			builder.toMap
 		}
 		
 		/**
-		  * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
-		  * The resulting iterator returns items as groups based on the group function result.
-		  * @param f A grouping function
-		  * @tparam G Type of group identifier
-		  * @return An iterator that returns groups of consecutive items, including the group identifiers
-		  */
-		def groupBy[G](f: A => G) = GroupIterator(i)(f)
+		 * Finds the minimum and the maximum values from this iterator.
+		 * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		 * @param f A mapping function that determines the values for ordering
+		 * @param ord Implicit ordering
+		 * @return The minimum and the maximum value found from this iterator
+		 */
+		def minMaxBy[B](f: A => B)(implicit ord: Ordering[B]) = minMax(Ordering.by(f))
+		/**
+		 * Finds the minimum and the maximum values from this iterator.
+		 * NB: Consumes all items within this iterator. Will not terminate for infinite iterators.
+		 * @param f   A mapping function that determines the values for ordering
+		 * @param ord Implicit ordering
+		 * @return The minimum and the maximum value found from this iterator.
+		 *         None if this iterator is empty.
+		 */
+		def minMaxByOption[B](f: A => B)(implicit ord: Ordering[B]) =
+			if (i.hasNext) Some(minMaxBy(f)) else None
 		
 		/**
-		  * Performs the specified function for each item in this iterator, consuming this iterator.
-		  * Collects failures without interrupting iteration.
-		  * @param f A function that returns success or failure
-		  * @tparam U Arbitrary function return type
-		  * @return Collected failures
-		  */
+		 * Performs the specified function for each item in this iterator, consuming this iterator.
+		 * Collects failures without interrupting iteration.
+		 * @param f A function that returns success or failure
+		 * @tparam U Arbitrary function return type
+		 * @return Collected failures
+		 */
 		def foreachCatching[U](f: A => Try[U]) = {
 			val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
 			i.foreach {
@@ -2584,14 +2677,13 @@ object CollectionExtensions
 			}
 			failuresBuilder.result()
 		}
-		
 		/**
-		  * Maps this iterator with a function that can fail. Handles failures by catching them.
-		  * @param f      A mapping function
-		  * @param logger A logger that will receive possibly thrown exceptions
-		  * @tparam B Type of successful map result
-		  * @return Iterator of the mapped items
-		  */
+		 * Maps this iterator with a function that can fail. Handles failures by catching them.
+		 * @param f      A mapping function
+		 * @param logger A logger that will receive possibly thrown exceptions
+		 * @tparam B Type of successful map result
+		 * @return Iterator of the mapped items
+		 */
 		def mapCatching[B](f: A => Try[B])(implicit logger: Logger) = {
 			i.flatMap { original =>
 				f(original) match {
@@ -2604,82 +2696,34 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * @param start The prepended pair start point (call-by-name).
-		  *              This will never be called if this iterator is empty.
-		  * @tparam B Type of pair parts
-		  * @return A copy of this iterator that returns items as pairs, with the 'start' prepended.
-		  *         E.g. If this iterator contained items [A, B, C] and start was X, the resulting iterator would
-		  *         return [XA, AB, BC]
-		  */
-		def pairedFrom[B >: A](start: => B) = new PairingIterator[B](start, i)
-		/**
-		  * @param end The appended pair end point (call-by-name). I.e. the last value of the last returned pair.
-		  *            This will never be called if this iterator is empty.
-		  * @tparam B Type of pair parts
-		  * @return A copy of this iterator that returns items as pairs, with the 'end' appended.
-		  *         E.g. If this iterator contained items [A, B, C] and end was X, the resulting iterator would
-		  *         return [AB, BC, CX]
-		  */
-		def pairedTo[B >: A](end: => B) = PairingIterator.to(i, end)
-		/**
-		  * Creates an iterator that returns the consecutive items in this collection as pairs.
-		  * @param start  The first element of the first returned Pair
-		  * @param end    The second element of last returned Pair
-		  * @tparam B Type of the returned items
-		  * @return A new pairing iterator based on the elements of this collection.
-		  *         E.g. If this collection contains elements A, B and C, 'start' is S and 'end' is E,
-		  *         the resulting iterator would return SA, AB, BC and CE.
-		  */
-		def pairedBetween[B >: A](start: => B, end: => B) = PairingIterator.between(start, i, end)
-		/**
-		  * Creates an iterator that returns the consecutive items in this collection as pairs.
-		  * @param ends The first element of the first pair and the second element of the last pair
-		  * @tparam B Type of the returned items
-		  * @return A new pairing iterator based on the elements of this collection.
-		  *         E.g. If this collection contains elements A, B and C, and 'ends' is SE,
-		  *         the resulting iterator would return SA, AB, BC and CE.
-		  */
-		def pairedBetween[B >: A](ends: Pair[B]): Iterator[Pair[B]] = pairedBetween(ends.first, ends.second)
-		
-		/**
-		  * Zips this iterator with another, possibly padding one of them.
-		  * Neither of these two source iterators should be used afterwards.
-		  * @param other        Another iterator
-		  * @param myPadding    Padding to use for this iterator (call-by-name)
-		  * @param theirPadding Padding to use for the other iterator (call-by-name)
-		  * @tparam B Type of items in the other iterator
-		  * @return An iterator that takes from both of these iterators and zips the results,
-		  *         padding if one depletes before the other
-		  */
-		def zipPad[B](other: Iterator[B], myPadding: => A, theirPadding: => B) =
-			ZipPadIterator(i, other, myPadding, theirPadding)
-		
-		/**
-		  * Zips this iterator with another, possibly padding one of them.
-		  * Neither of these two source iterators should be used afterwards.
-		  * @param other   Another iterator
-		  * @param padding Padding to use for the iterator that depletes first (call-by-name)
-		  * @return An iterator that takes from both of these iterators and zips the results,
-		  *         padding if one depletes before the other
-		  */
-		def zipPad(other: Iterator[A], padding: => A) = ZipPadIterator(i, other, padding)
-		
-		/**
-		  * Creates a copy of this iterator that supports change events
-		  * @param initialValue The value of the resulting iterator until next() is called for the first time
-		  * @tparam B Type of items in the resulting iterator
-		  * @return A copy of this iterator that supports change events
-		  */
+		 * Creates a copy of this iterator that supports change events
+		 * @param initialValue The value of the resulting iterator until next() is called for the first time
+		 * @tparam B Type of items in the resulting iterator
+		 * @return A copy of this iterator that supports change events
+		 */
 		def eventful[B >: A](initialValue: B)(implicit log: Logger) =
 			EventfulIterator[B](initialValue, i)
 		/**
-		  * Creates a copy of this iterator that supports change events
-		  * @param initialValue The value of the resulting iterator until next() is called for the first time
-		  * @tparam B Type of items in the resulting iterator
-		  * @return A copy of this iterator that supports change events
-		  */
+		 * Creates a copy of this iterator that supports change events
+		 * @param initialValue The value of the resulting iterator until next() is called for the first time
+		 * @tparam B Type of items in the resulting iterator
+		 * @return A copy of this iterator that supports change events
+		 */
 		@deprecated("Renamed to .eventful(B)", "v2.2")
 		def withEvents[B >: A](initialValue: B)(implicit log: Logger) = new EventfulIterator[B](initialValue, i)
+		
+		/**
+		  * @param item An item to prepend (call-by-name)
+		  * @tparam B Type of that item
+		  * @return A copy of this iterator with that item prepended. This iterator is invalidated.
+		  */
+		def +:[B >: A](item: => B): Iterator[B] = PollableOnce(item) ++ i
+		/**
+		  * @param item An item to append (call-by-name)
+		  * @tparam B Type of that item
+		  * @return A copy of this iterator with that item appended. This iterator is invalidated.
+		  */
+		def :+[B >: A](item: => B): Iterator[B] = i ++ PollableOnce(item)
 	}
 	
 	

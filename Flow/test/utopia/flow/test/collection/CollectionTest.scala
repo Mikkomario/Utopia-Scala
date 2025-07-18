@@ -131,5 +131,10 @@ object CollectionTest extends App
 	
 	assert(OptimizedIndexedSeq.concat(Single(1), Empty, Single(2)) == Pair(1, 2))
 	
+	// Tests groupMapReduce
+	
+	assert(Vector("a1", "b1", "c1", "a2", "b2", "a3").iterator.groupMapReduce { _.head } { _.tail } { _ ++ _ } ==
+		Map('a' -> "123", 'b' -> "12", 'c' -> "1"))
+	
 	println("Success!")
 }

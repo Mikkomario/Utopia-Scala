@@ -215,7 +215,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      * @param propFactory The property factory used for building the properties of the new model
      */
     def immutableCopyUsing(propFactory: PropertyFactory[Constant]) =
-        immutable.Model.withConstants(properties.map { att => propFactory(att.name, att.value) }, propFactory)
+        immutable.Model.withConstants(properties.view.map { att => propFactory(att.name, att.value) }, propFactory)
     
     protected def newProperty(attName: String, value: Value) = {
         // In addition to creating the attribute, adds it to this model and generates an event

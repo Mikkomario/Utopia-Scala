@@ -255,6 +255,10 @@ object TimeExtensions
 			case f: FiniteDuration => Some(f)
 			case d => if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
 		}
+		/**
+		 * @return A finite version of this duration. Zero for infinite / invalid durations.
+		 */
+		def finiteOrZero = finite.getOrElse(scala.concurrent.duration.Duration.Zero)
 		
 		/**
 		  * @return Describes this duration in a suitable unit and precision
