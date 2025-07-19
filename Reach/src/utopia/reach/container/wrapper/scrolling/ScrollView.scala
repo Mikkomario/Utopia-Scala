@@ -10,6 +10,7 @@ import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -132,9 +133,12 @@ case class InitializedContextualScrollViewFactory[N](hierarchy: ComponentHierarc
 	override def withAxis(axis: Axis2D) = copy(axis = axis)
 }
 
-object ScrollView extends Cff[ScrollViewFactory]
+object ScrollView extends Cff[ScrollViewFactory] with Gccff[Any, ContextualScrollViewFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ScrollViewFactory(hierarchy)
+	
+	override def withContext[N <: Any](hierarchy: ComponentHierarchy, context: N): ContextualScrollViewFactory[N] =
+		ContextualScrollViewFactory(hierarchy, context)
 }
 /**
   * A component wrapper which allows scrolling along one axis

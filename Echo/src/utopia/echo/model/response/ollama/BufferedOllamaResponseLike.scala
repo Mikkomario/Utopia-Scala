@@ -3,7 +3,7 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{invalidArrayRegex, lineCommentRegex}
+import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{escapedEscapeRegex, invalidArrayRegex, lineCommentRegex}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
@@ -23,6 +23,7 @@ object BufferedOllamaResponseLike
 		Regex.escape(',') + (Regex.whiteSpace || Regex.newLine).anyTimes.withinParentheses + Regex.escape(']')
 	private lazy val lineCommentRegex =
 		Regex.escape('/').times(2) + (!Regex.newLine.anyTimes).withinParentheses + Regex.newLine
+	private lazy val escapedEscapeRegex = Regex.escape('\\').times(2)
 }
 
 /**
@@ -93,7 +94,8 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 				Some(text.lastIndexOf(endChar)).filter { _ > start }
 					.toTry { new NoSuchElementException(s"No complete $searchedEntityName is present in '$text'") }
 					.flatMap { end =>
-						val parsedPart = text.substring(start, end + 1)
+						// It's possible that the LLM escaped an escape sign. We'll convert these back to normal.
+						val parsedPart = text.substring(start, end + 1).replaceEachMatchOf(escapedEscapeRegex, "\\")
 						val defaultResult = JsonBunny.munch(parsedPart)
 						// Sometimes the parsing fails because of ",]" text entries.
 						// Attempts to remove these, just in case.

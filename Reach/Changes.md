@@ -22,6 +22,7 @@
   allowing for easier color assignment
 ### Other changes
 - **Field** now visibly reacts to mouse hover
+- **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 

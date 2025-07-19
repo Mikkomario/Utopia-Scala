@@ -13,6 +13,7 @@
 - When using `.jsonArray` and `.jsonObject` in **BufferedOllamaResponseLike**, 
   attempts to handle JSON generation errors where there's a comma before the array end.
   - Also, removes any line comments before parsing
+  - Also, replaces `\\` with `\`
 - **ResponseStatistics** and **GenerationDurations** now extend **Combinable** and **LinearScalable** 
   (i.e. they provide the `+` and `*` functions)
 

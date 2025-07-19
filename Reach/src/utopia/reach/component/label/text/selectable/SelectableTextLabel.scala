@@ -247,7 +247,7 @@ case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, c
 }
 
 /**
-  * Used for defining selectable text label creation settings outside of the component building process
+  * Used for defining selectable text label creation settings outside the component building process
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */

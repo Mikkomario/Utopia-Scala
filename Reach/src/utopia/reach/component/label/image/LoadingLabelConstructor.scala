@@ -3,6 +3,8 @@ package utopia.reach.component.label.image
 import utopia.firmament.component.stack.Constrainable
 import utopia.reach.component.template.ReachComponent
 
+import scala.language.implicitConversions
+
 object LoadingLabelConstructor
 {
 	/**

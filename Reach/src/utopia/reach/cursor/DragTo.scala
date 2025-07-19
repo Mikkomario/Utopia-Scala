@@ -206,11 +206,11 @@ object DragTo
 		
 		/**
 		  * @param component Component that will be resized
-		  * @param activeBorders Sizes of the borders at which resizing is enabled
+		  * @param activeBorders Sizes of the borders at which resizing is enabled. Default = no insets.
 		  * @param exc Implicit execution context for the resizing
 		  * @param log Implicit logging implementation for possible unexpected resizing errors
 		  */
-		def applyTo(component: ReachComponent, activeBorders: Insets)
+		def applyTo(component: ReachComponent, activeBorders: Insets = Insets.zero)
 		           (implicit exc: ExecutionContext, log: Logger): Unit =
 			new DragTo(component, activeBorders, repositionLogic, resizeAxes, updateDelay, expandAtSides, fillAtTop)
 	}
