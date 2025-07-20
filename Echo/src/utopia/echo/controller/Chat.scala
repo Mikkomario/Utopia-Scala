@@ -47,7 +47,7 @@ object Chat
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val noThinkFlag = "/nothink"
+	private val noThinkFlag = "/no_think"
 	
 	
 	// OTHER    ------------------------------
