@@ -92,7 +92,8 @@ trait AccessStatementPlacementRows[+A, +Repr <: TargetingManyLike[_, Repr, _], +
 				case Some(links) => (statement.indexedWords ++ links).sortBy { _._1 }
 				case None => statement.indexedWords
 			}
-			val text = s"${ allWords.iterator.map { _._2 }.mkString(" ") }${ delimiterPerId(statement.id) }"
+			val delimiter = statement.delimiterId.flatMap(delimiterPerId.get).getOrElse("")
+			val text = s"${ allWords.iterator.map { _._2 }.mkString(" ") }$delimiter"
 			placement -> text
 		}
 	}

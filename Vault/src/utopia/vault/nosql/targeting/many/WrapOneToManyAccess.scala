@@ -17,7 +17,7 @@ trait WrapOneToManyAccess[+A[_]]
 	 * @tparam I Type of accessed items
 	 * @return An access wrapper
 	 */
-	def apply[I](access: AccessMany[I]): A[I]
+	def apply[I](access: TargetingMany[I]): A[I]
 	
 	
 	// OTHER    -------------------------

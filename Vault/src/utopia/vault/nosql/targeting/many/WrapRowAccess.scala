@@ -17,7 +17,7 @@ trait WrapRowAccess[+A[_]]
 	 * @tparam I Type of accessed / pulled items
 	 * @return An access point wrapping that access
 	 */
-	def apply[I](access: AccessManyRows[I]): A[I]
+	def apply[I](access: TargetingManyRows[I]): A[I]
 	
 	
 	// OTHER    --------------------------
