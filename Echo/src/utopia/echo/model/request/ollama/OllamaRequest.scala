@@ -62,7 +62,6 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 			"think" -> think
 		)
 		val bodyModel = (baseModel ++ customProperties).withoutEmptyValues
-		println(s"Sending out $bodyModel")
 		Left(bodyModel)
 	}
 	
