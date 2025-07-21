@@ -19,6 +19,14 @@ import scala.util.Try
 
 object ChatMessage extends FromModelFactory[ChatMessage]
 {
+	// ATTRIBUTES   ----------------------
+	
+	/**
+	 * An empty chat message from the user
+	 */
+	lazy val empty = apply("")
+	
+	
 	// IMPLEMENTED  ----------------------
 	
 	override def apply(model: ModelLike[Property]): Try[ChatMessage] =
