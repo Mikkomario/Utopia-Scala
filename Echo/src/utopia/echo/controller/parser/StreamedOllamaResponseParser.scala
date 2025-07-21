@@ -63,6 +63,7 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 		
 		// IMPLEMENTED  ----------------
 		
+		// TODO: Add support for thinking. The model should contain something like "thinking" (in the message section). Also, "thinking" and "content" may be exclusive with each other.
 		override def updateStatus(response: Model): Unit = {
 			val newText = textFromResponse(response)
 			// Checks for edge cases, where the new addition is identical to the latest one

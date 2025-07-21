@@ -5,6 +5,7 @@ import utopia.echo.model.request.ollama.OllamaRequest
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -87,6 +88,7 @@ trait Generate[+R] extends OllamaRequest[R]
 	override def llm: LlmDesignator = params.llm
 	override def settings: ModelSettings = params.settings
 	override def deprecated: Boolean = params.deprecationView.value
+	override def think: UncertainBoolean = params.think
 	
 	override def customProperties: Seq[Constant] = Vector(
 		Constant("prompt", query.toPrompt),

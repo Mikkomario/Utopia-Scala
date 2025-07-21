@@ -7,6 +7,7 @@ import utopia.disciple.model.request.Body
 import utopia.echo.model.llm.{HasModelSettings, LlmDesignator}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.util.UncertainBoolean
 
 import scala.language.implicitConversions
 
@@ -39,6 +40,14 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 	  *         - If true, the response text will be received word by word
 	  */
 	def stream: Boolean
+	/**
+	 * @return Whether to enable thinking / reflection features for LLMs that support it.
+	 *              - true if thinking should be enabled => Yields a separate thinking and text output
+	 *              - false if thinking should be disabled => The LLM should not enter thinking mode
+	 *              - Uncertain if no adjustment should be made =>
+	 *                The LLM may enter thinking mode. Output will be generated as normal text.
+	 */
+	def think: UncertainBoolean
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -49,8 +58,11 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 		val baseModel = Model.from(
 			"model" -> llm.llmName,
 			"stream" -> stream,
-			"options" -> optionsModel.notEmpty)
+			"options" -> optionsModel.notEmpty,
+			"think" -> think
+		)
 		val bodyModel = (baseModel ++ customProperties).withoutEmptyValues
+		println(s"Sending out $bodyModel")
 		Left(bodyModel)
 	}
 	

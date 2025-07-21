@@ -32,7 +32,7 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.{Mutate, NotEmpty}
+import utopia.flow.util.{Mutate, NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
@@ -1007,21 +1007,11 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 				// TODO: Implement tools support for streams
 				val defaultTools = this.tools
 				val tools = defaultTools ++ extraTools.view.filterNot(defaultTools.contains)
-				val systemMessage = {
-					val base = NotEmpty(systemMessages).map { _.mkString("\n\n") }.map { System(_) }
-					// Applies the /nothink -flag, if appropriate
-					if (thinkingDisabled && llm.thinks)
-						base match {
-							case Some(message) => Some(message + s"\n$noThinkFlag")
-							case None => Some(System(noThinkFlag))
-						}
-					else
-						base
-				}
+				val systemMessage = NotEmpty(systemMessages).map { _.mkString("\n\n") }.map { System(_) }
 				// Sends the chat request
 				val replyFuture = requestQueue.push(
 					ChatParams(messages.last, systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1),
-						tools, settings)
+						tools, settings, think = if (thinkingDisabled && llm.thinks) false else UncertainBoolean)
 						.toRequest(stream = allowStreaming && tools.isEmpty)).future
 				
 				// Updates the pointers once a response is received

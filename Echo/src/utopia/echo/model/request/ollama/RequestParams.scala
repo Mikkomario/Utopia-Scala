@@ -1,6 +1,7 @@
 package utopia.echo.model.request.ollama
 
 import utopia.echo.model.llm.{HasImmutableModelSettings, LlmDesignator}
+import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -22,6 +23,14 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  *         (if not yet sent out)
 	  */
 	def deprecationView: View[Boolean]
+	/**
+	 * @return Whether to enable thinking / reflection features for LLMs that support it.
+	 *              - true if thinking should be enabled => Yields a separate thinking and text output
+	 *              - false if thinking should be disabled => The LLM should not enter thinking mode
+	 *              - Uncertain if no adjustment should be made =>
+	 *                The LLM may enter thinking mode. Output will be generated as normal text.
+	 */
+	def think: UncertainBoolean
 	
 	/**
 	  * @param llm Targeted LLM
@@ -35,6 +44,11 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  * @return Copy of these parameters with the specified deprecation condition
 	  */
 	def withDeprecationView(condition: View[Boolean]): Repr
+	/**
+	 * @param think Whether to allow, disallow, or not affect LLM thinking
+	 * @return A copy of these parameters with the specified think setting
+	 */
+	def withThink(think: UncertainBoolean): Repr
 	
 	
 	// COMPUTED -------------------------
@@ -43,6 +57,15 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  * @return Copy of these parameters with no deprecation condition
 	  */
 	def neverDeprecating = withDeprecationView(AlwaysFalse)
+	
+	/**
+	 * @return A copy of these parameters with thinking explicitly enabled
+	 */
+	def thinking = withThink(true)
+	/**
+	 * @return A copy of these parameters with thinking disabled
+	 */
+	def notThinking = withThink(false)
 	
 	
 	// OTHER    -------------------------

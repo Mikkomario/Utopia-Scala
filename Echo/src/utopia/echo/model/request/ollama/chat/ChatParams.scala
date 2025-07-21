@@ -6,7 +6,7 @@ import utopia.echo.model.request.ollama.RequestParams
 import utopia.echo.model.request.ollama.chat.tool.Tool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.Mutate
+import utopia.flow.util.{Mutate, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -24,7 +24,8 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @since 31.08.2024, v1.1
   */
 case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage] = Empty, tools: Seq[Tool] = Empty,
-                      settings: ModelSettings = ModelSettings.empty, deprecationView: View[Boolean] = AlwaysFalse)
+                      settings: ModelSettings = ModelSettings.empty, deprecationView: View[Boolean] = AlwaysFalse,
+                      think: UncertainBoolean = UncertainBoolean)
                      (implicit override val llm: LlmDesignator)
 	extends RequestParams[ChatParams]
 {
@@ -47,6 +48,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	override def toLlm(llm: LlmDesignator): ChatParams = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): ChatParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]): ChatParams = copy(deprecationView = condition)
+	override def withThink(think: UncertainBoolean): ChatParams = copy(think = think)
 	
 	
 	// OTHER    ------------------------------

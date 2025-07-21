@@ -1,13 +1,12 @@
 package utopia.echo.model.request.ollama.chat
 
-import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.OllamaRequest
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{Constant, Value}
+import utopia.flow.generic.model.immutable.Constant
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -79,6 +78,7 @@ trait ChatRequest[+R] extends OllamaRequest[R]
 	override def settings: ModelSettings = params.settings
 	
 	override def deprecated: Boolean = params.deprecationView.value
+	override def think: UncertainBoolean = params.think
 	
 	override def customProperties: Seq[Constant] =
 		Pair(Constant("messages", params.messages), Constant("tools", NotEmpty(params.tools)))

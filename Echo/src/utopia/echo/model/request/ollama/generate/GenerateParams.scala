@@ -3,7 +3,7 @@ package utopia.echo.model.request.ollama.generate
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.Mutate
+import utopia.flow.util.{Mutate, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -22,7 +22,8 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @since 31.08.2024, v1.1
   */
 case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.empty,
-                          conversationContext: Value = Value.empty, deprecationView: View[Boolean] = AlwaysFalse)
+                          conversationContext: Value = Value.empty, deprecationView: View[Boolean] = AlwaysFalse,
+                          think: UncertainBoolean = UncertainBoolean)
                          (implicit override val llm: LlmDesignator)
 	extends RequestParams[GenerateParams]
 {
@@ -45,6 +46,7 @@ case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.
 	override def toLlm(llm: LlmDesignator) = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): GenerateParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
+	override def withThink(think: UncertainBoolean): GenerateParams = copy(think = think)
 	
 	
 	// OTHER    -------------------------
