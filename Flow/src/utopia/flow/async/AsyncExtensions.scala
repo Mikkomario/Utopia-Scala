@@ -345,6 +345,13 @@ object AsyncExtensions
 		def waitForResult(timeout: Duration = Duration.Inf): TryCatch[A] = f.waitFor(timeout).flattenCatching
 		
 		/**
+		 * @param map A mapping function applied if this future resolves successfully
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A mapped copy of this future
+		 */
+		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { _.map(map) }
+		/**
 		 * @param map Mapping function to apply to a success result
 		 * @param exc Implicit execution context
 		 * @tparam B Type of mapping results, when successful

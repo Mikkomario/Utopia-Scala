@@ -19,7 +19,8 @@
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
 - **Future**
-  - Added `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` for **Future**s of type **TryCatch**
+  - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
+    for **Future**s of type **TryCatch**
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
