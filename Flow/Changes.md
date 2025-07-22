@@ -26,11 +26,13 @@
   - Added `.groupedWithinSize(Int)` for deep collections
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
-  - Added `.groupReduce(...)`
+  - Added `.groupReduce(...)` and `.groupSimilar(...)`
 - **Iterator** (**CollectionExtensions**)
   - Added `.groupMapReduce(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
+- **String** (**StringExtensions**)
+  - Added `.notContaining(String)` and `.notContainingAnyOf(IterableOnce)`
 - **TryCatch**
   - Added `.isPartialFailure`
   - Added `.toEither`

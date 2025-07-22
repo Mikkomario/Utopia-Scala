@@ -1,5 +1,6 @@
 package utopia.flow.test
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex.stringToRegex
 import utopia.flow.parse.string.Regex
@@ -83,6 +84,11 @@ object StringUtilsTest extends App
 	
 	println("This is a long string that needs to be split to multiple lines. \n\nAlso, this string contains line breaks.\nSome."
 		.splitToLinesIterator(20).mkString("\n"))
+	
+	// Tests notContainingAnyOf
+	
+	assert(s.notContainingAnyOf(Vector("str", "i", "a")) == "Ths s  test ng")
+	assert("El Padel Oy".notContainingAnyOf(Set("Oy", "GmbH", "LLC", "Ry")) == "El Padel ")
 	
 	println("Success!")
 }

@@ -312,6 +312,46 @@ object StringExtensions
 		  *         Otherwise returns this string as is.
 		  */
 		def notEndingWith(suffix: String) = if (s.endsWith(suffix)) s.dropRight(suffix.length) else s
+		/**
+		 * @param string A string that is not allowed
+		 * @return A copy of this string not containing the specified string even once.
+		 *         If this string didn't contain the specified string, yields this.
+		 */
+		def notContaining(string: String) = {
+			// Attempts to find the targeted string within this instance
+			val firstMatchIndex = s.indexOf(string)
+			// Case: No match => No change
+			if (firstMatchIndex < 0)
+				s
+			// Case: At least one match => Looks for others and builds the final result
+			else {
+				val builder = new StringBuilder(s.take(firstMatchIndex))
+				val step = string.length
+				var cursor = firstMatchIndex + step
+				
+				// Looks for additional matches until no more can be found or the whole string has been exhausted
+				while (cursor > 0 && cursor < s.length) {
+					val nextIndex = s.indexOf(string, cursor)
+					if (nextIndex < 0) {
+						builder ++= s.drop(cursor)
+						cursor = -1
+					}
+					else {
+						builder ++= s.slice(cursor, nextIndex)
+						cursor = nextIndex + step
+					}
+				}
+				
+				builder.result()
+			}
+		}
+		/**
+		 * @param strings Strings that are not allowed
+		 * @return A copy of this string not containing any of the specified strings even once.
+		 *         If this string didn't contain any of the specified strings, yields this.
+		 */
+		def notContainingAnyOf(strings: IterableOnce[String]) =
+			strings.iterator.foldLeft(s) { _.notContaining(_) }
 		
 		/**
 		 * @param str A searched string

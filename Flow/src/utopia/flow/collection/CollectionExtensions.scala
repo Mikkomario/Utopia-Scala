@@ -668,6 +668,49 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * Groups items, merging similar keys together
+		 * @param f A function for converting an item to a key
+		 * @param areSimilar A function for testing whether two keys are similar to each other (and should be merged)
+		 * @param reduce A function for combining two keys together
+		 * @tparam K Type of keys used
+		 * @return A map where keys are generated using 'f' and 'reduce' and values are all original items
+		 *         mapping to those keys (directly or indirectly)
+		 */
+		def groupBySimilar[K](f: A => K)(areSimilar: (K, K) => Boolean)(reduce: (K, K) => K) = {
+			// Builds the map incrementally using a mutable version
+			val builder = mutable.Map.empty[K, mutable.Builder[A, Seq[A]]]
+			i.iterator.foreach { a =>
+				val key = f(a)
+				builder.get(key) match {
+					// Case: Already matching a key => Adds the value
+					case Some(builder) => builder += a
+					// Case: Not matching a key => Looks for a similar key
+					case None =>
+						builder.iterator.find { case (existingKey, _) => areSimilar(existingKey, key) } match {
+							// Case: Similar key found => Adds the value and reduces a new key
+							case Some((similarKey, valuesBuilder)) =>
+								valuesBuilder += a
+								
+								val newKey = reduce(similarKey, key)
+								// Case: New key is different => Replaces the old entry
+								if (newKey != similarKey) {
+									builder -= similarKey
+									builder += (newKey -> valuesBuilder)
+								}
+								
+							// Case: No similar key found => Adds a new key
+							case None =>
+								val valuesBuilder = OptimizedIndexedSeq.newBuilder[A]
+								valuesBuilder += a
+								builder += (key -> valuesBuilder)
+						}
+				}
+			}
+			// Converts the result into an immutable map
+			builder.view.map { case (key, builder) => key -> builder.result() }.toMap
+		}
+		
+		/**
 		  * Divides / maps the items in this collection to two groups
 		  * @param f A function for separating / mapping the items
 		  * @tparam L Type of left group items
