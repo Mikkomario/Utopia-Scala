@@ -50,7 +50,7 @@ object Statement
 			val parts = Link.regex.divide(statement)
 			val (lastPart, delimiter) = parts.last match {
 				case Left(text) =>
-					val (textPart, delimiter) = Delimiter.anyDelimiterRegex.rangesIteratorIn(text)
+					val (textPart, delimiter) = Delimiter.regex.any.rangesIteratorIn(text)
 						.lastOption.filter { _.end == text.length } match
 					{
 						case Some(delimiterRange) =>
@@ -78,7 +78,7 @@ object Statement
 		val parts = Link.regex.divide(text).flatMap {
 			case Left(text) =>
 				// Trims words and filters out empty strings
-				Delimiter.anyDelimiterRegex.divide(text).flatMap {
+				Delimiter.regex.any.divide(text).flatMap {
 					case Left(text) =>
 						wordSplitRegex.split(text).view.map { _.trim }.filter { _.nonEmpty }.map { _ -> _word }
 						

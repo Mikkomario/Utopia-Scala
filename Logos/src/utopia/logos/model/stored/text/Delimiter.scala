@@ -9,21 +9,15 @@ import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, Store
 
 object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 {
-	// ATTRIBUTES	--------------------
-	
-	private lazy val dashRegex = Regex.escape('-')
-	private lazy val quotationRegex = Regex("\\\"")
-	
-	private lazy val spacedDelimiterRegex =
-		(Regex.anyOf(",.!?:;)]").oneOrMoreTimes +
-			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
-	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParentheses
+	// COMPUTED ------------------------
 	
 	/**
-	  * A regular expression that finds delimiters from text
-	  */
-	lazy val anyDelimiterRegex = (Regex.anyOf("()<>{}[]") || quotationRegex || spacedDelimiterRegex ||
-			surroundedDashRegex || Regex.newLine).withinParentheses + Regex.newLine.anyTimes
+	 * @return Access to delimiter-related regular expressions
+	 */
+	def regex = Regexes
+	
+	@deprecated("Replaced with regex.any", "v0.6")
+	def anyDelimiterRegex = regex.any
 			
 	
 	// IMPLEMENTED	--------------------
@@ -32,6 +26,31 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 	
 	override protected def complete(model: AnyModel, data: DelimiterData) = 
 		model("id").tryInt.map { apply(_, data) }
+		
+	
+	// NESTED   ------------------------
+	
+	object Regexes
+	{
+		private lazy val dash = Regex.escape('-')
+		private lazy val quotation = Regex("\\\"")
+		
+		/**
+		 * Delimiters which require a space after them
+		 */
+		private lazy val spaced =
+			(Regex.anyOf(",.!?:;)]").oneOrMoreTimes +
+				(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
+		
+		private lazy val surroundedDash = (Regex.whiteSpace + dash + Regex.whiteSpace).withinParentheses
+		
+		/**
+		 * A regular expression that finds delimiters from text
+		 */
+		lazy val any = Regex.whiteSpace.noneOrOnce +
+			(Regex.anyOf("()<>{}[]") || quotation || spaced || surroundedDash || Regex.newLine).withinParentheses +
+			Regex.newLine.anyTimes
+	}
 }
 
 /**

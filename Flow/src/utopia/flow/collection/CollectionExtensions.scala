@@ -709,6 +709,14 @@ object CollectionExtensions
 			// Converts the result into an immutable map
 			builder.view.map { case (key, builder) => key -> builder.result() }.toMap
 		}
+		/**
+		 * Joins similar entries in this collection together
+		 * @param areSimilar A function that compares two items to see whether they are similar
+		 * @param reduce A function which combines two similar items together
+		 * @return Distinct items in this collection
+		 */
+		def joinSimilar(areSimilar: (A, A) => Boolean)(reduce: (A, A) => A) =
+			groupBySimilar(Identity)(areSimilar)(reduce).valuesIterator.map { _.reduce(reduce) }.toOptimizedSeq
 		
 		/**
 		  * Divides / maps the items in this collection to two groups

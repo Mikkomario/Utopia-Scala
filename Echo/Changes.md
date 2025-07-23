@@ -14,6 +14,7 @@
   attempts to handle JSON generation errors where there's a comma before the array end.
   - Also, removes any line comments before parsing
   - Also, replaces `\\` with `\`
+  - Also, the generated error messages now include the input
 - **ResponseStatistics** and **GenerationDurations** now extend **Combinable** and **LinearScalable** 
   (i.e. they provide the `+` and `*` functions)
 

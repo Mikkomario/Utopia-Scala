@@ -16,6 +16,8 @@ object StatementParseTest extends App
 		println(s"Content: ${ s.words.mkString(" + ") }")
 		println(s"Links: ${ s.links.mkString(" + ") }")
 		println(s"Words: ${ s.standardizedWords.map { _._1 }.mkString(" + ") }")
+		println(s"Delimiter: \"${ s.delimiter }\"")
+		println(s"Full: $s")
 	}
 	
 	private val link = Link("https://topaasia.com/tapahtumat").get

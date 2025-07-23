@@ -2,6 +2,10 @@
 
 ## v0.6 (in development)
 Added new targeting traits (beta)
+### Deprecations
+- Deprecated `Delimiter.anyDelimiterRegex` in favor of `Delimiter.regex.any`
+### Bugfixes
+- Improved delimiter parsing to include whitespaces before the delimiters (e.g. " (")
 
 ## v0.5 - 26.05.2025
 This update adds major changes to the database access interfaces of the **Logos**-specific models.

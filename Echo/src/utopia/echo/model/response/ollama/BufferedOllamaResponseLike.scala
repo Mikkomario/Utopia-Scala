@@ -3,11 +3,13 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.echo.model.error.ParseException
 import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{escapedEscapeRegex, invalidArrayRegex, lineCommentRegex}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 
@@ -86,7 +88,6 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 	// OTHER    ------------------------
 	
 	private def closedJsonEntity(startChar: Char, endChar: Char, searchedEntityName: => String) = {
-		// Removes the <think> block, if present
 		val text = this.text
 		Some(text.indexOf(startChar)).filter { _ >= 0 }
 			.toTry { new NoSuchElementException(s"No $searchedEntityName is present in '$text'") }
@@ -104,9 +105,10 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 							val fixedStr = parsedPart
 								.replaceEachMatchOf(invalidArrayRegex, "]").replaceEachMatchOf(lineCommentRegex, "\n")
 							if (fixedStr.length == parsedPart.length)
-								defaultResult
+								defaultResult.mapFailure { new ParseException(s"Failed to parse '$text'", _) }
 							else
 								JsonBunny.munch(fixedStr)
+									.mapFailure { new ParseException(s"Failed to parse '$fixedStr'", _) }
 						}
 					}
 			}
