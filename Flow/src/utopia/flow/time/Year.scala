@@ -12,6 +12,18 @@ import scala.language.implicitConversions
 
 object Year
 {
+	// ATTRIBUTES   --------------------------
+	
+	/**
+	 * Year 0
+	 */
+	lazy val zero = apply(0)
+	/**
+	 * Year 1970
+	 */
+	lazy val epoch = apply(1970)
+	
+	
 	// TYPES    ------------------------------
 	
 	/**

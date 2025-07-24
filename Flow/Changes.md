@@ -21,12 +21,14 @@
 - **Future**
   - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
     for **Future**s of type **TryCatch**
+  - Added `.toFutureTryCatch` to **Future**s of type **Try**
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
   - Added `.groupReduce(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
+  - Added `.mostCommonEntry`, `.mostCommonEntryOption` and `.mostCommonEntries`
 - **Iterator** (**CollectionExtensions**)
   - Added `.groupMapReduce(...)`
 - **Seq** (**CollectionExtensions**)

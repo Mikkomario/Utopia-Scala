@@ -86,6 +86,31 @@ object CollectionExtensions
 		private lazy val ops = iter(coll)
 		
 		
+		// COMPUTED ---------------------------
+		
+		/**
+		 * @param buildFrom A build-from for the resulting collection
+		 * @tparam To Type of resulting collection
+		 * @return A collection that only contains the elements which appeared in this collection the most times.
+		 *
+		 *         E.g. If this collection is [A, A, B, B, C, D], would yield [A, B] (in no specific order)
+		 */
+		def mostCommonEntries[To](implicit buildFrom: BuildFrom[Repr, iter.A, To]) = {
+			// In cases where this collection is known to be very small, uses a simplified approach
+			ops.knownSize match {
+				case 0 => buildFrom.fromSpecific(coll)(Empty)
+				case 1 | 2 => buildFrom.fromSpecific(coll)(ops)
+				case _ =>
+					val counts = ops.countAll
+					counts.valuesIterator.maxOption match {
+						case Some(largestCount) =>
+							buildFrom.fromSpecific(coll)(counts.view.filter { _._2 == largestCount }.keys)
+						case None => buildFrom.fromSpecific(coll)(Empty)
+					}
+			}
+		}
+		
+		
 		// OTHER    ---------------------------
 		
 		/**
@@ -518,6 +543,39 @@ object CollectionExtensions
 			}
 			else
 				Map.empty.withDefaultValue(0)
+		}
+		/**
+		 * @return The most common entry from this collection.
+		 *         If multiple entries share the most common position, only one is selected.
+		 */
+		@throws[UnsupportedOperationException]("If this collection is empty")
+		def mostCommonEntry = {
+			i.knownSize match {
+				case 0 => throw new UnsupportedOperationException("mostCommonEntry called on an empty collection")
+				case 1 | 2 =>
+					i match {
+						case i: Iterable[A] => i.head
+						case _ => i.iterator.next()
+					}
+				case _ => countAll.maxBy { _._2 }._1
+			}
+		}
+		/**
+		 * @return The most common entry from this collection.
+		 *         If multiple entries share the most common position, only one is selected.
+		 *         None if this collection is empty.
+		 */
+		// WET WET
+		def mostCommonEntryOption = {
+			i.knownSize match {
+				case 0 => None
+				case 1 | 2 =>
+					i match {
+						case i: Iterable[A] => i.headOption
+						case _ => i.iterator.nextOption()
+					}
+				case _ => countAll.maxByOption { _._2 }.map { _._1 }
+			}
 		}
 		
 		

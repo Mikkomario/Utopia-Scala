@@ -243,6 +243,12 @@ object AsyncExtensions
 		}
 		
 		/**
+		 * @param exc Implicit execution context
+		 * @return A copy of this future where the underlying Try is converted into a TryCatch
+		 */
+		def toFutureTryCatch(implicit exc: ExecutionContext) = f.map { _.toTryCatch }
+		
+		/**
 		  * Waits for the result of this future (blocks) and returns it once it's ready
 		  * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 		  * @return The result of the future. A failure if this future failed, if timeout was reached or if result was a failure
