@@ -2,7 +2,7 @@ package utopia.logos.model.stored.word
 
 import utopia.logos.model.partial.word.TextStatementLinkDataLike
 import utopia.logos.model.template.StoredPlaced
-import utopia.vault.model.template.FromIdFactory
+import utopia.vault.store.FromIdFactory
 
 /**
  * Common trait for stored text statement links (i.e. links between texts (custom class) and statements (logos class))

@@ -7,6 +7,7 @@ import utopia.flow.view.template.Extender
   * @author Mikko Hilpinen
   * @since 2.5.2020, v1
   */
+@deprecated("Please use the Vault version instead", "v2.3")
 trait Stored[+Data] extends Extender[Data]
 {
 	// ABSTRACT	---------------------------------

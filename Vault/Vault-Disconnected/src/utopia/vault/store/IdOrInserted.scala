@@ -1,7 +1,6 @@
-package utopia.vault.model.immutable
+package utopia.vault.store
 
 import utopia.flow.util.EitherExtensions._
-import utopia.vault.model.template.HasId
 
 import scala.language.implicitConversions
 

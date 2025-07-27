@@ -4,7 +4,7 @@ import utopia.flow.view.template.Extender
 import utopia.logos.model.factory.text.StatementFactoryWrapper
 import utopia.logos.model.partial.text.StatementData
 import utopia.logos.model.stored.text.StoredStatement
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 
 /**
  * Common trait for combinations where the primary part is a (stored) statement

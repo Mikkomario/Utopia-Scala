@@ -1,6 +1,6 @@
 package utopia.logos.model.template
 
-import utopia.vault.model.template.Stored
+import utopia.vault.store.Stored
 
 /**
  * Common trait for stored items that define a specific position where they should be placed in a sequence.

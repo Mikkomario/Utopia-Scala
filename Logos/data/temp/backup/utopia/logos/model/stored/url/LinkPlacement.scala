@@ -7,7 +7,7 @@ import utopia.logos.model.partial.text.TextPlacementData
 import utopia.logos.model.partial.url.LinkPlacementData
 import utopia.logos.model.stored.text.StoredTextPlacementLike
 import utopia.logos.model.template.StoredPlaced
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object LinkPlacement extends StoredFromModelFactory[LinkPlacementData, LinkPlacement]
 {

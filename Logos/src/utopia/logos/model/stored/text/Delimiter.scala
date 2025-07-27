@@ -5,7 +5,7 @@ import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.text.delimiter.DbSingleDelimiter
 import utopia.logos.model.factory.text.DelimiterFactoryWrapper
 import utopia.logos.model.partial.text.DelimiterData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 {

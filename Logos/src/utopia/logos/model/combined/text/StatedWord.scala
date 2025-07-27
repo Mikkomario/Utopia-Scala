@@ -5,7 +5,7 @@ import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
 import utopia.logos.model.stored.text.{StoredWord, WordPlacement}
 import utopia.logos.model.template.Placed
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 
 object StatedWord
 {

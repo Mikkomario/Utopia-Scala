@@ -3,9 +3,10 @@ package utopia.vault.test.database.storable.item
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
-import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
+import utopia.vault.model.template.HasIdProperty
 import utopia.vault.nosql.storable.StorableFactory
 import utopia.vault.nosql.storable.deprecation.DeprecatableAfter
+import utopia.vault.store.{FromIdFactory, HasId}
 import utopia.vault.test.database.VaultTestTables
 import utopia.vault.test.model.factory.item.VersionedTestItemFactory
 import utopia.vault.test.model.partial.item.VersionedTestItemData
@@ -86,7 +87,7 @@ object VersionedTestItemDbModel
   */
 case class VersionedTestItemDbModel(id: Option[Int] = None, name: String = "", 
 	created: Option[Instant] = None, deprecatedAfter: Option[Instant] = None) 
-	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, VersionedTestItemDbModel] 
+	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, VersionedTestItemDbModel]
 		with VersionedTestItemFactory[VersionedTestItemDbModel]
 {
 	// ATTRIBUTES	--------------------

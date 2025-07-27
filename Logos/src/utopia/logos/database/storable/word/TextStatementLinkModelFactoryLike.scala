@@ -2,7 +2,7 @@ package utopia.logos.database.storable.word
 
 import utopia.logos.model.template.StatementLinkFactory
 import utopia.vault.model.immutable.Storable
-import utopia.vault.model.template.FromIdFactory
+import utopia.vault.store.FromIdFactory
 import utopia.vault.nosql.storable.DataInserter
 
 /**

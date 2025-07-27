@@ -10,6 +10,7 @@ import utopia.flow.collection.CollectionExtensions._
   * @author Mikko Hilpinen
   * @since 19.6.2020, v1
   */
+@deprecated("Please use the Vault version instead", "v2.3")
 trait StoredFromModelFactory[+A, Data] extends FromModelFactory[A]
 {
 	// ABSTRACT	-------------------------

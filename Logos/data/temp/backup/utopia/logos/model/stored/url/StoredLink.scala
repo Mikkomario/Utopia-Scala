@@ -5,7 +5,7 @@ import utopia.logos.database.access.single.url.link.DbSingleLink
 import utopia.logos.model.cached.Link
 import utopia.logos.model.factory.url.LinkFactoryWrapper
 import utopia.logos.model.partial.url.LinkData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object StoredLink extends StoredFromModelFactory[LinkData, StoredLink]
 {

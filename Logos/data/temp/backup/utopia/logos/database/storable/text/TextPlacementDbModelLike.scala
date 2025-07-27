@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.logos.model.factory.text.TextPlacementFactory
 import utopia.vault.model.immutable.Storable
-import utopia.vault.model.template.{FromIdFactory, HasId}
+import utopia.vault.store.{FromIdFactory, HasId}
 
 /**
   * Common trait for database models used for interacting with text placement data in the database

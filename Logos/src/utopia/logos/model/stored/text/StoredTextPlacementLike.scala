@@ -3,7 +3,7 @@ package utopia.logos.model.stored.text
 import utopia.logos.model.factory.text.TextPlacementFactoryWrapper
 import utopia.logos.model.partial.text.TextPlacementDataLike
 import utopia.logos.model.template.StoredPlaced
-import utopia.vault.model.template.{FromIdFactory, Stored}
+import utopia.vault.store.{FromIdFactory, Stored}
 
 /**
   * Common trait for text placements which have been stored in the database

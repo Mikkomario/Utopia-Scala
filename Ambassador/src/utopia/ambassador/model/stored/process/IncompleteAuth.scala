@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.process
 
 import utopia.ambassador.database.access.single.process.DbSingleIncompleteAuth
 import utopia.ambassador.model.partial.process.IncompleteAuthData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a IncompleteAuth that has already been stored in the database

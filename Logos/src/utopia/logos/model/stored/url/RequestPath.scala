@@ -4,7 +4,7 @@ import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.logos.database.access.single.url.path.DbSingleRequestPath
 import utopia.logos.model.factory.url.{RequestPathFactory, RequestPathFactoryWrapper}
 import utopia.logos.model.partial.url.RequestPathData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 import java.time.Instant
 

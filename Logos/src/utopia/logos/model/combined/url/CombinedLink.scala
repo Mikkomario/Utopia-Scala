@@ -4,7 +4,7 @@ import utopia.flow.view.template.Extender
 import utopia.logos.model.factory.url.LinkFactoryWrapper
 import utopia.logos.model.partial.url.LinkData
 import utopia.logos.model.stored.url.StoredLink
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 
 /**
  * Common trait for classes which attach data to stored links

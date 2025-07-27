@@ -20,5 +20,6 @@
     <orderEntry type="module" module-name="Disciple" />
     <orderEntry type="library" name="httpclient" level="project" />
     <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
+    <orderEntry type="module" module-name="Vault-Disconnected" />
   </component>
 </module>

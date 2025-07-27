@@ -7,7 +7,7 @@ import utopia.logos.model.factory.url.DomainFactory
 import utopia.logos.model.partial.url.DomainData
 import utopia.logos.model.stored.url.Domain
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.FromIdFactory
+import utopia.vault.store.FromIdFactory
 import utopia.vault.nosql.storable.StorableFactory
 
 import java.time.Instant

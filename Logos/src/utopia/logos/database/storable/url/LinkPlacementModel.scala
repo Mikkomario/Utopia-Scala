@@ -8,7 +8,7 @@ import utopia.logos.model.factory.url.LinkPlacementFactory
 import utopia.logos.model.partial.url.LinkPlacementData
 import utopia.logos.model.stored.url.LinkPlacement
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.FromIdFactory
+import utopia.vault.store.FromIdFactory
 import utopia.vault.nosql.storable.StorableFactory
 
 /**

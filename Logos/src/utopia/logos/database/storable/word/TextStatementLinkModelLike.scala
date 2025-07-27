@@ -6,7 +6,7 @@ import utopia.logos.database.factory.word.{TextStatementLinkDbFactory, TextState
 import utopia.logos.model.stored.word.TextStatementLink
 import utopia.logos.model.template.StatementLinkFactory
 import utopia.vault.model.immutable.StorableWithFactory
-import utopia.vault.model.template.{FromIdFactory, HasId}
+import utopia.vault.store.{FromIdFactory, HasId}
 
 /**
  * A DB model used for interacting with text statement links in a table

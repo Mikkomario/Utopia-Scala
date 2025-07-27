@@ -1,8 +1,7 @@
-package utopia.vault.model.template
+package utopia.vault.store
 
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelLike, Property}
 
 import scala.util.Try
 
@@ -33,6 +32,5 @@ trait StoredFromModelFactory[Data, +A] extends FromModelFactory[A]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: ModelLike[Property]): Try[A] =
-		dataFactory(model).flatMap { data => complete(model, data) }
+	override def apply(model: AnyModel): Try[A] = dataFactory(model).flatMap { data => complete(model, data) }
 }

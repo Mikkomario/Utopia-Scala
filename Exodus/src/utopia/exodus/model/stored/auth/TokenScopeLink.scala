@@ -3,7 +3,7 @@ package utopia.exodus.model.stored.auth
 import utopia.exodus.database.access.single.auth.DbSingleTokenScopeLink
 import utopia.exodus.model.combined.auth.TokenScope
 import utopia.exodus.model.partial.auth.TokenScopeLinkData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a token scope link that has already been stored in the database

@@ -1,7 +1,7 @@
 package utopia.vault.test.model.stored.item
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import utopia.vault.test.database.access.item.versioned.AccessVersionedTestItem
 import utopia.vault.test.model.factory.item.VersionedTestItemFactoryWrapper
 import utopia.vault.test.model.partial.item.VersionedTestItemData

@@ -1,4 +1,4 @@
-package utopia.vault.model.template
+package utopia.vault.store
 
 import utopia.flow.view.template.Extender
 

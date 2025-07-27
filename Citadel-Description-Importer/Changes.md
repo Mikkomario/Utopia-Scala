@@ -1,5 +1,8 @@
 # Utopia Description Importer - List of changes
 
+## v1.0.5 (in development)
+Supports latest changes in **Vault**
+
 ## v1.0.4 - 22.01.2024
 Removing deprecated parts of this tool.
 ### Breaking changes

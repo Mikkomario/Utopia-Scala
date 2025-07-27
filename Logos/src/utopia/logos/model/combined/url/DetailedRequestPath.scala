@@ -5,7 +5,7 @@ import utopia.flow.view.template.Extender
 import utopia.logos.model.factory.url.RequestPathFactoryWrapper
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.{Domain, RequestPath}
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 
 object DetailedRequestPath
 {

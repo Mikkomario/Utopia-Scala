@@ -1,7 +1,7 @@
 package utopia.trove.model.stored
 
 import utopia.trove.model.partial.DatabaseVersionData
-import utopia.vault.model.template.Stored
+import utopia.vault.store.Stored
 
 /**
   * A stored database version recording

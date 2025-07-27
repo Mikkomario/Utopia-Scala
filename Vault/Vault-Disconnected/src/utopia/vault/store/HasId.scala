@@ -1,4 +1,4 @@
-package utopia.vault.model.template
+package utopia.vault.store
 
 /**
  * Common trait for classes which specify a (database row) id

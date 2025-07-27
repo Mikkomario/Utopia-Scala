@@ -2,7 +2,7 @@ package utopia.logos.model.stored.text
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.logos.model.partial.text.TextPlacementData
-import utopia.vault.model.template.StoredFromModelFactory
+import utopia.vault.store.StoredFromModelFactory
 
 object TextPlacement extends StoredFromModelFactory[TextPlacementData, TextPlacement]
 {

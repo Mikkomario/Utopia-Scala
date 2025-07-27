@@ -4,7 +4,7 @@ import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.logos.database.access.single.text.word.placement.DbSingleWordPlacement
 import utopia.logos.model.factory.text.WordPlacementFactoryWrapper
 import utopia.logos.model.partial.text.{TextPlacementData, WordPlacementData}
-import utopia.vault.model.template.StoredFromModelFactory
+import utopia.vault.store.StoredFromModelFactory
 
 object WordPlacement extends StoredFromModelFactory[WordPlacementData, WordPlacement]
 {

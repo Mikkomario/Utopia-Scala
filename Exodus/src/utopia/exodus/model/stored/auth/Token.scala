@@ -6,7 +6,7 @@ import utopia.exodus.model.combined.auth.{EmailValidationToken, ScopedToken, Typ
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.database.Connection
-import utopia.vault.model.template.Stored
+import utopia.vault.store.Stored
 
 /**
   * Represents a token that has already been stored in the database

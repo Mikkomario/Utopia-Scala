@@ -1,7 +1,6 @@
-package utopia.vault.util
+package utopia.vault.store
 
 import utopia.flow.operator.equality.EqualsFunction
-import utopia.vault.model.template.HasId
 
 /**
  * An equals function that compares database ids

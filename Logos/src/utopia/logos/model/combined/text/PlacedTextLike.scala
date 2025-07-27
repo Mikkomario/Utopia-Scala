@@ -4,7 +4,7 @@ import utopia.flow.view.template.Extender
 import utopia.logos.model.partial.text.TextPlacementDataLike
 import utopia.logos.model.stored.text.StoredTextPlacementLike
 import utopia.logos.model.template.Placed
-import utopia.vault.model.template.{HasId, Stored}
+import utopia.vault.store.{HasId, Stored}
 
 /**
   * Common trait for combinations that combine some text with its placement

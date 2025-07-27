@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.token
 
 import utopia.ambassador.database.access.single.token.DbSingleAuthTokenScopeLink
 import utopia.ambassador.model.partial.token.AuthTokenScopeLinkData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a AuthTokenScopeLink that has already been stored in the database

@@ -2,7 +2,7 @@ package utopia.exodus.model.stored.auth
 
 import utopia.exodus.database.access.single.auth.DbSingleTokenType
 import utopia.exodus.model.partial.auth.TokenTypeData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a token type that has already been stored in the database

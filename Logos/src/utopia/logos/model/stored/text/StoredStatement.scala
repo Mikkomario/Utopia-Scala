@@ -4,7 +4,7 @@ import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.logos.database.access.single.text.statement.DbSingleStatement
 import utopia.logos.model.factory.text.StatementFactoryWrapper
 import utopia.logos.model.partial.text.StatementData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object StoredStatement extends StoredFromModelFactory[StatementData, StoredStatement]
 {

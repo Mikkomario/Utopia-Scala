@@ -1,6 +1,5 @@
 package utopia.exodus.util
 
-import utopia.access.model.enumeration.Status
 import utopia.citadel.util.CitadelContext
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -105,7 +104,6 @@ object ExodusContext
 	         (defaultUserScopeIds: => Set[Int])(implicit logger: Logger) =
 	{
 		CitadelContext.setup(executionContext, connectionPool, databaseName)
-		Status.setup()
 		data = Some(Data(defaultModelStyle, uuidGenerator, Lazy(defaultUserScopeIds), emailValidator, logger,
 			requireUserEmail))
 	}

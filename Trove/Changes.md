@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.13 (in development)
+Supports latest changes in **Vault**
+
 ## v1.1.12 - 26.05.2025
 A new build compatible with the latest **Flow** & **Vault**
 

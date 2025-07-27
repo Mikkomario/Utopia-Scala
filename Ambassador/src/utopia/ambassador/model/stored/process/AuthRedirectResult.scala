@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.process
 
 import utopia.ambassador.database.access.single.process.DbSingleAuthRedirectResult
 import utopia.ambassador.model.partial.process.AuthRedirectResultData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a AuthRedirectResult that has already been stored in the database

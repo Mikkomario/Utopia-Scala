@@ -2,6 +2,9 @@
 
 ## v1.22 (in development)
 ### Breaking changes
+- Moved the following classes to a separate module package: utopia.vault.store:
+  - **HasId**, **FromIdFactory**, **EqualsById**
+  - **Stored**, **StoredFromModelFactory**, **StoredModelConvertible**
 - Replaced **ReferencePoint** with **TableColumn**
 - Multiple breaking changes to **References**
   - `.from(TableColumn)` now yields **Reference** instead of an **Option**

@@ -1,4 +1,4 @@
-package utopia.vault.model.template
+package utopia.vault.store
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Constant

@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.service
 
 import utopia.ambassador.database.access.single.service.DbSingleAuthServiceSettings
 import utopia.ambassador.model.partial.service.AuthServiceSettingsData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a AuthServiceSettings that has already been stored in the database

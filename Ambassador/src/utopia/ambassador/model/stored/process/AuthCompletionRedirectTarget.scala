@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.process
 
 import utopia.ambassador.database.access.single.process.DbSingleAuthCompletionRedirectTarget
 import utopia.ambassador.model.partial.process.AuthCompletionRedirectTargetData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a AuthCompletionRedirectTarget that has already been stored in the database

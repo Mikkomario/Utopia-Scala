@@ -2,8 +2,9 @@ package utopia.logos.database.storable.text
 
 import utopia.logos.model.factory.text.TextPlacementFactory
 import utopia.vault.model.immutable.Storable
-import utopia.vault.model.template.{FromIdFactory, HasIdProperty}
+import utopia.vault.model.template.HasIdProperty
 import utopia.vault.nosql.storable.StorableFactory
+import utopia.vault.store.FromIdFactory
 
 /**
   * Common trait for factories used for constructing text placement database models

@@ -2,7 +2,7 @@ package utopia.exodus.model.stored.auth
 
 import utopia.exodus.database.access.single.auth.DbSingleEmailValidationAttempt
 import utopia.exodus.model.partial.auth.EmailValidationAttemptData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a email validation attempt that has already been stored in the database

@@ -6,7 +6,7 @@ import utopia.logos.database.access.single.url.domain.DbSingleDomain
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.factory.url.DomainFactoryWrapper
 import utopia.logos.model.partial.url.DomainData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object Domain extends StoredFromModelFactory[DomainData, Domain]
 {

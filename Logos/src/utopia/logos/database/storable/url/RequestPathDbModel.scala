@@ -7,7 +7,8 @@ import utopia.logos.model.factory.url.RequestPathFactory
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.RequestPath
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
-import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
+import utopia.vault.model.template.HasIdProperty
+import utopia.vault.store.{FromIdFactory, HasId}
 import utopia.vault.nosql.storable.StorableFactory
 
 import java.time.Instant

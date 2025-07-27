@@ -20,55 +20,55 @@ object ComparisonOperator
 	  */
 	case object Equal extends ComparisonOperator
 	{
-		override def toSql = "<=>"
+		override val toSql = "<=>"
 	}
 	/**
 	  * Returns true when both items are unequal. Null safe.
 	  */
 	case object NotEqual extends ComparisonOperator
 	{
-		override def toSql = "<>"
+		override val toSql = "<>"
 	}
 	/**
 	  * Returns true when the first item is larger than the second item
 	  */
 	case object Larger extends ComparisonOperator
 	{
-		override def toSql = ">"
+		override val toSql = ">"
 	}
 	/**
 	  * Returns true when the first item is larger than the second item or the items are equal
 	  */
 	case object LargerOrEqual extends ComparisonOperator
 	{
-		override def toSql = ">="
+		override val toSql = ">="
 	}
 	/**
 	  * Returns true when the first item is smaller than the second item
 	  */
 	case object Smaller extends ComparisonOperator
 	{
-		override def toSql = "<"
+		override val toSql = "<"
 	}
 	/**
 	  * Returns true when the first item is smaller than the second item or the items are equal
 	  */
 	case object SmallerOrEqual extends ComparisonOperator
 	{
-		override def toSql = "<="
+		override val toSql = "<="
 	}
 	/**
 	  * Returns true when the first item matches the pattern in the second item
 	  */
 	case object Like extends ComparisonOperator
 	{
-		override def toSql = "LIKE"
+		override val toSql = "LIKE"
 	}
 	/**
 	  * Returns true when the first item doesn't match the pattern in the second item
 	  */
 	case object NotLike extends ComparisonOperator
 	{
-		override def toSql = "NOT LIKE"
+		override val toSql = "NOT LIKE"
 	}
 }

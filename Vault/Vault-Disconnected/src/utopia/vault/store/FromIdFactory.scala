@@ -1,4 +1,4 @@
-package utopia.vault.model.template
+package utopia.vault.store
 
 /**
  * Common trait for factory classes, which attach an id to an item, forming a new item

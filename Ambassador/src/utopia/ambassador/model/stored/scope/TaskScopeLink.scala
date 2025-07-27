@@ -2,7 +2,7 @@ package utopia.ambassador.model.stored.scope
 
 import utopia.ambassador.database.access.single.scope.DbSingleTaskScopeLink
 import utopia.ambassador.model.partial.scope.TaskScopeLinkData
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a TaskScopeLink that has already been stored in the database

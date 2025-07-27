@@ -4,7 +4,7 @@ import utopia.logos.model.partial.text.StatementData
 import utopia.logos.model.stored.text.StoredStatement
 import utopia.logos.model.stored.word.TextStatementLink
 import utopia.logos.model.template.Placed
-import utopia.vault.model.template.Stored
+import utopia.vault.store.Stored
 
 /**
  * Common trait for combined models that join a statement with a text link

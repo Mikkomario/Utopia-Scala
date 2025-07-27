@@ -4,7 +4,7 @@ import utopia.ambassador.database.access.single.token.DbSingleAuthToken
 import utopia.ambassador.model.combined.token.AuthTokenWithScopes
 import utopia.ambassador.model.partial.token.AuthTokenData
 import utopia.ambassador.model.stored.scope.Scope
-import utopia.vault.model.template.StoredModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * Represents a AuthToken that has already been stored in the database

@@ -4,7 +4,7 @@ import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.logos.database.access.single.text.word.DbSingleWord
 import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 
 object StoredWord extends StoredFromModelFactory[WordData, StoredWord]
 {

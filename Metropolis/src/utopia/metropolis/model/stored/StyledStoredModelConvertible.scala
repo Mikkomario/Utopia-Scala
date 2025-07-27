@@ -3,6 +3,7 @@ package utopia.metropolis.model.stored
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Constant
 import utopia.metropolis.model.StyledModelConvertible
+import utopia.vault.store.StoredModelConvertible
 
 /**
   * A common trait for models that are registered to database and which can be converted to
