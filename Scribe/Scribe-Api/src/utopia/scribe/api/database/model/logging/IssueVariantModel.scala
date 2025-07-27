@@ -16,6 +16,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
+@deprecated("Replaced with the DbModel version", "v1.2")
 object IssueVariantModel extends DataInserter[IssueVariantModel, IssueVariant, IssueVariantData]
 {
 	// ATTRIBUTES	--------------------
@@ -135,7 +136,8 @@ object IssueVariantModel extends DataInserter[IssueVariantModel, IssueVariant, I
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class IssueVariantModel(id: Option[Int] = None, issueId: Option[Int] = None, 
+@deprecated("Replaced with the DbModel version", "v1.2")
+case class IssueVariantModel(id: Option[Int] = None, issueId: Option[Int] = None,
 	version: Option[Version] = None, errorId: Option[Int] = None, details: Model = Model.empty, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[IssueVariant]

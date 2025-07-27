@@ -6,6 +6,7 @@ import utopia.scribe.core.model.combined.logging.IssueVariantInstances
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object UniqueIssueVariantInstancesAccess
 {
 	// OTHER	--------------------
@@ -34,7 +35,8 @@ object UniqueIssueVariantInstancesAccess
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-trait UniqueIssueVariantInstancesAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait UniqueIssueVariantInstancesAccess
 	extends UniqueIssueVariantAccessLike[IssueVariantInstances] 
 		with FilterableView[UniqueIssueVariantInstancesAccess]
 {

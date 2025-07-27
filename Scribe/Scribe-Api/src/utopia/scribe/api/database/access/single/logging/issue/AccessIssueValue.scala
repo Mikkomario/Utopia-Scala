@@ -12,6 +12,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.0.5
   */
+@deprecated("Replaced with targeting access classes", "v1.2")
 case class AccessIssueValue(access: AccessColumn) extends AccessValue
 {
 	val model = IssueModel

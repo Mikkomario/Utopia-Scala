@@ -15,6 +15,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object UniqueIssueOccurrenceAccess
 {
 	// OTHER	--------------------
@@ -41,7 +42,8 @@ object UniqueIssueOccurrenceAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait UniqueIssueOccurrenceAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait UniqueIssueOccurrenceAccess
 	extends SingleRowModelAccess[IssueOccurrence] with FilterableView[UniqueIssueOccurrenceAccess] 
 		with DistinctModelAccess[IssueOccurrence, Option[IssueOccurrence], Value] with Indexed
 {

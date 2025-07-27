@@ -10,6 +10,7 @@ import utopia.flow.generic.model.template.ModelConvertible
   * @author Mikko Hilpinen
   * @since 22.5.2023, v0.1
   */
+@deprecated("Replaced with the Vault version", "v1.2")
 trait StoredModelConvertible[+Data <: ModelConvertible] extends Stored[Data] with ModelConvertible
 {
 	override def toModel: Model = Constant("id", id) +: data.toModel

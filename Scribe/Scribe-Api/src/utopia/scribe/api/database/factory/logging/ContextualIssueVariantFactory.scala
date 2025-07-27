@@ -12,7 +12,8 @@ import utopia.vault.nosql.factory.row.linked.CombiningFactory
   * @author Mikko Hilpinen
   * @since 23.05.2023, v0.1
   */
-object ContextualIssueVariantFactory 
+@deprecated("Replaced with the DbReader version", "v1.2")
+object ContextualIssueVariantFactory
 	extends CombiningFactory[ContextualIssueVariant, IssueVariant, Issue] 
 		with FromTimelineRowFactory[ContextualIssueVariant]
 {

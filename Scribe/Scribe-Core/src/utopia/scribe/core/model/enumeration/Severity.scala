@@ -5,11 +5,11 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType}
 import utopia.flow.generic.model.template.ValueConvertible
+import utopia.flow.operator.Steppable
+import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.Sign
-import utopia.flow.operator.Steppable
-import utopia.flow.operator.enumeration.Extreme
 
 /**
   * Represents the level of severity associated with some problem or error situation
@@ -114,24 +114,18 @@ object Severity
 	
 	/**
 	  * @param value A value representing an severity level
+	  * @return severity matching the specified value. None if the value didn't match any severity
+	  */
+	def findForValue(value: Value) = value.castTo(IntType, StringType) match {
+		case Left(idVal) => findForLevel(idVal.getInt)
+		case Right(stringVal) => val str = stringVal.getString; values.find { _.toString ~== str }
+	}
+	/**
+	  * @param value A value representing an severity level
 	  * @return severity matching the specified value, when the value is interpreted as an severity level, 
 	  * or the default severity (unrecoverable)
 	  */
-	def fromValue(value: Value) = {
-		// Expects Int (level) or String (name) type
-		value.castTo(IntType, StringType) match {
-			// Case: Int or empty
-			case Left(intV) =>
-				intV.int match {
-					// Case Int => Finds a match with level
-					case Some(level) => forLevel(level)
-					// Case: Empty => Uses the default value
-					case None => default
-				}
-			// Case String (name) type => Finds a match with name
-			case Right(strV) => forName(strV.getString)
-		}
-	}
+	def fromValue(value: Value) = findForValue(value).getOrElse(default)
 	
 	
 	// NESTED	--------------------

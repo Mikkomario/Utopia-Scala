@@ -8,6 +8,7 @@ import utopia.vault.nosql.view.UnconditionalView
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
+@deprecated("Replaced with targeting access classes", "v1.2")
 object DbIssues extends ManyIssuesAccess with UnconditionalView
 {
 	// OTHER	--------------------

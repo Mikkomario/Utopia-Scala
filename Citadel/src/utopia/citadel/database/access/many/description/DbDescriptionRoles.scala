@@ -47,38 +47,31 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 	
 	// IMPLEMENTED  ------------------
 	
-	override def ids(implicit connection: Connection) = cache match
-	{
+	override def ids(implicit connection: Connection) = cache match {
 		case Some(c) => c.value.map { _.id }
 		case None => super.ids
 	}
-	override def size(implicit connection: Connection) = cache match
-	{
+	override def size(implicit connection: Connection) = cache match {
 		case Some(c) => c.value.size
 		case None => super.size
 	}
-	override def all(implicit connection: Connection) = cache match
-	{
+	override def all(implicit connection: Connection) = cache match {
 		case Some(c) => c.value
 		case None => super.all
 	}
-	override def foreach[U](f: DescriptionRole => U)(implicit connection: Connection) = cache match
-	{
+	override def foreach[U](f: DescriptionRole => U)(implicit connection: Connection) = cache match {
 		case Some(c) => c.value.foreach(f)
 		case None => super.foreach(f)
 	}
-	override def pull(implicit connection: Connection) = cache match
-	{
+	override def pull(implicit connection: Connection) = cache match {
 		case Some(c) => c.value
 		case None => super.pull
 	}
-	override def nonEmpty(implicit connection: Connection) = cache match
-	{
+	override def nonEmpty(implicit connection: Connection) = cache match {
 		case Some(c) => c.value.nonEmpty
 		case None => super.nonEmpty
 	}
-	override def isEmpty(implicit connection: Connection) = cache match
-	{
+	override def isEmpty(implicit connection: Connection) = cache match {
 		case Some(c) => c.value.isEmpty
 		case None => super.isEmpty
 	}

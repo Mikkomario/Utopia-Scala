@@ -15,6 +15,7 @@ import utopia.vault.util.ErrorHandling
   * @author Mikko Hilpinen
   * @since 25.5.2023, v0.1
   */
+@deprecated("Replaced with the DbReader version", "v1.2")
 object IssueInstancesFactory extends FromResultFactory[IssueInstances]
 {
 	// ATTRIBUTES   ------------------------

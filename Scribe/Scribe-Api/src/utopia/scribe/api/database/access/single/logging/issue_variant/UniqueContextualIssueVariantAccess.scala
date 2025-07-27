@@ -11,6 +11,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object UniqueContextualIssueVariantAccess
 {
 	// OTHER	--------------------
@@ -39,7 +40,8 @@ object UniqueContextualIssueVariantAccess
   * @author Mikko Hilpinen
   * @since 23.05.2023, v0.1
   */
-trait UniqueContextualIssueVariantAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait UniqueContextualIssueVariantAccess
 	extends UniqueIssueVariantAccessLike[ContextualIssueVariant] 
 		with SingleChronoRowModelAccess[ContextualIssueVariant, UniqueContextualIssueVariantAccess]
 {

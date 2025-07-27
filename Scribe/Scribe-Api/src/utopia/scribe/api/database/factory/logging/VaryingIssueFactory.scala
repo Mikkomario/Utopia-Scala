@@ -9,6 +9,7 @@ import utopia.vault.nosql.factory.multi.MultiCombiningFactory
   * @author Mikko Hilpinen
   * @since 26.05.2023, v0.1
   */
+@deprecated("Replaced with the DbReader version", "v1.2")
 object VaryingIssueFactory extends MultiCombiningFactory[VaryingIssue, Issue, IssueVariant]
 {
 	// IMPLEMENTED	--------------------

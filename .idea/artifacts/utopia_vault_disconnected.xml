@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="utopia-vault-disconnected">
+    <output-path>$PROJECT_DIR$/out/artifacts/utopia_vault/disconnected</output-path>
+    <root id="archive" name="utopia-vault-disconnected.jar">
+      <element id="module-output" name="Vault-Disconnected" />
+      <element id="module-source" name="Vault-Disconnected" />
+    </root>
+  </artifact>
+</component>

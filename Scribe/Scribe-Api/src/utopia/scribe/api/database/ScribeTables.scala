@@ -10,29 +10,34 @@ import utopia.vault.model.immutable.Table
   */
 object ScribeTables
 {
-	// COMPUTED	--------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Table that contains error records (Represents a single error or exception thrown during program runtime)
+	  * Table that contains error records (Represents a single error or exception thrown during 
+	  * program runtime)
 	  */
-	def errorRecord = apply("error_record")
+	lazy val errorRecord = apply("error_record")
 	/**
-	  * Table that contains issues (Represents a type of problem or issue that may occur during a program's run)
+	  * Table that contains issues (Represents a type of problem or an issue that may occur during a 
+	  * program's run)
 	  */
-	def issue = apply("issue")
+	lazy val issue = apply("issue")
 	/**
-	  * Table that contains issue occurrences (Represents a specific occurrence of a recorded issue)
+	  * Table that contains issue occurrences (Represents one or more specific occurrences of a 
+	  * recorded issue)
 	  */
-	def issueOccurrence = apply("issue_occurrence")
+	lazy val issueOccurrence = apply("issue_occurrence")
 	/**
-	  * Table that contains issue variants (Represents a specific setting where a problem or an issue occurred)
+	  * Table that contains issue variants (Represents a specific setting where a problem or an issue 
+	  * occurred)
 	  */
-	def issueVariant = apply("issue_variant")
+	lazy val issueVariant = apply("issue_variant")
 	/**
-	  * Table that contains stack trace elements (Represents a single error stack trace line.
-	  * A stack trace indicates how an error propagated through the program flow before it was recorded.)
+	  * Table that contains stack trace element records (Represents a single error stack trace line.
+	  * A stack trace indicates how an error propagated through the program flow before it was 
+	  * recorded.)
 	  */
-	def stackTraceElementRecord = apply("stack_trace_element_record")
+	lazy val stackTraceElementRecord = apply("stack_trace_element_record")
 	
 	
 	// OTHER	--------------------

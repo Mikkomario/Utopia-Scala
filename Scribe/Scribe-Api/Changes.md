@@ -2,6 +2,9 @@
 
 ## v1.0.6 (in development)
 Adds support for **Scribe-Core v1.2 and Vault v1.22**
+### Deprecations
+- Deprecated all previous database classes (i.e. database model classes, database factory classes and the access classes)
+  - These are replaced with newly generated versions
 
 ## v1.0.5 - 26.05.2025
 Adds support for **Access v1.6**

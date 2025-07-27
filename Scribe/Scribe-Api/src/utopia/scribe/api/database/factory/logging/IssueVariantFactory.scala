@@ -14,7 +14,8 @@ import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-object IssueVariantFactory 
+@deprecated("Replaced with the DbReader version", "v1.2")
+object IssueVariantFactory
 	extends FromValidatedRowModelFactory[IssueVariant] with FromRowFactoryWithTimestamps[IssueVariant]
 {
 	// IMPLEMENTED	--------------------

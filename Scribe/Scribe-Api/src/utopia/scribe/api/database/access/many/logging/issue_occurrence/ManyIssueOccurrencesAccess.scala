@@ -13,6 +13,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object ManyIssueOccurrencesAccess
 {
 	// OTHER	--------------------
@@ -35,7 +36,8 @@ object ManyIssueOccurrencesAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait ManyIssueOccurrencesAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait ManyIssueOccurrencesAccess
 	extends ManyRowModelAccess[IssueOccurrence] with FilterableView[ManyIssueOccurrencesAccess] with Indexed 
 		with OccurrenceTimeBasedAccess[ManyIssueOccurrencesAccess]
 {

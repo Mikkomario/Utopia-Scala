@@ -13,6 +13,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object UniqueErrorRecordAccess
 {
 	// OTHER	--------------------
@@ -39,7 +40,8 @@ object UniqueErrorRecordAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait UniqueErrorRecordAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait UniqueErrorRecordAccess
 	extends SingleRowModelAccess[ErrorRecord] with FilterableView[UniqueErrorRecordAccess] 
 		with DistinctModelAccess[ErrorRecord, Option[ErrorRecord], Value] with Indexed
 {

@@ -6,6 +6,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ChronoRowFactoryView
 import utopia.vault.sql.Condition
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object ManyIssueVariantsAccess
 {
 	// OTHER	--------------------
@@ -28,7 +29,8 @@ object ManyIssueVariantsAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-trait ManyIssueVariantsAccess 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait ManyIssueVariantsAccess
 	extends ManyIssueVariantsAccessLike[IssueVariant, ManyIssueVariantsAccess] 
 		with ManyRowModelAccess[IssueVariant] with ChronoRowFactoryView[IssueVariant, ManyIssueVariantsAccess]
 {

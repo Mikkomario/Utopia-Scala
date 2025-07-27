@@ -12,6 +12,7 @@ import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
+import utopia.scribe.core.model.factory.logging.IssueFactory
 
 import java.time.Instant
 
@@ -19,19 +20,22 @@ object IssueData extends FromModelFactoryWithSchema[IssueData]
 {
 	// ATTRIBUTES	--------------------
 	
+	override lazy val schema = 
+		ModelDeclaration(Vector(PropertyDeclaration("context", StringType, isOptional = true), 
+			PropertyDeclaration("severity", IntType, Empty, Unrecoverable.level), 
+			PropertyDeclaration("created", InstantType, isOptional = true)))
+	
 	/**
 	  * Ordering that presents the least severe issues first
 	  */
-	implicit val ordering: Ordering[IssueData] = CombinedOrdering(
-		Ordering.by { i: IssueData => i.severity },
-		Ordering.by { i: IssueData => i.context },
-		Ordering.by { i: IssueData => i.created }
-	)
+	implicit val ordering: Ordering[IssueData] = 
+		CombinedOrdering(Ordering.by { i: IssueData => i.severity },Ordering.by { i: IssueData => i.context },
+			Ordering.by { i: IssueData => i.created }
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("context", StringType), PropertyDeclaration("severity", 
-			IntType, Empty, Unrecoverable.level), PropertyDeclaration("created", InstantType,
-			isOptional = true)))
+	
+	// INITIAL CODE	--------------------
+	
+	)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -42,19 +46,25 @@ object IssueData extends FromModelFactoryWithSchema[IssueData]
 }
 
 /**
-  * Represents a type of problem or issue that may occur during a program's run
-  * @param context Program context where this issue occurred or was logged. Should be unique.
+  * Represents a type of problem or an issue that may occur during a program's run
+  * @param context  Program context where this issue occurred or was logged. Should be unique.
   * @param severity The estimated severity of this issue
-  * @param created Time when this issue first occurred or was first recorded
+  * @param created  Time when this issue first occurred or was first recorded
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
 case class IssueData(context: String, severity: Severity = Unrecoverable, created: Instant = Now) 
-	extends ModelConvertible
+	extends IssueFactory[IssueData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("context" -> context, "severity" -> severity.level, 
 		"created" -> created))
+	
+	override def withContext(context: String) = copy(context = context)
+	
+	override def withCreated(created: Instant) = copy(created = created)
+	
+	override def withSeverity(severity: Severity) = copy(severity = severity)
 }
 

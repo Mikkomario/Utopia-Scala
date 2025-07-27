@@ -13,6 +13,7 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 26.05.2023, v0.1
   */
+@deprecated("Replaced with targeting access classes", "v1.2")
 object DbVaryingIssue extends SingleModelAccess[VaryingIssue] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

@@ -15,7 +15,8 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-trait ManyIssuesAccessLike[+A, +Repr] 
+@deprecated("Replaced with targeting access classes", "v1.2")
+trait ManyIssuesAccessLike[+A, +Repr]
 	extends ManyModelAccess[A] with Indexed with FilterableView[Repr] with SeverityBasedAccess[Repr]
 {
 	// COMPUTED	--------------------

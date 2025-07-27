@@ -1,6 +1,6 @@
 package utopia.scribe.core.model.partial.logging
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
@@ -9,6 +9,7 @@ import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, PairType,
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.scribe.core.model.factory.logging.IssueOccurrenceFactory
 
 import java.time.Instant
 
@@ -17,14 +18,12 @@ object IssueOccurrenceData extends FromModelFactoryWithSchema[IssueOccurrenceDat
 	// ATTRIBUTES	--------------------
 	
 	override lazy val schema = ModelDeclaration(Vector(
-		PropertyDeclaration("caseId", IntType, Vector("case_id")),
-		PropertyDeclaration("errorMessages", VectorType, Vector("error_messages"), isOptional = true),
+		PropertyDeclaration("caseId", IntType, Single("case_id")),
+		PropertyDeclaration("errorMessages", VectorType, Single("error_messages"), isOptional = true),
 		PropertyDeclaration("details", ModelType, isOptional = true),
-		PropertyDeclaration("count", IntType, Vector(), 1),
+		PropertyDeclaration("count", IntType, Empty, 1),
 		PropertyDeclaration("occurrencePeriod", PairType, Vector("earliest", "latest", "occurrence_period"),
-			Span.singleValue[Instant](Now).ends.map[Value] { v => v })
-	))
-	
+			Span.singleValue[Instant](Now).ends.map[Value] { v => v })))
 	
 	/**
 	  * Ordering that lists issue occurrences by their latest occurrence time (ascending)
@@ -34,29 +33,29 @@ object IssueOccurrenceData extends FromModelFactoryWithSchema[IssueOccurrenceDat
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def fromValidatedModel(valid: Model) =
-		IssueOccurrenceData(valid("caseId").getInt, valid("errorMessages").getVector.map { v => v.getString },
-			valid("details").getModel, valid("count").getInt,
-			Span(valid("occurrencePeriod").getPair.map { v => v.getInstant }))
-	
+	override protected def fromValidatedModel(valid: Model) = 
+		IssueOccurrenceData(valid("caseId").getInt, 
+			valid("errorMessages").getVector.map { v => v.getString }, valid("details").getModel, 
+			valid("count").getInt, Span(valid("occurrencePeriod").getPair.map { v => v.getInstant }))
 }
 
 /**
   * Represents one or more specific occurrences of a recorded issue
-  * @param caseId Id of the issue variant that occurred
-  * @param errorMessages Error messages listed in the stack trace. 
-  * If multiple occurrences are represented, contains data from the latest occurrence.
-  * @param details Additional details concerning these issue occurrences.
-  * In case of multiple occurrences, contains only the latest entry for each detail.
-  * @param count Number of issue occurrences represented by this entry
+  * @param caseId           Id of the issue variant that occurred
+  * @param errorMessages    Error messages listed in the stack trace. 
+  *                         If multiple occurrences are represented, contains data from the 
+  *                         latest occurrence.
+  * @param details          Additional details concerning these issue occurrences.
+  *                         In case of multiple occurrences, contains only the latest entry for 
+  *                         each detail.
+  * @param count            Number of issue occurrences represented by this entry
   * @param occurrencePeriod The first and last time this set of issues occurred
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty,
-                               details: Model = Model.empty, count: Int = 1,
-                               occurrencePeriod: Span[Instant] = Span.singleValue[Instant](Now))
-	extends ModelConvertible
+case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty, details: Model = Model.empty,
+                               count: Int = 1, occurrencePeriod: Span[Instant] = Span.singleValue[Instant](Now))
+	extends IssueOccurrenceFactory[IssueOccurrenceData] with ModelConvertible
 {
 	// COMPUTED	--------------------
 	
@@ -70,16 +69,23 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty,
 	def lastOccurrence = occurrencePeriod.end
 	
 	/**
-	  * @return The length of the time span represented by this occurrence instance
+	  * The length of the time span represented by this occurrence instance
 	  */
 	def duration = occurrencePeriod.end - occurrencePeriod.start
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("caseId" -> caseId, "errorMessages" -> errorMessages.map[Value] { v => v }.toVector,
-			"details" -> details, "count" -> count, 
-			"occurrencePeriod" -> occurrencePeriod.ends.map[Value] { v => v }))
+	override def toModel = Model(Vector(
+		"caseId" -> caseId, "errorMessages" -> errorMessages.map[Value] { v => v }, "details" -> details,
+		"count" -> count, "occurrencePeriod" -> occurrencePeriod.ends.map[Value] { v => v }))
+	
+	override def withCaseId(caseId: Int) = copy(caseId = caseId)
+	override def withCount(count: Int) = copy(count = count)
+	override def withDetails(details: Model) = copy(details = details)
+	override def withErrorMessages(errorMessages: Seq[String]) =
+		copy(errorMessages = errorMessages)
+	override def withOccurrencePeriod(occurrencePeriod: Span[Instant]) =
+		copy(occurrencePeriod = occurrencePeriod)
 }
 

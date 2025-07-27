@@ -8,6 +8,7 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * @author Mikko Hilpinen
   * @since 26.05.2023, v0.1
   */
-case class DbSingleVaryingIssue(id: Int) 
+@deprecated("Replaced with targeting access classes", "v1.2")
+case class DbSingleVaryingIssue(id: Int)
 	extends UniqueVaryingIssueAccess with SingleIntIdModelAccess[VaryingIssue]
 

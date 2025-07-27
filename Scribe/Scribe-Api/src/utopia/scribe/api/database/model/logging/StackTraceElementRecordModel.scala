@@ -15,7 +15,8 @@ import utopia.vault.nosql.storable.DataInserter
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-object StackTraceElementRecordModel 
+@deprecated("Replaced with the DbModel version", "v1.2")
+object StackTraceElementRecordModel
 	extends DataInserter[StackTraceElementRecordModel, StackTraceElementRecord, StackTraceElementRecordData]
 {
 	// ATTRIBUTES	--------------------
@@ -139,7 +140,8 @@ object StackTraceElementRecordModel
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-case class StackTraceElementRecordModel(id: Option[Int] = None, fileName: String = "", 
+@deprecated("Replaced with the DbModel version", "v1.2")
+case class StackTraceElementRecordModel(id: Option[Int] = None, fileName: String = "",
 	className: String = "", methodName: String = "", lineNumber: Option[Int] = None, 
 	causeId: Option[Int] = None) 
 	extends StorableWithFactory[StackTraceElementRecord]

@@ -11,6 +11,7 @@ import utopia.flow.generic.model.template.{ModelLike, Property}
   * @since 22.5.2023, v0.1
   */
 // WET WET (Copied from Metropolis)
+@deprecated("Replaced with the Vault version", "v1.2")
 trait StoredFromModelFactory[+A, Data] extends FromModelFactory[A]
 {
 	// ABSTRACT	-------------------------

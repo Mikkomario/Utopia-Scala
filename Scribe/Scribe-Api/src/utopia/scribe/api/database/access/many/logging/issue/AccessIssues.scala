@@ -8,6 +8,7 @@ import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with targeting access classes", "v1.2")
 object AccessIssues extends AccessManyRoot[AccessIssues[Issue]]
 {
 	// ATTRIBUTES   -----------------------
@@ -29,6 +30,7 @@ object AccessIssues extends AccessManyRoot[AccessIssues[Issue]]
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.0.5
   */
+@deprecated("Rewritten and moved to another package", "v1.2")
 case class AccessIssues[A](wrapped: TargetingMany[A])
 	extends AccessWrapper[A, AccessIssues[A], AccessIssue[A]] with FilterIssues[AccessIssues[A]]
 {
