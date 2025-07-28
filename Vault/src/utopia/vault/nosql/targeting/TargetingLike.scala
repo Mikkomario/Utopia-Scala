@@ -2,11 +2,12 @@ package utopia.vault.nosql.targeting
 
 import utopia.flow.collection.immutable.Single
 import utopia.vault.database.Connection
+import utopia.vault.model.immutable.Table
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.targeting.columns.AccessColumns
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{JoinType, OrderBy}
+import utopia.vault.sql.{Condition, JoinType, OrderBy}
 
 /**
   * Common trait for access points that may be filtered and/or extended
@@ -31,6 +32,13 @@ trait TargetingLike[+A, +V, +Repr] extends AccessColumns[V] with FilterableView[
 	  * @return Copy of this access point including the specified joins
 	  */
 	def join(joins: Seq[Joinable], joinType: JoinType = Inner): Repr
+	/**
+	  * @param table Table that may be linked
+	  * @param where A condition that must be met for linking to occur (optional)
+	  * @return Copy of this access limited to entries where no links (where the specified condition is met)
+	  *         exist to the specified table
+	  */
+	def notLinkedTo(table: Table, where: Option[Condition] = None): Repr
 	
 	/**
 	  * @param ordering Ordering to apply
@@ -53,4 +61,12 @@ trait TargetingLike[+A, +V, +Repr] extends AccessColumns[V] with FilterableView[
 	 * @return A copy of this access which applies the specified joins as left joins
 	 */
 	def leftJoin(join: Joinable, more: Joinable*): Repr = this.join(Single(join) ++ more, JoinType.Left)
+	
+	/**
+	  * @param table Table that may be linked
+	  * @param where A condition that must be met for linking to occur (optional)
+	  * @return Copy of this access limited to entries where no links (where the specified condition is met)
+	  *         exist to the specified table
+	  */
+	def notLinkedTo(table: Table, where: Condition): Repr = notLinkedTo(table, Some(where))
 }

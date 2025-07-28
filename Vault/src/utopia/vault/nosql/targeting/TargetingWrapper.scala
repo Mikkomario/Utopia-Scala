@@ -43,6 +43,7 @@ trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
 	
 	override def apply(condition: Condition): Repr = mapWrapped { _(condition) }
 	override def join(joins: Seq[Joinable], joinType: JoinType): Repr = mapWrapped { _.join(joins, joinType) }
+	override def notLinkedTo(table: Table, where: Option[Condition]) = mapWrapped { _.notLinkedTo(table, where) }
 	override def withOrdering(ordering: OrderBy): Repr = mapWrapped { _.withOrdering(ordering) }
 	
 	

@@ -1,13 +1,14 @@
 package utopia.scribe.api.database.access.logging.issue
 
 import utopia.scribe.api.database.ScribeTables
-import utopia.scribe.api.database.reader.logging.{IssueDbReader, VaryingIssueDbReader}
+import utopia.scribe.api.database.access.logging.issue.occurrence.{AccessIssueOccurrenceValues, FilterByIssueOccurrence}
+import utopia.scribe.api.database.access.logging.issue.variant.{AccessIssueVariantValues, FilterByIssueVariant}
+import utopia.scribe.api.database.reader.logging.{IssueDbReader, IssueInstancesDbReader, VaryingIssueDbReader}
 import utopia.scribe.api.database.storable.logging.IssueDbModel
 import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessMany, AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, TargetingTimeline, WrapOneToManyAccess, WrapRowAccess}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
-import variant.{AccessIssueVariantValues, FilterByIssueVariant}
 
 import scala.language.implicitConversions
 
@@ -22,7 +23,11 @@ object AccessIssues
 	/**
 	  * Access to issues in the DB, also including issue variant information
 	  */
-	lazy val withVariants = AccessCombinedIssues(AccessMany(VaryingIssueDbReader))
+	lazy val withVariants = apply(VaryingIssueDbReader)
+	/**
+	  * Access to issues in the DB, including variants and occurrences
+	  */
+	lazy val withOccurrences = apply(IssueInstancesDbReader)
 	
 	
 	// IMPLICIT	--------------------
@@ -40,7 +45,6 @@ object AccessIssues
 	  * @tparam A Type of accessed items
 	  */
 	override def apply[A](access: TargetingManyRows[A]) = AccessIssueRows(access)
-	
 	/**
 	  * @tparam A Type of accessed items
 	  */
@@ -66,16 +70,18 @@ abstract class AccessIssues[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: 
 	  * A copy of this access which also targets issue_variant
 	  */
 	lazy val joinVariants = join(ScribeTables.issueVariant)
-	
 	/**
 	  * Access to the values of linked issue variants
 	  */
 	lazy val variants = AccessIssueVariantValues(joinVariants)
-	
 	/**
 	  * Access to issue variant -based filtering functions
 	  */
 	lazy val whereVariants = FilterByIssueVariant(joinVariants)
+	
+	lazy val joinOccurrences = joinVariants.join(ScribeTables.issueOccurrence)
+	lazy val occurrences = AccessIssueOccurrenceValues(joinOccurrences)
+	lazy val whereOccurrences = FilterByIssueOccurrence(joinOccurrences)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -98,7 +104,6 @@ case class AccessIssueRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssue(target)
 }
 
@@ -117,7 +122,6 @@ case class AccessCombinedIssues[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssues(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssue(target)
 }
 

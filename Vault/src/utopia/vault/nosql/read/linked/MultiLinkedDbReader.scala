@@ -1,13 +1,13 @@
 package utopia.vault.nosql.read.linked
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.vault.model.immutable.{Row, Table}
-import utopia.vault.model.mutable.ResultStream
 import utopia.vault.nosql.read.DbRowReader
-import utopia.vault.nosql.read.parse.ParseRows
+import utopia.vault.nosql.read.parse.ParseGroupedRows
 import utopia.vault.sql.JoinType
 import utopia.vault.sql.JoinType.Inner
+
+import scala.util.Try
 
 object MultiLinkedDbReader
 {
@@ -53,7 +53,7 @@ object MultiLinkedDbReader
 abstract class MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
                                    bridges: Seq[Table] = Empty, neverEmptyRight: Boolean = false)
 	extends JoiningDbReader[L, R, A](left, right, bridges, if (neverEmptyRight) Inner else JoinType.Left)
-		with ParseRows[Seq[A]]
+		with ParseGroupedRows[A]
 {
 	// ABSTRACT ----------------------------
 	
@@ -68,8 +68,5 @@ abstract class MultiLinkedDbReader[L, R, A](left: DbRowReader[L], right: DbRowRe
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def apply(rows: Seq[Row]): Seq[A] = left.parseMultiLinkedWith(rows, right)(combine).toOptimizedSeq
-	
-	override def apply(stream: ResultStream): Seq[A] =
-		left.parseMultiLinkedWith(stream.rowsIterator, right)(combine).toOptimizedSeq
+	override def parseGroup(rows: Seq[Row]): Try[A] = left(rows.head).map { combine(_, right(rows)) }
 }

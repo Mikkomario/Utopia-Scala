@@ -1,9 +1,12 @@
 package utopia.scribe.api.database.access.logging.issue.occurrence
 
+import utopia.scribe.api.database.ScribeTables
+import utopia.scribe.api.database.access.logging.issue.variant.{AccessIssueVariantValues, FilterByIssueVariant}
+import utopia.scribe.api.database.access.logging.issue.{AccessIssueValues, FilterByIssue}
 import utopia.scribe.api.database.reader.logging.IssueOccurrenceDbReader
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 import scala.language.implicitConversions
@@ -23,8 +26,7 @@ object AccessIssueOccurrences
 	  * Provides implicit access to an access point's .values property
 	  * @param access Access point whose values are accessed
 	  */
-	implicit def accessValues(access: AccessIssueOccurrences[_, 
-		_]): AccessIssueOccurrenceValues = access.values
+	implicit def accessValues(access: AccessIssueOccurrences[_, _]): AccessIssueOccurrenceValues = access.values
 	
 	
 	// IMPLEMENTED	--------------------
@@ -33,7 +35,6 @@ object AccessIssueOccurrences
 	  * @tparam A Type of accessed items
 	  */
 	override def apply[A](access: TargetingManyRows[A]) = AccessIssueOccurrenceRows(access)
-	
 	/**
 	  * @tparam A Type of accessed items
 	  */
@@ -54,6 +55,14 @@ abstract class AccessIssueOccurrences[A, +Repr <: TargetingManyLike[_, Repr, _]]
 	  * Access to the values of accessible issue occurrences
 	  */
 	lazy val values = AccessIssueOccurrenceValues(wrapped)
+	
+	lazy val joinIssueVariants = join(ScribeTables.issueVariant)
+	lazy val whereIssueVariants = FilterByIssueVariant(joinIssueVariants)
+	lazy val issueVariants = AccessIssueVariantValues(joinIssueVariants)
+	
+	lazy val joinIssues = joinIssueVariants.join(ScribeTables.issue)
+	lazy val whereIssues = FilterByIssue(joinIssues)
+	lazy val issues = AccessIssueValues(joinIssues)
 }
 
 /**
@@ -71,7 +80,6 @@ case class AccessIssueOccurrenceRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueOccurrenceRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueOccurrence(target)
 }
 
@@ -91,7 +99,6 @@ case class AccessCombinedIssueOccurrences[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssueOccurrences(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueOccurrence(target)
 }
 

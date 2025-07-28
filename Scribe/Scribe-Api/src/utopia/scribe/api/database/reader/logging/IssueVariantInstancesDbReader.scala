@@ -10,8 +10,8 @@ import utopia.vault.nosql.read.linked.MultiLinkedDbReader
   * @since 27.07.2025, v0.1
   */
 object IssueVariantInstancesDbReader 
-	extends MultiLinkedDbReader[IssueVariant, IssueOccurrence, IssueVariantInstances](IssueVariantDbReader, 
-		IssueOccurrenceDbReader, neverEmptyRight = true)
+	extends MultiLinkedDbReader[IssueVariant, IssueOccurrence, IssueVariantInstances](
+		IssueVariantDbReader, IssueOccurrenceDbReader)
 {
 	// IMPLEMENTED	--------------------
 	

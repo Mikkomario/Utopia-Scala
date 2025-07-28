@@ -4,6 +4,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.ScribeTables
 import utopia.scribe.core.model.factory.logging.IssueOccurrenceFactory
@@ -99,6 +101,18 @@ object IssueOccurrenceDbModel
 		apply(earliest = Some(occurrencePeriod.start), latest = Some(occurrencePeriod.end))
 	
 	override protected def complete(id: Value, data: IssueOccurrenceData) = IssueOccurrence(id.getInt, data)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param end Targeted end (first or last)
+	  * @return DB property that matches the earliest or the latest occurrence, based on the specified end
+	  */
+	def time(end: End) = end match {
+		case First => earliest
+		case Last => latest
+	}
 }
 
 /**

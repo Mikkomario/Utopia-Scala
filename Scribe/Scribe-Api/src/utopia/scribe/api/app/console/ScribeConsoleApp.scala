@@ -7,7 +7,6 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType, IntType, StringType}
-import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
@@ -20,11 +19,10 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.scribe.api.database.ScribeAccessExtensions._
-import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}
-import utopia.scribe.api.database.access.many.logging.issue_occurrence.DbIssueOccurrences
-import utopia.scribe.api.database.access.many.logging.issue_variant.DbIssueVariants
-import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
-import utopia.scribe.api.database.access.single.logging.issue.DbVaryingIssue
+import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
+import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
+import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
+import utopia.scribe.api.database.access.logging.issue.{AccessIssue, AccessIssues}
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.core.model.combined.logging.{IssueInstances, IssueVariantInstances}
 import utopia.scribe.core.model.enumeration.Severity
@@ -93,33 +91,32 @@ object ScribeConsoleApp extends App
 	private val statusCommand = Command.withoutArguments("status", "st", "Shows current issue status") {
 		cPool.tryWith { implicit c =>
 			// Counts active issues
-			val activeIssueIds = DbManyIssueInstances.since(recent, includePartialRanges = true).ids.toSet
+			val activeIssueSeverities = AccessIssues.whereOccurrences.since(recent, includePartialRanges = true)
+				.severities.pull
 			
 			// Case: No active issues
-			if (activeIssueIds.isEmpty)
+			if (activeIssueSeverities.isEmpty)
 				println("No active issues within the last 7 days")
 			// Case: Active issues => Lists number of active issues by severity and handles new issues
 			else {
-				val countBySeverity = DbIssues(activeIssueIds).severities
-					.groupMapReduce(Identity) { _ => 1 } { _ + _ }
-				println(s"${ activeIssueIds.size } active issues:")
+				val countBySeverity = activeIssueSeverities.countAll
+				println(s"${ activeIssueSeverities.size } active issues:")
 				countBySeverity.keys.toVector.reverseSorted.foreach { severity =>
 					println(s"\t- $severity: ${countBySeverity(severity)} issues")
 				}
 				
-				// Checks for new issues
-				val newIssueIds = DbIssueVariants.after(recent).issueIds
-					.groupMapReduce(Identity) { _ => 1 } { _ + _ }
-					.toVector.reverseSorted
+				// Checks for new issues [(Issue ID, Number of new variants)]
+				val newIssueVariantCounts = AccessIssueVariants.since(recent).issueIds.pull.countAll
+					.toOptimizedSeq.reverseSorted
 				
 				// Case: No new issues
-				if (newIssueIds.isEmpty)
+				if (newIssueVariantCounts.isEmpty)
 					println("None of the issues are new")
 				// Case: New issues => Lists their ids
 				else {
-					println(s"${newIssueIds.size} of the issues have appeared just recently (i.e. in last 7 days):")
-					val newIssueById = DbIssues(newIssueIds.map { _._1 }.toSet).toMapBy { _.id }
-					val orderedNewIssueIds = newIssueIds
+					println(s"${newIssueVariantCounts.size} of the issues have appeared just recently (i.e. in last 7 days):")
+					val newIssueById = AccessIssues(newIssueVariantCounts.view.map { _._1 }.toIntSet).toMapBy { _.id }
+					val orderedNewIssueIds = newIssueVariantCounts
 						.reverseSortBy { case (issueId, _) => newIssueById.get(issueId) }
 					orderedNewIssueIds.foreach { case (issueId, variantCount) =>
 						val baseStr = newIssueById.get(issueId) match {
@@ -169,15 +166,15 @@ object ScribeConsoleApp extends App
 		}
 		// Finds the issues
 		cPool.tryWith { implicit c =>
-			val occurrencesPerVariantId = DbIssueOccurrences.since(since, includePartialRanges = true).pull
+			val occurrencesPerVariantId = AccessIssueOccurrences.since(since, includePartialRanges = true).pull
 				.groupBy { _.caseId }
 			if (occurrencesPerVariantId.isEmpty)
 				Empty
 			else {
-				val variantsPerIssueId = DbIssueVariants(occurrencesPerVariantId.keySet).pull
+				val variantsPerIssueId = AccessIssueVariants(occurrencesPerVariantId.keys).pull
 					.map { v => v.withOccurrences(occurrencesPerVariantId(v.id).reverseSorted) }
 					.groupBy { _.issueId }
-				val issues = DbIssues(variantsPerIssueId.keySet)
+				val issues = AccessIssues(variantsPerIssueId.keys)
 					.withSeverityIn(severityRange).includingContext(args("filter").getString)
 					.pull
 					.map { issue => issue.withOccurrences(variantsPerIssueId(issue.id).reverseSorted) }.reverseSorted
@@ -241,8 +238,9 @@ object ScribeConsoleApp extends App
 				// Fetches the base issue data
 				val issue = target match {
 					case Left(issueId) =>
-						DbVaryingIssue(issueId).pull.map { issue =>
-							issue.withOccurrences(DbIssueOccurrences.ofVariants(issue.variants.map { _.id }).pull)
+						AccessIssue.withVariants(issueId).pull.map { issue =>
+							issue.withOccurrences(
+								AccessIssueOccurrences.ofVariants(issue.variants.view.map { _.id }).pull)
 						}
 					case Right(issue) => Some(issue)
 				}
@@ -251,12 +249,12 @@ object ScribeConsoleApp extends App
 						// Retrieves and prints available information about the issue
 						val lastOccurrence = issue.latestOccurrence
 						val numberOfOccurrences = {
-							val access = DbIssueOccurrences.ofVariants(issue.variantIds)
+							val access = AccessIssueOccurrences.ofVariants(issue.variantIds)
 							val targetedAccess = issue.earliestOccurrence match {
 								case Some(o) => access.before(o.lastOccurrence)
 								case None => access
 							}
-							targetedAccess.counts.sum + issue.numberOfOccurrences
+							targetedAccess.totalCount + issue.numberOfOccurrences
 						}
 						val averageOccurrenceInterval = {
 							if (numberOfOccurrences > 1)
@@ -396,29 +394,31 @@ object ScribeConsoleApp extends App
 		help = "Prints the stack trace of the most recently encountered error") {
 		queuedErrorIdPointer.value match {
 			case Some(errorId) =>
-				cPool.tryWith { implicit c =>
-					// Reads and prints error data
-					DbErrorRecord(errorId).topToBottomIterator.zipWithIndex.foreach { case (error, index) =>
-						// Prints one line for the error type
-						val prefix = if (index == 0) "" else "Caused by: "
-						println(s"$prefix${error.exceptionType}")
-						// Groups by file, class and method
-						error.stackAccess.topToBottomIterator.groupBy { _.fileName }
-							.foreach { case (fileName, stack) =>
-								stack.iterator.groupBy { _.className }.toVector.oneOrMany match {
-									// Case: Only one class in this file
-									case Left((_, classLines)) =>
-										printClassStack(classLines, stack.head.fileAndClassName)
-									// Case: Multiple classes in this file => Prints a separate header for the file
-									case Right(classes) =>
-										println(s"\t$fileName")
-										classes.foreach { case (className, classLines) =>
-											printClassStack(classLines, className.nonEmptyOrElse(fileName), 2)
-										}
+				cPool
+					.tryWith { implicit c =>
+						// Reads and prints error data
+						AccessErrorRecord(errorId).topToBottomIterator.zipWithIndex.foreach { case (error, index) =>
+							// Prints one line for the error type
+							val prefix = if (index == 0) "" else "Caused by: "
+							println(s"$prefix${error.exceptionType}")
+							// Groups by file, class and method
+							error.stackAccess.topToBottomIterator.groupBy { _.fileName }
+								.foreach { case (fileName, stack) =>
+									stack.iterator.groupBy { _.className }.toVector.oneOrMany match {
+										// Case: Only one class in this file
+										case Left((_, classLines)) =>
+											printClassStack(classLines, stack.head.fileAndClassName)
+										// Case: Multiple classes in this file => Prints a separate header for the file
+										case Right(classes) =>
+											println(s"\t$fileName")
+											classes.foreach { case (className, classLines) =>
+												printClassStack(classLines, className.nonEmptyOrElse(fileName), 2)
+											}
+									}
 								}
-							}
+						}
 					}
-				}.log
+					.log
 			case None => println("There is no error to describe")
 		}
 	}

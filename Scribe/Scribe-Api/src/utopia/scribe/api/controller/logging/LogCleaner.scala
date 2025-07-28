@@ -9,10 +9,10 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.scribe.api.database.ScribeTables
-import utopia.scribe.api.database.access.many.logging.issue.{DbIssues, DbManyIssueInstances}
-import utopia.scribe.api.database.access.many.logging.issue_occurrence.DbIssueOccurrences
-import utopia.scribe.api.database.access.many.logging.issue_variant.DbIssueVariants
-import utopia.scribe.api.database.model.logging.IssueOccurrenceModel
+import utopia.scribe.api.database.access.logging.issue.AccessIssues
+import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
+import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
+import utopia.scribe.api.database.storable.logging.IssueOccurrenceDbModel
 import utopia.scribe.api.model.cached.logging.LogStoreDurations
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
@@ -40,7 +40,8 @@ object LogCleaner
 			durations.mergeDurationRangesIterator.flatMap { case (durationRange, mergeGroupLength) =>
 				// Finds the issue occurrences that match the specified severity levels
 				// and occurred within the specified time period
-				val issues = DbManyIssueInstances.withSeverityIn(severities).during(durationRange.mapTo { now - _ }).pull
+				val issues = AccessIssues.withOccurrences
+					.withSeverityIn(severities).during(durationRange.mapTo { now - _ }).pull
 				if (issues.exists { _.hasOccurred }) {
 					// Merges occurrences within specific time periods, forming a single item
 					val dataIter = mergeGroupLength.finite match {
@@ -78,9 +79,9 @@ object LogCleaner
 		}
 		val (newOccurrenceData, removeOccurrenceIdSets) = mergeDataIter.split
 		// Applies queued occurrence deletion
-		DbIssueOccurrences(removeOccurrenceIdSets.iterator.flatten.toSet).delete()
+		AccessIssueOccurrences(removeOccurrenceIdSets.view.flatten.toIntSet).delete()
 		// Inserts the merged occurrences, so that they affect the deletion processes
-		IssueOccurrenceModel.insert(newOccurrenceData)
+		IssueOccurrenceDbModel.insert(newOccurrenceData)
 		
 		// Deletes occurrences that are too old
 		// Targets issues by severity and length of inactivity
@@ -90,30 +91,26 @@ object LogCleaner
 				requiredInactivity.finite.foreach { requiredInactivity =>
 					deleteAfter.finite.foreach { deleteAfter =>
 						// Case: Inactivity required =>
-						// Finds issue variants that have not occurred within the specified duration
-						if (requiredInactivity > Duration.Zero) {
-							// FIXME: Sql syntax error here
-							NotEmpty(DbIssueVariants.contextual.withSeverityIn(severities)
-								.findNotOccurredSince(now - requiredInactivity))
-								.foreach { targetedVariants =>
+						//       Finds issue variants that have not occurred within the specified duration
+						if (requiredInactivity > Duration.Zero)
+							AccessIssueVariants.whereIssues.ofSeverities(severities)
+								.notOccurredSince(now - requiredInactivity).ids.pull.notEmpty
+								.foreach { variantIds =>
 									// Deletes old occurrences of those variants
-									DbIssueOccurrences.ofVariants(targetedVariants.map { _.id }.toSet)
-										.before(now - deleteAfter)
-										.delete()
+									AccessIssueOccurrences.ofVariants(variantIds).before(now - deleteAfter).delete()
 								}
-						}
 						// Case: No inactivity required => Deletes old occurrences
 						else
-							DbManyIssueInstances.withSeverityIn(severities).before(now - deleteAfter)
-								.deleteOccurrences()
+							AccessIssueOccurrences.whereIssues.ofSeverities(severities).before(now - deleteAfter)
+								.delete()
 					}
 				}
 			}
 		}
 		
 		// Also deletes any issue variant and issue that has no recorded occurrences in the database
-		DbIssueVariants.deleteNotLinkedTo(ScribeTables.issueOccurrence)
-		DbIssues.deleteNotLinkedTo(ScribeTables.issueVariant)
+		AccessIssueVariants.deleteNotLinkedTo(ScribeTables.issueOccurrence)
+		AccessIssues.deleteNotLinkedTo(ScribeTables.issueVariant)
 	}
 	
 	// Returns Left in cases where merging was not necessary (single occurrence)

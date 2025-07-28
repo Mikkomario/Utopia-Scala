@@ -2,6 +2,8 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.vault.model.error.ColumnNotFoundException
+import utopia.vault.model.immutable.Table
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.targeting.one.TargetingOne
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
@@ -40,6 +42,18 @@ trait ConcreteAccessManyLike[+A, +Repr <: TargetingManyLike[A, Repr, _]] extends
 				self
 			else
 				copyAccess(target = newTarget)
+		}
+	}
+	override def notLinkedTo(table: Table, where: Option[Condition]) = {
+		table.primaryColumn match {
+			case Some(index) =>
+				val joinToApply = where match {
+					case Some(condition) => table.where(condition)
+					case None => table
+				}
+				join(joinToApply).filter(index.isNull)
+				
+			case None => throw new ColumnNotFoundException(s"$table doesn't have a primary key")
 		}
 	}
 	override def apply(condition: Condition) = {

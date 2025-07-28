@@ -16,7 +16,7 @@ object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 	/**
 	  * Access to individual issues in the DB, also including issue variant information
 	  */
-	lazy val withVariant = AccessIssues.withVariants.head
+	lazy val withVariants = AccessIssues.withVariants.head
 	
 	
 	// IMPLICIT	--------------------
