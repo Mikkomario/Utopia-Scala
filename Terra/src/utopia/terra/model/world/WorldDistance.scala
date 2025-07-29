@@ -97,14 +97,14 @@ object WorldDistance
 		override def isAboutZero: Boolean = withEither { _ ~== 0.0 } { _.isAboutZero }
 		
 		override def +(amount: Double): WorldDistance =
-			new LazyWorldDistance(Lazy { distance + conversion.distanceOf(amount) }, v.mapCurrent { _ + amount })
+			new LazyWorldDistance(Lazy { distance + conversion.distanceOf(amount) }, v.lightMap { _ + amount })
 		override def +(other: Distance): WorldDistance =
-			new LazyWorldDistance(d.mapCurrent { _ + other }, Lazy { vectorLength + conversion.vectorLengthOf(other) })
+			new LazyWorldDistance(d.lightMap { _ + other }, Lazy { vectorLength + conversion.vectorLengthOf(other) })
 		override def +(other: WorldDistance): WorldDistance =
 			new LazyWorldDistance(Lazy { distance + other.distance }, Lazy { vectorLength + other.vectorLength })
 		
 		override def *(mod: Double): WorldDistance =
-			new LazyWorldDistance(d.mapCurrent { _ * mod }, v.mapCurrent { _ * mod })
+			new LazyWorldDistance(d.lightMap { _ * mod }, v.lightMap { _ * mod })
 			
 		
 		// OTHER    -------------------------

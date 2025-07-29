@@ -3,6 +3,7 @@ package utopia.scribe.core.model.cached.logging
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
@@ -80,12 +81,11 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	  *         starting with this error.
 	  */
 	def topToBottomIterator = OptionsIterator.iterate(Some(this)) { _.cause }
-	
 	/**
 	  * @return A vector that contains this error and all the causing errors
 	  *         from top (i.e. this) to bottom (i.e. root cause)
 	  */
-	def topToBottom = topToBottomIterator.toVector
+	def topToBottom = topToBottomIterator.toOptimizedSeq
 	/**
 	  * @return A vector that contains this error and all the causing errors
 	  *         from bottom (i.e. root cause) to top (i.e. this)
@@ -99,7 +99,7 @@ case class RecordableError(className: String, stackTrace: StackTrace, cause: Opt
 	/**
 	  * @return The distinct messages listed in this error stack, from top to bottom
 	  */
-	def messages = messagesIterator.toVector
+	def messages = messagesIterator.toOptimizedSeq
 	
 	
 	// IMPLEMENTED  -----------------------

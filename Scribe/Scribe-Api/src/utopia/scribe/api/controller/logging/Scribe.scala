@@ -10,7 +10,7 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.scribe.api.database.access.single.logging.issue.DbIssue
+import utopia.scribe.api.database.access.logging.issue.IssueDb
 import utopia.scribe.api.util.ScribeContext
 import utopia.scribe.api.util.ScribeContext._
 import utopia.scribe.core.controller.listener.MaximumLogLimitReachedListener
@@ -57,7 +57,7 @@ object Scribe
 	  * @param issue The issue to record
 	  */
 	def record(issue: ClientIssue) = {
-		log[Unit] { implicit c => DbIssue.store(issue) } { loggingError =>
+		log[Unit] { implicit c => IssueDb.store(issue) } { loggingError =>
 			backupLogger(loggingError, "Failed to document a client-originated issue")
 			backupLogger(issue.toString)
 		}
@@ -154,7 +154,7 @@ object Scribe
 				limitReachEvent match {
 					// Case: Maximum reached => Logs the warning
 					case Some(event) =>
-						DbIssue.store("Scribe.maximumReached", None,
+						IssueDb.store("Scribe.maximumReached", None,
 							"Maximum number of logging entries was reached. Logging will not be performed anymore.",
 							Critical, Model.empty,
 							Model.from("limit" -> event.limit, "since" -> event.timeSpan.start))
@@ -192,7 +192,7 @@ case class Scribe(context: String, severity: Severity = Severity.default, varian
 	
 	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
 		Scribe.log[Unit] { implicit c =>
-			DbIssue.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
+			IssueDb.store(context, error.flatMap(RecordableError.apply), message, severity, variantDetails, details)
 		} { loggingError =>
 			// If logging fails, logs the original error and the logging failure using the backup logger
 			ScribeContext.backupLogger(error, message)

@@ -54,4 +54,14 @@ case class StoreResult[+A <: HasId[Int]](stored: A, isNew: Boolean = false)
 	
 	override def inserted: Option[A] = if (isNew) Some(stored) else None
 	override def existingId: Option[Int] = if (isNew) None else Some(id)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	  * @param f A mapping function applied to the stored element
+	  * @tparam B Type of mapping results
+	  * @return A copy of this result with mapped contents
+	  */
+	def map[B <: HasId[Int]](f: A => B) = copy(stored = f(stored))
 }

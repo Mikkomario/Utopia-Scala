@@ -3,6 +3,7 @@
 ## v1.2 (in development)
 ### Breaking changes
 - Removed a number of functions from the **ScribeLike** trait, somewhat limiting the interface usage options
+- Some **RecordableError** functions now yield **IndexedSeq** instead of **Vector**
 ### Deprecations
 - Deprecated **Stored**, **StoredFromModelFactory** and **StoredModelConvertible**
 ### New features

@@ -102,11 +102,11 @@ object RelativePoint
 		
 		override def map(f: Point => Point): RelativePoint = current match {
 			case Some(cached) => cached.map(f)
-			case None => new LazyRelativePoint(lazyRelative.mapCurrent(f), lazyAbsolute.mapCurrent(f))
+			case None => new LazyRelativePoint(lazyRelative.lightMap(f), lazyAbsolute.lightMap(f))
 		}
 		override def mapRelative(f: Point => Point): RelativePoint = current match {
 			case Some(cached) => cached.mapRelative(f)
-			case None => new LazyRelativePoint(lazyRelative.mapCurrent(f), lazyAbsolute)
+			case None => new LazyRelativePoint(lazyRelative.lightMap(f), lazyAbsolute)
 		}
 	}
 }

@@ -8,7 +8,7 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.caching.{Lazy, LazyWrapper}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
 object Fixed
@@ -34,7 +34,7 @@ object Fixed
 	  * @tparam A Type of the wrapped value
 	  * @return A fixed pointer that wraps the specified value, but initializes itself lazily
 	  */
-	def lazily[A](value: => A): LazilyFixed[A] = new LazilyFixed[A](value)
+	def lazily[A](value: => A): LazilyFixed[A] = LazilyFixed[A](value)
 	
 	
 	// NESTED   ------------------------
@@ -70,29 +70,31 @@ sealed abstract class Fixed[+A] extends Changing[A] with EqualsBy
 	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = other.map { f(value, _) }
 }
 
+object LazilyFixed
+{
+	/**
+	  * @param get A function that yields the lazily acquired value
+	  * @tparam A Type of value to acquire
+	  * @return A lazily initialized fixed pointer
+	  */
+	def apply[A](get: => A) = new LazilyFixed[A](Lazy(get))
+}
 /**
   * A pointer that initializes its value lazily, and never changes afterwards
-  * @param get A function for initializing the wrapped value
+  * @param wrapped The wrapped lazy container
   * @tparam A Type of the wrapped fixed value
   */
-sealed class LazilyFixed[+A](get: => A) extends Fixed[A] with Lazy[A]
+sealed case class LazilyFixed[+A] private(wrapped: Lazy[A]) extends Fixed[A] with LazyWrapper[A]
 {
-	// ATTRIBUTES   --------------------
-	
-	private val wrapped = Lazy(get)
-	
-	
 	// IMPLEMENTED  --------------------
-	
-	override def value: A = wrapped.value
-	override def current: Option[A] = wrapped.current
 	
 	override def toString = current match {
 		case Some(value) => s"Always.lazily($value)"
 		case None => "Always.lazily(<unitialized>)"
 	}
 	
-	override def map[B](f: A => B) = new LazilyFixed[B](f(value))
+	override def map[B](f: A => B) = new LazilyFixed[B](wrapped.map(f))
+	override def lightMap[B](f: A => B) = new LazilyFixed[B](wrapped.lightMap(f))
 }
 
 /**
