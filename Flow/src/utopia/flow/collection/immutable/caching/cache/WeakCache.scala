@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.collection.CollectionExtensions._
+import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable
 import scala.ref.WeakReference
 
@@ -37,23 +37,21 @@ object WeakCache
   * A [[Cache]] implementation that weakly references both keys and values
   * @author Mikko Hilpinen
   * @since 01.10.2024, v2.5
-  * @see [[WeakValuesCache]]
+  * @see [[WeakValuesCache]], if you only want the values to be weakly referenced
   */
-class WeakCache[K, V <: AnyRef](f: K => V) extends Cache[K, V]
+class WeakCache[-K, +V <: AnyRef](f: K => V) extends WeakValuesCache[K, V]
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val cache = new mutable.WeakHashMap[K, WeakReference[V]]()
+	override protected val refs: mutable.WeakHashMap[K, WeakReference[V]] @uncheckedVariance =
+		new mutable.WeakHashMap[K, WeakReference[V]]()
 	
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def cachedValues: Iterable[V] = cache.valuesIterator.flatMap { _.get }.caching
+	override protected def cachedValueRefsIterator: Iterator[WeakReference[V]] = refs.valuesIterator
 	
-	override def cached(key: K): Option[V] = cache.get(key).flatMap { _.get }
-	override def apply(key: K): V = cached(key).getOrElse {
-		val value = f(key)
-		cache += (key -> WeakReference(value))
-		value
-	}
+	override protected def cachedRefFor(key: K): Option[WeakReference[V]] = refs.get(key)
+	
+	override protected def request(key: K): V = f(key)
 }

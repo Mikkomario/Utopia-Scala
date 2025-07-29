@@ -21,6 +21,22 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
+trait AcceptsTimedTasks
+{
+	// ABSTRACT -------------------------------
+	
+	/**
+	  * Adds a new timed task
+	  * @param task A task to add to the performed tasks
+	  */
+	def +=(task: TimedTask): Unit
+	/**
+	  * Adds new timed tasks
+	  * @param tasks Tasks to add to the performed tasks
+	  */
+	def ++=(tasks: IterableOnce[TimedTask]): Unit
+}
+
 /**
   * A process which completes a set of timed tasks, which may be repeated
   * @author Mikko Hilpinen
@@ -29,7 +45,7 @@ import scala.util.{Failure, Success, Try}
 class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
                  clearTasksOnStop: Boolean = false)
                 (implicit exc: ExecutionContext, logger: Logger)
-	extends Process(waitLock, Some(shutdownReaction)) with MaybeEmpty[TimedTasks]
+	extends Process(waitLock, Some(shutdownReaction)) with MaybeEmpty[TimedTasks] with AcceptsTimedTasks
 {
 	// ATTRIBUTES   ----------------------------
 	
@@ -54,6 +70,14 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	}
 	
 	
+	// COMPUTED --------------------------------
+	
+	/**
+	  * @return An interface to these tasks, which only allows adding new tasks
+	  */
+	def builder: AcceptsTimedTasks = AcceptInterface
+	
+	
 	// IMPLEMENTED  ----------------------------
 	
 	override def self: TimedTasks = this
@@ -62,6 +86,27 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	
 	// This set of tasks is considered empty if none of the scheduled tasks specify a run time
 	override def isEmpty: Boolean = queue.value.forall { _._1.value.isEmpty }
+	
+	/**
+	  * Adds a new timed task. Restarts this process if it had completed already.
+	  * Note: Doesn't start this process if this process has not yet started.
+	  * @param task A task to add to the performed tasks
+	  */
+	override def +=(task: TimedTask): Unit =
+		addCancellableAsync(Fixed(Some(task.firstRunTime))) { task.run() }
+	/**
+	  * Adds new timed tasks. Restarts this process if it had completed already.
+	  * Note: Doesn't start this process if this process has not yet started.
+	  * @param tasks Tasks to add to the performed tasks
+	  */
+	override def ++=(tasks: IterableOnce[TimedTask]): Unit = {
+		val iter = tasks.iterator
+		if (iter.hasNext) {
+			iter.foreach { t => _addTask(Fixed(Some(t.firstRunTime)), () => t.run()) }
+			// Restarts if necessary (but not if broken)
+			restartIfCompleted()
+		}
+	}
 	
 	override protected def runOnce() = {
 		// Performs the next task in the ordered loops (unless empty)
@@ -153,27 +198,6 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	def add(time: Instant)(task: => Instant) = addCompleting(time) { Some(task) }
 	
 	/**
-	  * Adds a new timed task. Restarts this process if it had completed already.
-	  * Note: Doesn't start this process if this process has not yet started.
-	  * @param task A task to add to the performed tasks
-	  */
-	def +=(task: TimedTask): Unit =
-		addCancellableAsync(Fixed(Some(task.firstRunTime))) { task.run() }
-	/**
-	  * Adds new timed tasks. Restarts this process if it had completed already.
-	  * Note: Doesn't start this process if this process has not yet started.
-	  * @param tasks Tasks to add to the performed tasks
-	  */
-	def ++=(tasks: IterableOnce[TimedTask]): Unit = {
-		val iter = tasks.iterator
-		if (iter.hasNext) {
-			iter.foreach { t => _addTask(Fixed(Some(t.firstRunTime)), () => t.run()) }
-			// Restarts if necessary (but not if broken)
-			restartIfCompleted()
-		}
-	}
-	
-	/**
 	  * Adds a new task. Restarts this process if it had completed. The specified task is only run once.
 	  * @param time Time when the task should be run
 	  * @param task Task to run
@@ -257,5 +281,14 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	private def restartIfCompleted() = {
 		if (state == Completed)
 			runAsync()
+	}
+	
+	
+	// NESTED   -------------------------
+	
+	private object AcceptInterface extends AcceptsTimedTasks
+	{
+		override def +=(task: TimedTask): Unit = TimedTasks.this += task
+		override def ++=(tasks: IterableOnce[TimedTask]): Unit = TimedTasks.this ++= tasks
 	}
 }

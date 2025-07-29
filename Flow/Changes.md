@@ -35,9 +35,15 @@
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **String** (**StringExtensions**)
   - Added `.notContaining(String)` and `.notContainingAnyOf(IterableOnce)`
+- **TimedTasks**
+  - Added `.builder`, which yields **AcceptsTimedTasks**, providing an interface for adding new tasks, 
+    without allowing other actions such as `runAsync()` or `stop() `
 - **TryCatch**
   - Added `.isPartialFailure`
   - Added `.toEither`
+- **WeakValuesCache**
+  - Added `.prune()`, which removes keys for released values
+    - This also affects **WeakCache** through inheritance
 ### Other changes
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
@@ -50,6 +56,7 @@
 - When dividing collections containing **Try** (using **TryExtensions**), 
   the resulting collections are now **IndexedSeq** instead of **Vector**.
 - Modified `toString` implementations of most **Changing** implementations
+- Converted **WeakValuesCache** into a trait and refactored it; Also, **WeakCache** now extends **WeakValuesCache**.
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

@@ -1,5 +1,8 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.8 (in development)
+New build supporting **Flow v2.7**
+
 ## v1.0.7 - 26.05.2025
 This update enables **JsonBunny** to become the default **JsonParser** (for **Value**s) in **Flow**.
 ### Other changes
