@@ -40,15 +40,13 @@ class LazyFuture[A](generator: ExecutionContext => Future[A])
 	  * @param executionContext An implicit execution context. Used only when requesting for a new value.
 	  * @return Future of the eventual results
 	  */
-	def value(implicit executionContext: ExecutionContext) = cached match
-	{
+	def value(implicit executionContext: ExecutionContext) = cached match {
 		case Some(v) => v
 		case None =>
 			val newFuture = generator(executionContext)
 			cached = Some(newFuture)
 			newFuture
 	}
-	
 	/**
 	  * @return Currently cached results. None if the item hasn't been requested or received yet.
 	  */

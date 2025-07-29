@@ -5,6 +5,8 @@
 - Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
   with new classes with these names
   - These also affect **Quarter** and **YearlyDateRange**
+- **Lazy**`.flatMap(...)` now yields **Lazy** instead of **LazySeq**
+  - The previous implementation is available as `.mapToSeq(...)`
 - **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
@@ -13,8 +15,11 @@
 - Bugfix to `OptimizedIndexedSeq.concat(...)`, which would previously yield wrong-sized collections sometimes
 - Under certain conditions, **OptimizedMultiMergeMirror** 
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
+### Deprecations
+- Renamed **Lazy**`.mapCurrent(...)` to `.lightMap(...) `
 ### New features
 - Added builder for **IntSet**s
+- Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy** and **LazyWrapper**
 ### New methods
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
@@ -31,6 +36,10 @@
   - Added `.mostCommonEntry`, `.mostCommonEntryOption` and `.mostCommonEntries`
 - **Iterator** (**CollectionExtensions**)
   - Added `.groupMapReduce(...)`
+- **Lazy**
+  - Added `.lightMap(...)`
+  - Added `.or(...)` and `||`
+  - Added `.flatten` for deep **Lazy** containers
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **String** (**StringExtensions**)
@@ -49,6 +58,7 @@
 - **UncertainBoolean** now extends **ValueConvertible**
 - Optimized `IntSet.from(IterableOnce)` implementation
 - Added new `++` and `--` implementations to **IntSet**
+- Rewrote **Lazy**`.mapCurrent` implementation
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**
