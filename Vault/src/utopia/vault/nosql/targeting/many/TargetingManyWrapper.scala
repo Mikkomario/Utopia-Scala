@@ -1,7 +1,7 @@
 package utopia.vault.nosql.targeting.many
 
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.targeting.TargetingWrapper
@@ -36,6 +36,9 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +
 	
 	override def apply(end: End, ordering: Option[OrderBy], filter: Option[Condition]) =
 		wrapUniqueTarget(wrapped(end, ordering, filter))
+	
+	override def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value =
+		wrapped(column, extreme)
 	
 	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =

@@ -2,6 +2,8 @@ package utopia.vault.nosql.targeting.columns
 
 import utopia.flow.collection.immutable.IntSet
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
@@ -112,6 +114,29 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	
 	/**
 	  * @param connection Implicit DB connection
+	  * @return The smallest accessible value
+	  */
+	@throws[NoSuchElementException]("If value-mapping yielded 0 values")
+	def min(implicit connection: Connection) = apply(Min)
+	/**
+	  * @param connection Implicit DB connection
+	  * @return The largest accessible value
+	  */
+	@throws[NoSuchElementException]("If value-mapping yielded 0 values")
+	def max(implicit connection: Connection) = apply(Max)
+	/**
+	  * @param connection Implicit DB connection
+	  * @return The smallest accessible value. None if value-mapping didn't yield any values.
+	  */
+	def minOption(implicit connection: Connection) = find(Min)
+	/**
+	  * @param connection Implicit DB connection
+	  * @return The largest accessible value. None if value-mapping didn't yield any values.
+	  */
+	def maxOption(implicit connection: Connection) = find(Max)
+	
+	/**
+	  * @param connection Implicit DB connection
 	  * @return Distinct accessible values of this column
 	  */
 	def distinct(implicit connection: Connection) = parse(access(column, distinct = true))
@@ -146,6 +171,35 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	
 	
 	// OTHER    -----------------
+	
+	/**
+	  * @param extreme Targeted extreme
+	  * @param connection Implicit DB connection
+	  * @return The most extreme accessible value
+	  */
+	@throws[NoSuchElementException]("If value-mapping yielded 0 values")
+	def apply(extreme: Extreme)(implicit connection: Connection) = {
+		val value = access(column, extreme)
+		fromValue match {
+			case Left(flatMap) =>
+				flatMap(value).iterator.nextOption().getOrElse { throw new NoSuchElementException(
+					s"No $extreme value could be extracted from ${ value.description }") }
+			case Right(map) => map(value)
+		}
+	}
+	/**
+	  * @param extreme Targeted extreme
+	  * @param connection Implicit DB connection
+	  * @return The most extreme accessible value.
+	  *         None if value-mapping didn't yield any values.
+	  */
+	def find(extreme: Extreme)(implicit connection: Connection) = {
+		val value = access(column, extreme)
+		fromValue match {
+			case Left(flatMap) => flatMap(value).iterator.nextOption()
+			case Right(map) => Some(map(value))
+		}
+	}
 	
 	/**
 	  * Streams accessible values of this column

@@ -2,6 +2,8 @@ package utopia.vault.nosql.targeting.columns
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 
@@ -13,6 +15,15 @@ import utopia.vault.model.immutable.Column
 trait AccessManyColumns extends AccessColumns[Seq[Value]]
 {
 	// ABSTRACT -------------------------------
+	
+	/**
+	  * Accesses the smallest or largest accessible column value
+	  * @param column Targeted column
+	  * @param extreme Targeted extreme
+	  * @param connection Implicit DB connection
+	  * @return The most 'extreme' accessible 'column' value
+	  */
+	def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value
 	
 	/**
 	  * Accesses values of a single column in a streamed fashion
@@ -39,6 +50,19 @@ trait AccessManyColumns extends AccessColumns[Seq[Value]]
 	
 	
 	// OTHER    -----------------------------
+	
+	/**
+	  * @param column Targeted column
+	  * @param connection Implicit DB connection
+	  * @return The smallest accessible value of that column
+	  */
+	def min(column: Column)(implicit connection: Connection) = apply(column, Min)
+	/**
+	  * @param column Targeted column
+	  * @param connection Implicit DB connection
+	  * @return The largest accessible value of that column
+	  */
+	def max(column: Column)(implicit connection: Connection) = apply(column, Max)
 	
 	/**
 	  * Accesses column values in a streamed fashion

@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v1.22 (in development)
+## v2.0 (in development)
 ### Breaking changes
 - Moved the following classes to a separate module package: utopia.vault.store:
   - **HasId**, **FromIdFactory**, **EqualsById**

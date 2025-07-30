@@ -3,14 +3,15 @@ package utopia.vault.nosql.targeting.many
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.Column
 import utopia.vault.model.mutable.ResultStream
-import utopia.vault.model.template.Joinable
-import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.targeting.one.TargetingOne
-import utopia.vault.sql.{Condition, OrderBy, Select, SqlSegment, Update, Where}
+import utopia.vault.sql.OrderDirection.{Ascending, Descending}
+import utopia.vault.sql._
 
 /**
   * An interface used for accessing multiple items with each search query
@@ -78,6 +79,23 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 		pullManyWith(Select.distinctIf(target, column, distinct)) { _.rowValuesIterator.toOptimizedSeq }
 	override def apply(columns: Seq[Column])(implicit connection: Connection) =
 		pullManyWith(Select(target, columns)) { _.rowsIterator.map { row => columns.map(row.apply) }.toOptimizedSeq }
+	
+	override def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value = {
+		val condition = appliedCondition
+		// Case: No rows may be targeted => Skips the DB interaction
+		if (condition.exists { _.isAlwaysFalse })
+			Value.empty
+		else {
+			// Determines the ordering direction
+			val direction = extreme match {
+				case Max => Descending
+				case Min => Ascending
+			}
+			// Pulls the most extreme accessible column value from the DB
+			connection.stream(Select(target, column) + condition.map(Where.apply) +
+				OrderBy(column, direction) + Limit(1)) { _.nextValue }
+		}
+	}
 	
 	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =
