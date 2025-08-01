@@ -191,15 +191,15 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	  * @param extreme Targeted extreme
 	  * @param connection Implicit DB connection
 	  * @return The most extreme accessible value.
-	  *         None if value-mapping didn't yield any values.
+	  *         None if no values were accessible, or if value-mapping didn't yield any values.
 	  */
-	def find(extreme: Extreme)(implicit connection: Connection) = {
-		val value = access(column, extreme)
-		fromValue match {
-			case Left(flatMap) => flatMap(value).iterator.nextOption()
-			case Right(map) => Some(map(value))
+	def find(extreme: Extreme)(implicit connection: Connection) =
+		access(column, extreme).notEmpty.flatMap { value =>
+			fromValue match {
+				case Left(flatMap) => flatMap(value).iterator.nextOption()
+				case Right(map) => Some(map(value))
+			}
 		}
-	}
 	
 	/**
 	  * Streams accessible values of this column

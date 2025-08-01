@@ -2,7 +2,8 @@ package utopia.logos.database.storable.text
 
 import utopia.logos.model.factory.text.TextPlacementFactory
 import utopia.vault.model.immutable.Storable
-import utopia.vault.model.template.{FromIdFactory, HasIdProperty}
+import utopia.vault.model.template.HasIdProperty
+import utopia.vault.store.FromIdFactory
 import utopia.vault.nosql.storable.StorableFactory
 
 /**

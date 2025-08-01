@@ -114,6 +114,31 @@ object CollectionExtensions
 		// OTHER    ---------------------------
 		
 		/**
+		 * Takes the first n items of this collection,
+		 * until a specified count of condition-fulfilling items has been found.
+		 * @param count Number of items that satisfy 'f' to target
+		 * @param f A function that determines whether an item should count towards 'count'
+		 * @param bf An implicit build-from for the resulting collection
+		 * @tparam To Type of the resulting collection
+		 * @return A collection that contains the first elements of this collection,
+		 *         including up to 'count' items that satisfy 'f'.
+		 *
+		 *         Note: May also include items which didn't satisfy 'f'.
+		 */
+		def takeCount[To](count: Int)(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) = {
+			if (count <= 0)
+				bf.fromSpecific(coll)(Empty)
+			else {
+				var encountered = 0
+				bf.fromSpecific(coll)(ops.iterator.takeTo { item =>
+					if (f(item))
+						encountered += 1
+					encountered >= count
+				})
+			}
+		}
+		
+		/**
 		  * Splits this collection into a number of smaller pieces. Preserves order.
 		  * @param maxLength Maximum length of each segment
 		  * @param buildFrom A build from (implicit)
