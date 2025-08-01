@@ -22,9 +22,17 @@ object ReplyParseUtils
 	  */
 	def separateThinkFrom(fullText: String) = {
 		val startIndex = fullText.indexOf(thinkBlockStart)
-		// Case: No <think> block present
-		if (startIndex < 0)
-			fullText -> ""
+		// Case: No (complete) <think> block present => Checks whether a partial block may be found
+		if (startIndex < 0) {
+			val endIndex = fullText.indexOf(thinkBlockEnd)
+			if (endIndex < 0)
+				fullText -> ""
+			else {
+				val think = fullText.take(endIndex).trim
+				val text = fullText.drop(endIndex + thinkBlockEnd.length).trim
+				text -> think
+			}
+		}
 		// Case: <think> block found => Separates its contents from the rest of the answer
 		else {
 			val firstThinkIndex = startIndex + thinkBlockStart.length

@@ -38,12 +38,12 @@ object ErrorDb
 		val bottomToTop = error.bottomToTop
 		val errorsIterator = bottomToTop.iterator
 		OptionsIterator
-			.iterate(Some(store(errorsIterator.next()))) { cause =>
-				errorsIterator.nextOption().map { error => store(error, Some(cause), cause.isNew) }
+			.iterate(Some(_store(errorsIterator.next()))) { cause =>
+				errorsIterator.nextOption().map { error => _store(error, Some(cause), cause.isNew) }
 			}
 			.last
 	}
-	private def store(error: RecordableError, cause: Option[ErrorRecordWithStackTrace] = None,
+	private def _store(error: RecordableError, cause: Option[ErrorRecordWithStackTrace] = None,
 	                  assumeNewCause: Boolean = false)
 	                 (implicit connection: Connection): StoreResult[ErrorRecordWithStackTrace] =
 	{
