@@ -6,8 +6,9 @@ import utopia.flow.generic.model.enumeration.ConversionReliability
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, LocalDateTimeType, StringType}
-import utopia.flow.time.Today
+import utopia.flow.time.Month.{August, February}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Today, Year}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
@@ -18,6 +19,8 @@ import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
  */
 object DataTypeTest extends App
 {
+	assert("01".toInt == 1)
+	
 	val testNode = new GraphNode[String, Int]("Test1")
 	val testNode2 = new GraphNode[String, Int]("Test2")
 	val testNode3 = new GraphNode[String, Int]("Test3")
@@ -154,6 +157,13 @@ object DataTypeTest extends App
 	// NB: This test doesn't resolve on every time zone
 	assert("2021-01-01T12:04:02Z".getLocalDate == LocalDate.of(2021, 1, 1), "2021-01-01T12:04:02Z".getLocalDate)
 	assert("04/15/2024".getLocalDate == LocalDate.of(2024, 4, 15))
+	
+	assert("1920".getYear == Year(1920))
+	assert("Feb".getMonth == February)
+	assert(8.getMonth == August)
+	assert("01.01.2021".getYear == Year(2021))
+	assert("01.02.2021".getMonth == February)
+	assert("01.02.2021".getYearMonth == Year(2021)/February)
 	
 	println("Success")
 }

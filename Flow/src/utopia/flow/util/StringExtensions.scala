@@ -245,6 +245,21 @@ object StringExtensions
 		def endsWithIgnoreCase(suffix: String) = s.toLowerCase.endsWith(suffix.toLowerCase)
 		
 		/**
+		  * If this string is shorter than the specified length, prepends it with 'elem' until it reaches that length.
+		  * E.g. "123".prependTo(4, '0') would yield "01234".
+		  * @param length Target (minimum) length
+		  * @param elem The character to prepend to this string, if appropriate (call-by-name)
+		  * @return This string prepended to at least 'length'
+		  */
+		def prependTo(length: Int, elem: => Char) = {
+			val prependCount = length - s.length
+			if (prependCount <= 0)
+				s
+			else
+				s"${ elem.toString * prependCount }$s"
+		}
+		
+		/**
 		  * @param prefix A prefix with which the resulting string will start
 		  * @param enablePartialReplacement Whether the prefix and this string may partially overlap, causing
 		  *                                 only a portion of the prefix to be added.

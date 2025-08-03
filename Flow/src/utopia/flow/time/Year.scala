@@ -1,5 +1,8 @@
 package utopia.flow.time
 
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.YearType
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.combine.{Combinable, Subtractable}
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.ordering.SelfComparable
@@ -50,7 +53,7 @@ object Year
  */
 case class Year(value: Int)
 	extends SelfComparable[Year] with Combinable[Int, Year] with Subtractable[Int, Year]
-		with Reversible[Year] with Steppable[Year]
+		with Reversible[Year] with Steppable[Year] with ValueConvertible
 {
 	// COMPUTED ------------------------------
 	
@@ -98,6 +101,7 @@ case class Year(value: Int)
 	override def unary_- : Year = Year(-value)
 	
 	override def toString = value.toString
+	override def toValue: Value = new Value(Some(this), YearType)
 	
 	override def +(other: Int): Year = Year(value + other)
 	override def -(years: Int) = Year(value - years)

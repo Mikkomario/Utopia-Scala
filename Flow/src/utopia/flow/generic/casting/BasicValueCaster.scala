@@ -1,17 +1,16 @@
 package utopia.flow.generic.casting
 
-import utopia.flow.collection.immutable.Pair
-import ValueConversions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
+import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
+import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.string.Regex
-import utopia.flow.time.{Days, Today}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Days, Month, Today, Year, YearMonth}
 import utopia.flow.util.StringExtensions._
 
 import java.time.format.DateTimeFormatter
@@ -32,97 +31,125 @@ object BasicValueCaster extends ValueCaster
 	private lazy val supportedLocalDateFormats = Vector(
 		DateTimeFormatter.ISO_LOCAL_DATE,
 		DateTimeFormatter.ofPattern("dd.MM.uuuu"),
-		DateTimeFormatter.ofPattern("MM/dd/uuuu"))
+		DateTimeFormatter.ofPattern("MM/dd/uuuu")
+	)
 	private lazy val supportedLocalDateTimeFormats = Vector(
 		DateTimeFormatter.ISO_LOCAL_DATE_TIME,
 		DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm:ss"),
 		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm:ss"),
 		DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm"),
-		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm"))
+		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm")
+	)
 	private lazy val dateTimeSplitRegex = Regex("T") || Regex.whiteSpace
 	
 	override lazy val conversions = Set(
 		// Any type can be converted to a string using .toString, although some conversions may be considered more
 		// plausible
 		Conversion(AnyType, StringType, DataLoss),
-		immutable.Conversion(IntType, StringType, ContextLoss),
-		immutable.Conversion(DoubleType, StringType, ContextLoss),
-		immutable.Conversion(LongType, StringType, ContextLoss),
-		immutable.Conversion(InstantType, StringType, ContextLoss),
-		immutable.Conversion(ModelType, StringType, ContextLoss),
+		Conversion(IntType, StringType, ContextLoss),
+		Conversion(DoubleType, StringType, ContextLoss),
+		Conversion(LongType, StringType, ContextLoss),
+		Conversion(InstantType, StringType, ContextLoss),
+		Conversion(MonthType, StringType, ContextLoss),
+		Conversion(ModelType, StringType, ContextLoss),
 		// Conversions to Int
-		immutable.Conversion(DoubleType, IntType, DataLoss),
-		immutable.Conversion(LongType, IntType, DataLoss),
-		immutable.Conversion(FloatType, IntType, DataLoss),
-		immutable.Conversion(BooleanType, IntType, ContextLoss),
-		immutable.Conversion(DaysType, IntType, ContextLoss),
-		immutable.Conversion(StringType, IntType, Dangerous),
+		Conversion(DoubleType, IntType, DataLoss),
+		Conversion(LongType, IntType, DataLoss),
+		Conversion(FloatType, IntType, DataLoss),
+		Conversion(BooleanType, IntType, ContextLoss),
+		Conversion(DaysType, IntType, ContextLoss),
+		Conversion(YearType, IntType, ContextLoss),
+		Conversion(MonthType, IntType, ContextLoss),
+		Conversion(StringType, IntType, Dangerous),
 		// Conversions to Double
-		immutable.Conversion(IntType, DoubleType, Perfect),
-		immutable.Conversion(FloatType, DoubleType, Perfect),
-		immutable.Conversion(LongType, DoubleType, Perfect),
-		immutable.Conversion(DurationType, DoubleType, ContextLoss),
-		immutable.Conversion(StringType, DoubleType, Dangerous),
+		Conversion(IntType, DoubleType, Perfect),
+		Conversion(FloatType, DoubleType, Perfect),
+		Conversion(LongType, DoubleType, Perfect),
+		Conversion(DurationType, DoubleType, ContextLoss),
+		Conversion(StringType, DoubleType, Dangerous),
 		// Conversions to Float
-		immutable.Conversion(IntType, FloatType, Perfect),
-		immutable.Conversion(DoubleType, FloatType, DataLoss),
-		immutable.Conversion(LongType, FloatType, DataLoss),
-		immutable.Conversion(StringType, FloatType, Dangerous),
+		Conversion(IntType, FloatType, Perfect),
+		Conversion(DoubleType, FloatType, DataLoss),
+		Conversion(LongType, FloatType, DataLoss),
+		Conversion(StringType, FloatType, Dangerous),
 		// Conversions to Long
-		immutable.Conversion(IntType, LongType, Perfect),
-		immutable.Conversion(DoubleType, LongType, DataLoss),
-		immutable.Conversion(FloatType, LongType, DataLoss),
-		immutable.Conversion(InstantType, LongType, DataLoss),
-		immutable.Conversion(DurationType, LongType, ContextLoss),
-		immutable.Conversion(DaysType, LongType, ContextLoss),
-		immutable.Conversion(StringType, LongType, Dangerous),
+		Conversion(IntType, LongType, Perfect),
+		Conversion(DoubleType, LongType, DataLoss),
+		Conversion(FloatType, LongType, DataLoss),
+		Conversion(InstantType, LongType, DataLoss),
+		Conversion(DurationType, LongType, ContextLoss),
+		Conversion(DaysType, LongType, ContextLoss),
+		Conversion(StringType, LongType, Dangerous),
 		// Conversions to Boolean
-		immutable.Conversion(IntType, BooleanType, MeaningLoss),
-		immutable.Conversion(StringType, BooleanType, Dangerous),
+		Conversion(IntType, BooleanType, MeaningLoss),
+		Conversion(StringType, BooleanType, Dangerous),
 		// Conversions to Instant
-		immutable.Conversion(LongType, InstantType, Perfect),
-		immutable.Conversion(LocalDateTimeType, InstantType, Perfect),
-		immutable.Conversion(DurationType, InstantType, MeaningLoss),
-		immutable.Conversion(DaysType, InstantType, MeaningLoss),
-		immutable.Conversion(StringType, InstantType, Dangerous),
+		Conversion(LongType, InstantType, Perfect),
+		Conversion(LocalDateTimeType, InstantType, Perfect),
+		Conversion(DurationType, InstantType, MeaningLoss),
+		Conversion(DaysType, InstantType, MeaningLoss),
+		Conversion(StringType, InstantType, Dangerous),
 		// Conversions to LocalDate
-		immutable.Conversion(LocalDateTimeType, LocalDateType, DataLoss),
-		immutable.Conversion(DaysType, LocalDateType, MeaningLoss),
-		immutable.Conversion(StringType, LocalDateType, Dangerous),
+		Conversion(LocalDateTimeType, LocalDateType, DataLoss),
+		Conversion(DaysType, LocalDateType, MeaningLoss),
+		Conversion(YearMonthType, LocalDateType, ContextLoss),
+		Conversion(YearType, LocalDateType, MeaningLoss),
+		Conversion(StringType, LocalDateType, Dangerous),
 		// Conversions to LocalTime
-		immutable.Conversion(LocalDateTimeType, LocalTimeType, DataLoss),
-		immutable.Conversion(DurationType, LocalTimeType, MeaningLoss),
-		immutable.Conversion(StringType, LocalTimeType, Dangerous),
+		Conversion(LocalDateTimeType, LocalTimeType, DataLoss),
+		Conversion(DurationType, LocalTimeType, MeaningLoss),
+		Conversion(StringType, LocalTimeType, Dangerous),
 		// Conversions to LocalDateTime
-		immutable.Conversion(InstantType, LocalDateTimeType, DataLoss),
-		immutable.Conversion(LocalDateType, LocalDateTimeType, Perfect),
-		immutable.Conversion(LocalTimeType, LocalDateTimeType, MeaningLoss),
-		immutable.Conversion(StringType, LocalDateTimeType, Dangerous),
-		immutable.Conversion(PairType, LocalDateTimeType, Dangerous),
+		Conversion(InstantType, LocalDateTimeType, DataLoss),
+		Conversion(LocalDateType, LocalDateTimeType, Perfect),
+		Conversion(LocalTimeType, LocalDateTimeType, MeaningLoss),
+		Conversion(StringType, LocalDateTimeType, Dangerous),
+		Conversion(PairType, LocalDateTimeType, Dangerous),
 		// Conversions to Duration
-		immutable.Conversion(DaysType, DurationType, Perfect),
-		immutable.Conversion(LocalTimeType, DurationType, ContextLoss),
-		immutable.Conversion(LongType, DurationType, Perfect),
-		immutable.Conversion(IntType, DurationType, Perfect),
-		immutable.Conversion(DoubleType, DurationType, Perfect),
-		immutable.Conversion(InstantType, DurationType, ContextLoss),
-		immutable.Conversion(ModelType, DurationType, Dangerous),
-		immutable.Conversion(StringType, DurationType, Dangerous),
+		Conversion(DaysType, DurationType, Perfect),
+		Conversion(LocalTimeType, DurationType, ContextLoss),
+		Conversion(LongType, DurationType, Perfect),
+		Conversion(IntType, DurationType, Perfect),
+		Conversion(DoubleType, DurationType, Perfect),
+		Conversion(InstantType, DurationType, ContextLoss),
+		Conversion(ModelType, DurationType, Dangerous),
+		Conversion(StringType, DurationType, Dangerous),
 		// Conversions to Days
-		immutable.Conversion(DurationType, DaysType, DataLoss),
-		immutable.Conversion(IntType, DaysType, Perfect),
-		immutable.Conversion(LocalDateType, DaysType, ContextLoss),
+		Conversion(DurationType, DaysType, DataLoss),
+		Conversion(IntType, DaysType, Perfect),
+		Conversion(LocalDateType, DaysType, ContextLoss),
+		Conversion(MonthType, DaysType, MeaningLoss),
+		Conversion(YearType, DaysType, MeaningLoss),
+		Conversion(YearMonthType, DaysType, MeaningLoss),
+		// Conversions to Year
+		Conversion(StringType, YearType, Dangerous),
+		Conversion(IntType, YearType, Perfect),
+		Conversion(LocalDateType, YearType, DataLoss),
+		Conversion(YearMonthType, YearType, DataLoss),
+		// Conversions to Month
+		Conversion(StringType, MonthType, Dangerous),
+		Conversion(IntType, MonthType, Dangerous),
+		Conversion(LocalDateType, MonthType, DataLoss),
+		Conversion(YearMonthType, MonthType, DataLoss),
+		// Conversions to YearMonth
+		Conversion(StringType, YearMonthType, Dangerous),
+		Conversion(LocalDateType, YearMonthType, DataLoss),
+		Conversion(MonthType, YearMonthType, MeaningLoss),
+		Conversion(PairType, YearMonthType, Dangerous),
+		Conversion(ModelType, YearMonthType, Dangerous),
 		// Conversions to Vector
-		immutable.Conversion(AnyType, VectorType, MeaningLoss),
-		immutable.Conversion(PairType, VectorType, ContextLoss),
+		Conversion(AnyType, VectorType, MeaningLoss),
+		Conversion(PairType, VectorType, ContextLoss),
 		// Conversions to Pair
-		immutable.Conversion(VectorType, PairType, Dangerous),
-		immutable.Conversion(LocalDateTimeType, PairType, ContextLoss),
-		immutable.Conversion(LocalTimeType, PairType, ContextLoss),
-		immutable.Conversion(StringType, PairType, Dangerous),
+		Conversion(VectorType, PairType, Dangerous),
+		Conversion(LocalDateTimeType, PairType, ContextLoss),
+		Conversion(LocalTimeType, PairType, ContextLoss),
+		Conversion(YearMonthType, PairType, ContextLoss),
+		Conversion(StringType, PairType, Dangerous),
 		// Conversions to Model
-		immutable.Conversion(DurationType, ModelType, ContextLoss),
-		immutable.Conversion(StringType, ModelType, Dangerous)
+		Conversion(DurationType, ModelType, ContextLoss),
+		Conversion(StringType, ModelType, Dangerous),
+		Conversion(YearMonthType, ModelType, ContextLoss)
 	)
 	
 	/**
@@ -149,6 +176,9 @@ object BasicValueCaster extends ValueCaster
 			case LocalDateTimeType => localDateTimeOf(value)
 			case DurationType => durationOf(value)
 			case DaysType => daysOf(value)
+			case YearType => yearOf(value)
+			case MonthType => monthOf(value)
+			case YearMonthType => yearMonthOf(value)
 			case VectorType => vectorOf(value)
 			case PairType => pairOf(value)
 			case ModelType => modelOf(value)
@@ -182,6 +212,8 @@ object BasicValueCaster extends ValueCaster
 			case FloatType => Some(value.getFloat.intValue())
 			case BooleanType => Some(if (value.getBoolean) 1 else 0)
 			case DaysType => Some(value.getDays.length)
+			case YearType => Some(value.getYear.value)
+			case MonthType => Some(value.getMonth.value)
 			case StringType => value.string.flatMap { stringToNumber(_) { _.toDouble.toInt } { _.toInt } }
 			case _ => None
 		}
@@ -270,18 +302,9 @@ object BasicValueCaster extends ValueCaster
 		value.dataType match {
 			case LocalDateTimeType => Some(value.getLocalDateTime.toLocalDate)
 			case DaysType => Some(LocalDate.ofEpochDay(value.getDays.length))
-			case StringType =>
-				val str = value.getString
-				supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(str, f) }.toOption }
-					// Backup strategy: Extract the date portion from the input string
-					.orElse {
-						dateTimeSplitRegex.startIndexIteratorIn(str).nextOption().filter { _ > 0 }
-							.flatMap { timeStartIndex =>
-								val datePart = str.take(timeStartIndex)
-								// WET WET
-								supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(datePart, f) }.toOption }
-							}
-					}
+			case YearType => Some(value.getYear.firstDay)
+			case YearMonthType => Some(value.getYearMonth.firstDay)
+			case StringType => stringToDate(value.getString)
 			case _ => None
 		}
 	private def localTimeOf(value: Value): Option[LocalTime] =
@@ -356,6 +379,68 @@ object BasicValueCaster extends ValueCaster
 		case DurationType => Some(Days(value.getDuration.toDays.toInt))
 		case IntType => Some(Days(value.getInt))
 		case LocalDateType => Some(Days(value.getLocalDate.toEpochDay.toInt))
+		case YearType => Some(value.getYear.length)
+		case YearMonthType => Some(value.getYearMonth.length)
+		case MonthType => Some(value.getMonth.length)
+		case _ => None
+	}
+	
+	private def yearOf(value: Value): Option[Year] = value.dataType match {
+		case StringType =>
+			val str = value.getString
+			str.toIntOption match {
+				case Some(int) => Some(Year(int))
+				case None => stringToDate(str).map { _.year }
+			}
+		case IntType => Some(Year(value.getInt))
+		case LocalDateType => Some(value.getLocalDate.year)
+		case YearMonthType => Some(value.getYearMonth.year)
+		case _ => None
+	}
+	private def monthOf(value: Value): Option[Month] = value.dataType match {
+		case IntType => Month.findForValue(value.getInt)
+		case StringType =>
+			val str = value.getString
+			stringToMonth(str).orElse { stringToDate(str).map { _.month } }
+		case LocalDateType => Some(value.getLocalDate.month)
+		case YearMonthType => Some(value.getYearMonth.month)
+		case _ => None
+	}
+	private def yearMonthOf(value: Value): Option[YearMonth] = value.dataType match {
+		case StringType =>
+			val str = value.getString
+			val parts = {
+				if (str.contains('/'))
+					str.split('/').toVector
+				else if (str.contains('.'))
+					str.split('.').toVector
+				else
+					Single(str)
+			}
+			parts.size match {
+				case 1 =>
+					stringToDate(str) match {
+						case Some(date) => Some(date.yearMonth)
+						case None => stringToMonth(str).map { Today.year/_ }
+					}
+				
+				case 2 => stringToMonth(parts.head).flatMap { month => parts(1).toIntOption.map { Year(_)/month } }
+				case _ =>
+					Pair(1, 0).findMap { i => stringToMonth(parts(i)) }.flatMap { month =>
+						parts(2).toIntOption.map { Year(_)/month }
+					}
+			}
+		case LocalDateType => Some(value.getLocalDate.yearMonth)
+		case MonthType => Some(Today.year/value.getMonth)
+		case PairType =>
+			val p = value.getPair
+			p.first.year.flatMap { year => p.second.month.map(year.apply) }.orElse {
+				p.second.year.flatMap { year => p.first.month.map(year.apply) }
+			}
+		case ModelType =>
+			val m = value.getModel
+			m("year", "y").year.flatMap { year => m("month", "mo", "m").month.map(year.apply) }
+			
 		case _ => None
 	}
 	
@@ -381,9 +466,12 @@ object BasicValueCaster extends ValueCaster
 		case LocalTimeType =>
 			val t = value.getLocalTime
 			Some(Pair(t.getHour, t.getMinute))
+		case YearMonthType =>
+			val ym = value.getYearMonth
+			Some(Pair(ym.year, ym.month))
 		case VectorType =>
 			val v = value.getVector
-			if (v.size >= 2) Some(Pair(v.head, v(1))) else None
+			if (v.hasSize >= 2) Some(Pair(v.head, v(1))) else None
 		case StringType =>
 			val s = value.getString
 			val containsComma = s.contains(',')
@@ -422,6 +510,10 @@ object BasicValueCaster extends ValueCaster
 				case None => d.toMillis
 			}
 			Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
+		case YearMonthType =>
+			val ym = value.getYearMonth
+			Some(Model.from("year" -> ym.year, "month" -> ym.month))
+			
 		case StringType => jsonParser.apply(value.getString).toOption.filter { _.isOfType(ModelType) }.map { _.getModel }
 		case _ => None
 	}
@@ -438,6 +530,7 @@ object BasicValueCaster extends ValueCaster
 	private def stringToNumber[N](str: String)(fromDecimal: String => N)(fromIntegral: String => N): Option[N] = {
 		// Removes any leading and trailing spaces and other control characters
 		val cleanStr = str.stripControlCharacters.trim
+		
 		if (cleanStr.isEmpty)
 			None
 		else if (cleanStr.contains(','))
@@ -446,5 +539,21 @@ object BasicValueCaster extends ValueCaster
 			Try { fromDecimal(cleanStr) }.toOption
 		else
 			Try { fromIntegral(cleanStr) }.toOption
+	}
+	
+	private def stringToDate(str: String) =
+		supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(str, f) }.toOption }
+			// Backup strategy: Extract the date portion from the input string
+			.orElse {
+				dateTimeSplitRegex.startIndexIteratorIn(str).nextOption().filter { _ > 0 }
+					.flatMap { timeStartIndex =>
+						val datePart = str.take(timeStartIndex)
+						// WET WET
+						supportedLocalDateFormats.findMap { f => Try { LocalDate.parse(datePart, f) }.toOption }
+					}
+			}
+	private def stringToMonth(str: String) = str.toIntOption match {
+		case Some(int) => Month.findForValue(int)
+		case None => Month.findForName(str)
 	}
 }

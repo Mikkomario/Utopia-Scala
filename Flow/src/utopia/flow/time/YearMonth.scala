@@ -1,10 +1,14 @@
 package utopia.flow.time
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.YearMonthType
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Month.{December, January}
+import utopia.flow.util.StringExtensions._
 
 import java.time.{DateTimeException, LocalDate}
 import scala.language.implicitConversions
@@ -28,7 +32,7 @@ object YearMonth
  * @author Mikko Hilpinen
  * @since 04.06.2025, v2.7
  */
-case class YearMonth(year: Year, month: Month) extends MonthLike[YearMonth]
+case class YearMonth(year: Year, month: Month) extends MonthLike[YearMonth] with ValueConvertible
 {
 	// COMPUTED ----------------------------
 	
@@ -93,6 +97,9 @@ case class YearMonth(year: Year, month: Month) extends MonthLike[YearMonth]
 	
 	override def name = month.name
 	override def length = month.lengthAt(year)
+	
+	override def toString = s"${ month.value.toString.prependTo(2, '0') }/${ year.value }"
+	override def toValue: Value = new Value(Some(this), YearMonthType)
 	
 	override def +(other: Int) = {
 		var year = this.year

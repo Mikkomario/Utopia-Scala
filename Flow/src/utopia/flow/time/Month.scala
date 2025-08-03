@@ -1,5 +1,8 @@
 package utopia.flow.time
 
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.mutable.DataType.MonthType
+import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.sign.Sign
@@ -15,7 +18,7 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 04.06.2025, v2.7
  */
-sealed trait Month extends MonthLike[Month]
+sealed trait Month extends MonthLike[Month] with ValueConvertible
 {
 	// ABSTRACT ----------------------
 	
@@ -62,6 +65,7 @@ sealed trait Month extends MonthLike[Month]
 	override def self = this
 	
 	override def toString = name
+	override def toValue: Value = new Value(Some(this), MonthType)
 	
 	override def +(other: Int) = {
 		val newIndex = (value - 1 + other) % 12
@@ -185,6 +189,25 @@ object Month
 	 */
 	@throws[IndexOutOfBoundsException]("If 'month' is < 1 or > 12")
 	def apply(month: Int) = values(month - 1)
+	
+	/**
+	  * @param value A month value
+	  * @return If the specified value was between 1 and 12, yields the matching month.
+	  *         Otherwise, yields None.
+	  */
+	def findForValue(value: Int) = values.lift(value - 1)
+	/**
+	  * @param name A month name. E.g. "January" or "Jan"
+	  * @return Month that matches the specified name. None if no month matches that name.
+	  */
+	def findForName(name: String) = {
+		if (name.length < 3)
+			None
+		else {
+			val str = name.take(3).toLowerCase.capitalize
+			values.find { _.name.take(3) == str }
+		}
+	}
 	
 	
 	// VALUES   -----------------------

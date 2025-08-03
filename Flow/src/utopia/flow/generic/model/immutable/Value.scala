@@ -4,10 +4,10 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ConversionHandler
 import utopia.flow.parse.json.{JsonConvertible, JsonValueConverter}
-import utopia.flow.time.{Days, Today}
+import utopia.flow.time.{Days, Month, Today, Year, YearMonth}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, PairType, StringType, VectorType}
+import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, MonthType, PairType, StringType, VectorType, YearMonthType, YearType}
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -251,6 +251,9 @@ case class Value(content: Option[Any], dataType: DataType)
     def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
     def duration = objectValue(DurationType).map { _.asInstanceOf[FiniteDuration] }
     def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
+    def year = objectValue(YearType).map { _.asInstanceOf[Year] }
+    def month = objectValue(MonthType).map { _.asInstanceOf[Month] }
+    def yearMonth = objectValue(YearMonthType).map { _.asInstanceOf[YearMonth] }
     def vector = objectValue(VectorType).map { _.asInstanceOf[Vector[Value]]}
     def pair = objectValue(PairType).map { _.asInstanceOf[Pair[Value]] }
     def model = objectValue(ModelType).map { _.asInstanceOf[Model]}
@@ -267,6 +270,9 @@ case class Value(content: Option[Any], dataType: DataType)
     def localDateTimeOr(default: => LocalDateTime = LocalDateTime.now()) = localDateTime.getOrElse(default)
     def durationOr(default: => FiniteDuration = Duration.Zero) = duration.getOrElse(default)
     def daysOr(default: => Days = Days.zero) = days.getOrElse(default)
+    def yearOr(default: => Year = Today.year) = year.getOrElse(default)
+    def monthOr(default: => Month = Today.month) = month.getOrElse(default)
+    def yearMonthOr(default: => YearMonth = Today.yearMonth) = yearMonth.getOrElse(default)
     def vectorOr(default: => Vector[Value] = Vector[Value]()) = vector.getOrElse(default)
     def pairOr(default: => Pair[Value] = Pair.twice(Value.empty)) = pair.getOrElse(default)
     def modelOr(default: => Model = Model.empty) = model.getOrElse(default)
@@ -283,6 +289,9 @@ case class Value(content: Option[Any], dataType: DataType)
     def getLocalDateTime = localDateTimeOr()
     def getDuration = durationOr()
     def getDays = daysOr()
+    def getYear = yearOr()
+    def getMonth = monthOr()
+    def getYearMonth = yearMonthOr()
     def getVector = vectorOr()
     def getPair = pairOr()
     def getModel = modelOr()
@@ -299,6 +308,9 @@ case class Value(content: Option[Any], dataType: DataType)
     def tryLocalDateTime = tryGetNonEmpty(localDateTime)("LocalDateTime")
     def tryDuration = tryGetNonEmpty(duration)("Duration")
     def tryDays = tryGetNonEmpty(days)("Days")
+    def tryYear = tryGetNonEmpty(year)("Year")
+    def tryMonth = tryGetNonEmpty(month)("Month")
+    def tryYearMonth = tryGetNonEmpty(yearMonth)("YearMonth")
     def tryVector = getTry(VectorType) { _.getVector }
     def tryPair = tryGetNonEmpty(pair)("Pair")
     def tryModel = getTry(ModelType) { _.getModel }

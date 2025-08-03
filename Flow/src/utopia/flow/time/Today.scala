@@ -19,7 +19,6 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	// IMPLICIT ----------------------------
 	
 	implicit def currentDate(today: Today.type): LocalDate = today.toLocalDate
-	
 	implicit def extendedDate(today: Today.type): ExtendedLocalDate = today.toLocalDate
 	
 	
@@ -29,6 +28,19 @@ object Today extends ValueConvertible with RichComparable[LocalDate]
 	  * @return Today as a date
 	  */
 	def toLocalDate: LocalDate = LocalDate.now()
+	
+	/**
+	  * @return The current year
+	  */
+	def year: Year = java.time.Year.now()
+	/**
+	  * @return The current month
+	  */
+	def month: Month = toLocalDate.month
+	/**
+	  * @return The current year-month
+	  */
+	def yearMonth: YearMonth = java.time.YearMonth.now()
 	
 	
 	// IMPLEMENTED  ------------------------

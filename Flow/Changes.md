@@ -18,6 +18,7 @@
 ### Deprecations
 - Renamed **Lazy**`.mapCurrent(...)` to `.lightMap(...) `
 ### New features
+- Added **Year**, **YearMonth** and **Month** as generic data types
 - Added builder for **IntSet**s
 - Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy** and **LazyWrapper**
 ### New methods
