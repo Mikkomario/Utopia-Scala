@@ -19,6 +19,8 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{AssignableOnce, SettableFlag}
 import utopia.vault.database.Connection.{GeneratedKeysIterator, StatementRowsIterator, settings}
+import utopia.vault.error.HandleError
+import utopia.vault.model.error.{DBException, NoConnectionException}
 import utopia.vault.model.immutable.{Result, Row, Table}
 import utopia.vault.model.mutable.ResultStream
 import utopia.vault.sql.SqlSegment
@@ -580,7 +582,6 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 	/**
 	  * Performs an SQL query. Buffers the results.
 	  * @param statement Statement to execute.
-	  * @param log Implicit logging implementation.
 	  * @return Acquired result
 	  */
 	@throws[DBException]("If a database exception was encountered")
@@ -866,8 +867,6 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 		connection
 	}
 	
-	// TODO: Consider improving error-handling here.
-	//  The current implementation throws all errors as DbExceptions, matching previously implemented functionality.
 	private def _stream[A](connection: java.sql.Connection, sql: String, values: Seq[Value],
 	                       selectedTables: Iterable[Table] = Empty, returnGeneratedKeys: Boolean = false)
 	                      (f: ResultStream => A) =
@@ -960,7 +959,7 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 					
 					result
 				}
-				// Throws errors encountered during statement preparation and execution,
+				// Handles errors encountered during statement preparation and execution,
 				// As well as those thrown by the specified function
 				.getOrMap { error =>
 					// Includes details about the executed query
@@ -971,7 +970,11 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 						else
 							values.iterator.mkString(", ")
 					}
-					throw new DBException(s"DB query failed.\nSQL: $sql\nValues:[$valuesStr]", error)
+					HandleError.duringDbQuery(
+						new DBException(s"DB query failed.\nSQL: $sql\nValues:[$valuesStr]", error))
+					
+					// If the captured error was not rethrown, handles the situation as if received an empty response
+					f(ResultStream.empty)
 				}
 		}
 	}

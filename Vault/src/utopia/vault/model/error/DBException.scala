@@ -1,4 +1,4 @@
-package utopia.vault.database
+package utopia.vault.model.error
 
 /**
   * Thrown when database interactions fail

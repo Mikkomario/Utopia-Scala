@@ -5,10 +5,10 @@ import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, Triggers}
+import utopia.vault.error.HandleError
 import utopia.vault.model.error.ColumnNotFoundException
 import utopia.vault.model.immutable.TableUpdateEvent.DataInserted
 import utopia.vault.model.immutable.{Result, Table}
-import utopia.vault.util.ErrorHandling
 
 import scala.collection.immutable.HashSet
 
@@ -44,7 +44,7 @@ object Insert
 				}
 			}
 			if (nonMatchingProperties.nonEmpty)
-				ErrorHandling.insertClipPrinciple.handle(new ColumnNotFoundException(
+				HandleError.fromInsertClipping(new ColumnNotFoundException(
 					s"No matching column in table ${table.name} for properties: [${
 						nonMatchingProperties.sorted.mkString(", ")}]. Correct property names are: [${
 						table.columns.map { _.propertyName }.sorted.mkString(", ")}]"))

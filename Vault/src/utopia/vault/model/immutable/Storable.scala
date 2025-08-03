@@ -5,10 +5,11 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property}
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.vault.database.{Connection, DBException}
+import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.And
 import utopia.vault.model.enumeration.ComparisonOperator.Equal
 import utopia.vault.model.enumeration.{BasicCombineOperator, ComparisonOperator}
+import utopia.vault.model.error.DBException
 import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory

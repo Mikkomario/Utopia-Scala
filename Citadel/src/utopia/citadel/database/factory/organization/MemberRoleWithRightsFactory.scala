@@ -1,12 +1,12 @@
 package utopia.citadel.database.factory.organization
 
 import utopia.metropolis.model.combined.organization.MemberRoleWithRights
+import utopia.vault.error.HandleError
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.JoinType
-import utopia.vault.util.ErrorHandling
 
 import scala.util.{Failure, Success}
 
@@ -48,7 +48,7 @@ object MemberRoleWithRightsFactory extends FromResultFactory[MemberRoleWithRight
 			} match {
 				case Success(memberRole) => Some(memberRole)
 				case Failure(exception) =>
-					ErrorHandling.modelParsePrinciple.handle(exception)
+					HandleError.duringRowParsing(exception)
 					None
 			}
 		}

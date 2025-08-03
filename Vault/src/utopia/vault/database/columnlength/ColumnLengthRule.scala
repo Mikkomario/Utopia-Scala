@@ -3,8 +3,9 @@ package utopia.vault.database.columnlength
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.vault.database.ConnectionPool
-import utopia.vault.database.columnlength.ColumnLengthRule.CombiningRule
+import utopia.vault.database.columnlength.ColumnLengthRule.{CombiningRule, OrLogRule}
 import utopia.vault.model.error.MaxLengthExceededException
 import utopia.vault.model.immutable.Column
 
@@ -31,6 +32,16 @@ trait ColumnLengthRule
 	  * @throws Exception May throw an exception if the value is not accepted
 	  */
 	def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value): Value
+	
+	
+	// COMPUTED --------------------------------
+	
+	/**
+	  * @param log Implicit logging implementation to use
+	  * @return A length rule that catches and logs errors thrown by this rule.
+	  *         For nullable columns, converts the values into empty / NULL values.
+	  */
+	def orLog(implicit log: Logger): ColumnLengthRule = new OrLogRule(this, log)
 	
 	
 	// OTHER    --------------------------------
@@ -156,6 +167,21 @@ object ColumnLengthRule
 		{
 			Try { primary(databaseName, column, lengthLimit, proposedValue) }.getOrMap { error =>
 				Try { secondary(databaseName, column, lengthLimit, proposedValue) }.getOrElse { throw error }
+			}
+		}
+	}
+	
+	private class OrLogRule(primary: ColumnLengthRule, log: Logger) extends ColumnLengthRule
+	{
+		override def apply(databaseName: String, column: Column, lengthLimit: ColumnLengthLimit, proposedValue: Value): Value = {
+			// Attempts the primary rule
+			Try { primary(databaseName, column, lengthLimit, proposedValue) }.getOrMap { error =>
+				// If failed, logs the error and either converts into an empty (NULL) value, or rethrows
+				log(error, s"$column couldn't accept: $proposedValue")
+				if (column.allowsNull)
+					Value.empty
+				else
+					throw error
 			}
 		}
 	}

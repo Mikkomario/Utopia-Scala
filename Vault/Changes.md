@@ -12,6 +12,11 @@
 - **Row** no longer contains references to the read **Table**s
 - **Result** and **Row** no longer provide utility functions for accessing table indices
 - Modified **Join** constructor to accept **TableColumn** instead of accepting **Table** and **Column** separately
+- **ErrorHandling**'s handlers are now of type **ErrorHandler** instead of **ErrorHandlingPrinciple**
+- Errors encountered during database query execution are now handled by **HandleError** instead of always rethrown
+- The default error handling method is now to rethrow (previously was to ignore)
+  - Modify `HandleError.default` to alter this
+- Moved **DBException** and **NoConnectionException** to `vault.model.error`
 - **Connection** constructor now requires an implicit **Logger**
   - Does not affect use-cases where **ConnectionPool** is utilized
 - **SqlValueGenerator** now defines a new abstract function: `conversionFrom(Int)`
@@ -36,6 +41,7 @@
   - Renamed `.select` to `.toSelect`
   - Deprecated `.parseIfPresent(Row)` in favor of the new `.tryParse(Row)` implementation
   - In **Result**, deprecated `.parse(FromResultFactory)` and `.parseSingle(FromRowFactory)`
+- Deprecated **ErrorHandling** and **ErrorHandlingPrinciple** in favor of **HandleError** and **ErrorHandler**
 - Deprecated **Deprecatable**, **TimeDeprecatable**, **NullDeprecatable** and **Expiring** in favor of 
   new **Deprecates**, **DeprecatesAfter**, **DeprecatesAfterDefined** and **DeprecatesIfDefined** traits
 - Deprecated **DeletionRule** constructors in favor of new versions which accept **TableColumn**

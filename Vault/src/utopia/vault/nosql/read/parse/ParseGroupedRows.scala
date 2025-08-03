@@ -1,11 +1,11 @@
 package utopia.vault.nosql.read.parse
 
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.vault.error.HandleError
 import utopia.vault.model.immutable.{Column, Row}
 import utopia.vault.model.mutable.ResultStream
 import utopia.vault.model.template.HasTable
-import utopia.vault.util.ErrorHandling
 
 import scala.collection.View
 import scala.util.{Failure, Success, Try}
@@ -72,7 +72,7 @@ trait ParseGroupedRows[+A] extends ParseRows[Seq[A]] with HasTable
 		parseGroup(rows) match {
 			case Success(item) => Some(item)
 			case Failure(error) =>
-				ErrorHandling.modelParsePrinciple.handle(error)
+				HandleError.duringRowParsing(error)
 				None
 		}
 	}
@@ -91,7 +91,7 @@ trait ParseGroupedRows[+A] extends ParseRows[Seq[A]] with HasTable
 	private def parseWithoutIndex(rows: Seq[Row]) = parseGroup(rows) match {
 		case Success(item) => Single(item)
 		case Failure(error) =>
-			ErrorHandling.modelParsePrinciple.handle(error)
+			HandleError.duringRowParsing(error)
 			Empty
 	}
 }

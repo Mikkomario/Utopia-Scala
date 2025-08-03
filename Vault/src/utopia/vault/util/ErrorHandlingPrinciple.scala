@@ -1,6 +1,7 @@
 package utopia.vault.util
 
 import utopia.flow.util.logging.Logger
+import utopia.vault.error.ErrorHandler
 
 import scala.language.implicitConversions
 
@@ -9,15 +10,24 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 18.7.2019, v1.3+
   */
-trait ErrorHandlingPrinciple
+@deprecated("Please use ErrorHandler instead", "v2.0")
+trait ErrorHandlingPrinciple extends ErrorHandler
 {
+	// ABSTRACT --------------------------
+	
 	/**
 	  * Handles the error according to this principle. May throw.
 	  * @param error The error to be handled
 	  */
 	def handle(error: Throwable): Unit
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def apply(error: Throwable): Unit = handle(error)
 }
 
+@deprecated("Please use ErrorHandler instead", "v2.0")
 object ErrorHandlingPrinciple
 {
 	/**

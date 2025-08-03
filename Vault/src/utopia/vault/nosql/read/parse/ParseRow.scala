@@ -1,9 +1,9 @@
 package utopia.vault.nosql.read.parse
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.vault.model.immutable.{Result, Row}
+import utopia.vault.error.HandleError
+import utopia.vault.model.immutable.Row
 import utopia.vault.model.mutable.ResultStream
-import utopia.vault.util.ErrorHandling
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -70,7 +70,7 @@ trait ParseRow[+A] extends ParseRows[Seq[A]]
 				case Success(result) => Some(result)
 				// Case: Parsing failed => Delegates the error to the main error handling interface
 				case Failure(error) =>
-					ErrorHandling.modelParsePrinciple.handle(error)
+					HandleError.duringRowParsing(error)
 					None
 			}
 		// Case: Should skip

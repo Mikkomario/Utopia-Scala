@@ -3,12 +3,12 @@ package utopia.scribe.api.database.factory.logging
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.TryExtensions._
 import utopia.scribe.core.model.combined.logging.IssueInstances
+import utopia.vault.error.HandleError
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.JoinType
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.util.ErrorHandling
 
 /**
   * Used for reading issue data, along with its variants and occurrences
@@ -43,5 +43,5 @@ object IssueInstancesFactory extends FromResultFactory[IssueInstances]
 				val variants = childFactory(result)
 				IssueInstances(issue, variants)
 			}
-		}.toTry.getOrMap { error => ErrorHandling.modelParsePrinciple.handle(error); Empty }
+		}.toTry.getOrMap { error => HandleError.duringRowParsing(error); Empty }
 }

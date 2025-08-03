@@ -10,7 +10,8 @@ import utopia.scribe.api.controller.logging.Scribe
 import utopia.scribe.api.util.ScribeContext
 import utopia.vault.database.{ConnectionPool, Tables}
 import utopia.vault.database.columnlength.ColumnLengthRules
-import utopia.vault.util.{ErrorHandling, ErrorHandlingPrinciple}
+import utopia.vault.error.ErrorHandler.Rethrow
+import utopia.vault.error.HandleError
 
 import scala.concurrent.ExecutionContext
 
@@ -26,7 +27,7 @@ object ScribeTestContext
 	implicit val jsonParser: JsonParser = JsonBunny
 	
 	ScribeContext.setup(exc, cPool, new Tables(cPool))
-	ErrorHandling.defaultPrinciple = ErrorHandlingPrinciple.Throw
+	HandleError.default = Rethrow
 	ColumnLengthRules.loadFrom("Scribe/Scribe-Core/data/length-rules/scribe-length-rules-v0.1.json",
 		"utopia_scribe_db")
 	implicit val scribe: Scribe = Scribe("Test")

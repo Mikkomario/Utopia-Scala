@@ -11,6 +11,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
+import utopia.vault.model.error.NoConnectionException
 
 import java.time.Instant
 import scala.collection.immutable.VectorBuilder

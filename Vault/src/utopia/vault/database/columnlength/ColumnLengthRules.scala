@@ -1,6 +1,5 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.DeepMap
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -27,9 +26,9 @@ object ColumnLengthRules
 	private lazy val ruleSplitRegex = Regex.whiteSpace + Regex("or") + Regex.whiteSpace
 	
 	/**
-	  * The column length rule applied by default (default = throw error if column maximum length is exceeded)
+	  * The column length rule applied by default (default = Throw an error)
 	  */
-	var default = Throw
+	var default: ColumnLengthRule = Throw
 	
 	// Key path is: database name -> table name -> property name
 	private var specifics = DeepMap.empty[String, ColumnLengthRule]

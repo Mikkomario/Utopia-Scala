@@ -9,8 +9,8 @@ import utopia.flow.view.mutable.caching.{ExpiringLazy, RefreshingLazy}
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole
 import utopia.metropolis.model.stored.description.DescriptionRole
 import utopia.vault.database.Connection
+import utopia.vault.error.HandleError
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.util.ErrorHandling
 
 import scala.concurrent.duration.Duration
 
@@ -33,7 +33,7 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 			
 			def _readValues = connectionPool.tryWith { implicit c => super.pull }
 				.getOrMap { error =>
-					ErrorHandling.defaultPrinciple.handle(error)
+					HandleError.default(error)
 					Empty
 				}
 			

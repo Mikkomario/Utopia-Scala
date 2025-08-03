@@ -17,8 +17,7 @@ import utopia.nexus.rest.RequestHandler
 import utopia.nexus.servlet.{ApiLogic, LogicWrappingServlet}
 import utopia.vault.database.columnlength.ColumnLengthRules
 import utopia.vault.database.{Connection, ConnectionPool}
-import utopia.vault.util.ErrorHandling
-import utopia.vault.util.ErrorHandlingPrinciple.Log
+import utopia.vault.error.HandleError
 
 import java.nio.file.Paths
 import javax.servlet.annotation.MultipartConfig
@@ -78,7 +77,7 @@ class ApiServlet extends LogicWrappingServlet
 			logger("Database settings read failed (error below). Continues with no password and database name 'exodus-test'")
 			logger(error.getMessage)
 	}
-	ErrorHandling.defaultPrinciple = Log
+	HandleError.default = logger
 	
 	// Applies length rules
 	Paths.get("length-rules/exodus")

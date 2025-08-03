@@ -1,4 +1,4 @@
-package utopia.vault.database
+package utopia.vault.model.error
 
 /**
  * These exceptions are thrown when connecting to database fails
