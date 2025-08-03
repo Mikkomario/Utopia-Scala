@@ -9,7 +9,10 @@ import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, JoinType, OrderBy}
 
 /**
-  * A common trait for all DB access points that provide data reading
+  * A common trait for all DB access points that provide data reading.
+  *
+  * Note: New implementations should be based on [[utopia.vault.nosql.targeting.TargetingLike]] instead of this trait.
+  *
   * @author Mikko Hilpinen
   * @since 30.1.2020, v1.4
   * @tparam A The type of search results this access point produces

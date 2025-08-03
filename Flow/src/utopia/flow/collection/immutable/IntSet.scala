@@ -215,7 +215,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 	override def last = ranges.last.end
 	override def tail = {
 		if (ranges.head.length > 1)
-			IntSet(NumericSpan(head + 1, ranges.head.last) +: ranges.tail)
+			IntSet(ranges.mapHead { _.mapStart { _ + 1 } })
 		else
 			IntSet(ranges.tail)
 	}

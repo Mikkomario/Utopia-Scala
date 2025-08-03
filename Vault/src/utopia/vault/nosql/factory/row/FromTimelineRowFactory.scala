@@ -46,7 +46,10 @@ object FromTimelineRowFactory
 }
 
 /**
-  * A common trait for factories that track row creation time
+  * A common trait for factories that track row creation time.
+  *
+  * Note: New implementations should use [[utopia.vault.nosql.read.DbRowReader]] instead of this class.
+  *
   * @author Mikko Hilpinen
   * @since 1.2.2020, v1.4
   */

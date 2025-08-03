@@ -12,7 +12,10 @@ import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql._
 
 /**
-  * These factories are used for constructing object data from database results
+  * These factories are used for constructing object data from database results.
+  *
+  * Note: New implementations should use [[DbReader]] instead of this class.
+  *
   * @author Mikko Hilpinen
   * @since 8.7.2019, v1.1.1+
   */

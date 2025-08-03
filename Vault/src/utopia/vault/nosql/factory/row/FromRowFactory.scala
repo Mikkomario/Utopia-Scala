@@ -16,7 +16,10 @@ import utopia.vault.sql._
 
 /**
   * These factories are used for converting database row data into objects. These factories are able to parse an object
-  * from a single row (which may contain joined data)
+  * from a single row (which may contain joined data).
+  *
+  * Note: New implementations should use [[DbRowReader]] instead of this class.
+  *
   * @author Mikko Hilpinen
   * @since 10.7.2019, v1.2+
   */

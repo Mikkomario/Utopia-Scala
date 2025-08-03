@@ -5,7 +5,6 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.Property
 import utopia.vault.model.enumeration.SelectTarget
-import utopia.vault.model.enumeration.SelectTarget.All
 import utopia.vault.model.immutable.{Row, Storable, Table}
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.sql.JoinType
@@ -35,6 +34,10 @@ object FromRowModelFactory
 
 /**
  * These factory instances are used for converting database-originated model data into a Storable instance.
+  *
+  * Note: New implementations should use [[utopia.vault.nosql.read.DbRowReader]] and
+  * [[utopia.vault.nosql.read.parse.ParseTableModel]] instead of this class.
+  *
  * @author Mikko Hilpinen
  * @since 18.6.2017
  */

@@ -5,7 +5,11 @@ import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.access.template.Access
 
 /**
-  * A common trait for access points that are used for accessing values of a certain table column
+  * A common trait for access points that are used for accessing values of a certain table column.
+  *
+  * Note: Use of this trait is discouraged, as it may get deprecated and eventually removed in a future release.
+  * Please use the new [[utopia.vault.nosql.targeting.columns.AccessColumns]] trait instead.
+  *
   * @author Mikko Hilpinen
   * @since 11.7.2021, v1.8
   * @tparam V Type of the read column values (when including empty value cases)

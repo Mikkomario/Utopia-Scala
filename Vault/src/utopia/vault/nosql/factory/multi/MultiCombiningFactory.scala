@@ -4,7 +4,10 @@ import utopia.vault.model.immutable.Result
 import utopia.vault.nosql.factory.{CombiningFactoryLike, LinkedFactoryLike}
 
 /**
-  * This factory class attaches multiple child instances to a parent instance by utilizing two other factory classes
+  * This factory class attaches multiple child instances to a parent instance by utilizing two other factory classes.
+  *
+  * Note: New implementations should extend [[utopia.vault.nosql.read.linked.MultiLinkedDbReader]] instead.
+  *
   * @author Mikko Hilpinen
   * @since 28.6.2021, v1.8
   * @tparam Combined The combined result read from this factory

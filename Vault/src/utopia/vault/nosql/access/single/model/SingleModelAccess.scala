@@ -13,7 +13,11 @@ import utopia.vault.sql.OrderDirection.{Ascending, Descending}
 import utopia.vault.sql.{Condition, JoinType, Limit, OrderBy, OrderDirection, Select, Where}
 
 /**
- * Used for accessing individual models from DB
+ * Used for accessing individual models from DB.
+  *
+  * Note: New implementations should be based on [[utopia.vault.nosql.targeting.one.TargetingOneLike]]
+  * instead of this trait.
+  *
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */

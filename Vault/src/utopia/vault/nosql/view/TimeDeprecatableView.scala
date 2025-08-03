@@ -1,7 +1,7 @@
 package utopia.vault.nosql.view
 
 import utopia.vault.database.Connection
-import utopia.vault.nosql.storable.deprecation.TimeDeprecatable
+import utopia.vault.model.template.DeprecatesAfter
 
 import java.time.Instant
 
@@ -17,7 +17,7 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	/**
 	  * @return Model used for interacting with the DB and for building conditions
 	  */
-	protected def model: TimeDeprecatable
+	protected def model: DeprecatesAfter
 	
 	
 	// COMPUTED ----------------------

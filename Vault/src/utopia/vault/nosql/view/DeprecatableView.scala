@@ -1,6 +1,6 @@
 package utopia.vault.nosql.view
 
-import utopia.vault.nosql.template.Deprecatable
+import utopia.vault.model.template.Deprecates
 
 /**
  * Common trait for views which distinguish between active and deprecated items
@@ -15,7 +15,7 @@ trait DeprecatableView[+Repr] extends FilterableView[Repr]
 	/**
 	 * @return Model used for interacting with the DB and for building conditions
 	 */
-	protected def model: Deprecatable
+	protected def model: Deprecates
 	
 	
 	// COMPUTED ----------------------
@@ -23,5 +23,5 @@ trait DeprecatableView[+Repr] extends FilterableView[Repr]
 	/**
 	 * @return Access to non-deprecated items
 	 */
-	def active = filter(model.nonDeprecatedCondition)
+	def active = filter(model.activeCondition)
 }

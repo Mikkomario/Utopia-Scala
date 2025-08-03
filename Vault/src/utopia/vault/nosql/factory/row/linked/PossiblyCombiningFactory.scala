@@ -5,7 +5,10 @@ import utopia.vault.nosql.factory.CombiningFactoryLike
 
 /**
   * A common trait for factory classes that attach a child instance to a parent instance when one exists,
-  * but also handle / expect cases where there are no child items to attach
+  * but also handle / expect cases where there are no child items to attach.
+  *
+  * Note: New implementations should extend [[utopia.vault.nosql.read.linked.PossiblyCombiningDbRowReader]] instead.
+  *
   * @author Mikko Hilpinen
   * @since 29.6.2021, v1.8
   */

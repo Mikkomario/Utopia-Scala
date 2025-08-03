@@ -1,9 +1,9 @@
 package utopia.exodus.database
 
 import utopia.citadel.database.deletion.CitadelDataDeletionRules
-import CitadelDataDeletionRules.defaultHistoryDuration
+import utopia.citadel.database.deletion.CitadelDataDeletionRules.defaultHistoryDuration
 import utopia.exodus.database.model.auth.TokenModel
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.model.immutable.DataDeletionRule
 
@@ -39,9 +39,9 @@ object ExodusDataDeletionRules
 	def custom(token: Duration = defaultHistoryDuration) = token.finite match {
 		case Some(duration) =>
 			val tokenModel = TokenModel
-			Vector(
-				DataDeletionRule(tokenModel.table, tokenModel.expiresAttName, duration),
-				DataDeletionRule(tokenModel.table, tokenModel.deprecatedAfterAttName, duration)
+			Pair(
+				DataDeletionRule(tokenModel.expiresColumn, duration),
+				DataDeletionRule(tokenModel.deprecatedAfterColumn, duration)
 			)
 		case None => Empty
 	}

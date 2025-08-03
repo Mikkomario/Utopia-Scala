@@ -1,19 +1,19 @@
 package utopia.vault.database
 
 import utopia.flow.async.process.LoopingProcess
-
-import java.time.{Instant, LocalTime}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.util.logging.Logger
 import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.vault.model.error.NoReferenceFoundException
-import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table}
+import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table, TableColumn}
+import utopia.vault.model.template.HasTable
 import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
 
+import java.time.{Instant, LocalTime}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -76,18 +76,20 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		val nonEmptyRules =  rules.filter { _.nonEmpty }
 		nonEmptyRules.map { rule =>
 			// Checks if there exist any rules for tables referencing the table in question
-			val tree = References.referenceTree(rule.targetTable)
-			val restrictingChildren = nonEmptyRules.flatMap { childRule =>
-				tree.pathsToRootsWhere { _.nav == childRule.targetTable }.map { childPath =>
-					// Converts the table path to a reference path
-					// Throws possible errors here (those would result from logic / programming error)
-					// TODO: Sometimes the path is empty. Probably for self-referencing tables.
-					referencePathFrom(rule.targetTable, childPath.drop(1).map { _.nav }).get
+			val tree = References.referenceTree(rule.table)
+			val restrictingChildren = nonEmptyRules.view
+				.flatMap { childRule =>
+					tree.pathsToRootsWhere { _.nav == childRule.table }.map { childPath =>
+						// Converts the table path to a reference path
+						// Throws possible errors here (those would result from logic / programming error)
+						// TODO: Sometimes the path is empty. Probably for self-referencing tables.
+						referencePathFrom(rule.table, childPath.drop(1).map { _.nav }).get
+					}
 				}
-			}.toSeq
+				.toOptimizedSeq
 			// Creates the deletion rule for the primary table
-			TableDeletionRule(rule.targetTable, rule.timePropertyName, rule.standardLiveDuration,
-				rule.conditionalLiveDurations, restrictingChildren)
+			TableDeletionRule(rule.timeColumn, rule.standardLiveDuration, rule.conditionalLiveDurations,
+				restrictingChildren)
 		}
 	}
 	
@@ -167,21 +169,15 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	
 	// NESTED	-------------------------------
 	
-	private case class TableDeletionRule(table: Table, timePropertyName: String,
+	private case class TableDeletionRule(timeColumn: TableColumn,
 	                                     baseLiveDuration: Duration = Duration.Inf,
 	                                     conditionalPeriods: Map[Condition, FiniteDuration] = Map(),
 	                                     restrictiveChildPaths: Seq[Seq[Reference]] = Empty)
+		extends HasTable
 	{
-		lazy val timeColumn = table(timePropertyName)
-		
 		lazy val restrictiveChildTables = restrictiveChildPaths.iterator
 			.flatMap { _.lastOption.map { _.to.table } }.toSet
 		
-		/*
-		def maxDuration = baseLiveDuration.getOrElse(conditionalPeriods.values.max)
-		
-		def additionalConditionsRestricting(proposedDuration: Period) =
-			conditionalPeriods.filter { _._2 > proposedDuration }.keys
-			*/
+		override def table: Table = timeColumn.table
 	}
 }

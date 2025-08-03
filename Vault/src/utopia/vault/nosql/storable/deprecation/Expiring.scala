@@ -8,6 +8,7 @@ import utopia.flow.time.Now
  * @author Mikko Hilpinen
  * @since 26.9.2021, v1.0
  */
+@deprecated("Please use DeprecatesAfter instead", "v2.0")
 trait Expiring extends TimeDeprecatable
 {
 	// IMPLEMENTED  ----------------------------

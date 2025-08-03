@@ -4,6 +4,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
+import utopia.vault.model.template.DeprecatesAfterDefined
 import utopia.vault.nosql.template.Indexed
 
 import java.time.Instant
@@ -15,7 +16,8 @@ import java.time.Instant
  * @author Mikko Hilpinen
  * @since 26.9.2021, v1.10
  */
-trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
+@deprecated("Please use DeprecatesAfterDefined instead", "v2.0")
+trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed with DeprecatesAfterDefined
 {
 	// ABSTRACT   ----------------------------
 	
@@ -29,11 +31,6 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 	// COMPUTED ------------------------------
 	
 	/**
-	  * @return A condition that holds true for all deprecated items
-	  */
-	def deprecatedCondition = deprecationColumn.isNotNull
-	
-	/**
 	 * @return A model that has just been marked as deprecated
 	 */
 	def nowDeprecated = withDeprecatedAfter(Now)
@@ -41,7 +38,7 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def nonDeprecatedCondition = deprecationColumn.isNull
+	override def nonDeprecatedCondition = super[DeprecatesAfterDefined].activeCondition
 	
 	
 	// OTHER    ------------------------------
@@ -54,7 +51,6 @@ trait NullDeprecatable[+M <: Storable] extends TimeDeprecatable with Indexed
 	 */
 	def deprecateId(id: Value)(implicit connection: Connection) =
 		nowDeprecated.updateWhere(index <=> id && nonDeprecatedCondition) > 0
-	
 	/**
 	 * Deprecates multiple items
 	 * @param ids Target ids

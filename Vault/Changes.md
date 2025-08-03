@@ -36,6 +36,9 @@
   - Renamed `.select` to `.toSelect`
   - Deprecated `.parseIfPresent(Row)` in favor of the new `.tryParse(Row)` implementation
   - In **Result**, deprecated `.parse(FromResultFactory)` and `.parseSingle(FromRowFactory)`
+- Deprecated **Deprecatable**, **TimeDeprecatable**, **NullDeprecatable** and **Expiring** in favor of 
+  new **Deprecates**, **DeprecatesAfter**, **DeprecatesAfterDefined** and **DeprecatesIfDefined** traits
+- Deprecated **DeletionRule** constructors in favor of new versions which accept **TableColumn**
 - Renamed **TimeDeprecatableView**'s `.nonDeprecated` to `.active`
 - Note: In a future release, **FromResultFactory** and **Access** classes might be deprecated 
   in favor of newer interfaces

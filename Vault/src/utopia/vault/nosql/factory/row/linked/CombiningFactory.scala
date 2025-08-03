@@ -4,7 +4,10 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.vault.nosql.factory.CombiningFactoryLike
 
 /**
-  * This factory class combines the results of two other factories from a join result
+  * This factory class combines the results of two other factories from a join result.
+  *
+  * Note: New implementations should extend [[utopia.vault.nosql.read.linked.CombiningDbRowReader]] instead.
+  *
   * @author Mikko Hilpinen
   * @since 28.6.2021, v1.8
   * @tparam Combined The combined result read from this factory

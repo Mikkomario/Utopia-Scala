@@ -11,7 +11,11 @@ import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, JoinType, OrderBy, Select, SqlSegment, SqlTarget, Where}
 
 /**
- * Used for accessing multiple models at a time from DB
+ * Used for accessing multiple models at a time from DB.
+  *
+  * Note: Newer implementations should be based on
+  * [[utopia.vault.nosql.targeting.many.TargetingManyLike]] instead of this trait.
+  *
  * @author Mikko Hilpinen
  * @since 30.1.2020, v1.4
  */
