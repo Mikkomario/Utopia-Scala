@@ -107,9 +107,27 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 			f(result.rowsIterator.map { row => columns.map(row.apply) })
 		}
 	
-	override def update(column: Column, value: Value)(implicit connection: Connection): Boolean =
-		connection(Update(target, column, value) + accessCondition.map { Where(_) }).updatedRows
-		
+	override def update(column: Column, value: Value)(implicit connection: Connection): Boolean = {
+		val condition = appliedCondition
+		if (condition.exists { _.isAlwaysFalse })
+			false
+		else
+			connection.stream(Update(target, column, value) + condition.map(Where.apply)) { _.updatedRows }
+	}
+	// WET WET
+	override def update(assignments: IterableOnce[(Column, Value)])(implicit connection: Connection): Boolean = {
+		val condition = appliedCondition
+		if (condition.exists { _.isAlwaysFalse })
+			false
+		else
+			assignments.toOptimizedSeq.notEmpty match {
+				case Some(assignments) =>
+					connection
+						.stream(Update.columns(target, assignments) + condition.map(Where.apply)) { _.updatedRows }
+				case None => false
+			}
+	}
+	
 	
 	// OTHER    ---------------------------
 	

@@ -44,6 +44,15 @@ trait AccessColumns[+V] extends Indexed
 	  * @return Whether any item was targeted
 	  */
 	def update(column: Column, value: Value)(implicit connection: Connection): Boolean
+	/**
+	  * Updates column values of the targeted items
+	  * @param assignments Column value assignments, where each entry contains:
+	  *                         1. Modified column
+	  *                         1. Assigned value
+	  * @param connection Implicit DB connection
+	  * @return Whether any row / item was targeted
+	  */
+	def update(assignments: IterableOnce[(Column, Value)])(implicit connection: Connection): Boolean
 	
 	
 	// OTHER    -----------------------------

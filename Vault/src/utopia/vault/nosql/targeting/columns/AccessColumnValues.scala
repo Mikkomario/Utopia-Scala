@@ -2,6 +2,7 @@ package utopia.vault.nosql.targeting.columns
 
 import utopia.flow.collection.immutable.IntSet
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.util.TryExtensions._
@@ -27,15 +28,35 @@ object AccessColumnValues
 	// NESTED   -------------------------
 	
 	class AccessColumnValuesFactory(access: AccessManyColumns, column: Column)
-		extends ColumnValueAccessFactory[AccessColumnValues]
 	{
-		// IMPLEMENTED  -----------------
+		// OTHER    ---------------------
 		
-		override def customInput[A, I](parse: Value => A)(toValue: I => Value) =
+		/**
+		 * Creates an access point to an individual column's values
+		 * @param f A function that parses the column values into the desired data type
+		 * @param valueOf Implicit function that converts an input value into a value to store
+		 * @tparam V Type of parsed column value
+		 * @return A new access point
+		 */
+		def apply[V](f: Value => V)(implicit valueOf: V => Value) =
+			customInput[V, V](f)(valueOf)
+		/**
+		 * Creates an access point to an individual column's values
+		 * @param parse A function that parses the column values into the desired data type
+		 * @param toValue A function that converts an input value into a value to store
+		 * @tparam A Type of parsed column value
+		 * @return A new access point
+		 */
+		def customInput[A, I](parse: Value => A)(toValue: I => Value) =
 			_apply(Right(parse))(toValue)
 		
-		
-		// OTHER    ---------------------
+		/**
+		 * Creates an access point to an individual column's values.
+		 * @param f A function that parses the column values into the desired data type
+		 * @tparam O Type of parsed column value
+		 * @return A new access point
+		 */
+		def noAssign[O](f: Value => O) = customInput[O, Value](f)(Identity)
 		
 		/**
 		 * Creates an access point to an individual column's values. Assumes that each column contains 0-n values.
@@ -100,7 +121,7 @@ object AccessColumnValues
 
 /**
   * An interface that provides access to a single column's values
-  * @tparam A Type of parsed column value
+  * @tparam A Type of a parsed (concrete) column value
   * @tparam In Type of accepted input when assigning values
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.21
@@ -108,7 +129,7 @@ object AccessColumnValues
 class AccessColumnValues[+A, -In](override protected val access: AccessManyColumns, override val column: Column)
                                  (val fromValue: Either[Value => IterableOnce[A], Value => A])
                                  (toValue: In => Value)
-	extends ColumnValueAccess[Seq[Value], Seq[A], In]
+	extends ColumnValueAccess[Seq[Value], Seq[A], A, In]
 {
 	// COMPUTED ------------------
 	
@@ -160,8 +181,24 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 		}
 	}
 	
+	/**
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the collected elements
+	 * @return A set containing all distinct accessible values
+	 */
+	def toSet[B >: A](implicit connection: Connection) = streamDistinct { _.toSet[B] }
+	
 	
 	// IMPLEMENTED  --------------
+	
+	/**
+	 * Streams accessible values of this column
+	 * @param f A function for processing streamed values
+	 * @param connection Implicit DB connection
+	 * @tparam B Function result type
+	 * @return Function 'f' results
+	 */
+	override def stream[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = false)
 	
 	override protected def parse(value: Seq[Value]): Seq[A] = fromValue match {
 		case Left(flatMap) => value.flatMap(flatMap)
@@ -201,14 +238,9 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 			}
 		}
 	
-	/**
-	  * Streams accessible values of this column
-	  * @param f A function for processing streamed values
-	  * @param connection Implicit DB connection
-	  * @tparam B Function result type
-	  * @return Function 'f' results
-	  */
-	def stream[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = false)
+	def reduce[B >: A](f: (B, B) => B)(implicit connection: Connection) = stream { _.reduce(f) }
+	def reduceOption[B >: A](f: (B, B) => B)(implicit connection: Connection) = stream { _.reduceOption(f) }
+	
 	/**
 	  * Streams accessible distinct values of this column
 	  * @param f A function for processing streamed values

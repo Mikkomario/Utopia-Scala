@@ -26,7 +26,7 @@ import utopia.vault.model.mutable.ResultStream
 import utopia.vault.sql.SqlSegment
 
 import java.nio.file.Path
-import java.sql.{DriverManager, PreparedStatement, ResultSet, SQLException, Statement, Types}
+import java.sql._
 import scala.util.{Failure, Success, Try}
 
 object Connection
@@ -876,7 +876,7 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 			f(ResultStream.empty)
 		else {
 			// Prepares the statement
-			Try
+			val result = Try
 				.apply {
 					connection.prepareStatement(sql,
 						if (returnGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS)
@@ -944,13 +944,10 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 							}
 							// Passes the result stream to the specified function, while the statement remains open
 							// Catches errors
-							Try { f(result) }.flatMap { result =>
+							Try { f(result) }.map { result =>
 								// If a failure was encountered during the processing,
-								// it is captured here and thrown later
-								failureP.value match {
-									case Some(error) => Failure(error)
-									case None => Success(result)
-								}
+								// it is captured, and handled later
+								result -> failureP.value
 							}
 						}
 					}
@@ -959,10 +956,21 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 					
 					result
 				}
-				// Handles errors encountered during statement preparation and execution,
-				// As well as those thrown by the specified function
-				.getOrMap { error =>
-					// Includes details about the executed query
+			
+			// Handles errors encountered during statement preparation and execution,
+			// As well as those thrown by the specified function
+			val (lazyFinalResult, errorToHandle) = result match {
+				// Case: 'f' ran successfully => Prepares an error based on failure-pointer's contents, if applicable
+				case Success((result, error)) => Lazy.initialized(result) -> error
+				// Case: 'f' threw an exception
+				//       => Prepares the captured error.
+				//          If it is not rethrown later, simulates a new return value with an empty result.
+				case Failure(error) => Lazy { f(ResultStream.empty) } -> Some(error)
+			}
+			errorToHandle match {
+				// Case: Encountered an error => Converts it to a detailed DBException
+				//                               and lets HandleError deal with it
+				case Some(error) =>
 					val valuesStr = {
 						if (values.hasSize > 50)
 							s"${ values.view.take(25).mkString(", ") }, \n\t..., \n\t${
@@ -973,9 +981,12 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 					HandleError.duringDbQuery(
 						new DBException(s"DB query failed.\nSQL: $sql\nValues:[$valuesStr]", error))
 					
-					// If the captured error was not rethrown, handles the situation as if received an empty response
-					f(ResultStream.empty)
-				}
+					// If the captured error was not rethrown, yields the previously prepared result
+					lazyFinalResult.value
+				
+				// Case: No error encountered => Yields the result as prepared
+				case None => lazyFinalResult.value
+			}
 		}
 	}
 	

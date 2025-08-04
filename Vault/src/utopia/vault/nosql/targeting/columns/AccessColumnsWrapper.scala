@@ -33,4 +33,6 @@ trait AccessColumnsWrapper[VO, +VR] extends AccessColumns[VR]
 	override def apply(columns: Seq[Column])(implicit connection: Connection): Seq[VR] = wrapped(columns).map(wrapValue)
 	override def update(column: Column, value: Value)(implicit connection: Connection): Boolean =
 		wrapped(column) = value
+	override def update(assignments: IterableOnce[(Column, Value)])(implicit connection: Connection): Boolean =
+		wrapped.update(assignments)
 }

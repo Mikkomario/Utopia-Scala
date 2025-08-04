@@ -8,6 +8,7 @@ import utopia.flow.operator.Identity
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.21
   */
+@deprecated("Deprecated for removal", "v2.0")
 trait ColumnValueAccessFactory[+A[_, _]]
 {
 	// ABSTRACT ------------------------

@@ -1,8 +1,13 @@
 package utopia.vault.nosql.targeting.columns
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.Identity
+import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
+
+import scala.util.Try
 
 object AccessColumnValue
 {
@@ -13,31 +18,100 @@ object AccessColumnValue
 	  * @param column Targeted column
 	  * @return A factory for constructing the column value access interface
 	  */
-	def apply(access: AccessColumn, column: Column) =  new AccessColumnValueFactory(access, column)
+	def apply(access: AccessColumn, column: Column) = new AccessColumnValueFactory(access, column)
 	
 	
 	// NESTED   --------------------------
 	
 	class AccessColumnValueFactory(access: AccessColumn, column: Column)
-		extends ColumnValueAccessFactory[AccessColumnValue]
 	{
-		// IMPLEMENTED  ------------------
-		
-		override def customInput[O, I](parse: Value => O)(toValue: I => Value): AccessColumnValue[O, I] =
-			new AccessColumnValue[O, I](access, column)(parse)(toValue)
-		
-		
 		// OTHER    ----------------------
 		
 		/**
-		 * Creates an access point to an individual column's values. Yields optional values.
-		 * @param f A function that parses the column values into the desired data type
-		 * @param valueOf Implicit function that converts an input value into a value to store
-		 * @tparam V Type of parsed column value
-		 * @return A new access point
+		 * Creates a new column value access. Assumes that the parsed values are concrete, and not collections.
+		 * @param parse A function that parses a value into the presented data type
+		 * @param toValue An implicit function that converts an input value into a value to update the column with
+		 * @tparam A Type of parsed column values; Also the type of accepted input values.
+		 * @return A column value accessor
 		 */
-		def optional[V](f: Value => Option[V])(implicit valueOf: V => Value) =
-			customInput[Option[V], V](f)(valueOf)
+		def apply[A](parse: Value => A)(implicit toValue: A => Value) =
+			custom(parse)(toValue).concrete
+		/**
+		 * Creates an access point to an individual column's values. Yields optional values.
+		 * @param parse A function that parses the column values into the desired data type
+		 * @param valueOf Implicit function that converts an input value into a value to store
+		 * @tparam A Type of parsed column value
+		 * @return A column value accessor
+		 */
+		def optional[A](parse: Value => Option[A])(implicit valueOf: A => Value) =
+			custom(parse)(valueOf).iterable
+		/**
+		 * Creates an access point to an individual column's values. Yields instances of Try.
+		 * @param parse A function for parsing column values
+		 * @param valueOf An implicit function that converts an input value into a value to update the column with
+		 * @tparam A Type of successfully parsed column values
+		 * @return A column value accessor
+		 */
+		def tryParse[A](parse: Value => Try[A])(implicit valueOf: A => Value) =
+			custom(parse)(valueOf).iterateWith { _.toOption }
+		
+		/**
+		 * Creates a new column value access
+		 * @param parse A function for parsing individual column values into the presented data type
+		 * @param toValue A function that converts an input value into a value to update the column with
+		 * @tparam O Type of parse function output
+		 * @tparam I Type of accepted input
+		 * @return A factory for finalizing the accessor into either a concrete or an iterable version
+		 */
+		def custom[O, I](parse: Value => O)(toValue: I => Value) =
+			new PreparedAccessColumnValueFactory[O, I](access, column, parse, toValue)
+		/**
+		 * Creates a new column value access. Doesn't specify a value conversion for column updates.
+		 * @param parse A function for parsing individual column values into the presented data type
+		 * @tparam A Type of parse function output
+		 * @return A factory for finalizing the accessor into either a concrete or an iterable version
+		 */
+		def noAssign[A](parse: Value => A) =
+			custom[A, Value](parse)(Identity)
+		
+		@deprecated("Please use .custom(...).concrete instead", "v2.0")
+		def customInput[O, I](parse: Value => O)(toValue: I => Value): AccessColumnValue[O, O, I] =
+			custom(parse)(toValue).concrete
+	}
+	
+	class PreparedAccessColumnValueFactory[+A, -In](access: AccessColumn, column: Column, parse: Value => A,
+	                                                toValue: In => Value)
+	{
+		// COMPUTED ----------------------
+		
+		/**
+		 * Creates an access point to individual column values.
+		 * Handles empty values by converting them to concrete instances.
+		 * @return A column value accessor
+		 */
+		def concrete = iterateWith(Single.apply)
+		/**
+		 * Creates an access point to individual column values. Yields parsed values as collections.
+		 * @param ev Implicit evidence for the fact that the parsed type is a collection
+		 * @tparam C Type of individual elements within the parsed type
+		 * @return A column value accessor
+		 */
+		def iterable[C](implicit ev: A <:< IterableOnce[C]): AccessColumnValue[A, C, In] = iterateWith[C] { a => a }
+		
+		
+		// OTHER    ---------------------
+		
+		/**
+		 * Creates an access point to individual column's values.
+		 * Implements custom value iteration for streaming / iterating functions.
+		 * @param iterate A function that converts the parsed value into an iterable format
+		 * @tparam C Type of iterated individual values.
+		 *
+		 *           E.g. if 'A' is Option[Int], this would be Int.
+		 * @return A new column value accessor
+		 */
+		def iterateWith[C](iterate: A => IterableOnce[C]) =
+			new AccessColumnValue[A, C, In](access, column)(parse)(iterate)(toValue)
 	}
 }
 
@@ -46,10 +120,13 @@ object AccessColumnValue
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.21
   */
-class AccessColumnValue[+A, -In](override protected val access: AccessColumn, override val column: Column)
-                                (f: Value => A)(implicit toValue: In => Value)
-	extends ColumnValueAccess[Value, A, In]
+class AccessColumnValue[+A, +C, -In](override protected val access: AccessColumn, override val column: Column)
+                                    (f: Value => A)(iterate: A => IterableOnce[C])(implicit toValue: In => Value)
+	extends ColumnValueAccess[Value, A, C, In]
 {
 	override protected def parse(value: Value): A = f(value)
 	override protected def valueOf(value: In): Value = toValue(value)
+	
+	override def stream[B](f: Iterator[C] => B)(implicit connection: Connection): B =
+		f(iterate(this.f(access(column))).iterator)
 }

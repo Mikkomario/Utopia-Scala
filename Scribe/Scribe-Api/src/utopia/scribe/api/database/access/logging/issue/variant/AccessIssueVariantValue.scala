@@ -34,7 +34,7 @@ case class AccessIssueVariantValue(access: AccessColumn) extends AccessValue
 	  * The program version in which this issue (variant) occurred
 	  */
 	lazy val version =
-		apply(model.version).customInput { v => v.string.map { v => Version(v) } } { v: Version => v.toString }
+		apply(model.version).custom { v => v.string.map { v => Version(v) } } { v: Version => v.toString }.concrete
 	/**
 	  * Id of the error / exception that is associated with this issue (variant). None if not 
 	  * applicable.
