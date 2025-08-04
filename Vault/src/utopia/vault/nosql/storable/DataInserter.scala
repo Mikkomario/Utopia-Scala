@@ -6,6 +6,30 @@ import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Insert
+import utopia.vault.store.Inserter
+
+import scala.language.implicitConversions
+
+object DataInserter
+{
+	// IMPLICIT --------------------------
+	
+	implicit def toInserter[I, S](dataInserter: DataInserter[_, S, I])(implicit connection: Connection): Inserter[I, S] =
+		new InserterWrapper[I, S](dataInserter)
+	
+	
+	// NESTED   --------------------------
+	
+	private class InserterWrapper[-I, +S](inserter: DataInserter[_, S, I])(implicit connection: Connection)
+		extends Inserter[I, S]
+	{
+		override def insert(data: I): S = inserter.insert(data)
+		override def insert(data: Seq[I]): Seq[S] = inserter.insert(data)
+		
+		override def insertFrom[O, R](data: Seq[O])(extractData: O => I)(mergeBack: (S, O) => R): Seq[R] =
+			inserter.insertFrom(data)(extractData)(mergeBack)
+	}
+}
 
 /**
   * Common trait for database interaction models / access points which allow insertion of model data
