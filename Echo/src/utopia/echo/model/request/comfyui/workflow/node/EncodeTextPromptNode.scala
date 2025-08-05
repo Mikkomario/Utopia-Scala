@@ -1,9 +1,10 @@
-package utopia.echo.model.request.comfyui.workflow
+package utopia.echo.model.request.comfyui.workflow.node
 
 import utopia.echo.model.enumeration.comfyui.NodeClass
 import utopia.echo.model.enumeration.comfyui.NodeClass.EncodeTextPrompt
-import utopia.flow.generic.model.immutable.Model
+import utopia.echo.model.request.comfyui.workflow.OutputRef
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 
 /**
  * Used for encoding input text and using it as a prompt

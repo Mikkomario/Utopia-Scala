@@ -31,9 +31,9 @@ import scala.concurrent.duration.FiniteDuration
   *                            (default = 1 = parallelism not supported)
   * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
   */
-class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "",
-                                maxParallelRequests: Int = 1, offlineWaitThreshold: FiniteDuration = 7.minutes)
-                               (implicit log: Logger, exc: ExecutionContext)
+class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "", maxParallelRequests: Int = 1,
+                       offlineWaitThreshold: FiniteDuration = 7.minutes)
+                      (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {
 	/*
@@ -70,7 +70,9 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		override protected def gateway = LlmServiceClient.this.gateway
 		
 		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
-			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v => v("error").stringOr(v.getString) }
+			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v =>
+				v("error", "message").stringOr(v.getString)
+			}
 		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
 			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
 		

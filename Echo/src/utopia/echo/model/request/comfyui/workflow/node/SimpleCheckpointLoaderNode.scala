@@ -1,9 +1,9 @@
-package utopia.echo.model.request.comfyui.workflow
+package utopia.echo.model.request.comfyui.workflow.node
 
 import utopia.echo.model.enumeration.comfyui.NodeClass
 import utopia.echo.model.enumeration.comfyui.NodeClass.SimpleCheckpointLoader
-import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 
 /**
  * A node used for loading a checkpoint model
