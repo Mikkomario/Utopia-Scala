@@ -2,6 +2,7 @@ package utopia.vault.nosql.storable.deprecation
 
 import utopia.vault.model.immutable.Storable
 
+@deprecated("Deprecated for removal", "v2.0")
 object DeprecatableAfter
 {
 	/**
@@ -17,6 +18,7 @@ object DeprecatableAfter
  * @author Mikko Hilpinen
  * @since 26.9.2021, v1.10
  */
+@deprecated("Deprecated for removal", "v2.0")
 trait DeprecatableAfter[+M <: Storable] extends NullDeprecatable[M]
 {
 	// IMPLEMENTED  ----------------------------

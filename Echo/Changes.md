@@ -1,6 +1,7 @@
 # Utopia Echo - List of Changes
 
 ## v1.4 (in development)
+Adding ComfyUI integration
 ### Breaking changes
 - Modified reply constructors to include a new `thoughts` property. This also affects **ChatMessage**.
 ### New features
