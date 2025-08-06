@@ -1,9 +1,9 @@
-package utopia.echo.model.request.comfyui.workflow.node
+package utopia.echo.model.comfyui.workflow.node
 
-import utopia.echo.model.enumeration.comfyui.NodeClass
-import utopia.echo.model.enumeration.comfyui.NodeClass.KSampler
-import utopia.echo.model.request.comfyui.Seed
-import utopia.echo.model.request.comfyui.workflow.{OutputRef, SamplerSettings}
+import utopia.echo.model.comfyui.workflow.node.NodeClass
+import utopia.echo.model.comfyui.workflow.node.NodeClass.KSampler
+import utopia.echo.model.comfyui.Seed
+import utopia.echo.model.comfyui.workflow.{OutputRef, SamplerSettings}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 

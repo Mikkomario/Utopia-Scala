@@ -1,4 +1,4 @@
-package utopia.echo.model.request.comfyui.workflow
+package utopia.echo.model.comfyui.workflow
 
 import utopia.flow.util.Mutate
 

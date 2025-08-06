@@ -1,10 +1,18 @@
-package utopia.echo.model.request.comfyui.workflow.node
+package utopia.echo.model.comfyui.workflow.node
 
-import utopia.echo.model.enumeration.comfyui.NodeClass
-import utopia.echo.model.enumeration.comfyui.NodeClass.EmptyLatentImage
+import utopia.echo.model.comfyui.workflow.node.EmptyLatentImageNode.defaultSize
+import utopia.echo.model.comfyui.workflow.node.NodeClass.EmptyLatentImage
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+
+object EmptyLatentImageNode
+{
+	/**
+	 * The default width + height of empty latent images
+	 */
+	lazy val defaultSize = Pair.twice(512)
+}
 
 /**
  * Used for creating empty latent image(s) for denoising
@@ -15,7 +23,7 @@ import utopia.flow.generic.model.immutable.Model
  * @author Mikko Hilpinen
  * @since 05.08.2025, v1.4
  */
-case class EmptyLatentImageNode(name: String, size: Pair[Int] = Pair.twice(512), batchSize: Int = 1)
+case class EmptyLatentImageNode(name: String, size: Pair[Int] = defaultSize, batchSize: Int = 1)
 	extends WorkflowNode
 {
 	override val classType: NodeClass = EmptyLatentImage

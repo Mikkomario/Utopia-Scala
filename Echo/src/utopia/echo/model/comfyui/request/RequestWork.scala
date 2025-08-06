@@ -1,4 +1,4 @@
-package utopia.echo.model.request.comfyui
+package utopia.echo.model.comfyui.request
 
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.Post
@@ -6,11 +6,11 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
-import utopia.echo.model.request.comfyui.RequestWork.{ExtractPromptId, defaultClientId}
-import utopia.echo.model.request.comfyui.workflow.node.WorkflowNode
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.echo.model.comfyui.request.RequestWork.{ExtractPromptId, defaultClientId}
+import utopia.echo.model.comfyui.workflow.node.WorkflowNode
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse

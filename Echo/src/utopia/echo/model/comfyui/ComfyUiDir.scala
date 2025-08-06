@@ -1,4 +1,6 @@
-package utopia.echo.model.request.comfyui
+package utopia.echo.model.comfyui
+
+import utopia.flow.parse.file.FileExtensions.RichPath
 
 import java.nio.file.Path
 import scala.language.implicitConversions
@@ -7,6 +9,7 @@ object ComfyUiDir
 {
 	implicit def fromPath(path: Path): ComfyUiDir = apply(path)
 	implicit def toPath(dir: ComfyUiDir): Path = dir.path
+	implicit def toRichPath(dir: ComfyUiDir): RichPath = dir.path
 }
 
 /**

@@ -1,16 +1,17 @@
-package utopia.echo.model.request.comfyui
+package utopia.echo.model.comfyui.request
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.GetRequest
 import utopia.disciple.model.error.RequestFailedException
+import utopia.echo.model.comfyui.ComfyUiDir
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.mutable.DataType.{StringType, VectorType}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 

@@ -1,4 +1,4 @@
-package utopia.echo.model.request.comfyui
+package utopia.echo.model.comfyui
 
 import utopia.flow.view.immutable.View
 

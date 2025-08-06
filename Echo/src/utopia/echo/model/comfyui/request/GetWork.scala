@@ -1,4 +1,4 @@
-package utopia.echo.model.request.comfyui
+package utopia.echo.model.comfyui.request
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.GetRequest

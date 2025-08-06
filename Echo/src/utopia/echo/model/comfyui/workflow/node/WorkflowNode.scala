@@ -1,7 +1,6 @@
-package utopia.echo.model.request.comfyui.workflow.node
+package utopia.echo.model.comfyui.workflow.node
 
-import utopia.echo.model.enumeration.comfyui.NodeClass
-import utopia.echo.model.request.comfyui.workflow.OutputRef
+import utopia.echo.model.comfyui.workflow.OutputRef
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 

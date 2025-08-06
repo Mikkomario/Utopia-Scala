@@ -1,4 +1,4 @@
-package utopia.echo.model.request.comfyui.workflow
+package utopia.echo.model.comfyui.workflow
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Value

@@ -1,4 +1,4 @@
-package utopia.echo.model.enumeration.comfyui
+package utopia.echo.model.comfyui.workflow.node
 
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.util.{OpenEnumeration, OpenEnumerationValue}

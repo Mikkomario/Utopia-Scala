@@ -3,8 +3,8 @@ package utopia.echo.controller.client
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.client.ComfyUIClient.waitInterval
-import utopia.echo.model.request.comfyui.workflow.node.WorkflowNode
-import utopia.echo.model.request.comfyui.{GetWorkResult, RequestWork}
+import utopia.echo.model.comfyui.request.{GetWorkResult, RequestWork}
+import utopia.echo.model.comfyui.workflow.node.WorkflowNode
 import utopia.flow.async.TryFuture
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.factory.FromModelFactory
