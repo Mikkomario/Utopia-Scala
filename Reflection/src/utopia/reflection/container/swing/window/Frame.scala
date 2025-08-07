@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.component.stack.FixedStackable
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
@@ -81,6 +82,7 @@ object Frame
     
     private class ZeroSizePanel
         extends AwtComponentWrapperWrapper with ReflectionStackable with ReflectionStackLeaf with AwtContainerRelated
+            with FixedStackable
     {
         // ATTRIBUTES   ------------------------
         
@@ -96,8 +98,6 @@ object Frame
         override def updateLayout() = ()
     
         override def stackSize = StackSize.fixedZero
-    
-        override def resetCachedSize() = ()
     
         override lazy val stackId = hashCode()
     }

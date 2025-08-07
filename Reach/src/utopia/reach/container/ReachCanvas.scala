@@ -484,7 +484,10 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 	}
 	
 	override def resetCachedSize() = currentContent.foreach { _.resetCachedSize() }
+	override def updateStackSize(): Boolean = currentContent.exists { _.updateStackSize() }
 	
+	// TODO: This layout update logic needs to be generalized, so that it's usable from all Reach components
+	//  (i.e. also from lower layers). This includes repaint delaying (or ignoring) until revalidation is completed.
 	override def updateLayout(): Unit = {
 		revalidatingFlag.reset()
 		// Updates content size and layout

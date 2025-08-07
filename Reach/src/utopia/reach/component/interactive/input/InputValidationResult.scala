@@ -3,6 +3,7 @@ package utopia.reach.component.interactive.input
 import utopia.paradigm.color.ColorRole
 import utopia.firmament.localization.LocalizedString
 
+import scala.annotation.unused
 import scala.language.implicitConversions
 
 /**
@@ -29,7 +30,7 @@ object InputValidationResult
 	// IMPLICIT --------------------
 	
 	// Implicitly converts unit to the default result
-	implicit def unitToResult(u: Unit): InputValidationResult = Default
+	implicit def unitToResult(@unused u: Unit): InputValidationResult = Default
 	
 	
 	// OTHER    --------------------

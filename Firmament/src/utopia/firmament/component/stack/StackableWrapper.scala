@@ -16,9 +16,10 @@ trait StackableWrapper extends ComponentWrapper with Stackable
 	
 	// IMPLEMENTED	-----------------
 	
-	override def updateLayout() = wrapped.updateLayout()
-	
 	override def stackSize = wrapped.stackSize
 	
+	override def updateLayout() = wrapped.updateLayout()
+	
 	override def resetCachedSize() = wrapped.resetCachedSize()
+	override def updateStackSize(): Boolean = wrapped.updateStackSize()
 }

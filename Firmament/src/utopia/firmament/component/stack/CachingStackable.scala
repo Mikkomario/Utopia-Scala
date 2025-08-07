@@ -23,7 +23,6 @@ trait CachingStackable extends Stackable with Constrainable
 	// IMPLEMENTED	-----------------
 	
 	override def constraints = _constraints
-	
 	override def constraints_=(newConstraints: Seq[StackSizeModifier]) = {
 		_constraints = newConstraints
 		resetCachedSize()
@@ -32,4 +31,6 @@ trait CachingStackable extends Stackable with Constrainable
 	override def stackSize = cachedStackSize.value
 	
 	override def resetCachedSize() = cachedStackSize.reset()
+	// Updates cached size. Checks whether any different.
+	override def updateStackSize(): Boolean = !cachedStackSize.popCurrent().contains(stackSize)
 }

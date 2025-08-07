@@ -69,6 +69,8 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	private val cachedImages = ResettableLazy { imageAnimation(progress) }
 	private val cachedSize = ResettableLazy { sizeAnimation(progress) }
 	
+	override lazy val stackId = hashCode()
+	
 	
 	// COMPUTED	------------------------------------
 	
@@ -85,8 +87,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	/**
 	  * @return Estimated completion time of this transition. None if this transition hasn't started yet.
 	  */
-	def estimatedCompletionTime = _state match
-	{
+	def estimatedCompletionTime = _state match {
 		case Finished => Some(Instant.now())
 		case Ongoing => Some(Instant.now() + duration - passedDuration)
 		case NotStarted => None
@@ -99,13 +100,16 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	
 	override def children = super[ReflectionStackLeaf].children
 	
-	override def updateLayout() = ()
-	
 	override def stackSize = cachedSize.value
 	
+	override def updateLayout() = ()
 	override def resetCachedSize() = cachedSize.reset()
-	
-	override def stackId = hashCode()
+	override def updateStackSize(): Boolean = {
+		if (state == Finished)
+			!cachedSize.popCurrent().contains(stackSize)
+		else
+			true
+	}
 	
 	
 	// OTHER	---------------------------------
@@ -120,8 +124,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	  * Starts this transition progress
 	  * @return A future of transition completion
 	  */
-	def start(actorHandler: ActorHandler) =
-	{
+	def start(actorHandler: ActorHandler) = {
 		if (_state == NotStarted) {
 			// Starts transition & revalidation loop
 			_state = Ongoing

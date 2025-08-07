@@ -76,8 +76,7 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStac
 	private val label = new EmptyLabel()
 	
 	// TODO: Update image periodically?
-	override protected val imageAnimation =
-	{
+	override protected val imageAnimation = {
 		if (useFading)
 			Animation { progress =>
 				val alpha = visibility match
@@ -95,13 +94,11 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStac
 	
 	override protected val sizeAnimation = Animation { progress =>
 		val curvedProgress = curve(progress)
-		val scaling = transition match
-		{
+		val scaling = transition match {
 			case Appearing => curvedProgress
 			case Disappearing => 1 - curvedProgress
 		}
-		StackSize.any(transitionAxis match
-		{
+		StackSize.any(transitionAxis match {
 			case Some(axis) => targetSize.mapDimension(axis) { _ * scaling }
 			case None => targetSize * scaling
 		})
@@ -115,8 +112,7 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStac
 	
 	// COMPUTED	------------------------------------
 	
-	def visibility = state match
-	{
+	def visibility = state match {
 		case NotStarted => Invisible
 		case Ongoing => transition
 		case Finished => Visible
@@ -126,6 +122,5 @@ class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStac
 	// IMPLEMENTED	--------------------------------
 	
 	override def drawable = label
-	
 	override protected def wrapped = label
 }

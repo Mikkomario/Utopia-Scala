@@ -1,7 +1,8 @@
 package utopia.reach.component.hierarchy
 
 import utopia.firmament.model.CoordinateTransform
-import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.template.eventful.Flag
@@ -16,12 +17,148 @@ import utopia.reach.container.ReachCanvas
 
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
+import scala.collection.mutable
+
+object ComponentHierarchy
+{
+	/**
+	 * Updates component layout based on queued updates
+	 * @param top The top component in the component hierarchy, if applicable.
+	 * @param queues Sequences of components from hierarchy top downwards that require a layout update
+	 * @param topChangedSize Whether the 'top' component changed its size before this layout update (default = false)
+	 * @param topIsCanvas Whether the 'top' component represents the Reach Canvas.
+	 *                    Affects repainting and component position-detection logic, for example.
+	 *                    Default = false.
+	 */
+	def updateLayoutFor(top: ReachComponent, queues: Iterable[Seq[ReachComponent]], topChangedSize: Boolean = false,
+	                    topIsCanvas: Boolean = false): Unit =
+	{
+		// Updates content layout
+		val layoutUpdateQueues = queues.view.map { q => (q, topChangedSize, q.size) }.toOptimizedSeq
+		val sizeChangeTargets: Set[ReachComponent] = if (topChangedSize) Set(top) else Set()
+		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty) {
+			// Performs the layout updates. The repaint logic is different for the root level component.
+			if (topIsCanvas) {
+				val boundsBuilder = OptimizedIndexedSeq.newBuilder[Bounds]
+				updateLayoutFor(if (topIsCanvas) None else Some(top), layoutUpdateQueues, sizeChangeTargets,
+					boundsBuilder, 0)
+				lazy val canvas = top.hierarchy.top
+				boundsBuilder.result().foreach { canvas.repaint(_) }
+			}
+			else {
+				val boundsBuilder = Bounds.aroundBuilder
+				updateLayoutFor(if (topIsCanvas) None else Some(top), layoutUpdateQueues, sizeChangeTargets,
+					boundsBuilder, 0)
+				boundsBuilder.resultOption().foreach { top.repaintArea(_) }
+			}
+		}
+	}
+	
+	/**
+	 * Updates the layout of the specified components. Queues repaints as appropriate.
+	 * @param topComponent The component relative to which the repaint requests are made
+	 * @param componentQueues The component queues that are yet to be fully updated.
+	 *                        Each element contains 3 values:
+	 *                              1. The component queue (from top to bottom)
+	 *                              1. Whether a repaint has already been queued higher up
+	 *                              1. The length of this queue
+	 * @param sizeChangedChildren Collection of components that had their size altered during the previous iteration.
+	 *                            These are all updated as well.
+	 * @param repaintZonesBuilder A builder for the resulting repaint areas
+	 * @param queueIndex Next queue index to process
+	 */
+	@tailrec
+	private def updateLayoutFor(topComponent: Option[ReachComponent],
+	                            componentQueues: Iterable[(Seq[ReachComponent], Boolean, Int)],
+	                            sizeChangedChildren: collection.Set[ReachComponent],
+	                            repaintZonesBuilder: mutable.Growable[Bounds], queueIndex: Int): Unit =
+	{
+		// Records the components that had their size or position changed,
+		// as well as new areas that need repainting afterwards
+		val nextSizeChangeChildrenBuilder = mutable.Set[ReachComponent]()
+		val nextPositionChangeChildrenBuilder = mutable.Set[ReachComponent]()
+		
+		// Determines the next components for which layout is updated.
+		// I.e. next queued components, as well as the latest components that had their size adjusted.
+		//      Component -> Whether paint operation has already been queued
+		val nextTargetsView =
+			componentQueues.view.map { case (queue, wasPainted, _) => queue(queueIndex) -> wasPainted } ++
+				sizeChangedChildren.view.map { _ -> true }
+		// Updates the layout of the next layer (from top to bottom) components.
+		// Checks for size (and possible position) changes and queues updates for the children of components which
+		// changed size during the layout update
+		// Also, collects any repaint requirements
+		nextTargetsView.foreach { case (component, wasPainted) =>
+			// Caches bounds before update
+			val oldChildBounds = component.children.map { c => c -> c.bounds }
+			// Applies component update
+			component.updateLayout()
+			// Queues child updates (on size changes) and possible repaints
+			// (only in components where no repaint has occurred yet)
+			
+			// Case: This component was already queued for repaint
+			//       => Only checks if any of the child components changed size
+			if (wasPainted)
+				nextSizeChangeChildrenBuilder ++=
+					oldChildBounds.iterator.filter { case (child, oldBounds) => child.size != oldBounds.size }
+						.map { _._1 }
+			// Case: This component was not queued for repaint
+			//       => Checks if any of the child component bounds were modified and queues repaints, as necessary
+			else
+				oldChildBounds.foreach { case (child, oldBounds) =>
+					val currentBounds = child.bounds
+					if (currentBounds != oldBounds) {
+						// Queues a repaint (in the top component's coordinate space)
+						repaintZonesBuilder += (Bounds.around(Pair(oldBounds, currentBounds)) +
+							topComponent.flatMap(child.hierarchy.positionInComponentModifier)
+								.getOrElse { child.hierarchy.positionToTopModifier })
+						
+						// Case: Size changed
+						//       => Remembers this component, so that it will be updated on the next iteration
+						if (oldBounds.size != currentBounds.size)
+							nextSizeChangeChildrenBuilder += child
+						// Case: Only position changed => Remembers that a repaint was queued for this component
+						else
+							nextPositionChangeChildrenBuilder += child
+					}
+				}
+		}
+		
+		// Moves to the next layer of components, if there is one
+		// Checks which of the queues contain more components to handle
+		val paintedChildren = Set.concat(nextSizeChangeChildrenBuilder, nextPositionChangeChildrenBuilder)
+		val nextQueueIndex = queueIndex + 1
+		val (leaves, remainingQueues) = componentQueues.divideWith { case (queue, wasPainted, length) =>
+			// Case: Queue contains more components
+			//       => Updates the painted status and prepares the queue for the next iteration
+			if (length > nextQueueIndex)
+				Right((queue, wasPainted || paintedChildren.contains(queue(nextQueueIndex)), length))
+			// Case: Queue ended here => Collects the last component for repainting, if appropriate
+			else {
+				val leaf = queue(queueIndex)
+				Left((leaf, wasPainted || paintedChildren.contains(leaf)))
+			}
+		}
+		// Paints all the lowest revalidation levels, unless their parents were already painted
+		repaintZonesBuilder ++= leaves.iterator.filterNot { _._2 }.map { case (leaf, _) =>
+			topComponent.flatMap(leaf.boundsInside).getOrElse(leaf.boundsInsideTop)
+		}
+		
+		// Checks whether more iterations are appropriate
+		// Case: More components to update => Continues using recursion
+		if (remainingQueues.nonEmpty || nextSizeChangeChildrenBuilder.nonEmpty) {
+			updateLayoutFor(topComponent, remainingQueues, nextSizeChangeChildrenBuilder, repaintZonesBuilder,
+				nextQueueIndex)
+		}
+	}
+}
 
 /**
   * Represents a sequence of components that forms a linear hierarchy
   * @author Mikko Hilpinen
   * @since 3.10.2020, v0.1
   */
+// TODO: For the revalidation implementation, may add a pointer for delaying repaints
 trait ComponentHierarchy
 {
 	// ABSTRACT	--------------------------
@@ -178,7 +315,7 @@ trait ComponentHierarchy
 	def revalidate(layoutUpdateComponents: Seq[ReachComponent]): Unit = {
 		val branchBuilder = new VectorBuilder[ReachComponent]()
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
-		_revalidate(branchBuilder) { _.revalidate(_) }
+		_revalidate(branchBuilder) { _.foreach { case (canvas, queue) => canvas.revalidate(queue) } }
 	}
 	/**
 	  * Revalidates this component hierarchy (provided this part of the hierarchy is currently linked to the main
@@ -189,24 +326,32 @@ trait ComponentHierarchy
 	def revalidateAndThen(layoutUpdateComponents: Seq[ReachComponent])(f: => Unit): Unit = {
 		val branchBuilder = new VectorBuilder[ReachComponent]()
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
-		_revalidate(branchBuilder) { _.revalidateAndThen(_)(f) }
+		_revalidate(branchBuilder) {
+			case Some((canvas, queue)) => canvas.revalidateAndThen(queue)(f)
+			case None => f
+		}
 	}
 	@tailrec
-	private def _revalidate(branchBuilder: VectorBuilder[ReachComponent])
-	                       (callCanvas: (ReachCanvas, Vector[ReachComponent]) => Unit): Unit =
+	private def _revalidate(branchBuilder: mutable.Builder[ReachComponent, Seq[ReachComponent]])
+	                        (atTop: Option[(ReachCanvas, Seq[ReachComponent])] => Unit): Unit =
 	{
 		// Terminates if not linked
 		if (isThisLevelLinked)
 			parent match {
-				// Case: Top reached => Performs the revalidation function
-				case Left(canvas) =>
-					val branch = branchBuilder.result().reverse
-					callCanvas(canvas, branch)
-				// Case: Parent is not canvas => Adds the component to the queue and continues recursively
+				// Case: Top reached => Performs the revalidation by calling the canvas
+				case Left(canvas) => atTop(Some(canvas -> branchBuilder.result()))
+				// Case: Parent is not a canvas => Resets its stack size
 				case Right((block, component)) =>
-					component.resetCachedSize()
-					branchBuilder += component
-					block._revalidate(branchBuilder)(callCanvas)
+					// Case: Stack size may have changed => Propagates the revalidation further up
+					if (component.updateStackSize()) {
+						branchBuilder += component
+						block._revalidate(branchBuilder)(atTop)
+					}
+					// Case: Stack size didn't change => Performs the layout updates & repainting on a local level
+					else {
+						ComponentHierarchy.updateLayoutFor(component, Single(branchBuilder.result()))
+						atTop(None)
+					}
 			}
 	}
 	

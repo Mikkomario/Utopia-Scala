@@ -1,16 +1,13 @@
 package utopia.reach.container
 
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
 import utopia.genesis.graphics.{PaintManager, Priority}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.cursor.ReachCursorManager
 import utopia.reach.focus.ReachFocusManager
-
-import scala.collection.immutable.VectorBuilder
 
 /**
   * A common trait for canvas elements where components are drawn
@@ -72,10 +69,9 @@ trait ReachCanvasLike
 	  * if updates were previously ignored and can't be tracked anymore
 	  * @param targetContentSize Size to assign for the managed component
 	  */
-	def updateWholeLayout(targetContentSize: Size) =
-		currentContent.foreach { content =>
-			updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
-		}
+	def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
+		updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
+	}
 	
 	/**
 	  * Updates component layout based on queued updates
@@ -83,25 +79,14 @@ trait ReachCanvasLike
 	  * @param componentTargetSize Size to assign for the managed component
 	  */
 	protected def updateLayout(queues: Set[Seq[ReachComponent]], componentTargetSize: Size) = {
-		// Updates content size
-		val contentSizeChanged = currentContent match {
-			case Some(content) =>
-				val requiresSizeUpdate = content.size != componentTargetSize
-				if (requiresSizeUpdate)
-					content.size = componentTargetSize
-				requiresSizeUpdate
-			case None => false
-		}
-		// Updates content layout
-		val layoutUpdateQueues = queues.map { q: Seq[ReachComponent] => q -> contentSizeChanged }
-		val sizeChangeTargets: Set[ReachComponent] = {
-			if (contentSizeChanged)
-				currentContent.toSet
-			else
-				Set()
-		}
-		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty) {
-			updateLayoutFor(layoutUpdateQueues, sizeChangeTargets).foreach { repaint(_) }
+		currentContent.foreach { content =>
+			// Updates the content size, if appropriate
+			val requiresSizeUpdate = content.size != componentTargetSize
+			if (requiresSizeUpdate)
+				content.size = componentTargetSize
+				
+			// Performs the layout updates throughout the component hierarchy
+			ComponentHierarchy.updateLayoutFor(content, queues, topChangedSize = requiresSizeUpdate, topIsCanvas = true)
 		}
 	}
 	
@@ -125,72 +110,4 @@ trait ReachCanvasLike
 	  */
 	def shiftArea(originalArea: Bounds, translation: Vector2D) =
 		currentPainter.foreach { _.shift(originalArea, translation) }
-	
-	// Second parameter in queues is whether a repaint operation has already been queued for them
-	// Resized children are expected to have their repaints already queued
-	// Returns areas to repaint afterwards
-	private def updateLayoutFor(componentQueues: Set[(Seq[ReachComponent], Boolean)],
-	                            sizeChangedChildren: Set[ReachComponent]): Vector[Bounds] =
-	{
-		val nextSizeChangeChildrenBuilder = new VectorBuilder[ReachComponent]()
-		val nextPositionChangeChildrenBuilder = new VectorBuilder[ReachComponent]()
-		val repaintZonesBuilder = new VectorBuilder[Bounds]()
-		
-		// Component -> Whether paint operation has already been queued
-		val nextTargets = componentQueues
-			.map { case (queue, wasPainted) => queue.head -> wasPainted } ++ sizeChangedChildren.map { _ -> true }
-		// Updates the layout of the next layer (from top to bottom) components.
-		// Checks for size (and possible position) changes and queues updates for the children of components which
-		// changed size during the layout update
-		// Also, collects any repaint requirements
-		nextTargets.foreach { case (component, wasPainted) =>
-			// Caches bounds before update
-			val oldChildBounds = component.children.map { c => c -> c.bounds }
-			// Applies component update
-			component.updateLayout()
-			// Queues child updates (on size changes) and possible repaints
-			// (only in components where no repaint has occurred yet)
-			if (wasPainted)
-				oldChildBounds.foreach { case (child, oldBounds) =>
-					if (child.size != oldBounds.size)
-						nextSizeChangeChildrenBuilder += child
-				}
-			else
-				oldChildBounds.foreach { case (child, oldBounds) =>
-					val currentBounds = child.bounds
-					if (currentBounds != oldBounds) {
-						repaintZonesBuilder += (Bounds.around(Pair(oldBounds, currentBounds)) +
-							child.hierarchy.positionToTopModifier)
-						if (oldBounds.size != currentBounds.size)
-							nextSizeChangeChildrenBuilder += child
-						else
-							nextPositionChangeChildrenBuilder += child
-					}
-				}
-		}
-		
-		// Moves to the next layer of components, if there is one
-		val nextSizeChangedChildren = nextSizeChangeChildrenBuilder.result().toSet
-		val paintedChildren = nextSizeChangedChildren ++ nextPositionChangeChildrenBuilder.result()
-		val (leaves, branches) = componentQueues.divideBy { _._1.hasSize > 1 }.toTuple
-		val nextQueues = branches.map { case (queue, wasPainted) =>
-			if (wasPainted)
-				queue.tail -> wasPainted
-			else
-				// Checks whether a paint operation was queued for this component already
-				queue.tail -> paintedChildren.contains(queue(1))
-		}
-		// Also, paints all of the lowest revalidation levels, unless their parents were already painted
-		leaves.iterator.foreach { case (queue, wasPainted) =>
-			if (!wasPainted && !paintedChildren.contains(queue.head))
-				repaintZonesBuilder += queue.head.boundsInsideTop
-		}
-		val repaintZones = repaintZonesBuilder.result()
-		// Case: Reached the bottom => Returns
-		if (nextQueues.isEmpty && nextSizeChangedChildren.isEmpty)
-			repaintZones
-		// Case: There are more branches / depth => Moves one level deeper
-		else
-			 repaintZones ++ updateLayoutFor(nextQueues, nextSizeChangedChildren)
-	}
 }

@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.input.InteractionWithPointer
+import utopia.firmament.component.stack.FixedStackable
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
@@ -65,7 +66,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
              initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
-		with ReflectionStackable
+		with ReflectionStackable with FixedStackable
 {
 	// ATTRIBUTES	-----------------
 	
@@ -78,6 +79,8 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	override val valuePointer = EventfulPointer(initialState)
 	
 	override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
+	
+	override lazy val stackId = hashCode()
 	
 	
 	// INITIAL CODE	-----------------
@@ -115,20 +118,13 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 	
 	// IMPLEMENTED	-----------------
 	
-	override def stackId = hashCode()
-	
 	override protected def wrapped = label
-	
 	override def drawable = label
 	
 	override def updateLayout() = ()
 	
-	override def resetCachedSize() = ()
-	
 	override def isAttachedToMainHierarchy = _attached
-	
-	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-	{
+	override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
 		if (newAttachmentStatus != _attached) {
 			_attached = newAttachmentStatus
 			if (newAttachmentStatus) {

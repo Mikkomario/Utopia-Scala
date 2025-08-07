@@ -21,8 +21,11 @@
 - All text-related contextual button factories now extend **FromColorRoleFactory**, 
   allowing for easier color assignment
 ### Other changes
+- Revalidation (and consequently repainting) is now (potentially) much faster, 
+  as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
 - **Field** now visibly reacts to mouse hover
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
+- Optimized the component layout update algorithm
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 

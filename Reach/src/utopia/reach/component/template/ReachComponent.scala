@@ -157,14 +157,25 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  */
 	def positionRelativeTo(parent: ReachComponent) =
 		hierarchy.positionInComponentModifier(parent).map { position + _ }
+	/**
+	 * @param parent A component higher up in this component's hierarchy
+	 * @return This component's bounds within that component's coordinate system.
+	 *         None if this component is not a child of that component.
+	 */
+	def boundsInside(parent: ReachComponent) = positionRelativeTo(parent).map { Bounds(_, size) }
 	
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated
 	  */
 	def revalidate() = {
-		// Resets the cached stack size of this and upper components
-		resetCachedSize()
-		hierarchy.revalidate(Single(this))
+		// Case: Stack size may have been affected => Propagates the revalidation to the parent components
+		if (updateStackSize())
+			hierarchy.revalidate(Single(this))
+		// Case: Stack size was unaffected => Only updates the inner layout and repaints
+		else {
+			updateLayout()
+			repaint()
+		}
 	}
 	/**
 	  * Indicates that this component's and its hierarchy's layout should be updated. Calls the specified function
@@ -173,8 +184,14 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  *          this component is not connected to the main stack hierarchy
 	  */
 	def revalidateAndThen(f: => Unit) = {
-		resetCachedSize()
-		hierarchy.revalidateAndThen(Single(this))(f)
+		// See notes in revalidate()
+		if (updateStackSize())
+			hierarchy.revalidateAndThen(Single(this))(f)
+		else {
+			updateLayout()
+			repaint()
+			f
+		}
 	}
 	/**
 	  * Resets the cached stack size of this component and all the children of this component.

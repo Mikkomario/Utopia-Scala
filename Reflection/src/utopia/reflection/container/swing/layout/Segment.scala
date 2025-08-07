@@ -104,6 +104,8 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		override var stackHierarchyListeners: Seq[StackHierarchyListener] = Empty
 		
+		override lazy val stackId = hashCode()
+		
 		
 		// INITIAL CODE	-------------------------
 		
@@ -114,24 +116,24 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		
 		// IMPLEMENTED	-------------------------
 		
-		override lazy val stackId = hashCode()
+		override protected def wrapped = panel
 		
 		override def children = Single(wrappedComponent)
 		
-		override def resetCachedSize() =
-		{
+		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
+		
+		override def resetCachedSize() = {
 			// If needs to reset cached size while not in update mode, revalidates all segment containers and not
 			// just this one
 			if (isAttachedToMainHierarchy && isUpdatingFlag.isNotSet)
 				updateContainers()
 		}
+		override def updateStackSize(): Boolean = {
+			resetCachedSize()
+			true
+		}
 		
-		override def stackSize = wrappedComponent.stackSize.withSide(lengthCache.value, alignAxis)
-		
-		override protected def wrapped = panel
-		
-		override def updateLayout() =
-		{
+		override def updateLayout() = {
 			// Ends possible update process in updateLayout()
 			isUpdatingFlag.reset()
 			// Sets component position and size
@@ -139,22 +141,17 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 		}
 		
 		override def isAttachedToMainHierarchy = _isAttached
-		
-		override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) =
-		{
+		override def isAttachedToMainHierarchy_=(newAttachmentStatus: Boolean) = {
 			// Registers or unregisters this container based on attachment status
 			// Also informs the child component
-			if (_isAttached != newAttachmentStatus)
-			{
+			if (_isAttached != newAttachmentStatus) {
 				_isAttached = newAttachmentStatus
 				fireStackHierarchyChangeEvent(newAttachmentStatus)
-				if (newAttachmentStatus)
-				{
+				if (newAttachmentStatus) {
 					wrappedComponent.attachToStackHierarchyUnder(this)
 					registerContainer(this)
 				}
-				else
-				{
+				else {
 					wrappedComponent.isAttachedToMainHierarchy = newAttachmentStatus
 					removeContainer(this)
 				}

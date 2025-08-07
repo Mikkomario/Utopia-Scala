@@ -23,6 +23,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	
 	private var foundParent: Option[Either[ReachCanvas, (ComponentHierarchy, ReachComponent)]] = None
 	// Set when this block is replaced with another block
+	// TODO: Maybe use a pointer-based approach so that derived values (such as coordinateTransform) may be cached
 	private var replacement: Option[ComponentHierarchy] = None
 	
 	
@@ -56,7 +57,7 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def complete(parent: ReachComponent, switchConditionFlag: Changing[Boolean]) ={
+	def complete(parent: ReachComponent, switchConditionFlag: Flag) ={
 		foundParent match {
 			// Throws if there already existed a parent connection
 			case Some(existingParent) =>
@@ -79,11 +80,12 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 	  * @throws IllegalStateException If this hierarchy was already completed (These hierarchies mustn't be completed twice)
 	  */
 	@throws[IllegalStateException]("If already completed previously")
-	def lockToTop(switchConditionFlag: Changing[Boolean] = AlwaysTrue) = foundParent match {
+	def lockToTop(switchConditionFlag: Flag = AlwaysTrue) = foundParent match {
 		case Some(existingParent) =>
 			existingParent match {
 				case Left(_) => ()
-				case Right((_, component)) => throw new IllegalStateException(s"Already connected to component $component")
+				case Right((_, component)) =>
+					throw new IllegalStateException(s"Already connected to component $component")
 			}
 		case None =>
 			// Directly attaches to the top
@@ -138,11 +140,10 @@ class SeedHierarchyBlock(override val top: ReachCanvas) extends CompletableCompo
 		
 		// OTHER	--------------------------
 		
-		def onParentFound(defaultConditionFlag: Flag,
-		                  additionalConditionFlag: Changing[Boolean]) =
+		def onParentFound(defaultConditionFlag: Flag, additionalConditionFlag: Flag) =
 			specifyFinalFlag(defaultConditionFlag && additionalConditionFlag, additionalConditionFlag)
 		
-		def onLinkedToCanvas(additionalConditionFlag: Changing[Boolean]) =
+		def onLinkedToCanvas(additionalConditionFlag: Flag) =
 			specifyFinalFlag(top.linkedFlag && additionalConditionFlag, additionalConditionFlag)
 		
 		def onReplacement(replacement: ComponentHierarchy) =

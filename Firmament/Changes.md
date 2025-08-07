@@ -1,11 +1,16 @@
 # Utopia Firmament - List of Changes
 
-## v1.5.1 (in development)
+## v1.6 (in development)
+### Breaking changes
+- Stackable now requires the classes to implement `updateStackSize(): Boolean`
+  - This is already implemented by all **CachingStackable** and **StackableWrapper**, 
+    only not covering custom implementations and static sized components
 ### New features
 - All context implementations now implement a `windowPointer` property, where the intention is to allow 
   the components to utilize a centralized pointer that will contain the Firmament-based window hosting them.
   - Please note, that this pointer is never populated by default. 
     Implementing libraries / code (such as Utopia Reach) will need to populate / specify it themselves.
+- Added **FixedStackable** trait for static-sized **Stackable** implementations
 ### New methods
 - **java.awt.Component** (via **AwtComponentExtensions**)
   - Added `.toImage`

@@ -16,7 +16,7 @@ import utopia.genesis.graphics.FontMetricsWrapper
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateHandler, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateListener, MouseEventGenerator, MouseMoveListener, MouseWheelListener}
+import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
@@ -209,6 +209,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	override def stackSize = cachedStackSize.value
 	
 	override def resetCachedSize() = cachedStackSize.reset()
+	override def updateStackSize(): Boolean = !cachedStackSize.popCurrent().contains(stackSize)
 	
 	override def fontMetricsWith(font: Font): FontMetricsWrapper = content.fontMetricsWith(font)
 	

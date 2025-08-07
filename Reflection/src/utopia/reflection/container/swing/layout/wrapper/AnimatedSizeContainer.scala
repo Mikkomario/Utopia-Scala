@@ -67,6 +67,8 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	private val transitioningFlag = Volatile.switch
 	
+	override val stackId = hashCode()
+	
 	
 	// INITIAL CODE	--------------------
 	
@@ -77,11 +79,9 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	// COMPUTED	------------------------
 	
 	private def transitioning = transitioningFlag.value
-	
 	private def transitioning_=(newState: Boolean) = transitioningFlag.update { oldState =>
 		// May register or unregister the actor component from the actor handler
-		if (oldState != newState)
-		{
+		if (oldState != newState) {
 			if (newState)
 				actorHandler += SizeUpdater
 			else
@@ -99,18 +99,15 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	override protected def wrapped = panel
 	
-	override def updateLayout() =
-	{
+	override def updateLayout() = {
 		// Content is set to fill this container
 		content.size = size
 		// panel.repaint()
 	}
 	
-	override def stackSize =
-	{
+	override def stackSize = {
 		// When transitioning, provides a stack size that is getting closer to the target
-		if (transitioning)
-		{
+		if (transitioning) {
 			val progress = curve(timePassed / transitionDuration)
 			targetSize * progress + startSize * (1 - progress)
 		}
@@ -120,8 +117,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 			targetSize
 	}
 	
-	override def resetCachedSize() =
-	{
+	override def resetCachedSize() = {
 		// When stack size is reset while a transition is NOT in process, may start one
 		if (!transitioning) {
 			// Only starts animation if content stack size really changed
@@ -129,8 +125,19 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 		}
 		// These events are ignored while transition is in progress, because this method is being called repeatedly
 	}
-	
-	override val stackId = hashCode()
+	override def updateStackSize(): Boolean = {
+		if (transitioning)
+			true
+		else {
+			val target = content.stackSize
+			if (target == targetSize)
+				false
+			else {
+				newTarget(target)
+				true
+			}
+		}
+	}
 	
 	override protected def _set(content: C): Unit = {
 		panel -= _content
@@ -152,10 +159,8 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	// OTHER	-------------------------
 	
-	private def newTarget(newTargetSize: StackSize) =
-	{
-		if (newTargetSize != targetSize)
-		{
+	private def newTarget(newTargetSize: StackSize) = {
+		if (newTargetSize != targetSize) {
 			// The starting size must still stay within new size bounds
 			startSize = targetSize.map { (axis, length) =>
 				val newTargetLength = newTargetSize.along(axis)

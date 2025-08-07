@@ -1,5 +1,6 @@
 package utopia.reflection.test.swing
 
+import utopia.firmament.component.stack.FixedStackable
 import utopia.paradigm.color.Color
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import utopia.reflection.component.template.ReflectionComponentLike
@@ -19,15 +20,13 @@ import utopia.reflection.test.TestContext._
 object DialogTest extends App
 {
 	private class ContentPanel(override val stackSize: StackSize)
-		extends Panel[ReflectionComponentLike with AwtComponentRelated] with ReflectionStackLeaf
+		extends Panel[ReflectionComponentLike with AwtComponentRelated] with ReflectionStackLeaf with FixedStackable
 	{
 		background = Color.white
 
 		override def stackId = hashCode()
 
 		override def updateLayout() = ()
-
-		override def resetCachedSize() = ()
 	}
 
 	private val frame = Frame.windowed(new ContentPanel(640.any x 480.any), "Frame".local.skipLocalization)

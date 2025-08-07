@@ -1,6 +1,7 @@
 package utopia.reflection.component.swing.input
 
 import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.component.stack.FixedStackable
 import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
@@ -259,7 +260,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
                 stickyPoints: Seq[Double] = Vector(), arrowMovement: Double = 0.1,
                 leftHeightModifier: Double = 1.0, rightHeightModifier: Double = 1.0, initialValue: Double = 0.0)
 	extends AwtComponentWrapperWrapper with ReflectionStackLeaf with Focusable with MutableCustomDrawableWrapper
-		with InputWithPointer[A, Changing[A]]
+		with InputWithPointer[A, Changing[A]] with FixedStackable
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -361,13 +362,10 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 	
 	// IMPLEMENTED  -------------------------
 	
+	override protected def wrapped = label
 	override def drawable = label
 	
 	override def updateLayout() = ()
-	
-	override def resetCachedSize() = ()
-	
-	override protected def wrapped = label
 	
 	override def requestFocusInWindow() = component.requestFocusInWindow()
 	

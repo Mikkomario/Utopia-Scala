@@ -3,6 +3,8 @@
 ## v1.7.3 (in development)
 ### Bugfixes
 - Fixed a bug that caused **ProjectilePath** to transform its shape when its linearity was positive
+### New features
+- Added `Bounds.aroundBuilder`
 ### Other
 - Rewrote **ProjectilePath**
 

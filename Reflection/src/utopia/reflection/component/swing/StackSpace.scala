@@ -52,7 +52,8 @@ object StackSpace
   * @author Mikko Hilpinen
   * @since 14.3.2020, v1
   */
-class StackSpace(override val stackSize: StackSize) extends JWrapper with ReflectionStackLeaf with MutableCustomDrawableWrapper
+class StackSpace(override val stackSize: StackSize)
+	extends JWrapper with ReflectionStackLeaf with MutableCustomDrawableWrapper
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -68,6 +69,7 @@ class StackSpace(override val stackSize: StackSize) extends JWrapper with Reflec
 	override def updateLayout() = ()
 	
 	override def resetCachedSize() = ()
+	override def updateStackSize(): Boolean = false
 	
 	override def drawable = component
 }
