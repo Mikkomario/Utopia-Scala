@@ -2,8 +2,9 @@ package utopia.echo.controller.sd
 
 import utopia.echo.controller.client.ComfyUIClient
 import utopia.echo.model.comfyui.request.GetWorkResult
+import utopia.echo.model.comfyui.settings.SamplerSettings
 import utopia.echo.model.comfyui.workflow.node._
-import utopia.echo.model.comfyui.workflow.{OutputRef, SamplerSettings}
+import utopia.echo.model.comfyui.workflow.OutputRef
 import utopia.echo.model.comfyui.{CheckpointModel, ComfyUiDir, Seed}
 import utopia.flow.collection.immutable.Pair
 

@@ -1,9 +1,9 @@
 package utopia.echo.model.comfyui.workflow.node
 
-import utopia.echo.model.comfyui.workflow.node.NodeClass
-import utopia.echo.model.comfyui.workflow.node.NodeClass.KSampler
 import utopia.echo.model.comfyui.Seed
-import utopia.echo.model.comfyui.workflow.{OutputRef, SamplerSettings}
+import utopia.echo.model.comfyui.settings.{SamplerSettings, SamplerSettingsWrapper}
+import utopia.echo.model.comfyui.workflow.OutputRef
+import utopia.echo.model.comfyui.workflow.node.NodeClass.KSampler
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 
@@ -22,8 +22,8 @@ import utopia.flow.generic.model.immutable.Model
  */
 case class KSamplerNode(name: String, model: OutputRef, positive: OutputRef, negative: OutputRef,
                         latentInput: OutputRef)
-                       (implicit settings: SamplerSettings, seed: Seed)
-	extends WorkflowNode
+                       (implicit override val settings: SamplerSettings, seed: Seed)
+	extends WorkflowNode with SamplerSettingsWrapper[KSamplerNode]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -41,4 +41,6 @@ case class KSamplerNode(name: String, model: OutputRef, positive: OutputRef, neg
 		"model" -> model, "seed" -> seed.next(), "steps" -> settings.steps, "cfg" -> settings.cfg,
 		"sampler_name" -> settings.sampler, "scheduler" -> settings.scheduler, "positive" -> positive,
 		"negative" -> negative, "latent_image" -> latentInput, "denoise" -> settings.denoiseRatio)
+	
+	override def withSettings(settings: SamplerSettings): KSamplerNode = copy()(settings, seed)
 }

@@ -3,7 +3,7 @@ package utopia.echo.test
 import utopia.echo.controller.client.ComfyUIClient
 import utopia.echo.controller.sd.GenerateImages
 import utopia.echo.model.comfyui.Seed.RandomSeed
-import utopia.echo.model.comfyui.workflow.SamplerSettings
+import utopia.echo.model.comfyui.settings.SamplerSettings
 import utopia.echo.model.comfyui.{CheckpointModel, ComfyUiDir, Seed}
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
