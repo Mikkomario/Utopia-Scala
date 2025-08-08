@@ -59,9 +59,12 @@
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s
 - Added **FilterableViewWrapper**
+- Added **AccessDeprecatingRoot**, **AccessManyDeprecatingRoot** and **AccessOneDeprecatingRoot**
 ### New methods
 - **Column**
   - Added `.sqlName`, `.shortSqlName` and `.sqlDescription`
+- **DeprecatableView**
+  - Added `.active` and `.historical`
 - **Joinable**
   - Added `.where(Condition)` for constructing conditional joins
 - **References**

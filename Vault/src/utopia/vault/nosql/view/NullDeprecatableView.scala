@@ -2,8 +2,7 @@ package utopia.vault.nosql.view
 
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Storable
-import utopia.vault.nosql.storable.deprecation.NullDeprecatable
+import utopia.vault.model.template.DeprecatesAfterDefined
 import utopia.vault.sql.{Update, Where}
 
 /**
@@ -15,7 +14,7 @@ trait NullDeprecatableView[+Sub] extends TimeDeprecatableView[Sub]
 {
 	// ABSTRACT -----------------------
 	
-	override protected def model: NullDeprecatable[Storable]
+	override protected def model: DeprecatesAfterDefined
 	
 	
 	// COMPUTED ----------------------

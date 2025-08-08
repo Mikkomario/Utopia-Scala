@@ -24,4 +24,8 @@ trait DeprecatableView[+Repr] extends FilterableView[Repr]
 	 * @return Access to non-deprecated items
 	 */
 	def active = filter(model.activeCondition)
+	/**
+	 * @return Access limited to deprecated items
+	 */
+	def historical = filter(model.deprecatedCondition)
 }
