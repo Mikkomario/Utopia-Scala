@@ -1,7 +1,9 @@
 package utopia.vault.nosql.view
 
+import utopia.flow.time.Now
 import utopia.vault.database.Connection
 import utopia.vault.model.template.DeprecatesAfter
+import utopia.vault.sql.{Update, Where}
 
 import java.time.Instant
 
@@ -24,6 +26,12 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	
 	@deprecated("Renamed to .active", "v1.22")
 	def nonDeprecated = active
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	def deprecate()(implicit c: Connection) =
+		c(Update(target, model.deprecationColumn, Now.toValue) + accessCondition.map(Where.apply)).updatedRows
 	
 	
 	// OTHER    ----------------------

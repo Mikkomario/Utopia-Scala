@@ -1,5 +1,6 @@
 package utopia.vault.nosql.view
 
+import utopia.vault.database.Connection
 import utopia.vault.model.template.Deprecates
 
 /**
@@ -16,6 +17,13 @@ trait DeprecatableView[+Repr] extends FilterableView[Repr]
 	 * @return Model used for interacting with the DB and for building conditions
 	 */
 	protected def model: Deprecates
+	
+	/**
+	 * Deprecates the accessible items
+	 * @param connection Implicit DB connection
+	 * @return Whether any row was targeted
+	 */
+	def deprecate()(implicit connection: Connection): Boolean
 	
 	
 	// COMPUTED ----------------------
