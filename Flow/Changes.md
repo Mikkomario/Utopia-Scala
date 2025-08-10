@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.6.1 (in development)
+## v2.7 (in development)
 ### Breaking changes
 - Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
   with new classes with these names
@@ -20,7 +20,8 @@
 ### New features
 - Added **Year**, **YearMonth** and **Month** as generic data types
 - Added builder for **IntSet**s
-- Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy** and **LazyWrapper**
+- Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy**, 
+  **MergingLazy** and **LazyWrapper**
 ### New methods
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`

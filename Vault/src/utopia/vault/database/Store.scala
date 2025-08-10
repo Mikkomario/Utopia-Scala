@@ -2,6 +2,7 @@ package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{IntSet, OptimizedIndexedSeq}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.collectionMayBeEmpty
 import utopia.vault.nosql.storable.DataInserter
@@ -212,7 +213,6 @@ object Store
 	 * @tparam S Type of existing database entries
 	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
 	 */
-	// TODO: Add more general deprecating support (not just null-deprecatable)
 	def replaceKeyMapped[K, V, D, S <: HasId[Int]](access: ViewManyByIntIds[DeprecatableView[_]],
 	                                               model: DataInserter[_, S, D],
 	                                               itemsToStore: Iterable[(K, V)], existingItems: Map[K, S])

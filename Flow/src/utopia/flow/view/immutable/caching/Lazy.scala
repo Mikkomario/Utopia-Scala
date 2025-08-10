@@ -189,6 +189,33 @@ trait Lazy[+A] extends View[A]
 	  * @return A lazily initialized container that contains the result of 'f'
 	  */
 	def flatMap[B](f: A => Lazy[B]): Lazy[B] = new FlatteningLazy(lightMap(f))
+	/**
+	 * Merges this lazy with another lazy instance.
+	 * The merging function is not necessarily called lazily, however.
+	 *
+	 * Note: The merge results are cached, meaning that resets in either source
+	 *       are not necessarily reflected in the result.
+	 *
+	 * @param other Another lazy container
+	 * @param f A merge function that combines values from both containers
+	 *          once they're requested or once they become available.
+	 * @tparam B Type of the value in the other container
+	 * @tparam R Type of merge results
+	 * @return A lazy container that will contain the merge results
+	 */
+	def mergeWith[B, R](other: Lazy[B])(f: (A, B) => R): Lazy[R] = current match {
+		case Some(leftV) =>
+			other.current match {
+				case Some(rightV) => Lazy.initialized(f(leftV, rightV))
+				case None => other.lightMap { f(value, _) }
+			}
+			
+		case None =>
+			if (other.isInitialized)
+				lightMap { f(_, other.value) }
+			else
+				MergingLazy(this, other)(f)
+	}
 	
 	/**
 	  * Lazily maps this container's content
