@@ -2,34 +2,12 @@ package utopia.vault.nosql.storable
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, Inserter}
 import utopia.vault.model.immutable.Storable
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Insert
-import utopia.vault.store.Inserter
 
 import scala.language.implicitConversions
-
-object DataInserter
-{
-	// IMPLICIT --------------------------
-	
-	implicit def toInserter[I, S](dataInserter: DataInserter[_, S, I])(implicit connection: Connection): Inserter[I, S] =
-		new InserterWrapper[I, S](dataInserter)
-	
-	
-	// NESTED   --------------------------
-	
-	private class InserterWrapper[-I, +S](inserter: DataInserter[_, S, I])(implicit connection: Connection)
-		extends Inserter[I, S]
-	{
-		override def insert(data: I): S = inserter.insert(data)
-		override def insert(data: Seq[I]): Seq[S] = inserter.insert(data)
-		
-		override def insertFrom[O, R](data: Seq[O])(extractData: O => I)(mergeBack: (S, O) => R): Seq[R] =
-			inserter.insertFrom(data)(extractData)(mergeBack)
-	}
-}
 
 /**
   * Common trait for database interaction models / access points which allow insertion of model data
@@ -39,7 +17,7 @@ object DataInserter
   * @tparam Complete Class that represents an instance that hase been stored to DB
   * @tparam Data     Class that represents an instance before it has been stored to the DB
   */
-trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
+trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Inserter[Data, Complete] with Indexed
 {
 	// ABSTRACT ---------------------------
 	
@@ -57,7 +35,7 @@ trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
 	protected def complete(id: Value, data: Data): Complete
 	
 	
-	// OTHER    ---------------------------
+	// IMPLEMENTED  -----------------------
 	
 	/**
 	  * Inserts a new item to the database
@@ -65,15 +43,14 @@ trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
 	  * @param connection DB Connection (implicit)
 	  * @return Inserted item
 	  */
-	def insert(data: Data)(implicit connection: Connection) = complete(apply(data).insert(), data)
-	
+	override def insert(data: Data)(implicit connection: Connection) = complete(apply(data).insert(), data)
 	/**
 	  * Inserts multiple new items to the database
 	  * @param data       Data to insert
 	  * @param connection DB Connection (implicit)
 	  * @return Inserted items
 	  */
-	def insert(data: Seq[Data])(implicit connection: Connection) = {
+	override def insert(data: Seq[Data])(implicit connection: Connection) = {
 		val ids = _insert(data)
 		ids.zipAndMerge(data) { (id, data) => complete(id, data) }
 	}
@@ -89,13 +66,16 @@ trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Indexed
 	  * @tparam R Type of the merge results
 	  * @return Merge results
 	  */
-	def insertFrom[O, R](data: Seq[O])(extractData: O => Data)(mergeBack: (Complete, O) => R)
+	override def insertFrom[O, R](data: Seq[O])(extractData: O => Data)(mergeBack: (Complete, O) => R)
 	                    (implicit connection: Connection) =
 	{
 		val extractedData = data.map(extractData)
 		val ids = _insert(extractedData)
 		ids.zipWithIndex.map { case (id, i) => mergeBack(complete(id, extractedData(i)), data(i)) }
 	}
+	
+	
+	// OTHER    ---------------------------
 	
 	private def _insert(data: Seq[Data])(implicit connection: Connection) =
 		Insert(table, data.map { apply(_).toModel }).generatedKeys

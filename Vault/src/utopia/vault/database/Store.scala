@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.Extender
 import utopia.vault.database.Store.ReplaceHandler
 import utopia.vault.nosql.view.{TimeDeprecatableView, ViewManyByIntIds}
-import utopia.vault.store.{HasId, Inserter, StoreResult}
+import utopia.vault.store.{HasId, StoreResult}
 
 import scala.collection.View
 
