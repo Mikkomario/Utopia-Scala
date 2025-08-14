@@ -1,13 +1,15 @@
 package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{IntSet, OptimizedIndexedSeq}
-import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.collection.immutable.{IntSet, OptimizedIndexedSeq, Pair}
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.collectionMayBeEmpty
-import utopia.vault.nosql.storable.DataInserter
-import utopia.vault.nosql.view.{DeprecatableView, ViewFactory, ViewManyByIntIds}
-import utopia.vault.store.{HasId, StoreResult, Stored}
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.template.Extender
+import utopia.vault.database.Store.ReplaceHandler
+import utopia.vault.nosql.view.{TimeDeprecatableView, ViewManyByIntIds}
+import utopia.vault.store.{HasId, Inserter, StoreResult}
 
 import scala.collection.View
 
@@ -18,325 +20,449 @@ import scala.collection.View
   */
 object Store
 {
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * The specified items are expected to be in prepared data format, ready to be inserted after duplicate-exclusion.
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates)
-	 * @param existingItems Related items that already existed in the DB
-	 * @param dataToKey A function that extracts a unique key from a data entry
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def keyMapData[K, D, S <: Stored[D, Int]](model: DataInserter[_, S, D], itemsToStore: Iterable[D],
-	                                          existingItems: Iterable[S])
-	                                         (dataToKey: D => K)(implicit connection: Connection) =
-		keyMap[K, D, D, S](model, itemsToStore, existingItems)(dataToKey) { e => dataToKey(e.data) }(Identity)
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates)
-	 * @param existingItems Related items that already existed in the DB
-	 * @param itemToKey     A function that extracts a unique key from a proposed item
-	 * @param existingToKey A function that extracts a unique key from an existing item
-	 * @param toData A function that converts an item into a data-set ready for DB insertion
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam V Type of stored values
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def keyMap[K, V, D, S <: HasId[Int]](model: DataInserter[_, S, D], itemsToStore: Iterable[V],
-	                                     existingItems: Iterable[S])
-	                                    (itemToKey: V => K)(existingToKey: S => K)
-	                                    (toData: V => D)
-	                                    (implicit connection: Connection) =
-		keyMapped[K, V, D, S](model, itemsToStore.view.map { a => itemToKey(a) -> a },
-			existingItems.view.map { e => existingToKey(e) -> e }.toMap)(toData)
+	// COMPUTED ----------------------
 	
 	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * The specified items are expected to be in prepared data format, ready to be inserted after duplicate-exclusion.
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates). Each entry is mapped to a unique key.
-	 * @param existingItems Related items that already existed in the DB. Each entry is mapped to a unique key.
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
+	 * @tparam S Type of stored instances
+	 * @return A factory for constructing store interfaces that yield stored items of the specified type
 	 */
-	def keyMappedData[K, D, S <: HasId[Int]](model: DataInserter[_, S, D], itemsToStore: Iterable[(K, D)],
-	                                         existingItems: Map[K, S])
-	                                        (implicit connection: Connection) =
-		keyMapped[K, D, D, S](model, itemsToStore, existingItems)(Identity)
+	def to[S <: HasId[Int]] = new StoreFactory[S]
+	
+	
+	// OTHER    ----------------------
+	
 	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates). Each entry is mapped to a unique key.
-	 * @param existingItems Related items that already existed in the DB. Each entry is mapped to a unique key.
-	 * @param toData A function that converts an item into a data-set ready for DB insertion
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam V Type of stored values
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
+	 * @param model Interface used for inserting new items to the database
+	 * @tparam D Type of inserted data
+	 * @tparam S Type of stored instances
+	 * @return A factory for constructing store interfaces which use the specified model
 	 */
-	def keyMapped[K, V, D, S <: HasId[Int]](model: DataInserter[_, S, D], itemsToStore: Iterable[(K, V)],
-	                                        existingItems: Map[K, S])
-	                                       (toData: V => D)
-	                                       (implicit connection: Connection) =
+	def apply[D, S <: HasId[Int] with Extender[D]](model: Inserter[D, S]) = new PreparedStoreFactory[D, S](model)
+	
+	/**
+	 * @param model Interface used for inserting new items to the database
+	 * @param toData A function which converts the accepted input into insertable data
+	 * @tparam V Type of accepted input
+	 * @tparam D Type of stored data
+	 * @tparam S Type of the items that have already been stored to the DB
+	 * @return An interface for storing items to the DB
+	 */
+	def using[V, D, S <: HasId[Int]](model: Inserter[D, S])(toData: V => D) = new PreparedStore[V, D, S](model)(toData)
+	/**
+	 * @param model Interface used for inserting new items to the database
+	 * @tparam D Type of stored data
+	 * @tparam S Type of the items that have already been stored to the DB
+	 * @return An interface for storing prepared data to the DB
+	 */
+	def dataUsing[D, S <: HasId[Int] with Extender[D]](model: Inserter[D, S]) = new PreparedStoreData[D, S](model)
+	
+	
+	// NESTED   ---------------------------
+	
+	class StoreFactory[S <: HasId[Int]]
 	{
-		// Checks for duplicates
-		val dataToInsert = itemsToStore.view
-			.flatMap { case (key, item) =>
-				if (existingItems.contains(key))
-					None
-				// Case: Not a duplicate => Prepares data to insert
-				else
-					Some(key -> toData(item))
-			}
-			.toOptimizedSeq
-		
-		// Case: No data to insert => Returns the existing entries
-		if (dataToInsert.isEmpty)
-			existingItems.view.mapValues(StoreResult.existed).toMap
-		else {
-			// Inserts the prepared data
-			val inserted = model.insertFrom(dataToInsert) { _._2 } { case (inserted, (key, _)) =>
-				key -> StoreResult.inserted(inserted) }
-			
-			// Combines the existing and the inserted data
-			View.concat(existingItems.view.mapValues(StoreResult.existed), inserted).toMap
-		}
+		/**
+		 * @param model Interface used for inserting new items to the database
+		 * @param toData A function which converts the accepted input into insertable data
+		 * @tparam V Type of accepted input
+		 * @tparam D Type of stored data
+		 * @return An interface for storing items to the DB
+		 */
+		def apply[V, D](model: Inserter[D, S])(toData: V => D) = new PreparedStore[V, D, S](model)(toData)
 	}
 	
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * New data may replace existing data, in which case the existing database entry is deprecated.
-	 * The specified items are expected to be in prepared data format, ready to be inserted after duplicate-exclusion.
-	 * @param access Root access point for querying existing data
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates)
-	 * @param existingItems Related items that already existed in the DB
-	 * @param dataToKey A function that extracts a unique key from a data entry
-	 * @param shouldReplace A function that compares a new item (1) and an existing item's data (2),
-	 *                      where their unique keys matched, and yields true in
-	 *                      situations where the new item should replace the existing DB entry.
-	 *                      If this function yields false, the new item is considered a duplicate and ignored.
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def keyMapDataReplacing[K, D, S <: Stored[D, Int]](access: ViewManyByIntIds[DeprecatableView[_]],
-	                                                   model: DataInserter[_, S, D],
-	                                                   itemsToStore: Iterable[D], existingItems: Iterable[S])
-	                                                  (dataToKey: D => K)(shouldReplace: (D, D) => Boolean)
-	                                                  (implicit connection: Connection) =
-		keyMapReplacing[K, D, D, S](access, model, itemsToStore, existingItems)(dataToKey) { e => dataToKey(e.data) } {
-			(data, existing) => shouldReplace(data, existing.data) }(Identity)
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * New data may replace existing data, in which case the existing database entry is deprecated.
-	 * @param access Root access point for querying existing data
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates)
-	 * @param existingItems Related items that already existed in the DB
-	 * @param itemToKey A function that extracts a unique key from a proposed item
-	 * @param existingToKey A function that extracts a unique key from an existing item
-	 * @param shouldReplace A function that compares a new item (1) and an existing item (2),
-	 *                      where their unique keys matched, and yields true in
-	 *                      situations where the new item should replace the existing DB entry.
-	 *                      If this function yields false, the new item is considered a duplicate and ignored.
-	 * @param toData A function that converts an item into a data-set ready for DB insertion
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam V Type of stored values
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def keyMapReplacing[K, V, D, S <: HasId[Int]](access: ViewManyByIntIds[DeprecatableView[_]],
-	                                              model: DataInserter[_, S, D],
-	                                              itemsToStore: Iterable[V], existingItems: Iterable[S])
-	                                             (itemToKey: V => K)(existingToKey: S => K)
-	                                             (shouldReplace: (V, S) => Boolean)(toData: V => D)
-	                                             (implicit connection: Connection) =
-		replaceKeyMapped[K, V, D, S](access, model, itemsToStore.view.map { a => itemToKey(a) -> a },
-			existingItems.view.map { e => existingToKey(e) -> e }.toMap)(shouldReplace)(toData)
-	
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * New data may replace existing data, in which case the existing database entry is deprecated.
-	 * The specified items are expected to be in prepared data format, ready to be inserted after duplicate-exclusion.
-	 * @param access Root access point for querying existing data
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates). Each entry is mapped to a unique key.
-	 * @param existingItems Related items that already existed in the DB. Each entry is mapped to a unique key.
-	 * @param shouldReplace A function that compares a new item (1) and an existing item (2) and yields true in
-	 *                      situations where the new item should replace the existing DB entry.
-	 *                      If this function yields false, the new item is considered a duplicate and ignored.
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam D Type of prepared data entries / items to store
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def replaceKeyMappedData[K, D, S <: HasId[Int]](access: ViewManyByIntIds[DeprecatableView[_]],
-	                                                model: DataInserter[_, S, D],
-	                                                itemsToStore: Iterable[(K, D)], existingItems: Map[K, S])
-	                                               (shouldReplace: (D, S) => Boolean)
-	                                               (implicit connection: Connection) =
-		replaceKeyMapped[K, D, D, S](access, model, itemsToStore, existingItems)(shouldReplace)(Identity)
-	/**
-	 * Stores 0-n items, avoiding inserting duplicate.
-	 * New data may replace existing data, in which case the existing database entry is deprecated.
-	 * @param access Root access point for querying existing data
-	 * @param model A DB model for inserting new data to the DB
-	 * @param itemsToStore Items to store to the DB (excluding duplicates). Each entry is mapped to a unique key.
-	 * @param existingItems Related items that already existed in the DB. Each entry is mapped to a unique key.
-	 * @param shouldReplace A function that compares a new item (1) and an existing item (2) and yields true in
-	 *                      situations where the new item should replace the existing DB entry.
-	 *                      If this function yields false, the new item is considered a duplicate and ignored.
-	 * @param toData A function that converts an item into a data-set ready for DB insertion
-	 * @param connection Implicit DB connection
-	 * @tparam K Type of used unique keys
-	 * @tparam V Type of stored values
-	 * @tparam D Type of prepared data entries
-	 * @tparam S Type of existing database entries
-	 * @return A map containing both the existing and the inserted items, mapped to their unique keys
-	 */
-	def replaceKeyMapped[K, V, D, S <: HasId[Int]](access: ViewManyByIntIds[DeprecatableView[_]],
-	                                               model: DataInserter[_, S, D],
-	                                               itemsToStore: Iterable[(K, V)], existingItems: Map[K, S])
-	                                              (shouldReplace: (V, S) => Boolean)(toData: V => D)
-	                                              (implicit connection: Connection) =
+	class PreparedStoreFactory[D, S <: HasId[Int] with Extender[D]](model: Inserter[D, S])
 	{
-		// Reviews the items, collecting inserts, deprecations and existing matches
-		val idsToReplaceBuilder = IntSet.newBuilder
-		val insertsBuilder = OptimizedIndexedSeq.newBuilder[(K, V)]
-		itemsToStore.foreach { case (key, item) =>
-			existingItems.get(key) match {
+		// COMPUTED ---------------------------
+		
+		/**
+		 * @return An interface for storing prepared data to the DB
+		 */
+		def data = new PreparedStoreData[D, S](model)
+		
+		
+		// OTHER    ---------------------------
+		
+		/**
+		 * @param toData A function which converts the accepted input into insertable data
+		 * @tparam V Type of accepted input
+		 * @return An interface for storing items to the DB
+		 */
+		def apply[V](toData: V => D) = new PreparedStore[V, D, S](model)(toData)
+	}
+	
+	class PreparedStore[V, -D, S <: HasId[Int]](model: Inserter[D, S],
+	                                            replaceHandler: Option[ReplaceHandler[V, S]] = None)
+	                                           (toData: V => D)
+		extends Store[V, S, PreparedStore[V, D, S]]
+	{
+		// IMPLEMENTED  ---------------------------
+		
+		override def using(handler: ReplaceHandler[V, S]): PreparedStore[V, D, S] =
+			new PreparedStore(model, Some(handler))(toData)
+		
+		override def single(item: V, existingMatch: Option[S])(implicit connection: Connection) =
+			existingMatch match {
+				// Case: There already existed a new item => Performs the replacement check, if appropriate
 				case Some(existing) =>
-					if (shouldReplace(item, existing)) {
-						idsToReplaceBuilder += existing.id
-						insertsBuilder += (key -> item)
+					replaceHandler match {
+						// Case: Replacement may be utilized => Checks whether the item is a new version or a duplicate
+						case Some(replacer) =>
+							// Case: The item is a new version => Replaces the old version with it
+							if (replacer.handleMatch(item, item, existing)) {
+								val lazyInserted = Lazy { model.insert(toData(item)) }
+								replacer.replace(MapAccess { _ => lazyInserted.value })
+								StoreResult.inserted(lazyInserted.value)
+							}
+							// Case: Duplicate => Yields the existing item
+							else
+								StoreResult.existed(existing)
+						
+						// Case: Replacement is not used
+						//       => Considers the new item a duplicate and yields the existing item
+						case None => StoreResult.existed(existing)
 					}
-				case None => insertsBuilder += (key -> item)
+				// Case: No existing match => Inserts the item
+				case None => StoreResult.inserted(model.insert(toData(item)))
+			}
+		
+		override def keyMapped[K](itemsToStore: IterableOnce[(K, V)], existingItems: Map[K, S])
+		                (implicit connection: Connection) =
+		{
+			val existingResultView = existingItems.view.mapValues(StoreResult.existed)
+			itemsToStore.nonEmptyIterator match {
+				case Some(itemsIterator) =>
+					// Checks against the existing items,
+					// preparing the non-duplicates as new inserts and handling possible replacements
+					val insertsBuilder = OptimizedIndexedSeq.newBuilder[(K, V)]
+					itemsIterator.foreach { case (key, item) =>
+						existingItems.get(key) match {
+							// Case: Matches an existing item
+							//       => Handles it using the replace-handler, if appropriate.
+							//          If no handler has been specified,
+							//          treats the item as a duplicate and won't insert it.
+							case Some(existing) =>
+								if (replaceHandler.exists { _.handleMatch(key, item, existing) })
+									insertsBuilder += (key -> item)
+							
+							// Case: A non-duplicate item => Prepares to insert it
+							case None => insertsBuilder += (key -> item)
+						}
+					}
+					
+					insertsBuilder.result().notEmpty match {
+						// Case: At least one insert is necessary
+						case Some(inserts) =>
+							// Performs the inserts before or after the replacement
+							val lazyInserted = Lazy {
+								model.insertFrom(inserts) { case (_, item) => toData(item) } {
+									case (inserted, (key, _)) => key -> inserted }
+							}
+							// Performs the replacement, if appropriate
+							replaceHandler.foreach { replacer =>
+								val lazyInsertedMap = lazyInserted.map { _.toMap[Any, S] }
+								replacer.replace(MapAccess.wrapLazily[Any, S](lazyInsertedMap.value))
+							}
+							// Converts the insertion results into store-results
+							// If the insert was not performed yet, it is performed here
+							// Combines the existing and inserted results into a map
+							View.concat(
+								existingResultView,
+								lazyInserted.value.view.map { case (key, inserted) =>
+									key -> StoreResult.inserted(inserted)
+								}
+							).toMap
+						
+						// Case: None of the specified items were new => Returns the existing items
+						case None => existingResultView.toMap
+					}
+					
+				// Case: There were no items to store => Yields the existing items
+				case None => existingResultView.toMap
+			}
+		}
+	}
+	class PreparedStoreData[D, S <: Extender[D] with HasId[Int]](model: Inserter[D, S],
+	                                                             replaceHandler: Option[ReplaceHandler[D, S]] = None)
+		extends PreparedStore[D, D, S](model, replaceHandler)(Identity) with Store[D, S, PreparedStoreData[D, S]]
+	{
+		// IMPLEMENTED  ------------------------
+		
+		override def using(handler: ReplaceHandler[D, S]): PreparedStoreData[D, S] =
+			new PreparedStoreData[D, S](model, Some(handler))
+		
+		
+		// OTHER    ----------------------------
+		
+		/**
+		 * Maps the items into unique keys and uses that mapping to check for duplicates
+		 * @param itemsToStore Items that should be inserted, unless they're duplicates
+		 * @param existingItems Potentially matching items that already exist in the database
+		 * @param dataToKey A function that converts the data form of an item into a unique key
+		 * @param connection Implicit DB connection
+		 * @tparam K Type of keys used
+		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
+		 */
+		def keyMap[K](itemsToStore: IterableOnce[D], existingItems: IterableOnce[S])(dataToKey: D => K)
+		             (implicit connection: Connection) =
+			super.keyMap[K](itemsToStore, existingItems) { dataToKey(_) } { e => dataToKey(e.wrapped) }
+	}
+	
+	object ReplaceHandler
+	{
+		// OTHER    -------------------------
+		
+		/**
+		 * Creates a replace-handler which applies a deprecating timestamp to the replaced items / rows
+		 * @param rootAccess Root-level access to the items in the database. Used for performing the deprecation.
+		 * @param shouldReplace A function that accepts the proposed item and the item that already exists in the DB.
+		 *                          - Yields true if the new item should be considered a new version
+		 *                            and replace the existing item.
+		 *                          - Yields false if the new item should be considered a duplicate
+		 *                            and ignored / not inserted to the DB.
+		 * @tparam V Type of new values
+		 * @tparam S Type of existing DB entries
+		 * @return A new replace-handler, which deprecates by updating a timestamp column
+		 */
+		def deprecating[V, S <: HasId[Int]](rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])
+		                                   (shouldReplace: (V, S) => Boolean) =
+			new DeprecatingReplaceHandler[V, S](rootAccess)(shouldReplace)
+		
+		/**
+		 * Creates a new replace-handler, where the replacements are performed after the inserts
+		 * @param shouldReplace A function that accepts the proposed item and the item that already exists in the DB.
+		 *                          - Yields true if the new item should be considered a new version
+		 *                            and replace the existing item.
+		 *                          - Yields false if the new item should be considered a duplicate
+		 *                            and ignored / not inserted to the DB.
+		 * @param replace A function that performs the actual replacement, based on two parameters:
+		 *                      1. Replacements to perform. Never empty.
+		 *                         Each entry is a pair containing two stored versions:
+		 *                              1. The newly inserted version
+		 *                              1. The earlier version, which needs to be replaced / deprecated
+		 *                      1. Database connection to use
+		 * @tparam V Type of new items, before they've been inserted
+		 * @tparam S Type of items after they've been inserted
+		 * @return A new replace-handler
+		 */
+		def apply[V, S](shouldReplace: (V, S) => Boolean)
+		               (replace: (IndexedSeq[Pair[S]], Connection) => Unit): ReplaceHandler[V, S] =
+			new _ReplaceHandler[V, S](shouldReplace)(replace)
+		
+		
+		// NESTED   -------------------------
+		
+		class DeprecatingReplaceHandler[-V, -S <: HasId[Int]](rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])
+		                                                     (shouldReplace: (V, S) => Boolean)
+			extends ReplaceHandler[V, S]
+		{
+			// ATTRIBUTES   -----------------
+			
+			// Collects the IDs which need to be deprecated
+			private val idsToReplaceBuilder = IntSet.newBuilder
+			
+			
+			// IMPLEMENTED  -----------------
+			
+			override def handleMatch(key: Any, newItem: V, existingItem: S): Boolean = {
+				// Case: Replacement => Remembers the old version's ID
+				if (shouldReplace(newItem, existingItem)) {
+					idsToReplaceBuilder += existingItem.id
+					true
+				}
+				else
+					false
+			}
+			
+			override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit = {
+				// Deprecates the rows matching the collected IDs
+				rootAccess(idsToReplaceBuilder.result()).deprecate()
+				idsToReplaceBuilder.clear()
 			}
 		}
 		
-		insertsBuilder.result().notEmpty match {
-			case Some(inserts) =>
-				// Performs the deprecations and the inserts
-				idsToReplaceBuilder.result().notEmpty.foreach { access(_).deprecate() }
-				val inserted = model.insertFrom(inserts) { case (_, v) => toData(v) } { case (inserted, (key, _)) =>
-					key -> StoreResult.inserted(inserted) }
-				
-				// Combines the results
-				View.concat(existingItems.view.mapValues(StoreResult.existed), inserted).toMap
+		private class _ReplaceHandler[-V, S](shouldReplace: (V, S) => Boolean)
+		                                   (replace: (IndexedSeq[Pair[S]], Connection) => Unit)
+			extends ReplaceHandler[V, S]
+		{
+			// ATTRIBUTES   -----------------------
 			
-			// Case: No data to insert => Just returns the existing items
-			case None => existingItems.view.mapValues(StoreResult.existed).toMap
-		}
-	}
-	
-	/**
-	 * Stores an individual item to the DB, checking for potential duplicates first
-	 * @param model Model used for inserting new entries to the DB
-	 * @param data The item to store to the DB, as prepared data
-	 * @param existingMatch Matching item from the DB. None if there was no match.
-	 * @param connection Implicit DB connection
-	 * @tparam D Type of data representations
-	 * @tparam S Type of stored instances
-	 * @return A store result based on either a newly inserted item, or the existing match
-	 */
-	def singleData[D, S <: HasId[Int]](model: DataInserter[_, S, D], data: D, existingMatch: Option[S])
-	                                  (implicit connection: Connection) =
-		single[D, D, S](model, data, existingMatch)(Identity)
-	/**
-	 * Stores an individual item to the DB, checking for potential duplicates first
-	 * @param model Model used for inserting new entries to the DB
-	 * @param itemToStore The item to store to the DB
-	 * @param existingMatch Matching item from the DB. None if there was no match.
-	 * @param toData A function that converts the new item to insertable data
-	 * @param connection Implicit DB connection
-	 * @tparam V Type of stored / new values
-	 * @tparam D Type of data representations
-	 * @tparam S Type of stored instances
-	 * @return A store result based on either a newly inserted item, or the existing match
-	 */
-	def single[V, D, S <: HasId[Int]](model: DataInserter[_, S, D], itemToStore: V, existingMatch: Option[S])
-	                                 (toData: V => D)(implicit connection: Connection) =
-		existingMatch match {
-			case Some(existing) => StoreResult.existed(existing)
-			case None => StoreResult.inserted(model.insert(toData(itemToStore)))
-		}
-	
-	/**
-	 * Stores an individual item to the DB, checking for potential duplicates first.
-	 * Supports the deprecation of previous / existing DB matches.
-	 * @param access Root level access to the stored items. Used in the deprecation process.
-	 * @param model Model used for inserting new entries to the DB
-	 * @param dataToStore The item to store to the DB, as a prepared data entry
-	 * @param existingMatch Matching item from the DB. None if there was no match.
-	 * @param shouldReplace A function that compares the new and the existing item.
-	 *                      Yields true if the new item should replace the existing item.
-	 * @param connection Implicit DB connection
-	 * @tparam D Type of data representations
-	 * @tparam S Type of stored instances
-	 * @return A store result based on either a newly inserted item, or the existing match
-	 */
-	def singleDataReplacing[D, S <: HasId[Int]](access: => ViewFactory[DeprecatableView[_]],
-	                                            model: DataInserter[_, S, D], dataToStore: D,
-	                                            existingMatch: Option[S])
-	                                           (shouldReplace: (D, S) => Boolean)
-	                                           (implicit connection: Connection) =
-		singleReplacing[D, D, S](access, model, dataToStore, existingMatch)(shouldReplace)(Identity)
-	/**
-	 * Stores an individual item to the DB, checking for potential duplicates first.
-	 * Supports the deprecation of previous / existing DB matches.
-	 * @param access Root level access to the stored items. Used in the deprecation process.
-	 * @param model Model used for inserting new entries to the DB
-	 * @param itemToStore The item to store to the DB
-	 * @param existingMatch Matching item from the DB. None if there was no match.
-	 * @param shouldReplace A function that compares the new and the existing item.
-	 *                      Yields true if the new item should replace the existing item.
-	 * @param toData A function that converts the new item to insertable data
-	 * @param connection Implicit DB connection
-	 * @tparam V Type of stored / new values
-	 * @tparam D Type of data representations
-	 * @tparam S Type of stored instances
-	 * @return A store result based on either a newly inserted item, or the existing match
-	 */
-	def singleReplacing[V, D, S <: HasId[Int]](access: => ViewFactory[DeprecatableView[_]],
-	                                           model: DataInserter[_, S, D], itemToStore: V, existingMatch: Option[S])
-	                                          (shouldReplace: (V, S) => Boolean)(toData: V => D)
-	                                          (implicit connection: Connection) =
-	{
-		existingMatch match {
-			// Case: There already exists a match in the DB => Checks whether it should be replaced
-			case Some(existing) =>
-				// Case: Should replace => Deprecates the item and inserts a new entry
-				if (shouldReplace(itemToStore, existing)) {
-					model.table.primaryColumn.foreach { index =>
-						access(index <=> existing.id).deprecate()
-					}
-					StoreResult.inserted(model.insert(toData(itemToStore)))
+			// Collects the items to replace, mapped to their unique keys
+			private val replacementsBuilder = OptimizedIndexedSeq.newBuilder[(Any, S)]
+			
+			
+			// IMPLEMENTED  -----------------------
+			
+			override def handleMatch(key: Any, newItem: V, existingItem: S): Boolean = {
+				// Case: Replacement => Remembers the old version, as well as its key
+				if (shouldReplace(newItem, existingItem)) {
+					replacementsBuilder += (key -> existingItem)
+					true
 				}
-				// Case: Should not replace => Yields the existing item
 				else
-					StoreResult.existed(existing)
-				
-			// Case: No match existed => Inserts a new item
-			case None => StoreResult.inserted(model.insert(toData(itemToStore)))
+					false
+			}
+			
+			override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit = {
+				// Performs the replacements. Safely assumes that at least one replacement was prepared.
+				replace(replacementsBuilder.result().map { case (key, existing) => Pair(inserted(key), existing) },
+					connection)
+				replacementsBuilder.clear()
+			}
 		}
 	}
+	/**
+	 * Common trait for interfaces which handle item replacement / deprecation.
+	 *
+	 * ReplaceHandlers are expected to be stateful,
+	 * but to reset their state after the replace operation has been performed.
+	 *
+	 * @tparam V Type of new items
+	 * @tparam S Type of existing items
+	 */
+	trait ReplaceHandler[-V, -S]
+	{
+		/**
+		 * Checks whether a new item is to be considered a duplicate or a new version of an existing item.
+		 * Prepares the replacement, if appropriate.
+		 * @param key A unique key common to both items
+		 * @param newItem The item proposed to be stored
+		 * @param existingItem The item that already existed in the DB
+		 * @return Whether 'newItem' should be considered an updated version of 'existingItem'.
+		 *         False if 'newItem' should be considered a duplicate and ignored.
+		 */
+		def handleMatch(key: Any, newItem: V, existingItem: S): Boolean
+		
+		/**
+		 * Performs the prepared replacements.
+		 * Only called if replacements have been prepared, i.e. if 'handleMatch' yielded true at least once.
+		 * @param inserted Access to the inserted items based on their unique keys.
+		 *
+		 *                 Note: If no value is queried, the insert will be performed AFTER this replace function call.
+		 *                       On the other hand, if a value is requested, the insert will be performed immediately.
+		 *                       ReplaceHandler implementations may use this property to control when the inserts
+		 *                       should be performed. Typically, the optimal approach would be not to use this
+		 *                       property, unless necessary.
+		 *
+		 * @param connection Implicit DB connection
+		 */
+		def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit
+	}
+}
+
+/**
+ * A prepared interface for performing various store functions
+ * @tparam V Type of accepted input / items to store
+ * @tparam S Type of existing database entries / inserted items
+ * @tparam Repr Type of this store interface
+ */
+trait Store[V, S <: HasId[Int], +Repr]
+{
+	// ABSTRACT ------------------------
+	
+	/**
+	 * @param handler A new replace-handler to perform replacements with
+	 * @return A copy of this interface, which uses the specified replace-handler
+	 */
+	def using(handler: ReplaceHandler[V, S]): Repr
+	
+	/**
+	 * Stores an individual item to the database.
+	 * If the specified item was a duplicate entry, no insertion is performed.
+	 * @param item The item to store
+	 * @param existingMatch An existing matching entry from the database. None if there was no matching entry.
+	 * @param connection Implicit DB connection
+	 * @return Result of this store operation, either containing the inserted entry, or 'existingMatch'.
+	 */
+	def single(item: V, existingMatch: Option[S])(implicit connection: Connection): StoreResult[S]
+	
+	/**
+	 * Stores 0-n items to the database. Checks against existing data and won't insert any duplicate entries.
+	 * @param itemsToStore The items that should be stored to the DB.
+	 *                     Each item is mapped to a unique key,
+	 *                     which is used for matching it with a possible existing DB entry.
+	 * @param existingItems Matching items from the database. These, also, are mapped to unique (matching) keys.
+	 * @param connection Implicit DB connection
+	 * @tparam K type of keys used
+	 * @return A map where keys are the specified keys and values are store results,
+	 *         either containing a newly inserted item, or one of the existing DB entries.
+	 */
+	def keyMapped[K](itemsToStore: IterableOnce[(K, V)], existingItems: Map[K, S])
+	                (implicit connection: Connection): Map[K, StoreResult[S]]
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param rootAccess Root-level access to the matching database entries.
+	 *                   Used for deprecating older item versions. Supports timestamp-based deprecation.
+	 * @param shouldReplace A function that accepts the proposed item and the item that already exists in the DB.
+	 *                          - Yields true if the new item should be considered a new version
+	 *                            and replace the existing item.
+	 *                          - Yields false if the new item should be considered a duplicate
+	 *                            and ignored / not inserted to the DB.
+	 * @return Copy of this interface, which deprecates older item versions by specifying a deprecation timestamp
+	 */
+	def deprecating(rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])(shouldReplace: (V, S) => Boolean) =
+		using(ReplaceHandler.deprecating(rootAccess)(shouldReplace))
+	/**
+	 * @param shouldReplace A function that accepts the proposed item and the item that already exists in the DB.
+	 *                          - Yields true if the new item should be considered a new version
+	 *                            and replace the existing item.
+	 *                          - Yields false if the new item should be considered a duplicate
+	 *                            and ignored / not inserted to the DB.
+	 * @param replace A function that performs the actual replacement, based on two parameters:
+	 *                      1. Replacements to perform. Never empty.
+	 *                         Each entry is a pair containing two stored versions:
+	 *                              1. The newly inserted version
+	 *                              1. The earlier version, which needs to be replaced / deprecated
+	 *                      1. Database connection to use
+	 * @return Copy of this interface, which deprecates older item versions by using the specified replace function
+	 */
+	def replacing(shouldReplace: (V, S) => Boolean)(replace: (IndexedSeq[Pair[S]], Connection) => Unit) =
+		using(ReplaceHandler(shouldReplace)(replace))
+	
+	/**
+	 * Inserts a new item to the database. Assumes that no matching entry exists in the database.
+	 * @param item The item to insert
+	 * @param connection Implicit DB connection
+	 * @return The inserted item
+	 */
+	def unique(item: V)(implicit connection: Connection) = single(item, None)
+	/**
+	 * Inserts 0-n items to the database. Assumes that no matching entries exist in the database.
+	 * @param items The items to insert
+	 * @param connection Implicit DB connection
+	 * @return The inserted items (not necessarily in the same order as specified).
+	 */
+	def unique(items: IterableOnce[V])(implicit connection: Connection) =
+		keyMapped(items.iterator.map { item => item -> item }, Map.empty[V, S]).values
+	
+	/**
+	 * Stores an individual item to the database.
+	 * If the specified item was a duplicate entry, no insertion is performed.
+	 * @param item The item to store
+	 * @param existingMatch An existing matching entry from the database.
+	 * @param connection Implicit DB connection
+	 * @return Result of this store operation, either containing the inserted entry, or 'existingMatch'.
+	 */
+	def single(item: V, existingMatch: S)(implicit connection: Connection): StoreResult[S] =
+		single(item, Some(existingMatch))
+	
+	/**
+	 * Stores 0-n items to the database. Checks against existing data and won't insert any duplicate entries.
+	 * @param itemsToStore Items to store
+	 * @param existingItems Matching items from the database.
+	 * @param itemToKey A function that accepts an item to store and maps it to a unique key
+	 * @param existingToKey A function that accepts an existing database entry and maps it to a unique key similar
+	 *                      to what 'itemToKey' would produce.
+	 * @param connection Implicit DB connection
+	 * @tparam K Type of keys used
+	 * @return A map where keys are the specified keys and values are store results,
+	 *         either containing a newly inserted item, or one of the existing DB entries.
+	 */
+	def keyMap[K](itemsToStore: IterableOnce[V], existingItems: IterableOnce[S])
+	             (itemToKey: V => K)(existingToKey: S => K)(implicit connection: Connection) =
+		keyMapped[K](itemsToStore.iterator.map { item => itemToKey(item) -> item },
+			existingItems.iterator.map { existing => existingToKey(existing) -> existing }.toMap)
 }

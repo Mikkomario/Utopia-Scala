@@ -28,12 +28,6 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	def nonDeprecated = active
 	
 	
-	// IMPLEMENTED  -------------------
-	
-	def deprecate()(implicit c: Connection) =
-		c(Update(target, model.deprecationColumn, Now.toValue) + accessCondition.map(Where.apply)).updatedRows
-	
-	
 	// OTHER    ----------------------
 	
 	/**
@@ -54,4 +48,12 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	  */
 	def wasDeprecatedAfter(threshold: Instant)(implicit c: Connection) =
 		exists(model.deprecatedAfterCondition(threshold))
+	
+	/**
+	 * Deprecates all accessible items
+	 * @param c Implicit database connection
+	 * @return Whether any row was targeted
+	 */
+	def deprecate()(implicit c: Connection) =
+		c(Update(target, model.deprecationColumn, Now.toValue) + accessCondition.map(Where.apply)).updatedRows
 }

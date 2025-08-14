@@ -43,6 +43,8 @@
   - Added `.lightMap(...)`
   - Added `.or(...)` and `||`
   - Added `.flatten` for deep **Lazy** containers
+- **MapAccess** (object)
+  - Added a few new **MapAccess** constructors, including **Map** wrappers
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **String** (**StringExtensions**)

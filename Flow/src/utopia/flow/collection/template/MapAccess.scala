@@ -6,11 +6,8 @@ object MapAccess
 {
 	// IMPLICIT ----------------------------
 	
-	// Implicitly converts functions to map-like items
-	implicit def functionToMapLike[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
-	
-	
-	// OTHER    -----------------------------
+	implicit def wrap[K, V](map: collection.Map[K, V]): MapAccess[K, V] = new MapWrapper[K, V](map)
+	implicit def wrapView[K, V](mapView: collection.MapView[K, V]): MapAccess[K, V] = new MapViewWrapper[K, V](mapView)
 	
 	/**
 	 * @param f A function that serves as a mapping
@@ -18,7 +15,18 @@ object MapAccess
 	 * @tparam V Type of mapping values
 	 * @return A map that is solely based on the specified function
 	 */
-	def apply[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
+	implicit def apply[K, V](f: K => V): MapAccess[K, V] = new MapLikeFunction[K, V](f)
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	 * @param map A function that yields the map to wrap. Called the first time a value is requested.
+	 * @tparam K Type of used keys
+	 * @tparam V Type of yielded values
+	 * @return A map access that lazily wraps the specified map
+	 */
+	def wrapLazily[K, V](map: => collection.Map[K, V]): MapAccess[K, V] = new LazyMapWrapper[K, V](map)
 	
 	
 	// NESTED   ----------------------------
@@ -32,6 +40,21 @@ object MapAccess
 	private class MapLikeFunction[-K, +V](f: K => V) extends MapAccess[K, V]
 	{
 		override def apply(key: K) = f(key)
+	}
+	
+	private class MapWrapper[-K, +V](map: collection.Map[K, V]) extends MapAccess[K, V]
+	{
+		override def apply(key: K): V = map(key)
+	}
+	private class MapViewWrapper[-K, +V](mapView: collection.MapView[K, V]) extends MapAccess[K, V]
+	{
+		override def apply(key: K): V = mapView(key)
+	}
+	private class LazyMapWrapper[K, +V](getMap: => collection.Map[K, V]) extends MapAccess[K, V]
+	{
+		private lazy val map = getMap
+		
+		override def apply(key: K): V = map(key)
 	}
 }
 
