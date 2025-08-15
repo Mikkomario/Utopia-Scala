@@ -72,7 +72,7 @@ object HasEnds
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait HasEnds[+P]
+trait HasEnds[+P] extends MayHaveEnds[P]
 {
 	// ABSTRACT -----------------------
 	
@@ -86,50 +86,28 @@ trait HasEnds[+P]
 	  */
 	def end: P
 	
-	/**
-	  * @return Whether the end-point of this range is inclusive (true) or exclusive (false)
-	  */
-	def isInclusive: Boolean
-	
 	
 	// COMPUTED -----------------------
 	
-	/**
-	  * @return Whether this is an exclusive range.
-	  *         The 'end' in exclusive ranges is not considered to be contained within the range itself.
-	  */
-	def isExclusive = !isInclusive
-	
-	/**
-	  * @return A pair containing the start and end points of this range
-	  */
-	def ends = Pair(start, end)
 	/**
 	  * @return A pair containing the start and end points of this range
 	  */
 	@deprecated("Please use .ends instead", "v2.2")
 	def toPair = ends
 	
-	/**
-	  * @return Whether this is an empty range
-	  */
-	def isEmpty = isExclusive && start == end
-	/**
-	  * @return Whether this range is not empty
-	  */
-	def nonEmpty = !isEmpty
-	
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def toString = {
-		if (isInclusive) {
-			if (start == end)
-				start.toString
-			else
-				s"$start to $end"
-		}
-		else
-			s"$start until $end"
-	}
+	/**
+	 * @return Whether this is an empty range
+	 */
+	override def isEmpty = isExclusive && start == end
+	
+	override def startOption: Option[P] = Some(start)
+	override def endOption: Option[P] = Some(end)
+	
+	/**
+	 * @return A pair containing the start and end points of this range
+	 */
+	override def ends = Pair(start, end)
 }

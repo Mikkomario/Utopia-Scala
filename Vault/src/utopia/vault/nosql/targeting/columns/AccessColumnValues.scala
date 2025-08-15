@@ -162,6 +162,14 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	  */
 	def distinct(implicit connection: Connection) = parse(access(column, distinct = true))
 	/**
+	 * @param connection Implicit DB connection
+	 * @return If this column only contains a single distinct accessible value, yields that.
+	 *         Otherwise, yields None.
+	 */
+	def only(implicit connection: Connection) =
+		streamDistinct { iter => iter.nextOption.filterNot { _ => iter.hasNext } }
+	
+	/**
 	 * Maps column values to row ids.
 	 * Assumes that each row contains a non-empty index, and that 'fromValue' yields 0-1 items.
 	  * @param connection Implicit DB connection

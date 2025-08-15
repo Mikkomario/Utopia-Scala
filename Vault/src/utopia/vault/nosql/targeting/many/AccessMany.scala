@@ -6,11 +6,10 @@ import utopia.flow.util.Mutate
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.Table
 import utopia.vault.model.mutable.ResultStream
-import utopia.vault.model.template.HasTable
+import utopia.vault.model.template.Deprecates
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.read.DbReader
 import utopia.vault.nosql.read.parse.ParseResultStream
-import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, OrderBy, SqlSegment, SqlTarget}
 
 object AccessMany
@@ -37,8 +36,8 @@ object AccessMany
 		apply[A](more.foldLeft(first join second) { _ join _ }, first,
 			SelectTarget.tables(Pair(first, second) ++ more))(parse)
 	
-	def active[A](factory: DbReader[Seq[A]] with Deprecatable): AccessMany[A] =
-		apply(factory).filter(factory.nonDeprecatedCondition)
+	def active[A](factory: DbReader[Seq[A]] with Deprecates): AccessMany[A] =
+		apply(factory).filter(factory.activeCondition)
 	
 	
 	// NESTED   ------------------------------

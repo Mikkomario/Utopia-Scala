@@ -46,6 +46,8 @@ object Span
 	                           (implicit override val ordering: Ordering[P])
 		extends Span[P]
 	{
+		override protected def self: Span[P] = this
+		
 		override def withEnds(start: P, end: P) = copy(start, end)
 	}
 }
@@ -55,9 +57,7 @@ object Span
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait Span[P] extends SpanLike[P, Span[P]]
+trait Span[P] extends OpenRange[P] with SpanLike[P, Span[P]]
 {
-	override protected def self = this
-	
 	override def toString = s"$start to $end"
 }

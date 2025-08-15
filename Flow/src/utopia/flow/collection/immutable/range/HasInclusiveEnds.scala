@@ -41,26 +41,11 @@ object HasInclusiveEnds
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait HasInclusiveEnds[+P] extends HasEnds[P]
+trait HasInclusiveEnds[+P] extends HasEnds[P] with MayHaveInclusiveEnds[P]
 {
-	// COMPUTED -----------------------
-	
-	/**
-	  * @return Whether this span is of length 1 (i.e. the start and the end overlap)
-	  */
-	def isUnit = start == end
-	
-	/**
-	  * @return The only value contained within this range.
-	  *         None if this range contains multiple values.
-	  */
-	def only = Some(start).filter { _ == end }
-	
-	
 	// IMPLEMENTED  --------------------
 	
-	override def isInclusive = true
-	override def isEmpty = false
+	override def isUnit = start == end
 	
 	
 	// OTHER    ----------------------

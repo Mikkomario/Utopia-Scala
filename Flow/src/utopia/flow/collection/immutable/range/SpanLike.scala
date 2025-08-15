@@ -1,14 +1,7 @@
 package utopia.flow.collection.immutable.range
 
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.enumeration.{End, Extreme}
-import utopia.flow.operator.enumeration.Extreme.{Max, Min}
-import utopia.flow.operator.sign.Sign
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
-import utopia.flow.operator.enumeration.End.{First, Last}
 
 import scala.math.Ordered.orderingToOrdered
 
@@ -69,48 +62,52 @@ object SpanLike
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
+trait SpanLike[P, +Repr] extends OpenRangeLike[P, Repr, OpenRange[P]] with HasInclusiveOrderedEnds[P]
 {
-	// ABSTRACT -------------------------
+	// IMPLEMENTED ---------------------
 	
-	/**
-	  * @return "This" element
-	  */
-	protected def self: Repr
+	override def reverse = withEnds(end, start)
 	
-	/**
-	  * Creates a copy of this element
-	  * @param start New starting point (default = current start)
-	  * @param end New ending point (default = current end)
-	  * @return A copy of this element with the specified start and end points
-	  */
-	def withEnds(start: P = this.start, end: P = this.end): Repr
-
+	override def withStart(start: P) = withEnds(start, end)
+	override def withEnd(end: P) = withEnds(start, end)
+	override def withPossibleEnds(start: Option[P], end: Option[P]): OpenRange[P] = OpenRange(start, end, isAscending)
 	
-	// COMPUTED ------------------------
+	override def mapStart(f: P => P) = withStart(f(start))
+	override def mapEnd(f: P => P) = withEnd(f(end))
+	override def mapEnds(f: P => P) = withEnds(f(start), f(end))
 	
-	/**
-	  * @return A reverse of this span, where the start and end are swapped
-	  */
-	def reverse = withEnds(end, start)
+	override def withMin(min: P) = {
+		val _max = max
+		if (_max < min)
+			withEnds(min, min)
+		else if (isAscending)
+			withEnds(min, _max)
+		else
+			withEnds(_max, min)
+	}
+	override def withMax(max: P) = {
+		val _min = min
+		if (max < _min)
+			withEnds(max, max)
+		else if (isAscending)
+			withEnds(_min, max)
+		else
+			withEnds(max, _min)
+	}
 	
-	/**
-	  * @return A copy of this span where the 'start' is smaller than the 'end'
-	  */
-	def ascending = if (isAscending) self else reverse
-	/**
-	  * @return A copy of this span where the 'start' is larger than the 'end'
-	  */
-	def descending = if (isDescending) self else reverse
+	override def including(point: P) = {
+		val _ends = minMax
+		if (point < _ends.first)
+			withMin(point)
+		else if (point > _ends.second)
+			withMax(point)
+		else
+			self
+	}
 	
 	
 	// OTHER    -----------------------
 	
-	/**
-	  * @param f A mapping function to apply to the end-points of this span
-	  * @return A copy of this span with mapped end-points
-	  */
-	def mapEnds(f: P => P) = withEnds(f(start), f(end))
 	/**
 	 * Maps the ends of this span to a different data type
 	 * @param f A mapping function applied for both ends of this span
@@ -121,137 +118,6 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 	def mapTo[P2](f: P => P2)(implicit ord: Ordering[P2]) = Span(f(start), f(end))
 	@deprecated("Please use .mapTo(...) instead, as this method involves name conflicts", "v2.2")
 	def map[P2](f: P => P2)(implicit ord: Ordering[P2]) = mapTo[P2](f)
-	
-	/**
-	  * @param start A new starting point for this span
-	  * @return A copy of this span with the new starting point
-	  */
-	def withStart(start: P) = withEnds(start)
-	/**
-	  * @param end A new end-point for this span
-	  * @return A copy of this span with the new ending point
-	  */
-	def withEnd(end: P) = withEnds(end = end)
-	/**
-	  * @param end New start or end for this span
-	  * @param side Whether to replace the start point (First) or the end point (Last)
-	  * @return Copy of this span with the targeted end replaced
-	  */
-	def withEnd(end: P, side: End): Repr = side match {
-		case First => withStart(end)
-		case Last => withEnd(end)
-	}
-	
-	/**
-	  * @param f A mapping function to apply to the starting value of this span
-	  * @return Copy of this span with mapped starting value
-	  */
-	def mapStart(f: P => P) = withStart(f(start))
-	/**
-	  * @param f A mapping function to apply to the final value of this span
-	  * @return Copy of this span with mapped final value
-	  */
-	def mapEnd(f: P => P) = withEnd(f(end))
-	/**
-	  * @param end Targeted end (start (First) or end (Last))
-	  * @param f A mapping function to apply to the targeted value of this span
-	  * @return Copy of this span with a mapped value
-	  */
-	def mapSpecificEnd(end: End)(f: P => P) = end match {
-		case First => mapStart(f)
-		case Last => mapEnd(f)
-	}
-	
-	/**
-	  * @param min A new minimum point for this span
-	  * @return A copy of this span with that minimum point
-	  */
-	def withMin(min: P) = {
-		val _max = max
-		if (_max < min)
-			withEnds(min, min)
-		else if (isAscending)
-			withEnds(min, _max)
-		else
-			withEnds(_max, min)
-	}
-	/**
-	  * @param max A new maximum point for this span
-	  * @return A copy of this span with that maximum point
-	  */
-	def withMax(max: P) = {
-		val _min = min
-		if (max < _min)
-			withEnds(max, max)
-		else if (isAscending)
-			withEnds(_min, max)
-		else
-			withEnds(max, _min)
-	}
-	/**
-	  * @param value New minimum or maximum value for this span
-	  * @param extreme Targeted / replaced extreme
-	  * @return Copy of this span with the replaced minimum or maximum value
-	  */
-	def withExtreme(value: P, extreme: Extreme) = extreme match {
-		case Min => withMin(value)
-		case Max => withMax(value)
-	}
-	
-	/**
-	  * @param direction A direction (positive (i.e. ascending) or negative (i.e. descending))
-	  * @return A copy of this span with that direction
-	  */
-	def withDirection(direction: Sign) = if (this.direction == direction) self else reverse
-	/**
-	  * @param extreme The extreme that should be placed at the end of this span
-	  * @return Copy of this span where the more extreme value is at the end
-	  */
-	def towards(extreme: Extreme) = extreme match {
-		case Max => ascending
-		case Min => descending
-	}
-	
-	/**
-	  * @param point A point to include within this span
-	  * @return A copy of this span that is extended to include the specified point
-	  */
-	def including(point: P) = {
-		val _ends = minMax
-		if (point < _ends.first)
-			withMin(point)
-		else if (point > _ends.second)
-			withMax(point)
-		else
-			self
-	}
-	/**
-	  * @param points A set of points
-	  * @return A copy of this span that is extended to include all of the specified points
-	  */
-	def including(points: IterableOnce[P]): Repr = points match {
-		case span: HasInclusiveOrderedEnds[P] => _including(span.minMax)
-		case i: Iterable[P] =>
-			if (i.knownSize == 1)
-				including(i.head)
-			else
-				i.minMaxOption match {
-					case Some(minMax) => _including(minMax)
-					case None => self
-				}
-		case o =>
-			o.iterator.minMaxOption match {
-				case Some(minMax) => _including(minMax)
-				case None => self
-			}
-	}
-	/**
-	  * @param p1 A point
-	  * @param p2 Another point
-	  * @param more More points
-	  * @return A copy of this span that is extended to include all of the specified points
-	  */
-	def including(p1: P, p2: P, more: P*): Repr = including(Set(p1, p2) ++ more)
 	
 	/**
 	  * @param other Another span
@@ -278,13 +144,6 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 	  */
 	def &(other: HasInclusiveOrderedEnds[P]) = overlapWith(other)
 	
-	/**
-	  * @param distance A distance to move this span
-	  * @param plus A function that combines a point and a distance
-	  * @return A copy of this span where both the start and the end points have been moved the specified distance
-	  */
-	protected def _shiftedBy[D](distance: D)(plus: (P, D) => P) =
-		withEnds(plus(start, distance), plus(end, distance))
 	/**
 	  * @param length New length to assign to this span
 	  * @param plus A function that combines a point and a distance
@@ -341,15 +200,5 @@ trait SpanLike[P, +Repr] extends HasInclusiveOrderedEnds[P]
 			_shiftedBy(ord.max(minus(other.start, start), minus(other.end, end)))(plus)
 		else
 			self
-	}
-	
-	private def _including(minMax: Pair[P]) = {
-		val myMinMax = this.minMax
-		val newMin = ordering.min(minMax.first, myMinMax.first)
-		val newMax = ordering.max(minMax.second, myMinMax.second)
-		direction match {
-			case Positive => withEnds(newMin, newMax)
-			case Negative => withEnds(newMax, newMin)
-		}
 	}
 }

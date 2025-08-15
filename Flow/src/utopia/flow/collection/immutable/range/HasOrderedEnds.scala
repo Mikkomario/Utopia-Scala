@@ -1,8 +1,5 @@
 package utopia.flow.collection.immutable.range
 
-import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.operator.sign.Sign
-
 import scala.math.Ordered.orderingToOrdered
 
 object HasOrderedEnds
@@ -40,6 +37,17 @@ object HasOrderedEnds
 	  */
 	def exclusive[P](start: P, end: P)(implicit ord: Ordering[P]) = apply(start, end, exclusive = true)
 	
+	/**
+	 * @param other An instance that has ends
+	 * @param ord Implicit ordering to use (if 'other' is not ordered)
+	 * @tparam P Type of end points
+	 * @return An ordered range, based on the specified instance
+	 */
+	def from[P](other: HasEnds[P])(implicit ord: Ordering[P]) = other match {
+		case p: HasOrderedEnds[P] => p
+		case o => apply(o.start, o.end, exclusive = o.isExclusive)
+	}
+	
 	
 	// NESTED   ------------------------
 	
@@ -55,58 +63,27 @@ object HasOrderedEnds
   * @author Mikko Hilpinen
   * @since 16.12.2022, v2.0
   */
-trait HasOrderedEnds[P] extends HasEnds[P]
+trait HasOrderedEnds[P] extends HasEnds[P] with MayHaveOrderedEnds[P]
 {
-	// ABSTRACT -----------------------
-	
-	/**
-	  * @return Ordering used for the end-points of this range
-	  */
-	implicit def ordering: Ordering[P]
-	
-	
-	// COMPUTED -----------------------
-	
-	/**
-	  * @return Whether this range moves from a smaller 'start' into a larger 'end'
-	  */
-	def isAscending = end >= start
-	/**
-	  * @return Whether this range moves from a larger 'start' into a smaller 'end'
-	  */
-	def isDescending = end <= start
-	
-	/**
-	  * @return Positive if values increase along this range, Negative if they decrease
-	  */
-	def direction: Sign = if (isAscending) Positive else Negative
-	
-	
 	// IMPLEMENTED  ---------------------
 	
-	override def toString = if (isInclusive) s"$start to $end" else s"$start until $end"
+	override def isAscending = end >= start
+	override def isDescending = end <= start
 	
-	
-	// OTHER    -------------------------
-	
-	/**
-	  * @param point A point
-	  * @return Whether that point lies within this range
-	  */
-	def contains(point: P) = {
+	override def contains(point: P) = {
 		val compares = ends.map { ordering.compare(point, _).sign }
 		if (isInclusive)
 			compares.isAsymmetric || compares.contains(0)
 		else
 			compares.second != 0 && compares.isAsymmetric
 	}
-	/**
-	  * @param other Another range
-	  * @return Whether this range contains all items in that range
-	  */
-	def contains(other: HasEnds[P]): Boolean =
+	override def contains(other: HasEnds[P]): Boolean =
 		other.nonEmpty && (contains(other.start) &&
 			(contains(other.end) || (isExclusive && other.isExclusive && end == other.end)))
+	
+	
+	// OTHER    -------------------------
+	
 	/**
 	  * @param other Another range
 	  * @return Whether these two ranges overlap at some point

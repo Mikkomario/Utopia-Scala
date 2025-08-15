@@ -1,9 +1,10 @@
 package utopia.vault.nosql.view
 
-import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.immutable.range.{HasEnds, HasOrderedEnds, MayHaveOrderedEnds}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.model.immutable.Column
+import utopia.vault.sql.Condition
 
 import java.time.Instant
 
@@ -55,17 +56,81 @@ trait TimelineView[+Repr] extends FilterableView[Repr]
 	 * @param timespan Targeted timespan
 	 * @return Access to items where the timestamp is on the specified timespan
 	 */
-	def during(timespan: HasEnds[Instant]): Repr = {
+	def during(timespan: HasOrderedEnds[Instant]): Repr = {
 		// Case: Inclusive range => Uses BETWEEN
 		if (timespan.isInclusive)
 			during(timespan.start, timespan.end)
 		// Case: Exclusive range => Uses > and <
 		else {
-			val t = timestampColumn
-			if (timespan.start < timespan.end)
-				filter(t >= timespan.start && t < timespan.end)
-			else
-				filter(t > timespan.end && t <= timespan.start)
+			if (timespan.isEmpty)
+				filter(Condition.alwaysFalse)
+			else {
+				val t = timestampColumn
+				if (timespan.isAscending)
+					filter(t >= timespan.start && t < timespan.end)
+				else
+					filter(t > timespan.end && t <= timespan.start)
+			}
 		}
+	}
+	/**
+	 * @param timespan Targeted timespan
+	 * @return Access to items where the timestamp is on the specified timespan
+	 */
+	def during(timespan: HasEnds[Instant]): Repr = timespan match {
+		case s: HasOrderedEnds[Instant] => during(s)
+		case other => during(HasOrderedEnds.from(other))
+	}
+	/**
+	 * @param timespan Targeted timespan, which may be open
+	 * @return Access to items where the timestamp is on the specified timespan
+	 */
+	def during(timespan: MayHaveOrderedEnds[Instant]): Repr = {
+		// Case: Empty range => Can't access any items
+		if (timespan.isEmpty)
+			filter(Condition.alwaysFalse)
+		else
+			timespan.startOption match {
+				case Some(start) =>
+					timespan.endOption match {
+						// Case: Closed range
+						case Some(end) =>
+							// Case: Inclusive range => Uses IS BETWEEN
+							if (timespan.isInclusive)
+								during(start, end)
+							// Case: Exclusive range => Applies < or > for the end value
+							else {
+								val t = timestampColumn
+								if (timespan.isAscending)
+									filter(t >= start && t < end)
+								else
+									filter(t <= start && t > end)
+							}
+						// Case: Open end => Applies >= or <=
+						case None =>
+							if (timespan.isAscending)
+								filter(timestampColumn >= start)
+							else
+								filter(timestampColumn <= start)
+					}
+				case None =>
+					timespan.endOption match {
+						// Case: Open start => Applies inclusive or exclusive column comparison
+						case Some(end) =>
+							if (timespan.isInclusive) {
+								if (timespan.isAscending)
+									filter(timestampColumn <= end)
+								else
+									filter(timestampColumn >= end)
+							}
+							else if (timespan.isAscending)
+								filter(timestampColumn < end)
+							else
+								filter(timestampColumn > end)
+						
+						// Case: Infinite range => Won't filter
+						case None => self
+					}
+			}
 	}
 }

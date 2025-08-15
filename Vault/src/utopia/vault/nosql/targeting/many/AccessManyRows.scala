@@ -2,12 +2,12 @@ package utopia.vault.nosql.targeting.many
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
+import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Row, Table}
-import utopia.vault.model.template.Joinable
+import utopia.vault.model.template.{Deprecates, Joinable}
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.read.DbRowReader
-import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 
 import scala.collection.View
@@ -41,8 +41,8 @@ object AccessManyRows
 	  * @tparam A Type of parsed items
 	  * @return Access to items targeted by that factory. Limited to active (i.e. non-deprecated) items.
 	  */
-	def active[A](factory: DbRowReader[A] with Deprecatable) =
-		apply(factory).filter(factory.nonDeprecatedCondition)
+	def active[A](factory: DbRowReader[A] with Deprecates) =
+		apply(factory).filter(factory.activeCondition)
 	
 	
 	// NESTED   --------------------------
@@ -62,6 +62,10 @@ object AccessManyRows
 		
 		override protected def self = this
 		override protected def limitedToOne = if (limit.contains(1)) this else withLimit(1)
+		
+		override def pullOnly(implicit connection: Connection): Option[A] = withLimit(2).stream { iter =>
+			iter.nextOption().filterNot { _ => iter.hasNext }
+		}
 		
 		override def withOrdering(ordering: OrderBy) = copy(ordering = Some(ordering))
 		override def withLimit(limit: Int) = copy(limit = Some(limit))

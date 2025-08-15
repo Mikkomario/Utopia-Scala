@@ -40,6 +40,12 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	// ABSTRACT --------------------------
 	
 	/**
+	 * @param connection Implicit DB connection
+	 * @return The only accessible item. None if no items were accessible, or if multiple items were accessible.
+	 */
+	def pullOnly(implicit connection: Connection): Option[A]
+	
+	/**
 	  * @param n Maximum number of rows to include
 	  * @return A copy of this access point, limited to that number of rows
 	  */

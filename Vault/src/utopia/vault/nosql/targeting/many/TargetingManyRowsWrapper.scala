@@ -17,6 +17,8 @@ trait TargetingManyRowsWrapper[T <: TargetingManyRowsLike[O, T, OT], OT, O, +A, 
 {
 	// IMPLEMENTED  ------------------------
 	
+	override def pullOnly(implicit connection: Connection): Option[A] = wrapped.pullOnly.map(mapResult)
+	
 	override def take(n: Int): Repr = mapWrapped { _.take(n) }
 	override def drop(n: Int): Repr = mapWrapped { _.drop(n) }
 	override def slice(range: HasInclusiveEnds[Int]): Repr = mapWrapped { _.slice(range) }
