@@ -67,7 +67,7 @@ abstract class AccessStatements[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapp
 	
 	// IMPLEMENTED	--------------------
 	
-	override def timestamp = StatementDbModel.created
+	override def timestampColumn = StatementDbModel.created
 }
 
 /**

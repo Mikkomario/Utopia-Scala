@@ -8,6 +8,7 @@ import utopia.flow.operator.MaybeEmpty.collectionMayBeEmpty
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.Extender
 import utopia.vault.database.Store.ReplaceHandler
+import utopia.vault.database.Store.ReplaceHandler.MappingReplaceHandler
 import utopia.vault.nosql.view.{TimeDeprecatableView, ViewManyByIntIds}
 import utopia.vault.store.{HasId, StoreResult}
 
@@ -20,15 +21,6 @@ import scala.collection.View
   */
 object Store
 {
-	// COMPUTED ----------------------
-	
-	/**
-	 * @tparam S Type of stored instances
-	 * @return A factory for constructing store interfaces that yield stored items of the specified type
-	 */
-	def to[S <: HasId[Int]] = new StoreFactory[S]
-	
-	
 	// OTHER    ----------------------
 	
 	/**
@@ -55,21 +47,20 @@ object Store
 	 * @return An interface for storing prepared data to the DB
 	 */
 	def dataUsing[D, S <: HasId[Int] with Extender[D]](model: Inserter[D, S]) = new PreparedStoreData[D, S](model)
+	/**
+	 * @param model Interface used for inserting new items to the database
+	 * @param toData A function which converts the accepted input (key + value) into insertable data
+	 * @tparam K Type of keys attached to the stored values
+	 * @tparam V Type of stored values
+	 * @tparam D Type of stored / prepared data
+	 * @tparam S Type of the items that have already been stored to the DB
+	 * @return An interface for storing items to the DB
+	 */
+	 def keyMappedUsing[K, V, D, S <: HasId[Int]](model: Inserter[D, S])(toData: (K, V) => D) =
+		 new PreparedKeyMappedStore[K, V, D, S](model, None)(toData)
 	
 	
 	// NESTED   ---------------------------
-	
-	class StoreFactory[S <: HasId[Int]]
-	{
-		/**
-		 * @param model Interface used for inserting new items to the database
-		 * @param toData A function which converts the accepted input into insertable data
-		 * @tparam V Type of accepted input
-		 * @tparam D Type of stored data
-		 * @return An interface for storing items to the DB
-		 */
-		def apply[V, D](model: Inserter[D, S])(toData: V => D) = new PreparedStore[V, D, S](model)(toData)
-	}
 	
 	class PreparedStoreFactory[D, S <: HasId[Int] with Extender[D]](model: Inserter[D, S])
 	{
@@ -89,6 +80,13 @@ object Store
 		 * @return An interface for storing items to the DB
 		 */
 		def apply[V](toData: V => D) = new PreparedStore[V, D, S](model)(toData)
+		/**
+		 * @param toData A function which converts the accepted input (key + value) into insertable data
+		 * @tparam K Type of keys attached to the stored values
+		 * @tparam V Type of stored values
+		 * @return An interface for storing items to the DB
+		 */
+		def keyMapped[K, V](toData: (K, V) => D) = new PreparedKeyMappedStore[K, V, D, S](model, None)(toData)
 	}
 	
 	class PreparedStore[V, -D, S <: HasId[Int]](model: Inserter[D, S],
@@ -207,6 +205,78 @@ object Store
 		             (implicit connection: Connection) =
 			super.keyMap[K](itemsToStore, existingItems) { dataToKey(_) } { e => dataToKey(e.wrapped) }
 	}
+	class PreparedKeyMappedStore[K, V, -D, S <: HasId[Int]](model: Inserter[D, S],
+	                                                       replaceHandler: Option[ReplaceHandler[(K, V), S]])
+	                                                      (toData: (K, V) => D)
+		extends PreparedStore[(K, V), D, S](model, replaceHandler)({ case (key, value) => toData(key, value) })
+			with Store[(K, V), S, PreparedKeyMappedStore[K, V, D, S]]
+	{
+		// IMPLEMENTED  ---------------------
+		
+		override def using(handler: ReplaceHandler[(K, V), S]): PreparedKeyMappedStore[K, V, D, S] =
+			new PreparedKeyMappedStore[K, V, D, S](model, Some(handler))(toData)
+			
+		
+		// OTHER    -------------------------
+		
+		/**
+		 * @param rootAccess Root-level access to the matching database entries.
+		 *                   Used for deprecating older item versions. Supports timestamp-based deprecation.
+		 * @param shouldReplace A function that accepts the proposed item (value) and the item that already exists in the DB.
+		 *                          - Yields true if the new item should be considered a new version
+		 *                            and replace the existing item.
+		 *                          - Yields false if the new item should be considered a duplicate
+		 *                            and ignored / not inserted to the DB.
+		 * @return Copy of this interface, which deprecates older item versions by specifying a deprecation timestamp
+		 */
+		def deprecatingValues(rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])(shouldReplace: (V, S) => Boolean) =
+			using(ReplaceHandler.deprecating(rootAccess)(shouldReplace).mapInput { _._2 })
+		/**
+		 * @param shouldReplace A function that accepts the proposed item (value) and the item that already exists in the DB.
+		 *                          - Yields true if the new item should be considered a new version
+		 *                            and replace the existing item.
+		 *                          - Yields false if the new item should be considered a duplicate
+		 *                            and ignored / not inserted to the DB.
+		 * @param replace A function that performs the actual replacement, based on two parameters:
+		 *                      1. Replacements to perform. Never empty.
+		 *                         Each entry is a pair containing two stored versions:
+		 *                              1. The newly inserted version
+		 *                              1. The earlier version, which needs to be replaced / deprecated
+		 *                      1. Database connection to use
+		 * @return Copy of this interface, which deprecates older item versions by using the specified replace function
+		 */
+		def replacingValues(shouldReplace: (V, S) => Boolean)(replace: (IndexedSeq[Pair[S]], Connection) => Unit) =
+			using(ReplaceHandler(shouldReplace)(replace).mapInput { _._2 })
+		
+		/**
+		 * @param itemsToStore Items to store, including unique keys
+		 * @param existingItems Existing DB entries
+		 * @param existingToKey A function which converts an existing item into a unique key
+		 * @param connection Implicit DB connection
+		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
+		 */
+		def apply(itemsToStore: IterableOnce[(K, V)], existingItems: IterableOnce[S])(existingToKey: S => K)
+		         (implicit connection: Connection) =
+			keyMap(itemsToStore, existingItems) { _._1 }(existingToKey)
+		
+		/**
+		 * Stores items after mapping them to keys and values
+		 * @param itemsToStore The items to store
+		 * @param existingItems Existing DB entries
+		 * @param itemToKey A function which maps an item to a unique key
+		 * @param itemToValue A function that converts an item to a value to store
+		 * @param existingToKey A function which maps an existing database entry into a unique key
+		 * @param connection Implicit DB connection
+		 * @tparam A Type of accepted items
+		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
+		 */
+		def keyValueMap[A](itemsToStore: IterableOnce[A], existingItems: IterableOnce[S])
+		                  (itemToKey: A => K)(itemToValue: A => V)(existingToKey: S => K)
+		                  (implicit connection: Connection) =
+		{
+			apply(itemsToStore.iterator.map { a => itemToKey(a) -> itemToValue(a) }, existingItems)(existingToKey)
+		}
+	}
 	
 	object ReplaceHandler
 	{
@@ -310,6 +380,15 @@ object Store
 				replacementsBuilder.clear()
 			}
 		}
+		private class MappingReplaceHandler[-I, V, S](delegate: ReplaceHandler[V, S], f: I => V)
+			extends ReplaceHandler[I, S]
+		{
+			override def handleMatch(key: Any, newItem: I, existingItem: S): Boolean =
+				delegate.handleMatch(key, f(newItem), existingItem)
+			
+			override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit =
+				delegate.replace(inserted)
+		}
 	}
 	/**
 	 * Common trait for interfaces which handle item replacement / deprecation.
@@ -322,6 +401,8 @@ object Store
 	 */
 	trait ReplaceHandler[-V, -S]
 	{
+		// ABSTRACT --------------------------
+		
 		/**
 		 * Checks whether a new item is to be considered a duplicate or a new version of an existing item.
 		 * Prepares the replacement, if appropriate.
@@ -347,6 +428,16 @@ object Store
 		 * @param connection Implicit DB connection
 		 */
 		def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		 * @param f A mapping function applied to the stored items, before they're passed to this handler
+		 * @tparam V2 Type of mapping results
+		 * @return A copy of this handler, which accepts the items before mapping them
+		 */
+		def mapInput[V2](f: V2 => V): ReplaceHandler[V2, S] = new MappingReplaceHandler[V2, V, S](this, f)
 	}
 }
 

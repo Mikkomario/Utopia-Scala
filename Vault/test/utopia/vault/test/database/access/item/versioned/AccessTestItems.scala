@@ -49,7 +49,7 @@ abstract class AccessTestItems[A, +Repr <: AccessManyColumns with FilterableView
 	  */
 	lazy val values = AccessVersionedTestItemValues(wrapped)
 	
-	override protected lazy val timestamp: DbPropertyDeclaration = VersionedTestItemDbModel.created
+	override protected lazy val timestampColumn = VersionedTestItemDbModel.created
 	
 	
 	// OTHER	--------------------

@@ -86,7 +86,7 @@ abstract class AccessIssues[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: 
 	
 	// IMPLEMENTED	--------------------
 	
-	override def timestamp = IssueDbModel.created
+	override def timestampColumn = IssueDbModel.created
 }
 
 /**

@@ -59,7 +59,7 @@
   **SelectsTable** and **SelectsTables** traits for specifying **SqlTarget** and possibly **SelectTarget**
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s
-- Added **FilterableViewWrapper**
+- Added **FilterableViewWrapper** and **TimeFilterableView**
 - Added **AccessDeprecatingRoot**, **AccessManyDeprecatingRoot** and **AccessOneDeprecatingRoot**
 ### New methods
 - **Column**

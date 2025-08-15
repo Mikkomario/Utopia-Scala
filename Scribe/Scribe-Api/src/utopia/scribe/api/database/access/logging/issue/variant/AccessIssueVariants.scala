@@ -102,7 +102,7 @@ abstract class AccessIssueVariants[A, +Repr <: TargetingManyLike[_, Repr, _]](wr
 	
 	// IMPLEMENTED	--------------------
 	
-	override def timestamp = IssueVariantDbModel.created
+	override def timestampColumn = IssueVariantDbModel.created
 	
 	
 	// OTHER    ------------------------
