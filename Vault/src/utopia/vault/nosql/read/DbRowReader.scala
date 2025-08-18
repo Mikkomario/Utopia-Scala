@@ -2,11 +2,31 @@ package utopia.vault.nosql.read
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
+import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Column, Row, Table}
+import utopia.vault.nosql.read.DbRowReader.MappingDbRowReader
 import utopia.vault.nosql.read.linked.{CombiningDbRowReader, MultiLinkedDbReader, PossiblyCombiningDbRowReader}
 import utopia.vault.nosql.read.parse.{ParseRow, ParseRows}
+import utopia.vault.sql.SqlTarget
 
 import scala.collection.View
+import scala.util.Try
+
+object DbRowReader
+{
+	// NESTED   -----------------------
+	
+	private class MappingDbRowReader[-A, +B](reader: DbRowReader[A], f: A => B) extends DbRowReader[B]
+	{
+		override def selectTarget: SelectTarget = reader.selectTarget
+		override def table: Table = reader.table
+		override def tables: Seq[Table] = reader.tables
+		override def target: SqlTarget = reader.target
+		
+		override def shouldParse(row: Row): Boolean = reader.shouldParse(row)
+		override def apply(row: Row): Try[B] = reader(row).map(f)
+	}
+}
 
 /**
   * Common trait for classes which target and read data from the database, processing row-specific entries.
@@ -15,6 +35,15 @@ import scala.collection.View
   */
 trait DbRowReader[+A] extends DbReader[Seq[A]] with ParseRow[A]
 {
+	// OTHER    --------------------------
+	
+	/**
+	 * @param f A mapping function applied to individual parsed items
+	 * @tparam B Type of mapping results
+	 * @return A reader which maps the individual results of this reader
+	 */
+	def map[B](f: A => B): DbRowReader[B] = new MappingDbRowReader[A, B](this, f)
+	
 	/**
 	  * Combines this reader with another reader
 	  * @param right Reader to join to this one
