@@ -5,6 +5,25 @@ import utopia.vault.nosql.targeting.AccessDeprecatingRoot
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.DeprecatableView
 
+object AccessOneDeprecatingRoot
+{
+	// OTHER    ------------------------
+	
+	/**
+	 * @param all Access to all items, including historical entries
+	 * @tparam A Type of the wrapped access point
+	 * @return A root level access, wrapping the specified access
+	 */
+	def apply[A <: DeprecatableView[A] with Indexed](all: A): AccessOneDeprecatingRoot[A] =
+		_AccessOneDeprecatingRoot(all)
+	
+	
+	// NESTED   ------------------------
+	
+	private case class _AccessOneDeprecatingRoot[+A <: DeprecatableView[A] with Indexed](all: A)
+		extends AccessOneDeprecatingRoot[A]
+}
+
 /**
  * Common trait for root level access classes that target individual deprecated or active items at once
  * @author Mikko Hilpinen

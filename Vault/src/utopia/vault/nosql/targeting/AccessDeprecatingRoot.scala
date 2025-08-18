@@ -1,6 +1,20 @@
 package utopia.vault.nosql.targeting
 
-import utopia.vault.nosql.view.{DeprecatableView, ViewFactory}
+import utopia.vault.nosql.targeting.many.AccessManyDeprecatingRoot
+import utopia.vault.nosql.targeting.one.AccessOneDeprecatingRoot
+import utopia.vault.nosql.view.DeprecatableView
+
+object AccessDeprecatingRoot
+{
+	/**
+	 * @return Constructors for creating access into individual items
+	 */
+	def one = AccessOneDeprecatingRoot
+	/**
+	 * @return Constructors for creating access into multiple items at once
+	 */
+	def many = AccessManyDeprecatingRoot
+}
 
 /**
  * Common trait for root level access points that can target active and/or historical items separately or together.

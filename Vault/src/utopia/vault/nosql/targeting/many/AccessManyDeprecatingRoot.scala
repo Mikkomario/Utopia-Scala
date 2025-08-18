@@ -6,6 +6,25 @@ import utopia.vault.nosql.targeting.AccessDeprecatingRoot
 import utopia.vault.nosql.view.{DeprecatableView, ViewManyByIntIds}
 import utopia.vault.sql.Condition
 
+object AccessManyDeprecatingRoot
+{
+	// OTHER    -------------------------
+	
+	/**
+	 * @param all Access to all elements, including historical ones
+	 * @tparam A Type of yielded access points
+	 * @return A root level access which wraps the specified access
+	 */
+	def apply[A <: DeprecatableView[A] with HasTable](all: A): AccessManyDeprecatingRoot[A] =
+		_AccessManyDeprecatingRoot(all)
+	
+	
+	// NESTED   -------------------------
+	
+	private case class _AccessManyDeprecatingRoot[+A <: DeprecatableView[A] with HasTable](all: A)
+		extends AccessManyDeprecatingRoot[A]
+}
+
 /**
  * Common trait for root level access points which target historical or active rows, or both.
  *
