@@ -771,6 +771,19 @@ object CollectionExtensions
 			}
 			builder.view.mapValues { _.result() }.toMap
 		}
+		/**
+		 * @param f A function for mapping an item to a key
+		 * @tparam K Type of keys used
+		 * @return A map where keys are the results of 'f' and values are all items which matched that key
+		 */
+		def groupToSeqsBy[K](f: A => K) = groupByUsing(OptimizedIndexedSeq.newBuilder)(f)
+		/**
+		 * @param f A function for mapping an item to a key
+		 * @tparam K Type of keys used
+		 * @return A map where keys are the results of 'f' and values are all distinct items which matched that key
+		 */
+		def groupToSetsBy[K](f: A => K) = groupByUsing(mutable.Set[A]().mapResult { _.toSet })(f)
+		
 		
 		/**
 		 * Groups items, merging similar keys together
@@ -2573,7 +2586,7 @@ object CollectionExtensions
 		 * @return A map where the keys are results of 'f' and values are all
 		 *         encountered items that mapped to that key
 		 */
-		def collectToGroupsBy[K](f: A => K) = i.groupByUsing(OptimizedIndexedSeq.newBuilder)(f)
+		def collectToGroupsBy[K](f: A => K) = i.groupToSeqsBy(f)
 		
 		/**
 		 * @param start The prepended pair start point (call-by-name).

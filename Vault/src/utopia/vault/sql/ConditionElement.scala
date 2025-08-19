@@ -233,6 +233,21 @@ trait ConditionElement
 	  */
 	def notIn[V](elements: Iterable[V])(implicit transform: V => ConditionElement): Condition =
 		notIn(elements.map(transform))
+	/**
+	 * @param values Targeted / accepted values
+	 * @return Condition where this element's value must not match any of the specified values
+	 */
+	// WET WET
+	def notIn(values: IntSet): Condition = {
+		// Converts the input range into individual values (from ranges of length 1 & 2) and longer ranges
+		val (individualValues, ranges) = inConditionElements(values)
+		// Uses NOT BETWEEN condition with the ranges and IN condition with the other values
+		val rangeConditions = ranges.map { range => !isBetween(range.start, range.end) }
+		if (individualValues.isEmpty)
+			Condition.and(rangeConditions)
+		else
+			notIn(individualValues) && rangeConditions
+	}
 	
 	/**
 	  * @param matchString A string match where % is a placeholder for any string.

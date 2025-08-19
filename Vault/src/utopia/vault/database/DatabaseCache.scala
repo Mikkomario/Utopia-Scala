@@ -33,7 +33,7 @@ object DatabaseCache
 	def forIndex[A, I](connectionPool: ConnectionPool, accessor: SingleModelAccess[A],
 					   maxCacheDuration: Duration = Duration.Inf, maxFailureCacheDuration: Duration = Duration.Inf)
 					  (implicit exc: ExecutionContext, valueConversion: I => Value) = new DatabaseCache[A, I](
-		connectionPool, accessor, maxCacheDuration, maxFailureCacheDuration)({ id => accessor.table.primaryColumn.get <=> id })
+		connectionPool, accessor, maxCacheDuration, maxFailureCacheDuration)({ id => accessor.table.getPrimaryKey <=> id })
 }
 
 /**

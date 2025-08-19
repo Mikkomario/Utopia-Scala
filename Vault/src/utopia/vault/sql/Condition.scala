@@ -1,10 +1,11 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.collection.immutable.{IntSet, Pair, Single}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.UncertainBoolean
 import utopia.vault.model.enumeration.BasicCombineOperator
-import utopia.vault.model.immutable.Storable
+import utopia.vault.model.immutable.{Column, Storable}
 
 object Where
 {
@@ -43,6 +44,18 @@ object Condition
 	val alwaysFalse = Condition(SqlSegment("FALSE"), knownResult = false)
 	
 	
+	// COMPUTED -----------------------------
+	
+	/**
+	 * An alias for [[alwaysTrue]]
+	 */
+	def always = alwaysTrue
+	/**
+	 * An alias for [[alwaysFalse]]
+	 */
+	def never = alwaysFalse
+	
+	
 	// OTHER    -----------------------------
 	
 	/**
@@ -69,6 +82,33 @@ object Condition
 		conditions.find { _.isAlwaysFalse }.getOrElse {
 			combine(conditions.filterNot { _.isAlwaysTrue }, "AND", always(resultOnEmpty))
 		}
+	
+	/**
+	 * @param index An integer-based (index) column
+	 * @param values Acceptable values
+	 * @return A condition that is met by rows where the column matches one of the specified values
+	 */
+	def indexIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.in)(index.in)
+	/**
+	 * @param index An integer-based (index) column
+	 * @param values Excluded values
+	 * @return A condition that is met by rows where the column does not match any of the specified values
+	 */
+	def indexNotIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.notIn)(index.notIn)
+	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inSet: Set[Int] => Condition) = {
+		values match {
+			case s: IntSet => inInts(s)
+			case i: Set[Int] =>
+				val kn = values.knownSize
+				// Case: Short collection => Won't bother converting to an int-set
+				if (kn >= 0 && kn <= 6)
+					inSet(i)
+				// Case: Longer collection => Converts targeted ids to an int-set
+				else
+					inInts(IntSet.from(i))
+			case i => inInts(IntSet.from(i))
+		}
+	}
 	
 	private def combine(conditions: Seq[Condition], separator: => String, resultOnEmpty: => Condition) = {
 		conditions.emptyOneOrMany match {

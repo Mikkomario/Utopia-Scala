@@ -64,8 +64,15 @@
 ### New methods
 - **Column**
   - Added `.sqlName`, `.shortSqlName` and `.sqlDescription`
+- **Condition** (object)
+  - Added `.indexIn(IterableOnce[Int])` and `.indexNotIn(IterableOnce[Int])`
+- **ConditionElement**
+  - Added `.notIn(IntSet)`
 - **DeprecatableView**
   - Added `.active` and `.historical`
+- **FilterableView**
+  - Added `.orWhere(Condition)`
+  - Added `.in(IterableOnce[Int])`, `.excluding(IterableOnce[Int])` and `.excluding(ConditionElement)`
 - **Joinable**
   - Added `.where(Condition)` for constructing conditional joins
 - **References**

@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
-import utopia.vault.model.error.NoReferenceFoundException
+import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.JoinType.Inner
@@ -78,6 +78,14 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  * @return A factory for storable instances from this table
 	  */
 	def toFactory = FromRowModelFactory(this)
+	
+	/**
+	 * @throws ColumnNotFoundException If this table does not specify a primary key column
+	 * @return The primary key / index used by this table
+	 */
+	@throws[ColumnNotFoundException]("If this table does not specify a primary key column")
+	def getPrimaryKey =
+		primaryColumn.getOrElse { throw new ColumnNotFoundException(s"$this does not specify a primary index") }
 	
 	/**
 	  * @param connection Database connection
