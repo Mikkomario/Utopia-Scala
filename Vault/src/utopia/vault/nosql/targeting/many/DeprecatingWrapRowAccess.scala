@@ -43,13 +43,13 @@ abstract class DeprecatingWrapRowAccess[A[X] <: FilterableView[A[X]]](defaultDep
 	 * @tparam I Type of individual accessed items
 	 * @return A root-level access wrapping the specified reader
 	 */
-	def apply[I](reader: DbRowReader[I]): AccessManyDeprecatingRoot[A[I]] = roots(reader)
+	def apply[I](reader: DbRowReader[I]): ManyDeprecatingRoot[A[I]] = roots(reader)
 	/**
 	 * @param all Access to all items, whether active or historical
 	 * @tparam I Type of individual accessed items
 	 * @return A root-level access wrapping the specified access point
 	 */
-	def apply[I](all: TargetingManyRows[I]): AccessManyDeprecatingRoot[A[I]] = roots(all)
+	def apply[I](all: TargetingManyRows[I]): ManyDeprecatingRoot[A[I]] = roots(all)
 	
 	/**
 	 * @param reader A database row reader to wrap
@@ -58,7 +58,7 @@ abstract class DeprecatingWrapRowAccess[A[X] <: FilterableView[A[X]]](defaultDep
 	 * @tparam I Type of individual accessed items
 	 * @return A root-level access wrapping the specified reader
 	 */
-	def apply[I](reader: DbRowReader[I], additionalConditions: Deprecates): AccessManyDeprecatingRoot[A[I]] =
+	def apply[I](reader: DbRowReader[I], additionalConditions: Deprecates): ManyDeprecatingRoot[A[I]] =
 		apply(additionalConditions)(reader)
 	/**
 	 * @param all Access to all items, whether active or historical
@@ -67,7 +67,7 @@ abstract class DeprecatingWrapRowAccess[A[X] <: FilterableView[A[X]]](defaultDep
 	 * @tparam I Type of individual accessed items
 	 * @return A root-level access wrapping the specified access point
 	 */
-	def apply[I](all: TargetingManyRows[I], additionalConditions: Deprecates): AccessManyDeprecatingRoot[A[I]] =
+	def apply[I](all: TargetingManyRows[I], additionalConditions: Deprecates): ManyDeprecatingRoot[A[I]] =
 		apply(additionalConditions)(all)
 	
 	/**
@@ -116,5 +116,5 @@ abstract class DeprecatingWrapRowAccess[A[X] <: FilterableView[A[X]]](defaultDep
 	 * @param model A model that determines which items are to be considered active and which deprecated
 	 * @tparam I Type of individual accessed items
 	 */
-	case class Root[I](all: A[I], model: Deprecates) extends AccessManyDeprecatingRoot[A[I]]
+	case class Root[I](all: A[I], model: Deprecates) extends ManyDeprecatingRoot[A[I]]
 }

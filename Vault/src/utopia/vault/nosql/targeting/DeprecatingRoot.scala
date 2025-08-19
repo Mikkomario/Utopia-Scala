@@ -2,8 +2,8 @@ package utopia.vault.nosql.targeting
 
 import utopia.flow.collection.immutable.Pair
 import utopia.vault.model.template.Deprecates
-import utopia.vault.nosql.targeting.many.AccessManyDeprecatingRoot
-import utopia.vault.nosql.targeting.one.AccessOneDeprecatingRoot
+import utopia.vault.nosql.targeting.many.ManyDeprecatingRoot
+import utopia.vault.nosql.targeting.one.OneDeprecatingRoot
 import utopia.vault.nosql.view.{DeprecatableView, FilterableView}
 
 object DeprecatingRoot
@@ -13,11 +13,11 @@ object DeprecatingRoot
 	/**
 	 * @return Constructors for creating access into individual items
 	 */
-	def one = AccessOneDeprecatingRoot
+	def one = OneDeprecatingRoot
 	/**
 	 * @return Constructors for creating access into multiple items at once
 	 */
-	def many = AccessManyDeprecatingRoot
+	def many = ManyDeprecatingRoot
 	
 	
 	// NESTED   -------------------------
