@@ -36,10 +36,10 @@
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
   - Added `.takeCount(...)`, a combination of `.count(...)` and `.take(...)`
-  - Added `.groupReduce(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
+  - Added `.groupReduce(...)`, `.groupByUsing(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
   - Added `.mostCommonEntry`, `.mostCommonEntryOption` and `.mostCommonEntries`
 - **Iterator** (**CollectionExtensions**)
-  - Added `.groupMapReduce(...)`
+  - Added `.groupMapReduce(...)` and `.collectToGroupsBy(...)`
 - **Lazy**
   - Added `.lightMap(...)`
   - Added `.or(...)` and `||`

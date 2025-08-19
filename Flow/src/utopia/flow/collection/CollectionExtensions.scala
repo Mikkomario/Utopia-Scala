@@ -749,6 +749,28 @@ object CollectionExtensions
 			}
 			builder.toMap
 		}
+		/**
+		 * Groups all items in this collection into collections of some type by mapping them to keys
+		 * @param makeBuilder A function for creating a new builder for a group
+		 * @param f A function for mapping an item to a key
+		 * @tparam K Type of keys used
+		 * @tparam To Type of collections to which items are grouped
+		 * @return A map where keys are the results of 'f' and values are all items which matched that key
+		 */
+		def groupByUsing[K, To](makeBuilder: => mutable.Builder[A, To])(f: A => K) = {
+			val builder = mutable.Map.empty[K, mutable.Builder[A, To]]
+			i.iterator.foreach { a =>
+				val key = f(a)
+				builder.get(key) match {
+					case Some(builder) => builder += a
+					case None =>
+						val newBuilder = makeBuilder
+						newBuilder += a
+						builder += (key -> newBuilder)
+				}
+			}
+			builder.view.mapValues { _.result() }.toMap
+		}
 		
 		/**
 		 * Groups items, merging similar keys together
@@ -2545,6 +2567,13 @@ object CollectionExtensions
 			foreachGroup(groupSize) { resultBuilder += map(_) }
 			resultBuilder.result()
 		}
+		/**
+		 * @param f A function which maps an item to a key
+		 * @tparam K Type of keys used
+		 * @return A map where the keys are results of 'f' and values are all
+		 *         encountered items that mapped to that key
+		 */
+		def collectToGroupsBy[K](f: A => K) = i.groupByUsing(OptimizedIndexedSeq.newBuilder)(f)
 		
 		/**
 		 * @param start The prepended pair start point (call-by-name).
