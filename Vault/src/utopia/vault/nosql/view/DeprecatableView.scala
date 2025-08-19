@@ -15,7 +15,7 @@ trait DeprecatableView[+Repr] extends FilterableView[Repr]
 	/**
 	 * @return Model used for interacting with the DB and for building conditions
 	 */
-	protected def model: Deprecates
+	def model: Deprecates
 	
 	
 	// COMPUTED ----------------------

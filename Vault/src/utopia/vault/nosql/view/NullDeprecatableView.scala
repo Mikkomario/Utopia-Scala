@@ -11,7 +11,7 @@ trait NullDeprecatableView[+Sub] extends TimeDeprecatableView[Sub]
 {
 	// ABSTRACT -----------------------
 	
-	override protected def model: DeprecatesAfterDefined
+	override def model: DeprecatesAfterDefined
 	
 	
 	// COMPUTED ----------------------

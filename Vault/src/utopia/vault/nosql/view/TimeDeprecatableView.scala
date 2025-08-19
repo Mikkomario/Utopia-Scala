@@ -19,7 +19,7 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	/**
 	  * @return Model used for interacting with the DB and for building conditions
 	  */
-	protected def model: DeprecatesAfter
+	override def model: DeprecatesAfter
 	
 	
 	// COMPUTED ----------------------

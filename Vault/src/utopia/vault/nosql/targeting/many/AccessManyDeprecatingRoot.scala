@@ -1,27 +1,23 @@
 package utopia.vault.nosql.targeting.many
 
 import utopia.vault.model.immutable.Table
-import utopia.vault.model.template.HasTable
-import utopia.vault.nosql.targeting.AccessDeprecatingRoot
-import utopia.vault.nosql.view.{DeprecatableView, ViewManyByIntIds}
+import utopia.vault.model.template.Deprecates
+import utopia.vault.nosql.targeting.DeprecatingRoot
+import utopia.vault.nosql.targeting.DeprecatingRoot.DeprecatingRootFactory
+import utopia.vault.nosql.view.{FilterableView, ViewManyByIntIds}
 import utopia.vault.sql.Condition
 
-object AccessManyDeprecatingRoot
+object AccessManyDeprecatingRoot extends DeprecatingRootFactory[AccessManyDeprecatingRoot]
 {
-	// OTHER    -------------------------
+	// IMPLEMENTED    --------------------
 	
-	/**
-	 * @param all Access to all elements, including historical ones
-	 * @tparam A Type of yielded access points
-	 * @return A root level access which wraps the specified access
-	 */
-	def apply[A <: DeprecatableView[A] with HasTable](all: A): AccessManyDeprecatingRoot[A] =
-		_AccessManyDeprecatingRoot(all)
+	override protected def _apply[A <: FilterableView[A]](all: A, conditions: Deprecates): AccessManyDeprecatingRoot[A] =
+		_AccessManyDeprecatingRoot(all, conditions)
 	
 	
 	// NESTED   -------------------------
 	
-	private case class _AccessManyDeprecatingRoot[+A <: DeprecatableView[A] with HasTable](all: A)
+	private case class _AccessManyDeprecatingRoot[+A <: FilterableView[A]](all: A, model: Deprecates)
 		extends AccessManyDeprecatingRoot[A]
 }
 
@@ -31,8 +27,8 @@ object AccessManyDeprecatingRoot
  * @author Mikko Hilpinen
  * @since 08.08.2025, v2.0
  */
-trait AccessManyDeprecatingRoot[+A <: DeprecatableView[A] with HasTable]
-	extends AccessDeprecatingRoot[A] with ViewManyByIntIds[A]
+trait AccessManyDeprecatingRoot[+A <: FilterableView[A]]
+	extends DeprecatingRoot[A] with ViewManyByIntIds[A]
 {
 	// IMPLEMENTED  ---------------------
 	
