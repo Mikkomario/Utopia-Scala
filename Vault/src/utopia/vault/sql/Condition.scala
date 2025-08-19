@@ -88,13 +88,14 @@ object Condition
 	 * @param values Acceptable values
 	 * @return A condition that is met by rows where the column matches one of the specified values
 	 */
-	def indexIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.in)(index.in)
+	def indexIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.in) { index.in(_) }
 	/**
 	 * @param index An integer-based (index) column
 	 * @param values Excluded values
 	 * @return A condition that is met by rows where the column does not match any of the specified values
 	 */
-	def indexNotIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.notIn)(index.notIn)
+	def indexNotIn(index: Column, values: IterableOnce[Int]) =
+		_indexIn(values)(index.notIn) { index.notIn(_) }
 	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inSet: Set[Int] => Condition) = {
 		values match {
 			case s: IntSet => inInts(s)
