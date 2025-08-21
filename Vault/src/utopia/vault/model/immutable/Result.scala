@@ -119,7 +119,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * Retrieves row data concerning a certain table
      * @param table The table whose data is returned
      */
-    def rowsForTable(table: String) = rows.flatMap { _.tableModels.get(table) }
+    def rowsForTable(table: String) = rows.flatMap { _.models.get(table) }
     /**
       * Retrieves row data concerning a certain table
       * @param table The table whose data is returned

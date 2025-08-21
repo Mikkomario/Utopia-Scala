@@ -124,7 +124,14 @@ case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Opt
       * @return Copy of this segment with the specified segments appended to it
       */
     def ++(others: IterableOnce[SqlSegment]) = others.iterator.foldLeft(this) { _ + _ }
-    
+	
+	/**
+	 * @param other Another SQL segment
+	 * @param separator A separator to place between these segments (including whitespaces)
+	 * @return An appended copy of this segment
+	 */
+	def append(other: SqlSegment, separator: String) =
+		mergeWith(other) { (my, their) => s"$my$separator$their" }
     /**
      * Prepends this sql segment with an sql string. The new string will be added to the beginning 
      * of this segment. A whitespace character is added between the two segments.

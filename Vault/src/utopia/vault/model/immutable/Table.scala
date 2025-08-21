@@ -100,6 +100,8 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	
 	override def tables = Single(this)
 	
+	override def contains(table: Table): Boolean = table == this
+	
 	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner) = {
 		// If already part of the origin tables, no join is created
 		if (originTables.contains(this))
@@ -132,7 +134,7 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	}
 	
 	
-	// OPERATORS    ----------------------------
+	// OTHER    ----------------------------
 	
 	/**
 	  * @param propertyName Name of the database property matching the targeted column
@@ -156,9 +158,6 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  */
 	def apply(propertyName: String, second: String, others: String*): Seq[TableColumn] =
 		apply(Pair(propertyName, second) ++ others)
-	
-	
-	// OTHER METHODS    ------------------------
 	
 	/**
 	  * Finds a column with the provided database model property name. Returns None if no such column exists in

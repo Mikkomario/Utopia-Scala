@@ -2,7 +2,7 @@ package utopia.vault.model.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.model.immutable.Table
-import utopia.vault.model.template.Joinable.ConditionalJoinable
+import utopia.vault.model.template.Joinable.{ConditionalJoinable, RenamedJoinable}
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, Join, JoinType}
 
@@ -16,6 +16,12 @@ object Joinable
 	{
 		override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) =
 			original.toJoinsFrom(originTables, joinType).map { _.mapHead { _.where(condition) } }
+	}
+	
+	private class RenamedJoinable(original: Joinable, alias: String) extends Joinable
+	{
+		override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType): Try[Seq[Join]] =
+			original.toJoinsFrom(originTables, joinType).map { _.mapHead { _.copy(rightAlias = alias) } }
 	}
 }
 
@@ -45,4 +51,10 @@ trait Joinable
 	 * @return A copy of this joinable item, joined only when the specified condition is met
 	 */
 	def where(condition: Condition): Joinable = new ConditionalJoinable(this, condition)
+	
+	/**
+	 * @param alias An alias given to the joined table
+	 * @return A copy of this joinable item, applying the specified table alias
+	 */
+	def as(alias: String): Joinable = new RenamedJoinable(this, alias)
 }

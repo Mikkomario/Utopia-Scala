@@ -37,7 +37,7 @@ trait ConcreteAccessManyLike[+A, +Repr <: TargetingManyLike[A, Repr, _]] extends
 		if (joins.isEmpty)
 			self
 		else {
-			val newTarget = joins.foldLeft(target) { _.join(_, joinType) }
+			val newTarget = target.join(joins)
 			if (newTarget == target)
 				self
 			else

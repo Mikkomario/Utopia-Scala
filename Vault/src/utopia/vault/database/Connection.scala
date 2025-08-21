@@ -178,17 +178,15 @@ object Connection
 					
 					// Checks which read column belongs to which table
 					// Some columns may be outside the specified tables
-					val (otherIndexGroups, tableIndices) = columnIndices.groupBy(meta.getTableName)
+					val (otherIndices, tableIndices) = columnIndices.groupBy(meta.getTableName)
 						.divideWith { case (tableName, indices) =>
 							tableIndex.get(tableName) match {
 								// Case: Targeting one of the read tables
 								case Some(table) => Right(table -> indices)
 								// Case: Targeting some other data
-								case None => Left(indices)
+								case None => Left(tableName -> indices)
 							}
 						}
-					// Collects column indices which fall outside the read tables
-					val otherIndices = otherIndexGroups.flatten
 					
 					// Maps column indices to database property names.
 					// Acquires these names from the matching columns.
@@ -242,12 +240,12 @@ object Connection
 					}
 					def indicesToModel(indices: Iterable[Int]) = customIndicesToModel(indices) { getColumnValue(_)() }
 					
-					// Function for populating the 'other' Row property
-					val readOtherModel = {
+					// Function for reading data from colums which didn't match any of the predefined tables
+					val readOtherModels = {
 						if (otherIndices.isEmpty)
-							() => Model.empty
+							() => Empty
 						else
-							() => indicesToModel(otherIndices)
+							() => otherIndices.map { case (tableName, indices) => tableName -> indicesToModel(indices) }
 					}
 					
 					// Case: There may be duplicate model entries => Prepares to perform duplicate-checking
@@ -269,10 +267,9 @@ object Connection
 						//       => Performs the default parsing instead
 						if (primaryColumnIndices.isEmpty)
 							() => {
-								val tableModels = tableIndices.view
+								val tableModelsView = tableIndices.view
 									.map { case (table, indices) => table.name -> indicesToModel(indices) }
-									.toMap.withDefaultValue(Model.empty)
-								Row(tableModels, readOtherModel())
+								Row((tableModelsView ++ readOtherModels()).toMap.withDefaultValue(Model.empty))
 							}
 						// Case: Duplicate-checking is possible => Prepares a function which handles it
 						else {
@@ -281,7 +278,7 @@ object Connection
 							// skipping value-processing
 							var lastModels = Map[String, Pointer[(Value, Model)]]()
 							() => {
-								val tableModels = tableIndices.view
+								val tableModelsView = tableIndices.view
 									.map { case (table, indices) =>
 										val model = primaryColumnIndices.get(table.name) match {
 											case Some(primaryIndex) =>
@@ -329,20 +326,17 @@ object Connection
 										}
 										table.name -> model
 									}
-									.toMap.withDefaultValue(Model.empty)
 								
-								Row(tableModels, readOtherModel())
+								Row((tableModelsView ++ readOtherModels()).toMap.withDefaultValue(Model.empty))
 							}
 						}
 					}
 					// Case: Duplicate-checking is not necessary => Applies the default parsing logic
 					else
 						() => {
-							val tableModels = tableIndices.view
+							val tableModelsView = tableIndices.view
 								.map { case (table, indices) => table.name -> indicesToModel(indices) }
-								.toMap.withDefaultValue(Model.empty)
-							
-							Row(tableModels, readOtherModel())
+							Row((tableModelsView ++ readOtherModels()).toMap.withDefaultValue(Model.empty))
 						}
 				} match {
 					case Success(getRow) => Some(getRow)

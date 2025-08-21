@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.util.StringExtensions._
 import utopia.vault.model.immutable.{Column, Table, TableColumn}
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.JoinType._
@@ -17,8 +18,10 @@ import scala.util.Success
   * @param joinType The type of join used (default = Inner)
   * @param condition Condition that applies to joining (optional).
   *                  When specified, only rows satisfying the specified condition will participate in a join.
+ * @param rightAlias Alias given to the joined table. Default = empty = no alias given.
   */
-case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condition: Option[Condition] = None)
+case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condition: Option[Condition] = None,
+                rightAlias: String = "")
 	extends Joinable
 {
 	// COMPUTED PROPERTIES    ----------------
@@ -27,10 +30,11 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 	  * An sql segment based on this join (Eg. "LEFT JOIN table2 ON table1.column1 = table2.column2")
 	  */
 	def toSqlSegment = {
-		val base = SqlSegment(s"$joinType JOIN ${ to.table.sqlName } ON ${ from.sqlName } = ${ to.sqlName }",
+		val base = SqlSegment(s"$joinType JOIN ${ to.table.sqlName }${ rightAlias.prependIfNotEmpty(" AS ") } ON ${
+			from.sqlName } = ${ to.sqlName }",
 			Empty, Some(to.table.databaseName), Set(to.table))
 		condition match {
-			case Some(c) => base + "AND" + c.segment
+			case Some(c) => base.append(c.segment, " AND ")
 			case None => base
 		}
 	}
@@ -70,6 +74,8 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 		}
 		copy(condition = Some(newCondition))
 	}
+	
+	override def as(alias: String): Joinable = copy(rightAlias = alias)
 	
 	
 	// OTHER    --------------------------

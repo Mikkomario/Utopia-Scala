@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.vault.model.immutable.Column
+import utopia.vault.model.immutable.{Column, Table}
 import utopia.vault.model.template.{HasTables, Joinable}
 import utopia.vault.sql.JoinType._
 
@@ -18,23 +18,28 @@ trait SqlTarget extends HasTables
 	def databaseName: String
 	
 	/**
-	  * Converts this sql target into an sql segment
+	  * Converts this sql target into a SQL segment
 	  */
 	def toSqlSegment: SqlSegment
 	
+	/**
+	 * @param table A table
+	 * @return Whether this target already contains that table
+	 */
+	def contains(table: Table): Boolean
 	
-	// OPERATORS    ----------------------------
+	
+	// OTHER    ----------------------------
 	
 	/**
 	  * Joins another table to this target using by appending an already complete join
 	  */
 	def +(join: Join): SqlTarget = {
-		val existingTables = tables
 		// Will ignore joins to tables already contained within this target
-		if (existingTables.contains(join.to.table))
+		if (contains(join.to.table))
 			this
 		else
-			SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, existingTables :+ join.to.table)
+			SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.to.table)
 	}
 	
 	/**
@@ -46,19 +51,15 @@ trait SqlTarget extends HasTables
 		if (joins.isEmpty)
 			this
 		else {
-			val existingTables = tables
 			// TODO: This filtering might be unnecessary now that Joinable.toJoinFrom is more carefully implemented
-			val newJoins = joins.filterNot { join => existingTables.contains(join.to.table) }
+			val newJoins = joins.filterNot { join => contains(join.to.table) }
 			if (newJoins.isEmpty)
 				this
 			else
 				SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
-					existingTables ++ newJoins.map { _.to.table })
+					tables ++ newJoins.map { _.to.table })
 		}
 	}
-	
-	
-	// OTHER METHODS    ------------------------
 	
 	/**
 	  * @param target A target which may be joined unto this sql target

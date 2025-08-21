@@ -16,12 +16,10 @@ object Row
   * Represents a single database row pulled with a select query
   * @author Mikko Hilpinen
   * @since 30.4.2017
-  * @param tableModels (Database) models formed based on read data, grouped by table name.
-  *                    Model properties are named based on pulled column property names.
-  * @param other A model containing all data outside the included tables.
-  *                  Default = empty model.
+  * @param models (Database) models formed based on read data, grouped by table name.
+  *               Model properties are named based on pulled column property names.
   */
-case class Row(tableModels: Map[String, Model], other: Model = Model.empty) extends MaybeEmpty[Row]
+case class Row(models: Map[String, Model]) extends MaybeEmpty[Row]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -29,32 +27,16 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	  * This row represented as a single model. If there are results from multiple tables in this
 	  * row, this model may not contain all of that data because of duplicate property names.
 	  */
-	lazy val toModel = {
-		if (tableModels.isEmpty)
-			other
-		else if (other.isEmpty)
-			tableModels.valuesIterator.reduce { _ ++ _ }
-		else
-			tableModels.valuesIterator.foldLeft(other) { _ ++ _ }
-	}
+	lazy val toModel = models.valuesIterator.reduceOption { _ ++ _ }.getOrElse(Model.empty)
 	
 	
 	// COMPUTED PROPERTIES    -----------------
 	
 	/**
-	  * @return Whether this row contains data besides table-specific data
-	  */
-	def containsOtherData = other.hasNonEmptyValues
-	
-	/**
 	  * @return The first value found from this row. Should only be used when just a single value is requested
 	  */
-	def value =
-		tableModels.valuesIterator.flatMap { _.propertiesIterator.map { _.value }.filter { _.nonEmpty } }.nextOption()
-			.getOrElse { other.propertiesIterator.map { _.value }.find { _.nonEmpty }.getOrElse(Value.empty) }
-	
-	@deprecated("Renamed to .other", "v1.22")
-	def otherData = other
+	def value = models.valuesIterator.findMap { _.propertiesIterator.map { _.value }.find { _.nonEmpty } }
+		.getOrElse(Value.empty)
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -64,15 +46,9 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	/**
 	  * Whether this row is empty and contains no column value data at all
 	  */
-	override def isEmpty = tableModels.valuesIterator.forall { _.hasOnlyEmptyValues } && other.hasOnlyEmptyValues
+	override def isEmpty = models.valuesIterator.forall { _.hasOnlyEmptyValues }
 	
 	override def toString = {
-		val models = {
-			if (other.hasNonEmptyValues)
-				tableModels + ("other" -> other)
-			else
-				tableModels
-		}
 		models.emptyOneOrMany match {
 			case None => "{}"
 			case Some(Left((_, model))) => model.toString
@@ -82,7 +58,7 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	}
 	
 	
-	// OPERATORS    ---------------------------
+	// OTHER    ---------------------------
 	
 	/**
 	  * Finds column data for a table
@@ -93,7 +69,7 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	  * @param tableName Name of the targeted table
 	  * @return A model representing that table's collected data
 	  */
-	def table(tableName: String) = tableModels.getOrElse(tableName, Model.empty)
+	def table(tableName: String) = models.getOrElse(tableName, Model.empty)
 	
 	/**
 	  * Finds the value of a single property in the row
@@ -105,7 +81,7 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	  * @param propertyName Name of the targeted property
 	  * @return Value of the targeted property
 	  */
-	def apply(tableName: String, propertyName: String) = tableModels.get(tableName) match {
+	def apply(tableName: String, propertyName: String) = models.get(tableName) match {
 		case Some(table) => table(propertyName)
 		case None => Value.empty
 	}
@@ -125,9 +101,6 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	 */
 	def apply(prop: DbPropertyDeclaration): Value = apply(prop.column)
 	
-	
-	// OTHER METHODS    ----------------------
-	
 	/**
 	  * Finds the index of the row in the specified table
 	  */
@@ -135,6 +108,13 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 		case Some(col) => apply(col)
 		case None => Value.empty
 	}
+	
+	/**
+	 * @param table Table to which an alias was given
+	 * @param alias Alias that was given to the specified table
+	 * @return A copy of this row mapping the aliased content back to the table name
+	 */
+	def applyingAlias(table: Table, alias: String) = Row(models + (table.name -> this.table(alias)))
 	
 	/**
 	  * Checks whether this row contains any data for the specified table
@@ -147,5 +127,5 @@ case class Row(tableModels: Map[String, Model], other: Model = Model.empty) exte
 	  * @param table Targeted table
 	  * @return Whether this row contains any data for that table
 	  */
-	def containsDataForTable(table: String) = tableModels.get(table).exists { _.hasNonEmptyValues }
+	def containsDataForTable(table: String) = models.get(table).exists { _.hasNonEmptyValues }
 }

@@ -53,6 +53,7 @@
 - Added new traits for database-reading and results-parsing, which were handled 
   by **FromResultFactory** variants until this point.
   - These are found under `utopia.vault.nosql.read`
+- Added support for table aliases when joining
 - Added **Store** interface for inserting new items to the database, while avoiding duplicate entries
 - Added **StoreResult** and **IdOrInserted** for wrapping store function results
 - Added **HasTables**, **HasTarget******, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget**, 

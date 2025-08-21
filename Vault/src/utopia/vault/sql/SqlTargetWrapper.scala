@@ -16,4 +16,6 @@ case class SqlTargetWrapper(private val segment: SqlSegment, databaseName: Strin
     def toSqlSegment = segment
     
     override def toString = toSqlSegment.toString
+	
+	override def contains(table: Table): Boolean = tables.contains(table)
 }
