@@ -757,20 +757,8 @@ object CollectionExtensions
 		 * @tparam To Type of collections to which items are grouped
 		 * @return A map where keys are the results of 'f' and values are all items which matched that key
 		 */
-		def groupByUsing[K, To](makeBuilder: => mutable.Builder[A, To])(f: A => K) = {
-			val builder = mutable.Map.empty[K, mutable.Builder[A, To]]
-			i.iterator.foreach { a =>
-				val key = f(a)
-				builder.get(key) match {
-					case Some(builder) => builder += a
-					case None =>
-						val newBuilder = makeBuilder
-						newBuilder += a
-						builder += (key -> newBuilder)
-				}
-			}
-			builder.view.mapValues { _.result() }.toMap
-		}
+		def groupByUsing[K, To](makeBuilder: => mutable.Builder[A, To])(f: A => K) =
+			groupMapUsing(makeBuilder)(f)(Identity)
 		/**
 		 * @param f A function for mapping an item to a key
 		 * @tparam K Type of keys used
@@ -784,6 +772,54 @@ object CollectionExtensions
 		 */
 		def groupToSetsBy[K](f: A => K) = groupByUsing(mutable.Set[A]().mapResult { _.toSet })(f)
 		
+		/**
+		 * Groups all items in this collection into value collections of some type by mapping them to key-value pairs
+		 * @param makeBuilder A function for creating a new builder for a group
+		 * @param toKey A function for mapping an item to a key
+		 * @param toValue A function for mapping an item into a value
+		 * @tparam K Type of keys used
+		 * @tparam V Type of individual values used
+		 * @tparam To Type of collections to which values are grouped
+		 * @return A map where keys are the results of 'toKey'
+		 *         and values are the results of 'toValue' for all items which matched that key
+		 */
+		def groupMapUsing[K, V, To](makeBuilder: mutable.Builder[V, To])(toKey: A => K)(toValue: A => V) = {
+			val builder = mutable.Map.empty[K, mutable.Builder[V, To]]
+			i.iterator.foreach { a =>
+				val key = toKey(a)
+				val value = toValue(a)
+				builder.get(key) match {
+					case Some(builder) => builder += value
+					case None =>
+						val newBuilder = makeBuilder
+						newBuilder += value
+						builder += (key -> newBuilder)
+				}
+			}
+			builder.view.mapValues { _.result() }.toMap
+		}
+		/**
+		 * Groups all items in this collection into value sequences by mapping them to key-value pairs
+		 * @param toKey A function for mapping an item to a key
+		 * @param toValue A function for mapping an item into a value
+		 * @tparam K Type of keys used
+		 * @tparam V Type of individual values used
+		 * @return A map where keys are the results of 'toKey'
+		 *         and values are the results of 'toValue' for all items which matched that key
+		 */
+		def groupMapToSeqs[K, V](toKey: A => K)(toValue: A => V) =
+			groupMapUsing[K, V, IndexedSeq[V]](OptimizedIndexedSeq.newBuilder)(toKey)(toValue)
+		/**
+		 * Groups all items in this collection into value sets by mapping them to key-value pairs
+		 * @param toKey A function for mapping an item to a key
+		 * @param toValue A function for mapping an item into a value
+		 * @tparam K Type of keys used
+		 * @tparam V Type of individual values used
+		 * @return A map where keys are the results of 'toKey'
+		 *         and values are the results of 'toValue' for all items which matched that key
+		 */
+		def groupMapToSets[K, V](toKey: A => K)(toValue: A => V) =
+			groupMapUsing[K, V, Set[V]](mutable.Set[V]().mapResult { _.toSet })(toKey)(toValue)
 		
 		/**
 		 * Groups items, merging similar keys together
@@ -2926,10 +2962,20 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * @param other Another option
+		 * @tparam B Type of the other option
+		 * @return Whether this option contains an item different from the other option's contents.
+		 *         Yields false if:
+		 *              - This option is empty
+		 *              - These two options both contain the same item
+		 */
+		def containsDifferentFrom[B >: A](other: Option[B]) = o.exists { my => other.exists { _ != my } }
+		
+		/**
 		  * Merges this option with another option using the following logic:
-		  * 1) If neither of these options are defined, returns None
-		  * 2) If only one of these options is defined, returns that option
-		  * 3) If both of these options are defined, merges the two values into a new option
+		  *     1. If neither of these options are defined, returns None
+		  *     1. If only one of these options is defined, returns that option
+		  *     1. If both of these options are defined, merges the two values into a new option
 		  * @param other Another option
 		  * @param merge Function to use when both of these options contain a value
 		  * @tparam B Type of the other option (super-type of this option)

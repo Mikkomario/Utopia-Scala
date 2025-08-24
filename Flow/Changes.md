@@ -36,7 +36,7 @@
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
   - Added `.takeCount(...)`, a combination of `.count(...)` and `.take(...)`
-  - Added `.groupReduce(...)`, `.groupByUsing(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
+  - Added `.groupReduce(...)`, `.groupByUsing(...)`, `.groupMapUsing(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
   - Added `.mostCommonEntry`, `.mostCommonEntryOption` and `.mostCommonEntries`
 - **Iterator** (**CollectionExtensions**)
   - Added `.groupMapReduce(...)` and `.collectToGroupsBy(...)`
@@ -46,6 +46,8 @@
   - Added `.flatten` for deep **Lazy** containers
 - **MapAccess** (object)
   - Added a few new **MapAccess** constructors, including **Map** wrappers
+- **Option** (**CollectionExtensions**)
+  - Added `.containsDifferentFrom(Option)`
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **String** (**StringExtensions**)

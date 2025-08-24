@@ -109,4 +109,15 @@ trait DeprecatingRoot[+A <: FilterableView[A]]
 	 * @return Access to either all entries, or only active entries
 	 */
 	def activeIf(condition: Boolean) = if (condition) active else all
+	/**
+	 * @param condition A condition that, if met, causes the resulting access to be limited to historical entries
+	 * @return Access to all entries, or only historical entries
+	 */
+	def historicalIf(condition: Boolean) = if (condition) historical else all
+	/**
+	 * @param condition A condition that, if met,
+	 *                  causes the resulting access to include historical entries, in addition to active ones
+	 * @return Access to either all or only active entries
+	 */
+	def includingHistoryIf(condition: Boolean) = activeIf(!condition)
 }
