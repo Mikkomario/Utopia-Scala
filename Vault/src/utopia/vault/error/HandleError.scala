@@ -19,6 +19,7 @@ object HandleError
 	
 	private var _connection: Option[ErrorHandler] = None
 	private var _parse: Option[ErrorHandler] = None
+	private var _alias: Option[ErrorHandler] = None
 	private var _clip: ErrorHandler = ErrorHandler.logUsing(VaultContext.log)
 	
 	
@@ -32,6 +33,10 @@ object HandleError
 	  * @return A handler for handling errors during database row -processing
 	  */
 	def duringRowParsing = _parse.getOrElse(default)
+	/**
+	 * @return An interface for handling errors related to table aliasing
+	 */
+	def inTableAliasing = _alias.getOrElse(default)
 	/**
 	  * @return A handler for handling cases where some data is excluded from inserts,
 	  *         because said data belonged to a different table
@@ -49,6 +54,11 @@ object HandleError
 	  */
 	def handleRowParseErrorsWith(handler: ErrorHandler) = _parse = Some(handler)
 	/**
+	 * Assigns an error handler to deal with failures related to table aliasing
+	 * @param handler An error handler
+	 */
+	def handleTableAliasingErrorsWith(handler: ErrorHandler) = _alias = Some(handler)
+	/**
 	  * Assigns an error handler for dealing with insert clipping errors
 	  * @param handler An error handler
 	  */
@@ -62,6 +72,7 @@ object HandleError
 		default = handler
 		_connection = None
 		_parse = None
+		_alias = None
 		_clip = handler
 	}
 }

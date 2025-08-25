@@ -96,17 +96,19 @@ object Condition
 	 */
 	def indexNotIn(index: Column, values: IterableOnce[Int]) =
 		_indexIn(values)(index.notIn) { index.notIn(_) }
-	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inSet: Set[Int] => Condition) = {
+	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inOther: Iterable[Int] => Condition) = {
 		values match {
 			case s: IntSet => inInts(s)
 			case i: Set[Int] =>
 				val kn = values.knownSize
 				// Case: Short collection => Won't bother converting to an int-set
 				if (kn >= 0 && kn <= 6)
-					inSet(i)
+					inOther(i)
 				// Case: Longer collection => Converts targeted ids to an int-set
 				else
 					inInts(IntSet.from(i))
+					
+			case p: Pair[Int] => inOther(p.distinct)
 			case i => inInts(IntSet.from(i))
 		}
 	}

@@ -3,6 +3,7 @@ package utopia.vault.model.immutable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.MaybeEmpty
+import utopia.vault.error.HandleError
 
 object Row
 {
@@ -114,7 +115,22 @@ case class Row(models: Map[String, Model]) extends MaybeEmpty[Row]
 	 * @param alias Alias that was given to the specified table
 	 * @return A copy of this row mapping the aliased content back to the table name
 	 */
-	def applyingAlias(table: Table, alias: String) = Row(models + (table.name -> this.table(alias)))
+	def applyingAlias(table: Table, alias: String) = models.get(alias) match {
+		// Case: Alias found => Maps the column names into column DB property names
+		case Some(aliased) =>
+			val mapped = aliased.mapKeys { colName =>
+				table.findColumnWithName(colName) match {
+					case Some(col) => col.name
+					case None => colName
+				}
+			}
+			Row(models - alias + (table.name -> mapped))
+		
+		// Case: No alias found => Delegates to HandleError
+		case None =>
+			HandleError.inTableAliasing(new NoSuchElementException(s"No alias ´$alias´ was found"))
+			Row(models - table.name)
+	}
 	
 	/**
 	  * Checks whether this row contains any data for the specified table
