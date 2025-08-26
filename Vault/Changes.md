@@ -96,7 +96,9 @@
   - Generated SQL queries are not quite as long anymore
   - The specified tables in `.apply(Iterable)` no longer have to all belong to the same database
 - **FromRowFactory**`.tryParse(Row)` now functions exactly as `.parseIfPresent(Row)`
-- **ViewManyByIntIds** now only skips IntSet conversion for **Set**s, no longer for other collection types
+- **ViewManyByIntIds** now only skips **IntSet** conversion for **Set**s and **Pair**s, 
+  no longer for other collection types
+- **Tables** no longer accepts implicit **ExecutionContext** in its constructor
 
 ## v1.21 - 26.05.2025
 This update improves connection management logic in **ConnectionPool** and
