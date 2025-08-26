@@ -7,8 +7,8 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.scribe.api.database.ScribeAccessExtensions._
-import utopia.scribe.api.database.access.many.logging.issue.DbIssues
-import utopia.scribe.api.database.access.single.logging.error_record.DbErrorRecord
+import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
+import utopia.scribe.api.database.access.logging.issue.AccessIssues
 import utopia.scribe.core.model.enumeration.Severity.Debug
 import utopia.scribe.core.util.logging.ScribeTryExtensions._
 
@@ -36,18 +36,19 @@ object DbLoggingTest extends App
 	Wait(1.0.seconds)
 	
 	cPool { implicit c =>
-		val issues = DbIssues.instances.since(Now - 5.seconds, includePartialRanges = true).pull
+		val issues = AccessIssues.withOccurrences
+			.whereOccurrences.since(Now - 5.seconds, includePartialRanges = true).pull
 		println(s"Read ${ issues.size } issues from the DB")
 		issues.foreach { issue =>
 			println(s"${issue.id} ${issue.severity} ${issue.context}")
 			issue.variants.foreach { variant =>
 				println(s"\t- Variant #${variant.id} ${variant.version}")
 				variant.latestOccurrence.foreach { occ =>
-					println(s"\t\t- ${occ.lastOccurrence}: ${occ.errorMessages}")
+					println(s"\t\t- ${occ.lastOccurrence}: ${occ.errorMessages.mkString(" => ")}")
 				}
 				variant.errorId.foreach { errorId =>
 					println(s"Describing error $errorId")
-					DbErrorRecord(errorId).topToBottomIterator.foreach { error =>
+					AccessErrorRecord(errorId).topToBottomIterator.foreach { error =>
 						println(error.data.exceptionType)
 						error.stackAccess.topToBottomIterator.groupBy { _.fileAndClassName }
 							.foreach { case (className, stack) =>
