@@ -8,7 +8,8 @@ Adds support for **Scribe-Core v1.2 and Vault v1.22**
 - Deprecated all previous database classes (i.e. database model classes, database factory classes and the access classes)
   - These are replaced with newly generated versions
 ### New features
-- Added models for managing issues
+- Added `queue` command to the console app
+- Added database interfaces for managing issues
 
 ## v1.0.5 - 26.05.2025
 Adds support for **Access v1.6**

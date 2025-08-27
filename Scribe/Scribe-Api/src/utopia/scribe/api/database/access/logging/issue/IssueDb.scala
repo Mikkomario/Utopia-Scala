@@ -9,12 +9,15 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
 import utopia.scribe.api.database.access.logging.error.ErrorDb
 import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
+import utopia.scribe.api.database.access.management.resolution.AccessResolutions
 import utopia.scribe.api.database.storable.logging.{IssueDbModel, IssueOccurrenceDbModel, IssueVariantDbModel}
+import utopia.scribe.api.database.storable.management.IssueNotificationDbModel
 import utopia.scribe.core.model.cached.logging.RecordableError
-import utopia.scribe.core.model.combined.logging.{IssueWithDetailedVariants, DetailedIssueVariant}
+import utopia.scribe.core.model.combined.logging.{DetailedIssueVariant, IssueWithDetailedVariants}
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.scribe.core.model.partial.logging.{IssueData, IssueOccurrenceData, IssueVariantData}
+import utopia.scribe.core.model.partial.management.IssueNotificationData
 import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.database.Connection
@@ -32,8 +35,9 @@ object IssueDb
 	// ATTRIBUTES   -----------------------
 	
 	private val model = IssueDbModel
-	private val variantmodel = IssueVariantDbModel
+	private val variantModel = IssueVariantDbModel
 	private val occurrenceModel = IssueOccurrenceDbModel
+	private val notificationModel = IssueNotificationDbModel
 	
 	
 	// OTHER    ---------------------------
@@ -86,7 +90,7 @@ object IssueDb
 		
 		// Stores or pulls the appropriate issue variant
 		val variant = {
-			def insert() = variantmodel.insert(IssueVariantData(
+			def insert() = variantModel.insert(IssueVariantData(
 				issue.id, version, storedError.map { _.id }, variantDetails.sorted, timeRange.start))
 			
 			if (issue.isNew || storedError.exists { _.isNew })
@@ -109,6 +113,16 @@ object IssueDb
 		// Stores an issue occurrence
 		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages,
 			occurrenceDetails.sorted, occurrences, timeRange))
+		
+		// Checks whether a notification should be generated, also
+		val brokenResolutions = AccessResolutions.active.ofIssue(issue.id).generatingNotifications
+			.idsAndVersionThresholds.filter { _._2.forall { _ < version } }
+		if (brokenResolutions.nonEmpty) {
+			AccessResolutions(brokenResolutions.map { _._1 }).deprecate()
+			notificationModel.insert(
+				brokenResolutions.map { case (resolutionId, _) => IssueNotificationData(resolutionId) })
+		}
+		
 		// Combines the data together and returns
 		IssueWithDetailedVariants(issue, Single(DetailedIssueVariant(variant, storedError.map { _.stored }, Single(occurrence))))
 	}

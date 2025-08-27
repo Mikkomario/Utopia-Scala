@@ -3,6 +3,7 @@ package utopia.scribe.api.database.access.management.resolution
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.Version
 import utopia.scribe.api.database.storable.management.ResolutionDbModel
+import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
 /**
@@ -55,5 +56,18 @@ case class AccessResolutionValues(access: AccessManyColumns) extends AccessValue
 	  * Note: Only one notification may be generated in total.
 	  */
 	lazy val notifyWhenBroken = apply(model.notifies) { v => v.getBoolean }
+	
+	
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return 2 values from all accessible resolutions:
+	 *              1. ID
+	 *              1. Version threshold, if applicable
+	 */
+	def idsAndVersionThresholds(implicit connection: Connection) =
+		access(model.id, model.versionThreshold)
+			.map { values => values.head.getInt -> values(1).string.map(Version.apply) }
 }
 

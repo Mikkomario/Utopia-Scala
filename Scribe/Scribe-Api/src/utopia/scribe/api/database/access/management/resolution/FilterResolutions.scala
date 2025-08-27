@@ -12,6 +12,14 @@ import utopia.vault.nosql.view.{TimeDeprecatableView, TimelineView}
   */
 trait FilterResolutions[+Repr] extends TimelineView[Repr] with TimeDeprecatableView[Repr]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Access to resolutions which generate notifications
+	 */
+	def generatingNotifications = withNotifies(true)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	/**

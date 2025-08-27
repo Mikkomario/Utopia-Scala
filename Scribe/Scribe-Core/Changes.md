@@ -7,6 +7,7 @@
 ### Deprecations
 - Deprecated **Stored**, **StoredFromModelFactory** and **StoredModelConvertible**
 ### New features
+- Added models for issue management
 - Added **LazyScribe** implementation, including implicit conversions from **Lazy** to **Scribe**
 - Added **ScribeWrapper** trait
 ### Other changes
