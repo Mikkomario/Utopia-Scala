@@ -41,7 +41,7 @@ object AccessErrorRecord extends AccessOneRoot[AccessErrorRecord[ErrorRecord]]
 /**
   * Used for accessing individual error records from the DB at a time
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class AccessErrorRecord[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessErrorRecord[A]] with FilterErrorRecords[AccessErrorRecord[A]]

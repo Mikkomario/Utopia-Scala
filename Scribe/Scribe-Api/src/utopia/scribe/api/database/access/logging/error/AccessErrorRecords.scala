@@ -42,7 +42,7 @@ object AccessErrorRecords
 /**
   * Used for accessing multiple error records from the DB at a time
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 abstract class AccessErrorRecords[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingManyLike[A, Repr, AccessErrorRecord[A]] with FilterErrorRecords[Repr]

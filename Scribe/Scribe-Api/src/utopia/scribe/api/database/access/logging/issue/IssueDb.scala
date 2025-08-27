@@ -11,7 +11,7 @@ import utopia.scribe.api.database.access.logging.error.ErrorDb
 import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
 import utopia.scribe.api.database.storable.logging.{IssueDbModel, IssueOccurrenceDbModel, IssueVariantDbModel}
 import utopia.scribe.core.model.cached.logging.RecordableError
-import utopia.scribe.core.model.combined.logging.{DetailedIssue, DetailedIssueVariant}
+import utopia.scribe.core.model.combined.logging.{IssueWithDetailedVariants, DetailedIssueVariant}
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.scribe.core.model.partial.logging.{IssueData, IssueOccurrenceData, IssueVariantData}
@@ -78,7 +78,7 @@ object IssueDb
 	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty,
 	          occurrenceDetails: Model = Model.empty, occurrences: Int = 1,
 	          timeRange: Span[Instant] = Span.singleValue(Now))
-	         (implicit connection: Connection, version: Version): DetailedIssue =
+	         (implicit connection: Connection, version: Version): IssueWithDetailedVariants =
 	{
 		// Stores the root issue and the associated error
 		val issue = store(IssueData(context, severity, timeRange.start))
@@ -110,7 +110,7 @@ object IssueDb
 		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages,
 			occurrenceDetails.sorted, occurrences, timeRange))
 		// Combines the data together and returns
-		DetailedIssue(issue, Single(DetailedIssueVariant(variant, storedError.map { _.stored }, Single(occurrence))))
+		IssueWithDetailedVariants(issue, Single(DetailedIssueVariant(variant, storedError.map { _.stored }, Single(occurrence))))
 	}
 	
 	/**
@@ -129,7 +129,7 @@ object IssueDb
 	  * @param connection Implicit DB connection
 	  * @return The recorded issue
 	  */
-	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue =
+	def store(issue: ClientIssue)(implicit connection: Connection): IssueWithDetailedVariants =
 		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.occurrenceDetails,
 			issue.instances,issue.storeDuration.mapTo { Now - _ })(connection, issue.version)
 }

@@ -13,7 +13,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object UniqueStackTraceElementRecordAccess
 {
 	// OTHER	--------------------
@@ -42,7 +42,7 @@ object UniqueStackTraceElementRecordAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait UniqueStackTraceElementRecordAccess
 	extends SingleRowModelAccess[StackTraceElementRecord] 
 		with FilterableView[UniqueStackTraceElementRecordAccess] 

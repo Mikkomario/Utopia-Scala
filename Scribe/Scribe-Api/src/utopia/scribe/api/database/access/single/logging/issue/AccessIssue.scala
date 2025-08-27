@@ -4,7 +4,7 @@ import utopia.scribe.api.database.access.many.logging.issue.{AccessIssues, Filte
 import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 {
 	override lazy val root: AccessIssue[Issue] = AccessIssues.root.head
@@ -16,7 +16,7 @@ object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.0.5
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 case class AccessIssue[A](wrapped: TargetingOne[Option[A]])
 	extends AccessOneWrapper[Option[A], AccessIssue[A]] with FilterIssues[AccessIssue[A]]
 {

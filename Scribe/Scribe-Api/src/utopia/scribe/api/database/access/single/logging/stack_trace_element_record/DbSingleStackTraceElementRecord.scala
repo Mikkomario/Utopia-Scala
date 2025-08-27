@@ -8,7 +8,7 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 case class DbSingleStackTraceElementRecord(id: Int)
 	extends UniqueStackTraceElementRecordAccess with SingleIntIdModelAccess[StackTraceElementRecord]
 

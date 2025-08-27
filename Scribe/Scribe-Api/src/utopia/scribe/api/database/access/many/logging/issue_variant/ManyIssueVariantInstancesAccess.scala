@@ -8,7 +8,7 @@ import utopia.scribe.core.model.combined.logging.IssueVariantInstances
 import utopia.vault.database.Connection
 import utopia.vault.sql.Condition
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object ManyIssueVariantInstancesAccess
 {
 	// OTHER	--------------------
@@ -31,7 +31,7 @@ object ManyIssueVariantInstancesAccess
   * @author Mikko Hilpinen
   * @since 25.05.2023
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait ManyIssueVariantInstancesAccess
 	extends ManyIssueVariantsAccessLike[IssueVariantInstances, ManyIssueVariantInstancesAccess]
 {

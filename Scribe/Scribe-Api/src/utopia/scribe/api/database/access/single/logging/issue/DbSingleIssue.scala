@@ -8,6 +8,6 @@ import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 case class DbSingleIssue(id: Int) extends UniqueIssueAccess with SingleIntIdModelAccess[Issue]
 

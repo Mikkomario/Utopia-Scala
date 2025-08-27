@@ -17,7 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 23.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait ManyIssueVariantsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed with FilterableView[Repr]
 {
 	// COMPUTED	--------------------

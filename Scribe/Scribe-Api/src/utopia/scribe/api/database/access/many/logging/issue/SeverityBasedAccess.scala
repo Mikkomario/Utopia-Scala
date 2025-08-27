@@ -12,7 +12,7 @@ import utopia.vault.nosql.view.FilterableView
   * @author Mikko Hilpinen
   * @since 10.7.2023, v1.0
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait SeverityBasedAccess[+Repr] extends FilterableView[Repr]
 {
 	// COMPUTED -------------------------

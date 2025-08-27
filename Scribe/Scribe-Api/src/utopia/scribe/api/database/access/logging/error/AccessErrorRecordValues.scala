@@ -7,7 +7,7 @@ import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 /**
   * Used for accessing error record values from the DB
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class AccessErrorRecordValues(access: AccessManyColumns) extends AccessValues
 {

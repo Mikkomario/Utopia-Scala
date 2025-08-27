@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.FilterableView
 /**
   * Common trait for access points which may be filtered based on error record properties
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 trait FilterErrorRecords[+Repr] extends FilterableView[Repr]
 {

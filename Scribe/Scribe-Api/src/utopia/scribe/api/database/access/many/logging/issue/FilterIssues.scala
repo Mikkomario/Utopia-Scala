@@ -12,7 +12,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 20.05.2025, v1.0.5
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait FilterIssues[+Repr] extends FilterableView[Repr]
 {
 	// COMPUTED -------------------------

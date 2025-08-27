@@ -14,7 +14,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 9.7.2023, v1.0
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait OccurrenceTimeBasedAccess[+Repr] extends FilterableView[Repr]
 {
 	// COMPUTED ------------------------

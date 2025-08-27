@@ -8,7 +8,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.Condition
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object ManyIssueInstancesAccess
 {
 	// OTHER	--------------------
@@ -31,7 +31,7 @@ object ManyIssueInstancesAccess
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait ManyIssueInstancesAccess
 	extends ManyIssuesAccessLike[IssueInstances, ManyIssueInstancesAccess] 
 		with OccurrenceTimeBasedAccess[ManyIssueInstancesAccess]

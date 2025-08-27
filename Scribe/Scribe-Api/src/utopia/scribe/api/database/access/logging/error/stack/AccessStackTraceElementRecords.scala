@@ -45,7 +45,7 @@ object AccessStackTraceElementRecords
 /**
   * Used for accessing multiple stack trace element records from the DB at a time
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 abstract class AccessStackTraceElementRecords[A, +Repr <: TargetingManyLike[_, Repr, 
 	_]](wrapped: AccessManyColumns) 
