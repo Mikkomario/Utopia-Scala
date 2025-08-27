@@ -8,8 +8,18 @@ Adds support for **Scribe-Core v1.2 and Vault v1.22**
 - Deprecated all previous database classes (i.e. database model classes, database factory classes and the access classes)
   - These are replaced with newly generated versions
 ### New features
-- Added `queue` command to the console app
+- Added the following new console commands:
+  - `comments`: Read comments on the open issue
+  - `comment`: Write a comment on the open issue
+  - `fixed`: Mark the issue as fixed
+  - `silence`: Silence the issue for some time
+  - `alias`: Given an issue an alias
+  - `severity`: Change issue severity
+  - `queue`: Queue issues for `see next`
+  - `close`: Mark notifications as read
 - Added database interfaces for managing issues
+### Other changes
+- Rewrote the `status` command
 
 ## v1.0.5 - 26.05.2025
 Adds support for **Access v1.6**
