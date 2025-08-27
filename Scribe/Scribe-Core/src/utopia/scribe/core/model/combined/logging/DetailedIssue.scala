@@ -17,7 +17,7 @@ import utopia.scribe.core.model.stored.management.{Comment, IssueAlias}
  */
 case class DetailedIssue(issue: Issue, variants: Seq[DetailedIssueVariant] = Empty, aliasing: Option[IssueAlias] = None,
                          comments: Seq[Comment] = Empty, resolutions: Seq[DetailedResolution] = Empty)
-	extends IssueWithDetailedVariants with CombinedIssue[DetailedIssue]
+	extends ManagedIssueInstances with IssueWithDetailedVariants with CombinedIssue[DetailedIssue]
 {
 	override protected def wrap(factory: Issue): DetailedIssue = copy(issue = factory)
 }

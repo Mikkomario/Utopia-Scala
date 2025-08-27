@@ -16,7 +16,7 @@ object IssueAlias extends StandardStoredFactory[IssueAliasData, IssueAlias]
   * @param id   id of this issue alias in the database
   * @param data Wrapped issue alias data
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class IssueAlias(id: Int, data: IssueAliasData) 
 	extends StoredModelConvertible[IssueAliasData] with FromIdFactory[Int, IssueAlias] 

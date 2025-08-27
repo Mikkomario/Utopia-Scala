@@ -19,6 +19,12 @@ trait FilterResolutions[+Repr] extends TimelineView[Repr] with TimeDeprecatableV
 	 */
 	def generatingNotifications = withNotifies(true)
 	
+	/**
+	 * @return Access to resolutions which don't silence notifications
+	 *         (including cases where a resolution is not joined at all)
+	 */
+	def notSilencing = filter(model.silences <> true)
+	
 	
 	// IMPLEMENTED	--------------------
 	

@@ -36,7 +36,7 @@ object DbLoggingTest extends App
 	Wait(1.0.seconds)
 	
 	cPool { implicit c =>
-		val issues = AccessIssues.withOccurrences
+		val issues = AccessIssues.instances
 			.whereOccurrences.since(Now - 5.seconds, includePartialRanges = true).pull
 		println(s"Read ${ issues.size } issues from the DB")
 		issues.foreach { issue =>

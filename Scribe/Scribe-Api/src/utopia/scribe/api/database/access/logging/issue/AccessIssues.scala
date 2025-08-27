@@ -3,20 +3,22 @@ package utopia.scribe.api.database.access.logging.issue
 import utopia.scribe.api.database.ScribeTables
 import utopia.scribe.api.database.access.logging.issue.occurrence.{AccessIssueOccurrenceValues, FilterByIssueOccurrence}
 import utopia.scribe.api.database.access.logging.issue.variant.{AccessIssueVariantValues, FilterByIssueVariant}
-import utopia.scribe.api.database.reader.logging.{IssueDbReader, IssueInstancesDbReader, VaryingIssueDbReader}
+import utopia.scribe.api.database.access.management.resolution.FilterByResolution
+import utopia.scribe.api.database.reader.logging.{IssueDbReader, IssueInstancesDbReader, ManagedIssueDbReader, VaryingIssueDbReader}
 import utopia.scribe.api.database.storable.logging.IssueDbModel
+import utopia.scribe.api.database.storable.management.{IssueNotificationDbModel, ResolutionDbModel}
 import utopia.scribe.core.model.stored.logging.Issue
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
-
-import scala.language.implicitConversions
 
 object AccessIssues 
 	extends AccessManyRoot[AccessIssueRows[Issue]] with WrapRowAccess[AccessIssueRows] 
 		with WrapOneToManyAccess[AccessCombinedIssues]
 {
 	// ATTRIBUTES	--------------------
+	
+	private val resolutionModel = ResolutionDbModel
 	
 	override lazy val root = apply(IssueDbReader)
 	
@@ -27,16 +29,13 @@ object AccessIssues
 	/**
 	  * Access to issues in the DB, including variants and occurrences
 	  */
-	lazy val withOccurrences = apply(IssueInstancesDbReader)
-	
-	
-	// IMPLICIT	--------------------
+	lazy val instances = apply(IssueInstancesDbReader)
 	
 	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessIssues[_, _]): AccessIssueValues = access.values
+	 * Access to issues with resolutions and aliases.
+	 * Note: Even when filtered to active items only, historical notifications may be included.
+	 */
+	lazy val managed = ManyDeprecatingRoot(apply(ManagedIssueDbReader), resolutionModel)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -57,7 +56,7 @@ object AccessIssues
   * @since 27.07.2025, v1.1
   */
 abstract class AccessIssues[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
-	extends TargetingTimeline[A, Repr, AccessIssue[A]] with FilterIssues[Repr]
+	extends TargetingTimeline[A, Repr, AccessIssue[A]] with FilterIssues[Repr] with HasValues[AccessIssueValues]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -82,6 +81,9 @@ abstract class AccessIssues[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: 
 	lazy val joinOccurrences = joinVariants.join(ScribeTables.issueOccurrence)
 	lazy val occurrences = AccessIssueOccurrenceValues(joinOccurrences)
 	lazy val whereOccurrences = FilterByIssueOccurrence(joinOccurrences)
+	
+	lazy val leftJoinResolutions = leftJoin(ScribeTables.resolution)
+	lazy val wherePossibleResolutions = FilterByResolution(leftJoinResolutions)
 	
 	
 	// IMPLEMENTED	--------------------

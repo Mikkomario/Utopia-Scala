@@ -69,6 +69,7 @@
   - Added `.indexIn(IterableOnce[Int])` and `.indexNotIn(IterableOnce[Int])`
 - **ConditionElement**
   - Added `.notIn(IntSet)`
+  - Added `.inIfLimited(IntSet, Int)`
 - **DeprecatableView**
   - Added `.active` and `.historical`
 - **FilterableView**

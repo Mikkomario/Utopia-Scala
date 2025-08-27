@@ -2,6 +2,7 @@ package utopia.scribe.api.database.reader.management
 
 import utopia.flow.generic.model.immutable.Model
 import utopia.scribe.api.database.storable.management.IssueAliasDbModel
+import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.partial.management.IssueAliasData
 import utopia.scribe.core.model.stored.management.IssueAlias
 import utopia.vault.model.template.HasTableAsTarget
@@ -13,7 +14,7 @@ import scala.util.Success
 /**
   * Used for reading issue alias data from the DB
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 object IssueAliasDbReader 
 	extends DbRowReader[IssueAlias] with ParseTableModel[IssueAlias] with HasTableAsTarget
@@ -34,7 +35,7 @@ object IssueAliasDbReader
 		Success(IssueAlias(valid(this.model.id.name).getInt, 
 			IssueAliasData(issueId = valid(this.model.issueId.name).getInt, 
 			alias = valid(this.model.alias.name).getString, 
-			newSeverity = valid(this.model.newSeverity.name).getInt, 
+			newSeverity = Severity.findForValue(valid(this.model.newSeverity.name)), 
 			created = valid(this.model.created.name).getInstant)))
 }
 

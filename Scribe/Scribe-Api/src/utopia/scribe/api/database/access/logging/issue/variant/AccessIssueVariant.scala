@@ -21,7 +21,7 @@ object AccessIssueVariant extends AccessOneRoot[AccessIssueVariant[IssueVariant]
 	/**
 	  * Access to individual issue variants in the DB, also including issue occurrence information
 	  */
-	lazy val withOccurrence = AccessIssueVariants.withOccurrences.head
+	lazy val withOccurrence = AccessIssueVariants.instances.head
 	
 	
 	// IMPLICIT	--------------------

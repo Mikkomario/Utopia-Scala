@@ -35,6 +35,7 @@
   - Added `.groupedWithinSize(Int)` for deep collections
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
+  - Added `.countsBy(...)`
   - Added `.takeCount(...)`, a combination of `.count(...)` and `.take(...)`
   - Added `.groupReduce(...)`, `.groupByUsing(...)`, `.groupMapUsing(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
   - Added `.mostCommonEntry`, `.mostCommonEntryOption` and `.mostCommonEntries`

@@ -1,5 +1,7 @@
 package utopia.scribe.core.model.factory.management
 
+import utopia.scribe.core.model.enumeration.Severity
+
 import java.time.Instant
 
 /**
@@ -7,7 +9,7 @@ import java.time.Instant
   * properties
   * @tparam A Type of constructed instances
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 trait IssueAliasFactory[+A]
 {
@@ -35,6 +37,6 @@ trait IssueAliasFactory[+A]
 	  * @param newSeverity New new severity to assign
 	  * @return Copy of this item with the specified new severity
 	  */
-	def withNewSeverity(newSeverity: Int): A
+	def withNewSeverity(newSeverity: Severity): A
 }
 

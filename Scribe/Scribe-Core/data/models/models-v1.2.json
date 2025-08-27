@@ -268,7 +268,8 @@
         "props": [
           {
             "ref": "issue",
-            "doc": "ID of the described issue"
+            "doc": "ID of the described issue",
+            "with": "ofIssue"
           },
           {
             "name": "alias",
@@ -277,7 +278,7 @@
           },
           {
             "name": "newSeverity",
-            "type": "Option[Severity]",
+            "type": "Option[Enum[Severity]]",
             "doc": "New severity level assigned for the issue. None if severity is not modified."
           },
           {

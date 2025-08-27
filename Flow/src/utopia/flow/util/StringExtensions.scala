@@ -1,14 +1,12 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
-
-import scala.collection.immutable.VectorBuilder
 
 /**
  * Contains some utility extensions that extend the capabilities of standard strings
@@ -522,37 +520,49 @@ object StringExtensions
 		/**
 		  * Splits this string based on maximum line length
 		  * @param maxCharactersPerLine Maximum amount of characters that may be included in a single line
-		  * @return An iterator that returns lines that are <= 'maxCharactersPerLine' long, except in cases where
+		  * @param splitRegex Regular expression for identifying a potential line split location.
+		 *                   Default = look for whitespaces.
+		 * @param splitterOnNewLine Whether the line splitters (e.g. whitespaces)
+		 *                       should be placed on the new line instead of being left at the end of the previous line.
+		 *                       Default = false.
+		 * @return An iterator that returns lines that are <= 'maxCharactersPerLine' long, except in cases where
 		  *         individual words exceed this length limit.
 		  */
-		def splitToLinesIterator(maxCharactersPerLine: Int) = s.linesIterator.flatMap { str =>
-			val length = str.length
-			// Case: This string already fits a single line
-			if (length <= maxCharactersPerLine)
-				Iterator.single(str)
-			// Case: Splitting is necessary
-			else {
-				// Checks all places where this string may be split
-				val possibleSplitIndices = Regex.whiteSpace.startIndexIteratorIn(str).map { _ + 1 }.toVector
-				// Finds the optimal split intervals
-				OptionsIterator
-					.iterate(Some(0 -> -1)) { case (lineStartIndex, lastSplitIndex) =>
-						val maxIndex = lineStartIndex + maxCharactersPerLine
-						// Case: This is the last line => No need for further splitting
-						if (maxIndex >= length)
-							None
+		def splitToLinesIterator(maxCharactersPerLine: Int, splitRegex: Regex = Regex.whiteSpace,
+		                         splitterOnNewLine: Boolean = false) =
+			s.linesIterator.flatMap { str =>
+				val length = str.length
+				// Case: This string already fits a single line
+				if (length <= maxCharactersPerLine)
+					Iterator.single(str)
+				// Case: Splitting is necessary
+				else {
+					// Checks all places where this string may be split
+					val possibleSplitIndices = {
+						if (splitterOnNewLine)
+							splitRegex.startIndexIteratorIn(str).toVector
 						else
-							possibleSplitIndices.view.zipWithIndex.drop(lastSplitIndex + 1)
-								.takeWhile { _._1 <= maxIndex }.lastOption
-								.orElse {
-									Some(lastSplitIndex + 1).filter { _ < possibleSplitIndices.size }
-										.map { i => possibleSplitIndices(i) -> i }
-								}
+							splitRegex.endIndexIteratorIn(str).toVector
 					}
-					// Converts the selected split intervals to lines
-					.map { _._1 }.pairedTo(length).map { range => str.substring(range.first, range.second) }
+					// Finds the optimal split intervals
+					OptionsIterator
+						.iterate(Some(0 -> -1)) { case (lineStartIndex, lastSplitIndex) =>
+							val maxIndex = lineStartIndex + maxCharactersPerLine
+							// Case: This is the last line => No need for further splitting
+							if (maxIndex >= length)
+								None
+							else
+								possibleSplitIndices.view.zipWithIndex.drop(lastSplitIndex + 1)
+									.takeWhile { _._1 <= maxIndex }.lastOption
+									.orElse {
+										Some(lastSplitIndex + 1).filter { _ < possibleSplitIndices.size }
+											.map { i => possibleSplitIndices(i) -> i }
+									}
+						}
+						// Converts the selected split intervals to lines
+						.map { _._1 }.pairedTo(length).map { range => str.substring(range.first, range.second) }
+				}
 			}
-		}
 		
 		/**
 		 * Divides this string based on the specified divider / separator string. Works much like split,

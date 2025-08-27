@@ -2,13 +2,14 @@ package utopia.scribe.api.database.access.management.aliasing
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.scribe.api.database.storable.management.IssueAliasDbModel
+import utopia.scribe.core.model.enumeration.Severity
 import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 import utopia.vault.nosql.targeting.columns.AccessValue
 
 /**
   * Used for accessing individual issue alias values from the DB
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessIssueAliasValue(access: AccessColumn) extends AccessValue
 {
@@ -37,7 +38,7 @@ case class AccessIssueAliasValue(access: AccessColumn) extends AccessValue
 	/**
 	  * New severity level assigned for the issue. None if severity is not modified.
 	  */
-	lazy val newSeverity = apply(model.newSeverity).optional { v => v.int }
+	lazy val newSeverity = apply(model.newSeverity).optional { v => Severity.findForValue(v) }
 	
 	/**
 	  * Time when this alias was given

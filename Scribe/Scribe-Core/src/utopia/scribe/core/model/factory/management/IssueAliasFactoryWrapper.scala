@@ -1,6 +1,7 @@
 package utopia.scribe.core.model.factory.management
 
 import utopia.flow.util.Mutate
+import utopia.scribe.core.model.enumeration.Severity
 
 import java.time.Instant
 
@@ -10,7 +11,7 @@ import java.time.Instant
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 trait IssueAliasFactoryWrapper[A <: IssueAliasFactory[A], +Repr] extends IssueAliasFactory[Repr]
 {
@@ -37,7 +38,7 @@ trait IssueAliasFactoryWrapper[A <: IssueAliasFactory[A], +Repr] extends IssueAl
 	
 	override def withIssueId(issueId: Int) = mapWrapped { _.withIssueId(issueId) }
 	
-	override def withNewSeverity(newSeverity: Int) = mapWrapped { _.withNewSeverity(newSeverity) }
+	override def withNewSeverity(newSeverity: Severity) = mapWrapped { _.withNewSeverity(newSeverity) }
 	
 	
 	// OTHER	--------------------

@@ -554,21 +554,7 @@ object CollectionExtensions
 		 *
 		 *         The resulting map has a default value of 0.
 		 */
-		def countAll: Map[A, Int] = {
-			val iter = i.iterator
-			if (iter.hasNext) {
-				val buffer = mutable.Map[A, Int]()
-				iter.foreach { a =>
-					buffer.updateWith(a) {
-						case Some(c) => Some(c + 1)
-						case None => Some(1)
-					}
-				}
-				buffer.toMap.withDefaultValue(0)
-			}
-			else
-				Map.empty.withDefaultValue(0)
-		}
+		def countAll: Map[A, Int] = countsBy(Identity)
 		/**
 		 * @return The most common entry from this collection.
 		 *         If multiple entries share the most common position, only one is selected.
@@ -682,6 +668,31 @@ object CollectionExtensions
 					found += 1
 			}
 			found == count
+		}
+		
+		/**
+		 * Counts how many times each mapping result appears within this collection.
+		 * @param f A mapping function that maps items to keys
+		 * @tparam K Type of mapping results / resulting keys
+		 * @return A map where the keys are unique mapping results and the values
+		 *         are the numbers of times they appeared within this collection.
+		 *
+		 *         The resulting map has a default value of 0.
+		 */
+		def countsBy[K](f: A => K): Map[K, Int] = {
+			val iter = i.iterator
+			if (iter.hasNext) {
+				val buffer = mutable.Map[K, Int]()
+				iter.foreach { a =>
+					buffer.updateWith(f(a)) {
+						case Some(c) => Some(c + 1)
+						case None => Some(1)
+					}
+				}
+				buffer.toMap.withDefaultValue(0)
+			}
+			else
+				Map.empty.withDefaultValue(0)
 		}
 		
 		/**
@@ -2214,6 +2225,14 @@ object CollectionExtensions
 		  */
 		def sortedWith(firstOrdering: Ordering[A], secondOrdering: Ordering[A], moreOrderings: Ordering[A]*) =
 			seq.sorted(new CombinedOrdering[A](Pair(firstOrdering, secondOrdering) ++ moreOrderings))
+		/**
+		 * @param firstOrdering The primary ordering to use (will be reversed)
+		 * @param second The secondary ordering to use (will be reversed)
+		 * @param more Additional orderings to use (all will be reversed)
+		 * @return A sorted copy of this collection
+		 */
+		def reverseSortedWith(firstOrdering: Ordering[A], second: Ordering[A], more: Ordering[A]*) =
+			seq.sorted(new CombinedOrdering[A](Pair(firstOrdering.reverse, second.reverse) ++ more.map { _.reverse }))
 		
 		/**
 		  * Performs a map operation until a non-empty value is returned. Returns both the mapped value and the mapped index.

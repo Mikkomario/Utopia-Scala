@@ -40,7 +40,7 @@ object LogCleaner
 			durations.mergeDurationRangesIterator.flatMap { case (durationRange, mergeGroupLength) =>
 				// Finds the issue occurrences that match the specified severity levels
 				// and occurred within the specified time period
-				val issues = AccessIssues.withOccurrences
+				val issues = AccessIssues.instances
 					.withSeverityIn(severities).during(durationRange.mapTo { now - _ }).pull
 				if (issues.exists { _.hasOccurred }) {
 					// Merges occurrences within specific time periods, forming a single item

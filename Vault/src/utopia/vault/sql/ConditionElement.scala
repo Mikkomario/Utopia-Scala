@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.collection.immutable.{Empty, IntSet, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -143,12 +144,7 @@ trait ConditionElement
 	def in(values: IntSet): Condition = {
 		// Converts the input range into individual values (from ranges of length 1 & 2) and longer ranges
 		val (individualValues, ranges) = inConditionElements(values)
-		// Uses BETWEEN condition with the ranges and IN condition with the other values
-		val rangeConditions = ranges.map { range => isBetween(range.start, range.end) }
-		if (individualValues.isEmpty)
-			Condition.or(rangeConditions)
-		else
-			in(individualValues) || rangeConditions
+		combineInConditionElements(individualValues, ranges)
 	}
 	/**
 	  * Creates a sequence of conditions for targeting all the specified integer (column) values.
@@ -206,6 +202,19 @@ trait ConditionElement
 				}
 			}
 		}
+	}
+	/**
+	 * @param values Targeted values
+	 * @param maxConditions Maximum number of generated comparisons
+	 * @return A condition that targets the specified values.
+	 *         However, None if too many comparisons would be used.
+	 */
+	def inIfLimited(values: IntSet, maxConditions: Int) = {
+		if (values.ranges.iterator.map { range => if (range.isUnit) 1 else 2 }
+			.foldLeftIterator(0) { _ + _ }.exists { _ > maxConditions })
+			None
+		else
+			Some(in(values))
 	}
 	
 	/**
@@ -288,6 +297,14 @@ trait ConditionElement
 	
 	private def makeCondition(operator: String, other: ConditionElement) = Condition(toSqlSegment + operator + other.toSqlSegment)
 	
+	private def combineInConditionElements(individualValues: Seq[Int], ranges: Seq[HasInclusiveEnds[Int]]) = {
+		// Uses BETWEEN condition with the ranges and IN condition with the other values
+		val rangeConditions = ranges.map { range => isBetween(range.start, range.end) }
+		if (individualValues.isEmpty)
+			Condition.or(rangeConditions)
+		else
+			in(individualValues) || rangeConditions
+	}
 	private def inConditionElements(values: IntSet) = {
 		// Converts the input range into individual values (from ranges of length 1 & 2) and longer ranges
 		values.ranges.flatDivideWith { range =>

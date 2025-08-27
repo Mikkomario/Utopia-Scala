@@ -20,6 +20,6 @@ object IssueVariantInstancesDbReader
 	  * @param occurrences occurrences to attach to this variant
 	  */
 	override def combine(variant: IssueVariant, occurrences: Seq[IssueOccurrence]) = 
-		IssueVariantInstances(variant, occurrences)
+		IssueVariantInstances(variant, occurrences.sorted)
 }
 

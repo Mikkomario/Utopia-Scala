@@ -10,6 +10,7 @@ import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Version
 import utopia.scribe.core.model.factory.management.ResolutionFactory
 
@@ -55,9 +56,9 @@ object ResolutionData extends FromModelFactoryWithSchema[ResolutionData]
   * @author Mikko Hilpinen
   * @since 26.08.2025, v1.2
   */
-case class ResolutionData(resolvedIssueId: Int, commentId: Option[Int] = None, 
-	versionThreshold: Option[Version] = None, created: Instant = Now, deprecates: Option[Instant] = None, 
-	silences: Boolean = false, notifies: Boolean = false) 
+case class ResolutionData(resolvedIssueId: Int, commentId: Option[Int] = None, versionThreshold: Option[Version] = None,
+                          created: Instant = Now, deprecates: Option[Instant] = None, silences: Boolean = false,
+                          notifies: Boolean = false)
 	extends ResolutionFactory[ResolutionData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
@@ -75,5 +76,15 @@ case class ResolutionData(resolvedIssueId: Int, commentId: Option[Int] = None,
 	override def withSilences(silences: Boolean) = copy(silences = silences)
 	override def withVersionThreshold(versionThreshold: Version) = copy(versionThreshold = 
 		Some(versionThreshold))
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	 * @param currentVersion Current target application version. Call-by-name, called if a version check is necessary.
+	 * @return Whether this resolution applies active silencing, affecting the specified version.
+	 */
+	def silencesVersion(currentVersion: => Version) =
+		silences && deprecates.forall { _.isFuture } && versionThreshold.forall { _ >= currentVersion }
 }
 

@@ -20,8 +20,8 @@ object Issue extends StoredFromModelFactory[IssueData, Issue]
 	
 	override def dataFactory = IssueData
 	
-	override protected def complete(model: AnyModel, data: IssueData) = model("id").tryInt.map { apply(_, 
-		data) }
+	override protected def complete(model: AnyModel, data: IssueData) =
+		model("id").tryInt.map { apply(_, data) }
 }
 
 /**

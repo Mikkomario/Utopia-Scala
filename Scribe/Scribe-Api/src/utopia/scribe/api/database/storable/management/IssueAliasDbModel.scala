@@ -3,6 +3,7 @@ package utopia.scribe.api.database.storable.management
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.scribe.api.database.ScribeTables
+import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.factory.management.IssueAliasFactory
 import utopia.scribe.core.model.partial.management.IssueAliasData
 import utopia.scribe.core.model.stored.management.IssueAlias
@@ -17,7 +18,7 @@ import java.time.Instant
   * Used for constructing IssueAliasDbModel instances and for inserting issue aliases to the 
   * database
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 object IssueAliasDbModel 
 	extends StorableFactory[IssueAliasDbModel, IssueAlias, IssueAliasData] 
@@ -41,7 +42,7 @@ object IssueAliasDbModel
 	/**
 	  * Database property used for interacting with new severities
 	  */
-	lazy val newSeverity = property("newSeverity")
+	lazy val newSeverity = property("newSeverityLevel")
 	
 	/**
 	  * Database property used for interacting with creation times
@@ -54,7 +55,7 @@ object IssueAliasDbModel
 	override def table = ScribeTables.issueAlias
 	
 	override def apply(data: IssueAliasData): IssueAliasDbModel = 
-		apply(None, Some(data.issueId), data.alias, Some(data.newSeverity), Some(data.created))
+		apply(None, Some(data.issueId), data.alias, data.newSeverity, Some(data.created))
 	
 	override def withAlias(alias: String) = apply(alias = alias)
 	
@@ -64,7 +65,7 @@ object IssueAliasDbModel
 	
 	override def withIssueId(issueId: Int) = apply(issueId = Some(issueId))
 	
-	override def withNewSeverity(newSeverity: Int) = apply(newSeverity = Some(newSeverity))
+	override def withNewSeverity(newSeverity: Severity) = apply(newSeverity = Some(newSeverity))
 	
 	override protected def complete(id: Value, data: IssueAliasData) = IssueAlias(id.getInt, data)
 }
@@ -73,10 +74,10 @@ object IssueAliasDbModel
   * Used for interacting with IssueAliases in the database
   * @param id issue alias database id
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class IssueAliasDbModel(id: Option[Int] = None, issueId: Option[Int] = None, alias: String = "", 
-	newSeverity: Option[Int] = None, created: Option[Instant] = None) 
+	newSeverity: Option[Severity] = None, created: Option[Instant] = None) 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, IssueAliasDbModel] 
 		with IssueAliasFactory[IssueAliasDbModel]
 {
@@ -84,7 +85,8 @@ case class IssueAliasDbModel(id: Option[Int] = None, issueId: Option[Int] = None
 	
 	override lazy val valueProperties: Seq[(String, Value)] = 
 		Vector(IssueAliasDbModel.id.name -> id, IssueAliasDbModel.issueId.name -> issueId, 
-			IssueAliasDbModel.alias.name -> alias, IssueAliasDbModel.newSeverity.name -> newSeverity, 
+			IssueAliasDbModel.alias.name -> alias, 
+			IssueAliasDbModel.newSeverity.name -> newSeverity.map[Value] { e => e.level }.getOrElse(Value.empty), 
 			IssueAliasDbModel.created.name -> created)
 	
 	
@@ -100,6 +102,6 @@ case class IssueAliasDbModel(id: Option[Int] = None, issueId: Option[Int] = None
 	
 	override def withIssueId(issueId: Int) = copy(issueId = Some(issueId))
 	
-	override def withNewSeverity(newSeverity: Int) = copy(newSeverity = Some(newSeverity))
+	override def withNewSeverity(newSeverity: Severity) = copy(newSeverity = Some(newSeverity))
 }
 

@@ -33,5 +33,5 @@ object IssueInstancesDbReader
 	override def table: Table = readIssue.table
 	
 	override def parseGroup(rows: Seq[Row]): Try[IssueInstances] =
-		readIssue(rows.head).map { IssueInstances(_, readVariant(rows)) }
+		readIssue(rows.head).map { IssueInstances(_, readVariant(rows).sorted) }
 }

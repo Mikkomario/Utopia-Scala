@@ -20,22 +20,18 @@ object IssueData extends FromModelFactoryWithSchema[IssueData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("context", StringType, isOptional = true), 
-			PropertyDeclaration("severity", IntType, Empty, Unrecoverable.level), 
-			PropertyDeclaration("created", InstantType, isOptional = true)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("context", StringType, isOptional = true),
+		PropertyDeclaration("severity", IntType, Empty, Unrecoverable.level),
+		PropertyDeclaration("created", InstantType, isOptional = true)))
 	
 	/**
 	  * Ordering that presents the least severe issues first
 	  */
-	implicit val ordering: Ordering[IssueData] = 
-		CombinedOrdering(Ordering.by { i: IssueData => i.severity },Ordering.by { i: IssueData => i.context },
-			Ordering.by { i: IssueData => i.created }
-	
-	
-	// INITIAL CODE	--------------------
-	
-	)
+	implicit val ordering: Ordering[IssueData] = CombinedOrdering(
+		Ordering.by { i: IssueData => i.severity },
+		Ordering.by { i: IssueData => i.context },
+		Ordering.by { i: IssueData => i.created })
 	
 	
 	// IMPLEMENTED	--------------------
@@ -58,13 +54,10 @@ case class IssueData(context: String, severity: Severity = Unrecoverable, create
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector("context" -> context, "severity" -> severity.level, 
-		"created" -> created))
+	override def toModel = Model(Vector("context" -> context, "severity" -> severity.level, "created" -> created))
 	
 	override def withContext(context: String) = copy(context = context)
-	
 	override def withCreated(created: Instant) = copy(created = created)
-	
 	override def withSeverity(severity: Severity) = copy(severity = severity)
 }
 

@@ -23,17 +23,14 @@ case class AccessIssueValues(access: AccessManyColumns) extends AccessValues
 	  * Access to issue ids
 	  */
 	lazy val ids = apply(model.index) { _.getInt }
-	
 	/**
 	  * Program context where this issue occurred or was logged. Should be unique.
 	  */
 	lazy val contexts = apply(model.context) { v => v.getString }
-	
 	/**
 	  * The estimated severity of this issue
 	  */
 	lazy val severities = apply(model.severity) { v => Severity.fromValue(v) }
-	
 	/**
 	  * Time when this issue first occurred or was first recorded
 	  */

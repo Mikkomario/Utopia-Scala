@@ -52,6 +52,13 @@ trait FilterIssueVariants[+Repr] extends FilterableView[Repr]
 	  * specified value set
 	  */
 	def ofIssues(issueIds: IterableOnce[Int]) = filter(model.issueId.column.in(IntSet.from(issueIds)))
+	/**
+	 * @param issueIds Targeted issue IDs
+	 * @param maxConditions Maximum number of generated conditions / comparisons
+	 * @return If the specified ID set is small enough, filters to only that set. Otherwise, performs no filtering.
+	 */
+	def ofLimitedIssues(issueIds: IterableOnce[Int], maxConditions: Int) =
+		filter(model.issueId.inIfLimited(IntSet.from(issueIds), maxConditions))
 	
 	/**
 	  * @param errorId error id to target

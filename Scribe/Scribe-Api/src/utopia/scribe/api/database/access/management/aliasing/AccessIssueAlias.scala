@@ -1,6 +1,5 @@
 package utopia.scribe.api.database.access.management.aliasing
 
-import utopia.scribe.api.database.storable.management.IssueAliasDbModel
 import utopia.scribe.core.model.stored.management.IssueAlias
 import utopia.vault.nosql.targeting.columns.HasValues
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
@@ -15,19 +14,15 @@ object AccessIssueAlias extends AccessOneRoot[AccessIssueAlias[IssueAlias]]
 /**
   * Used for accessing individual issue aliases from the DB at a time
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessIssueAlias[A](wrapped: TargetingOne[Option[A]]) 
-	extends AccessOneWrapper[Option[A], AccessIssueAlias[A]] with HasValues[AccessIssueAliasValue]
+	extends AccessOneWrapper[Option[A], AccessIssueAlias[A]] with HasValues[AccessIssueAliasValue] 
+		with FilterIssueAliases[AccessIssueAlias[A]]
 {
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessIssueAliasValue(wrapped)
-	
-	/**
-	  * A database model used for interacting with issue alias DB properties
-	  */
-	val model = IssueAliasDbModel
 	
 	
 	// IMPLEMENTED	--------------------

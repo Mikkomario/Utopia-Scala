@@ -29,7 +29,7 @@ object AccessIssueVariants
 	/**
 	  * Access to issue variants in the DB, also including issue occurrence information
 	  */
-	lazy val withOccurrences = AccessCombinedIssueVariants(AccessMany(IssueVariantInstancesDbReader))
+	lazy val instances = AccessCombinedIssueVariants(AccessMany(IssueVariantInstancesDbReader))
 	
 	
 	// IMPLICIT	--------------------
