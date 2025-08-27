@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   * @param wrapped Wrapped access point. Expected to include stack_trace_element_record.
   * @tparam A Type of the wrapped access class
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class FilterByStackTraceElementRecord[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterStackTraceElementRecords[A] with FilterableViewWrapper[A]

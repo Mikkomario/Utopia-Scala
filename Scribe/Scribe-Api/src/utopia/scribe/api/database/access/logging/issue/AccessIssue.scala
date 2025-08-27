@@ -31,7 +31,7 @@ object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 /**
   * Used for accessing individual issues from the DB at a time
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class AccessIssue[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessIssue[A]] with FilterIssues[AccessIssue[A]]

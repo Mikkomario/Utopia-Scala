@@ -39,6 +39,25 @@ object ScribeTables
 	  */
 	lazy val stackTraceElementRecord = apply("stack_trace_element_record")
 	
+	/**
+	 * Table that contains comments (Comments an issue)
+	 */
+	lazy val comment = apply("issue_comment")
+	/**
+	 * Table that contains issue aliases (Assigns a more human-readable name to an issue. May also
+	 * be used to adjust issue severity.)
+	 */
+	lazy val issueAlias = apply("issue_alias")
+	/**
+	 * Table that contains issue notifications (Represents a notification generated based on a
+	 * reappeared issue)
+	 */
+	lazy val issueNotification = apply("issue_notification")
+	/**
+	 * Table that contains resolutions (Marks an issue as resolved (or to be ignored) in some way)
+	 */
+	lazy val resolution = apply("issue_resolution")
+	
 	
 	// OTHER	--------------------
 	

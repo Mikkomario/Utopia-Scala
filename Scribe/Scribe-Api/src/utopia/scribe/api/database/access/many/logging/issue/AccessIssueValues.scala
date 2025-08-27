@@ -13,7 +13,7 @@ import utopia.vault.nosql.targeting.columns.AccessValues
   * @author Mikko Hilpinen
   * @since 19.05.2025, v1.0.5
   */
-@deprecated("Rewritten and moved to another package", "v1.2")
+@deprecated("Rewritten and moved to another package", "v1.1")
 case class AccessIssueValues(override protected val access: AccessManyColumns with HasTable) extends AccessValues
 {
 	// ATTRIBUTES   ------------------

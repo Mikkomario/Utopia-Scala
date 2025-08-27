@@ -13,7 +13,7 @@ import utopia.scribe.api.database.access.single.logging.issue_variant.DbIssueVar
 import utopia.scribe.api.database.factory.logging.IssueFactory
 import utopia.scribe.api.database.model.logging.{IssueModel, IssueOccurrenceModel, IssueVariantModel}
 import utopia.scribe.core.model.cached.logging.RecordableError
-import utopia.scribe.core.model.combined.logging.{DetailedIssue, DetailedIssueVariant}
+import utopia.scribe.core.model.combined.logging.{IssueWithDetailedVariants, DetailedIssueVariant}
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Unrecoverable
 import utopia.scribe.core.model.partial.logging.{IssueData, IssueOccurrenceData, IssueVariantData}
@@ -32,7 +32,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
@@ -91,7 +91,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	          severity: Severity = Unrecoverable, variantDetails: Model = Model.empty,
 	          occurrenceDetails: Model = Model.empty, occurrences: Int = 1,
 	          timeRange: Span[Instant] = Span.singleValue(Now))
-	         (implicit connection: Connection, version: Version): DetailedIssue =
+	         (implicit connection: Connection, version: Version): IssueWithDetailedVariants =
 	{
 		// Inserts or finds the matching issue
 		val issueResult = store(IssueData(context, severity, timeRange.start))
@@ -131,7 +131,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 		val occurrence = occurrenceModel.insert(IssueOccurrenceData(variant.id, errorMessages,
 			occurrenceDetails.sorted, occurrences, timeRange))
 		// Combines the data together and returns
-		DetailedIssue(issue, Single(DetailedIssueVariant(variant, storedError, Single(occurrence))))
+		IssueWithDetailedVariants(issue, Single(DetailedIssueVariant(variant, storedError, Single(occurrence))))
 	}
 	
 	/**
@@ -152,7 +152,7 @@ object DbIssue extends SingleRowModelAccess[Issue] with UnconditionalView with I
 	  * @param connection Implicit DB connection
 	  * @return The recorded issue
 	  */
-	def store(issue: ClientIssue)(implicit connection: Connection): DetailedIssue = 
+	def store(issue: ClientIssue)(implicit connection: Connection): IssueWithDetailedVariants =
 		store(issue.context, issue.error, issue.message, issue.severity, issue.variantDetails, issue.occurrenceDetails,
 			issue.instances,issue.storeDuration.mapTo { Now - _ })(connection, issue.version)
 	

@@ -10,7 +10,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object ManyVaryingIssuesAccess
 {
 	// OTHER	--------------------
@@ -33,7 +33,7 @@ object ManyVaryingIssuesAccess
   * @author Mikko Hilpinen
   * @since 26.05.2023
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait ManyVaryingIssuesAccess extends ManyIssuesAccessLike[VaryingIssue, ManyVaryingIssuesAccess]
 {
 	// COMPUTED	--------------------

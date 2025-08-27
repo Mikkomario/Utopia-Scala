@@ -7,7 +7,7 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   * @param wrapped Wrapped access point. Expected to include error_record.
   * @tparam A Type of the wrapped access class
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class FilterByErrorRecord[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterErrorRecords[A] with FilterableViewWrapper[A]

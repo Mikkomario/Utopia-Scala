@@ -16,7 +16,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 object IssueModel extends DataInserter[IssueModel, Issue, IssueData]
 {
 	// ATTRIBUTES	--------------------
@@ -103,7 +103,7 @@ object IssueModel extends DataInserter[IssueModel, Issue, IssueData]
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 case class IssueModel(id: Option[Int] = None, context: String = "", severity: Option[Int] = None,
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[Issue]

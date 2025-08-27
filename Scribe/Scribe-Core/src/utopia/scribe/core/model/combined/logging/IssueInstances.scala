@@ -6,12 +6,12 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.view.template.Extender
-import utopia.scribe.core.model.partial.logging.IssueData
 import utopia.scribe.core.model.stored.logging.Issue
 
 object IssueInstances
 {
+	// ATTRIBUTES   ---------------------
+	
 	/**
 	  * Ascending ordering that is based on issue severity (1), version (2) and latest occurrence time (3)
 	  */
@@ -20,6 +20,25 @@ object IssueInstances
 		Ordering.by { i: IssueInstances => i.variants.iterator.map { _.version }.maxOption },
 		Ordering.by { i: IssueInstances => i.latestOccurrence.map { _.lastOccurrence } }
 	)
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param issue Issue to wrap
+	 * @param variants Variants to include
+	 * @return Specified issue with the specified variants included
+	 */
+	def apply(issue: Issue, variants: Seq[IssueVariantInstances] = Empty): IssueInstances =
+		_IssueInstances(issue, variants)
+	
+	
+	// NESTED   ------------------------
+	
+	private case class _IssueInstances(issue: Issue, variants: Seq[IssueVariantInstances]) extends IssueInstances
+	{
+		override protected def wrap(factory: Issue): IssueInstances = copy(issue = factory)
+	}
 }
 
 /**
@@ -27,8 +46,16 @@ object IssueInstances
   * @author Mikko Hilpinen
   * @since 25.5.2023, v0.1
   */
-case class IssueInstances(issue: Issue, variants: Seq[IssueVariantInstances] = Empty) extends Extender[IssueData]
+trait IssueInstances extends CombinedIssue[IssueInstances]
 {
+	// ABSTRACT ----------------------
+	
+	/**
+	 * @return Variants of this issue, including individual occurrences
+	 */
+	def variants: Seq[IssueVariantInstances]
+	
+	
 	// ATTRIBUTES   ------------------
 	
 	/**
@@ -40,16 +67,11 @@ case class IssueInstances(issue: Issue, variants: Seq[IssueVariantInstances] = E
 	  * @return The latest occurrence of this issue.
 	  *         None if no occurrences are recorded.
 	  */
-	lazy val latestOccurrence =
-		variants.iterator.flatMap { _.latestOccurrence }.maxByOption { _.lastOccurrence }
+	lazy val latestOccurrence = variants.iterator.flatMap { _.latestOccurrence }.maxByOption { _.lastOccurrence }
 	
 	
 	// COMPUTED ----------------------
 	
-	/**
-	  * @return The DB id of this issue
-	  */
-	def id = issue.id
 	/**
 	  * @return Ids of the included variants of this issue
 	  */
@@ -99,8 +121,6 @@ case class IssueInstances(issue: Issue, variants: Seq[IssueVariantInstances] = E
 	
 	
 	// IMPLEMENTED  ------------------
-	
-	override def wrapped: IssueData = issue.data
 	
 	override def toString = {
 		val sb = new StringBuilder()

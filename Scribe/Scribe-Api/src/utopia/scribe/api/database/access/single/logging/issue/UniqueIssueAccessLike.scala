@@ -16,7 +16,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 25.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait UniqueIssueAccessLike[+A]
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
 {

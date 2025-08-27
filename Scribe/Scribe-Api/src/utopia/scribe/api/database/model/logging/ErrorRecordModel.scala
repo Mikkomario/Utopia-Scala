@@ -13,7 +13,7 @@ import utopia.vault.nosql.storable.DataInserter
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 object ErrorRecordModel extends DataInserter[ErrorRecordModel, ErrorRecord, ErrorRecordData]
 {
 	// ATTRIBUTES	--------------------
@@ -102,7 +102,7 @@ object ErrorRecordModel extends DataInserter[ErrorRecordModel, ErrorRecord, Erro
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 case class ErrorRecordModel(id: Option[Int] = None, exceptionType: String = "",
 	stackTraceId: Option[Int] = None, causeId: Option[Int] = None) 
 	extends StorableWithFactory[ErrorRecord]

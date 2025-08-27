@@ -14,7 +14,7 @@ import utopia.vault.sql.{Condition, SqlTarget}
   * @author Mikko Hilpinen
   * @since 3.8.2023, v1.0
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object DbIssueInstances extends SingleModelAccess[IssueInstances] with UnconditionalView with Indexed
 {
 	// IMPLEMENTED  ----------------------------

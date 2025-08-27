@@ -20,7 +20,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccurrence, IssueOccurrenceData]
 {
 	// ATTRIBUTES	--------------------
@@ -152,7 +152,7 @@ object IssueOccurrenceModel extends DataInserter[IssueOccurrenceModel, IssueOccu
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with the DbModel version", "v1.2")
+@deprecated("Replaced with the DbModel version", "v1.1")
 case class IssueOccurrenceModel(id: Option[Int] = None, caseId: Option[Int] = None,
                                 errorMessages: Seq[String] = Empty, details: Model = Model.empty,
                                 count: Option[Int] = None,

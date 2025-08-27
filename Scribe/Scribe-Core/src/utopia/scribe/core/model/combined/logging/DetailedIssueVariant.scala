@@ -1,8 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.view.template.Extender
-import utopia.scribe.core.model.partial.logging.IssueVariantData
 import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
 
 /**
@@ -16,17 +14,9 @@ import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
   */
 case class DetailedIssueVariant(variant: IssueVariant, error: Option[ErrorRecordWithStackTrace] = None,
                                 occurrences: Seq[IssueOccurrence] = Empty)
-	extends Extender[IssueVariantData]
+	extends IssueVariantInstances with CombinedIssueVariant[DetailedIssueVariant]
 {
-	// COMPUTED -----------------------------
-	
-	/**
-	  * @return Id of this issue variant
-	  */
-	def id = variant.id
-	
-	
 	// IMPLEMENTED  ------------------------
 	
-	override def wrapped: IssueVariantData = variant.data
+	override protected def wrap(factory: IssueVariant): DetailedIssueVariant = copy(variant = factory)
 }

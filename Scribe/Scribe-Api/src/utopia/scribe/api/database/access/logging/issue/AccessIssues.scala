@@ -54,7 +54,7 @@ object AccessIssues
 /**
   * Used for accessing multiple issues from the DB at a time
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 abstract class AccessIssues[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingTimeline[A, Repr, AccessIssue[A]] with FilterIssues[Repr]

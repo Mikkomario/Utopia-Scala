@@ -11,7 +11,7 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object ManyContextualIssueVariantsAccess
 {
 	// OTHER	--------------------
@@ -34,7 +34,7 @@ object ManyContextualIssueVariantsAccess
   * @author Mikko Hilpinen
   * @since 23.05.2023
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait ManyContextualIssueVariantsAccess
 	extends ManyIssueVariantsAccessLike[ContextualIssueVariant, ManyContextualIssueVariantsAccess] 
 		with ManyRowModelAccess[ContextualIssueVariant] 

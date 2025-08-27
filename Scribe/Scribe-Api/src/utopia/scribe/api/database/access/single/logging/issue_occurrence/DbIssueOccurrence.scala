@@ -15,7 +15,7 @@ import utopia.vault.sql.Condition
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object DbIssueOccurrence extends SingleRowModelAccess[IssueOccurrence] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

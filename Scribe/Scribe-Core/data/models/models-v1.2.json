@@ -258,6 +258,128 @@
           }
         ]
       }
+    ],
+    "management": [
+      {
+        "name": "IssueAlias",
+        "name_plural": "IssueAliases",
+        "access": "aliasing",
+        "doc": "Assigns a more human-readable name to an issue. May also be used to adjust issue severity.",
+        "props": [
+          {
+            "ref": "issue",
+            "doc": "ID of the described issue"
+          },
+          {
+            "name": "alias",
+            "type": "String(32-640)",
+            "doc": "Alias given to the issue. Empty if no alias is given."
+          },
+          {
+            "name": "newSeverity",
+            "type": "Option[Severity]",
+            "doc": "New severity level assigned for the issue. None if severity is not modified."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this alias was given",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Comment",
+        "table": "issue_comment",
+        "doc": "Comments an issue",
+        "props": [
+          {
+            "name": "issueVariantId",
+            "ref": "issue_variant",
+            "doc": "ID of the commented issue variant",
+            "with": "onVariant"
+          },
+          {
+            "name": "text",
+            "type": "NonEmptyString(255-2048)",
+            "doc": "The text contents of this comment"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this comment was recorded"
+          }
+        ]
+      },
+      {
+        "name": "Resolution",
+        "table": "issue_resolution",
+        "doc": "Marks an issue as resolved (or to be ignored) in some way",
+        "props": [
+          {
+            "name": "resolvedIssueId",
+            "ref": "issue",
+            "doc": "ID of the resolved issue",
+            "with": "ofIssue"
+          },
+          {
+            "name": "commentId",
+            "ref": "issue_comment",
+            "type": "Option[Int]",
+            "doc": "ID of the comment added to this resolution, if applicable",
+            "with": "withComment"
+          },
+          {
+            "name": "versionThreshold",
+            "type": "Option[Version]",
+            "doc": "The last version number (inclusive), to which silencing may apply, and for which notifications are NOT generated. \nNone if not restricted by version."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this resolution was registered"
+          },
+          {
+            "name": "deprecates",
+            "name_plural": "deprecateAt",
+            "type": "Option[Instant]",
+            "index": true,
+            "doc": "Time when this resolution expires, was removed or was broken. May be in the future."
+          },
+          {
+            "name": "silences",
+            "name_plural": "silence",
+            "type": "Boolean",
+            "doc": "Whether the issue should not be reported while this resolution is active."
+          },
+          {
+            "name": "notifies",
+            "name_plural": "notify",
+            "type": "Boolean",
+            "index": true,
+            "doc": "Whether a notification should be generated if this resolution is broken. \nNote: Only one notification may be generated in total."
+          }
+        ]
+      },
+      {
+        "name": "IssueNotification",
+        "access": "notification",
+        "doc": "Represents a notification generated based on a reappeared issue",
+        "props": [
+          {
+            "name": "resolutionId",
+            "ref": "issue_resolution",
+            "doc": "ID of the resolution on which this notification is based",
+            "with": "fromResolution"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "name": "closed",
+            "name_plural": "closureTimes",
+            "type": "deprecation",
+            "doc": "Time when this notification was closed / marked as read"
+          }
+        ]
+      }
     ]
   }
 }

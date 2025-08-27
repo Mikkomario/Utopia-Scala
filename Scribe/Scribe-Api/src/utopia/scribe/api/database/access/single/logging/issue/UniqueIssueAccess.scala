@@ -5,7 +5,7 @@ import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.sql.Condition
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object UniqueIssueAccess
 {
 	// OTHER	--------------------
@@ -32,7 +32,7 @@ object UniqueIssueAccess
   * @author Mikko Hilpinen
   * @since 22.05.2023, v0.1
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait UniqueIssueAccess
 	extends UniqueIssueAccessLike[Issue] with SingleChronoRowModelAccess[Issue, UniqueIssueAccess]
 {

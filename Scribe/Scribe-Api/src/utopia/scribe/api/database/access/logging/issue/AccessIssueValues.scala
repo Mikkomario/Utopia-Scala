@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 /**
   * Used for accessing issue values from the DB
   * @author Mikko Hilpinen
-  * @since 27.07.2025, v1.2
+  * @since 27.07.2025, v1.1
   */
 case class AccessIssueValues(access: AccessManyColumns) extends AccessValues
 {

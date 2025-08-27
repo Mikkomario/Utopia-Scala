@@ -5,7 +5,7 @@ import utopia.scribe.core.model.combined.logging.IssueInstances
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.Condition
 
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 object UniqueIssueInstancesAccess
 {
 	// OTHER	--------------------
@@ -29,7 +29,7 @@ object UniqueIssueInstancesAccess
   * @author Mikko Hilpinen
   * @since 03.08.2023, v1.0
   */
-@deprecated("Replaced with targeting access classes", "v1.2")
+@deprecated("Replaced with targeting access classes", "v1.1")
 trait UniqueIssueInstancesAccess extends UniqueIssueAccessLike[IssueInstances]
 {
 	// IMPLEMENTED	--------------------
