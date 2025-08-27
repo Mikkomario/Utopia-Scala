@@ -14,7 +14,7 @@ object AccessComment extends AccessOneRoot[AccessComment[Comment]]
 /**
   * Used for accessing individual comments from the DB at a time
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessComment[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessComment[A]] with HasValues[AccessCommentValue] 

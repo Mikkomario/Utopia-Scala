@@ -18,14 +18,13 @@ object AccessComments
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessCommentRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedComments(access)
 }
 
 /**
   * Used for accessing multiple comments from the DB at a time
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 abstract class AccessComments[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingTimeline[A, Repr, AccessComment[A]] with HasValues[AccessCommentValues] 
@@ -40,7 +39,7 @@ abstract class AccessComments[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped
   * Provides access to row-specific comment -like items
   * @param wrapped The wrapped access point
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessCommentRows[A](wrapped: TargetingManyRows[A]) 
 	extends AccessComments[A, AccessCommentRows[A]](wrapped) 
@@ -51,7 +50,6 @@ case class AccessCommentRows[A](wrapped: TargetingManyRows[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessCommentRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessComment(target)
 }
 
@@ -59,7 +57,7 @@ case class AccessCommentRows[A](wrapped: TargetingManyRows[A])
   * Used for accessing comment items that have been combined with one-to-many combinations
   * @param wrapped The wrapped access point
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessCombinedComments[A](wrapped: TargetingMany[A]) 
 	extends AccessComments[A, AccessCombinedComments[A]](wrapped) 
@@ -70,7 +68,6 @@ case class AccessCombinedComments[A](wrapped: TargetingMany[A])
 	override protected def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedComments(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessComment(target)
 }
 

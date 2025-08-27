@@ -42,8 +42,8 @@ object ResolutionData extends FromModelFactoryWithSchema[ResolutionData]
   * Marks an issue as resolved (or to be ignored) in some way
   * @param resolvedIssueId  ID of the resolved issue
   * @param commentId        ID of the comment added to this resolution, if applicable
-  * @param versionThreshold The last version number (inclusive), to which silencing may apply, 
-  *                         and for which notifications are NOT generated. 
+  * @param versionThreshold The first version number (inclusive), to which silencing WON'T apply,
+  *                         and for which notifications WILL be generated.
   *                         None if not restricted by version.
   * @param created          Time when this resolution was registered
   * @param deprecates       Time when this resolution expires, was removed or was broken. May be 
@@ -61,6 +61,14 @@ case class ResolutionData(resolvedIssueId: Int, commentId: Option[Int] = None, v
                           notifies: Boolean = false)
 	extends ResolutionFactory[ResolutionData] with ModelConvertible
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Whether this is to be considered a still valid / active resolution
+	 */
+	def isValid = deprecates.forall { _.isFuture }
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
@@ -85,6 +93,6 @@ case class ResolutionData(resolvedIssueId: Int, commentId: Option[Int] = None, v
 	 * @return Whether this resolution applies active silencing, affecting the specified version.
 	 */
 	def silencesVersion(currentVersion: => Version) =
-		silences && deprecates.forall { _.isFuture } && versionThreshold.forall { _ >= currentVersion }
+		silences && isValid && versionThreshold.forall { _ > currentVersion }
 }
 

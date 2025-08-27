@@ -1,10 +1,12 @@
 package utopia.scribe.api.database.access.logging.issue.variant
 
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
 import utopia.scribe.api.database.storable.logging.IssueVariantDbModel
+import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
 /**
@@ -48,5 +50,17 @@ case class AccessIssueVariantValues(access: AccessManyColumns) extends AccessVal
 	  * Time when this case or variant was first encountered
 	  */
 	lazy val creationTimes = apply(model.created) { v => v.getInstant }
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return Latest accessible variant version per issue ID
+	 */
+	def latestVersionPerIssue(implicit connection: Connection) =
+		access.streamColumns(model.issueId, model.version) { valuesIter =>
+			valuesIter.groupMapReduce { _.head.getInt } { v => Version(v(1).getString) } { _ max _ }
+		}
 }
 

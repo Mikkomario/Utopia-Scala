@@ -18,7 +18,7 @@ object CommentData extends FromModelFactoryWithSchema[CommentData]
 	// ATTRIBUTES	--------------------
 	
 	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("issueVariantId", IntType, Single("issue_variant_id")), 
+		ModelDeclaration(Vector(PropertyDeclaration("issueId", IntType, Single("issue_id")), 
 			PropertyDeclaration("text", StringType), PropertyDeclaration("created", InstantType, 
 			isOptional = true)))
 	
@@ -26,28 +26,27 @@ object CommentData extends FromModelFactoryWithSchema[CommentData]
 	// IMPLEMENTED	--------------------
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		CommentData(valid("issueVariantId").getInt, valid("text").getString, valid("created").getInstant)
+		CommentData(valid("issueId").getInt, valid("text").getString, valid("created").getInstant)
 }
 
 /**
   * Comments an issue
-  * @param issueVariantId ID of the commented issue variant
-  * @param text           The text contents of this comment
-  * @param created        Time when this comment was recorded
+  * @param issueId ID of the commented issue
+  * @param text    The text contents of this comment
+  * @param created Time when this comment was recorded
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
-case class CommentData(issueVariantId: Int, text: String, created: Instant = Now) 
+case class CommentData(issueId: Int, text: String, created: Instant = Now) 
 	extends CommentFactory[CommentData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = Model(Vector("issueVariantId" -> issueVariantId, "text" -> text, 
-		"created" -> created))
+	override def toModel = Model(Vector("issueId" -> issueId, "text" -> text, "created" -> created))
 	
 	override def withCreated(created: Instant) = copy(created = created)
 	
-	override def withIssueVariantId(issueVariantId: Int) = copy(issueVariantId = issueVariantId)
+	override def withIssueId(issueId: Int) = copy(issueId = issueId)
 	
 	override def withText(text: String) = copy(text = text)
 }

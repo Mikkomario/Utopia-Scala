@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.Version
@@ -75,14 +76,38 @@ trait ManagedIssue extends CombinedIssue[ManagedIssue]
 	def severity = aliasing.flatMap { _.newSeverity }.getOrElse(issue.severity)
 	
 	/**
+	 * @return Alias of this issue. Empty if no alias has been given.
+	 */
+	def alias = aliasing match {
+		case Some(alias) => alias.alias
+		case None => ""
+	}
+	/**
 	 * @return Alias given to this issue, or its context
 	 */
 	def aliasOrContext = aliasing.map { _.alias }.filter { _.nonEmpty }.getOrElse(issue.context)
 	
 	/**
+	 * @return Unread notifications concerning this issue
+	 */
+	def unreadNotifications =
+		resolutions.view.flatMap { r => r.notification.filter { _.isValid }.map { r -> _ } }.toOptimizedSeq
+	/**
 	 * @return Whether this issue contains unread notifications
 	 */
 	def hasUnreadNotifications = resolutions.exists { _.notification.exists { _.isValid } }
+	
+	/**
+	 * @return Whether this issue has been unconditionally silenced
+	 */
+	def isAlwaysSilenced = resolutions.exists { r => r.silences && r.isValid && r.versionThreshold.isEmpty }
+	/**
+	 * @return Whether this issue is silenced only in certain versions
+	 */
+	def isConditionallySilenced = {
+		val silencingResolutionsIter = resolutions.iterator.filter { r => r.silences && r.isValid }
+		silencingResolutionsIter.hasNext && silencingResolutionsIter.forall { _.versionThreshold.isDefined }
+	}
 	
 	
 	// OTHER    ------------------------

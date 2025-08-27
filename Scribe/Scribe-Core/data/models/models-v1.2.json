@@ -294,10 +294,10 @@
         "doc": "Comments an issue",
         "props": [
           {
-            "name": "issueVariantId",
-            "ref": "issue_variant",
-            "doc": "ID of the commented issue variant",
-            "with": "onVariant"
+            "name": "issueId",
+            "ref": "issue",
+            "doc": "ID of the commented issue",
+            "with": "onIssue"
           },
           {
             "name": "text",

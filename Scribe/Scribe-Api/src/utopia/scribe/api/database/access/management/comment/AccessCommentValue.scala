@@ -8,7 +8,7 @@ import utopia.vault.nosql.targeting.columns.AccessValue
 /**
   * Used for accessing individual comment values from the DB
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class AccessCommentValue(access: AccessColumn) extends AccessValue
 {
@@ -25,9 +25,9 @@ case class AccessCommentValue(access: AccessColumn) extends AccessValue
 	lazy val id = apply(model.index).optional { _.int }
 	
 	/**
-	  * ID of the commented issue variant
+	  * ID of the commented issue
 	  */
-	lazy val issueVariantId = apply(model.issueVariantId).optional { v => v.int }
+	lazy val issueId = apply(model.issueId).optional { v => v.int }
 	
 	/**
 	  * The text contents of this comment

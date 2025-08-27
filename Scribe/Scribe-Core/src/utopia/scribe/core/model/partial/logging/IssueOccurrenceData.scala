@@ -57,6 +57,14 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty, 
                                count: Int = 1, occurrencePeriod: Span[Instant] = Span.singleValue[Instant](Now))
 	extends IssueOccurrenceFactory[IssueOccurrenceData] with ModelConvertible
 {
+	// ATTRIBUTES   ----------------
+	
+	/**
+	 * The length of the time span represented by this occurrence instance
+	 */
+	lazy val duration = occurrencePeriod.end - occurrencePeriod.start
+	
+	
 	// COMPUTED	--------------------
 	
 	/**
@@ -67,11 +75,6 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty, 
 	  * The last issue occurrence time covered by this instance
 	  */
 	def lastOccurrence = occurrencePeriod.end
-	
-	/**
-	  * The length of the time span represented by this occurrence instance
-	  */
-	def duration = occurrencePeriod.end - occurrencePeriod.start
 	
 	
 	// IMPLEMENTED	--------------------
@@ -87,5 +90,24 @@ case class IssueOccurrenceData(caseId: Int, errorMessages: Seq[String] = Empty, 
 		copy(errorMessages = errorMessages)
 	override def withOccurrencePeriod(occurrencePeriod: Span[Instant]) =
 		copy(occurrencePeriod = occurrencePeriod)
+		
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param threshold A time threshold
+	 * @return The portion of [[count]], which is estimated to have taken place since the specified time threshold.
+	 *         Note: May be based on an assumption of average occurrence intervals.
+	 */
+	def countSince(threshold: Instant) = {
+		if (lastOccurrence < threshold)
+			0
+		else if (firstOccurrence >= threshold)
+			count
+		else {
+			val ratio = (lastOccurrence - threshold) / duration
+			count * ratio
+		}
+	}
 }
 

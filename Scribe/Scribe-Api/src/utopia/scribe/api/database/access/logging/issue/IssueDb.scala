@@ -116,7 +116,7 @@ object IssueDb
 		
 		// Checks whether a notification should be generated, also
 		val brokenResolutions = AccessResolutions.active.ofIssue(issue.id).generatingNotifications
-			.idsAndVersionThresholds.filter { _._2.forall { _ < version } }
+			.idsAndVersionThresholds.filter { _._2.forall { _ <= version } }
 		if (brokenResolutions.nonEmpty) {
 			AccessResolutions(brokenResolutions.map { _._1 }).deprecate()
 			notificationModel.insert(

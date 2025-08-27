@@ -2,7 +2,7 @@ package utopia.scribe.api.app.console
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.Span
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
+import utopia.flow.collection.immutable.{Empty, IntSet, OptimizedIndexedSeq, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType, IntType, StringType}
 import utopia.flow.parse.string.Regex
@@ -15,21 +15,24 @@ import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{StringUtils, Version}
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
-import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
 import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
 import utopia.scribe.api.database.access.logging.issue.{AccessIssue, AccessIssues}
 import utopia.scribe.api.database.access.management.aliasing.AccessIssueAliases
+import utopia.scribe.api.database.access.management.comment.AccessComments
+import utopia.scribe.api.database.access.management.notification.AccessIssueNotifications
 import utopia.scribe.api.database.access.management.resolution.AccessResolutions
 import utopia.scribe.api.util.ScribeContext._
-import utopia.scribe.core.model.combined.logging.{IssueInstances, IssueVariantInstances, ManagedIssue, ManagedIssueInstances}
+import utopia.scribe.core.model.combined.logging.{IssueVariantInstances, ManagedIssue, ManagedIssueInstances}
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
+import utopia.scribe.core.model.stored.management.Comment
 import utopia.vault.database.Connection
 
 import java.time.Instant
@@ -43,7 +46,7 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 27.08.2025, v1.1
  */
-class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logger)
+class LogReviewCommands(implicit log: Logger)
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -58,8 +61,8 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 	
 	// Tracks program state in separate pointers
 	
-	// TODO: Possibly include ManagedIssue as an option
-	private val queuedIssuesP = Pointer[(Seq[Either[Int, IssueInstances]], Int)](Empty -> 0)
+	private val openIssueIdP = Pointer.eventful.empty[Int]
+	private val queuedIssuesP = Pointer[(Seq[Either[Int, ManagedIssue]], Int)](Empty -> 0)
 	private val queuedVariantsP = EventfulPointer[(Seq[IssueVariantInstances], Int)](Empty -> 0)
 	private val queuedErrorIdP = EventfulPointer.empty[Int]
 	
@@ -67,9 +70,18 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 	private val moreIssuesOrOccurrencesP =
 		EventfulPointer[(Either[Seq[IssueOccurrenceData], Seq[ManagedIssueInstances]], Int)](Left(Empty) -> 0)
 	
+	/**
+	 * A pointer that contains the IDs of the notifications that may be closed
+	 */
+	private val queuedNotificationIdsP = Pointer.eventful(IntSet.empty)
+	private lazy val mayCloseNotificationsFlag: Flag = queuedNotificationIdsP.lightMap { _.nonEmpty }
+	
+	private val queuedCommentsP = Pointer.eventful.emptySeq[Comment]
+	private val hasQueuedCommentsFlag: Flag = queuedCommentsP.lightMap { _.nonEmpty }
+	
 	private lazy val hasMoreVariantsFlag: Flag = queuedVariantsP
-		.map { case (variants, nextIndex) => nextIndex < variants.size }
-	private lazy val hasQueuedErrorFlag: Flag = queuedErrorIdP.map { _.isDefined }
+		.map { case (variants, nextIndex) => variants.hasSize > nextIndex }
+	private lazy val hasQueuedErrorFlag: Flag = queuedErrorIdP.lightMap { _.isDefined }
 	private lazy val hasMoreIssuesOrOccurrencesFlag: Flag = moreIssuesOrOccurrencesP
 		.map { case (data, nextIndex) => data.either.hasSize > nextIndex }
 	
@@ -87,10 +99,21 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 				println(s"Looking up status since ${ (Now - timeThreshold).description }")
 				
 				// Pulls active issues
-				val activeIssues = AccessIssues.managed.active
+				val recentIssues = AccessIssues.managed
 					.whereOccurrences.since(timeThreshold, includePartialRanges = true).pull
-					// Skips those that have been silenced
-					.filterNot { _.isSilencedInVersion(lazyTargetAppVersion) }
+				
+				// Looks version information for conditionally silenced issues
+				val versionRequiredForIssueIds = recentIssues.view.filter { _.isConditionallySilenced }
+					.map { _.id }.toIntSet
+				val activeIssues = {
+					if (versionRequiredForIssueIds.isEmpty)
+						recentIssues.filterNot { _.isAlwaysSilenced }
+					else {
+						val versions = AccessIssueVariants.ofIssues(versionRequiredForIssueIds).latestVersionPerIssue
+						recentIssues
+							.filterNot { i => i.isSilencedInVersion(Lazy { versions.getOrElse(i.id, Version(0, 1)) }) }
+					}
+				}
 				
 				// Case: No active issues
 				if (activeIssues.isEmpty)
@@ -138,7 +161,7 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 							}
 						})
 					
-					queuedIssuesP.value = sortedIssues.map { i => Left(i.id) } -> 0
+					queuedIssuesP.value = sortedIssues.map[Either[Int, ManagedIssue]](Right.apply) -> 0
 					println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
 				}
 			}
@@ -152,6 +175,9 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
 		ArgumentSchema("filter", "f", help = "A filter applied to issue context (optional)"),
 		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for. E.g. \"3d\", \"3 days\", \"2h\", \"2 hours\", \"2000-09-30\", \"2000-09-30T13:24:00\" or \"13:24\". Default = 7 days.")) { args =>
+		// Clears the previous state
+		closeIssue()
+		
 		// Parses the arguments
 		val since = args("since").castTo(InstantType, DurationType) match {
 			case Left(instantV) => instantV.getInstant
@@ -193,7 +219,9 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 				// Filters out silenced issues
 				// TODO: Make this an optional step
 				val issuesToDisplay = issues.view.map { i => i -> resolutions(i.id) }
-					.filterNot { _._2.exists { _.silencesVersion(lazyTargetAppVersion.value) } }
+					.filterNot { case (issue, resolutions) =>
+						resolutions.exists { _.silencesVersion(issue.latestVersion.getOrElse(Version(0, 1))) }
+					}
 					.toOptimizedSeq
 				
 				// Loads aliases
@@ -246,14 +274,14 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 			else {
 				if (args("append").getBoolean) {
 					val queueLength = queuedIssuesP.mutate { case (queue, readCount) =>
-						val newQueue = (queue.view.drop(readCount) ++ idList.map[Either[Int, IssueInstances]](Left.apply))
+						val newQueue = (queue.view.drop(readCount) ++ idList.map[Either[Int, ManagedIssue]](Left.apply))
 							.toOptimizedSeq
 						newQueue.size -> (newQueue -> 0)
 					}
 					println(s"Added ${ idList.size } issues to the queue. The queue is now $queueLength issues long")
 				}
 				else {
-					queuedIssuesP.value = idList.map[Either[Int, IssueInstances]](Left.apply) -> 0
+					queuedIssuesP.value = idList.map[Either[Int, ManagedIssue]](Left.apply) -> 0
 					println(s"Queued ${ idList.size } issues")
 				}
 				println("Unqueue issues with the \"see next\" command")
@@ -292,15 +320,13 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 			connectionPool.logging { implicit c =>
 				// Fetches the base issue data
 				val issue = target match {
-					case Left(issueId) =>
-						AccessIssue.withVariants(issueId).pull.map { issue =>
-							issue.withOccurrences(
-								AccessIssueOccurrences.ofVariants(issue.variants.view.map { _.id }).pull)
-						}
+					case Left(issueId) => AccessIssue.managed(issueId).pull
 					case Right(issue) => Some(issue)
 				}
 				issue match {
-					case Some(issue) => describeIssue(issue)
+					case Some(issue) =>
+						openIssueIdP.value = Some(issue.id)
+						describeIssue(issue)
 					// Case: No issue targeted
 					case None => println("No issue was found")
 				}
@@ -392,6 +418,7 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 					case None => println("No more occurrences have been queued")
 				}
 			case Right(issues) =>
+				closeIssue()
 				issues.foreach { summarize(_) }
 				println()
 				if (hasMoreIssuesOrOccurrencesFlag.value)
@@ -432,6 +459,27 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 			case None => println("There is no error to describe")
 		}
 	}
+	/**
+	 * A command for displaying the comments on the last opened issue
+	 */
+	lazy val comments = Command.withoutArguments("comments", help = "Displays the comments on the last opened issue") {
+		val comments = queuedCommentsP.value
+		if (comments.nonEmpty)
+			println(StringUtils.asciiTableFrom[Comment](comments, Pair("Time", "Comment"),
+				c => timeDescription(c.created), _.text.splitToLinesIterator(80).mkString("\n")))
+	}
+	/**
+	 * A command for marking notifications as read
+	 */
+	lazy val close = Command.withoutArguments("close", "read", help = "Marks the last notifications as read") {
+		val idsToClose = queuedNotificationIdsP.getAndSet(IntSet.empty)
+		if (idsToClose.nonEmpty) {
+			connectionPool.logging { implicit c =>
+				AccessIssueNotifications(idsToClose).deprecate()
+				println(s"Marked ${ idsToClose.size } notifications as read")
+			}
+		}
+	}
 	
 	// Determines the commands available at each time
 	private lazy val staticCommands = Vector(status, list, queue, see)
@@ -439,16 +487,27 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 	 * A pointer that contains the currently available commands
 	 */
 	lazy val pointer = hasMoreVariantsFlag
-		.mergeWith(hasQueuedErrorFlag, hasMoreIssuesOrOccurrencesFlag) { (variants, error, more) =>
-			val builder = OptimizedIndexedSeq.newBuilder[Command]
-			if (error)
-				builder += stack
-			if (more)
-				builder += this.more
-			if (variants)
-				builder += next
-			staticCommands ++ builder.result()
+		.mergeWith(Vector(hasQueuedErrorFlag, hasMoreIssuesOrOccurrencesFlag, hasQueuedCommentsFlag,
+			mayCloseNotificationsFlag)) {
+			variants =>
+				val builder = OptimizedIndexedSeq.newBuilder[Command]
+				if (hasQueuedCommentsFlag.value)
+					builder += comments
+				if (displayedNotifications)
+					builder += close
+				if (hasQueuedErrors)
+					builder += stack
+				if (hasMoreIssuesOrOccurrences)
+					builder += this.more
+				if (variants)
+					builder += next
+				staticCommands ++ builder.result()
 		}
+	
+	/**
+	 * A pointer that contains the ID of the currently viewed issue, if applicable
+	 */
+	lazy val openIssueIdPointer = openIssueIdP.readOnly
 	
 	
 	// COMPUTED ---------------------------------
@@ -459,10 +518,32 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 	 */
 	def currently = pointer.value
 	
+	def hasQueuedErrors = hasQueuedErrorFlag.value
+	def hasMoreIssuesOrOccurrences = hasMoreIssuesOrOccurrencesFlag.value
+	def displayedNotifications = mayCloseNotificationsFlag.value
+	
 	private def recent = Now - 7.days
 	
 	
 	// OTHER    ---------------------------------
+	
+	/**
+	 * Closes pointers related to the currently open issue.
+	 * Should be called when listing new issues.
+	 */
+	private def closeIssue() = {
+		openIssueIdP.clear()
+		queuedVariantsP.value = Empty -> 0
+		queuedErrorIdP.clear()
+		moreIssuesOrOccurrencesP.update { case (queue, nextIndex) =>
+			if (queue.isLeft)
+				Left(Empty) -> 0
+			else
+				queue -> nextIndex
+		}
+		queuedNotificationIdsP.value = IntSet.empty
+		queuedCommentsP.clear()
+	}
 	
 	private def summarize(issue: ManagedIssueInstances, threshold: Instant = recent) = {
 		val state = {
@@ -489,27 +570,30 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 		}
 	}
 	
-	private def describeIssue(issue: IssueInstances)(implicit connection: Connection) = {
-		// Retrieves and prints available information about the issue
-		val lastOccurrence = issue.latestOccurrence
-		val numberOfOccurrences = {
-			val access = AccessIssueOccurrences.ofVariants(issue.variantIds)
-			val targetedAccess = issue.earliestOccurrence match {
-				case Some(o) => access.before(o.lastOccurrence)
-				case None => access
-			}
-			targetedAccess.totalCount + issue.numberOfOccurrences
-		}
+	private def describeIssue(issue: ManagedIssue)(implicit connection: Connection) = {
+		// Loads information about this issue's variants and occurrences
+		val variants = AccessIssueVariants.instances.ofIssue(issue.id).pull.reverseSorted
+		val lastVersionVariants = variants.filterMaxBy { _.version }
+		
+		val lastOccurrence = variants.iterator.flatMap { _.occurrences }.maxByOption { _.lastOccurrence }
+		
+		val numberOfOccurrences = variants.iterator.map { _.numberOfOccurrences }.sum
 		val averageOccurrenceInterval = {
 			if (numberOfOccurrences > 1)
 				Some((Now - issue.created) / numberOfOccurrences)
 			else
 				None
 		}
-		val affectedVersions = issue.variants.map { _.version }.minMaxOption
+		val affectedVersions = variants.iterator.map { _.version }.minMaxOption
 		
-		println(s"${issue.id}: ${issue.severity} @ ${issue.context}")
-		println(s"\t- First encountered ${timeDescription(issue.created)}")
+		issue.alias.ifNotEmpty match {
+			case Some(alias) =>
+				println(s"${ issue.id }: $alias (${ issue.severity })")
+				println(s"\t- Context: ${ issue.context }")
+			
+			case None => println(s"${issue.id}: ${issue.severity} @ ${issue.context}")
+		}
+		println(s"\t- First encountered ${ timeDescription(issue.created) }")
 		lastOccurrence.foreach { last =>
 			println("\t- Last occurrence:")
 			describeOccurrence(last)
@@ -518,31 +602,74 @@ class LogReviewCommands(lazyTargetAppVersion: View[Version])(implicit log: Logge
 		averageOccurrenceInterval.foreach { interval =>
 			println(s"\t- Has occurred once every ${interval.description}")
 		}
-		issue.latestOccurrence.foreach { last =>
-			issue.earliestOccurrence.foreach { first =>
-				val start = first.firstOccurrence
-				val end = last.lastOccurrence
-				if (start != end)
-					println(s"\t\t- Recently once every ${
-						((end - start) / issue.numberOfOccurrences).description
-					}")
+		
+		lastVersionVariants.iterator.flatMap { _.occurrences }.map { _.firstOccurrence }.minOption
+			.foreach { firstOccurrence =>
+				val lastOccurrence = lastVersionVariants.iterator.flatMap { _.occurrences }.map { _.lastOccurrence }.max
+				if (firstOccurrence != lastOccurrence) {
+					val averageInterval = (lastOccurrence - firstOccurrence) /
+						lastVersionVariants.iterator.map { _.numberOfOccurrences }.sum
+					val threshold = Now - 24.hours
+					val recentOccurrences = lastVersionVariants.iterator.flatMap { _.occurrences }
+						.map { _.countSince(threshold) }.sum
+					
+					println(s"\t\t- In version ${ lastVersionVariants.head.version }, once every ${
+						averageInterval.description }; ${ recentOccurrences.round } times within the last 24 hours")
+				}
 			}
-		}
+		
 		affectedVersions.foreach { versions =>
 			if (versions.isSymmetric)
 				println(s"\t- Affects version: ${ versions.first }")
 			else
 				println(s"\t- Affects versions: [${ versions.mkString(" - ") }]")
 		}
-		if (issue.variants.isEmpty)
+		if (variants.isEmpty)
 			println("\t- Has not appeared recently")
 		else {
-			println(s"\t- Has ${issue.variants.size} different variants")
-			println("\nFor more information about each variant, use the 'next' command")
+			val threshold = recent
+			println(s"\t- Has ${ variants.size } different variants, ${
+				variants.count { _.occurrences.exists { _.lastOccurrence >= threshold } } } are active")
+		}
+		
+		// Looks up comments
+		val comments = AccessComments.onIssue(issue.id).pull.sortBy { _.created }
+		queuedCommentsP.value = comments
+		if (comments.nonEmpty)
+			println(s"\t- ${ comments.size } comments")
+		
+		// Checks information about notifications and/or resolutions
+		val notifications = issue.unreadNotifications.reverseSortBy { _._2.created }
+		notifications.foreach { case (resolution, notification) =>
+			resolution.versionThreshold match {
+				case Some(fixVersion) =>
+					println(s"\t- Was marked as fixed in $fixVersion ${
+						timeDescription(resolution.created) }, but reappeared ${
+						timeDescription(notification.created) } (${
+						(notification.created - resolution.created).description } later)")
+				case None =>
+					println(s"\t- Was supposed to be fixed ${ timeDescription(resolution.created) }, but reappeared ${
+						timeDescription(notification.created) } (${
+						(notification.created - resolution.created).description } later)")
+			}
+			resolution.text.ifNotEmpty.foreach { comment =>
+				println(s"\t\t- Comment: \"$comment\"")
+			}
+		}
+		queuedNotificationIdsP.value = IntSet.from(notifications.view.map { _._2.id })
+		
+		if (comments.nonEmpty || notifications.nonEmpty || variants.nonEmpty) {
+			println()
+			if (comments.nonEmpty)
+				println("To list comments concerning this issue, use the 'comments' command")
+			if (notifications.nonEmpty)
+				println("To mark the notifications as read, use the 'close' command")
+			if (variants.nonEmpty)
+				println("For more information about each variant, use the 'next' command")
 		}
 		
 		// Queues information about the issue variants
-		queuedVariantsP.value = issue.variants -> 0
+		queuedVariantsP.value = variants -> 0
 	}
 	
 	private def printClassStack(classLines: IterableOnce[StackTraceElementRecord], className: String, indents: Int = 1) =

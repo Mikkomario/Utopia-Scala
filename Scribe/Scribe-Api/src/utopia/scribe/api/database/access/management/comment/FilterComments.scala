@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.TimelineView
 /**
   * Common trait for access points which may be filtered based on comment properties
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 trait FilterComments[+Repr] extends TimelineView[Repr]
 {
@@ -28,17 +28,15 @@ trait FilterComments[+Repr] extends TimelineView[Repr]
 	// OTHER	--------------------
 	
 	/**
-	  * @param issueVariantId issue variant id to target
-	  * @return Copy of this access point that only includes comments with the specified issue variant id
+	  * @param issueId issue id to target
+	  * @return Copy of this access point that only includes comments with the specified issue id
 	  */
-	def onVariant(issueVariantId: Int) = filter(model.issueVariantId.column <=> issueVariantId)
-	
+	def onIssue(issueId: Int) = filter(model.issueId.column <=> issueId)
 	/**
-	  * @param issueVariantIds Targeted issue variant ids
-	  * @return Copy of this access point that only includes comments where issue variant id is within the 
-	  * specified value set
+	  * @param issueIds Targeted issue ids
+	  * @return Copy of this access point that only includes comments where issue id is within the specified 
+	  * value set
 	  */
-	def onVariants(issueVariantIds: IterableOnce[Int]) = 
-		filter(model.issueVariantId.column.in(IntSet.from(issueVariantIds)))
+	def onIssues(issueIds: IterableOnce[Int]) = filter(model.issueId.column.in(IntSet.from(issueIds)))
 }
 

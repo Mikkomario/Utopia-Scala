@@ -21,12 +21,12 @@ object ManagedIssueDbReader extends DbReader[Seq[ManagedIssue]] with ParseGroupe
 {
 	// ATTRIBUTES   ---------------------------
 	
-	private val readIssue = IssueDbReader
-	private val readAlias = IssueAliasDbReader
-	private val readResolution = DetailedResolutionDbReader
+	protected val readIssue = IssueDbReader
+	protected val readAlias = IssueAliasDbReader
+	protected val readResolution = DetailedResolutionDbReader
 	
-	private val resolution = ResolutionDbModel
-	private val notification = IssueNotificationDbModel
+	protected val resolution = ResolutionDbModel
+	protected val notification = IssueNotificationDbModel
 	
 	override lazy val target: SqlTarget = readIssue.target
 		.join(Vector(readAlias.table, resolution.table, notification.table), JoinType.Left)

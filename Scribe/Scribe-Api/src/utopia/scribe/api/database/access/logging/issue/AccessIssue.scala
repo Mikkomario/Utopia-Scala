@@ -1,9 +1,9 @@
 package utopia.scribe.api.database.access.logging.issue
 
 import utopia.scribe.api.database.ScribeTables
+import utopia.scribe.api.database.access.logging.issue.variant.{AccessIssueVariantValue, FilterByIssueVariant}
 import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
-import variant.{AccessIssueVariantValue, FilterByIssueVariant}
 
 import scala.language.implicitConversions
 
@@ -17,6 +17,16 @@ object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 	  * Access to individual issues in the DB, also including issue variant information
 	  */
 	lazy val withVariants = AccessIssues.withVariants.head
+	/**
+	 * Access to individual issues in the DB, including variant and occurrence information
+	 */
+	lazy val instances = AccessIssues.instances.head
+	
+	/**
+	 * Access to individual issues, including management-related information
+	 * (including historical resolutions and notifications)
+	 */
+	lazy val managed = AccessIssues.managed.head
 	
 	
 	// IMPLICIT	--------------------
@@ -47,12 +57,10 @@ case class AccessIssue[A](wrapped: TargetingOne[Option[A]])
 	  * A copy of this access which also targets issue_variant
 	  */
 	lazy val joinVariant = join(ScribeTables.issueVariant)
-	
 	/**
 	  * Access to the values of linked issue variants
 	  */
 	lazy val variant = AccessIssueVariantValue(joinVariant)
-	
 	/**
 	  * Access to issue variant -based filtering functions
 	  */

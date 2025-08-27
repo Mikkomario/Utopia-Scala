@@ -7,7 +7,6 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Version
 import utopia.flow.util.console.Console
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.scribe.api.util.ScribeContext
 import utopia.vault.database.{ConnectionPool, Tables}
 
@@ -33,11 +32,12 @@ object ScribeConsoleApp extends App
 	}
 	private implicit val cPool: ConnectionPool = new ConnectionPool(30)
 	
-	// TODO: Set the correct APP version
-	private val appVersion = Lazy.initialized(Version(1))
-	ScribeContext.setup(exc, cPool, new Tables(cPool), ScribeConsoleSettings.dbName, backupLogger = log)
+	ScribeContext.setup(exc, cPool, new Tables(cPool), ScribeConsoleSettings.dbName, backupLogger = log,
+		version = Version(1, 1))
 	
-	private val reviewCommands = new LogReviewCommands(appVersion)
+	private val reviewCommands = new LogReviewCommands()
+	private val manageCommands = new ManageIssueCommands(reviewCommands.openIssueIdPointer)
+	private val commandsP = reviewCommands.pointer.mergeWith(manageCommands.pointer) { _ ++ _ }
 	
 	
 	// APP CODE --------------------------------
@@ -45,8 +45,8 @@ object ScribeConsoleApp extends App
 	// Starts the console
 	println("Welcome to the Scribe utility console!")
 	println("You will find the available commands with the 'help' command.")
-	Console(reviewCommands.pointer,
-		s"\nNext command (${ reviewCommands.currently.iterator.map { _.name }.mkString(" | ") } | exit):",
+	Console(commandsP,
+		s"\nNext command (${ commandsP.value.iterator.map { _.name }.mkString(" | ") } | exit):",
 		closeCommandName = "exit")
 		.run()
 	println("Bye!")

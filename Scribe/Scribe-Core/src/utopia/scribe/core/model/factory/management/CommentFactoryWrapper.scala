@@ -9,7 +9,7 @@ import java.time.Instant
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 trait CommentFactoryWrapper[A <: CommentFactory[A], +Repr] extends CommentFactory[Repr]
 {
@@ -32,7 +32,7 @@ trait CommentFactoryWrapper[A <: CommentFactory[A], +Repr] extends CommentFactor
 	
 	override def withCreated(created: Instant) = mapWrapped { _.withCreated(created) }
 	
-	override def withIssueVariantId(issueVariantId: Int) = mapWrapped { _.withIssueVariantId(issueVariantId) }
+	override def withIssueId(issueId: Int) = mapWrapped { _.withIssueId(issueId) }
 	
 	override def withText(text: String) = mapWrapped { _.withText(text) }
 	

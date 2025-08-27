@@ -16,7 +16,7 @@ object Comment extends StandardStoredFactory[CommentData, Comment]
   * @param id   id of this comment in the database
   * @param data Wrapped comment data
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 case class Comment(id: Int, data: CommentData) 
 	extends StoredModelConvertible[CommentData] with FromIdFactory[Int, Comment] 

@@ -6,7 +6,7 @@ import utopia.scribe.api.database.access.logging.issue.variant.{AccessIssueVaria
 import utopia.scribe.api.database.access.management.resolution.FilterByResolution
 import utopia.scribe.api.database.reader.logging.{IssueDbReader, IssueInstancesDbReader, ManagedIssueDbReader, VaryingIssueDbReader}
 import utopia.scribe.api.database.storable.logging.IssueDbModel
-import utopia.scribe.api.database.storable.management.{IssueNotificationDbModel, ResolutionDbModel}
+import utopia.scribe.api.database.storable.management.ResolutionDbModel
 import utopia.scribe.core.model.stored.logging.Issue
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many._
@@ -32,10 +32,9 @@ object AccessIssues
 	lazy val instances = apply(IssueInstancesDbReader)
 	
 	/**
-	 * Access to issues with resolutions and aliases.
-	 * Note: Even when filtered to active items only, historical notifications may be included.
+	 * Access to issues with resolutions and aliases. Includes historical resolution information.
 	 */
-	lazy val managed = ManyDeprecatingRoot(apply(ManagedIssueDbReader), resolutionModel)
+	lazy val managed = apply(ManagedIssueDbReader)
 	
 	
 	// IMPLEMENTED	--------------------

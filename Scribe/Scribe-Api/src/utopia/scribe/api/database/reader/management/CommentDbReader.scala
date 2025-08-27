@@ -13,7 +13,7 @@ import scala.util.Success
 /**
   * Used for reading comment data from the DB
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 object CommentDbReader extends DbRowReader[Comment] with ParseTableModel[Comment] with HasTableAsTarget
 {
@@ -31,7 +31,7 @@ object CommentDbReader extends DbRowReader[Comment] with ParseTableModel[Comment
 	
 	override def fromValid(valid: Model) = 
 		Success(Comment(valid(this.model.id.name).getInt, 
-			CommentData(issueVariantId = valid(this.model.issueVariantId.name).getInt, 
+			CommentData(issueId = valid(this.model.issueId.name).getInt, 
 			text = valid(this.model.text.name).getString, 
 			created = valid(this.model.created.name).getInstant)))
 }

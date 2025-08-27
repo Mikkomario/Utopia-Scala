@@ -16,7 +16,7 @@ import java.time.Instant
 /**
   * Used for constructing CommentDbModel instances and for inserting comments to the database
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
 object CommentDbModel 
 	extends StorableFactory[CommentDbModel, Comment, CommentData] with FromIdFactory[Int, CommentDbModel] 
@@ -27,9 +27,9 @@ object CommentDbModel
 	override lazy val id = DbPropertyDeclaration("id", index)
 	
 	/**
-	  * Database property used for interacting with issue variant ids
+	  * Database property used for interacting with issue ids
 	  */
-	lazy val issueVariantId = property("issueVariantId")
+	lazy val issueId = property("issueId")
 	
 	/**
 	  * Database property used for interacting with texts
@@ -47,13 +47,13 @@ object CommentDbModel
 	override def table = ScribeTables.comment
 	
 	override def apply(data: CommentData): CommentDbModel = 
-		apply(None, Some(data.issueVariantId), data.text, Some(data.created))
+		apply(None, Some(data.issueId), data.text, Some(data.created))
 	
 	override def withCreated(created: Instant) = apply(created = Some(created))
 	
 	override def withId(id: Int) = apply(id = Some(id))
 	
-	override def withIssueVariantId(issueVariantId: Int) = apply(issueVariantId = Some(issueVariantId))
+	override def withIssueId(issueId: Int) = apply(issueId = Some(issueId))
 	
 	override def withText(text: String) = apply(text = text)
 	
@@ -64,9 +64,9 @@ object CommentDbModel
   * Used for interacting with Comments in the database
   * @param id comment database id
   * @author Mikko Hilpinen
-  * @since 26.08.2025, v1.2
+  * @since 27.08.2025, v1.2
   */
-case class CommentDbModel(id: Option[Int] = None, issueVariantId: Option[Int] = None, text: String = "", 
+case class CommentDbModel(id: Option[Int] = None, issueId: Option[Int] = None, text: String = "", 
 	created: Option[Instant] = None) 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, CommentDbModel] 
 		with CommentFactory[CommentDbModel]
@@ -74,7 +74,7 @@ case class CommentDbModel(id: Option[Int] = None, issueVariantId: Option[Int] = 
 	// ATTRIBUTES	--------------------
 	
 	override lazy val valueProperties: Seq[(String, Value)] = 
-		Vector(CommentDbModel.id.name -> id, CommentDbModel.issueVariantId.name -> issueVariantId, 
+		Vector(CommentDbModel.id.name -> id, CommentDbModel.issueId.name -> issueId, 
 			CommentDbModel.text.name -> text, CommentDbModel.created.name -> created)
 	
 	
@@ -86,7 +86,7 @@ case class CommentDbModel(id: Option[Int] = None, issueVariantId: Option[Int] = 
 	
 	override def withId(id: Int) = copy(id = Some(id))
 	
-	override def withIssueVariantId(issueVariantId: Int) = copy(issueVariantId = Some(issueVariantId))
+	override def withIssueId(issueId: Int) = copy(issueId = Some(issueId))
 	
 	override def withText(text: String) = copy(text = text)
 }
