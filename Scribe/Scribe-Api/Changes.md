@@ -13,6 +13,7 @@ Adds support for **Scribe-Core v1.2 and Vault v1.22**
   - `comment`: Write a comment on the open issue
   - `fixed`: Mark the issue as fixed
   - `silence`: Silence the issue for some time
+  - `follow`: Requests a notification when the issue appears the next time
   - `alias`: Given an issue an alias
   - `severity`: Change issue severity
   - `queue`: Queue issues for `see next`

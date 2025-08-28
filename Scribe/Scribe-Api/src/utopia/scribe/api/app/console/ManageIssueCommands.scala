@@ -51,6 +51,18 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 		}
 	}
 	/**
+	 * A console command for requesting a notification to be generated
+	 */
+	lazy val follow = Command.withoutArguments("follow", "track",
+		help = "Flags the currently open issue, so that a notification will be generated once it appears the next time") {
+		openIssueP.value.foreach { issueId =>
+			connectionPool.logging { implicit c =>
+				resolutionModel.insert(ResolutionData(issueId, notifies = true))
+				println("You will receive a notification when this issue occurs the next time")
+			}
+		}
+	}
+	/**
 	 * A console command for marking an issue fixed
 	 */
 	lazy val fixed = Command("fixed", "resolve", help = "Marks the currently open issue as fixed / resolved")(
@@ -196,7 +208,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	}
 	
 	private lazy val staticCommands = Pair(alias, changeSeverity)
-	private lazy val conditionalCommands = Vector(comment, fixed, silence)
+	private lazy val conditionalCommands = Vector(comment, fixed, silence, follow)
 	
 	/**
 	 * A pointer that contains the currently available console commands

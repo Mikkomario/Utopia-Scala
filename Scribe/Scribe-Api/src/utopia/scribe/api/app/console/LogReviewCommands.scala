@@ -8,7 +8,6 @@ import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType, In
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
-import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
@@ -18,6 +17,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
+import utopia.scribe.api.app.console.LogReviewCommands.MoreQueue
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
 import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
@@ -39,6 +39,21 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import scala.io.StdIn
 import scala.util.{Failure, Success}
+
+object LogReviewCommands
+{
+	// NESTED   ------------------------------
+	
+	private object MoreQueue
+	{
+		lazy val empty = apply()
+	}
+	private case class MoreQueue(status: Seq[(ManagedIssue, Int)] = Empty, list: Seq[ManagedIssueInstances] = Empty,
+	                             occurrences: Seq[IssueOccurrenceData] = Empty, timeThreshold: Option[Instant] = None)
+	{
+		lazy val size = status.size max list.size max occurrences.size
+	}
+}
 
 /**
  * Provides console commands for reviewing log entries
@@ -67,8 +82,7 @@ class LogReviewCommands(implicit log: Logger)
 	private val queuedErrorIdP = EventfulPointer.empty[Int]
 	
 	// More issues and more occurrences are mutually exclusive
-	private val moreIssuesOrOccurrencesP =
-		EventfulPointer[(Either[Seq[IssueOccurrenceData], Seq[ManagedIssueInstances]], Int)](Left(Empty) -> 0)
+	private val moreP = EventfulPointer[(MoreQueue, Int)](MoreQueue.empty -> 0)
 	
 	/**
 	 * A pointer that contains the IDs of the notifications that may be closed
@@ -82,8 +96,8 @@ class LogReviewCommands(implicit log: Logger)
 	private lazy val hasMoreVariantsFlag: Flag = queuedVariantsP
 		.map { case (variants, nextIndex) => variants.hasSize > nextIndex }
 	private lazy val hasQueuedErrorFlag: Flag = queuedErrorIdP.lightMap { _.isDefined }
-	private lazy val hasMoreIssuesOrOccurrencesFlag: Flag = moreIssuesOrOccurrencesP
-		.map { case (data, nextIndex) => data.either.hasSize > nextIndex }
+	private lazy val hasMoreIssuesOrOccurrencesFlag: Flag = moreP
+		.map { case (data, nextIndex) => data.size > nextIndex }
 	
 	/**
 	 * A console command for summarizing active and recent issues.
@@ -133,27 +147,9 @@ class LogReviewCommands(implicit log: Logger)
 						Ordering.by { i => newVariantCounts(i.id) > 0 },
 						Ordering.by { _.severity },
 						Ordering.by { _.created })
+						.map { i => i -> newVariantCounts(i.id) }
 					println()
-					println(StringUtils.asciiTableFrom[ManagedIssue](sortedIssues,
-						Vector("ID", "Severity", "Context", "Appeared", "Notice"),
-						_.id.toString, _.severity.toString,
-						_.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
-						i => (Now - i.created).description,
-						{ i: ManagedIssue =>
-							if (i.hasUnreadNotifications)
-								"!!!"
-							else if (i.created >= timeThreshold)
-								"NEW"
-							else {
-								val newVariantsCount = newVariantCounts(i.id)
-								if (newVariantsCount == 1)
-									"New variant"
-								else if (newVariantsCount > 0)
-									s"$newVariantsCount new variants"
-								else
-									""
-							}
-						}))
+					printStatusTableFor(sortedIssues.take(20), timeThreshold)
 					
 					// Lists a summary: [ Severity | Active | New | New variants ]
 					println()
@@ -163,8 +159,13 @@ class LogReviewCommands(implicit log: Logger)
 						_._1.toString, _._2.size.toString, _._2.count { _.created >= timeThreshold }.toString,
 						_._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString))
 					
-					queuedIssuesP.value = sortedIssues.map[Either[Int, ManagedIssue]](Right.apply) -> 0
+					queuedIssuesP.value =
+						sortedIssues.map[Either[Int, ManagedIssue]] { case (issue, _) => Right(issue) } -> 0
 					println("\nFor more information concerning these issues, use 'see next' or 'see <issue id>'")
+					
+					moreP.value = MoreQueue(status = sortedIssues, timeThreshold = Some(timeThreshold)) -> 20
+					if (sortedIssues.hasSize > 20)
+						println("In order to list more issues, use the 'more' command")
 				}
 			}
 	}
@@ -176,7 +177,9 @@ class LogReviewCommands(implicit log: Logger)
 		ArgumentSchema("level", "lvl",
 			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
 		ArgumentSchema("filter", "f", help = "A filter applied to issue context (optional)"),
-		ArgumentSchema("since", "t", 7.days, help = "The duration or time since which issues should be scanned for. E.g. \"3d\", \"3 days\", \"2h\", \"2 hours\", \"2000-09-30\", \"2000-09-30T13:24:00\" or \"13:24\". Default = 7 days.")) { args =>
+		ArgumentSchema("since", "t", 7.days,
+			help = "The duration or time since which issues should be scanned for. E.g. \"3d\", \"3 days\", \"2h\", \"2 hours\", \"2000-09-30\", \"2000-09-30T13:24:00\" or \"13:24\". Default = 7 days."),
+		ArgumentSchema.flag("silenced", "S", help = "Whether to include silenced issues")) { args =>
 		// Clears the previous state
 		closeIssue()
 		
@@ -218,13 +221,18 @@ class LogReviewCommands(implicit log: Logger)
 				val resolutions = AccessResolutions.detailed.active.ofIssues(issues.view.map { _.id })
 					.pull.groupBy { _.resolvedIssueId }.withDefaultValue(Empty)
 				
-				// Filters out silenced issues
-				// TODO: Make this an optional step
-				val issuesToDisplay = issues.view.map { i => i -> resolutions(i.id) }
-					.filterNot { case (issue, resolutions) =>
-						resolutions.exists { _.silencesVersion(issue.latestVersion.getOrElse(Version(0, 1))) }
-					}
-					.toOptimizedSeq
+				// Filters out silenced issues (optional)
+				val includeSilenced = args("silenced").getBoolean
+				val issuesToDisplay = {
+					if (includeSilenced)
+						issues.map { i => i -> resolutions(i.id) }
+					else
+						issues.view.map { i => i -> resolutions(i.id) }
+							.filterNot { case (issue, resolutions) =>
+								resolutions.exists { _.silencesVersion(issue.latestVersion.getOrElse(Version(0, 1))) }
+							}
+							.toOptimizedSeq
+				}
 				
 				// Loads aliases
 				val aliases = AccessIssueAliases.ofIssues(issuesToDisplay.view.map { _._1.id }).toMapBy { _.issueId }
@@ -246,7 +254,7 @@ class LogReviewCommands(implicit log: Logger)
 					issues.iterator.take(15).foreach { summarize(_, since) }
 					
 					if (issues.hasSize > 15) {
-						moreIssuesOrOccurrencesP.value = Right(issues) -> 15
+						moreP.value = MoreQueue(list = issues, timeThreshold = Some(since)) -> 15
 						println("\t- ...")
 						println("\nFor an expanded list, use the 'more' command")
 					}
@@ -267,7 +275,7 @@ class LogReviewCommands(implicit log: Logger)
 	lazy val queue = Command("queue", "q",
 		help = "Queues a list of issues, so that they can be unqueued with the 'see next' command")(
 		ArgumentSchema("issues", help = "IDs of the issues to queue. Separated with commas, semicolons or plus signs."),
-		ArgumentSchema.flag("append", "A", help = "Whether to append these issues to the queue instead of overwriting the queue")) {
+		ArgumentSchema.flag("append", "A", help = "Whether to append these issues to the queue instead of overwriting the queue.")) {
 		args =>
 			val input = args("issues").getString.nonEmptyOrElse(StdIn.read("Specify the issue IDs to queue").getString)
 			val idList = input.splitIterator(listSeparatorRegex).flatMap { _.trim.int }.toOptimizedSeq
@@ -387,7 +395,7 @@ class LogReviewCommands(implicit log: Logger)
 				queuedErrorIdP.value = variant.errorId
 				if (variant.errorId.isDefined)
 					println("\nFor more information about the associated error, use the 'stack' command")
-				moreIssuesOrOccurrencesP.value = Left(occurrences) -> 1
+				moreP.value = MoreQueue(occurrences = occurrences) -> 1
 				if (hasMoreIssuesOrOccurrencesFlag.value)
 					println("For information about previous issue occurrences, use the 'more' command")
 				if (hasMore)
@@ -403,11 +411,17 @@ class LogReviewCommands(implicit log: Logger)
 	lazy val more = Command.withoutArguments("more",
 		help = "Prints information about another set of queued issues or occurrences") {
 		// Collects the next 15 issues or the next occurrence
-		val next = moreIssuesOrOccurrencesP.mutate { case (from, nextIndex) =>
-			from match {
-				case Right(issues) => Right(issues.slice(nextIndex, nextIndex + 15)) -> (from -> (nextIndex + 15))
-				case Left(occurrences) => Left(occurrences.lift(nextIndex)) -> (from -> (nextIndex + 1))
+		val next = moreP.mutate { case (from, nextIndex) =>
+			if (from.status.nonEmpty) {
+				val stop = nextIndex + 20
+				Right(Right(from.status.slice(nextIndex, stop))) -> (from -> stop)
 			}
+			else if (from.list.nonEmpty) {
+				val stop = nextIndex + 15
+				Right(Left(from.list.slice(nextIndex, stop))) -> (from -> stop)
+			}
+			else
+				Left(from.occurrences.lift(nextIndex)) -> (from -> (nextIndex + 1))
 		}
 		next match {
 			case Left(occurrence) =>
@@ -421,7 +435,12 @@ class LogReviewCommands(implicit log: Logger)
 				}
 			case Right(issues) =>
 				closeIssue()
-				issues.foreach { summarize(_) }
+				val timeThreshold = moreP.value._1.timeThreshold.getOrElse(recent)
+				issues match {
+					case Left(issuesToList) => issuesToList.foreach { summarize(_, timeThreshold) }
+					case Right(statusIssues) => printStatusTableFor(statusIssues, timeThreshold)
+				}
+				
 				println()
 				if (hasMoreIssuesOrOccurrencesFlag.value)
 					println("For more issues, use the 'more' command")
@@ -537,15 +556,36 @@ class LogReviewCommands(implicit log: Logger)
 		openIssueIdP.clear()
 		queuedVariantsP.value = Empty -> 0
 		queuedErrorIdP.clear()
-		moreIssuesOrOccurrencesP.update { case (queue, nextIndex) =>
-			if (queue.isLeft)
-				Left(Empty) -> 0
+		moreP.update { case (queue, nextIndex) =>
+			if (queue.occurrences.nonEmpty)
+				MoreQueue.empty -> 0
 			else
 				queue -> nextIndex
 		}
 		queuedNotificationIdsP.value = IntSet.empty
 		queuedCommentsP.clear()
 	}
+	
+	private def printStatusTableFor(issues: Seq[(ManagedIssue, Int)], timeThreshold: Instant = recent) =
+		println(StringUtils.asciiTableFrom[(ManagedIssue, Int)](issues,
+			Vector("ID", "Severity", "Context", "Appeared", "Notice"),
+			_._1.id.toString, _._1.severity.toString,
+			_._1.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
+			i => (Now - i._1.created).description,
+			{ case (i: ManagedIssue, newVariantsCount: Int) =>
+				if (i.hasUnreadNotifications)
+					"!!!"
+				else if (i.created >= timeThreshold)
+					"NEW"
+				else {
+					if (newVariantsCount == 1)
+						"New variant"
+					else if (newVariantsCount > 0)
+						s"$newVariantsCount new variants"
+					else
+						""
+				}
+			}))
 	
 	private def summarize(issue: ManagedIssueInstances, threshold: Instant = recent) = {
 		val state = {
@@ -574,9 +614,7 @@ class LogReviewCommands(implicit log: Logger)
 	
 	private def describeIssue(issue: ManagedIssue)(implicit connection: Connection) = {
 		// Loads information about this issue's variants and occurrences
-		Connection.debugPrintsEnabled = true
 		val variants = AccessIssueVariants.instances.ofIssue(issue.id).pull
-		Connection.debugPrintsEnabled = false
 		val lastVersionVariants = variants.filterMaxBy { _.version }
 		
 		val lastOccurrence = variants.iterator.flatMap { _.occurrences }.maxByOption { _.lastOccurrence }
@@ -673,7 +711,7 @@ class LogReviewCommands(implicit log: Logger)
 		}
 		
 		// Queues information about the issue variants
-		queuedVariantsP.value = variants -> 0
+		queuedVariantsP.value = variants.reverseSorted -> 0
 	}
 	
 	private def printClassStack(classLines: IterableOnce[StackTraceElementRecord], className: String, indents: Int = 1) =
