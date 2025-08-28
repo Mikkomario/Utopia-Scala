@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.combine.{Combinable, LinearScalable}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions

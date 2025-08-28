@@ -31,10 +31,11 @@ object EqualsFunction
 		else
 			a == b
 	}
+	private val doubleMinDiff = 0.0000001
 	/**
 	  * A double equality function that rounds to 7th decimal place
 	  */
-	lazy val approxDouble = apply[Double] { (a, b) => a == b || (a - b).abs < 0.0000001 }
+	lazy val approxDouble = apply[Double] { (a, b) => a == b || (a - b).abs < doubleMinDiff }
 	
 	
 	// OTHER    ---------------------------

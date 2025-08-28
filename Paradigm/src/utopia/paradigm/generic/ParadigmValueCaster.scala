@@ -46,6 +46,7 @@ object ParadigmValueCaster extends ValueCaster
     // ATTRIBUTES    --------------
     
     private implicit val timeUnit: TimeUnit = TimeUnit.MILLISECONDS
+	private lazy val milli = 1.millis
     
     override lazy val conversions = Set[Conversion](
         // Conversions to String
@@ -575,7 +576,7 @@ object ParadigmValueCaster extends ValueCaster
         case PairType =>
             value.tryTupleWith { _.tryLinearVelocity } { _.tryDuration }.toOption
                 .map { case (a, d) => LinearAcceleration(a, d) }
-        case LinearVelocityType => Some(LinearAcceleration(value.getLinearVelocity, 1.millis))
+        case LinearVelocityType => Some(LinearAcceleration(value.getLinearVelocity, milli))
         case Acceleration2DType => Some(value.getAcceleration2D.linear)
         case Acceleration3DType => Some(value.getAcceleration3D.linear)
         case ModelType => LinearAcceleration(value.getModel).toOption
@@ -586,7 +587,7 @@ object ParadigmValueCaster extends ValueCaster
         case PairType =>
             value.tryTupleWith { _.tryVelocity2D } { _.tryDuration }.toOption.map { case (a, d) => Acceleration2D(a, d) }
         case Vector2DType => Some(Acceleration2D(value.getVector2D))
-        case Velocity2DType => Some(Acceleration2D(value.getVelocity2D, 1.millis))
+        case Velocity2DType => Some(Acceleration2D(value.getVelocity2D, milli))
         case Acceleration3DType => Some(value.getAcceleration3D.in2D)
         case ModelType => Acceleration2D(value.getModel).toOption
         case _ => None
@@ -596,7 +597,7 @@ object ParadigmValueCaster extends ValueCaster
         case PairType =>
             value.tryTupleWith { _.tryVelocity3D } { _.tryDuration }.toOption.map { case (a, d) => Acceleration3D(a, d) }
         case Vector3DType => Some(Acceleration3D(value.getVector3D))
-        case Velocity3DType => Some(Acceleration3D(value.getVelocity3D, 1.millis))
+        case Velocity3DType => Some(Acceleration3D(value.getVelocity3D, milli))
         case Acceleration2DType => Some(value.getAcceleration2D.in3D)
         case ModelType => Acceleration3D(value.getModel).toOption
         case _ => None

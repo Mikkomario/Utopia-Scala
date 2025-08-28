@@ -177,8 +177,13 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 			Duration.Zero
 		else if (acceleration.sign != sign.opposite)
 			Duration.Inf
-		else
-			(perMilliSecond / acceleration.perMilliSecond.perMilliSecond).abs.millis
+		else {
+			val accelerationPerMilli = acceleration.perMilliSecond.perMilliSecond
+			if (accelerationPerMilli ~== 0.0)
+				Duration.Inf
+			else
+				(perMilliSecond / accelerationPerMilli).abs.millis
+		}
 	}
 	
 	/**
@@ -193,7 +198,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 		// If preserving direction, has to check whether the movement would stop at a certain point
 		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).finite.filter(_ < time)
+				durationUntilStopWith(acceleration).finite.filter { _ < time }
 			else
 				None
 		}

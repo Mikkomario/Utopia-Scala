@@ -1,9 +1,17 @@
 package utopia.paradigm.motion.template
 
 import utopia.flow.time.TimeExtensions._
+import utopia.paradigm.motion.template.Change.milli
 import utopia.paradigm.transform.LinearSizeAdjustable
 
 import scala.concurrent.duration.Duration
+
+object Change
+{
+	// ATTRIBUTES   ----------------
+	
+	private lazy val milli = 1.millis
+}
 
 /**
   * Used for describing a change over time
@@ -31,7 +39,7 @@ trait Change[+A, +Repr <: Change[A, _]] extends LinearSizeAdjustable[Repr]
 	/**
 	  * @return Change per millisecond
 	  */
-	def perMilliSecond = apply(1.millis)
+	def perMilliSecond = apply(milli)
 	
 	
 	// OPERATORS	--------------

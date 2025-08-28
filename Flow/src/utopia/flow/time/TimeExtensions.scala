@@ -2,7 +2,6 @@ package utopia.flow.time
 
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.operator.ordering.SelfComparable
-import utopia.flow.time
 import utopia.flow.time.TimeUnit.{Day, Hour, JTimeUnit, MicroSecond, MilliSecond, Minute, NanoSecond, Second, Week}
 
 import java.time._
@@ -396,8 +395,7 @@ object TimeExtensions
 	implicit class ExtendedLocalDate(val d: LocalDate)
 		extends AnyVal with SelfComparable[LocalDate]
 	{
-		import utopia.flow.time.Month
-		import utopia.flow.time.Year
+		import utopia.flow.time.{Month, Year}
 		
 		// COMPUTED	-------------------------
 		

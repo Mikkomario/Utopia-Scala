@@ -3,6 +3,7 @@
 ## v1.7.3 (in development)
 ### Bugfixes
 - Fixed a bug that caused **ProjectilePath** to transform its shape when its linearity was positive
+- Added more careful zero-division checks to **LinearVelocity**'s `.durationUntilStopWith(LinearAcceleration)`
 ### New features
 - Added `Bounds.aroundBuilder`
 ### Other
