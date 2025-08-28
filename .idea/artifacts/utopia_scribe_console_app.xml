@@ -17,6 +17,7 @@
       </element>
       <element id="library" level="project" name="mariadb-java-client" />
       <element id="library" level="application" name="scala-sdk-2.13.14" />
+      <element id="file-copy" path="$PROJECT_DIR$/Scribe/Scribe-Core/data/length-rules/scribe-length-rules-v1.2.json" />
     </root>
   </artifact>
 </component>

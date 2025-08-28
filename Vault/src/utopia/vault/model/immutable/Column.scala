@@ -50,7 +50,7 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
 	/**
 	  * @return A description of this column, as it would appear in a create table or alter table -statement.
 	  */
-	def sqlDescription = s"$columnName $dataType ${ if (isPrimary) "PRIMARY KEY " else ""} ${
+	def sqlDescription = s"$columnName $dataType ${ if (isPrimary) "PRIMARY KEY " else ""}${
 		if (usesAutoIncrement) "AUTO_INCREMENT " else ""}"
 	
 	/**
@@ -79,7 +79,7 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
 	
 	override def isOptional = allowsNull
 	
-	override def toString = sqlDescription
+	override def toString = sqlName
 	override def toSqlSegment = SqlSegment(sqlName)
 	
 	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) = {

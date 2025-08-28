@@ -1,5 +1,7 @@
 package utopia.flow.test
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.Version
 
 /**
@@ -44,6 +46,9 @@ object VersionTest extends App
 	testNotFound("Some text here")
 	testNotFound("A.B.C")
 	testNotFound("-alpha")
+	
+	assert(Vector("v10.18.12", "v10.18.15", "v11.1.4", "v12.1").iterator.map(Version.apply).minMax ==
+		Pair(Version(10, 18, 12), Version(12, 1)))
 	
 	println("Success!")
 }

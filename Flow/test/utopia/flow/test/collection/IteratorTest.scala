@@ -1,7 +1,7 @@
 package utopia.flow.test.collection
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.mutable.iterator.{PollableOnce, RepeatOneForeverIterator}
 
 /**
@@ -68,6 +68,17 @@ object IteratorTest extends App
 	assert(foreverValueCalls == 1)
 	assert(forever.next() == 1)
 	assert(foreverValueCalls == 1)
+	
+	private val grouped = Vector("api", "aamu", "banana", "car", "cost", "ananas").iterator.groupBy { _.head }
+	assert(grouped.hasNext)
+	assert(grouped.next() == ('a', Pair("api", "aamu")))
+	assert(grouped.hasNext)
+	assert(grouped.next() == ('b', Single("banana")))
+	assert(grouped.hasNext)
+	assert(grouped.next() == ('c', Pair("car", "cost")))
+	assert(grouped.hasNext)
+	assert(grouped.next() == ('a', Single("ananas")))
+	assert(!grouped.hasNext)
 	
 	println("Success!")
 }

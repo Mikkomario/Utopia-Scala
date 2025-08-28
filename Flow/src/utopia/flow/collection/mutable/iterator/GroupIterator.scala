@@ -25,13 +25,15 @@ class GroupIterator[A, G](source: Iterator[A])(group: A => G) extends Iterator[(
 {
 	// ATTRIBUTES   ----------------------------
 	
-	// Initially empty, after first next() contains the head of the group
+	/**
+	 * Initially empty. After the first call to next(), contains the head of the next group.
+	 */
 	private var polled: Option[(A, G)] = None
 	
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def hasNext = source.hasNext
+	override def hasNext = polled.isDefined || source.hasNext
 	
 	override def next() = {
 		// Starts the group by picking the first item

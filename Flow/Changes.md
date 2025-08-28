@@ -12,6 +12,7 @@
   `.apply(...)`
 - `.splitMap(...)` in **IterableOnce** (via **CollectionExtensions**) now yields **IndexedSeq**s instead of **Vector**s
 ### Bugfixes
+- Bugfix to **Iterator**`.groupBy(...)`, which previously always omitted the last group if it consisted of a single element
 - Bugfix to `OptimizedIndexedSeq.concat(...)`, which would previously yield wrong-sized collections sometimes
 - Under certain conditions, **OptimizedMultiMergeMirror** 
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time

@@ -115,7 +115,7 @@ object AccessColumnValues
 		 * @param connection Implicit DB connection
 		 * @return All accessible values as an [[IntSet]]
 		 */
-		def toIntSet(implicit connection: Connection) = a.stream(IntSet.from)
+		def toIntSet(implicit connection: Connection) = a.streamDistinct(IntSet.from)
 	}
 }
 

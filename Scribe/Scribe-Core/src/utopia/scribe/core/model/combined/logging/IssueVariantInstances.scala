@@ -1,5 +1,6 @@
 package utopia.scribe.core.model.combined.logging
 
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
 import utopia.scribe.core.model.stored.logging.{IssueOccurrence, IssueVariant}
@@ -77,6 +78,12 @@ trait IssueVariantInstances extends CombinedIssueVariant[IssueVariantInstances]
 	  * Total number of issue occurrences represented by this instance
 	  */
 	def numberOfOccurrences = occurrences.iterator.map { _.count }.sum
+	
+	/**
+	 * @return The timespan of this variant's occurrences
+	 */
+	def timespan = occurrences.iterator.map { _.occurrencePeriod }
+		.reduceOption { (a, b) => Span(a.start min b.start, a.end max b.end) }
 	
 	/**
 	  * The average time interval between the recorded occurrences

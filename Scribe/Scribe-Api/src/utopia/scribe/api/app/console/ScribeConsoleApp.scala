@@ -2,12 +2,17 @@ package utopia.scribe.api.app.console
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
 import utopia.flow.util.console.Console
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.scribe.api.util.ScribeContext
+import utopia.vault.database.columnlength.ColumnLengthRules
 import utopia.vault.database.{ConnectionPool, Tables}
 
 /**
@@ -34,6 +39,12 @@ object ScribeConsoleApp extends App
 	
 	ScribeContext.setup(exc, cPool, new Tables(cPool), ScribeConsoleSettings.dbName, backupLogger = log,
 		version = Version(1, 1))
+	
+	// Loads column length rules, if possible
+	private val lengthRuleKeys = Vector("scribe", "length", "rule", "json")
+	FileUtils.workingDirectory.toTree.topDownNodesIterator
+		.findMap { _.nav.iterateChildren { _.find { _.fileName.containsInOrder(lengthRuleKeys) } }.getOrElse(None) }
+		.foreach { ColumnLengthRules.loadFrom(_, ScribeContext.databaseName) }
 	
 	private val reviewCommands = new LogReviewCommands()
 	private val manageCommands = new ManageIssueCommands(reviewCommands.openIssueIdPointer)

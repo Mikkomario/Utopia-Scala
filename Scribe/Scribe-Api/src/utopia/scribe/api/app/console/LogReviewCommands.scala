@@ -14,13 +14,13 @@ import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{StringUtils, Version}
-import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
+import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
 import utopia.scribe.api.database.access.logging.issue.variant.AccessIssueVariants
 import utopia.scribe.api.database.access.logging.issue.{AccessIssue, AccessIssues}
 import utopia.scribe.api.database.access.management.aliasing.AccessIssueAliases
@@ -99,8 +99,9 @@ class LogReviewCommands(implicit log: Logger)
 				println(s"Looking up status since ${ (Now - timeThreshold).description }")
 				
 				// Pulls active issues
-				val recentIssues = AccessIssues.managed
-					.whereOccurrences.since(timeThreshold, includePartialRanges = true).pull
+				val recentIssueIds = AccessIssueOccurrences.since(timeThreshold, includePartialRanges = true)
+					.issueVariants.issueIds.toIntSet
+				val recentIssues = AccessIssues.managed(recentIssueIds).pull
 				
 				// Looks version information for conditionally silenced issues
 				val versionRequiredForIssueIds = recentIssues.view.filter { _.isConditionallySilenced }
@@ -124,13 +125,6 @@ class LogReviewCommands(implicit log: Logger)
 					val newVariantCounts = AccessIssueVariants.since(timeThreshold)
 						.ofLimitedIssues(activeIssues.view.map { _.id }, 10).issueIds.pull.countAll
 					
-					// Lists a summary: [ Severity | Active | New | New variants ]
-					println(StringUtils.asciiTableFrom[(Severity, Seq[ManagedIssue])](
-						activeIssues.groupBy { _.severity }.toOptimizedSeq.reverseSortBy { _._1 },
-						Vector("Severity", "#Active", "#New", "#New variants"),
-						_._1.toString, _._2.size.toString, _._2.count { _.created >= timeThreshold }.toString,
-						_._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString))
-					
 					// Generates a table of the active issues
 					// [ ID | Severity | Name | Appeared | Notice ]
 					val sortedIssues = activeIssues.reverseSortedWith(
@@ -143,8 +137,8 @@ class LogReviewCommands(implicit log: Logger)
 					println(StringUtils.asciiTableFrom[ManagedIssue](sortedIssues,
 						Vector("ID", "Severity", "Context", "Appeared", "Notice"),
 						_.id.toString, _.severity.toString,
-						_.aliasOrContext.splitToLinesIterator(60, contextSplitRegex).mkString("\n"),
-						i => (Now - i.created).description),
+						_.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
+						i => (Now - i.created).description,
 						{ i: ManagedIssue =>
 							if (i.hasUnreadNotifications)
 								"!!!"
@@ -159,10 +153,18 @@ class LogReviewCommands(implicit log: Logger)
 								else
 									""
 							}
-						})
+						}))
+					
+					// Lists a summary: [ Severity | Active | New | New variants ]
+					println()
+					println(StringUtils.asciiTableFrom[(Severity, Seq[ManagedIssue])](
+						activeIssues.groupBy { _.severity }.toOptimizedSeq.reverseSortBy { _._1 },
+						Vector("Severity", "#Active", "#New", "#New variants"),
+						_._1.toString, _._2.size.toString, _._2.count { _.created >= timeThreshold }.toString,
+						_._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString))
 					
 					queuedIssuesP.value = sortedIssues.map[Either[Int, ManagedIssue]](Right.apply) -> 0
-					println("For more information concerning these issues, use 'see next' or 'see <issue id>'")
+					println("\nFor more information concerning these issues, use 'see next' or 'see <issue id>'")
 				}
 			}
 	}
@@ -572,7 +574,9 @@ class LogReviewCommands(implicit log: Logger)
 	
 	private def describeIssue(issue: ManagedIssue)(implicit connection: Connection) = {
 		// Loads information about this issue's variants and occurrences
-		val variants = AccessIssueVariants.instances.ofIssue(issue.id).pull.reverseSorted
+		Connection.debugPrintsEnabled = true
+		val variants = AccessIssueVariants.instances.ofIssue(issue.id).pull
+		Connection.debugPrintsEnabled = false
 		val lastVersionVariants = variants.filterMaxBy { _.version }
 		
 		val lastOccurrence = variants.iterator.flatMap { _.occurrences }.maxByOption { _.lastOccurrence }
