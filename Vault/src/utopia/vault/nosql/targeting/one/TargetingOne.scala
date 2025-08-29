@@ -26,12 +26,14 @@ object TargetingOne
 	}
 	
 	private class Head[T <: TargetingManyLike[A, T, _], A](override val wrapped: T)
-		extends TargetingOne[Option[A]] with TargetingWrapper[T, Seq[A], Seq[Value], Option[A], Value, TargetingOne[Option[A]]]
+		extends TargetingOne[Option[A]]
+			with TargetingWrapper[T, Seq[A], Seq[Value], Seq[Seq[Value]], Option[A], Value, Option[Seq[Value]], TargetingOne[Option[A]]]
 	{
 		override protected def self: TargetingOne[Option[A]] = this
 		
 		override protected def wrapResult(result: Seq[A]): Option[A] = result.headOption
 		override protected def wrapValue(value: Seq[Value]): Value = value.headOption.getOrElse(Value.empty)
+		override protected def wrapValues(values: Seq[Seq[Value]]): Option[Seq[Value]] = values.headOption
 		
 		override protected def wrap(newTarget: T): TargetingOne[Option[A]] = new Head[T, A](newTarget)
 	}
@@ -42,7 +44,7 @@ object TargetingOne
   * @author Mikko Hilpinen
   * @since 19.05.2025, v1.21
   */
-trait TargetingOne[+A] extends Targeting[A, Value] with TargetingOneLike[A, TargetingOne[A]]
+trait TargetingOne[+A] extends Targeting[A, Value, Option[Seq[Value]]] with TargetingOneLike[A, TargetingOne[A]]
 {
 	override def mapResult[B](f: A => B) = TargetingOne.map(this)(f)
 }

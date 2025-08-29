@@ -13,7 +13,8 @@ import utopia.vault.sql.{Condition, OrderBy}
   * @since 15.05.2025, v1.21
   */
 trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +One]
-	extends TargetingManyLike[A, Repr, One] with TargetingWrapper[T, Seq[O], Seq[Value], Seq[A], Seq[Value], Repr]
+	extends TargetingManyLike[A, Repr, One]
+		with TargetingWrapper[T, Seq[O], Seq[Value], Seq[Seq[Value]], Seq[A], Seq[Value], Seq[Seq[Value]], Repr]
 {
 	// ABSTRACT ---------------------------
 	
@@ -33,6 +34,7 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +
 	
 	override protected def wrapResult(result: Seq[O]): Seq[A] = result.map(mapResult)
 	override protected def wrapValue(value: Seq[Value]): Seq[Value] = value
+	override protected def wrapValues(values: Seq[Seq[Value]]): Seq[Seq[Value]] = values
 	
 	override def apply(end: End, ordering: Option[OrderBy], filter: Option[Condition]) =
 		wrapUniqueTarget(wrapped(end, ordering, filter))

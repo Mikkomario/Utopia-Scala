@@ -11,7 +11,7 @@ object AccessColumns
 	/**
 	  * A type alias for column access points which target one row at a time
 	  */
-	type AccessColumn = AccessColumns[Value]
+	type AccessColumn = AccessColumns[Value, Option[Seq[Value]]]
 }
 
 /**
@@ -19,7 +19,7 @@ object AccessColumns
   * @author Mikko Hilpinen
   * @since 19.05.2025, v1.21
   */
-trait AccessColumns[+V] extends Indexed
+trait AccessColumns[+V, +Values] extends Indexed
 {
 	// ABSTRACT ---------------------------
 	
@@ -34,7 +34,7 @@ trait AccessColumns[+V] extends Indexed
 	  * @param connection Implicit DB connection
 	  * @return Data of the targeted columns from the targeted item(s)
 	  */
-	def apply(columns: Seq[Column])(implicit connection: Connection): Seq[V]
+	def apply(columns: Seq[Column])(implicit connection: Connection): Values
 	
 	/**
 	  * Updates the column value(s) of the targeted item(s)
@@ -69,7 +69,7 @@ trait AccessColumns[+V] extends Indexed
 	  * @param connection Implicit DB connection
 	  * @return Targeted columns of the targeted item(s)
 	  */
-	def apply(firstColumn: Column, secondColumn: Column, moreColumns: Column*)(implicit connection: Connection): Seq[V] =
+	def apply(firstColumn: Column, secondColumn: Column, moreColumns: Column*)(implicit connection: Connection): Values =
 		apply(Pair(firstColumn, secondColumn) ++ moreColumns)
 	
 	/**

@@ -167,7 +167,7 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	 *         Otherwise, yields None.
 	 */
 	def only(implicit connection: Connection) =
-		streamDistinct { iter => iter.nextOption.filterNot { _ => iter.hasNext } }
+		streamDistinct { iter => iter.nextOption().filterNot { _ => iter.hasNext } }
 	
 	/**
 	 * Maps column values to row ids.

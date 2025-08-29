@@ -13,8 +13,8 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingWrapper[T <: TargetingLike[O, OV, T], O, OV, +R, +RV, +Repr]
-	extends TargetingLike[R, RV, Repr] with AccessColumnsWrapper[OV, RV]
+trait TargetingWrapper[T <: TargetingLike[O, OV, OVV, T], O, OV, OVV, +R, +RV, +RVV, +Repr]
+	extends TargetingLike[R, RV, RVV, Repr] with AccessColumnsWrapper[OV, OVV, RV, RVV]
 {
 	// ABSTRACT ------------------------
 	

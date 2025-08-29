@@ -15,7 +15,7 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy}
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
-trait TargetingLike[+A, +V, +Repr] extends AccessColumns[V] with FilterableView[Repr]
+trait TargetingLike[+A, +V, +VV, +Repr] extends AccessColumns[V, VV] with FilterableView[Repr]
 {
 	// ABSTRACT ----------------------------
 	

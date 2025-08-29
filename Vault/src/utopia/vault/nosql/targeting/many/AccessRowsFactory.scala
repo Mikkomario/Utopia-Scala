@@ -1,7 +1,7 @@
 package utopia.vault.nosql.targeting.many
 
+import utopia.vault.model.template.Deprecates
 import utopia.vault.nosql.factory.row.FromRowFactory
-import utopia.vault.nosql.template.Deprecatable
 
 /**
   * A trait for facilitating many rows -wrapping access construction
@@ -33,5 +33,5 @@ trait AccessRowsFactory[+T[_]]
 	  * @tparam A Type of parsed items
 	  * @return Access to currently active (i.e. non-deprecated) items in the targeted factory's table(s)
 	  */
-	def active[A](factory: FromRowFactory[A] with Deprecatable) = wrap(AccessManyRows.active(factory))
+	def active[A](factory: FromRowFactory[A] with Deprecates) = wrap(AccessManyRows.active(factory))
 }

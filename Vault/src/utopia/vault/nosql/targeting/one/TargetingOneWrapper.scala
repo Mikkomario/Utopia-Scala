@@ -9,7 +9,8 @@ import utopia.vault.nosql.targeting.TargetingWrapper
   * @since 19.05.2025, v1.21
   */
 trait TargetingOneWrapper[T <: TargetingOneLike[O, T], O, +R, +Repr]
-	extends TargetingOneLike[R, Repr] with TargetingWrapper[T, O, Value, R, Value, Repr]
+	extends TargetingOneLike[R, Repr] with TargetingWrapper[T, O, Value, Option[Seq[Value]], R, Value, Option[Seq[Value]], Repr]
 {
 	override protected def wrapValue(value: Value): Value = value
+	override protected def wrapValues(values: Option[Seq[Value]]) = values
 }

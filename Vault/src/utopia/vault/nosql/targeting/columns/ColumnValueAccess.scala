@@ -36,7 +36,7 @@ trait ColumnValueAccess[V, +A, +C, -In]
 	/**
 	  * @return Used database access point
 	  */
-	protected def access: AccessColumns[V]
+	protected def access: AccessColumns[V, _]
 	/**
 	  * @return Targeted column
 	  */

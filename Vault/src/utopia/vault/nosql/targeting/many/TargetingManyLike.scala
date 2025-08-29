@@ -18,7 +18,7 @@ import utopia.vault.sql.{Condition, OrderBy}
   * @since 15.05.2025, v1.21
   */
 trait TargetingManyLike[+A, +Repr, +One]
-	extends TargetingLike[Seq[A], Seq[Value], Repr] with AccessManyColumns with ViewManyByIntIds[Repr]
+	extends TargetingLike[Seq[A], Seq[Value], Seq[Seq[Value]], Repr] with AccessManyColumns with ViewManyByIntIds[Repr]
 {
 	// ABSTRACT ------------------------
 	

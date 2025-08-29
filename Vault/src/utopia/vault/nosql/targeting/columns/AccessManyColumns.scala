@@ -12,7 +12,7 @@ import utopia.vault.model.immutable.Column
   * @author Mikko Hilpinen
   * @since 02.07.2025, v1.22
   */
-trait AccessManyColumns extends AccessColumns[Seq[Value]]
+trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 {
 	// ABSTRACT -------------------------------
 	
