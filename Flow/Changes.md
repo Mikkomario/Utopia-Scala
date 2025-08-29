@@ -64,6 +64,8 @@
   - Added `.prune()`, which removes keys for released values
     - This also affects **WeakCache** through inheritance
 ### Other changes
+- **XmlReader** now discards non-XML prefix from the streamed input, 
+  effectively handling the BOM issue, and other such malformed inputs
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
 - Optimized `IntSet.from(IterableOnce)` implementation

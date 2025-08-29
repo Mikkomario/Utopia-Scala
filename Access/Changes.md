@@ -1,5 +1,8 @@
 # Utopia Access - List of Changes
 
+## v1.6.1 (in development)
+A new build supporting changes in **Flow**
+
 ## v1.6 - 26.05.2025
 This update brings the **Access** enumeration classes up-to-date and adds models to support server-sent events.
 ### Breaking changes

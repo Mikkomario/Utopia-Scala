@@ -14,9 +14,7 @@ import scala.util.{Failure, Success}
   */
 object XmlReaderTest extends App
 {
-	
-	
-	val result = XmlReader.readFile("Flow/test/test.xml") { reader =>
+	val result = XmlReader.readFile("Flow/data/test-material/test.xml") { reader =>
 		reader.toNextElementWithName("PREPRINTYEAR")
 		reader.readElement().flatMap { _.value.int } match {
 			case Some(year) =>
@@ -42,6 +40,5 @@ object XmlReaderTest extends App
 	}
 	
 	println(result.get)
-	
 	assert(result.get.size > 10)
 }

@@ -80,5 +80,8 @@ object IteratorTest extends App
 	assert(grouped.next() == ('a', Single("ananas")))
 	assert(!grouped.hasNext)
 	
+	private val grouped2 = Vector(1 -> 1, 2 -> 2, 3 -> 3, 4 -> 4).iterator.groupMapToSeqs { _._1 } { _._2 }
+	assert(grouped2 == Map(1 -> Single(1), 2 -> Single(2), 3 -> Single(3), 4 -> Single(4)), grouped2)
+	
 	println("Success!")
 }

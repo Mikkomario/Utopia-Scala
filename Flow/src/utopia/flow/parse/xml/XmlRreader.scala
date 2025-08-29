@@ -22,12 +22,21 @@ object XmlReader
       * Creates a new open xml reader
       * @param stream Xml input stream
       * @param charset Encoding used in source (default = UTF-8)
+     * @param clean Whether to clean a possible non-XML prefix from the stream before parsing it
+     *              (default = false = assumes clean XML)
       */
-    def apply(stream: InputStream, charset: Charset = StandardCharsets.UTF_8) =
-        new XmlReader(new InputStreamReader(stream, charset))
-    
-    
-    // OTHER    --------------------
+    def apply(stream: InputStream, charset: Charset = StandardCharsets.UTF_8, clean: Boolean = false) = {
+	    val readStream = {
+		    if (clean)
+			    processNonXmlStreamPrefix(stream, charset).get
+		    else
+			    stream
+	    }
+        new XmlReader(new InputStreamReader(readStream, charset))
+    }
+	
+	
+	// OTHER    --------------------
     
     /**
       * Reads the contents of a stream using a reader and a function. Please note that the reader will be closed after
@@ -38,7 +47,6 @@ object XmlReader
       */
     def readWith[A](reader: Reader)(contentReader: XmlReader => Try[A]) =
         new XmlReader(reader).tryConsume(contentReader).flatten
-    
     /**
      * Reads the contents of a stream using the specified reader function
      * @param stream the target stream (will be closed afterwards)
@@ -47,9 +55,10 @@ object XmlReader
      * @return The data parsed from the stream (may fail)
      */
     def readStream[A](stream: InputStream, charset: Charset = StandardCharsets.UTF_8)(contentReader: XmlReader => Try[A]) =
-        readWith(new InputStreamReader(stream, charset))(contentReader)
-    
-    /**
+	    processNonXmlStreamPrefix(stream, charset).flatMap { stream =>
+		    readWith(new InputStreamReader(stream, charset))(contentReader)
+	    }
+	/**
       * Reads the contents of an xml file using the specified reader function
       * @param file the target file
       * @param charset the charset of the file contents
@@ -57,7 +66,7 @@ object XmlReader
       * @return The data parsed from the file (may fail)
       */
     def readFile[A](file: Path, charset: Charset = StandardCharsets.UTF_8)(contentReader: XmlReader => Try[A]) =
-        Try(new FileInputStream(file.toFile).consume { readStream(_, charset)(contentReader) }).flatten
+        Try { new FileInputStream(file.toFile).consume { readStream(_, charset)(contentReader) } }.flatten
     
     /**
       * Parses reader contents into an xml element
@@ -66,9 +75,8 @@ object XmlReader
       */
     def parseWith(reader: Reader) = readWith(reader) { xml =>
         val element = xml.readElement()
-        if (element.isDefined) Success(element.get) else Failure(new NoSuchElementException())
+        if (element.isDefined) Success(element.get) else Failure(new NoSuchElementException("No XML content found"))
     }
-    
     /**
      * Parses the contents of a stream into an xml element
      * @param stream the target stream
@@ -76,8 +84,9 @@ object XmlReader
      * @return The element parsed from the stream (may fail)
      */
     def parseStream(stream: InputStream, charset: Charset = StandardCharsets.UTF_8) =
-        parseWith(new InputStreamReader(stream, charset))
-    
+	    processNonXmlStreamPrefix(stream, charset).flatMap { stream =>
+		    parseWith(new InputStreamReader(stream, charset))
+	    }
     /**
       * Parses the contents of an xml file into an xml element
       * @param file the target file
@@ -85,8 +94,7 @@ object XmlReader
       * @return The element parsed from the file (may fail)
       */
     def parseFile(file: Path, charset: Charset = StandardCharsets.UTF_8) =
-        Try(new FileInputStream(file.toFile).consume { parseStream(_, charset) }).flatten
-    
+        Try { new FileInputStream(file.toFile).consume { parseStream(_, charset) } }.flatten
     /**
      * Parses an xml element from a string
      * @param xml A string representing an xml element
@@ -97,6 +105,51 @@ object XmlReader
         Try { new BufferedInputStream(new ByteArrayInputStream(xml.getBytes(charset))) }
             .flatMap { _.consume { parseStream(_, charset) } }
     }
+	
+	// Processes the stream, skipping possible non-XML content prefix
+	private def processNonXmlStreamPrefix(stream: InputStream, charset: => Charset) = {
+		Try {
+			// Prepares a wrapper stream for processing a potential prefix
+			val pin = new PushbackInputStream(stream, 128)
+			// Collects the discarded data to a separate stream
+			val discardedOut = new ByteArrayOutputStream()
+			
+			// Reads up 10 128 bytes from the input, looking for '<'
+			var readCount = 0
+			var ready = false
+			var endOfStream = false
+			do {
+				val b = pin.read()
+				readCount += 1
+				// Case: End-of-stream => Terminates
+				if (b == -1)
+					endOfStream = true
+				// Case: Found what's likely the XML beginning => Terminates
+				else if (b == '<') {
+					pin.unread(b)
+					ready = true
+				}
+				// Case: Other content => Collects it
+				else
+					discardedOut.write(b)
+				
+			} while (!endOfStream && !ready && readCount < 128)
+			
+			// Case: Found likely XMl content => Success
+			if (ready)
+				Success(pin)
+			// Case: Failed to find XML content => Generates an error including the read content
+			else {
+				val read = new String(discardedOut.toByteArray, charset)
+				if (endOfStream)
+					Failure(new IllegalArgumentException(
+						s"No XML content was present in the specified input stream. Read: \"$read\""))
+				else
+					Failure(new IllegalArgumentException(
+						s"No XML could be found from the first 128 input bytes. Read: \"$read\""))
+			}
+		}.flatten
+	}
     
     /**
       * Parses a value from a string

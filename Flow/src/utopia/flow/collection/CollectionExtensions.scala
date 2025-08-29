@@ -794,7 +794,7 @@ object CollectionExtensions
 		 * @return A map where keys are the results of 'toKey'
 		 *         and values are the results of 'toValue' for all items which matched that key
 		 */
-		def groupMapUsing[K, V, To](makeBuilder: mutable.Builder[V, To])(toKey: A => K)(toValue: A => V) = {
+		def groupMapUsing[K, V, To](makeBuilder: => mutable.Builder[V, To])(toKey: A => K)(toValue: A => V) = {
 			val builder = mutable.Map.empty[K, mutable.Builder[V, To]]
 			i.iterator.foreach { a =>
 				val key = toKey(a)
