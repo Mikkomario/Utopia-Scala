@@ -17,7 +17,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
-import utopia.scribe.api.app.console.LogReviewCommands.MoreQueue
+import utopia.scribe.api.app.console.LogReviewCommands.{MoreQueue, StatusRow}
 import utopia.scribe.api.database.ScribeAccessExtensions._
 import utopia.scribe.api.database.access.logging.error.AccessErrorRecord
 import utopia.scribe.api.database.access.logging.issue.occurrence.AccessIssueOccurrences
@@ -44,11 +44,14 @@ object LogReviewCommands
 {
 	// NESTED   ------------------------------
 	
+	private case class StatusRow(issue: ManagedIssue, newVariantCount: Int, occurrenceCount: Int,
+	                             lastOccurrence: Instant)
+	
 	private object MoreQueue
 	{
 		lazy val empty = apply()
 	}
-	private case class MoreQueue(status: Seq[(ManagedIssue, Int)] = Empty, list: Seq[ManagedIssueInstances] = Empty,
+	private case class MoreQueue(status: Seq[StatusRow] = Empty, list: Seq[ManagedIssueInstances] = Empty,
 	                             occurrences: Seq[IssueOccurrenceData] = Empty, timeThreshold: Option[Instant] = None)
 	{
 		lazy val size = status.size max list.size max occurrences.size
@@ -112,10 +115,10 @@ class LogReviewCommands(implicit log: Logger)
 				}
 				println(s"Looking up status since ${ (Now - timeThreshold).description }")
 				
-				// Pulls active issues
-				val recentIssueIds = AccessIssueOccurrences.since(timeThreshold, includePartialRanges = true)
-					.issueVariants.issueIds.toIntSet
-				val recentIssues = AccessIssues.managed(recentIssueIds).pull
+				// Pulls active issues (number of occurrences & last occurrence time)
+				val issueStatistics = AccessIssueOccurrences.since(timeThreshold, includePartialRanges = true)
+					.joinIssueVariants.totalCountAndLatestTimePerIssue
+				val recentIssues = AccessIssues.managed(issueStatistics.keys).pull
 				
 				// Looks version information for conditionally silenced issues
 				val versionRequiredForIssueIds = recentIssues.view.filter { _.isConditionallySilenced }
@@ -146,8 +149,11 @@ class LogReviewCommands(implicit log: Logger)
 						Ordering.by { _.created >= timeThreshold },
 						Ordering.by { i => newVariantCounts(i.id) > 0 },
 						Ordering.by { _.severity },
-						Ordering.by { _.created })
-						.map { i => i -> newVariantCounts(i.id) }
+						Ordering.by { i => issueStatistics(i.id)._2 })
+						.map { i =>
+							val (occurrences, lastOccurrence) = issueStatistics(i.id)
+							StatusRow(i, newVariantCounts(i.id), occurrences, lastOccurrence)
+						}
 					println()
 					printStatusTableFor(sortedIssues.take(20), timeThreshold)
 					
@@ -160,7 +166,7 @@ class LogReviewCommands(implicit log: Logger)
 						_._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString))
 					
 					queuedIssuesP.value =
-						sortedIssues.map[Either[Int, ManagedIssue]] { case (issue, _) => Right(issue) } -> 0
+						sortedIssues.map[Either[Int, ManagedIssue]] { row => Right(row.issue) } -> 0
 					println("\nFor more information concerning these issues, use 'see next' or 'see <issue id>'")
 					
 					moreP.value = MoreQueue(status = sortedIssues, timeThreshold = Some(timeThreshold)) -> 20
@@ -566,22 +572,22 @@ class LogReviewCommands(implicit log: Logger)
 		queuedCommentsP.clear()
 	}
 	
-	private def printStatusTableFor(issues: Seq[(ManagedIssue, Int)], timeThreshold: Instant = recent) =
-		println(StringUtils.asciiTableFrom[(ManagedIssue, Int)](issues,
-			Vector("ID", "Severity", "Context", "Appeared", "Notice"),
-			_._1.id.toString, _._1.severity.toString,
-			_._1.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
-			i => (Now - i._1.created).description,
-			{ case (i: ManagedIssue, newVariantsCount: Int) =>
-				if (i.hasUnreadNotifications)
+	private def printStatusTableFor(issues: Seq[StatusRow], timeThreshold: Instant = recent) =
+		println(StringUtils.asciiTableFrom[StatusRow](issues,
+			Vector("ID", "Severity", "Context", "When", "Count", "Notice"),
+			_.issue.id.toString, _.issue.severity.toString,
+			_.issue.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
+			i => timeDescription(i.lastOccurrence), _.occurrenceCount.toString,
+			{ row =>
+				if (row.issue.hasUnreadNotifications)
 					"!!!"
-				else if (i.created >= timeThreshold)
+				else if (row.issue.created >= timeThreshold)
 					"NEW"
 				else {
-					if (newVariantsCount == 1)
+					if (row.newVariantCount == 1)
 						"New variant"
-					else if (newVariantsCount > 0)
-						s"$newVariantsCount new variants"
+					else if (row.newVariantCount > 0)
+						s"${ row.newVariantCount } new variants"
 					else
 						""
 				}

@@ -2,9 +2,12 @@ package utopia.scribe.api.database.access.logging.issue.occurrence
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.scribe.api.database.storable.logging.IssueOccurrenceDbModel
+import utopia.flow.operator.enumeration.End.Last
+import utopia.flow.time.TimeExtensions._
+import utopia.scribe.api.database.storable.logging.{IssueOccurrenceDbModel, IssueVariantDbModel}
 import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
@@ -55,10 +58,38 @@ case class AccessIssueOccurrenceValues(access: AccessManyColumns) extends Access
 	
 	// COMPUTED -------------------------
 	
+	private def variantModel = IssueVariantDbModel
+	
 	/**
 	  * @param connection Implicit DB connection
 	  * @return Total number of accessible issue occurrences
 	  */
 	def totalCount(implicit connection: Connection) = access.streamColumn(model.count) { _.map { _.getInt }.sum }
+	
+	/**
+	 * Counts the number of occurrences per issue.
+	 * Assumes that issue variant has been joined.
+	 * @param connection Implicit DB connection
+	 * @return A map where keys are issue IDs and values are total numbers of accessible occurrences of that issue
+	 */
+	def totalCountPerIssue(implicit connection: Connection) =
+		access
+			.streamColumns(variantModel.issueId, model.count) {
+				_.groupMapReduce { _.head.getInt } { _(1).getInt } { _ + _ } }
+			.withDefaultValue(0)
+	/**
+	 * Counts the number of occurrences per issue, also checking the timestamp of the latest occurrence
+	 * Assumes that issue variant has been joined.
+	 * @param connection Implicit DB connection
+	 * @return A map where keys are issue IDs and values are:
+	 *              1. Total numbers of accessible occurrences of that issue
+	 *              1. Timestamp of the last occurrence of that issue
+	 */
+	def totalCountAndLatestTimePerIssue(implicit connection: Connection) =
+		access.streamColumns(variantModel.issueId, model.count, model.latest) {
+			_.groupMapReduce { _.head.getInt } { values => values(1).getInt -> values(2).getInstant } {
+				case ((count, t1), (more, t2)) => (count + more) -> (t1 max t2)
+			}
+		}
 }
 
