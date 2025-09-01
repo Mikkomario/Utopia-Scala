@@ -73,7 +73,7 @@ class LogReviewCommands(implicit log: Logger)
 	
 	private lazy val otherYearDateFormat = DateTimeFormatter.ofPattern("dd.MM.YYYY")
 	private lazy val otherMonthDateFormat = DateTimeFormatter.ofPattern("dd.MM")
-	private lazy val otherDayDateFormat = DateTimeFormatter.ofPattern("dd HH:mm")
+	private lazy val otherDayDateFormat = DateTimeFormatter.ofPattern("dd. HH:mm")
 	private lazy val recentDayDateFormat = DateTimeFormatter.ofPattern("HH:mm")
 	private lazy val sameDayDateFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 	
