@@ -4,6 +4,8 @@ import utopia.echo.model.comfyui.workflow.OutputRef
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 
+import scala.language.implicitConversions
+
 object WorkflowNode
 {
 	// IMPLICIT ------------------------

@@ -2,6 +2,7 @@ package utopia.echo.model.comfyui
 
 import utopia.flow.view.immutable.View
 
+import scala.language.implicitConversions
 import scala.util.Random
 
 object Seed
