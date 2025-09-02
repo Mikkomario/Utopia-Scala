@@ -16,6 +16,13 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
   * @author Mikko Hilpinen
   * @since 07.04.2025, v1.3
   */
+// TODO: Add support for "metadata": https://platform.openai.com/docs/api-reference/responses/create#responses_create-metadata
+// TODO: Add "background" mode support. See: https://platform.openai.com/docs/guides/background
+// TODO: When applicable, add "include" property: https://platform.openai.com/docs/api-reference/responses/create#responses_create-include
+// TODO: Add reasoning effort configuration: https://platform.openai.com/docs/api-reference/responses/create#responses_create-reasoning
+// TODO: Add support for "service_tier": https://platform.openai.com/docs/api-reference/responses/create#responses_create-service_tier
+// TODO: May add support for "tool_choice" to force the model to use tools: https://platform.openai.com/docs/api-reference/responses/create#responses_create-tool_choice
+// TODO: May add support for truncation: https://platform.openai.com/docs/api-reference/responses/create#responses_create-truncation
 trait OpenAiChatRequest[+A] extends ApiRequest[A] with HasModelSettings
 {
 	// ABSTRACT -------------------------
@@ -23,6 +30,9 @@ trait OpenAiChatRequest[+A] extends ApiRequest[A] with HasModelSettings
 	/**
 	  * @return Parameters that specify the details of this request
 	  */
+	// TODO: Add support for "max_tool_calls" -parameter:
+	//  https://platform.openai.com/docs/api-reference/responses/create#responses_create-max_tool_calls
+	// TODO: Also add support for "parallel_tool_calls": https://platform.openai.com/docs/api-reference/responses/create#responses_create-parallel_tool_calls
 	def params: ChatParams
 	/**
 	  * @return Whether to request the response as a stream (true) or as a single buffered value (false).

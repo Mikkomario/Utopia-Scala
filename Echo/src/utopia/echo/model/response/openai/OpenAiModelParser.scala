@@ -26,8 +26,8 @@ object OpenAiModelParser
 	  * Parses status value from an Open AI response model.
 	  * Supports the following status values:
 	  *     - "completed" => Alive
-	  *     - "incomplete" | "failed" => Dead
-	  *     - "in_progress" => Flux
+	  *     - "incomplete" | "failed" | "cancelled" => Dead
+	  *     - "in_progress" | "queued" => Flux
 	  *
 	  * Defaults to Alive
 	  *
@@ -35,8 +35,8 @@ object OpenAiModelParser
 	  * @return Interpreted status.
 	  */
 	def parseStatusFrom(model: AnyModel): SchrodingerState = model("status").getString match {
-		case "incomplete" | "failed" => Dead
-		case "in_progress" => Flux
+		case "incomplete" | "failed" | "cancelled" => Dead
+		case "in_progress" | "queued" => Flux
 		case _ => Alive
 	}
 	/**

@@ -4,6 +4,7 @@ import utopia.echo.model.ChatMessage
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.echo.model.request.ollama.chat.tool.Tool
+import utopia.echo.model.request.openai.BufferedOpenAiChatRequest
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.{Mutate, UncertainBoolean}
@@ -41,6 +42,10 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	  *         The streaming option must be specified before this request may be sent out.
 	  */
 	def toRequest = ChatRequest(this)
+	/**
+	 * @return A buffered Open AI request based on these parameters.
+	 */
+	def toOpenAiRequest = BufferedOpenAiChatRequest(this)
 	
 	
 	// IMPLEMENTED  --------------------------

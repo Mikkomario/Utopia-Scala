@@ -6,7 +6,6 @@ import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
-import utopia.echo.controller.Chat.noThinkFlag
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.{Assistant, System}
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
@@ -211,6 +210,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	  */
 	lazy val queueSizePointer = _queueSizePointer.readOnly
 	
+	// TODO: Needs to be adjusted to support Open AI
 	private val _lastResultPointer = EventfulPointer[Try[ReplyMessage]](Success(StreamedReplyMessage.empty()))
 	/**
 	  * Pointer that contains the last reply message that was successfully received.
@@ -961,6 +961,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	// Assumes that messages is not empty
 	// 'replyIncoming' is called when a streamed reply is acquired. Not called if the reply is buffered.
 	// Final call will be either 'replyCompleted' (on success) or 'handleFailure' (on failure)
+	// TODO: Add Open AI support
 	private def _push(messages: Seq[ChatMessage], extraTools: Seq[Tool], allowStreaming: Boolean)
 	                 (replyIncoming: ReplyMessage => Unit)(replyCompleted: BufferedReplyMessage => Unit)
 	                 (handleFailure: Throwable => Unit): Unit =
@@ -1074,6 +1075,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 									// Case: Tool-calls => Applies the tools and forms a new request
 									else {
 										val toolMessages = reply.toolCalls.map { call =>
+											// TODO: Add OpenAI support: https://platform.openai.com/docs/guides/function-calling
 											val text = tools.find { _.name ~== call.name } match {
 												case Some(tool) => tool(call.args)
 												case None => s"\"${ call.name }\" doesn't match any of the available tools"

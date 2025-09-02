@@ -26,16 +26,20 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 	override def apply(model: ModelLike[Property]): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
 		model("usage").tryModel.flatMap(OpenAITokenUsageStatistics.apply).flatMap { tokenUsage =>
 			model("output").getVector.tryMap { _.tryModel }.flatMap { outputModels =>
-				val outputByType = outputModels.zipWithIndex.groupBy { _._1("type").getString }.withDefaultValue(Empty)
+				val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex
+					.groupBy { _._1("type").getString }.withDefaultValue(Empty)
 				OpenAiMessage(outputByType).flatMap { messages =>
-					OpenAiFunctionToolCall(outputByType).flatMap { functionCalls =>
-						WebSearchToolCall(outputByType).flatMap { webSearchCalls =>
-							FileSearchToolCall(outputByType).map { fileSearchCalls =>
-								apply(model("id").getString, messages, functionCalls, webSearchCalls, fileSearchCalls,
-									model("metadata").getModel, OpenAiModelParser.parseStatusFrom(model),
-									model("incomplete_details")("reason").getString,
-									model("error").model.map(OpenAiError.parseFrom), tokenUsage,
-									model("created_at").getInstant)
+					outputByType("reasoning").tryMap { case (model, _) => Reasoning(model) }.flatMap { reasoning =>
+						OpenAiFunctionToolCall(outputByType).flatMap { functionCalls =>
+							WebSearchToolCall(outputByType).flatMap { webSearchCalls =>
+								FileSearchToolCall(outputByType).map { fileSearchCalls =>
+									apply(model("id").getString, tokenUsage, messages, reasoning,
+										functionCalls, webSearchCalls, fileSearchCalls,
+										model("metadata").getModel, OpenAiModelParser.parseStatusFrom(model),
+										model("incomplete_details")("reason").getString,
+										model("error").model.map(OpenAiError.parseFrom),
+										model("created_at").getInstant)
+								}
 							}
 						}
 					}
@@ -47,16 +51,30 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 
 /**
   * Represents a complete response received from the Open AI API
-  * @author Mikko Hilpinen
+  * @param id Unique identifier for this Response.
+ * @param tokenUsage Information about the token-usage throughout this response
+ * @param messages Generated (assistant) messages
+ * @param functionCalls Function calls requested by the LLM
+ * @param webSearchCalls Calls made to the Open AI web search function
+ * @param fileSearchCalls Open AI file-search tool calls made by the LLM
+ * @param metadata Open form metadata included from other requests
+ * @param state State of this response, where:
+ *                  - Flux = In progress
+ *                  - Alive = Completed successfully
+ *                  - Dead = Left incomplete (i.e. rejected) or failed
+ * @param whyIncomplete Reason given by the API, why this response was left incomplete, if applicable.
+ *                      May be empty (even if incomplete).
+ * @param error Error linked to this failure response, if available / applicable
+ * @param created Time when this response was created (server-side)
+ * @author Mikko Hilpinen
   * @since 04.04.2025, v1.3
   */
-// TODO: Document
 // TODO: Add support for "computer use" tool-calls
 // TODO: Add details about the request
-case class OpenAiResponse(id: String, messages: Seq[OpenAiMessage] = Empty,
+case class OpenAiResponse(id: String, tokenUsage: OpenAITokenUsageStatistics, messages: Seq[OpenAiMessage] = Empty,
+                          reasoning: Seq[Reasoning] = Empty,
                           functionCalls: Seq[OpenAiFunctionToolCall] = Empty,
                           webSearchCalls: Seq[WebSearchToolCall] = Empty,
                           fileSearchCalls: Seq[FileSearchToolCall] = Empty, metadata: Model = Model.empty,
                           state: SchrodingerState = Alive,
-                          whyIncomplete: String = "", error: Option[OpenAiError] = None,
-                          tokenUsage: OpenAITokenUsageStatistics, created: Instant = Now)
+                          whyIncomplete: String = "", error: Option[OpenAiError] = None, created: Instant = Now)

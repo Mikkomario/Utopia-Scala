@@ -40,6 +40,7 @@ object ResponseStatistics
   * @param promptTokenCount Amount of tokens used in the prompt
   * @param responseTokenCount Amount of tokens used in the response
   */
+// TODO: Add a general statistics class that applies to both Ollama and Open AI
 case class ResponseStatistics(context: Value, duration: GenerationDurations,
                               promptTokenCount: Int, responseTokenCount: Int)
 	extends SelfCombinable[ResponseStatistics] with LinearScalable[ResponseStatistics]

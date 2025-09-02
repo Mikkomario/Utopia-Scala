@@ -34,6 +34,7 @@ object BufferedOllamaResponseLike
  * @author Mikko Hilpinen
  * @since 12.01.2025, v1.2
  */
+// TODO: Add a version that also supports Open AI
 trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 {
 	// ABSTRACT ------------------------

@@ -15,8 +15,11 @@ object Reasoning extends OpenAiModelParser[Reasoning] with FromModelFactoryWithS
 	
 	// IMPLEMENTED  -----------------------
 	
-	override protected def fromValidatedModel(model: Model): Reasoning =
-		apply(model("id").getString, model("summary").getVector.map { _.getString }.mkString, parseStatusFrom(model))
+	override protected def fromValidatedModel(model: Model): Reasoning = {
+		val summary = model("summary").getVector.iterator.map { _("text") }.mkString
+		val text = model("content").getVector.iterator.map { _("text") }.mkString
+		apply(model("id").getString, summary, text, model("encrypted_content").getString, parseStatusFrom(model))
+	}
 }
 
 /**
@@ -26,4 +29,4 @@ object Reasoning extends OpenAiModelParser[Reasoning] with FromModelFactoryWithS
   * @param id Id of this reasoning entry
   * @param text Reasoning text content
   */
-case class Reasoning(id: String, text: String, state: SchrodingerState)
+case class Reasoning(id: String, summary: String, text: String, encrypted: String, state: SchrodingerState)
