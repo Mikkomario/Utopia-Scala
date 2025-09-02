@@ -26,6 +26,14 @@ trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 	def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value
 	
 	/**
+	 * @param column Column whose (non-NULL) values are counted
+	 * @param distinct Whether to only count distinct column values (default = false = count number of non-NULL entries)
+	 * @param connection Implicit DB connection
+	 * @return The number of accessible values of that column
+	 */
+	def count(column: Column, distinct: Boolean = false)(implicit connection: Connection): Int
+	
+	/**
 	  * Accesses values of a single column in a streamed fashion
 	  * @param column Targeted column
 	  * @param distinct Whether to only target distinct column values (default = false)

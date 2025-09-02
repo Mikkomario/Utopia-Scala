@@ -170,6 +170,17 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 		streamDistinct { iter => iter.nextOption().filterNot { _ => iter.hasNext } }
 	
 	/**
+	 * @param connection Implicit DB connection
+	 * @return Number of accessible values of this column
+	 */
+	def size(implicit connection: Connection) = access.count(column)
+	/**
+	 * @param connection Implicit DB connection
+	 * @return Number of accessible distinct values of this column
+	 */
+	def distinctSize(implicit connection: Connection) = access.count(column, distinct = true)
+	
+	/**
 	 * Maps column values to row ids.
 	 * Assumes that each row contains a non-empty index, and that 'fromValue' yields 0-1 items.
 	  * @param connection Implicit DB connection

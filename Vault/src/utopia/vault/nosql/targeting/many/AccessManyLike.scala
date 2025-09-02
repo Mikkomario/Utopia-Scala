@@ -97,6 +97,9 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 		}
 	}
 	
+	override def count(column: Column, distinct: Boolean)(implicit connection: Connection) =
+		pullWith(Count(target, column, distinct), 0, ordering = None) { _.rowIntValuesIterator.sum }
+	
 	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =
 		pullWith(Select.distinctIf(target, column, distinct),

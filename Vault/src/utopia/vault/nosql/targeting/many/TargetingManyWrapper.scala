@@ -42,6 +42,9 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +
 	override def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value =
 		wrapped(column, extreme)
 	
+	override def count(column: Column, distinct: Boolean)(implicit connection: Connection) =
+		wrapped.count(column, distinct)
+	
 	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =
 		wrapped.streamColumn(column, distinct)(f)
