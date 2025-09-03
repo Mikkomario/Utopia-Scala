@@ -3,7 +3,7 @@ package utopia.echo.model.request.ollama.chat
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.echo.controller.parser.StreamedReplyMessageResponseParser
-import utopia.echo.model.response.ollama.chat.StreamedReplyMessage
+import utopia.echo.model.response.ollama.chat.StreamedOllamaReply
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 case class StreamedChatRequest(params: ChatParams)
                               (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
-	extends ChatRequest[StreamedReplyMessage]
+	extends ChatRequest[StreamedOllamaReply]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -28,6 +28,6 @@ case class StreamedChatRequest(params: ChatParams)
 	
 	override def stream: Boolean = true
 	
-	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedReplyMessage]] =
+	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedOllamaReply]] =
 		prepared.send(responseParser)
 }

@@ -1,6 +1,6 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.ollama.{OllamaResponseLike, ResponseStatistics}
+import utopia.echo.model.response.ollama.{OllamaResponseLike, OllamaResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.view.mutable.async.Volatile
@@ -18,7 +18,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedResponseParser[A, ResponseStatistics]
+trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedResponseParser[A, OllamaResponseStatistics]
 {
 	// ABSTRACT ---------------------------
 	
@@ -38,12 +38,12 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 	  */
 	protected def responseFrom(textPointer: Changing[String], newTextPointer: Changing[String],
 	                           lastUpdatedPointer: Changing[Instant],
-	                           statisticsFuture: Future[Try[ResponseStatistics]]): A
+	                           statisticsFuture: Future[Try[OllamaResponseStatistics]]): A
 	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override protected def newParser: SingleStreamedResponseParser[A, ResponseStatistics] =
+	override protected def newParser: SingleStreamedResponseParser[A, OllamaResponseStatistics] =
 		new SingleOllamaResponseParser
 	
 	override protected def failureMessageFrom(response: A): String = response.text
@@ -51,7 +51,7 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 	
 	// NESTED   ------------------------
 	
-	private class SingleOllamaResponseParser extends SingleStreamedResponseParser[A, ResponseStatistics]
+	private class SingleOllamaResponseParser extends SingleStreamedResponseParser[A, OllamaResponseStatistics]
 	{
 		// ATTRIBUTES   ----------------
 		
@@ -78,8 +78,8 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 		}
 		
 		// Converts the last read model into response statistics, if possible
-		override def processFinalParseResult(finalResponse: Try[Model]): Try[ResponseStatistics] =
-			finalResponse.map(ResponseStatistics.fromOllamaResponse)
+		override def processFinalParseResult(finalResponse: Try[Model]): Try[OllamaResponseStatistics] =
+			finalResponse.map(OllamaResponseStatistics.fromOllamaResponse)
 		
 		override def finish(): Unit = {
 			// Locks the pointers - There shall not be any updates afterwards
@@ -88,7 +88,7 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 			lastUpdatedPointer.lock()
 		}
 		
-		override def responseFrom(future: Future[Try[ResponseStatistics]]): A =
+		override def responseFrom(future: Future[Try[OllamaResponseStatistics]]): A =
 			StreamedOllamaResponseParser.this.responseFrom(textPointer.readOnly, newTextPointer.readOnly,
 				lastUpdatedPointer.readOnly, future)
 	}

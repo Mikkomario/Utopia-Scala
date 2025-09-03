@@ -3,21 +3,21 @@ package utopia.echo.model.response.ollama.chat
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.Assistant
-import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, ResponseStatistics}
+import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, OllamaResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.view.template.Extender
 
 import java.time.Instant
 
-object BufferedReplyMessage
+object BufferedOllamaReply
 {
 	// ATTRIBUTES   ----------------------
 	
 	/**
 	  * An empty reply message
 	  */
-	lazy val empty = apply(Assistant(""), ResponseStatistics.empty)
+	lazy val empty = apply(Assistant(""), OllamaResponseStatistics.empty)
 	
 	
 	// OTHER    --------------------------
@@ -32,7 +32,7 @@ object BufferedReplyMessage
 	def fromOllamaResponse(responseModel: Model) = {
 		// TODO: Add logging or return failure for invalid messages
 		apply(ChatMessage.parseFrom(responseModel("message").getModel, Assistant),
-			ResponseStatistics.fromOllamaResponse(responseModel))
+			OllamaResponseStatistics.fromOllamaResponse(responseModel))
 	}
 }
 
@@ -44,11 +44,11 @@ object BufferedReplyMessage
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-case class BufferedReplyMessage(message: ChatMessage, statistics: ResponseStatistics, lastUpdated: Instant = Now)
-	extends Extender[ChatMessage] with BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedReplyMessage]
-		with ReplyMessage
+case class BufferedOllamaReply(message: ChatMessage, statistics: OllamaResponseStatistics, lastUpdated: Instant = Now)
+	extends Extender[ChatMessage] with BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedOllamaReply]
+		with OllamaReply
 {
-	override def self: BufferedReplyMessage = this
+	override def self: BufferedOllamaReply = this
 	override def wrapped: ChatMessage = message
 	
 	override def text: String = message.text

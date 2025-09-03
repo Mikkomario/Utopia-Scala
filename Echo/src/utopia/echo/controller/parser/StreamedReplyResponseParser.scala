@@ -1,6 +1,6 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.model.response.ollama.OllamaResponseStatistics
 import utopia.echo.model.response.ollama.generate.StreamedReply
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
@@ -30,6 +30,6 @@ class StreamedReplyResponseParser(implicit override val exc: ExecutionContext, o
 	
 	override protected def responseFrom(textPointer: Changing[String], newTextPointer: Changing[String],
 	                                    lastUpdatedPointer: Changing[Instant],
-	                                    statisticsFuture: Future[Try[ResponseStatistics]]): StreamedReply =
+	                                    statisticsFuture: Future[Try[OllamaResponseStatistics]]): StreamedReply =
 		StreamedReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture)
 }

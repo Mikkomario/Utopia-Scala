@@ -1,12 +1,13 @@
 package utopia.echo.model.response.ollama.generate
 
-import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, ResponseStatistics}
+import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, OllamaResponseStatistics}
 import utopia.echo.util.ReplyParseUtils
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 
 import java.time.Instant
 
+@deprecated("Replaced with BufferedOllamaResponse", "v1.4")
 object BufferedReply
 {
 	// COMPUTED -----------------------
@@ -14,7 +15,7 @@ object BufferedReply
 	/**
 	  * @return An empty reply
 	  */
-	def empty = apply("", "", ResponseStatistics.empty, Now)
+	def empty = apply("", "", OllamaResponseStatistics.empty, Now)
 	
 	
 	// OTHER    -----------------------
@@ -28,7 +29,7 @@ object BufferedReply
 	def fromOllamaResponse(responseModel: Model) = {
 		val (text, think) = ReplyParseUtils.separateThinkFrom(responseModel("response").getString)
 		apply(text, think,
-			ResponseStatistics.fromOllamaResponse(responseModel), responseModel("created_at").getInstant)
+			OllamaResponseStatistics.fromOllamaResponse(responseModel), responseModel("created_at").getInstant)
 	}
 }
 
@@ -41,7 +42,8 @@ object BufferedReply
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   */
-case class BufferedReply(text: String, thoughts: String, statistics: ResponseStatistics, lastUpdated: Instant = Now)
+@deprecated("Replaced with BufferedOllamaResponse", "v1.4")
+case class BufferedReply(text: String, thoughts: String, statistics: OllamaResponseStatistics, lastUpdated: Instant = Now)
 	extends BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedReply] with Reply
 {
 	// IMPLEMENTED  -----------------------

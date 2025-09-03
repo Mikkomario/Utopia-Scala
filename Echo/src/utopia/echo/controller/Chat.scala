@@ -13,8 +13,8 @@ import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.chat.ChatParams
 import utopia.echo.model.request.ollama.chat.tool.{Tool, ToolFactory}
-import utopia.echo.model.response.ollama.ResponseStatistics
-import utopia.echo.model.response.ollama.chat.{BufferedReplyMessage, ReplyMessage, StreamedReplyMessage}
+import utopia.echo.model.response.ollama.OllamaResponseStatistics
+import utopia.echo.model.response.ollama.chat.{BufferedOllamaReply, OllamaReply, StreamedOllamaReply}
 import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
@@ -211,7 +211,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	lazy val queueSizePointer = _queueSizePointer.readOnly
 	
 	// TODO: Needs to be adjusted to support Open AI
-	private val _lastResultPointer = EventfulPointer[Try[ReplyMessage]](Success(StreamedReplyMessage.empty()))
+	private val _lastResultPointer = EventfulPointer[Try[OllamaReply]](Success(StreamedOllamaReply.empty()))
 	/**
 	  * Pointer that contains the last reply message that was successfully received.
 	  * The reply may be incomplete / streaming.
@@ -227,7 +227,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 		val initialResult = lastResult.flatMap { message =>
 			message.future.currentResult match {
 				case Some(current) => current.flatten
-				case None => Success(BufferedReplyMessage.empty)
+				case None => Success(BufferedOllamaReply.empty)
 			}
 		}
 		_lastResultPointer.mapToFuture(initialResult) {
@@ -741,25 +741,25 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	def push(message: String, images: Seq[String] = Empty, extraTools: Seq[Tool] = Empty, noStreaming: Boolean = false) =
 	{
 		// Prepares Schrödinger state & result pointer
-		val statePointer = LockablePointer[(SchrodingerState, Try[BufferedReplyMessage])](
+		val statePointer = LockablePointer[(SchrodingerState, Try[BufferedOllamaReply])](
 			Flux(lastResult.isSuccess) -> Failure(new IllegalArgumentException("No response has been acquired yet")))
 		
 		// Prepares the text, newText & lastUpdated pointers
 		// These depend on whether streaming or tools are used
-		val statisticsPromise = Promise[Try[ResponseStatistics]]()
+		val statisticsPromise = Promise[Try[OllamaResponseStatistics]]()
 		val (textPointer, newTextPointer, lastUpdatedPointer, replyIncoming, replyCompleted, handleFailure) = {
 			// Case: Tools are used or streaming is disabled => Prepares to receive only the final reply
 			if (extraTools.nonEmpty || this.usesTools) {
 				val textPointer = new MutableOnce("")
 				val lastUpdatedPointer = new MutableOnce(Now.toInstant)
 				
-				def replyCompleted(reply: BufferedReplyMessage) = {
+				def replyCompleted(reply: BufferedOllamaReply) = {
 					textPointer.value = reply.text
 					lastUpdatedPointer.value = reply.lastUpdated
 				}
 				
 				(textPointer, textPointer, lastUpdatedPointer,
-					None, Some[BufferedReplyMessage => Unit](replyCompleted), None)
+					None, Some[BufferedOllamaReply => Unit](replyCompleted), None)
 			}
 			// Case: Streaming is enabled
 			//       => Prepares to receive the text incrementally, but only expects to receive a single response
@@ -768,7 +768,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 				val newTextPointer = OnceFlatteningPointer("")
 				val lastUpdatedPointer = OnceFlatteningPointer(Now.toInstant)
 				
-				def replyIncoming(reply: ReplyMessage) = {
+				def replyIncoming(reply: OllamaReply) = {
 					textPointer.complete(reply.textPointer)
 					newTextPointer.complete(reply.newTextPointer)
 					lastUpdatedPointer.complete(reply.lastUpdatedPointer)
@@ -780,7 +780,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 				}
 				
 				(textPointer, newTextPointer, lastUpdatedPointer,
-					Some[ReplyMessage => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
+					Some[OllamaReply => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
 			}
 		}
 		
@@ -804,7 +804,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 		}
 		
 		// Returns a Schrödinger
-		val reply = StreamedReplyMessage(textPointer, newTextPointer, lastUpdatedPointer, statisticsPromise.future)
+		val reply = StreamedOllamaReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsPromise.future)
 		Schrodinger.wrap(statePointer.strongMap { case (state, finalReply) => (reply, finalReply, state) })
 	}
 	
@@ -963,7 +963,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 	// Final call will be either 'replyCompleted' (on success) or 'handleFailure' (on failure)
 	// TODO: Add Open AI support
 	private def _push(messages: Seq[ChatMessage], extraTools: Seq[Tool], allowStreaming: Boolean)
-	                 (replyIncoming: ReplyMessage => Unit)(replyCompleted: BufferedReplyMessage => Unit)
+	                 (replyIncoming: OllamaReply => Unit)(replyCompleted: BufferedOllamaReply => Unit)
 	                 (handleFailure: Throwable => Unit): Unit =
 	{
 		_queueSizePointer.update { _ + 1 }
@@ -1022,7 +1022,7 @@ class Chat(requestQueue: RequestQueue, initialLlm: LlmDesignator)
 					
 					result match {
 						// Case: Successfully acquired a response => Processes the streamed response contents
-						case Response.Success(reply: ReplyMessage, _, _) =>
+						case Response.Success(reply: OllamaReply, _, _) =>
 							if (reply.isStreaming)
 								replyIncoming(reply)
 							// Handles the reply completion asynchronously

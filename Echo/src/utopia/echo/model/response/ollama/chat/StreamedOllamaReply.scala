@@ -5,7 +5,7 @@ import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.Assistant
-import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.model.response.ollama.OllamaResponseStatistics
 import utopia.echo.util.ReplyParseUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
@@ -16,7 +16,7 @@ import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-object StreamedReplyMessage
+object StreamedOllamaReply
 {
 	/**
 	 * Creates an empty message that has been successfully read already
@@ -26,7 +26,7 @@ object StreamedReplyMessage
 	 * @return A new completed message
 	 */
 	def empty(lastUpdated: Instant = Now, role: ChatRole = Assistant)(implicit exc: ExecutionContext) =
-		completed(Success(ResponseStatistics.empty), lastUpdated = lastUpdated, role = role)
+		completed(Success(OllamaResponseStatistics.empty), lastUpdated = lastUpdated, role = role)
 	
 	/**
 	 * Creates a message that has been successfully streamed already
@@ -37,7 +37,7 @@ object StreamedReplyMessage
 	 * @param exc Implicit execution context
 	 * @return A new completed message
 	 */
-	def success(text: String, statistics: ResponseStatistics, lastUpdated: Instant = Now, role: ChatRole = Assistant)
+	def success(text: String, statistics: OllamaResponseStatistics, lastUpdated: Instant = Now, role: ChatRole = Assistant)
 	           (implicit exc: ExecutionContext) =
 		completed(Success(statistics), text, lastUpdated, role)
 	
@@ -58,7 +58,7 @@ object StreamedReplyMessage
 	 * @param exc Implicit execution context
 	 * @return A new completed message
 	 */
-	def completed(statistics: Try[ResponseStatistics], text: String = "", lastUpdated: Instant = Now,
+	def completed(statistics: Try[OllamaResponseStatistics], text: String = "", lastUpdated: Instant = Now,
 	              role: ChatRole = Assistant)
 	             (implicit exc: ExecutionContext) =
 		apply(Fixed(text), Fixed(text), Fixed(lastUpdated), Future.successful(statistics), role)
@@ -75,9 +75,9 @@ object StreamedReplyMessage
 	 * @return
 	 */
 	def apply(textPointer: Changing[String], newTextPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
-	          statisticsFuture: Future[Try[ResponseStatistics]], role: ChatRole = Assistant)
+	          statisticsFuture: Future[Try[OllamaResponseStatistics]], role: ChatRole = Assistant)
 	         (implicit exc: ExecutionContext) =
-		new StreamedReplyMessage(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture, role)
+		new StreamedOllamaReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture, role)
 }
 
 /**
@@ -92,18 +92,18 @@ object StreamedReplyMessage
  * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-class StreamedReplyMessage(override val textPointer: Changing[String], val newTextPointer: Changing[String],
-                           override val lastUpdatedPointer: Changing[Instant],
-                           override val statisticsFuture: Future[Try[ResponseStatistics]],
-                           override val senderRole: ChatRole = Assistant)
-                          (implicit exc: ExecutionContext)
-	extends ReplyMessage
+class StreamedOllamaReply(override val textPointer: Changing[String], val newTextPointer: Changing[String],
+                          override val lastUpdatedPointer: Changing[Instant],
+                          override val statisticsFuture: Future[Try[OllamaResponseStatistics]],
+                          override val senderRole: ChatRole = Assistant)
+                         (implicit exc: ExecutionContext)
+	extends OllamaReply
 {
 	// ATTRIBUTES   -----------------------
 	
 	override lazy val future = statisticsFuture.mapIfSuccess { stats =>
 		val (textWithoutThink, thoughts) = ReplyParseUtils.separateThinkFrom(text)
-		BufferedReplyMessage(ChatMessage(textWithoutThink, thoughts, senderRole), stats)
+		BufferedOllamaReply(ChatMessage(textWithoutThink, thoughts, senderRole), stats)
 	}
 	
 	

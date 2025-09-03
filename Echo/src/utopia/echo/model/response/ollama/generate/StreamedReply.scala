@@ -2,7 +2,7 @@ package utopia.echo.model.response.ollama.generate
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
-import utopia.echo.model.response.ollama.ResponseStatistics
+import utopia.echo.model.response.ollama.OllamaResponseStatistics
 import utopia.echo.util.ReplyParseUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Now
@@ -13,6 +13,7 @@ import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
+@deprecated("Replaced with OllamaResponse", "v1.4")
 object StreamedReply
 {
 	// COMPUTED -----------------------
@@ -21,7 +22,7 @@ object StreamedReply
 	  * @param exc Implicit execution context
 	  * @return An empty reply (final)
 	  */
-	def empty(implicit exc: ExecutionContext) = success("", ResponseStatistics.empty)
+	def empty(implicit exc: ExecutionContext) = success("", OllamaResponseStatistics.empty)
 	
 	
 	// OTHER    ----------------------
@@ -34,7 +35,7 @@ object StreamedReply
 	  * @param exc Implicit execution context
 	  * @return A successful final reply
 	  */
-	def success(text: String, statistics: ResponseStatistics, lastUpdated: Instant = Now)
+	def success(text: String, statistics: OllamaResponseStatistics, lastUpdated: Instant = Now)
 	           (implicit exc: ExecutionContext) =
 		completed(Success(statistics), text, lastUpdated)
 	/**
@@ -52,7 +53,7 @@ object StreamedReply
 	  * @param exc Implicit execution context
 	  * @return A completed / final reply
 	  */
-	def completed(statistics: Try[ResponseStatistics], text: String = "", lastUpdated: Instant = Now)
+	def completed(statistics: Try[OllamaResponseStatistics], text: String = "", lastUpdated: Instant = Now)
 	             (implicit exc: ExecutionContext) =
 		apply(Fixed(text), Fixed(text), Fixed(lastUpdated), Future.successful(statistics))
 	
@@ -68,7 +69,7 @@ object StreamedReply
 	  * @return A new streamed reply
 	  */
 	def apply(textPointer: Changing[String], newTextPointer: Changing[String], lastUpdatedPointer: Changing[Instant],
-	          statisticsFuture: Future[Try[ResponseStatistics]])
+	          statisticsFuture: Future[Try[OllamaResponseStatistics]])
 	         (implicit exc: ExecutionContext) =
 		new StreamedReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture)
 }
@@ -86,8 +87,9 @@ object StreamedReply
   *                         once this response has been fully generated.
   *                         Will contain a failure if reply parsing failed.
   */
+@deprecated("Replaced with OllamaResponse", "v1.4")
 class StreamedReply(val textPointer: Changing[String], val newTextPointer: Changing[String],
-                    val lastUpdatedPointer: Changing[Instant], val statisticsFuture: Future[Try[ResponseStatistics]])
+                    val lastUpdatedPointer: Changing[Instant], val statisticsFuture: Future[Try[OllamaResponseStatistics]])
                    (implicit exc: ExecutionContext)
 	extends Reply
 {

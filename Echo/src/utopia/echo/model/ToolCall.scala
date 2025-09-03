@@ -27,6 +27,7 @@ object ToolCall extends FromModelFactory[ToolCall]
   * @author Mikko Hilpinen
   * @since 31.08.2024, v1.1
   */
+// TODO: Add support for call ID
 case class ToolCall(name: String, args: Model = Model.empty) extends ModelConvertible
 {
 	override def toModel: Model = Model.from("function" -> Model.from(

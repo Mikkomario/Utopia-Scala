@@ -24,7 +24,7 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 	// IMPLEMENTED  -------------------
 	
 	override def apply(model: ModelLike[Property]): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
-		model("usage").tryModel.flatMap(OpenAITokenUsageStatistics.apply).flatMap { tokenUsage =>
+		model("usage").tryModel.flatMap(OpenAiTokenUsageStatistics.apply).flatMap { tokenUsage =>
 			model("output").getVector.tryMap { _.tryModel }.flatMap { outputModels =>
 				val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex
 					.groupBy { _._1("type").getString }.withDefaultValue(Empty)
@@ -69,9 +69,10 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
  * @author Mikko Hilpinen
   * @since 04.04.2025, v1.3
   */
-// TODO: Add support for "computer use" tool-calls
+// TODO: Add a buffered version, which extends BufferedResponse. Possibly move token usage stuff and other final info there.
+// TODO: Add support for "computer use" tool-calls (once other tool calls are better supported)
 // TODO: Add details about the request
-case class OpenAiResponse(id: String, tokenUsage: OpenAITokenUsageStatistics, messages: Seq[OpenAiMessage] = Empty,
+case class OpenAiResponse(id: String, tokenUsage: OpenAiTokenUsageStatistics, messages: Seq[OpenAiMessage] = Empty,
                           reasoning: Seq[Reasoning] = Empty,
                           functionCalls: Seq[OpenAiFunctionToolCall] = Empty,
                           webSearchCalls: Seq[WebSearchToolCall] = Empty,

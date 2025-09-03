@@ -3,6 +3,7 @@ package utopia.echo.model.response.ollama.generate
 import utopia.echo.model.response.ollama.{OllamaResponseWrapper, StreamedOrBufferedResponseFactory}
 import utopia.flow.util.EitherExtensions._
 
+@deprecated("Deprecated for removal. Please use OllamaResponse instead", "v1.4")
 object StreamedOrBufferedReply
 	extends StreamedOrBufferedResponseFactory[StreamedReply, BufferedReply, StreamedOrBufferedReply]
 {
@@ -15,6 +16,7 @@ object StreamedOrBufferedReply
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   */
+@deprecated("Deprecated for removal. Please use OllamaResponse instead", "v1.4")
 class StreamedOrBufferedReply(val format: Either[StreamedReply, BufferedReply])
 	extends OllamaResponseWrapper[BufferedReply] with Reply
 {

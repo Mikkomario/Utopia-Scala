@@ -2,7 +2,7 @@ package utopia.echo.model.request.ollama.chat
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.response.ollama.chat.BufferedReplyMessage
+import utopia.echo.model.response.ollama.chat.BufferedOllamaReply
 
 import scala.concurrent.Future
 
@@ -11,10 +11,10 @@ import scala.concurrent.Future
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
-case class BufferedChatRequest(params: ChatParams) extends ChatRequest[BufferedReplyMessage]
+case class BufferedChatRequest(params: ChatParams) extends ChatRequest[BufferedOllamaReply]
 {
 	override def stream: Boolean = false
 	
-	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedReplyMessage]] =
-		prepared.mapModel(BufferedReplyMessage.fromOllamaResponse)
+	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedOllamaReply]] =
+		prepared.mapModel(BufferedOllamaReply.fromOllamaResponse)
 }

@@ -27,7 +27,7 @@ trait OllamaResponseWrapper[+Buffered] extends OllamaResponseLike[Buffered]
 	
 	override def isBuffered: Boolean = wrapped.isBuffered
 	override def future: Future[Try[Buffered]] = wrapped.future
-	override def statisticsFuture: Future[Try[ResponseStatistics]] = wrapped.statisticsFuture
+	override def statisticsFuture: Future[Try[OllamaResponseStatistics]] = wrapped.statisticsFuture
 	
 	override def text: String = wrapped.text
 	override def textPointer: Changing[String] = wrapped.textPointer

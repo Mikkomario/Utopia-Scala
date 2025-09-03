@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-object ReplyMessage
+object OllamaReply
 {
 	// OTHER    --------------------------
 	
@@ -24,18 +24,18 @@ object ReplyMessage
 	  */
 	def from(response: OllamaResponse)(implicit exc: ExecutionContext) = response match {
 		// Case: Already a reply message
-		case r: ReplyMessage => r
+		case r: OllamaReply => r
 		case r =>
 			// Checks whether already completed / buffered
 			r.statisticsFuture.currentResult.map { _.flatten } match {
 				// Case: Successfully buffered => Yields a buffered message
-				case Some(Success(statistics)) => BufferedReplyMessage(ChatMessage(r.text), statistics, r.lastUpdated)
+				case Some(Success(statistics)) => BufferedOllamaReply(ChatMessage(r.text), statistics, r.lastUpdated)
 				// Case: Failed => Yields a failed streamed message
 				case Some(Failure(error)) =>
-					StreamedReplyMessage(Fixed(r.text), Fixed(r.text), Fixed(r.lastUpdated), TryFuture.failure(error))
+					StreamedOllamaReply(Fixed(r.text), Fixed(r.text), Fixed(r.lastUpdated), TryFuture.failure(error))
 				// Case: Not yet completed => Yields a streamed message
 				case None =>
-					StreamedReplyMessage(r.textPointer, r.newTextPointer, r.lastUpdatedPointer, r.statisticsFuture)
+					StreamedOllamaReply(r.textPointer, r.newTextPointer, r.lastUpdatedPointer, r.statisticsFuture)
 			}
 	}
 	
@@ -54,7 +54,7 @@ object ReplyMessage
 			// Case: Already resolved => Returns or wraps the available reply
 			case Some(Success(immediateReply)) => from(immediateReply)
 			// Case: Already failed => Returns a failure reply
-			case Some(Failure(cause)) => StreamedReplyMessage.failure(cause)
+			case Some(Failure(cause)) => StreamedOllamaReply.failure(cause)
 			// Case: Unresolved => Forms pointers that are completed once the reply is received
 			case None =>
 				val textPointer = OnceFlatteningPointer("")
@@ -76,7 +76,7 @@ object ReplyMessage
 						TryFuture.failure(error)
 				}
 				
-				StreamedReplyMessage(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture, role)
+				StreamedOllamaReply(textPointer, newTextPointer, lastUpdatedPointer, statisticsFuture, role)
 		}
 	}
 }
@@ -86,7 +86,7 @@ object ReplyMessage
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
-trait ReplyMessage extends OllamaResponse with OllamaResponseLike[BufferedReplyMessage]
+trait OllamaReply extends OllamaResponse with OllamaResponseLike[BufferedOllamaReply]
 {
 	/**
 	  * @return Role of the sender of this message

@@ -1,10 +1,11 @@
 package utopia.echo.model.response.openai
 
+import utopia.echo.model.response.TokenUsage
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
 
-object OpenAITokenUsageStatistics extends FromModelFactoryWithSchema[OpenAITokenUsageStatistics]
+object OpenAiTokenUsageStatistics extends FromModelFactoryWithSchema[OpenAiTokenUsageStatistics]
 {
 	// ATTRIBUTES   -----------------
 	
@@ -13,7 +14,7 @@ object OpenAITokenUsageStatistics extends FromModelFactoryWithSchema[OpenAIToken
 	
 	// IMPLEMENTED  -----------------
 	
-	override protected def fromValidatedModel(model: Model): OpenAITokenUsageStatistics = {
+	override protected def fromValidatedModel(model: Model): OpenAiTokenUsageStatistics = {
 		val input = model("input_tokens").getInt
 		val output = model("output_tokens").getInt
 		apply(input, model("input_tokens_details")("cached_tokens").getInt, output,
@@ -31,4 +32,5 @@ object OpenAITokenUsageStatistics extends FromModelFactoryWithSchema[OpenAIToken
   * @param reasoning The number of output tokens that were used in the reasoning phase
   * @param total Total number of tokens used in this interaction (input + output)
   */
-case class OpenAITokenUsageStatistics(input: Int, cached: Int, output: Int, reasoning: Int, total: Int)
+case class OpenAiTokenUsageStatistics(input: Int, cached: Int, output: Int, reasoning: Int, total: Int)
+	extends TokenUsage

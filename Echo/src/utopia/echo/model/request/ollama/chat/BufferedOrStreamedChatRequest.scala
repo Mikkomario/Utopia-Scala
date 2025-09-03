@@ -6,7 +6,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.EchoContext
 import utopia.echo.controller.parser.StreamedReplyMessageResponseParser
-import utopia.echo.model.response.ollama.chat.{BufferedReplyMessage, StreamedOrBufferedReplyMessage}
+import utopia.echo.model.response.ollama.chat.{BufferedOllamaReply, StreamedOrBufferedOllamaReply}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 
@@ -20,22 +20,22 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 case class BufferedOrStreamedChatRequest(params: ChatParams, stream: Boolean = false)
                                         (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
-	extends ChatRequest[StreamedOrBufferedReplyMessage]
+	extends ChatRequest[StreamedOrBufferedOllamaReply]
 {
 	// ATTRIBUTES   --------------------------
 	
 	private lazy val responseParser = {
 		if (stream)
-			new StreamedReplyMessageResponseParser().toResponse.mapSuccess(StreamedOrBufferedReplyMessage.streamed)
+			new StreamedReplyMessageResponseParser().toResponse.mapSuccess(StreamedOrBufferedOllamaReply.streamed)
 		else
 			ResponseParser.value.tryFlatMapToResponse(EchoContext.parseFailureStatus) {
-				_.tryModel.map[StreamedOrBufferedReplyMessage](BufferedReplyMessage.fromOllamaResponse) } {
+				_.tryModel.map[StreamedOrBufferedOllamaReply](BufferedOllamaReply.fromOllamaResponse) } {
 				_.getString }
 	}
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedOrBufferedReplyMessage]] =
+	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedOrBufferedOllamaReply]] =
 		prepared.send(responseParser)
 }

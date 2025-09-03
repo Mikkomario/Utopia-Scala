@@ -1,18 +1,19 @@
 package utopia.echo.model.response.ollama
 
 import utopia.echo.model.request.ollama.generate.GenerateBufferedOrStreamed
+import utopia.echo.model.response.TokenUsage
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
 
-object ResponseStatistics
+object OllamaResponseStatistics
 {
 	// ATTRIBUTES   ------------------------
 	
 	/**
 	  * An empty set of statistics
 	  */
-	val empty = apply(Value.empty, GenerationDurations.zero, 0, 0)
+	val empty = apply(Value.empty, GenerationDurations.zero, TokenUsage.zero)
 	
 	
 	// OTHER    ----------------------------
@@ -23,11 +24,10 @@ object ResponseStatistics
 	  * @param responseModel A json model returned by the Ollama API
 	  * @return Parsed statistics from the specified model
 	  */
-	def fromOllamaResponse(responseModel: Model) = ResponseStatistics(
+	def fromOllamaResponse(responseModel: Model) = OllamaResponseStatistics(
 		responseModel("context"),
 		GenerationDurations.fromOllamaResponse(responseModel),
-		responseModel("prompt_eval_count").getInt,
-		responseModel("eval_count").getInt)
+		TokenUsage(responseModel("prompt_eval_count").getInt, responseModel("eval_count").getInt))
 }
 
 /**
@@ -37,36 +37,36 @@ object ResponseStatistics
   * @param context A value which represents the conversation context so far.
   *                May be passed to the next outbound [[GenerateBufferedOrStreamed]].
   * @param duration Information about the duration it took to generate the response
-  * @param promptTokenCount Amount of tokens used in the prompt
-  * @param responseTokenCount Amount of tokens used in the response
+  * @param tokenUsage Number of tokens used in input & output
   */
-// TODO: Add a general statistics class that applies to both Ollama and Open AI
-case class ResponseStatistics(context: Value, duration: GenerationDurations,
-                              promptTokenCount: Int, responseTokenCount: Int)
-	extends SelfCombinable[ResponseStatistics] with LinearScalable[ResponseStatistics]
+case class OllamaResponseStatistics(context: Value, duration: GenerationDurations, tokenUsage: TokenUsage)
+	extends SelfCombinable[OllamaResponseStatistics] with LinearScalable[OllamaResponseStatistics]
 {
 	// COMPUTED ---------------------------
+	
+	@deprecated("Please use tokenUsage.input instead", "v1.4")
+	def promptTokenCount: Int = tokenUsage.input
+	@deprecated("Please use tokenUsage.output instead", "v1.4")
+	def responseTokenCount: Int = tokenUsage.output
 	
 	/**
 	  * @return Total number of tokens used within request context.
 	  *         Contains both prompt and reply tokens.
 	  */
-	def contextTokenCount = promptTokenCount + responseTokenCount
+	@deprecated("Please use tokenUsage.total instead", "v1.4")
+	def contextTokenCount = tokenUsage.total
 	
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def self: ResponseStatistics = this
+	override def self: OllamaResponseStatistics = this
 	
-	override def toString = s"Tokens: $promptTokenCount + $responseTokenCount = ${
-		promptTokenCount + responseTokenCount }; Durations: $duration"
+	override def toString = s"Tokens: $tokenUsage; Durations: $duration"
 	
-	override def +(other: ResponseStatistics): ResponseStatistics = ResponseStatistics(
+	override def +(other: OllamaResponseStatistics): OllamaResponseStatistics = OllamaResponseStatistics(
 		context = other.context.nonEmptyOrElse(context), duration = duration + other.duration,
-		promptTokenCount = promptTokenCount + other.promptTokenCount,
-		responseTokenCount = responseTokenCount + other.responseTokenCount)
+		tokenUsage = tokenUsage + other.tokenUsage)
 	
-	override def *(mod: Double): ResponseStatistics =
-		copy(duration = duration * mod, promptTokenCount = (promptTokenCount * mod).round.toInt,
-			responseTokenCount = (responseTokenCount * mod).round.toInt)
+	override def *(mod: Double): OllamaResponseStatistics =
+		copy(duration = duration * mod, tokenUsage = tokenUsage * mod)
 }

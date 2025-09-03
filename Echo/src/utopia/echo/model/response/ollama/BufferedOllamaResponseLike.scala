@@ -1,10 +1,10 @@
 package utopia.echo.model.response.ollama
 
-import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.echo.model.error.ParseException
 import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{escapedEscapeRegex, invalidArrayRegex, lineCommentRegex}
+import utopia.echo.model.response.{BufferedResponse, TokenUsage}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
@@ -35,7 +35,7 @@ object BufferedOllamaResponseLike
  * @since 12.01.2025, v1.2
  */
 // TODO: Add a version that also supports Open AI
-trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
+trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with BufferedResponse
 {
 	// ABSTRACT ------------------------
 	
@@ -46,7 +46,7 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 	/**
 	 * @return Statistics concerning this response
 	 */
-	def statistics: ResponseStatistics
+	def statistics: OllamaResponseStatistics
 	/**
 	  * @return The reflective content produced by the LLM before the final answer.
 	  *         May be empty.
@@ -76,10 +76,12 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr]
 	
 	override def isBuffered: Boolean = true
 	
-	override def future: Future[Try[Repr]] = TryFuture.success(self)
-	override def statisticsFuture: Future[Try[ResponseStatistics]] = TryFuture.success(statistics)
+	override def tokenUsage: TokenUsage = statistics.tokenUsage
 	
-	override def state: SchrodingerState = Alive
+	override def future: Future[Try[Repr]] = TryFuture.success(self)
+	override def statisticsFuture: Future[Try[OllamaResponseStatistics]] = TryFuture.success(statistics)
+	
+	override def state = Alive
 	
 	override def textPointer: Changing[String] = Fixed(text)
 	override def newTextPointer: Changing[String] = Fixed(text)

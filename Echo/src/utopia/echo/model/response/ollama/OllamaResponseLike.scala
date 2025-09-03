@@ -34,7 +34,7 @@ trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
 	  * @return A future that resolves into the final response statistics once they arrive.
 	  *         Will contain a failure in case response-parsing / processing failed.
 	  */
-	def statisticsFuture: Future[Try[ResponseStatistics]]
+	def statisticsFuture: Future[Try[OllamaResponseStatistics]]
 	
 	/**
 	  * @return The current text in this response.

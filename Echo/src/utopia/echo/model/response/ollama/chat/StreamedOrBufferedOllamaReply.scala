@@ -4,11 +4,11 @@ import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.response.ollama.{OllamaResponseWrapper, StreamedOrBufferedResponseFactory}
 import utopia.flow.util.EitherExtensions._
 
-object StreamedOrBufferedReplyMessage
-	extends StreamedOrBufferedResponseFactory[StreamedReplyMessage, BufferedReplyMessage, StreamedOrBufferedReplyMessage]
+object StreamedOrBufferedOllamaReply
+	extends StreamedOrBufferedResponseFactory[StreamedOllamaReply, BufferedOllamaReply, StreamedOrBufferedOllamaReply]
 {
-	override def apply(format: Either[StreamedReplyMessage, BufferedReplyMessage]): StreamedOrBufferedReplyMessage =
-		new StreamedOrBufferedReplyMessage(format)
+	override def apply(format: Either[StreamedOllamaReply, BufferedOllamaReply]): StreamedOrBufferedOllamaReply =
+		new StreamedOrBufferedOllamaReply(format)
 }
 
 /**
@@ -16,8 +16,8 @@ object StreamedOrBufferedReplyMessage
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
-class StreamedOrBufferedReplyMessage(val format: Either[StreamedReplyMessage, BufferedReplyMessage])
-	extends OllamaResponseWrapper[BufferedReplyMessage] with ReplyMessage
+class StreamedOrBufferedOllamaReply(val format: Either[StreamedOllamaReply, BufferedOllamaReply])
+	extends OllamaResponseWrapper[BufferedOllamaReply] with OllamaReply
 {
 	// ATTRIBUTES   ----------------------
 	
