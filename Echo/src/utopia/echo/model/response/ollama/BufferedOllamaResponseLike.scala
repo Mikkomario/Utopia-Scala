@@ -34,7 +34,6 @@ object BufferedOllamaResponseLike
  * @author Mikko Hilpinen
  * @since 12.01.2025, v1.2
  */
-// TODO: Add a version that also supports Open AI
 trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with BufferedResponse
 {
 	// ABSTRACT ------------------------
@@ -47,11 +46,6 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with Bu
 	 * @return Statistics concerning this response
 	 */
 	def statistics: OllamaResponseStatistics
-	/**
-	  * @return The reflective content produced by the LLM before the final answer.
-	  *         May be empty.
-	  */
-	def thoughts: String
 	
 	
 	// COMPUTED ------------------------

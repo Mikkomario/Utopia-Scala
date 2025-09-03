@@ -3,6 +3,7 @@ package utopia.echo.model.response.ollama.chat
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.Assistant
+import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.response.ollama.{BufferedOllamaResponse, BufferedOllamaResponseLike, OllamaResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
@@ -46,12 +47,10 @@ object BufferedOllamaReply
   */
 case class BufferedOllamaReply(message: ChatMessage, statistics: OllamaResponseStatistics, lastUpdated: Instant = Now)
 	extends Extender[ChatMessage] with BufferedOllamaResponse with BufferedOllamaResponseLike[BufferedOllamaReply]
-		with OllamaReply
+		with OllamaReply with BufferedReply
 {
 	override def self: BufferedOllamaReply = this
 	override def wrapped: ChatMessage = message
 	
-	override def text: String = message.text
-	override def thoughts: String = message.thoughts
 	override def senderRole: ChatRole = message.senderRole
 }

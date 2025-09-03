@@ -3,7 +3,10 @@
 ## v1.4 (in development)
 Adding ComfyUI integration
 ### Breaking changes
+- Renamed **ReplyMessage** classes to **OllamaReply** classes
 - Modified reply constructors to include a new `thoughts` property. This also affects **ChatMessage**.
+### Deprecations
+- Deprecated all **Reply** classes. These are now implemented in **OllamaResponse** classes
 ### New features
 - Added more advanced support for thinking LLMs:
   - Context size is maximized in order to ensure that the thinking process fits
