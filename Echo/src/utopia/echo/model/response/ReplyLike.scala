@@ -1,4 +1,4 @@
-package utopia.echo.model.response.ollama
+package utopia.echo.model.response
 
 import utopia.annex.model.manifest.HasSchrodingerState
 import utopia.flow.operator.Identity
@@ -10,13 +10,12 @@ import scala.concurrent.Future
 import scala.util.Try
 
 /**
-  * Common trait / interface for LLM replies, whether they're streamed or buffered
-  * and whether they're in chat or response format.
+  * Common trait / interface for LLM replies, whether they're streamed or buffered.
   * @tparam Buffered Buffered version of this response
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
+trait ReplyLike[+Buffered] extends HasSchrodingerState
 {
 	// ABSTRACT -------------------------
 	
@@ -30,11 +29,6 @@ trait OllamaResponseLike[+Buffered] extends HasSchrodingerState
 	  *         Will yield a failure in case response-parsing failed.
 	  */
 	def future: Future[Try[Buffered]]
-	/**
-	  * @return A future that resolves into the final response statistics once they arrive.
-	  *         Will contain a failure in case response-parsing / processing failed.
-	  */
-	def statisticsFuture: Future[Try[OllamaResponseStatistics]]
 	
 	/**
 	  * @return The current text in this response.

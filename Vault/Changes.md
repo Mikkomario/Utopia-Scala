@@ -10,6 +10,8 @@
   - `.from(TableColumn)` now yields **Reference** instead of an **Option**
   - from and to -variants now yield **Reference**s instead of **ReferencePoint**s
 - **Row** no longer contains references to the read **Table**s
+- **Row** no longer contains the `.otherData` property. All read data is mapped to table names, 
+  based on the MySQL interface's response
 - **Result** and **Row** no longer provide utility functions for accessing table indices
 - Modified **Join** constructor to accept **TableColumn** instead of accepting **Table** and **Column** separately
 - **ErrorHandling**'s handlers are now of type **ErrorHandler** instead of **ErrorHandlingPrinciple**

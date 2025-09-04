@@ -10,6 +10,7 @@ import scala.language.implicitConversions
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
+@deprecated("Deprecated for removal. No \"StreamedOrBuffered\" response classes exist anymore", "v1.4")
 trait StreamedOrBufferedResponseFactory[-Streamed, -Buffered, +StreamedOrBuffered]
 {
 	// ABSTRACT ------------------------

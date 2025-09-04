@@ -1,6 +1,7 @@
 package utopia.echo.model.response.openai.toolcall
 
 import utopia.annex.model.manifest.SchrodingerState
+import utopia.echo.model.ToolCall
 import utopia.echo.model.response.openai.{OpenAiModelParser, OpenAiOutputElementFromModelFactory}
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
@@ -50,9 +51,9 @@ object OpenAiFunctionToolCall extends OpenAiOutputElementFromModelFactory[OpenAi
   * @param id Unique id of this function call
   * @param callId Id of this function call in the model
   * @param name Name of the called function
-  * @param arguments Arguments passed to the function
+  * @param args Arguments passed to the function
   * @param state State of this tool call
   */
-case class OpenAiFunctionToolCall(index: Int, id: String, callId: String, name: String, arguments: Model = Model.empty,
+case class OpenAiFunctionToolCall(index: Int, id: String, callId: String, name: String, args: Model = Model.empty,
                                   state: SchrodingerState)
-	extends OpenAiOutputElement
+	extends OpenAiOutputElement with ToolCall

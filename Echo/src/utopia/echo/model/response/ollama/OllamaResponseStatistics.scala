@@ -1,6 +1,5 @@
 package utopia.echo.model.response.ollama
 
-import utopia.echo.model.request.ollama.generate.GenerateBufferedOrStreamed
 import utopia.echo.model.response.TokenUsage
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.combine.Combinable.SelfCombinable
@@ -32,10 +31,11 @@ object OllamaResponseStatistics
 
 /**
   * Contains statistical information about an LLM response.
+ *
   * @author Mikko Hilpinen
   * @since 19.07.2024, v1.0
   * @param context A value which represents the conversation context so far.
-  *                May be passed to the next outbound [[GenerateBufferedOrStreamed]].
+  *                May be passed to the next outbound [[utopia.echo.model.request.ollama.generate.GenerateRequest]].
   * @param duration Information about the duration it took to generate the response
   * @param tokenUsage Number of tokens used in input & output
   */

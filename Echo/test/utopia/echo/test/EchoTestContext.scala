@@ -27,9 +27,9 @@ object EchoTestContext
 	
 	// private val accessLogger = new AccessLogger(new FileLogger("Echo/data/test-output", groupDuration = 1.seconds))
 	/**
-	  * Commonly utilized Ollama client interface
-	  */
-	val client = new OllamaClient()
+	 * Commonly utilized Ollama client interface
+	 */
+	implicit val client: OllamaClient = new OllamaClient()
 		// requestInterceptors = Single(accessLogger),
 		// responseInterceptors = Single(accessLogger))
 	

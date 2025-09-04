@@ -33,7 +33,7 @@ case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.
 	  * @return A request based on these parameters.
 	  *         Streaming option still needs to be specified before this request may be sent.
 	  */
-	def toRequest = Generate(this)
+	def toRequest = GenerateRequest(this)
 	
 	/**
 	  * @return Copy of these parameters without conversation context included

@@ -2,6 +2,9 @@ package utopia.echo.model.response.openai
 
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
+import utopia.echo.model.ChatMessage
+import utopia.echo.model.enumeration.ChatRole.Assistant
+import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.response.openai.toolcall.{FileSearchToolCall, OpenAiFunctionToolCall, WebSearchToolCall}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
@@ -69,7 +72,6 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
  * @author Mikko Hilpinen
   * @since 04.04.2025, v1.3
   */
-// TODO: Add a buffered version, which extends BufferedResponse. Possibly move token usage stuff and other final info there.
 // TODO: Add support for "computer use" tool-calls (once other tool calls are better supported)
 // TODO: Add details about the request
 case class OpenAiResponse(id: String, tokenUsage: OpenAiTokenUsageStatistics, messages: Seq[OpenAiMessage] = Empty,
@@ -77,5 +79,32 @@ case class OpenAiResponse(id: String, tokenUsage: OpenAiTokenUsageStatistics, me
                           functionCalls: Seq[OpenAiFunctionToolCall] = Empty,
                           webSearchCalls: Seq[WebSearchToolCall] = Empty,
                           fileSearchCalls: Seq[FileSearchToolCall] = Empty, metadata: Model = Model.empty,
-                          state: SchrodingerState = Alive,
+                          override val state: SchrodingerState = Alive,
                           whyIncomplete: String = "", error: Option[OpenAiError] = None, created: Instant = Now)
+	extends BufferedReply
+{
+	// ATTRIBUTES   ------------------------
+	
+	override lazy val text: String =
+		messages.reverseIterator.find { _.senderRole == Assistant }.orElse(messages.lastOption) match {
+			case Some(message) => message.text
+			case None => ""
+		}
+	override lazy val thoughts: String = reasoning.iterator.map { _.text }.mkString
+	
+	override lazy val message: ChatMessage = ChatMessage(text, thoughts,
+		senderRole = {
+			if (messages.isEmpty || messages.exists { _.senderRole == Assistant })
+				Assistant
+			else
+				messages.last.senderRole
+		},
+		toolCalls = functionCalls)
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override def self: BufferedReply = this
+	
+	override def lastUpdated: Instant = created
+}

@@ -16,7 +16,7 @@ import scala.util.Try
   */
 class StreamedStatusParser(implicit override protected val exc: ExecutionContext,
                            override protected val jsonParser: JsonParser, override val log: Logger)
-	extends StreamedResponseParser[StreamedStatus, Unit]
+	extends StreamedNdJsonResponseParser[StreamedStatus, Unit]
 {
 	// IMPLEMENTED  ----------------------
 	

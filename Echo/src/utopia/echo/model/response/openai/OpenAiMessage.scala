@@ -86,7 +86,6 @@ object OpenAiMessage extends OpenAiOutputElementFromModelFactory[OpenAiMessage]
   * @param state State of this message (Alive = successful, Dead = Failed or refused, Flux = Processing)
   * @param isRefusal Whether this message represents a refusal
   */
-// TODO: Create general traits for commonalities between this and ChatMessage
 case class OpenAiMessage(index: Int, id: String, text: String = "", senderRole: ChatRole = Assistant,
                          urlCitations: Seq[UrlCitation] = Empty, fileReferences: Seq[OpenAiFileReference] = Empty,
                          state: SchrodingerState = Alive, isRefusal: Boolean = false)

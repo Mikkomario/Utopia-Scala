@@ -7,42 +7,34 @@ import java.time.Instant
 
 object BufferedReply
 {
-	// OTHER    --------------------------
+	// OTHER    ------------------------
 	
 	/**
-	 * @param message Wrapped chat message
+	 * @param message A chat message to wrap
 	 * @param tokenUsage Statistics about token usage
 	 * @param created Time when this (version of this) response was created
-	 * @return A new buffered reply instance
+	 * @return A new response
 	 */
-	def apply(message: ChatMessage, tokenUsage: TokenUsage, created: Instant = Now): BufferedReply =
+	def apply(message: ChatMessage, tokenUsage: TokenUsage = TokenUsage.zero,
+	          created: Instant = Now): BufferedReply =
 		_BufferedReply(message, tokenUsage, created)
 	
 	
-	// NESTED   --------------------------
+	// NESTED   ------------------------
 	
 	private case class _BufferedReply(message: ChatMessage, tokenUsage: TokenUsage, lastUpdated: Instant)
 		extends BufferedReply
+	{
+		override def self: BufferedReply = this
+		
+		override def text: String = message.text
+		override def thoughts: String = message.thoughts
+	}
 }
 
 /**
- * Common trait for chat message -based buffered response classes
- *
+ * Common trait for buffered responses, regardless of service provider
  * @author Mikko Hilpinen
  * @since 02.09.2025, v1.4
  */
-trait BufferedReply extends BufferedResponse
-{
-	// ABSTRACT --------------------------
-	
-	/**
-	 * @return The wrapped reply message
-	 */
-	def message: ChatMessage
-	
-	
-	// IMPLEMENTED  ----------------------
-	
-	override def text: String = message.text
-	override def thoughts: String = message.thoughts
-}
+trait BufferedReply extends Reply with BufferedReplyLike[BufferedReply]

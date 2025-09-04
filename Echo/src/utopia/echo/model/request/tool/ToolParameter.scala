@@ -1,4 +1,4 @@
-package utopia.echo.model.request.ollama.chat.tool
+package utopia.echo.model.request.tool
 
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.generic.casting.ValueConversions._

@@ -1,6 +1,6 @@
 package utopia.echo.controller.sd
 
-import utopia.echo.controller.client.ComfyUIClient
+import utopia.echo.controller.client.ComfyUiClient
 import utopia.echo.model.comfyui.request.GetWorkResult
 import utopia.echo.model.comfyui.settings.SamplerSettings
 import utopia.echo.model.comfyui.workflow.node._
@@ -29,7 +29,7 @@ object GenerateImages
 	
 	// Implicitly converts into a generator
 	implicit def objectToFactory(@unused o: GenerateImages.type)
-	                            (implicit comfyDir: ComfyUiDir, client: ComfyUIClient, model: CheckpointModel,
+	                            (implicit comfyDir: ComfyUiDir, client: ComfyUiClient, model: CheckpointModel,
 	                             seed: Seed = Seed.random, settings: SamplerSettings = SamplerSettings.default): ImageGenerator =
 		generator()
 	
@@ -51,7 +51,7 @@ object GenerateImages
 	 */
 	def generator(size: Pair[Int] = EmptyLatentImageNode.defaultSize, batchSize: Int = 1,
 	              fileNamePrefix: String = "Echo")
-	             (implicit comfyDir: ComfyUiDir, client: ComfyUIClient, model: CheckpointModel,
+	             (implicit comfyDir: ComfyUiDir, client: ComfyUiClient, model: CheckpointModel,
 	              seed: Seed = Seed.random, settings: SamplerSettings = SamplerSettings.default) =
 		new ImageGenerator(size, batchSize, fileNamePrefix)
 	
@@ -59,7 +59,7 @@ object GenerateImages
 	// NESTED   -------------------------
 	
 	class ImageGenerator(size: Pair[Int], batchSize: Int, fileNamePrefix: String)
-	                    (implicit comfyDir: ComfyUiDir, client: ComfyUIClient, model: CheckpointModel, seed: Seed,
+	                    (implicit comfyDir: ComfyUiDir, client: ComfyUiClient, model: CheckpointModel, seed: Seed,
 	                     settings: SamplerSettings)
 	{
 		// ATTRIBUTES   -----------------

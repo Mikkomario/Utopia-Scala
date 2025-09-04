@@ -2,7 +2,7 @@ package utopia.echo.model.request.ollama.generate
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.response.ollama.generate.BufferedReply
+import utopia.echo.model.response.ollama.BufferedOllamaReply
 
 import scala.concurrent.Future
 
@@ -12,10 +12,10 @@ import scala.concurrent.Future
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-case class GenerateBuffered(params: GenerateParams) extends Generate[BufferedReply]
+case class GenerateBufferedRequest(params: GenerateParams) extends GenerateRequest[BufferedOllamaReply]
 {
 	override def stream: Boolean = false
 	
-	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedReply]] =
-		prepared.mapModel(BufferedReply.fromOllamaResponse)
+	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedOllamaReply]] =
+		prepared.mapModel(BufferedOllamaReply.fromOllamaGenerateResponse)
 }

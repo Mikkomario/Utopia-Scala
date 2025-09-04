@@ -1,4 +1,4 @@
-package utopia.echo.model.request.ollama.chat.tool
+package utopia.echo.model.request.tool
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.{Model, Value}

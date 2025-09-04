@@ -1,10 +1,11 @@
-package utopia.echo.model.response.ollama
+package utopia.echo.model.response
 
+import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.bunnymunch.jawn.JsonBunny
+import utopia.echo.model.ChatMessage
 import utopia.echo.model.error.ParseException
-import utopia.echo.model.response.ollama.BufferedOllamaResponseLike.{escapedEscapeRegex, invalidArrayRegex, lineCommentRegex}
-import utopia.echo.model.response.{BufferedResponse, TokenUsage}
+import utopia.echo.model.response.BufferedReplyLike.{escapedEscapeRegex, invalidArrayRegex, lineCommentRegex}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
@@ -17,7 +18,7 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Try
 
-object BufferedOllamaResponseLike
+object BufferedReplyLike
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -34,7 +35,7 @@ object BufferedOllamaResponseLike
  * @author Mikko Hilpinen
  * @since 12.01.2025, v1.2
  */
-trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with BufferedResponse
+trait BufferedReplyLike[+Repr] extends ReplyLike[Repr]
 {
 	// ABSTRACT ------------------------
 	
@@ -42,10 +43,21 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with Bu
 	 * @return This response
 	 */
 	def self: Repr
+	
 	/**
-	 * @return Statistics concerning this response
+	 * @return The reflective / reasoning content produced by the LLM before the final answer.
+	 *         May be empty.
 	 */
-	def statistics: OllamaResponseStatistics
+	def thoughts: String
+	/**
+	 * @return Statistics about token usage in this interaction
+	 */
+	def tokenUsage: TokenUsage
+	
+	/**
+	 * @return The wrapped reply message
+	 */
+	def message: ChatMessage
 	
 	
 	// COMPUTED ------------------------
@@ -70,12 +82,9 @@ trait BufferedOllamaResponseLike[+Repr] extends OllamaResponseLike[Repr] with Bu
 	
 	override def isBuffered: Boolean = true
 	
-	override def tokenUsage: TokenUsage = statistics.tokenUsage
-	
 	override def future: Future[Try[Repr]] = TryFuture.success(self)
-	override def statisticsFuture: Future[Try[OllamaResponseStatistics]] = TryFuture.success(statistics)
 	
-	override def state = Alive
+	override def state: SchrodingerState = Alive
 	
 	override def textPointer: Changing[String] = Fixed(text)
 	override def newTextPointer: Changing[String] = Fixed(text)

@@ -1,7 +1,8 @@
 package utopia.echo.test
 
 import utopia.annex.util.RequestResultExtensions._
-import utopia.echo.controller.{Chat, EstimateTokenCount}
+import utopia.echo.controller.EstimateTokenCount
+import utopia.echo.controller.chat.OllamaChat
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.test.EchoTestContext._
@@ -70,7 +71,7 @@ object ChatTest extends App
 			}
 		}
 		
-		val chat = new Chat(client, llm)
+		val chat = new OllamaChat(llm)
 		chat.setupAutoSummaries()
 		llmPointer.addContinuousListener { e => chat.llm = e.newValue }
 		

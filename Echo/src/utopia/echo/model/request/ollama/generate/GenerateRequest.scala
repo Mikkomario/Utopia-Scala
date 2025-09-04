@@ -1,16 +1,23 @@
 package utopia.echo.model.request.ollama.generate
 
+import utopia.annex.controller.ApiClient
+import utopia.annex.model.response.{RequestResult, Response}
+import utopia.annex.util.ResponseParseExtensions._
+import utopia.disciple.controller.parse.ResponseParser
+import utopia.echo.controller.EchoContext
+import utopia.echo.controller.parser.StreamedOllamaResponseParser
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.OllamaRequest
+import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-object Generate
+object GenerateRequest
 {
 	// OTHER    -------------------------
 	
@@ -34,13 +41,14 @@ object Generate
 		/**
 		  * @return A request for receiving the response as a single entity.
 		  */
-		def buffered = GenerateBuffered(params)
+		def buffered = GenerateBufferedRequest(params)
 		/**
 		  * @param exc Implicit execution context utilized in streamed response-processing
 		  * @param jsonParser Implicit json parser used in response-parsing
 		  * @return A request for receiving the response in a streamed format.
 		  */
-		def streamed(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) = GenerateStreamed(params)
+		def streamed(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
+			apply(stream = true)
 		/**
 		  * @param stream Whether to receive the response as a stream.
 		  *               - If false (default) the response will be received only once generation completes,
@@ -50,8 +58,33 @@ object Generate
 		  * @param jsonParser Implicit json parser used in response-parsing
 		  * @return A new request
 		  */
-		def apply(stream: Boolean = false)(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger) =
-			GenerateBufferedOrStreamed(params)
+		def apply(stream: Boolean = false)
+		         (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger): GenerateRequest[OllamaReply] =
+			_GenerateRequest(params, stream)
+	}
+	
+	private case class _GenerateRequest(params: GenerateParams, stream: Boolean = false)
+	                                   (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
+		extends GenerateRequest[OllamaReply]
+	{
+		// ATTRIBUTES   ----------------------
+		
+		private lazy val responseParser: ResponseParser[Response[OllamaReply]] = {
+			// Case: Expecting a streamed response => Utilizes StreamedReplyResponseParser
+			if (stream)
+				StreamedOllamaResponseParser.generate.toResponse
+			// Case: Expecting a buffered response => Parses the reply from a response model
+			else
+				ResponseParser.value.tryFlatMapToResponse(EchoContext.parseFailureStatus) {
+					_.tryModel.map { model => BufferedOllamaReply.fromOllamaGenerateResponse(model) } } {
+					_.getString }
+		}
+		
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[OllamaReply]] =
+			prepared.send(responseParser)
 	}
 }
 
@@ -63,7 +96,7 @@ object Generate
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait Generate[+R] extends OllamaRequest[R]
+trait GenerateRequest[+R] extends OllamaRequest[R]
 {
 	// ABSTRACT --------------------------
 	

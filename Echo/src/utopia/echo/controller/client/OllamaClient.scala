@@ -5,7 +5,6 @@ import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInter
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.request.Timeout
-import utopia.echo.controller.Chat
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ollama.generate.Prompt
 import utopia.echo.model.request.ollama.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
@@ -54,7 +53,8 @@ class OllamaClient(serverAddress: String = "http://localhost:11434/api",
 	 * Buffered, in this context, means that the reply will be received all at once (which may take a while to complete).
 	 *
 	 * This function is suitable for very simple queries in a background thread,
-	 * where user-interactivity is not important. For more complex interactions, consider using the [[Chat]] interface.
+	 * where user-interactivity is not important. For more complex interactions, consider using the
+	 * [[utopia.echo.controller.chat.OllamaChat]] interface.
 	 *
 	 * @param prompt Prompt to send out for the LLM
 	 * @param system System message to set.

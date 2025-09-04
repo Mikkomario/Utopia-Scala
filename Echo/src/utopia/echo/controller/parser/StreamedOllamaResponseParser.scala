@@ -1,24 +1,62 @@
 package utopia.echo.controller.parser
 
-import utopia.echo.model.response.ollama.{OllamaResponseLike, OllamaResponseStatistics}
+import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply, OllamaResponseStatistics}
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.LockablePointer
-import utopia.flow.view.template.eventful.Changing
 
 import java.time.Instant
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+
+object StreamedOllamaResponseParser
+{
+	// COMPUTED --------------------------
+	
+	/**
+	 * @param exc Implicit execution context
+	 * @param jsonParser Implicit JSON parser used
+	 * @param log Implicit logging interface
+	 * @return A response parser for streamed chat requests
+	 */
+	def chat(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger): StreamedOllamaResponseParser =
+		new ChatResponseParser()
+	/**
+	 * @param exc Implicit execution context
+	 * @param jsonParser Implicit JSON parser used
+	 * @param log Implicit logging interface
+	 * @return A response parser for streamed generate requests
+	 */
+	def generate(implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger): StreamedOllamaResponseParser =
+		new GenerateResponseParser()
+	
+	
+	// NESTED   --------------------------
+	
+	private class ChatResponseParser(implicit override val exc: ExecutionContext,
+	                                 override val jsonParser: JsonParser, override val log: Logger)
+		extends StreamedOllamaResponseParser
+	{
+		override protected def textFromResponse(response: Model): String = response("message")("content").getString
+	}
+	
+	private class GenerateResponseParser(implicit override val exc: ExecutionContext,
+	                                     override val jsonParser: JsonParser, override val log: Logger)
+		extends StreamedOllamaResponseParser
+	{
+		override protected def textFromResponse(response: Model): String = response("response").getString
+	}
+}
 
 /**
   * A response parser which parses LLM replies from a streamed json response.
   * Expects the stream to contain newline-delimited json where each line represents a json object.
-  * @tparam A Type of the (streamed) responses parsed
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
-trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedResponseParser[A, OllamaResponseStatistics]
+trait StreamedOllamaResponseParser extends StreamedNdJsonResponseParser[OllamaReply, OllamaResponseStatistics]
 {
 	// ABSTRACT ---------------------------
 	
@@ -28,30 +66,21 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 	  */
 	protected def textFromResponse(response: Model): String
 	
-	/**
-	  * @param textPointer Pointer that will contain all response text (built incrementally)
-	  * @param newTextPointer A pointer that contains the latest addition to the response text
-	 * @param lastUpdatedPointer Pointer that contains the origin time of the latest response update
-	  * @param statisticsFuture Future that eventually resolves into statistics concerning this response,
-	  *                         or to a failure if response or json processing fails.
-	  * @return Completed streamed response instance
-	  */
-	protected def responseFrom(textPointer: Changing[String], newTextPointer: Changing[String],
-	                           lastUpdatedPointer: Changing[Instant],
-	                           statisticsFuture: Future[Try[OllamaResponseStatistics]]): A
-	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override protected def newParser: SingleStreamedResponseParser[A, OllamaResponseStatistics] =
+	override protected def emptyResponse: OllamaReply = BufferedOllamaReply.empty
+	
+	override protected def newParser: SingleStreamedResponseParser[OllamaReply, OllamaResponseStatistics] =
 		new SingleOllamaResponseParser
 	
-	override protected def failureMessageFrom(response: A): String = response.text
+	override protected def failureMessageFrom(response: OllamaReply): String = response.text
 	
 	
 	// NESTED   ------------------------
 	
-	private class SingleOllamaResponseParser extends SingleStreamedResponseParser[A, OllamaResponseStatistics]
+	private class SingleOllamaResponseParser
+		extends SingleStreamedResponseParser[OllamaReply, OllamaResponseStatistics]
 	{
 		// ATTRIBUTES   ----------------
 		
@@ -88,8 +117,8 @@ trait StreamedOllamaResponseParser[A <: OllamaResponseLike[_]] extends StreamedR
 			lastUpdatedPointer.lock()
 		}
 		
-		override def responseFrom(future: Future[Try[OllamaResponseStatistics]]): A =
-			StreamedOllamaResponseParser.this.responseFrom(textPointer.readOnly, newTextPointer.readOnly,
-				lastUpdatedPointer.readOnly, future)
+		override def responseFrom(future: Future[Try[OllamaResponseStatistics]]): OllamaReply =
+			OllamaReply(textPointer.readOnly, newTextPointer.readOnly, lastUpdatedPointer.readOnly)
+				.futureStatistics(future)
 	}
 }

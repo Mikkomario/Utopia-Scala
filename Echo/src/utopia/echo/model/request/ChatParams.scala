@@ -1,10 +1,11 @@
-package utopia.echo.model.request.ollama.chat
+package utopia.echo.model.request
 
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.RequestParams
-import utopia.echo.model.request.ollama.chat.tool.Tool
+import utopia.echo.model.request.ollama.chat.ChatRequest
 import utopia.echo.model.request.openai.BufferedOpenAiChatRequest
+import utopia.echo.model.request.tool.Tool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.{Mutate, UncertainBoolean}

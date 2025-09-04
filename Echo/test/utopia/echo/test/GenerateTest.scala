@@ -5,8 +5,8 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.interceptor.AccessLogger
 import utopia.echo.controller.client.OllamaClient
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.request.ollama.generate.{GenerateBufferedOrStreamed, Prompt, Query}
-import utopia.echo.model.response.ollama.generate.StreamedOrBufferedReply
+import utopia.echo.model.request.ollama.generate.{GenerateRequest, Prompt, Query}
+import utopia.echo.model.response.ollama.OllamaReply
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.parse.json.JsonParser
@@ -30,8 +30,8 @@ object GenerateTest extends App
 	private val prompt1 = Prompt("Define the word \"echo\"")
 	
 	println(s"Sending out: $prompt1")
-	client.push(GenerateBufferedOrStreamed(Query(prompt1), stream = true)).waitFor().get match {
-		case Response.Success(reply: StreamedOrBufferedReply, status, headers) =>
+	client.push(GenerateRequest(Query(prompt1))(stream = true)).waitFor().get match {
+		case Response.Success(reply: OllamaReply, status, headers) =>
 			println(s"Received response with status $status and headers $headers")
 			println(s"Reply: ")
 			reply.textPointer.addListenerAndSimulateEvent("") { change =>

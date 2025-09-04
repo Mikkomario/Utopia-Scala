@@ -1,6 +1,6 @@
 package utopia.echo.test
 
-import utopia.echo.controller.client.ComfyUIClient
+import utopia.echo.controller.client.ComfyUiClient
 import utopia.echo.controller.sd.GenerateImages
 import utopia.echo.model.comfyui.Seed.RandomSeed
 import utopia.echo.model.comfyui.settings.SamplerSettings
@@ -44,7 +44,7 @@ object ComfyUiTest extends App
 	{
 		implicit val seed: Seed = RandomSeed
 		implicit val samplerSettings: SamplerSettings = SamplerSettings.default
-		implicit val client: ComfyUIClient = new ComfyUIClient()
+		implicit val client: ComfyUiClient = new ComfyUiClient()
 		
 		// Request the work
 		println("Requesting the work...")

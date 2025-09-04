@@ -25,7 +25,7 @@ import scala.util.{Success, Try}
   * @author Mikko Hilpinen
   * @since 3.9.2024, v1.1
   */
-trait StreamedResponseParser[R, V] extends ResponseParser[R]
+trait StreamedNdJsonResponseParser[R, V] extends ResponseParser[R]
 {
 	// ABSTRACT ---------------------------
 	

@@ -2,7 +2,7 @@ package utopia.echo.model.request.openai
 
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
-import utopia.echo.model.request.ollama.chat.ChatParams
+import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.openai.OpenAiResponse
 
 import scala.concurrent.Future

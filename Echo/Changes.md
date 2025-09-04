@@ -1,16 +1,47 @@
 # Utopia Echo - List of Changes
 
 ## v1.4 (in development)
-Adding ComfyUI integration
 ### Breaking changes
-- Renamed **ReplyMessage** classes to **OllamaReply** classes
-- Modified reply constructors to include a new `thoughts` property. This also affects **ChatMessage**.
-### Deprecations
-- Deprecated all **Reply** classes. These are now implemented in **OllamaResponse** classes
+- Reworked the response / reply class hierarchy:
+  - There are no longer separate **Reply** and **Response** classes. All classes now extend **Reply** / **ReplyLike**.
+  - There are no longer separate **Streaming** reply / response classes, the **Reply** traits replaced those
+  - **BufferedReply** classes remain as separate subclasses of **Reply**
+  - Removed **BufferedOrStreamed** response / reply variants altogether; These are replaced with the **Reply** classes.
+  - All Ollama-specific reply classes are placed under **OllamaReply**
+- Reworked Ollama chat & generate request hierarchy:
+  - Removed the **Streamed** and **BufferedOrStreamed** request variants 
+    and joined the **BufferedOrStreamed** functionality under the main request trait / companion object
+    (**ChatRequest** or **GenerateRequest**)
+  - Renamed **Generate** to **GenerateRequest**
+- Simplified streamed (Ollama) response parsing class hierarchy:
+  - Renamed **StreamedResponseParser** to **StreamedNdJsonResponseParser**, 
+    in order to more clearly communicate the NDJSON format expectation / dependency
+  - **StreamedOllamaResponseParser** no longer accepts a generic type parameter, 
+    since only **OllamaReply** will be yielded
+  - Deleted the separate classes for generate and chat -endpoint response parsing and added new versions of 
+    those under **StreamedOllamaResponseParser**'s companion object (see the new `.chat` and `.generate` properties)
+- Added a new `thoughts` property to **ReplyLike** and **ChatMessage**.
+- Divided the **Chat** interface into 4 separate classes:
+  1. **ChatLike** - the generic trait that accepts type parameters without specifying full implementation
+  2. **Chat** - A variation of **ChatLike**, which removes the generic type parameters, replacing them with the generic 
+    **Reply** and **BufferedReply** types
+  3. **AbstractChat** - Which specifies most of the missing **ChatLike** implementation, 
+    leaving room for Ollama / OpenAI -specific functionality
+  4. **OllamaChat** - Full implementation matching the previous **Chat** class
+     - Note: Modified **OllamaChat**'s constructor, so that it now accepts an implicit **OllamaClient** reference, 
+       instead of an explicit **RequestQueue** reference.
+- Did some package refactoring:
+  - **ChatParams** and the `tool` package are now located directly under `utopia.echo.model.request`
+  - **Chat** classes are now located under `utopia.echo.controller.chat`
+- **ToolCall** now requires a new property: `callId: String`, which may be empty
+  - This property will be used in the OpenAI integration
 ### New features
+- Added a basic [ComfyUI](https://www.comfy.org/) integration for generating images using stable diffusion
+  - The current implementation is extendable to building custom workflows, 
+    but concrete / full implementation is limited to simple image generation
 - Added more advanced support for thinking LLMs:
   - Context size is maximized in order to ensure that the thinking process fits
-  - `/nothink` may be inserted to the system message, if requested
+  - Thinking may be deactivated
   - Think content won't be included in the chat history sent to the LLM
   - In **buffered** replies, the <think> block contents are now separated to `thoughts` and not included in `text`
 ### Other changes

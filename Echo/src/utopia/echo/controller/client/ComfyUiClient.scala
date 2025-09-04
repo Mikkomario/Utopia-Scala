@@ -2,7 +2,7 @@ package utopia.echo.controller.client
 
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
-import utopia.echo.controller.client.ComfyUIClient.waitInterval
+import utopia.echo.controller.client.ComfyUiClient.waitInterval
 import utopia.echo.model.comfyui.request.{GetWorkResult, RequestWork}
 import utopia.echo.model.comfyui.workflow.node.WorkflowNode
 import utopia.flow.async.TryFuture
@@ -16,7 +16,7 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-object ComfyUIClient
+object ComfyUiClient
 {
 	private lazy val waitInterval = 1.seconds
 }
@@ -27,7 +27,7 @@ object ComfyUIClient
  * @author Mikko Hilpinen
  * @since 05.08.2025, v1.4
  */
-class ComfyUIClient(gateway: Gateway = Gateway(), serverAddress: String = "http://localhost:8188",
+class ComfyUiClient(gateway: Gateway = Gateway(), serverAddress: String = "http://localhost:8188",
                     clientId: String = RequestWork.defaultClientId, maxParallelRequests: Int = 4)
                    (implicit log: Logger, exc: ExecutionContext)
 	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = maxParallelRequests,

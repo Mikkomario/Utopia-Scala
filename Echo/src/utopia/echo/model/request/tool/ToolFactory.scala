@@ -1,4 +1,4 @@
-package utopia.echo.model.request.ollama.chat.tool
+package utopia.echo.model.request.tool
 
 import ToolFactory.schema
 import utopia.flow.collection.CollectionExtensions._

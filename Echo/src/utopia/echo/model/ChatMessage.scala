@@ -3,8 +3,7 @@ package utopia.echo.model
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.request.CanAttachImages
-import utopia.echo.model.request.ollama.chat.ChatParams
+import utopia.echo.model.request.{CanAttachImages, ChatParams}
 import utopia.echo.util.ReplyParseUtils
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
