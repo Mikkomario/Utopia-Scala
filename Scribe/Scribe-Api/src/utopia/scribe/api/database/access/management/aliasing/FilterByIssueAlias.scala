@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.access.management.aliasing
 
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -11,4 +12,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByIssueAlias[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterIssueAliases[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}

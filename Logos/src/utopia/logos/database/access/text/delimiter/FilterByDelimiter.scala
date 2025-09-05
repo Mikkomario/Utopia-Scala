@@ -1,5 +1,6 @@
 package utopia.logos.database.access.text.delimiter
 
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -11,4 +12,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByDelimiter[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterDelimiters[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}

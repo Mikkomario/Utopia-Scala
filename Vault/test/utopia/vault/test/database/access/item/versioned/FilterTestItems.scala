@@ -15,11 +15,11 @@ trait FilterTestItems[+Repr] extends FilterableView[Repr]
 	/**
 	  * Model that defines versioned test item database properties
 	  */
-	def versionedTestItemModel = VersionedTestItemDbModel
+	def model = VersionedTestItemDbModel
 	
 	/**
 	  * Copy of this access, limited to currently active test items
 	  */
-	def active = filter(versionedTestItemModel.nonDeprecatedCondition)
+	def active = filter(model.nonDeprecatedCondition)
 }
 

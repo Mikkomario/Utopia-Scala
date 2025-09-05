@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.access.logging.error.stack
 
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -12,4 +13,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByStackTraceElementRecord[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterStackTraceElementRecords[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}

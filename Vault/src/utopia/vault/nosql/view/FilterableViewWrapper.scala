@@ -1,10 +1,9 @@
 package utopia.vault.nosql.view
 
-import utopia.vault.model.immutable.Table
 import utopia.vault.sql.{Condition, SqlTarget}
 
 /**
- * Common trait for instances which implement [[FilterableView]] by wrapping such a view
+ * Common trait for instances which implement [[FilterableView]] by wrapping such a view.
  *
  * @author Mikko Hilpinen
  * @since 02.06.2025, v1.21.1
@@ -25,6 +24,5 @@ trait FilterableViewWrapper[+A <: FilterableView[A]] extends FilterableView[A]
 	override protected def self: A = wrapped
 	override def target: SqlTarget = wrapped.target
 	override def accessCondition: Option[Condition] = wrapped.accessCondition
-	override def table: Table = wrapped.table
 	override def apply(condition: Condition): A = wrapped(condition)
 }

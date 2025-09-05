@@ -1,6 +1,7 @@
 package utopia.logos.database.access.text.statement.placement
 
 import utopia.logos.database.props.text.StatementPlacementDbProps
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -14,4 +15,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByStatementPlacement[+A <: FilterableView[A]](wrapped: A, model: StatementPlacementDbProps) 
 	extends FilterStatementPlacements[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}

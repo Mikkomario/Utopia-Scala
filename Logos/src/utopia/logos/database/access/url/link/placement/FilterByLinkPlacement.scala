@@ -1,5 +1,6 @@
 package utopia.logos.database.access.url.link.placement
 
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -11,4 +12,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByLinkPlacement[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterLinkPlacements[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}

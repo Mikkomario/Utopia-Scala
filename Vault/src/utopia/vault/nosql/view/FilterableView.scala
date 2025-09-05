@@ -48,6 +48,7 @@ trait FilterableView[+Sub] extends View with ViewFactory[Sub]
 		case None => self
 	}
 	
+	// FIXME: These don't work because the wrappers don't overwrite the primary table
 	/**
 	 * @param indices Targeted indices
 	 * @return Copy of this access limited to the specified indices

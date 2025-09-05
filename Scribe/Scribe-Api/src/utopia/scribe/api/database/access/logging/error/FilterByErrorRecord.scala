@@ -1,5 +1,6 @@
 package utopia.scribe.api.database.access.logging.error
 
+import utopia.vault.model.immutable.Table
 import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 
 /**
@@ -11,4 +12,6 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
   */
 case class FilterByErrorRecord[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterErrorRecords[A] with FilterableViewWrapper[A]
-
+{
+	override def table: Table = model.table
+}
