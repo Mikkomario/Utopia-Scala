@@ -1,6 +1,6 @@
 package utopia.reach.component.interactive.input.text
 
-import utopia.firmament.component.input.InputWithPointer
+import utopia.firmament.component.input.InteractionWithPointer
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.image.SingleColorIcon
@@ -18,6 +18,7 @@ import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
@@ -27,7 +28,7 @@ import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.interactive.input.InputValidationResult.Default
-import utopia.reach.component.interactive.input.{Field, FieldSettings, FieldSettingsLike, FieldState, InputValidationResult}
+import utopia.reach.component.interactive.input._
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
@@ -286,34 +287,38 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	  *                        Input validation only affects styling and state, but not output value.
 	  * @param parseResult A function for parsing the field value from input string.
 	  *                    Result filter, if provided, will be applied before passing the input to this function.
-	  * @tparam A Type of field output value
+	  * @param resultToText A function for converting a field value into text.
+	 *                     Used when setting a field value from the outside.
+	 * @tparam A Type of field output value
 	  * @return A new text field
 	  */
 	def apply[A](defaultWidth: StackLength,
 	             textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	             inputValidation: Option[A => InputValidationResult] = None)
-	            (parseResult: String => A) =
-		new TextField[A](hierarchy, context, defaultWidth, settings, textPointer, inputValidation)(parseResult)
+	            (parseResult: String => A)(resultToText: A => String) =
+		new TextField[A](hierarchy, context, defaultWidth, settings, textPointer, inputValidation)(
+			parseResult)(resultToText)
 	
 	/**
 	  * Creates a new text field
+ *
 	  * @param defaultWidth    The default stack width used for the editable portion of this text field.
 	  *                        The actual width may be larger, based on input.
 	  * @param textPointer     A mutable text pointer used and modified by this field (default = new empty pointer)
-	  *
 	  * @param parse     A function for parsing the field value from input string.
 	  *                        Result filter, if provided, will be applied before passing the input to this function.
 	  * @param validate A validation function for parsed output values. Returns a validation result.
 	  *                        Called only once the user leaves this input field.
 	  *                        None if no validation should be applied (default).
 	  *                        Input validation only affects styling and state, but not output value.
-	  * @tparam A Type of field output value
+	  * @param resultToText A function for converting a field value into text.
+	 *                     Used when setting a field value from the outside.
+	 * @tparam A Type of field output value
 	  * @return A new text field
 	  */
-	def validating[A](defaultWidth: StackLength,
-	                  textPointer: EventfulPointer[String] = EventfulPointer[String](""))
-	                 (parse: String => A)(validate: A => InputValidationResult) =
-		apply[A](defaultWidth, textPointer, Some(validate))(parse)
+	def validating[A](defaultWidth: StackLength, textPointer: EventfulPointer[String] = EventfulPointer[String](""))
+	                 (parse: String => A)(validate: A => InputValidationResult)(resultToText: A => String) =
+		apply[A](defaultWidth, textPointer, Some(validate))(parse)(resultToText)
 	
 	/**
 	  * Creates a new text field that produces string output values
@@ -329,7 +334,7 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	  */
 	def string(defaultWidth: StackLength, textPointer: EventfulPointer[String] = EventfulPointer[String](""),
 	           validate: Option[String => InputValidationResult] = None) =
-		apply[String](defaultWidth, textPointer, validate)(Identity)
+		apply[String](defaultWidth, textPointer, validate)(Identity)(Identity)
 	/**
 	  * Creates a new text field that produces string output values
 	  * @param defaultWidth The default stack width used for the editable portion of this text field.
@@ -458,7 +463,8 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 		
 		number[Double](allowedRange, initialValue, (expectedNumberOfDecimals - 1) max 0, inputFilter, resultFilter,
 			validate,
-			if (disableLengthHint) Pair.twice(false) else Pair(allowedRange.start != 0, true)) { _.double }
+			if (disableLengthHint) Pair.twice(false) else Pair(allowedRange.start != 0, true)) {
+			_.double }
 	}
 	/**
 	  * Creates a new field that accepts integer numbers
@@ -605,7 +611,7 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 					}
 				else
 					InputValidationResult.Failure("Not a valid number".autoLocalized)
-		}
+		} { _.mkString }
 	}
 	/**
 	  * Creates a text field for numeric input
@@ -676,10 +682,10 @@ object TextField extends TextFieldSetup()
   */
 class TextField[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                    defaultWidth: StackLength, settings: TextFieldSettings = TextFieldSettings.default,
-                   textContentPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
+                   val textPointer: EventfulPointer[String] = EventfulPointer("")(ComponentCreationDefaults.componentLogger),
                    inputValidation: Option[A => InputValidationResult] = None)
-				  (parseResult: String => A)
-	extends ReachComponentWrapper with InputWithPointer[A, Changing[A]] with FocusableWithStateWrapper
+				  (parseResult: String => A)(resultToText: A => String)
+	extends ReachComponentWrapper with InteractionWithPointer[A] with FocusableWithStateWrapper
 {
 	// ATTRIBUTES	------------------------------------------
 	
@@ -690,12 +696,16 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 		Detach
 	}
 	
-	private val isEmptyPointer = textContentPointer.map { _.isEmpty }
+	/**
+	 * A flag that contains true while this field is empty
+	 */
+	lazy val emptyFlag = textPointer.lightMap { _.isEmpty }
 	
-	override val valuePointer = settings.resultFilter match {
-		case Some(filter) => textContentPointer.map { text => parseResult(filter.filter(text)) }
-		case None => textContentPointer.map(parseResult)
+	private val _valueP = settings.resultFilter match {
+		case Some(filter) => textPointer.map { text => parseResult(filter.filter(text)) }
+		case None => textPointer.map(parseResult)
 	}
+	override lazy val valuePointer = Pointer.indirect.reverseMapped(textPointer, _valueP)(resultToText)
 	
 	// Input validation affects hint and highlight logic, if specified
 	// Also, displayed text affects prompt-displaying
@@ -704,7 +714,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 			// Case: Input validation is used => Merges validation results input other pointers
 			case Some(validation) =>
 				// The input is validated only after (and not during) editing
-				val validationResultPointer = valuePointer.mergeWith(_statePointer) { (value, state) =>
+				val validationResultPointer = _valueP.mergeWith(_statePointer) { (value, state) =>
 					if (state == AfterEdit) validation(value) else InputValidationResult.Default
 				}
 				val hintTextPointer = validationResultPointer.mergeWith(settings.hintPointer) { (validation, hint) =>
@@ -721,7 +731,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 		val actualPromptPointer = settings.promptPointer.notFixedWhere { _.isEmpty } match {
 			case Some(promptPointer) =>
 				// Displays the prompt while text starts with the same characters or is empty
-				promptPointer.mergeWith(textContentPointer) { (prompt, text) =>
+				promptPointer.mergeWith(textPointer) { (prompt, text) =>
 					if (text.isEmpty || prompt.wrapped.startsWith(text)) prompt else LocalizedString.empty
 				}
 			case None => settings.promptPointer
@@ -733,18 +743,18 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	}
 	
 	private val _wrapped = Field.withContext(hierarchy, context).withSettings(appliedFieldSettings)
-		.apply(isEmptyPointer) { fieldContext =>
+		.apply(emptyFlag) { fieldContext =>
 			// Modifies the context
 			val labelContext = fieldContext.context.withHorizontallyExpandingText
 			// Assigns focus listeners and prompt drawers to label settings
 			val mainFocusListener: FocusListener = {
 				// Remembers the first time this field received focus
-				case FocusGained => textContentPointer.addListener(goToEditInputListener)
+				case FocusGained => textPointer.addListener(goToEditInputListener)
 				// Formats text contents whenever focus is lost
 				case FocusLost =>
-					textContentPointer.removeListener(goToEditInputListener)
+					textPointer.removeListener(goToEditInputListener)
 					_statePointer.value = AfterEdit
-					settings.resultFilter.foreach { filter => textContentPointer.update(filter.filter) }
+					settings.resultFilter.foreach { filter => textPointer.update(filter.filter) }
 				case _ => ()
 			}
 			val appliedLabelSettings = settings.editingSettings
@@ -753,14 +763,14 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 				.withEnabledFlag(settings.enabledFlag)
 			EditableTextLabel.withContext(fieldContext.hierarchy, labelContext)
 				.withSettings(appliedLabelSettings)
-				.apply(textContentPointer)
+				.apply(textPointer)
 		} { fieldContext =>
 			// Case: Shows input character count at the bottom right label
 			if (settings.showsCharacterCount)
 				settings.maxLength.map { maxLength =>
 					implicit def localizer: Localizer = fieldContext.context.localizer
 					
-					val textLengthPointer = textContentPointer.map { _.length }
+					val textLengthPointer = textPointer.map { _.length }
 					Open.using(ViewTextLabel) {
 						_.withContext(fieldContext.context).apply(
 							textLengthPointer,
@@ -785,9 +795,11 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	// COMPUTED	----------------------------------------------
 	
 	/**
-	  * @return A read-only version of this text field's text pointer
-	  */
-	def textPointer = textContentPointer.readOnly
+	 * @return The current text input within this field
+	 */
+	def text = textPointer.value
+	def text_=(newText: String) = textPointer.value = newText
+	
 	/**
 	  * @return A pointer that contains the current state of this field
 	  */
@@ -818,6 +830,5 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	/**
 	  * Clears this field of all text
 	  */
-	@deprecated("This method will be removed, as it violates this field's capsuling principles", "< v1.1.1")
-	def clear() = textContentPointer.value = ""
+	def clear() = textPointer.value = ""
 }

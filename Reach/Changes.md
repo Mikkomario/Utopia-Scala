@@ -2,6 +2,7 @@
 
 ## v1.7 (in development)
 ### Breaking changes
+- Custom **TextField** constructors now require a new constructor function: result-to-text
 - **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
   - The implementing classes should extend either **VariableColorContextualFactory** or 
     **VariableTextContextualFactory**
@@ -24,6 +25,7 @@
 - Revalidation (and consequently repainting) is now (potentially) much faster, 
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
 - **Field** now visibly reacts to mouse hover
+- **TextField**'s `.textPointer` and `.valuePointer` are now mutable
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - Optimized the component layout update algorithm
 
