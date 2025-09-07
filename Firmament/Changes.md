@@ -5,6 +5,8 @@
 - Stackable now requires the classes to implement `updateStackSize(): Boolean`
   - This is already implemented by all **CachingStackable** and **StackableWrapper**, 
     only not covering custom implementations and static sized components
+### Deprecations
+- Deprecated **Input**, since it performs the exact same function as **View** in **Flow**
 ### New features
 - All context implementations now implement a `windowPointer` property, where the intention is to allow 
   the components to utilize a centralized pointer that will contain the Firmament-based window hosting them.
@@ -14,6 +16,8 @@
 ### New methods
 - **java.awt.Component** (via **AwtComponentExtensions**)
   - Added `.toImage`
+### Other
+- **Input** now extends **View**
 
 ## v1.5 - 26.05.2025
 This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  

@@ -13,6 +13,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed, Logi
 import utopia.flow.view.mutable.eventful.{LockableFlag, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.MaybeSet
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 object Flag
@@ -43,6 +44,29 @@ object Flag
 				case Some(fixed) => if (fixed) AlwaysTrue else AlwaysFalse
 				case None => new FlagWrapper(o)
 			}
+	}
+	
+	
+	// OTHER    ------------------
+	
+	/**
+	 * @param future Future for which a completion flag is constructed
+	 * @param exc Implicit execution context
+	 * @param log Implicit logging implementation. Used for handling failures during event-generation.
+	 * @return A flag that will contain true once the specified future completes.
+	 *         Will never change afterwards.
+	 */
+	def completionOf(future: Future[_])(implicit exc: ExecutionContext, log: Logger) = {
+		// Case: Future already completed => No need to build advanced logic
+		if (future.isCompleted)
+			AlwaysTrue
+		// Case: Future is still pending => Prepares a completion flag
+		else {
+			val flag = SettableFlag()
+			// Once the future resolves (whether successfully or not), sets the flag
+			future.onComplete { _ => flag.set() }
+			flag.view
+		}
 	}
 	
 	

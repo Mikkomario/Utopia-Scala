@@ -209,7 +209,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	  * @return The smallest possible month that is currently selectable
 	  */
 	def minMonth = {
-		if (yearDropDown.isEmpty || monthDropDown.isEmpty)
+		if (yearDropDown.content.isEmpty || monthDropDown.content.isEmpty)
 			value.yearMonth
 		else
 			yearDropDown.content.min + monthDropDown.content.min
@@ -218,7 +218,7 @@ class Calendar(val monthDropDown: JDropDownWrapper[Month], val yearDropDown: JDr
 	  * @return The largest possible month that is currently selectable
 	  */
 	def maxMonth = {
-		if (yearDropDown.isEmpty || monthDropDown.isEmpty)
+		if (yearDropDown.content.isEmpty || monthDropDown.content.isEmpty)
 			value.yearMonth
 		else
 			yearDropDown.content.max + monthDropDown.content.max

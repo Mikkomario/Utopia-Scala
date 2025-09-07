@@ -27,6 +27,7 @@
 - **Field** now visibly reacts to mouse hover
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
+- **InputField** conversions don't require **Input* anymore, only requiring **View** (also extended by **Input**)
 - Optimized the component layout update algorithm
 
 ## v1.6 - 26.05.2025

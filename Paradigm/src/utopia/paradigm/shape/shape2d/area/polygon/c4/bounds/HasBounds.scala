@@ -48,7 +48,7 @@ trait HasBounds extends HasSize with Area2D
 	/**
 	  * @return The bottom-right corner of this item's bounds
 	  */
-	def bottomRight = Point(bounds.dimensions.map { _.max })
+	def bottomRight: Point = Point(bounds.dimensions.map { _.max })
 	
 	/**
 	  * @return The center point of this item
@@ -116,12 +116,12 @@ trait HasBounds extends HasSize with Area2D
 	  * @param axis The targeted axis
 	  * @return The smallest coordinate within this item's bounds along the specified axis
 	  */
-	def minAlong(axis: Axis) = bounds(axis).min
+	def minAlong(axis: Axis): Double = bounds(axis).min
 	/**
 	  * @param axis The targeted axis
 	  * @return The largest coordinate within this item's bounds along the specified axis
 	  */
-	def maxAlong(axis: Axis) = bounds(axis).max
+	def maxAlong(axis: Axis): Double = bounds(axis).max
 	/**
 	  * @param axis Targeted axis
 	  * @return The center coordinate of this item along that axis

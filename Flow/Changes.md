@@ -27,6 +27,8 @@
 ### New methods
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
+- **Flag** (object)
+  - Added `.completionOf(Future)`
 - **Future**
   - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
     for **Future**s of type **TryCatch**

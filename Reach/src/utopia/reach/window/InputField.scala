@@ -1,10 +1,11 @@
 package utopia.reach.window
 
-import utopia.flow.generic.model.immutable.Value
-import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
-import utopia.reach.focus.FocusRequestable
 import utopia.firmament.component.input.Input
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.view.immutable.View
+import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
+import utopia.reach.focus.FocusRequestable
 
 import scala.language.implicitConversions
 
@@ -19,7 +20,7 @@ object InputField
 	  * @tparam A Type of field input
 	  * @return A new input field that wraps the specified field
 	  */
-	implicit def autoConvert[A](field: ReachComponent with FocusRequestable with Input[A])
+	implicit def autoConvert[A](field: ReachComponent with FocusRequestable with View[A])
 	                           (implicit f: A => Value): InputField =
 		wrap(field) { Right(f(field.value)) }
 	
@@ -54,7 +55,7 @@ object InputField
 	  * @tparam A Type of original input value
 	  * @return A new input field
 	  */
-	def test[A](field: ReachComponent with FocusRequestable with Input[A])(test: A => Either[LocalizedString, Value]) =
+	def test[A](field: ReachComponent with FocusRequestable with View[A])(test: A => Either[LocalizedString, Value]) =
 		wrap(field)(test(field.value))
 	
 	/**
@@ -64,7 +65,7 @@ object InputField
 	  * @tparam A Type of fields input
 	  * @return A new input field
 	  */
-	def convert[A](field: ReachComponent with FocusRequestable with Input[A])(convert: A => Value) =
+	def convert[A](field: ReachComponent with FocusRequestable with View[A])(convert: A => Value) =
 		wrap(field)(Right(convert(field.value)))
 	
 	/**
@@ -76,7 +77,7 @@ object InputField
 	  * @tparam A Field's input type
 	  * @return A new input field
 	  */
-	def validate[A](field: ReachComponent with FocusRequestable with Input[A])
+	def validate[A](field: ReachComponent with FocusRequestable with View[A])
 	               (validate: A => LocalizedString)(implicit f: A => Value) =
 		wrap(field) {
 			val input = field.value
@@ -86,7 +87,7 @@ object InputField
 	
 	// EXTENSIONS   ---------------------
 	
-	implicit class InputFieldConvertible[A](val field: ReachComponent with FocusRequestable with Input[A]) extends AnyVal
+	implicit class InputFieldConvertible[A](val field: ReachComponent with FocusRequestable with View[A]) extends AnyVal
 	{
 		/**
 		  * Adds value conversion & input validation to this field
@@ -154,4 +155,5 @@ object InputField
   * @author Mikko Hilpinen
   * @since 6.4.2023, v0.6
   */
+// TODO: When Input gets removed, replace it with View here. Can't do that before v1.8, however.
 trait InputField extends ReachComponent with FocusRequestable with Input[Either[LocalizedString, Value]]

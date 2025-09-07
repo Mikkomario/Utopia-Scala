@@ -10,6 +10,7 @@ import utopia.paradigm.enumeration.{Axis2D, Direction2D}
   * @author Mikko Hilpinen
   * @since 18.5.2023, v1.1
   */
+// TODO: Extend StackInsetsLike or something like that, which offers more copy functions
 trait FramedFactory[+Repr]
 {
 	// ABSTRACT ---------------------------
