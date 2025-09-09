@@ -91,6 +91,16 @@ object ImageButtonSettings
 	// ATTRIBUTES	--------------------
 	
 	val default = apply()
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param settings Settings which also include text settings
+	 * @return The image button settings extracted from the specified settings
+	 */
+	def from(settings: ImageAndTextButtonSettings) =
+		apply(settings.buttonSettings, settings.imageSettings, settings.imageEffects)
 }
 
 /**
