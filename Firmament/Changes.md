@@ -16,8 +16,11 @@
 ### New methods
 - **java.awt.Component** (via **AwtComponentExtensions**)
   - Added `.toImage`
+- **FramedFactory**
+  - Added new factory functions
 ### Other
 - **Input** now extends **View**
+- Separated some **StackInsets** features to a new trait named **StackInsetsLike**
 
 ## v1.5 - 26.05.2025
 This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  

@@ -50,25 +50,25 @@ object FormField
 	 * Useful in situations where the focusable component is very specific,
 	 * e.g. when the field consists of multiple components.
 	 * @param name Name of this field
-	 * @param field The wrapped [[ReachComponent]], for the purposes of locating notifications
+	 * @param component The wrapped [[ReachComponent]], for the purposes of locating notifications
 	 * @param focusable The wrapped [[FocusRequestable]], which receives focus if field value is rejected
 	 * @param out A function that produces field output
 	 * @return A new form field
 	 */
-	def separate(name: String, field: ReachComponent, focusable: FocusRequestable)(out: => FormFieldOut) =
-		new FormField(name, Some(field), Some(focusable))(out)
+	def separate(name: String, component: ReachComponent, focusable: FocusRequestable)(out: => FormFieldOut) =
+		new FormField(name, Some(component), Some(focusable))(out)
 }
 
 /**
  * Represents an input component in a form
  * @param name Name of this field / field's variable
- * @param field The wrapped [[ReachComponent]], over which potential notifications are displayed (optional)
+ * @param component The wrapped [[ReachComponent]], over which potential notifications are displayed (optional)
  * @param focusable The wrapped [[FocusRequestable]] that receives focus when/if the input value is rejected (optional)
  * @param getValue A function that yields a result / output value for this field
  * @author Mikko Hilpinen
  * @since 07.09.2025, v1.7
  */
-class FormField(val name: String, val field: Option[ReachComponent], val focusable: Option[FocusRequestable])
+class FormField(val name: String, val component: Option[ReachComponent], val focusable: Option[FocusRequestable])
                (getValue: => FormFieldOut)
 	extends View[FormFieldOut]
 {

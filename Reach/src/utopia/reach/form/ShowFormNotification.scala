@@ -4,7 +4,7 @@ import utopia.firmament.context.color.ColorContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.collection.CollectionExtensions._
+import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Screen
@@ -53,9 +53,28 @@ object ShowFormNotification
 	 * @param log Implicit logging implementation
 	 * @return A notification logic that will display a simple notification
 	 */
-    // TODO: Allow custom component with standard positioning
 	def apply(context: ColorContext, color: ColorRole = ColorRole.Failure, icon: SingleColorIcon = SingleColorIcon.empty,
 	          closeIcon: SingleColorIcon = SingleColorIcon.empty, preferredShade: ColorLevel = Standard)
+	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ShowFormNotification =
+		build(context, color, preferredShade) { notificationComponent(_, _, icon, closeIcon) }
+	
+	/**
+	 * A notification logic that displays a pop-up window next to the applicable component
+	 * (or in the bottom right corner of the window or screen).
+	 * @param context Component creation context in the hosting window
+	 * @param color Notification color role (default = failure)
+	 * @param preferredShade Preferred background color shade (default = standard)
+	 * @param f A function for building the notification contents.
+	 *          Accepts two parameters:
+	 *              1. Factories for building the component
+	 *              1. Message to display
+	 * @param windowContext Component creation context for the pop-up window (implicit)
+	 * @param exc Implicit execution context
+	 * @param log Implicit logging implementation
+	 * @return A notification logic that will display a pop-up window
+	 */
+	def build(context: ColorContext, color: ColorRole = ColorRole.Failure, preferredShade: ColorLevel = Standard)
+	         (f: (ContextualMixed[StaticTextContext], LocalizedString) => ReachComponent)
 	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ShowFormNotification =
 		apply { (message, component) =>
 			// The pop-up background color is based on the component-creation context
@@ -67,7 +86,7 @@ object ShowFormNotification
 				case Some(component) =>
 					windowF.anchoredToUsing(Mixed, component, preferredAlignment = Alignment.Right,
 						margin = context.margins.small, keepAnchored = false) {
-						(_, factories) => notificationComponent(factories, message, icon, closeIcon)
+						(_, factories) => f(factories, message)
 					}
 				// Case: Originating component not available
 				//       => Anchors to the parent window, or to the bottom right corner of the screen
@@ -82,7 +101,7 @@ object ShowFormNotification
 					val window = windowF
 						.withPositionAfterResize { bounds => targetBottomRight - bounds.size }
 						.using(Mixed, parent = parentWindow.map { _.component }) {
-							(_, factories) => notificationComponent(factories, message, icon, closeIcon)
+							(_, factories) => f(factories, message)
 						}
 					window
 			}
@@ -119,9 +138,8 @@ object ShowFormNotification
 				factories(ImageAndTextLabel)(icon, message)
 		}
 		// Case: Includes a close button => Creates a framed stack with 2-3 elements: [ Icon | Message | Close button ]
-		// TODO: Make vertical margins very small?
 		else
-			factories(Framing).small.build(Stack) { stackF =>
+			factories(Framing).small.withVerticalInsets(VerySmall).build(Stack) { stackF =>
 				stackF.centeredRow.related.build(Mixed) { factories =>
 					val iconComponent = icon.notEmpty.map { icon => factories(ImageLabel)(icon) }
 					val label = message.notEmpty.map { factories(TextLabel)(_) }

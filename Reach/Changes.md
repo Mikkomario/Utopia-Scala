@@ -15,12 +15,16 @@
 ### Deprecations
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
 ### New features
+- Added new **Form** classes as a more customizable alternative to **InputWindowFactory** for form (window) creation 
 - Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits
   - Multiple existing components now extend these, making context-modifications easier
 - When using **ReachWindow** and specifying content context (i.e. **ReachContentWindowContext**), the context's 
   `windowPointer` property (a new **Firmament** feature) will automatically be specified.
 - All text-related contextual button factories now extend **FromColorRoleFactory**, 
   allowing for easier color assignment
+### New methods
+- **ContextualFramedFactory**
+  - Added new factory functions
 ### Other changes
 - Revalidation (and consequently repainting) is now (potentially) much faster, 
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.

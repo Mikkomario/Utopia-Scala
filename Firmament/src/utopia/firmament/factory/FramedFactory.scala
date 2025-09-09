@@ -3,6 +3,7 @@ package utopia.firmament.factory
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible, StackLength}
 import utopia.flow.collection.immutable.Pair
 import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 
 /**
@@ -10,7 +11,6 @@ import utopia.paradigm.enumeration.{Axis2D, Direction2D}
   * @author Mikko Hilpinen
   * @since 18.5.2023, v1.1
   */
-// TODO: Extend StackInsetsLike or something like that, which offers more copy functions
 trait FramedFactory[+Repr]
 {
 	// ABSTRACT ---------------------------
@@ -63,6 +63,14 @@ trait FramedFactory[+Repr]
 	
 	
 	// OTHER    ------------------------
+	
+	def withTop(inset: StackLength) = withInset(Up, inset)
+	def withBottom(inset: StackLength) = withInset(Down, inset)
+	def withLeft(inset: StackLength) = withInset(Direction2D.Left, inset)
+	def withRight(inset: StackLength) = withInset(Direction2D.Right, inset)
+	
+	def withHorizontalInsets(inset: StackLength) = withInsetsAlong(X, inset)
+	def withVerticalInsets(inset: StackLength) = withInsetsAlong(Y, inset)
 	
 	def mapInsetsAlong(axis: Axis2D)(f: StackLength => StackLength) =
 		mapInsets { _.mapDimension(axis) { _.map(f) } }
