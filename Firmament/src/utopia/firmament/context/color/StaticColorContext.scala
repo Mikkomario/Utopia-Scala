@@ -1,6 +1,6 @@
 package utopia.firmament.context.color
 
-import utopia.firmament.context.base.{StaticBaseContext, StaticBaseContextWrapper, VariableBaseContext}
+import utopia.firmament.context.base.{StaticBaseContext, StaticBaseContextWrapper}
 import utopia.firmament.context.text.StaticTextContext
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.eventful.Fixed

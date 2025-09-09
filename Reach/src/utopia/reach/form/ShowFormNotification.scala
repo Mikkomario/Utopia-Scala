@@ -7,11 +7,8 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.SizeCategory.VerySmall
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.logging.Logger
-import utopia.genesis.util.Screen
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{ColorLevel, ColorRole}
-import utopia.paradigm.enumeration.Alignment
-import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.interactive.button.image.ImageButton
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageLabel}
@@ -20,7 +17,7 @@ import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.multi.Stack
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.context.StaticReachContentWindowContext
-import utopia.reach.window.ReachWindow
+import utopia.reach.window.NotificationWindow
 
 import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
@@ -76,43 +73,12 @@ object ShowFormNotification
 	def build(context: ColorContext, color: ColorRole = ColorRole.Failure, preferredShade: ColorLevel = Standard)
 	         (f: (ContextualMixed[StaticTextContext], LocalizedString) => ReachComponent)
 	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ShowFormNotification =
-		apply { (message, component) =>
-			// The pop-up background color is based on the component-creation context
-			val background = context.current.color.preferring(preferredShade)(color)
-			// The window is anchored to the originating component, if one is named
-			val windowF = ReachWindow.withContext(windowContext.withBackground(background))
-			val window = component match {
-				// Case: Originating component available => Anchors the window
-				case Some(component) =>
-					windowF.anchoredToUsing(Mixed, component, preferredAlignment = Alignment.Right,
-						margin = context.margins.small, keepAnchored = false) {
-						(_, factories) => f(factories, message)
-					}
-				// Case: Originating component not available
-				//       => Anchors to the parent window, or to the bottom right corner of the screen
-				case None =>
-					val parentWindow = context.windowPointer.value
-					val targetBottomRight = parentWindow match {
-						// Case: Parent window available => Anchors to its bottom right corner
-						case Some(parentWindow) => parentWindow.bottomRight - Vector2D.twice(context.margins.small)
-						// Case: Parent window not available => Anchors to the bottom right corner of the screen
-						case None => Screen.size.toPoint - Vector2D.twice(context.margins.medium)
-					}
-					val window = windowF
-						.withPositionAfterResize { bounds => targetBottomRight - bounds.size }
-						.using(Mixed, parent = parentWindow.map { _.component }) {
-							(_, factories) => f(factories, message)
-						}
-					window
-			}
-			// Closes the window if acted outside
-			window.setToCloseOnAnyKeyRelease()
-			window.setToCloseOnFocusLost()
-			window.setToCloseWhenClickedOutside()
-			
-			// Displays the window
-			window.display()
-		}
+	{
+		// Prepares a factory for constructing the notification windows
+		lazy val windowF = NotificationWindow.contextual.withBackground(color, preferredShade).closingEasily
+		// Creates and displays the notification window
+		apply { (message, component) => windowF.build(context, component) { f(_, message) }.display() }
+	}
 	
 	/**
 	 * Creates a standard notification component

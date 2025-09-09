@@ -1,10 +1,8 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.model.Destiny
-import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.logging.Logger
 import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{MaybeAssignable, Switch}
 import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
@@ -30,7 +28,7 @@ object MutableOnce
   * @tparam A Type of value held within this pointer
   */
 class MutableOnce[A](initialValue: A)(implicit log: Logger)
-	extends AbstractMayStopChanging[A] with EventfulPointer[A] with MaybeAssignable[A] with MaybeSet
+	extends AbstractMayStopChanging[A] with EventfulPointer[A] with MaybeAssignable[A] with MaybeSet with Lockable[A]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -66,7 +64,7 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger)
 	// IMPLEMENTED  -----------------------
 	
 	override def isSet: Boolean = setFlag.value
-	override def destiny: Destiny = if (isSet) Sealed else MaySeal
+	override def locked: Boolean = isSet
 	
 	override def value = _value
 	override def value_=(newValue: A) = {
@@ -103,5 +101,10 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger)
 		}
 		else
 			false
+	}
+	
+	override def lock(): Unit = {
+		if (setFlag.set())
+			declareChangingStopped()
 	}
 }

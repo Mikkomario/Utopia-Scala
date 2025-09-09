@@ -51,18 +51,7 @@ object Form
 	 */
 	def apply(field: FormField, moreFields: FormField*)
 	         (implicit log: Logger, exc: ExecutionContext, showNotification: ShowFormNotification, localizer: Localizer): Form =
-		new Form(field +: moreFields)
-	/**
-	 * @param fields The fields that form this form
-	 * @param log Implicit logging implementation. Used in asynchronous result-handling and pointer management.
-	 * @param exc Implicit execution context. Used when handling delayed form field outputs.
-	 * @param showNotification Logic for displaying notifications
-	 * @param localizer Localizer for displaying error messages
-	 * @return A new form
-	 */
-	def apply(fields: Iterable[FormField])
-	         (implicit log: Logger, exc: ExecutionContext, showNotification: ShowFormNotification, localizer: Localizer) =
-		new Form(fields)
+		apply(field +: moreFields)
 }
 
 /**
@@ -75,7 +64,7 @@ object Form
  * @author Mikko Hilpinen
  * @since 07.09.2025, v1.7
  */
-class Form(fields: Iterable[FormField])
+case class Form(fields: Iterable[FormField])
           (implicit log: Logger, exc: ExecutionContext, showNotification: ShowFormNotification, localizer: Localizer)
 	extends View[Future[Option[Model]]] with Combinable[FormField, Form]
 {
