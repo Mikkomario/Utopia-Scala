@@ -56,7 +56,6 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	  * @param newItem Adds a new item to this container
 	  */
 	def add(newItem: A) = _current.update { _ :+ newItem }
-	
 	/**
 	  * Removes an item from this container
 	  * @param item An item to remove
@@ -68,7 +67,6 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	  * @param f A filtering function
 	  */
 	def filter(f: A => Boolean) = _current.update { _.filter(f) }
-	
 	/**
 	  * Filters the contents of this container
 	  * @param f A filtering function that determines the items that are removed
@@ -80,7 +78,6 @@ abstract class MultiFileContainer[A](fileLocation: Path)(implicit jsonParser: Js
 	  * @return Content in this container before removal
 	  */
 	def popAll() = getAndSet(empty)
-	
 	/**
 	  * Removes all content from this container
 	  */

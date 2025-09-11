@@ -3,6 +3,7 @@ package utopia.reach.test.interactive
 import utopia.firmament.drawing.immutable.BorderDrawer
 import utopia.firmament.localization.Display
 import utopia.firmament.model.Border
+import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
 import utopia.paradigm.color.Color
@@ -47,7 +48,7 @@ object SelectionListTest extends App
 					framingF.withBackground(Primary, Light).small.build(SelectionList) { listF =>
 						// Selection list
 						val list = listF.apply(contentPointer, valuePointer,
-							alternativeKeyCondition = true) { (hierarchy, item: Int) =>
+							alternativeKeysEnabledFlag = AlwaysTrue) { (hierarchy, item: Int) =>
 							MutableViewTextLabel(hierarchy).withContext(listF.context.current)
 								.mapTextInsets { _.mapRight { i => i + margins.large }.expandingToRight }
 								.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))

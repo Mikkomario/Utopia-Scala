@@ -540,9 +540,20 @@ trait Stack extends ConcreteCustomDrawReachComponent with StackLike[ReachCompone
 	// ABSTRACT --------------------------
 	
 	/**
+	 * @return A pointer that contains the currently displayed components in this stack
+	 */
+	def componentsPointer: Changing[Seq[ReachComponent]]
+	
+	/**
 	  * @return A pointer that contains true while this stack should be displayed. I.e. is non-empty.
 	  */
-	def visibilityPointer: Flag
+	def visibleFlag: Flag
+	
+	
+	// COMPUTED --------------------------
+	
+	@deprecated("Renamed to visibleFlag", "v1.7")
+	def visibilityPointer = visibleFlag
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -558,7 +569,8 @@ private class _Stack(override val hierarchy: ComponentHierarchy,
 {
 	// ATTRIBUTES   ---------------------------
 	
-	override lazy val visibilityPointer: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	override lazy val visibleFlag: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
+	override lazy val componentsPointer: Changing[Seq[ReachComponent]] = Fixed(components)
 	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	

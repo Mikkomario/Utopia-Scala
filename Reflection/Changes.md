@@ -1,7 +1,11 @@
 # Utopia Reflection - List of Changes
 
-## v2.2.4 (in development)
+## v2.3 (in development)
 Supports latest changes in **Firmament** and **Flow**
+### Breaking changes
+- **ContainerSelectionManager**'s `.enableKeyHandling(...)` now accepts 
+  `adjustListener: Mutate[SelectionKeyListenerFactory]` instead of various other individual parameters, 
+  which were repeated from **SelectionKeyListener** constructors
 ### Other changes
 - The **Calendar** component now supports **Flow**'s new **Year** and **Month** classes
 

@@ -176,7 +176,7 @@ abstract class DropDownFieldLike[A, C <: AwtStackable with Refreshable[A]]
 		
 		displaysManager.enableMouseHandling()
 		displaysManager.enableKeyHandling(actorHandler,
-			listenEnabledCondition = mainDisplay.isInFocus || visiblePopupPointer.value.exists { _.visible })
+			_.withAdditionalCondition { mainDisplay.isInFocus || visiblePopupPointer.value.exists { _.visible } })
 		
 		addStackHierarchyChangeListener(attached => {
 			if (attached)

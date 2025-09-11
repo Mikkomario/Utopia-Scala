@@ -530,10 +530,14 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
 	
 	/**
+	 * A pointer that contains this stack's displayed components
+	 */
+	override lazy val componentsPointer = componentsP.readOnly
+	/**
 	  * A pointer to this stack's visibility state.
 	  * This stack is visible while there is one or more components visible inside.
 	  */
-	override lazy val visibilityPointer = componentsP.map { _.nonEmpty }
+	override lazy val visibleFlag = componentsP.map { _.nonEmpty }
 	
 	
 	// INITIAL CODE	-------------------------------

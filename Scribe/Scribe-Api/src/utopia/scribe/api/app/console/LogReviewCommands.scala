@@ -572,12 +572,13 @@ class LogReviewCommands(implicit log: Logger)
 		queuedCommentsP.clear()
 	}
 	
-	private def printStatusTableFor(issues: Seq[StatusRow], timeThreshold: Instant = recent) =
+	private def printStatusTableFor(issues: Seq[StatusRow], timeThreshold: Instant = recent) = {
+		val now = Now.toInstant
 		println(StringUtils.asciiTableFrom[StatusRow](issues,
-			Vector("ID", "Severity", "Context", "When", "Count", "Notice"),
+			Vector("ID", "Severity", "Context", "Age", "Count", "Notice"),
 			_.issue.id.toString, _.issue.severity.toString,
 			_.issue.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
-			i => timeDescription(i.lastOccurrence), _.occurrenceCount.toString,
+			i => (now - i.lastOccurrence).description, _.occurrenceCount.toString,
 			{ row =>
 				if (row.issue.hasUnreadNotifications)
 					"!!!"
@@ -592,6 +593,7 @@ class LogReviewCommands(implicit log: Logger)
 						""
 				}
 			}))
+	}
 	
 	private def summarize(issue: ManagedIssueInstances, threshold: Instant = recent) = {
 		val state = {

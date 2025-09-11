@@ -6,6 +6,10 @@
 - **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
   - The implementing classes should extend either **VariableColorContextualFactory** or 
     **VariableTextContextualFactory**
+- **Stack** now requires `visibleFlag: Flag` instead of `visibilityPointer: Flag`
+- **Stack** also requires `componentsPointer: Changing[Seq[ReachComponent]]`
+- **SelectionList** constructors now accepts `alternativeKeysEnabledFlag: Flag` instead of 
+  `alternativeKeyCondition: => Boolean`
 - **ReachWindow** constructors without content context (i.e. **ReachContentWindowContext**) will now receive a new 
   parameter: a window pointer.
   - This also applies to windows created via **ReachComponent**'s 
@@ -14,6 +18,7 @@
 - The field name -coloring in **Field** now properly adjusts to the changes in the inner field background color
 ### Deprecations
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
+- Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
 ### New features
 - Added new **Form** classes as a more customizable alternative to **InputWindowFactory** for form (window) creation 
 - Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits

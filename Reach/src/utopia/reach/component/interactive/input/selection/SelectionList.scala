@@ -14,7 +14,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
@@ -204,7 +204,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	  * @param valuePointer             A pointer to the currently selected value (default = new empty pointer)
 	  * @param sameItemCheck            A function for testing whether two items should be considered equal
 	  *                                 (specify only if equals method should <b>not</b> be used) (default = None)
-	  * @param alternativeKeyCondition  A function that returns true in cases where selection key events should be
+	  * @param alternativeKeysEnabledFlag A flag that contains true in cases where selection key events should be
 	  *                                 enabled. Key events are always enabled while this list is in focus.
 	  *                                 Default = false = Key events are received only while in focus.
 	  * @param makeDisplay              A function for creating a new display component. Accepts parent component hierarchy and
@@ -217,10 +217,10 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
 	protected def _apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
-	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeysEnabledFlag: Flag = AlwaysFalse)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		new SelectionList[A, C, P](hierarchy, actorHandler, contextBackgroundPointer, contentPointer,
-			valuePointer, settings, marginPointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
+			valuePointer, settings, marginPointer, sameItemCheck, alternativeKeysEnabledFlag)(makeDisplay)
 }
 
 /**
@@ -256,7 +256,7 @@ case class SelectionListFactory(hierarchy: ComponentHierarchy,
 	  * @param valuePointer             A pointer to the currently selected value (default = new empty pointer)
 	  * @param sameItemCheck            A function for testing whether two items should be considered equal
 	  *                                 (specify only if equals method should <b>not</b> be used) (default = None)
-	  * @param alternativeKeyCondition  A function that returns true in cases where selection key events should be
+	  * @param alternativeKeysEnabledFlag A flag that contains true in cases where selection key events should be
 	  *                                 enabled. Key events are always enabled while this list is in focus.
 	  *                                 Default = false = Key events are received only while in focus.
 	  * @param makeDisplay              A function for creating a new display component. Accepts parent component hierarchy and
@@ -269,10 +269,10 @@ case class SelectionListFactory(hierarchy: ComponentHierarchy,
 	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(actorHandler: ActorHandler, contextBackgroundPointer: View[Color], contentPointer: P,
 	 valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
-	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeysEnabledFlag: Flag = AlwaysFalse)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](actorHandler, contextBackgroundPointer, contentPointer, valuePointer, sameItemCheck,
-			alternativeKeyCondition)(makeDisplay)
+			alternativeKeysEnabledFlag)(makeDisplay)
 }
 
 /**
@@ -326,7 +326,7 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
 	  * @param valuePointer A pointer to the currently selected value (default = new empty pointer)
 	  * @param sameItemCheck A function for testing whether two items should be considered equal
 	  *                      (specify only if equals method should <b>not</b> be used) (default = None)
-	  * @param alternativeKeyCondition A function that returns true in cases where selection key events should be
+	  * @param alternativeKeysEnabledFlag A flag that contains true in cases where selection key events should be
 	  *                                enabled. Key events are always enabled while this list is in focus.
 	  *                                Default = false = Key events are received only while in focus.
 	  * @param makeDisplay A function for creating a new display component. Accepts parent component hierarchy and
@@ -338,10 +338,10 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
 	  */
 	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
 	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
-	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeyCondition: => Boolean = false)
+	 sameItemCheck: Option[EqualsFunction[A]] = None, alternativeKeysEnabledFlag: Flag = AlwaysFalse)
 	(makeDisplay: (ComponentHierarchy, A) => C) =
 		_apply[A, C, P](context.actorHandler, context.backgroundPointer, contentPointer,
-			valuePointer, sameItemCheck, alternativeKeyCondition)(makeDisplay)
+			valuePointer, sameItemCheck, alternativeKeysEnabledFlag)(makeDisplay)
 }
 
 /**
@@ -380,7 +380,7 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],
  settings: SelectionListSettings = SelectionListSettings.default,
  marginPointer: Changing[StackLength] = Fixed(StackLength.any), sameItemCheck: Option[EqualsFunction[A]],
- alternativeKeyCondition: => Boolean)
+ alternativeKeysEnabledFlag: Flag = AlwaysFalse)
 (makeDisplay: (ComponentHierarchy, A) => C)
 	extends ReachComponentWrapper with MutableCustomDrawableWrapper with MutableFocusable
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P] with CursorDefining
@@ -421,7 +421,8 @@ class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[S
 	}
 	
 	private val keyListener = SelectionKeyListener
-		.along(settings.axis, hasFocus || alternativeKeyCondition)(manager.moveSelection)
+		.withEnabledFlag(focusFlag || alternativeKeysEnabledFlag)
+		.listeningToKeysAlong(settings.axis)(manager.moveSelection)
 	
 	private val repaintAreaListener: ChangeListener[Option[Bounds]] = e => {
 		Bounds.aroundOption(e.values.flatten).foreach { area =>

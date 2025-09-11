@@ -1,30 +1,29 @@
 package utopia.reflection.controller.data
 
-import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.component.AreaOfItems
 import utopia.firmament.component.container.many.MutableMultiContainer
 import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.ComponentCreationDefaults.componentLogger
+import utopia.firmament.controller.data.SelectionKeyListener.SelectionKeyListenerFactory
 import utopia.firmament.controller.data.{ContainerContentDisplayer, ContentManager, SelectionKeyListener, SelectionManager}
 import utopia.firmament.drawing.mutable.MutableCustomDrawable
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.Drawer
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
-import utopia.genesis.handling.event.keyboard.Key.{DownArrow, UpArrow}
-import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
+import utopia.genesis.handling.event.keyboard.KeyboardEvents
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.reflection.component.template.ReflectionComponentLike
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.controller.data.ContainerSelectionManager.SelectStack
-
-import scala.concurrent.duration.Duration
 
 object ContainerSelectionManager
 {
@@ -205,14 +204,13 @@ class ContainerSelectionManager[A, C <: ReflectionStackable with Refreshable[A]]
 		container.addMouseButtonListener(new MouseHandler(consumeEvents))
 	/**
 	  * Enables key state handling for the stack (allows selection change with up & down arrows)
+	 * @param actorHandler Actor handler which delivers the necessary action events
+	 * @param adjustListener A function that is used for modifying the listener when it is created.
+	 *                       Default = no modifications.
 	  */
-	def enableKeyHandling(actorHandler: ActorHandler, nextKey: Key = DownArrow, prevKey: Key = UpArrow,
-	                      initialScrollDelay: Duration = 0.4.seconds, scrollDelayModifier: Double = 0.8,
-	                      minScrollDelay: Duration = 0.05.seconds,
-	                      listenEnabledCondition: => Boolean = true) =
+	def enableKeyHandling(actorHandler: ActorHandler, adjustListener: Mutate[SelectionKeyListenerFactory] = Identity): Unit =
 	{
-		val listener = new SelectionKeyListener(nextKey, prevKey, listenEnabledCondition,
-			initialScrollDelay, scrollDelayModifier, minScrollDelay)(amount => moveSelection(amount))
+		val listener = adjustListener(SelectionKeyListener.factory)(moveSelection)
 		container.addStackHierarchyChangeListener(attached => {
 			if (attached)
 				KeyboardEvents += listener

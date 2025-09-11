@@ -237,7 +237,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				val stack = factories(ViewStack).build(Mixed) { factories =>
 					groups.groups.map { group => groupToComponent(factories.next(), group, segmentGroup, fieldsBuffer) }
 				}.parent
-				stack -> stack.visibilityPointer
+				stack -> stack.visibleFlag
 			}
 		}
 		
@@ -265,7 +265,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 				val stack = factories(ViewStack).related.build(Mixed) { factories =>
 					group.rows.map { blueprint => actualizeRow(factories.next(), blueprint, segmentGroup, fieldsBuffer) }
 				}.parent
-				stack -> stack.visibilityPointer
+				stack -> stack.visibleFlag
 			}
 		}
 	}

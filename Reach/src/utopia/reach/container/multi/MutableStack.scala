@@ -123,15 +123,8 @@ class MutableStack[C <: ReachComponent](override val hierarchy: ComponentHierarc
 	private var _margin = initialMargin
 	private var _cap = initialCap
 	
-	override lazy val visibilityPointer: Flag = _componentsPointer.map { _.nonEmpty }
-	
-	
-	// COMPUTED -----------------------------
-	
-	/**
-	 * @return A read-only pointer to this stack's current contents
-	 */
-	def componentsPointer = _componentsPointer.readOnly
+	override lazy val visibleFlag: Flag = _componentsPointer.lightMap { _.nonEmpty }
+	override lazy val componentsPointer = _componentsPointer.readOnly
 	
 	
 	// IMPLEMENTED	------------------------
