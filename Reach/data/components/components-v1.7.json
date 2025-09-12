@@ -1,6 +1,6 @@
 {
   "project": "Reach",
-  "version": "v1.6",
+  "version": "v1.7",
   "author": "Mikko Hilpinen",
   "package": "utopia.reach",
   "packages": {
@@ -1103,7 +1103,7 @@
           "only_contextual": true,
           "props": [
             {
-              "ref": "Stack",
+              "ref": "ViewStack",
               "prefix": "stack",
               "prefix_props": false,
               "doc": "Settings that affect this stack's layout"
@@ -1116,9 +1116,9 @@
               "doc": "A drawer used for visualizing selection and mouse interaction"
             },
             {
-              "name": "additionalSelectionKeys",
+              "name": "extraSelectionKeys",
               "param": "keys",
-              "type": "Map[key, sign]",
+              "type": "Map[Key, Sign]",
               "default": "Map[Key, Sign]()",
               "map": true,
               "doc": "Keys (other than the arrow keys), which are used for moving the selection around. \nEach key is mapped to the direction to which it moves the selection."
@@ -1127,7 +1127,7 @@
               "name": "alternativeKeySelectionEnabledFlag",
               "param": "enabledFlag",
               "type": "flag",
-              "default": "false!",
+              "default": "!false",
               "doc": "A flag that, when set, makes the keyboard-based selection function even when the component doesn't have focus",
               "map": true
             },

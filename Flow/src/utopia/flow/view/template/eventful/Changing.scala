@@ -37,6 +37,14 @@ object Changing
 	var listenerDebuggingLimit = -1
 	
 	
+	// COMPUTED --------------------------
+	
+	/**
+	 * @return Access to constructors for lazily initialized changing items
+	 */
+	def lazily = LazilyInitializedChanging
+	
+	
 	// OTHER    --------------------------
 	
 	/**

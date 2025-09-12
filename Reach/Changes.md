@@ -22,6 +22,7 @@
 - Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
 ### New features
 - Added new **Form** classes as a more customizable alternative to **InputWindowFactory** for form (window) creation 
+- Added **SelectableStack** component
 - Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits
   - Multiple existing components now extend these, making context-modifications easier
 - When using **ReachWindow** and specifying content context (i.e. **ReachContentWindowContext**), the context's 

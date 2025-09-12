@@ -4,6 +4,8 @@
 ### New methods
 - **Drawer**
   - Added `.toGraphics`
+### Other changes
+- Added an implicit conversion from **Color** to **DrawSettings**
 
 ## v4.2.1 - 26.05.2025
 This update improves the reliability of the **Actor** system with better error-handling. 

@@ -22,6 +22,8 @@ object DrawSettings
 	// StrokeSettings may implicitly be interpreted as DrawSettings without fillColor
 	implicit def strokeToDraw(s: StrokeSettings): DrawSettings = apply(None, Some(s))
 	
+	implicit def colorToFill(fillColor: Color): DrawSettings = onlyFill(fillColor)
+	
 	
 	// OTHER    -----------------------------
 	

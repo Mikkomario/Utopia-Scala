@@ -68,6 +68,8 @@
 ### Other changes
 - **XmlReader** now discards non-XML prefix from the streamed input, 
   effectively handling the BOM issue, and other such malformed inputs
+- **LazilyInitializedChanging** now contains custom definitions for certain mapping functions,
+  etc. further delaying the initialization in certain use-cases.
 - **MutableOnce** now extends **Lockable**
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
