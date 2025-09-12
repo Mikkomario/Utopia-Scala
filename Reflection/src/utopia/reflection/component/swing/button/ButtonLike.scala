@@ -1,7 +1,8 @@
 package utopia.reflection.component.swing.button
 
 import utopia.firmament.model.GuiElementStatus
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
+import utopia.firmament.model.enumeration.MouseInteractionState.Hover
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag

@@ -1,7 +1,8 @@
 package utopia.reach.component.template
 
 import utopia.firmament.model.GuiElementStatus
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
+import utopia.firmament.model.enumeration.MouseInteractionState.Hover
 import utopia.reach.focus.FocusTracking
 
 /**

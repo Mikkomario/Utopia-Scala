@@ -1,6 +1,7 @@
 package utopia.reach.component.template
 
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused}
+import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, Pressed}
 import utopia.firmament.model.{GuiElementStatus, HotKey}
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.mutable.Pointer
@@ -53,6 +54,7 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 	/**
 	  * @return Whether this button is currently being pressed down
 	  */
+	@deprecated("Please use isActivated instead", "v1.7")
 	def isPressed = state is Activated
 	
 	@deprecated("Renamed to enabledFlag", "v1.6")
@@ -182,8 +184,8 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 		
 		// COMPUTED	-------------------------------
 		
-		def down = statePointer.value is Activated
-		def down_=(newState: Boolean) = statePointer.update { _ + (Activated -> newState) }
+		def down = statePointer.value is Pressed
+		def down_=(newState: Boolean) = statePointer.update { _ + (Pressed -> newState) }
 		
 		
 		// IMPLEMENTED	----------------------------

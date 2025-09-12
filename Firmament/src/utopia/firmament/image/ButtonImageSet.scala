@@ -1,8 +1,9 @@
 package utopia.firmament.image
 
 import utopia.firmament.image.ButtonImageEffect.{ChangeSize, Highlight, LowerAlphaOnDisabled}
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Focused}
 import utopia.firmament.model.GuiElementStatus
+import utopia.firmament.model.enumeration.MouseInteractionState.Hover
 import utopia.flow.operator.sign.Sign.Negative
 import utopia.genesis.image.Image
 import utopia.paradigm.transform.Adjustment

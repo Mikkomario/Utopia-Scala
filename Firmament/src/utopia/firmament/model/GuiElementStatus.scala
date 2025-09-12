@@ -43,35 +43,38 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	// ATTRIBUTES   -------------------
 	
 	/**
+	 * @return The states included in this status, including the implied states
+	 */
+	lazy val implicitStates = states ++ states.flatMap { _.impliedStates }
+	/**
 	  * @return The intensity of this status, where 0 is no effect.
 	  *         May be positive or negative.
 	  */
 	lazy val intensity = {
-		val default = implicitStates.iterator.map { _.effect.modifier }.sum
-		if (default > 1.0)
-			1.0 + (default - 1.0) * 0.5
-		else if (default < -1.0)
-			-1.0 - (default + 1.0) * 0.5
-		else
-			default
+		if (isEmpty)
+			0
+		else {
+			val default = implicitStates.iterator.map { _.level }.maxBy { _.abs }
+			if (default > 1.0)
+				1.0 + (default - 1.0) * 0.5
+			else if (default < -1.0)
+				-1.0 - (default + 1.0) * 0.5
+			else
+				default
+		}
 	}
+	
+	/**
+	 * @return Whether this element is currently enabled / may be interacted with
+	 */
+	lazy val enabled = isNot(Disabled)
+	/**
+	 * @return Whether this element is currently disabled / may not be interacted with
+	 */
+	lazy val  disabled = is(Disabled)
 	
 	
 	// COMPUTED -----------------------
-	
-	/**
-	  * @return Whether this element is currently enabled / may be interacted with
-	  */
-	def enabled = isNot(Disabled)
-	/**
-	  * @return Whether this element is currently disabled / may not be interacted with
-	  */
-	def disabled = is(Disabled)
-	
-	/**
-	  * @return The states included in this status, including the implied states
-	  */
-	def implicitStates = states ++ states.flatMap { _.impliedStates }
 	
 	/**
 	  * @return Hover effect alpha value to use with this status
@@ -98,7 +101,7 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	  * @param state A state
 	  * @return Whether the described element currently has that state
 	  */
-	def is(state: GuiElementState) = states.contains(state)
+	def is(state: GuiElementState) = implicitStates.contains(state)
 	/**
 	  * @param state A state
 	  * @return Whether the described element doesn't currently have that state

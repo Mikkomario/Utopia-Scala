@@ -41,6 +41,7 @@ trait SelectionDrawer
 	 */
 	def drawLevel: DrawLevel
 	
+	// TODO: Include a hover parameter
 	/**
 	 * Visualizes the selected area
 	 * @param drawer Drawer to utilize

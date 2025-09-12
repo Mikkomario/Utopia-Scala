@@ -7,7 +7,8 @@ import utopia.firmament.context.{AnimationContext, ComponentCreationDefaults}
 import utopia.firmament.drawing.mutable.MutableCustomDrawableWrapper
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
+import utopia.firmament.model.enumeration.MouseInteractionState.Hover
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeEvent

@@ -5,7 +5,7 @@ import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
-import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused, Hover}
+import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
 import utopia.firmament.model.enumeration.{GuiElementState, SizeCategory}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
@@ -43,6 +43,7 @@ import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import Slider.SliderColors
+import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, Pressed}
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
 import utopia.reach.focus.FocusListener
@@ -502,6 +503,8 @@ class Slider[A](override val hierarchy: ComponentHierarchy, actorHandler: ActorH
 			builder += Hover
 		if (activatedFlag.value)
 			builder += Activated
+		if (draggingFlag.value)
+			builder += Pressed
 		if (enabledFlag.isNotSet)
 			builder += Disabled
 		

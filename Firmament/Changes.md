@@ -6,6 +6,8 @@
   - The listener is now constructed using a factory setup
   - Listening enabled -state is tracked using pointers, where possible
   - Allows for changing and more customizable listened keys
+- Modified **GuiElementState** enumeration some, adding related **MouseInteractionState** enumeration
+  - Moved the **Hover** state to **MouseInteractionState** object
 - Stackable now requires the classes to implement `updateStackSize(): Boolean`
   - This is already implemented by all **CachingStackable** and **StackableWrapper**, 
     only not covering custom implementations and static sized components
