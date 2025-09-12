@@ -90,7 +90,9 @@ object Selectable
 
 /**
   * Selectable components are selections that can be interacted with from the program side
-  * @author Mikko Hilpinen
+  * @tparam S Type of the selected items
+ * @tparam C Type of the selection pool
+ * @author Mikko Hilpinen
   * @since 23.4.2019, Reflection v1+
   */
 trait Selectable[S, C] extends Selection[S, C] with Interaction[S]

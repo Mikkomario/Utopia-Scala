@@ -2,7 +2,8 @@ package utopia.reach.component.template
 
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.{Activated, Disabled, Focused}
-import utopia.firmament.model.enumeration.MouseInteractionState.Hover
+import utopia.firmament.model.enumeration.MouseInteractionState
+import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, NoInteraction, Pressed}
 import utopia.reach.focus.FocusTracking
 
 /**
@@ -48,6 +49,18 @@ trait HasGuiState extends FocusTracking
 	  * @return Whether this element is currently not being activated
 	  */
 	def isNotActivated = !isActivated
+	
+	/**
+	 * @return The currently applicable level of mouse interaction with this component
+	 */
+	def mouseInteractionLevel: MouseInteractionState = {
+		if (state is Pressed)
+			Pressed
+		else if (state is Hover)
+			Hover
+		else
+			NoInteraction
+	}
 	
 	
 	// IMPLEMENTED  -----------------------------

@@ -5,7 +5,9 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 
 /**
   * This selectable implementation uses pointers
-  * @author Mikko Hilpinen
+  * @tparam S Type of selection
+ * @tparam C Type of the content pool
+ * @author Mikko Hilpinen
   * @since 29.6.2019, Reflection v1+
   */
 trait SelectableWithPointers[S, C] extends Selectable[S, C]
