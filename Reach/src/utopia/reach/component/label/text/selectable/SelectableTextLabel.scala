@@ -208,17 +208,17 @@ trait SelectableTextLabelSettingsWrapper[+Repr] extends SelectableTextLabelSetti
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
-                                                settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                                drawsBackground: Boolean = false)
-	extends SelectableTextLabelSettingsWrapper[ContextualSelectableTextLabelFactory]
-		with VariableTextContextualFactory[ContextualSelectableTextLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
+case class SelectableTextLabelFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
+                                      settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
+                                      drawsBackground: Boolean = false)
+	extends SelectableTextLabelSettingsWrapper[SelectableTextLabelFactory]
+		with VariableTextContextualFactory[SelectableTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, SelectableTextLabelFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED  ---------------------------
 	
-	override def self: ContextualSelectableTextLabelFactory = this
+	override def self: SelectableTextLabelFactory = this
 	
 	override def withContext(context: VariableTextContext) =
 		copy(context = context)
@@ -226,7 +226,7 @@ case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, c
 		copy(settings = settings)
 	
 	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
-	                                                     backgroundDrawer: CustomDrawer): ContextualSelectableTextLabelFactory =
+	                                                     backgroundDrawer: CustomDrawer): SelectableTextLabelFactory =
 		copy(context = newContext, settings = settings.withCustomBackgroundDrawer(backgroundDrawer),
 			drawsBackground = true)
 	
@@ -253,12 +253,12 @@ case class ContextualSelectableTextLabelFactory(hierarchy: ComponentHierarchy, c
   */
 case class SelectableTextLabelSetup(settings: SelectableTextLabelSettings = SelectableTextLabelSettings.default)
 	extends SelectableTextLabelSettingsWrapper[SelectableTextLabelSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualSelectableTextLabelFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, SelectableTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
-		ContextualSelectableTextLabelFactory(hierarchy, context, settings)
+		SelectableTextLabelFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: SelectableTextLabelSettings) = copy(settings = settings)
 }

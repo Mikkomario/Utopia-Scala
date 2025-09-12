@@ -174,21 +174,21 @@ trait ImageAndTextButtonSettingsWrapper[+Repr] extends ImageAndTextButtonSetting
   * @author Mikko Hilpinen
   * @since 01.06.2023, v1.1
   */
-case class ContextualImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
-                                               settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
-	extends ImageAndTextButtonSettingsWrapper[ContextualImageAndTextButtonFactory]
-		with TextContextualFactory[ContextualImageAndTextButtonFactory] with PartOfComponentHierarchy
-		with FromColorRoleFactory[ContextualImageAndTextButtonFactory]
+case class ImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
+                                     settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
+	extends ImageAndTextButtonSettingsWrapper[ImageAndTextButtonFactory]
+		with TextContextualFactory[ImageAndTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ImageAndTextButtonFactory]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def self: ContextualImageAndTextButtonFactory = this
+	override def self: ImageAndTextButtonFactory = this
 	
 	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
-	override def withSettings(settings: ImageAndTextButtonSettings): ContextualImageAndTextButtonFactory =
+	override def withSettings(settings: ImageAndTextButtonSettings): ImageAndTextButtonFactory =
 		copy(settings = settings)
 	
-	override def apply(role: ColorRole): ContextualImageAndTextButtonFactory = withBackground(role)
+	override def apply(role: ColorRole): ImageAndTextButtonFactory = withBackground(role)
 	
 	
 	// OTHER    ----------------------------
@@ -265,15 +265,15 @@ case class ContextualImageAndTextButtonFactory(hierarchy: ComponentHierarchy, co
   */
 case class ImageAndTextButtonSetup(settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[StaticTextContext, ContextualImageAndTextButtonFactory]
+		with FromContextComponentFactoryFactory[StaticTextContext, ImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def self: ImageAndTextButtonSetup = this
 	
 	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: StaticTextContext): ContextualImageAndTextButtonFactory =
-		ContextualImageAndTextButtonFactory(hierarchy, context, settings)
+	                         context: StaticTextContext): ImageAndTextButtonFactory =
+		ImageAndTextButtonFactory(hierarchy, context, settings)
 	override def withSettings(settings: ImageAndTextButtonSettings): ImageAndTextButtonSetup =
 		copy(settings = settings)
 }

@@ -15,17 +15,17 @@ import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignable
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-object MutableTextLabel extends Ccff[StaticTextContext, ContextualMutableTextLabelFactory]
+object MutableTextLabel extends Ccff[StaticTextContext, MutableTextLabelFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: StaticTextContext) =
-		ContextualMutableTextLabelFactory(hierarchy, context)
+		MutableTextLabelFactory(hierarchy, context)
 }
 
-case class ContextualMutableTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
-                                             customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
-	extends TextContextualFactory[ContextualMutableTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualMutableTextLabelFactory]
-		with CustomDrawableFactory[ContextualMutableTextLabelFactory] with PartOfComponentHierarchy
+case class MutableTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
+                                   customDrawers: Seq[CustomDrawer] = Empty, isHint: Boolean = false)
+	extends TextContextualFactory[MutableTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, MutableTextLabelFactory]
+		with CustomDrawableFactory[MutableTextLabelFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED --------------------------------------
 	
@@ -37,9 +37,9 @@ case class ContextualMutableTextLabelFactory(hierarchy: ComponentHierarchy, cont
 	
 	// IMPLEMENTED	----------------------------------
 	
-	override def self: ContextualMutableTextLabelFactory = this
+	override def self: MutableTextLabelFactory = this
 	
-	override def withCustomDrawers(drawers: Seq[CustomDrawer]): ContextualMutableTextLabelFactory =
+	override def withCustomDrawers(drawers: Seq[CustomDrawer]): MutableTextLabelFactory =
 		copy(customDrawers = drawers)
 	override def withContext(newContext: StaticTextContext) = copy(context = newContext)
 	

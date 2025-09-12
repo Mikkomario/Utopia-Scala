@@ -165,13 +165,12 @@ trait ViewImageAndTextButtonSettingsWrapper[+Repr] extends ViewImageAndTextButto
   * @author Mikko Hilpinen
   * @since 31.05.2023, v1.1
   */
-case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy,
-                                                   context: VariableTextContext,
-                                                   settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
-	extends ViewImageAndTextButtonSettingsWrapper[ContextualViewImageAndTextButtonFactory]
-		with VariableTextContextualFactory[ContextualViewImageAndTextButtonFactory]
-		with FromAlignmentFactory[ContextualViewImageAndTextButtonFactory] with PartOfComponentHierarchy
-		with FromColorRoleFactory[ContextualViewImageAndTextButtonFactory]
+case class ViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
+                                         settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
+	extends ViewImageAndTextButtonSettingsWrapper[ViewImageAndTextButtonFactory]
+		with VariableTextContextualFactory[ViewImageAndTextButtonFactory]
+		with FromAlignmentFactory[ViewImageAndTextButtonFactory] with PartOfComponentHierarchy
+		with FromColorRoleFactory[ViewImageAndTextButtonFactory]
 {
 	// COMPUTED ------------------------------
 	
@@ -180,7 +179,7 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def self: ContextualViewImageAndTextButtonFactory = this
+	override def self: ViewImageAndTextButtonFactory = this
 	
 	override def withContext(context: VariableTextContext) =
 		copy(context = context)
@@ -305,12 +304,12 @@ case class ContextualViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy
   */
 case class ViewImageAndTextButtonSetup(settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ViewImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewImageAndTextButtonFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ViewImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
-		ContextualViewImageAndTextButtonFactory(hierarchy, context, settings)
+		ViewImageAndTextButtonFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageAndTextButtonSettings) =
 		copy(settings = settings)

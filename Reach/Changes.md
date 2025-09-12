@@ -2,6 +2,7 @@
 
 ## v1.7 (in development)
 ### Breaking changes
+- Removed "contextual" from component factory names in situations where no non-contextual version exists
 - Custom **TextField** constructors now require a new constructor function: result-to-text
 - **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
   - The implementing classes should extend either **VariableColorContextualFactory** or 

@@ -212,10 +212,10 @@ trait ProgressBarSettingsWrapper[+Repr] extends ProgressBarSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 13.02.2025, v1.6
   */
-case class ContextualProgressBarFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
-                                        settings: ProgressBarSettings = ProgressBarSettings.default)
-	extends ProgressBarSettingsWrapper[ContextualProgressBarFactory]
-		with ContextualFactory[VariableColorContext, ContextualProgressBarFactory]
+case class ProgressBarFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
+                              settings: ProgressBarSettings = ProgressBarSettings.default)
+	extends ProgressBarSettingsWrapper[ProgressBarFactory]
+		with ContextualFactory[VariableColorContext, ProgressBarFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
@@ -242,12 +242,12 @@ case class ContextualProgressBarFactory(hierarchy: ComponentHierarchy, context: 
   */
 case class ProgressBarSetup(settings: ProgressBarSettings = ProgressBarSettings.default)
 	extends ProgressBarSettingsWrapper[ProgressBarSetup]
-		with FromContextComponentFactoryFactory[VariableColorContext, ContextualProgressBarFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, ProgressBarFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext) =
-		ContextualProgressBarFactory(hierarchy, context, settings)
+		ProgressBarFactory(hierarchy, context, settings)
 	override def withSettings(settings: ProgressBarSettings) = copy(settings = settings)
 }
 

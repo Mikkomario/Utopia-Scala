@@ -247,13 +247,12 @@ trait ViewImageAndTextLabelSettingsWrapper[+Repr] extends ViewImageAndTextLabelS
 	def mapSettings(f: ViewImageAndTextLabelSettings => ViewImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
-                                                  context: VariableTextContext,
-                                                  settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default,
-                                                  drawBackground: Boolean = false)
-	extends ViewImageAndTextLabelSettingsWrapper[ContextualViewImageAndTextLabelFactory]
-		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
-		with VariableTextContextualFactory[ContextualViewImageAndTextLabelFactory]
+case class ViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
+                                        settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default,
+                                        drawBackground: Boolean = false)
+	extends ViewImageAndTextLabelSettingsWrapper[ViewImageAndTextLabelFactory]
+		with VariableBackgroundRoleAssignableFactory[VariableTextContext, ViewImageAndTextLabelFactory]
+		with VariableTextContextualFactory[ViewImageAndTextLabelFactory]
 		with PartOfComponentHierarchy
 {
 	// COMPUTED ----------------------
@@ -263,14 +262,14 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	
 	// IMPLEMENTED  ------------------
 	
-	override def self: ContextualViewImageAndTextLabelFactory = this
+	override def self: ViewImageAndTextLabelFactory = this
 	
-	override def withContext(p: VariableTextContext): ContextualViewImageAndTextLabelFactory = copy(context = p)
+	override def withContext(p: VariableTextContext): ViewImageAndTextLabelFactory = copy(context = p)
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)
 	
 	override protected def withVariableBackgroundContext(newContext: VariableTextContext,
-	                                                     backgroundDrawer: CustomDrawer): ContextualViewImageAndTextLabelFactory =
+	                                                     backgroundDrawer: CustomDrawer): ViewImageAndTextLabelFactory =
 		copy(context = newContext, settings = settings.withCustomDrawers(backgroundDrawer +: settings.customDrawers),
 			drawBackground = true)
 	
@@ -294,13 +293,13 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
 	  * @param preferredShade Preferred color shade to use (default = Standard)
 	  * @return Copy of this factory that places a color overlay over the drawn images
 	  */
-	def withImageColorOverlay(role: ColorRole, preferredShade: ColorLevel): ContextualViewImageAndTextLabelFactory =
+	def withImageColorOverlay(role: ColorRole, preferredShade: ColorLevel): ViewImageAndTextLabelFactory =
 		withImageColorRolePointer(Fixed(role), preferredShade)
 	/**
 	  * @param role           The color role to use as image overlay color
 	  * @return Copy of this factory that places a color overlay over the drawn images
 	  */
-	def withImageColorOverlay(role: ColorRole): ContextualViewImageAndTextLabelFactory =
+	def withImageColorOverlay(role: ColorRole): ViewImageAndTextLabelFactory =
 		withImageColorOverlay(role, Standard)
 	
 	/**
@@ -386,12 +385,12 @@ case class ContextualViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy,
   */
 case class ViewImageAndTextLabelSetup(settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
 	extends ViewImageAndTextLabelSettingsWrapper[ViewImageAndTextLabelSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewImageAndTextLabelFactory]
+		with FromContextComponentFactoryFactory[VariableTextContext, ViewImageAndTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext) =
-		ContextualViewImageAndTextLabelFactory(hierarchy, context, settings)
+		ViewImageAndTextLabelFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: ViewImageAndTextLabelSettings) =
 		copy(settings = settings)

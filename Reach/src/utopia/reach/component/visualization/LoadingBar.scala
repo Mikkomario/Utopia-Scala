@@ -141,15 +141,15 @@ trait LoadingBarSettingsWrapper[+Repr] extends LoadingBarSettingsLike[Repr]
   * @author Mikko Hilpinen
   * @since 13.02.2025, v1.6
   */
-case class ContextualLoadingBarFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
-                                       settings: LoadingBarSettings = LoadingBarSettings.default)
-	extends LoadingBarSettingsWrapper[ContextualLoadingBarFactory]
-		with VariableColorContextualFactory[ContextualLoadingBarFactory]
+case class LoadingBarFactory(hierarchy: ComponentHierarchy, context: VariableColorContext,
+                             settings: LoadingBarSettings = LoadingBarSettings.default)
+	extends LoadingBarSettingsWrapper[LoadingBarFactory]
+		with VariableColorContextualFactory[LoadingBarFactory]
 		with PartOfComponentHierarchy
 {
 	// IMPLEMENTED	--------------------
 	
-	override def self: ContextualLoadingBarFactory = this
+	override def self: LoadingBarFactory = this
 	
 	override def withContext(context: VariableColorContext) = copy(context = context)
 	override def withSettings(settings: LoadingBarSettings) = copy(settings = settings)
@@ -180,12 +180,12 @@ case class ContextualLoadingBarFactory(hierarchy: ComponentHierarchy, context: V
   */
 case class LoadingBarSetup(settings: LoadingBarSettings = LoadingBarSettings.default)
 	extends LoadingBarSettingsWrapper[LoadingBarSetup]
-		with FromContextComponentFactoryFactory[VariableColorContext, ContextualLoadingBarFactory]
+		with FromContextComponentFactoryFactory[VariableColorContext, LoadingBarFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext) =
-		ContextualLoadingBarFactory(hierarchy, context, settings)
+		LoadingBarFactory(hierarchy, context, settings)
 	
 	override def withSettings(settings: LoadingBarSettings) = copy(settings = settings)
 }

@@ -305,29 +305,29 @@ trait ImageAndTextLabelSettingsWrapper[+Repr] extends ImageAndTextLabelSettingsL
 	def mapSettings(f: ImageAndTextLabelSettings => ImageAndTextLabelSettings) = withSettings(f(settings))
 }
 
-case class ContextualImageAndTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
-                                              settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
-	extends TextContextualFactory[ContextualImageAndTextLabelFactory]
-		with ImageAndTextLabelSettingsWrapper[ContextualImageAndTextLabelFactory]
-		with ContextualBackgroundAssignableFactory[StaticTextContext, ContextualImageAndTextLabelFactory]
-		with FromAlignmentFactory[ContextualImageAndTextLabelFactory] with PartOfComponentHierarchy
+case class ImageAndTextLabelFactory(hierarchy: ComponentHierarchy, context: StaticTextContext,
+                                    settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
+	extends TextContextualFactory[ImageAndTextLabelFactory]
+		with ImageAndTextLabelSettingsWrapper[ImageAndTextLabelFactory]
+		with ContextualBackgroundAssignableFactory[StaticTextContext, ImageAndTextLabelFactory]
+		with FromAlignmentFactory[ImageAndTextLabelFactory] with PartOfComponentHierarchy
 {
 	// COMPUTED --------------------
 	
 	/**
 	  * @return A factory resembling this factory, which may be used for constructing view-based labels
 	  */
-	def toViewFactory: ContextualViewImageAndTextLabelFactory =
-		ContextualViewImageAndTextLabelFactory(hierarchy, context.toVariableContext, settings.toViewSettings)
+	def toViewFactory: ViewImageAndTextLabelFactory =
+		ViewImageAndTextLabelFactory(hierarchy, context.toVariableContext, settings.toViewSettings)
 	
 	private def resolveInsets = resolveInsetsIn(context)
 	
 	
 	// IMPLEMENTED  ----------------
 	
-	override def self: ContextualImageAndTextLabelFactory = this
+	override def self: ImageAndTextLabelFactory = this
 	
-	override def withSettings(settings: ImageAndTextLabelSettings): ContextualImageAndTextLabelFactory =
+	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelFactory =
 		copy(settings = settings)
 	
 	override def withContext(newContext: StaticTextContext) =
@@ -404,13 +404,13 @@ case class ContextualImageAndTextLabelFactory(hierarchy: ComponentHierarchy, con
   */
 case class ImageAndTextLabelSetup(settings: ImageAndTextLabelSettings = ImageAndTextLabelSettings.default)
 	extends ImageAndTextLabelSettingsWrapper[ImageAndTextLabelSetup]
-		with FromContextComponentFactoryFactory[StaticTextContext, ContextualImageAndTextLabelFactory]
+		with FromContextComponentFactoryFactory[StaticTextContext, ImageAndTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	
 	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: StaticTextContext): ContextualImageAndTextLabelFactory =
-		ContextualImageAndTextLabelFactory(hierarchy, context, settings.withImageAlignment(context.textAlignment.opposite))
+	                         context: StaticTextContext): ImageAndTextLabelFactory =
+		ImageAndTextLabelFactory(hierarchy, context, settings.withImageAlignment(context.textAlignment.opposite))
 	
 	override def withSettings(settings: ImageAndTextLabelSettings): ImageAndTextLabelSetup =
 		copy(settings = settings)
