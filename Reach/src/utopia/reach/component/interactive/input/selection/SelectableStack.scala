@@ -1,6 +1,6 @@
 package utopia.reach.component.interactive.input.selection
 
-import utopia.firmament.component.input.SelectionWithPointers
+import utopia.firmament.component.input.{InputWithPointer, SelectionWithPointers}
 import utopia.firmament.context.color.VariableColorContextLike
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.controller.data.SelectionKeyListener
@@ -19,7 +19,8 @@ import utopia.flow.view.immutable.eventful.{AlwaysFalse, LazilyInitializedChangi
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.genesis.graphics.{DrawLevel, Drawer}
+import utopia.genesis.graphics.DrawLevel.Background
+import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
@@ -53,6 +54,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 (implicit eq: EqualsFunction[A])
 	extends ReachComponentWrapper with FocusableWithState with HasGuiState
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], Changing[Seq[A]]]
+		with InputWithPointer[Option[A], EventfulPointer[Option[A]]]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -68,7 +70,10 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 	}
 	
 	override protected lazy val wrapped = ViewStack.withContext(hierarchy, context).withSettings(stackSettings)
-		.withAdditionalCustomDrawers(selectionDrawer.map { new LocalSelectionDrawer(_) })
+		.withCustomDrawer(selectionDrawer match {
+			case Some(drawer) => new LocalSelectionDrawer(drawer)
+			case None => new HoverDrawer
+		})
 		.mapPointer(contentPointer, viewFactory) { (factory, pointer, index) =>
 			// Tracks selection status and modifies the background pointer accordingly
 			val (selectedFlag, correctBgFactory) = selectedBgP match {
@@ -91,6 +96,13 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 	private lazy val locationTracker = new StackItemAreas[ReachComponent](wrapped, componentsP)
 	
 	private val listensToKeyboard = arrowKeySelectionEnabled || otherSelectionKeys.nonEmpty
+	
+	/**
+	 * A change listener for repainting changed selection and/or hover areas
+	 */
+	private val areaChangeListener = ChangeListener[Option[Bounds]] { e =>
+		e.values.flatten.reduceOption { (prev, now) => Bounds.around(Pair(prev, now)) }.foreach { repaintArea(_) }
+	}
 	
 	
 	// INITIAL CODE -----------------------
@@ -284,10 +296,6 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 			index.flatMap(components.lift).flatMap(locationTracker.areaOf)
 		}
 		
-		private val areaChangeListener = ChangeListener[Option[Bounds]] { e =>
-			e.values.flatten.reduceOption { (prev, now) => Bounds.around(Pair(prev, now)) }.foreach { repaintArea(_) }
-		}
-		
 		
 		// INITIAL CODE -------------------
 		
@@ -302,17 +310,42 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 		override def drawLevel: DrawLevel = wrapped.drawLevel
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
-			// Visualizes selection
 			val selectedArea = selectedAreaP.value
-			selectedArea.foreach { selected =>
-				wrapped.draw(drawer, bounds, selected, mouseInteractionLevel, hasFocus = hasFocus, selected = true)
-			}
-			// Also visualizes hover, if distinct
+			// Visualizes hover, if distinct from the selected area
 			MouseHoverTracker.hoverOverAreaP.value.filterNot { area => selectedArea.exists { _ ~== area } }
 				.foreach { hoverArea =>
 					wrapped.draw(drawer, bounds, hoverArea, mouseInteractionLevel,
 						hasFocus = hasFocus, selected = false)
 				}
+			// Visualizes selection
+			selectedArea.foreach { selected =>
+				wrapped.draw(drawer, bounds, selected, mouseInteractionLevel, hasFocus = hasFocus, selected = true)
+			}
 		}
+	}
+	/**
+	 * Used for visualizing the mouse hover state when no selection drawing is used
+	 */
+	private class HoverDrawer extends CustomDrawer
+	{
+		// ATTRIBUTES   --------------------------
+		
+		override val opaque: Boolean = false
+		override val drawLevel: DrawLevel = Background
+		
+		
+		// INITIAL CODE --------------------------
+		
+		MouseHoverTracker.hoverOverAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
+		
+		
+		// IMPLEMENTED  -------------------------
+		
+		override def draw(drawer: Drawer, bounds: Bounds): Unit = MouseHoverTracker.hoverOverAreaP.value
+			.foreach { hoverArea =>
+				implicit val ds: DrawSettings = DrawSettings.onlyFill(
+					context.backgroundPointer.value.highlightedBy(mouseInteractionLevel.level))
+				drawer.draw(hoverArea + bounds.position)
+			}
 	}
 }
