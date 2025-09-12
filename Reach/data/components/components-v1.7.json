@@ -31,6 +31,7 @@
     "times": "flow/time.TimeExtensions._",
     "pair": "coll/immutable.Pair",
     "regex": "strings/Regex",
+    "sign": "operator/Sign",
     "p": "pointers/template.eventful.Changing",
     "fixed": "immutablePointers.Fixed",
     "flag": "pointers/template.eventful.Flag",
@@ -45,7 +46,8 @@
     "sizeC": "fEnum/SizeCategory",
     "velocity": "paradigm/motion.motion1d.LinearVelocity",
     "prio": "graphics/Priority",
-    "fps": "genesis/util/Fps",
+    "fps": "genesis/util.Fps",
+    "key": "genesis/handling.event.keyboard.Key",
     "icon": "image/SingleColorIcon",
     "hotkey": "firmamentModels/HotKey",
     "localized": "localization/LocalizedString",
@@ -1097,6 +1099,8 @@
         {
           "name": "SelectableStack",
           "context": "any",
+          "parents": ["focus"],
+          "only_contextual": true,
           "props": [
             {
               "ref": "Stack",
@@ -1105,25 +1109,34 @@
               "doc": "Settings that affect this stack's layout"
             },
             {
-              "name": "highlightModifier",
-              "param": "modifier",
-              "type": "Double",
-              "default": "1.0",
-              "map": true,
-              "doc": "A modifier that is applied to the color highlighting used in this component.\n1.0 signifies the default color highlighting."
-            }
-          ],
-          "non_contextual_props": [
+              "name": "selectionDrawer",
+              "param": "drawer",
+              "type": "Option[utopia.component.interactive.input.selection.SelectionDrawer]",
+              "default": "None",
+              "doc": "A drawer used for visualizing selection and mouse interaction"
+            },
             {
-              "name": "marginPointer",
-              "param": "p",
-              "type": "p[len]",
-              "default": {
-                "code": "Fixed(StackLength.any)",
-                "refs": ["len", "fixed"]
-              },
+              "name": "additionalSelectionKeys",
+              "param": "keys",
+              "type": "Map[key, sign]",
+              "default": "Map[Key, Sign]()",
               "map": true,
-              "doc": "A pointer that determines the size of margins placed between selectable items"
+              "doc": "Keys (other than the arrow keys), which are used for moving the selection around. \nEach key is mapped to the direction to which it moves the selection."
+            },
+            {
+              "name": "alternativeKeySelectionEnabledFlag",
+              "param": "enabledFlag",
+              "type": "flag",
+              "default": "false!",
+              "doc": "A flag that, when set, makes the keyboard-based selection function even when the component doesn't have focus",
+              "map": true
+            },
+            {
+              "name": "arrowKeySelectionEnabled",
+              "param": "enabled",
+              "type": "Boolean",
+              "default": true,
+              "doc": "Whether arrow key -based selection should be enabled"
             }
           ]
         },

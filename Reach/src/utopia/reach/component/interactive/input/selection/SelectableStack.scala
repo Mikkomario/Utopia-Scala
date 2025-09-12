@@ -25,7 +25,6 @@ import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
-import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -48,7 +47,7 @@ import utopia.reach.focus.{FocusListener, FocusStateTracker}
 class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFactory[N, F]]
 (override val hierarchy: ComponentHierarchy, context: N, stackSettings: ViewStackSettings,
  override val contentPointer: Changing[Seq[A]], override val valuePointer: EventfulPointer[Option[A]],
- viewFactory: Ccff[N, F], makeView: (F, Changing[A], Flag, Int) => ReachComponent, selectedBgP: Option[Changing[Color]],
+ viewFactory: Ccff[N, F], makeView: (F, Changing[A], Flag, Int) => ReachComponent,
  selectionDrawer: Option[SelectionDrawer], arrowKeySelectionEnabled: Boolean, otherSelectionKeys: Map[Key, Sign],
  alternativeKeySelectionCondition: Flag = AlwaysFalse, otherFocusListeners: Seq[FocusListener])
 (implicit eq: EqualsFunction[A])
@@ -76,7 +75,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 		})
 		.mapPointer(contentPointer, viewFactory) { (factory, pointer, index) =>
 			// Tracks selection status and modifies the background pointer accordingly
-			val (selectedFlag, correctBgFactory) = selectedBgP match {
+			val (selectedFlag, correctBgFactory) = selectionDrawer.flatMap { _.selectionBackgroundPointer } match {
 				// Case: Selected item background is different from normal => Creates a custom background color -pointer
 				case Some(bgP) =>
 					val selectedFlag: Flag = selectedIndexP.lightMap { _.contains(index) }

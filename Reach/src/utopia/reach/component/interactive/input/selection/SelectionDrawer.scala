@@ -1,7 +1,9 @@
 package utopia.reach.component.interactive.input.selection
 
 import utopia.firmament.model.enumeration.MouseInteractionState
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawLevel, Drawer}
+import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 
 object SelectionDrawer
@@ -11,6 +13,8 @@ object SelectionDrawer
 	/**
 	 * Converts a function into a selection drawer
 	 * @param level The depth at which the drawing is performed
+	 * @param selectionBackgroundPointer A pointer that contains the drawn background color, if applicable.
+	 *                                   None if no solid background is drawn (default).
 	 * @param f A function that accepts 6 parameters:
 	 *              1. A drawer
 	 *              1. Container bounds
@@ -20,14 +24,15 @@ object SelectionDrawer
 	 *              1. Whether visualizing selection
 	 * @return A selection drawer based on the specified function
 	 */
-	def apply(level: DrawLevel)
+	def apply(level: DrawLevel, selectionBackgroundPointer: Option[Changing[Color]] = None)
 	         (f: (Drawer, Bounds, Bounds, MouseInteractionState, Boolean, Boolean) => Unit): SelectionDrawer =
-		new _SelectionDrawer(level, f)
+		new _SelectionDrawer(level, selectionBackgroundPointer, f)
 	
 	
 	// NESTED   ----------------------
 	
 	private class _SelectionDrawer(override val drawLevel: DrawLevel,
+	                               override val selectionBackgroundPointer: Option[Changing[Color]],
 	                               f: (Drawer, Bounds, Bounds, MouseInteractionState, Boolean, Boolean) => Unit)
 		extends SelectionDrawer
 	{
@@ -49,6 +54,12 @@ trait SelectionDrawer
 	 * @return The level at which the drawing is performed
 	 */
 	def drawLevel: DrawLevel
+	
+	/**
+	 * @return A pointer that contains the drawn background color, if applicable.
+	 *         None if no solid background is drawn.
+	 */
+	def selectionBackgroundPointer: Option[Changing[Color]]
 	
 	/**
 	 * Visualizes the selected area
