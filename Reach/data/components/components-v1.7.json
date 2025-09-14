@@ -756,6 +756,78 @@
           ]
         },
         {
+          "name": "FieldWithPopup",
+          "context": "text-variable",
+          "variable_context": true,
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "Field",
+              "prefix": "field",
+              "prefix_props": false,
+              "doc": "Wrapped more generic field settings"
+            },
+            {
+              "name": "expandAndCollapseIcon",
+              "param": "icons",
+              "type": "pair[SingleColorIcon]",
+              "default": {
+                "code": "Pair.twice(SingleColorIcon.empty)",
+                "refs": ["pair", "icon"]
+              },
+              "map": true,
+              "doc": "The expand (first) and the collapse icon (second) that should be displayed at the right side of the created fields.\nPlease note that a non-empty right-side icon will override these values."
+            },
+            {
+              "name": "activationKeys",
+              "param": "keys",
+              "type": "Set[Key]",
+              "default": "Set[Key]()",
+              "map": true,
+              "doc": "Keyboard keys that open the pop-up window when pressed while this field is in focus."
+            },
+            {
+              "name": "closeKeys",
+              "param": "keys",
+              "type": "Set[Key]",
+              "default": "Set[Key]()",
+              "map": true,
+              "doc": "Keyboard keys (in addition to escape), that close a pop-up window when released while the pop-up is in focus."
+            },
+            {
+              "name": "popupAlignment",
+              "param": "alignment",
+              "type": "align",
+              "default": "Alignment.Right",
+              "map": true,
+              "doc": "Alignment used for placing the pop-up window next to this field."
+            },
+            {
+              "name": "popupMatchesFieldLength",
+              "param": "matchLength",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the pop-up window's length should match that of this field, on the side matching [[popupAlignment]]."
+            },
+            {
+              "name": "appliesFieldBackgroundInPopUp",
+              "param": "applyBackground",
+              "setter": "withFieldBackgroundInPopUp",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the field's background color should become the pop-up window's background color, also"
+            },
+            {
+              "name": "hidesPopUpAfterMouseRelease",
+              "param": "hide",
+              "setter": "withHidePopUpAfterMouseRelease",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the opened pop-up window will be automatically hidden after a mouse release -event."
+            }
+          ]
+        },
+        {
           "name": "FieldWithSelectionPopup",
           "context": "window-static",
           "variable_context": true,

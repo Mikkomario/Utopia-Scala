@@ -11,8 +11,7 @@ object VariableReachContentWindowContext
 	  * @param contentContext Context to use for creating the window contents
 	  * @return A new window context
 	  */
-	def apply(windowContext: ReachWindowContext,
-	          contentContext: VariableTextContext): VariableReachContentWindowContext =
+	def apply(windowContext: ReachWindowContext, contentContext: VariableTextContext): VariableReachContentWindowContext =
 		_Context(windowContext, contentContext)
 	
 	

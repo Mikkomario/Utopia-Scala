@@ -22,13 +22,14 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.genesis.graphics.MeasuredText
+import utopia.genesis.graphics.{MeasuredText, Priority}
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.handling.event.mouse.MouseMoveListener
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -238,6 +239,22 @@ trait FieldSettingsLike[+Repr]
 	  * uses low priority size from the wrapped view image label settings
 	  */
 	def imageUsesLowPrioritySize = imageSettings.usesLowPrioritySize
+	/**
+	 * custom size pointer from the wrapped view image label settings
+	 */
+	def imageCustomSizePointer = imageSettings.customSizePointer
+	/**
+	 * image scaling pointer from the wrapped view image label settings
+	 */
+	def imageImageScalingPointer = imageSettings.imageScalingPointer
+	/**
+	 * repaint priority from the wrapped view image label settings
+	 */
+	def imageRepaintPriority = imageSettings.repaintPriority
+	/**
+	 * allows shrinking from the wrapped view image label settings
+	 */
+	def imageAllowsShrinking = imageSettings.allowsShrinking
 	
 	/**
 	  * @return Copy of this factory that uses the outlined style
@@ -270,6 +287,7 @@ trait FieldSettingsLike[+Repr]
 		withImageScalingPointer(f(imageScalingPointer))
 	def mapImageInsetsPointer(f: Changing[StackInsets] => Changing[StackInsets]) =
 		withImageInsetsPointer(f(imageInsetsPointer))
+	def mapImageRepaintPriority(f: Mutate[Priority]) = withImageRepaintPriority(f(imageRepaintPriority))
 	def mapImageSettings(f: ViewImageLabelSettings => ViewImageLabelSettings) =
 		withImageSettings(f(imageSettings))
 	def mapPromptPointer(f: Changing[LocalizedString] => Changing[LocalizedString]) =
@@ -326,6 +344,27 @@ trait FieldSettingsLike[+Repr]
 	  */
 	def withImageUsesLowPrioritySize(lowPriority: Boolean) =
 		withImageSettings(imageSettings.withUseLowPrioritySize(lowPriority))
+	/**
+	 * @param priority A priority used when requesting label repaints.
+	 *                 Note: Doesn't affect updates involving label size changes.
+	 * @return Copy of this factory with the specified image repaint priority
+	 */
+	def withImageRepaintPriority(priority: Priority) =
+		withImageSettings(imageSettings.withRepaintPriority(priority))
+	/**
+	 * @param p A pointer that, if specified, overrides the image size for the purposes of component
+	 *          layout.
+	 *          'imageScalingPointer' and 'insetsPointer' will be applied after this effect.
+	 * @return Copy of this factory with the specified image custom size pointer
+	 */
+	def withImageCustomSizePointer(p: Option[Changing[Size]]) =
+		withImageSettings(imageSettings.withCustomSizePointer(p))
+	/**
+	 * @param allowShrink Whether this label should shrink when the drawn image shrinks
+	 * @return Copy of this factory with the specified image allows shrinking
+	 */
+	def withImageAllowsShrinking(allowShrink: Boolean) =
+		withImageSettings(imageSettings.withAllowShrinking(allowShrink))
 	
 	/**
 	  * @param name Name displayed within this field
@@ -484,7 +523,7 @@ case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: Variab
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def apply[C <: ReachComponent with Focusable](emptyFlag: Changing[Boolean])
+	def apply[C <: ReachComponent with Focusable](emptyFlag: Flag)
 	                                             (makeField: FieldCreationContext => C)
 	                                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 		                                                 Option[OpenComponent[ReachComponent, Any]]) =

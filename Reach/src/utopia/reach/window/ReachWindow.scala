@@ -226,6 +226,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
+	// TODO: Make diagonal alignments still share an edge
 	def anchoredTo[C <: ReachComponent, R](component: ReachComponent, preferredAlignment: Alignment,
 	                                       margin: Double = 0.0, title: LocalizedString = LocalizedString.empty,
 	                                       matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
@@ -247,7 +248,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				base
 		}
 		
-		// A flag used to avoid looping size-altering & listening - Only needed when window streching is used
+		// A flag used to avoid looping size-altering & listening - Only needed when window stretching is used
 		val ignoreNextSizeUpdateFlag = ResettableFlag()
 		def optimizeWindowPosition() = {
 			if (window.isFullyVisible) {

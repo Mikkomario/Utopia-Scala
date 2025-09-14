@@ -50,7 +50,7 @@ import utopia.reach.focus.{FocusListener, FocusStateTracker}
  * Common trait for selectable stack factories and settings
  * @tparam Repr Implementing factory/settings type
  * @author Mikko Hilpinen
- * @since 12.09.2025, v1.6
+ * @since 12.09.2025, v1.7
  */
 trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] with ViewStackSettingsLike[Repr]
 {
@@ -224,7 +224,7 @@ object SelectableStackSettings
  *                                           have focus
  * @param arrowKeySelectionEnabled           Whether arrow key -based selection should be enabled
  * @author Mikko Hilpinen
- * @since 12.09.2025, v1.6
+ * @since 12.09.2025, v1.7
  */
 case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
                                    stackSettings: ViewStackSettings = ViewStackSettings.default,
@@ -256,7 +256,7 @@ case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
  * Common trait for factories that wrap a selectable stack settings instance
  * @tparam Repr Implementing factory/settings type
  * @author Mikko Hilpinen
- * @since 12.09.2025, v1.6
+ * @since 12.09.2025, v1.7
  */
 trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[Repr]
 {
@@ -305,7 +305,7 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
  * Factory class used for constructing selectable stacks using contextual component creation
  * information
  * @author Mikko Hilpinen
- * @since 12.09.2025, v1.6
+ * @since 12.09.2025, v1.7
  */
 case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy: ComponentHierarchy, context: N,
                                                                        settings: SelectableStackSettings = SelectableStackSettings.default)
@@ -382,7 +382,7 @@ case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy
 /**
  * Used for defining selectable stack creation settings outside the component building process
  * @author Mikko Hilpinen
- * @since 12.09.2025, v1.6
+ * @since 12.09.2025, v1.7
  */
 case class SelectableStackSetup(settings: SelectableStackSettings = SelectableStackSettings.default)
 	extends SelectableStackSettingsWrapper[SelectableStackSetup]
@@ -622,7 +622,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 		// Listens to mouse presses over this component
 		override lazy val handleCondition: Flag = wrapped.visibleFlag && MouseHoverTracker.hoverFlag
 		override lazy val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
-			MouseButtonStateEvent.filter.pressed
+			MouseButtonStateEvent.filter.leftPressed
 		
 		/**
 		 * Contains the component that was pressed. None if no component was pressed.
@@ -651,7 +651,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 		// Only listens while in the pressed state. Also, won't listen while not attached to the component hierarchy.
 		override lazy val handleCondition: Flag = linkedFlag && wrapped.visibleFlag && MousePressListener.pressedFlag
 		override lazy val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
-			MouseButtonStateEvent.filter.released
+			MouseButtonStateEvent.filter.leftReleased
 			
 		
 		// IMPLEMENTED  ---------------------------
