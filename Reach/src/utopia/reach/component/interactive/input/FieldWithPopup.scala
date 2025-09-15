@@ -154,6 +154,36 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def withPopupMatchesFieldLength(matchLength: Boolean): Repr
 	
 	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Copy of this factory where the pop-up window's length matches the field's, if possible
+	 */
+	def withPopupMatchingFieldLength = withPopupMatchesFieldLength(true)
+	/**
+	 * @return Copy of this factory where the pop-up window's length is not dependent on the field's
+	 */
+	def withPopupLengthNotTiedToField = withPopupMatchesFieldLength(false)
+	
+	/**
+	 * @return Copy of this factory that applies the field's background color to the pop-up window
+	 */
+	def withFieldBackgroundInPopup = withFieldBackgroundInPopUp(true)
+	/**
+	 * @return Copy of this factory that doesn't apply the field's background color in the pop-up window
+	 */
+	def withoutFieldBackgroundInPopup = withFieldBackgroundInPopUp(false)
+	
+	/**
+	 * @return Copy of this factory where the created pop-up windows are hid after a mouse release
+	 */
+	def hidingPopupOnMouseRelease = withHidePopUpAfterMouseRelease(true)
+	/**
+	 * @return A copy of this factory without pop-up window on mouse release enabled
+	 */
+	def notHidingPopupOnMouseRelease = withHidePopUpAfterMouseRelease(false)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def enabledFlag = fieldSettings.enabledFlag
@@ -203,7 +233,6 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def withExpandAndCollapseIcon(expand: SingleColorIcon, collapse: SingleColorIcon): Repr =
 		withExpandAndCollapseIcon(Pair(expand, collapse))
 	
-	// TODO: Continue adding utility functions
 	/**
 	 * @param key A key that will activate the pop-up window
 	 * @param exclusive Whether to set this as the only activation key (default = false = add to existing keys)
@@ -222,6 +251,29 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 			withAdditionalActivationKeys(keys)
 	}
 	def withAdditionalActivationKeys(keys: IterableOnce[Key]) = mapActivationKeys { _ ++ keys }
+	
+	/**
+	 * @param keys Keys that make the pop-up window close when released
+	 * @param exclusive Whether to treat these as the exclusive set of closing keys (default = false)
+	 * @return Copy of this factory with the specified closing keys
+	 */
+	def closingWith(keys: IterableOnce[Key], exclusive: Boolean = false) = {
+		if (exclusive)
+			withCloseKeys(Set.from(keys))
+		else
+			mapCloseKeys { _ ++ keys }
+	}
+	/**
+	 * @param key Key that closes the pop-up window when released
+	 * @return Copy of this factory with the specified closing key added
+	 */
+	def closingWith(key: Key): Repr = closingWith(Set(key))
+	/**
+	 * @param key Key that closes the pop-up window when released
+	 * @param exclusive Whether this should be the only key that closes the pop-up window (default = false)
+	 * @return Copy of this factory with the specified closing key
+	 */
+	def closingWith(key: Key, exclusive: Boolean): Repr = closingWith(Set(key), exclusive)
 	
 	def mapActivationKeys(f: Mutate[Set[Key]]) = withActivationKeys(f(activationKeys))
 	def mapCloseKeys(f: Mutate[Set[Key]]) = withCloseKeys(f(closeKeys))

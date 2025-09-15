@@ -154,9 +154,22 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	def withoutSelectionDrawer = withSelectionDrawer(None)
 	
 	/**
+	 * @return Copy of this factory enabling arrow key -based selection moving
+	 */
+	def withArrowKeySelection = withArrowKeySelectionEnabled(true)
+	/**
+	 * @return Copy of this factory disabling arrow key -based selection moving
+	 */
+	def withoutArrowKeySelection = withArrowKeySelectionEnabled(false)
+	/**
 	 * @return Copy of this factory where the created stacks react to keyboard events even while they're not in focus.
 	 */
 	def withoutFocusKeyRequirement = withAlternativeKeySelectionEnabledFlag(AlwaysTrue)
+	
+	/**
+	 * @return Copy of this factory without any margin between the selectable items
+	 */
+	def withoutMargin = withMargin(StackLength.fixedZero)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -210,6 +223,33 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 		else
 			withAdditionalSelectionKeys(backKey, forwardKey)
 	}
+	
+	/**
+	 * @param margin Margin to place between the selectable items
+	 * @return Copy of this factory with the specified margin
+	 */
+	def withMargin(margin: StackLength) = withMarginPointer(Fixed(margin))
+	/**
+	 * @param margin Size of the margin to place between the selectable items
+	 * @return Copy of this factory with the specified margin
+	 */
+	def withMargin(margin: SizeCategory) = withMarginSizePointer(Fixed(margin))
+	/**
+	 * A pointer that contains the margin placed between the components in this stack.
+	 * May be defined as either a general size category -pointer (left), or a specific length
+	 * -pointer (right).
+	 * @param p New margin pointer to use.
+	 * @return Copy of this factory with the specified margin pointer
+	 */
+	def withMarginPointer(p: Changing[StackLength]): Repr = withMarginPointer(Right(p))
+	/**
+	 * A pointer that contains the margin placed between the components in this stack.
+	 * May be defined as either a general size category -pointer (left), or a specific length
+	 * -pointer (right).
+	 * @param p New margin pointer to use, containing the general size of the placed margin.
+	 * @return Copy of this factory with the specified margin pointer
+	 */
+	def withMarginSizePointer(p: Changing[SizeCategory]): Repr = withMarginPointer(Left(p))
 	
 	def mapExtraSelectionKeys(f: Mutate[Map[Key, Sign]]) = withExtraSelectionKeys(f(extraSelectionKeys))
 	def mapAlternativeKeySelectionEnabledFlag(f: Mutate[Flag]) =

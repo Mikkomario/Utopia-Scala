@@ -13,7 +13,7 @@ import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
@@ -98,6 +98,10 @@ trait ViewStackSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 	  * Copy of this factory that builds rows
 	  */
 	def row = withAxis(X)
+	/**
+	 * @return A copy of this factory that builds columns
+	 */
+	def column = withAxis(Y)
 	
 	/**
 	  * Copy of this factory where items are centered

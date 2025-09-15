@@ -9,18 +9,19 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.enumeration.End
-import utopia.flow.operator.enumeration.End.First
+import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.sign.Sign
 import utopia.flow.time.Now
 import utopia.flow.util.Mutate
-import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key
 import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, Enter, Space, Tab}
 import utopia.paradigm.enumeration.Alignment.Bottom
+import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{ContextualMixed, FromContextComponentFactoryFactory, Mixed}
@@ -44,7 +45,6 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 14.09.2025, v1.7
  */
-// TODO: Add utility functions, including withoutSelectionMargin
 trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -129,7 +129,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	/**
 	 * stack settings from the wrapped selectable stack settings
 	 */
-	def selectionStackSettings = selectionSettings.stackSettings
+	def stackSettings = selectionSettings.stackSettings
 	/**
 	 * selection drawer from the wrapped selectable stack settings
 	 */
@@ -150,6 +150,54 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 * arrow key selection enabled from the wrapped selectable stack settings
 	 */
 	def arrowKeySelectionEnabled = selectionSettings.arrowKeySelectionEnabled
+	
+	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return A copy of this factory with no extra option component
+	 */
+	def withoutExtraOption = withExtraOptionConstructor(None)
+	
+	/**
+	 * @return A copy of this factory with the extra option placed before other options
+	 * @see [[withExtraOptionConstructor]]
+	 */
+	def withExtraOptionFirst = withExtraOptionPlacement(First)
+	/**
+	 * @return A copy of this factory with the extra option placed after the other options
+	 * @see [[withExtraOptionConstructor]]
+	 */
+	def withExtraOptionLast = withExtraOptionPlacement(Last)
+	
+	/**
+	 * @return A copy of this factory without the no options -view
+	 */
+	def withoutNoOptionsView = withNoOptionsViewConstructor(None)
+	
+	/**
+	 * @return A copy of this factory stacking the selectable items horizontally
+	 */
+	def withHorizontalSelection = withSelectionAxis(X)
+	
+	/**
+	 * @return Copy of this factory with no margin placed between the selectable options
+	 */
+	def withoutMarginInSelection = withSelectionMargin(StackLength.fixedZero)
+	
+	/**
+	 * @return Copy of this factory where arrow key -based selection has been enabled
+	 */
+	def withArrowKeySelection = withArrowKeySelectionEnabled(true)
+	/**
+	 * @return A copy of this factory where arrow key -based selection has been disabled
+	 */
+	def withoutArrowKeySelection = withArrowKeySelectionEnabled(false)
+	/**
+	 * @return A copy of this factory
+	 *         where the keyboard-based selection works even when the pop-up window is not in focus
+	 */
+	def withoutFocusRequirementInSelection = withAlternativeKeySelectionEnabledFlag(AlwaysTrue)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -183,15 +231,28 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	
 	// OTHER	--------------------
 	
-	def mapPopupSettings(f: Mutate[FieldWithPopupSettings]) = withPopupSettings(f(popupSettings))
+	/**
+	 * @param axis Axis along which the selectable options are placed
+	 * @return A copy of this factory that places the selectable items along the specified axis
+	 */
+	def withSelectionAxis(axis: Axis2D) = withSelectionAxisPointer(Fixed(axis))
 	
-	def mapSelectionAxisPointer(f: Mutate[Changing[Axis2D]]) = withSelectionAxisPointer(f(selectionAxisPointer))
-	def mapAlternativeKeySelectionEnabledFlag(f: Mutate[Flag]) =
-		withAlternativeKeySelectionEnabledFlag(f(alternativeKeySelectionEnabledFlag))
-	def mapExtraSelectionKeys(f: Mutate[Map[Key, Sign]]) = withExtraSelectionKeys(f(extraSelectionKeys))
-	def mapSelectionSettings(f: Mutate[SelectableStackSettings]) = withSelectionSettings(f(selectionSettings))
-	def mapSelectionStackSettings(f: Mutate[ViewStackSettings]) =
-		withSelectionStackSettings(f(selectionStackSettings))
+	/**
+	 * A function used for constructing an additional selectable view to display
+	 * @param f New extra option constructor to use.
+	 *          A function used for constructing an additional selectable view to display
+	 * @return Copy of this factory with the specified extra option constructor
+	 */
+	def withExtraOptionConstructor(f: ContextualMixed[VariableReachContentWindowContext] => ReachComponent): Repr =
+		withExtraOptionConstructor(Some(f))
+	/**
+	 * A function used for constructing a view to display when no options are selectable
+	 * @param f New no options view constructor to use.
+	 *          A function used for constructing a view to display when no options are selectable
+	 * @return Copy of this factory with the specified no options view constructor
+	 */
+	def withNoOptionsViewConstructor(f:ContextualMixed[VariableReachContentWindowContext] => ReachComponent): Repr =
+		withNoOptionsViewConstructor(Some(f))
 	
 	/**
 	 * @param enabledFlag A flag that, when set, makes the keyboard-based selection function even
@@ -206,6 +267,15 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withArrowKeySelectionEnabled(enabled: Boolean) =
 		withSelectionSettings(selectionSettings.withArrowKeySelectionEnabled(enabled))
+	
+	/**
+	 * @param forward A key for moving the selection forward
+	 * @param backward A key for moving the selection backward
+	 * @param exclusive Whether these should be the only selection-altering keys (default = false)
+	 * @return Copy of this factory with the specified selection keys
+	 */
+	def movingSelectionUsing(forward: Key, backward: Key, exclusive: Boolean = false) =
+		mapSelectionSettings { _.movingSelectionUsing(forward, backward, exclusive) }
 	/**
 	 * @param keys Keys (other than the arrow keys), which are used for moving the selection around.
 	 *             Each key is mapped to the direction to which it moves the selection.
@@ -213,12 +283,18 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withExtraSelectionKeys(keys: Map[Key, Sign]) =
 		withSelectionSettings(selectionSettings.withExtraSelectionKeys(keys))
+	
 	/**
 	 * @param listeners Focus listeners to assign to created components
 	 * @return Copy of this factory with the specified selection focus listeners
 	 */
 	def withSelectionFocusListeners(listeners: Seq[FocusListener]) =
 		withSelectionSettings(selectionSettings.withFocusListeners(listeners))
+	
+	def withSelectionMargin(margin: StackLength) = withSelectionMarginPointer(Fixed(margin))
+	def withSelectionMargin(margin: SizeCategory) = withSelectionMarginSizePointer(Fixed(margin))
+	def withSelectionMarginPointer(p: Changing[StackLength]): Repr = withSelectionMarginPointer(Right(p))
+	def withSelectionMarginSizePointer(p: Changing[SizeCategory]): Repr = withSelectionMarginPointer(Left(p))
 	/**
 	 * @param p A pointer that contains the margin placed between the components in this stack.
 	 *          May be defined as either a general size category -pointer (left), or a specific
@@ -227,6 +303,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withSelectionMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]) =
 		withSelectionSettings(selectionSettings.withMarginPointer(p))
+		
 	/**
 	 * @param drawer A drawer used for visualizing selection and mouse interaction
 	 * @return Copy of this factory with the specified selection drawer
@@ -238,12 +315,22 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 * @return Copy of this factory with the specified selection drawer
 	 */
 	def withSelectionDrawer(drawer: SelectionDrawer): Repr = withSelectionDrawer(Some(drawer))
+	
 	/**
 	 * @param settings Settings that affect this stack's layout
 	 * @return Copy of this factory with the specified selection stack settings
 	 */
-	def withSelectionStackSettings(settings: ViewStackSettings) =
+	def withStackSettings(settings: ViewStackSettings) =
 		withSelectionSettings(selectionSettings.withStackSettings(settings))
+	
+	def mapPopupSettings(f: Mutate[FieldWithPopupSettings]) = withPopupSettings(f(popupSettings))
+	
+	def mapSelectionAxisPointer(f: Mutate[Changing[Axis2D]]) = withSelectionAxisPointer(f(selectionAxisPointer))
+	def mapAlternativeKeySelectionEnabledFlag(f: Mutate[Flag]) =
+		withAlternativeKeySelectionEnabledFlag(f(alternativeKeySelectionEnabledFlag))
+	def mapExtraSelectionKeys(f: Mutate[Map[Key, Sign]]) = withExtraSelectionKeys(f(extraSelectionKeys))
+	def mapSelectionSettings(f: Mutate[SelectableStackSettings]) = withSelectionSettings(f(selectionSettings))
+	def mapStackSettings(f: Mutate[ViewStackSettings]) = withStackSettings(f(stackSettings))
 }
 
 object FieldWithSelectionPopupSettings
