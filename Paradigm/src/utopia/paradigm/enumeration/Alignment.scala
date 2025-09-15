@@ -67,6 +67,11 @@ sealed trait Alignment extends Dimensional[LinearAlignment, Alignment]
 	  * @return The axes supported for this alignment
 	  */
 	def affectedAxes: Set[Axis2D] = Axis2D.values.iterator.filter { apply(_).nonZero }.toSet
+	/**
+	 * @return The axes that are not affected by this alignment's placement.
+	 *         E.g. for Right, would yield Y and for Center would yield both X and Y.
+	 */
+	def unaffectedAxes: Set[Axis2D] = Axis2D.values.iterator.filter { apply(_).isZero }.toSet
 	
 	/**
 	  * @return Whether this alignment moves items along the horizontal axis (X)
@@ -484,18 +489,15 @@ object Alignment extends DimensionsWrapperFactory[LinearAlignment, Alignment]
 		val hMatch = forHorizontalSwingAlignment(horizontal).getOrElse(Center)
 		val vMatch = forVerticalSwingAlignment(vertical).getOrElse(Center)
 		
-		vMatch match
-		{
+		vMatch match {
 			case Top =>
-				hMatch match
-				{
+				hMatch match {
 					case Left => TopLeft
 					case Right => TopRight
 					case _ => Top
 				}
 			case Bottom =>
-				hMatch match
-				{
+				hMatch match {
 					case Left => BottomLeft
 					case Right => BottomRight
 					case _ => Bottom

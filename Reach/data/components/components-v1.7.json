@@ -1188,6 +1188,13 @@
               "doc": "A drawer used for visualizing selection and mouse interaction"
             },
             {
+              "name": "marginPointer",
+              "param": "p",
+              "type": "Either[Changing[SizeCategory], Changing[StackLength]]",
+              "default": "Left(Fixed(Small))",
+              "doc": "A pointer that contains the margin placed between the components in this stack. \nMay be defined as either a general size category -pointer (left), or a specific length -pointer (right)."
+            },
+            {
               "name": "extraSelectionKeys",
               "param": "keys",
               "type": "Map[Key, Sign]",
@@ -1209,6 +1216,49 @@
               "type": "Boolean",
               "default": true,
               "doc": "Whether arrow key -based selection should be enabled"
+            }
+          ]
+        },
+        {
+          "name": "FieldWithSelectionPopup",
+          "context": "text-variable",
+          "variable_context": true,
+          "only_contextual": true,
+          "props": [
+            {
+              "ref": "FieldWithPopup",
+              "prefix": "popup",
+              "prefix_props": false,
+              "doc": "Wrapped more generic field-with-popup settings"
+            },
+            {
+              "ref": "SelectableStack",
+              "prefix": "selection",
+              "doc": "Settings that apply to the opened selectable stack"
+            },
+            {
+              "name": "noOptionsViewConstructor",
+              "param": "f",
+              "type": "Option[ContextualMixed[VariableReachContentWindowContext] => ReachComponentLike]",
+              "default": "None",
+              "doc": "A function used for constructing a view to display when no options are selectable"
+            },
+            {
+              "name": "extraOptionConstructor",
+              "param": "f",
+              "type": "Option[ContextualMixed[VariableReachContentWindowContext] => ReachComponentLike]",
+              "default": "None",
+              "doc": "A function used for constructing an additional selectable view to display"
+            },
+            {
+              "name": "extraOptionPlacement",
+              "param": "placement",
+              "type": "operator/End",
+              "default": {
+                "code": "End.Last",
+                "ref": "operator/End"
+              },
+              "doc": "The location where the extra option should be placed, if one has been specified"
             }
           ]
         },

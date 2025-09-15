@@ -10,7 +10,8 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Focused
 import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, Pressed}
-import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.SizeCategory.Small
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
@@ -21,7 +22,7 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, LazilyInitializedChanging}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed, LazilyInitializedChanging}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -31,15 +32,12 @@ import utopia.genesis.handling.event.consume.ConsumeChoice
 import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
-import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.FocusListenableFactory
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.{ContextualMixed, FocusListenableFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{HasGuiState, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
@@ -66,6 +64,12 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	 */
 	def selectionDrawer: Option[SelectionDrawer]
 	/**
+	 * A pointer that contains the margin placed between the components in this stack.
+	 * May be defined as either a general size category -pointer (left), or a specific length
+	 * -pointer (right).
+	 */
+	def marginPointer: Either[Changing[SizeCategory], Changing[StackLength]]
+	/**
 	 * Keys (other than the arrow keys), which are used for moving the selection around.
 	 * Each key is mapped to the direction to which it moves the selection.
 	 */
@@ -80,6 +84,17 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	 */
 	def arrowKeySelectionEnabled: Boolean
 	
+	/**
+	 * A pointer that contains the margin placed between the components in this stack.
+	 * May be defined as either a general size category -pointer (left), or a specific length
+	 * -pointer (right).
+	 * @param p New margin pointer to use.
+	 *          A pointer that contains the margin placed between the components in this stack.
+	 *          May be defined as either a general size category -pointer (left), or a specific
+	 *          length -pointer (right).
+	 * @return Copy of this factory with the specified margin pointer
+	 */
+	def withMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]): Repr
 	/**
 	 * Changes the keyboard keys used for moving the selection around.
 	 * Note: Overrides previously used keys, including the default arrow keys.
@@ -211,10 +226,15 @@ object SelectableStackSettings
 }
 /**
  * Combined settings used when constructing selectable stacks
+ *
  * @param focusListeners                     Focus listeners to assign to created components
  * @param stackSettings                      Settings that affect this stack's layout
  * @param selectionDrawer                    A drawer used for visualizing selection and mouse
  *                                           interaction
+ * @param marginPointer                      A pointer that contains the margin placed between
+ *                                           the components in this stack.
+ *                                           May be defined as either a general size category -pointer (left),
+ *                                           or a specific length -pointer (right).
  * @param extraSelectionKeys            Keys (other than the arrow keys), which are used
  *                                           for moving the selection around.
  *                                           Each key is mapped to the direction to which it
@@ -229,6 +249,7 @@ object SelectableStackSettings
 case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
                                    stackSettings: ViewStackSettings = ViewStackSettings.default,
                                    selectionDrawer: Option[SelectionDrawer] = None,
+                                   marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = Left(Fixed(Small)),
                                    extraSelectionKeys: Map[Key, Sign] = Map[Key, Sign](),
                                    alternativeKeySelectionEnabledFlag: Flag = AlwaysFalse,
                                    arrowKeySelectionEnabled: Boolean = true)
@@ -246,6 +267,8 @@ case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
 		copy(focusListeners = listeners)
 	override def withSelectionDrawer(drawer: Option[SelectionDrawer]) =
 		copy(selectionDrawer = drawer)
+	override def withMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]) =
+		copy(marginPointer = p)
 	override def withStackSettings(settings: ViewStackSettings) = copy(stackSettings = settings)
 	
 	override def withSelectionKeys(keys: Map[Key, Sign]): SelectableStackSettings =
@@ -280,6 +303,7 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 	override def focusListeners = settings.focusListeners
 	override def selectionDrawer = settings.selectionDrawer
 	override def stackSettings = settings.stackSettings
+	override def marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = settings.marginPointer
 	
 	override def withExtraSelectionKeys(keys: Map[Key, Sign]) =
 		mapSettings { _.withExtraSelectionKeys(keys) }
@@ -292,6 +316,8 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 	override def withSelectionDrawer(drawer: Option[SelectionDrawer]) =
 		mapSettings { _.withSelectionDrawer(drawer) }
 	override def withStackSettings(settings: ViewStackSettings) = mapSettings { _.withStackSettings(settings) }
+	override def withMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]): Repr =
+		mapSettings { _.withMarginPointer(p) }
 	
 	override def withSelectionKeys(keys: Map[Key, Sign]): Repr = mapSettings { _.withSelectionKeys(keys) }
 	
@@ -310,16 +336,8 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy: ComponentHierarchy, context: N,
                                                                        settings: SelectableStackSettings = SelectableStackSettings.default)
 	extends SelectableStackSettingsWrapper[SelectableStackFactory[N]] with PartOfComponentHierarchy
+		with ContextualSelectionFactory[N, SelectableStackFactory[N]]
 {
-	// COMPUTED ------------------------
-	
-	/**
-	 * @return Copy of this factory using a selection drawer that highlights the selected area's background
-	 */
-	def highlightingSelectedArea =
-		withContextualSelectionDrawer { SelectionDrawer.highlight(_) }
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def withSettings(settings: SelectableStackSettings) = copy(settings = settings)
@@ -338,30 +356,11 @@ case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy
 		withContext(f(context))
 	
 	/**
-	 * @param color Selection background color
-	 * @param preferredShade Preferred background shade (default = standard)
-	 * @param highlightModifier A modifier applied to highlighting intensity.
-	 *                          Highlighting is used for visualizing the mouse hover & focus states.
-	 *                          Default = 1.0 = Original.
-	 * @return Copy of this factory highlighting the selected area using the specified background color
-	 */
-	def withSelectionBackground(color: ColorRole, preferredShade: ColorLevel = Standard,
-	                            highlightModifier: Double = 1.0) =
-		withContextualSelectionDrawer { SelectionDrawer.fill(_, color, preferredShade, highlightModifier) }
-	/**
-	 * @param createDrawer A function that receives this factory's context, and uses it to create a selection drawer
-	 * @return Copy of this factory using the constructed selection drawer
-	 */
-	def withContextualSelectionDrawer(createDrawer: N => SelectionDrawer) =
-		withSelectionDrawer(createDrawer(context))
-	
-	/**
 	 * Creates a new selectable stack
-	 * @param viewFactory A factory used for constructing the stacked components
 	 * @param contentPointer A pointer that contains the displayed content
 	 * @param valuePointer A mutable pointer that contains the selected value (default = new pointer)
 	 * @param makeView A function that receives:
-	 *                      1. Component factory
+	 *                      1. Component factory (a [[ContextualMixed]])
 	 *                      1. Content pointer
 	 *                      1. Selection flag
 	 *                      1. Component index (0-based)
@@ -369,14 +368,12 @@ case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy
 	 *                 And yields a component to display at that position
 	 * @param eq Implicit equals-function used for comparing selection. Default = Use ==
 	 * @tparam A Type of displayed & selected values
-	 * @tparam F Type of the component factories used
 	 * @return A new selectable stack component
 	 */
-	def apply[A, F <: ContextualFactory[N, F]](viewFactory: Ccff[N, F], contentPointer: Changing[Seq[A]],
-	                                           valuePointer: EventfulPointer[Option[A]] = Pointer.eventful.empty[A])
-	                                          (makeView: (F, Changing[A], Flag, Int) => ReachComponent)
-	                                          (implicit eq: EqualsFunction[A] = EqualsFunction.default) =
-		new SelectableStack[A, N, F](hierarchy, context, contentPointer, valuePointer, viewFactory, makeView, settings)
+	def apply[A](contentPointer: Changing[Seq[A]], valuePointer: EventfulPointer[Option[A]] = Pointer.eventful.empty[A])
+	            (makeView: (ContextualMixed[N], Changing[A], Flag, Int) => ReachComponent)
+	            (implicit eq: EqualsFunction[A] = EqualsFunction.default) =
+		new SelectableStack[A, N](hierarchy, context, settings, contentPointer, valuePointer, makeView)
 }
 
 /**
@@ -415,15 +412,15 @@ object SelectableStack extends SelectableStackSetup()
  * Adds selection features to a view stack
  * @tparam A Type of selected items
  * @tparam N Type of used component creation context
- * @tparam F Type of component factory used for constructing the wrapped components
  * @author Mikko Hilpinen
  * @since 09.09.2025, v1.7
  */
-class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFactory[N, F]]
-(override val hierarchy: ComponentHierarchy, context: N, override val contentPointer: Changing[Seq[A]],
- override val valuePointer: EventfulPointer[Option[A]], viewFactory: Ccff[N, F],
- makeView: (F, Changing[A], Flag, Int) => ReachComponent, settings: SelectableStackSettings)
-(implicit eq: EqualsFunction[A])
+class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hierarchy: ComponentHierarchy, context: N,
+                                                              settings: SelectableStackSettings,
+                                                              override val contentPointer: Changing[Seq[A]],
+                                                              override val valuePointer: EventfulPointer[Option[A]],
+                                                              makeView: (ContextualMixed[N], Changing[A], Flag, Int) => ReachComponent)
+                                                             (implicit eq: EqualsFunction[A])
 	extends ReachComponentWrapper with FocusableWithState with HasGuiState
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], Changing[Seq[A]]]
 		with InputWithPointer[Option[A], EventfulPointer[Option[A]]]
@@ -441,14 +438,21 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 		selected.flatMap { selected => content.findIndexWhere { eq(selected, _) } }
 	}
 	
-	override protected lazy val wrapped = ViewStack.withContext(hierarchy, context).withSettings(settings.stackSettings)
-		.withCustomDrawer(settings.selectionDrawer match {
-			case Some(drawer) => new LocalSelectionDrawer(drawer)
-			case None => new HoverDrawer
-		})
-		.mapPointer(contentPointer, viewFactory) { (factory, pointer, index) =>
+	override protected lazy val wrapped = {
+		val baseF = ViewStack.withContext(hierarchy, context).withSettings(settings.stackSettings)
+			.withCustomDrawer(settings.selectionDrawer match {
+				case Some(drawer) => new LocalSelectionDrawer(drawer)
+				case None => new HoverDrawer
+			})
+		val stackF = settings.marginPointer match {
+			case Left(sizeP) => baseF.withMarginSizePointer(sizeP)
+			case Right(marginP) => baseF.withMarginPointer(marginP)
+		}
+		stackF.mapPointer(contentPointer, Mixed) { (factory, pointer, index) =>
 			// Tracks selection status and modifies the background pointer accordingly
-			val (selectedFlag, correctBgFactory) = settings.selectionDrawer.flatMap { _.selectionBackgroundPointer } match {
+			val (selectedFlag, correctBgFactory) = settings.selectionDrawer
+				.flatMap { _.selectionBackgroundPointer } match
+			{
 				// Case: Selected item background is different from normal => Creates a custom background color -pointer
 				case Some(bgP) =>
 					val selectedFlag: Flag = selectedIndexP.lightMap { _.contains(index) }
@@ -457,13 +461,14 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _], F <: ContextualFac
 					} }
 					
 					selectedFlag -> modifiedFactory
-					
+				
 				// Case: Selected components have the same background
 				case None =>
 					LazilyInitializedChanging { selectedIndexP.lightMap { _.contains(index) } } -> factory
 			}
 			makeView(correctBgFactory, pointer, selectedFlag, index)
 		}
+	}
 	
 	private lazy val locationTracker = new StackItemAreas[ReachComponent](wrapped, componentsP)
 	

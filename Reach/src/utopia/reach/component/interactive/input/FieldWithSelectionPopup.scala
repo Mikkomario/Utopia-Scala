@@ -59,6 +59,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+// TODO: Add utility methods
 trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -478,6 +479,7 @@ object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
   * @tparam D Type of component to display a selectable item
   * @tparam P Type of content pointer used
   */
+@deprecated("Replaced with a new version", "v1.7")
 class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachComponent with Refreshable[A],
 	+P <: Changing[Seq[A]]]
 (override val hierarchy: ComponentHierarchy, context: VariableReachContentWindowContext,

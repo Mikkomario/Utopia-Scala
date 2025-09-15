@@ -26,6 +26,7 @@ import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.interactive.CanDisplayPopup
 import utopia.reach.component.interactive.input.FieldWithPopup.ignoreFocusAfterCloseDuration
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
@@ -190,6 +191,37 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * The expand (first) and the collapse icon (second) that should be displayed one the right side
+	 * of the created fields.
+	 * Please note that a non-empty right-side icon will override these values.
+	 * @param expand New expand icon to use
+	 * @param collapse New collapse icon to use
+	 * @return Copy of this factory with the specified expand and collapse icon
+	 */
+	def withExpandAndCollapseIcon(expand: SingleColorIcon, collapse: SingleColorIcon): Repr =
+		withExpandAndCollapseIcon(Pair(expand, collapse))
+	
+	// TODO: Continue adding utility functions
+	/**
+	 * @param key A key that will activate the pop-up window
+	 * @param exclusive Whether to set this as the only activation key (default = false = add to existing keys)
+	 * @return Copy of this factory with the specified activation key
+	 */
+	def withActivationKey(key: Key, exclusive: Boolean = false) = {
+		if (exclusive)
+			withActivationKeys(Set(key))
+		else
+			mapActivationKeys { _ + key }
+	}
+	def withActivationKeys(keys: IterableOnce[Key], exclusive: Boolean): Repr = {
+		if (exclusive)
+			withActivationKeys(Set.from(keys))
+		else
+			withAdditionalActivationKeys(keys)
+	}
+	def withAdditionalActivationKeys(keys: IterableOnce[Key]) = mapActivationKeys { _ ++ keys }
 	
 	def mapActivationKeys(f: Mutate[Set[Key]]) = withActivationKeys(f(activationKeys))
 	def mapCloseKeys(f: Mutate[Set[Key]]) = withCloseKeys(f(closeKeys))
@@ -381,6 +413,23 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
 		                                                          (makeRightHintLabel: ExtraFieldCreationContext[C] => OpenComponent[ReachComponent, Any])
 		                                                          (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent) =
 			_apply[C](emptyFlag, makeField, c => Some(makeRightHintLabel(c)), makePopupContent)
+		/**
+		 * Creates a new field. Includes an extra hint label.
+		 * @param emptyFlag A flag that contains true while this field's main content is empty
+		 * @param makeField A function that accepts field-creation context information ([[FieldCreationContext]]),
+		 *                  and yields the component to wrap inside.
+		 * @param makeRightHintLabel A function that accepts contextual information ([[ExtraFieldCreationContext]]),
+		 *                           and yields the right-side hint label / component in an open format, if applicable.
+		 * @param makePopupContent A function that accepts an initialized component factory and yields the
+		 *                         component to place inside the pop-up window
+		 * @tparam C Type of the field component created
+		 * @return A new field
+		 */
+		def withPossibleRightHintLabel[C <: ReachComponent with Focusable](emptyFlag: Flag)
+		                                                                  (makeField: FieldCreationContext => C)
+		                                                                  (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
+		                                                                  (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent) =
+			_apply[C](emptyFlag, makeField, makeRightHintLabel, makePopupContent)
 		
 		private def _apply[C <: ReachComponent with Focusable](emptyFlag: Flag, makeField: FieldCreationContext => C,
 		                                                       makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]],
@@ -431,7 +480,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
                                                         (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
                                                         (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent)
                                                         (implicit exc: ExecutionContext)
-	extends ReachComponentWrapper with FocusableWithStateWrapper
+	extends ReachComponentWrapper with FocusableWithStateWrapper with CanDisplayPopup
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -443,24 +492,25 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	 * Contains None while no pop-up window has been initialized.
 	 */
 	private val popupP = Volatile.lockable.empty[Window]
+	/**
+	 * A pointer that contains the linked pop-up window, whether open or hidden.
+	 * Contains None in situations where no pop-up window has been initialized / is available.
+	 */
+	lazy val popupPointer = popupP.readOnly
 	private val hasPopupFlag: Flag = popupP.lightMap { _.isDefined }
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	val popUpVisibleFlag: Flag = popupP.flatMap {
+	override lazy val popupVisibleFlag: Flag = popupP.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
 	/**
 	  * A pointer which contains true while a pop-up is hidden
 	  */
-	lazy val popUpHiddenFlag = !popUpVisibleFlag
-	/**
-	  * A pointer that contains a timestamp of the latest pop-up visibility change event
-	  */
-	val lastPopupVisibilityChangedPointer = popUpVisibleFlag.strongMap { _ => Now.toInstant }
+	override lazy val popupHiddenFlag = !popupVisibleFlag
 	// Merges the expand and the collapse icons, if necessary
-	private val rightIconP: Changing[SingleColorIcon] = {
+	private lazy val rightIconP: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
 		//       => Uses only the right-side icon from settings
 		if (settings.rightIconPointer.existsFixed { _.nonEmpty } || settings.expandAndCollapseIcon.forall { _.isEmpty })
@@ -475,7 +525,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 							case Some(collapseIcon) =>
 								// Makes sure both icons have the same size
 								if (expandIcon.size == collapseIcon.size)
-									popUpVisibleFlag.lightMap { visible => if (visible) collapseIcon else expandIcon }
+									popupVisibleFlag.lightMap { visible => if (visible) collapseIcon else expandIcon }
 								else {
 									val (smaller, larger) = Pair(expandIcon, collapseIcon)
 										.minMaxBy { _.size.area }.toTuple
@@ -486,7 +536,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 									
 									val (newExpandIcon, newCollapseIcon) =
 										if (smaller == expandIcon) smaller -> shrunkIcon else shrunkIcon -> smaller
-									popUpVisibleFlag
+									popupVisibleFlag
 										.lightMap { visible => if (visible) newCollapseIcon else newExpandIcon }
 								}
 							// Case: Only expand icon is defined => Doesn't use collapse icon
@@ -518,7 +568,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	/**
 	  * A pointer that contains true while the pop-up window is NOT displayed, but only while this field has focus
 	  */
-	lazy val popUpHiddenWhileFocusedFlag = popUpHiddenFlag && field.focusFlag
+	lazy val popupHiddenWhileFocusedFlag = popupHiddenFlag && field.focusFlag
 	
 	private lazy val appliedPopUpContext = {
 		val base = VariableReachContentWindowContext(popupContext, context)
@@ -552,35 +602,20 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	focusFlag.addContinuousListenerAndSimulateEvent(false) { e =>
 		if (e.newValue) {
 			if (Now - lastPopupCloseTime > ignoreFocusAfterCloseDuration)
-				openPopup()
+				showPopup()
 		}
 		else
-			cachedPopup.foreach { _.visible = false }
+			popup.foreach { _.visible = false }
 	}
 	
 	
 	// COMPUTED	---------------------------------
 	
 	/**
-	 * @return Whether a pop-up window is currently being displayed
+	 * @return The currently used pop-up window. Not necessarily visible at the moment.
+	 *         None if no window has been initialized yet / if none is available at the moment.
 	 */
-	def showingPopup = popUpVisibleFlag.value
-	def showingPopup_=(show: Boolean) = {
-		if (show) openPopup() else hidePopup()
-	}
-	/**
-	 * @return Whether the pop-up window is currently hidden / not displayed
-	 */
-	def popupHidden = !showingPopup
-	def popupHidden_=(hidden: Boolean) = showingPopup = !hidden
-	
-	/**
-	 * @return Timestamp of the last pop-up window visibility change.
-	 *         If the pop-up hasn't been displayed yet, yields the creation time of this component.
-	 */
-	def lastPopupVisibilityChangedTime = lastPopupVisibilityChangedPointer.value
-	
-	private def cachedPopup = popupP.value
+	def popup = popupP.value
 	
 	
 	// IMPLEMENTED	-----------------------------
@@ -588,14 +623,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	override protected def wrapped = field
 	override protected def focusable = field
 	
-	
-	// OTHER	---------------------------------
-	
-	/**
-	  * Displays this field's pop-up window, but only if this component is attached to the main component hierarchy
-	 * @return The displayed pop-up window. None if this field was not attached to the main component hierarchy.
-	  */
-	def openPopup(): Option[Window] = {
+	override def showPopup(): Option[Window] = {
 		// Case: Linked => Creates and/or displays the pop-up window
 		if (linkedFlag.value)
 			Some(popupP.mutate { popup =>
@@ -617,16 +645,14 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		else
 			None
 	}
-	/**
-	 * Hides the currently displayed pop-up window
-	 * @return The pop-up window. None if no window is open at the moment.
-	 */
-	def hidePopup() = {
-		val window = popupP.value
-		if (popUpVisibleFlag.value)
-			window.foreach { _.visible = false }
-		window.filter { _.hasNotClosed }
+	override def hidePopup() = {
+		val window = popupP.value.filter { _.hasNotClosed }
+		window.foreach { _.visible = false }
+		window
 	}
+	
+	
+	// OTHER	---------------------------------
 	
 	private def createPopup(): Window = {
 		// Creates the pop-up
@@ -663,7 +689,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val handleCondition: Flag = linkedFlag && popUpVisibleFlag
+		override val handleCondition: Flag = linkedFlag && popupVisibleFlag
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.left
 		
 		// Only closes the pop-up on mouse release if it was visible on the previous mouse press
@@ -675,12 +701,12 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
 			if (event.pressed) {
-				closeOnReleaseFlag.value = cachedPopup.exists { _.isFullyVisible }
+				closeOnReleaseFlag.value = popup.exists { _.isFullyVisible }
 				Preserve
 			}
 			// Case: Mouse release => Hides the pop-up if it was visible when the mouse was pressed
 			else if (closeOnReleaseFlag.reset()) {
-				cachedPopup.foreach { _.visible = false }
+				popup.foreach { _.visible = false }
 				Consume("Pop-up closing")
 			}
 			else
@@ -697,7 +723,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		// ATTRIBUTES	-------------------------
 		
 		// Is interested in key events while the field has focus and pop-up is not open
-		override val handleCondition: Flag = linkedFlag && popUpHiddenWhileFocusedFlag && field.enabledFlag
+		override val handleCondition: Flag = linkedFlag && popupHiddenWhileFocusedFlag && field.enabledFlag
 		
 		// Listens to the activation key -presses
 		override val keyStateEventFilter = KeyStateEvent.filter.pressed && KeyStateEvent.filter(settings.activationKeys)
@@ -705,7 +731,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def onKeyState(event: KeyStateEvent) = openPopup()
+		override def onKeyState(event: KeyStateEvent) = showPopup()
 	}
 	
 	private class PopupKeyListener(popup: Window) extends KeyStateListener
