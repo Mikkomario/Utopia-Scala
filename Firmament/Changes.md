@@ -20,11 +20,15 @@
     Implementing libraries / code (such as Utopia Reach) will need to populate / specify it themselves.
 - Added **FixedStackable** trait for static-sized **Stackable** implementations
 ### New methods
+- **Alignment** (via **LengthExtensions**)
+  - Added `.stretchToMatch(...)`, which is a size only -version of `.stretchNextToWithin(...)`
 - **java.awt.Component** (via **AwtComponentExtensions**)
   - Added `.toImage`
 - **FramedFactory**
   - Added new factory functions
 ### Other
+- **Window**'s location correction / location adjustment logic 
+  now only applies to windows which contain OS borders / decorations
 - **Input** now extends **View**
 - Separated some **StackInsets** features to a new trait named **StackInsetsLike**
 

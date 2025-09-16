@@ -344,11 +344,11 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  * @param matchEdgeLength Whether the window should share an edge length with the anchor component.
 	  *                        E.g. If bottom alignment is used and 'matchEdgeLength' is enabled, the resulting
 	  *                        window will attempt to stretch so that to matches the width of the 'component'.
-	  *                        The stacksize limits of the window will be respected, however, and may limit the
+	  *                        The stack-size limits of the window will be respected, however, and may limit the
 	  *                        resizing.
 	  *                        Default = false = will not resize the window.
 	  * @param keepAnchored       Whether the window should be kept close to this component when its size changes
-	  *                           or the this component is moved or resized.
+	  *                           or this component is moved or resized.
 	  *                           Set to false if you don't expect the owner component to move.
 	  *                           This will save some resources, as a large number of components needs to be tracked.
 	  *                           Default = true.
@@ -371,8 +371,8 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	                                        (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{
-		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title,
-			matchEdgeLength, keepAnchored)(createContent)
+		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title, matchEdgeLength, keepAnchored)(
+			createContent)
 		if (display)
 			window.display()
 		window

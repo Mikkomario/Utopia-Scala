@@ -32,11 +32,14 @@
 ### New methods
 - **ContextualFramedFactory**
   - Added new factory functions
+- **PartOfComponentHierarchy**
+  - Added `.isLinked` and `.isDetached` -utility functions
 ### Other changes
 - Revalidation (and consequently repainting) is now (potentially) much faster, 
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
 - **Field** now visibly reacts to mouse hover
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
+- Rewrote **ReachWindow**'s anchoring logic
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - **InputField** conversions don't require **Input* anymore, only requiring **View** (also extended by **Input**)
 - Optimized the component layout update algorithm

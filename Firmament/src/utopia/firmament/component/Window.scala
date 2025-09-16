@@ -2,7 +2,7 @@ package utopia.firmament.component
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
-import utopia.firmament.component.Window.{_locationAdjustment, minIconSize}
+import utopia.firmament.component.Window.{locationAdjustmentP, minIconSize}
 import utopia.firmament.component.stack.{CachingStackable, Stackable}
 import utopia.firmament.context.ComponentCreationDefaults
 import utopia.firmament.context.window.WindowContext
@@ -21,6 +21,8 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, ResettableFlag, SettableFlag}
 import utopia.flow.view.template.eventful.Flag
@@ -70,11 +72,13 @@ object Window
 	
 	/**
 	  * Stores here the location adjustment that must be applied for every call to setLocation and setBounds
-	  * in order to correct for Java and/or OS -caused errors.
+	  * in order to correct for Java and/or OS -caused errors (usually relating to window decoration).
 	  *
 	  * This value is set after the first window becomes visible, after which it is used among all created windows.
 	  */
-	private var _locationAdjustment: Option[Vector2D] = None
+	private lazy val locationAdjustmentP = ComponentCreationDefaults.componentLogger.use { implicit log =>
+		Pointer.eventful.empty[Vector2D]
+	}
 	
 	
 	// COMPUTED ----------------------------
@@ -83,7 +87,7 @@ object Window
 	  * @return Adjustment applied to all positioning requests.
 	  *         Used for countering any OS alteration.
 	  */
-	def appliedLocationAdjustment = _locationAdjustment.getOrElse(Vector2D.zero)
+	def appliedLocationAdjustment = locationAdjustmentP.value.getOrElse(Vector2D.zero)
 	
 	
 	// OTHER    ----------------------------
@@ -494,6 +498,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	lazy val minimizedPointer = IndirectPointer(_minimizedFlag) { minimized = _ }
 	/**
 	  * A mutable pointer that matches the current position of this window.
+	 * Also matches the absolute position of this window's content's top-left corner.
 	  */
 	lazy val positionPointer = IndirectPointer(_positionPointer) { position = _ }
 	/**
@@ -510,10 +515,42 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	lazy val boundsPointer = IndirectPointer(_boundsPointer) { bounds = _ }
 	
 	/**
-	  * The insets around this window.
-	  * Includes the window OS header, for example (unless borderless)
-	  */
-	lazy val insets = Insets of component.getInsets
+	 * The window insets, as returned by Swing / AWT.
+	 * These are not always accurate, as sometimes the OS insets are simply not included.
+	 */
+	private lazy val baseInsets = Insets of component.getInsets
+	/**
+	 * A pointer that contains the "actual" window insets, based on the measured location adjustment.
+	 */
+	lazy val insetsPointer = {
+		// Case: Has OS borders => Location adjustment needs to be accounted for
+		if (hasBorders)
+			locationAdjustmentP.map { adjustment =>
+				adjustment.filter { _.nonZero } match {
+					// Case: Adjustment was necessary => Includes it in the insets
+					case Some(adjustment) =>
+						// Applies the adjustment to the insets.
+						//      For example, if the adjustment is (0, -37),
+						//      that indicates that there is a 37 pixels high top header,
+						//      which needs to be included in the insets
+						baseInsets.mergeWith(adjustment) { (original, adjustment) =>
+							original.mapFirst { _ - adjustment }
+						}
+						
+					// Case: Location adjustment hasn't been measured yet, or no adjustment was necessary
+					//       => Uses the default insets, without adjustment
+					case None => baseInsets
+				}
+			}
+		// Case: Borderless window => Assumes that the location adjustment doesn't apply
+		else
+			Fixed(baseInsets)
+	}
+	/**
+	 * Contains the top-left part of the measured insets.
+	 * Used when converting mouse coordinates between the window's and content's coordinate systems.
+	 */
+	lazy val topLeftInsetsPointer = insetsPointer.map { _.toPoint }
 	
 	// The key-state handler is initialized only when necessary
 	private val keyStateHandlerPointer = Lazy {
@@ -643,7 +680,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			KeyboardEvents ++= keyStateHandlerPointer.current
 			
 			// Schedules to set up the location adjustment -value, unless set already
-			if (_locationAdjustment.isEmpty)
+			if (hasBorders && locationAdjustmentP.isEmpty)
 				Delay(0.5.seconds) { setupLocationAdjustment() }
 			else
 				positionAfterResize.foreach { f => position = f(bounds) }
@@ -675,6 +712,12 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	
 	// COMPUTED    ----------------
+	
+	/**
+	 * The insets around this window.
+	 * Includes the window OS header, for example (unless borderless)
+	 */
+	def insets = insetsPointer.value
 	
 	/**
 	  * @return True if this window doesn't contain the OS borders / header
@@ -837,6 +880,9 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	def keyStateHandler = keyStateHandlerPointer.value
 	
+	private def appliedLocationAdjustment =
+		if (hasBorders) locationAdjustmentP.value.getOrElse(Vector2D.zero) else Vector2D.zero
+	
 	/**
 	  * @return The point which is used as the "anchor" when the size of this window changes.
 	  *         Whenever changes occur, the anchor point is preserved and this window is moved around it instead.
@@ -896,7 +942,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 			_positionPointer.value = b.position
 			AwtEventThread.async {
 				component.setPreferredSize(roundBounds.size.toDimension)
-				component.setBounds((roundBounds + _locationAdjustment.getOrElse(Vector2D.zero)).toAwt)
+				component.setBounds((roundBounds + appliedLocationAdjustment).toAwt)
 			}
 			Delay(0.2.seconds) {
 				finishPositionUpdate(roundBounds.position)
@@ -925,11 +971,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// When distributing events, accounts for the difference in coordinate systems (based on insets)
 	override def distributeMouseButtonEvent(event: MouseButtonStateEvent) =
-		super.distributeMouseButtonEvent(event.translated(-insets.toPoint))
+		super.distributeMouseButtonEvent(event.translated(-topLeftInsetsPointer.value))
 	override def distributeMouseMoveEvent(event: MouseMoveEvent) =
-		super.distributeMouseMoveEvent(event.translated(-insets.toPoint))
+		super.distributeMouseMoveEvent(event.translated(-topLeftInsetsPointer.value))
 	override def distributeMouseWheelEvent(event: MouseWheelEvent) =
-		super.distributeMouseWheelEvent(event.translated(-insets.toPoint))
+		super.distributeMouseWheelEvent(event.translated(-topLeftInsetsPointer.value))
 	
 	
 	// OTHER    --------------------
@@ -1131,8 +1177,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 				// Case: Dictates size => Sets directly to optimal size
 				if (dictateSize)
 					stackSize.optimal
-				// Case: Only optimizes =>
-				// Checks whether the current size follows the limits placed by the stack size and modifies if necessary
+				// Case: Only optimizes => Checks whether the current size follows the limits placed by the stack size
+				//                         and modifies if necessary
 				else
 					size
 						.mergeWith(stackSize) { (current, limit) =>
@@ -1211,37 +1257,47 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}
 	
 	/**
-	  * Tests which locationAdjustment value works best for countering any OS messing
+	  * Tests which locationAdjustment value works best for countering any OS messing.
+	 * Note: Only affects windows with OS borders / decorations.
 	  * @param originalPosition Original position to restore after testing has completed.
 	  *                         Default = None = Restores to the position at the time when this method is called.
 	  */
 	def setupLocationAdjustment(originalPosition: Option[Point] = None): Unit = {
-		// Adjusts the position by 1 pixel to the right
-		val positionBeforeTest = position
-		val testPosition = positionBeforeTest + X(1)
-		position = testPosition
-		
-		// Waits for the position update to complete
-		positionUpdatingFlag.onceNotSet {
-			// Calculates the discrepancy
-			val positionAfterTest = position
-			val adjustment = (testPosition - positionAfterTest).toVector2D
-			// Applies the adjustment to future positioning events
-			_locationAdjustment = Some(_locationAdjustment match {
-				case Some(previous) => previous + adjustment
-				case None => adjustment
-			})
+		// Case: OS borders used => Applies the location adjustment process
+		if (hasBorders) {
+			// Adjusts the position by 1 pixel to the right
+			val positionBeforeTest = position
+			val testPosition = positionBeforeTest + X(1)
+			position = testPosition
 			
-			// Continues recursively until no further discrepancy is found
-			// Returns this window to the original location once done
-			if (adjustment.isAboutZero)
-				position = positionAfterResize match {
-					case Some(f) => f(bounds)
-					case None => originalPosition.getOrElse(positionBeforeTest)
+			// Waits for the position update to complete
+			positionUpdatingFlag.onceNotSet {
+				// Calculates the discrepancy
+				val positionAfterTest = position
+				val adjustment = (testPosition - positionAfterTest).toVector2D
+				// Applies the adjustment to future positioning events
+				locationAdjustmentP.update {
+					case Some(previous) => Some(previous + adjustment)
+					case None => Some(adjustment)
 				}
-			else
-				Delay(0.5.seconds) { setupLocationAdjustment(originalPosition.orElse(Some(positionBeforeTest))) }
+				
+				// Continues recursively until no further discrepancy is found
+				// Returns this window to the original location once done
+				if (adjustment.isAboutZero)
+					position = positionAfterResize match {
+						case Some(f) => f(bounds)
+						case None => originalPosition.getOrElse(positionBeforeTest)
+					}
+				else
+					Delay(0.5.seconds) { setupLocationAdjustment(originalPosition.orElse(Some(positionBeforeTest))) }
+			}
 		}
+		// Case: Borderless window => Just sets the desired position without adjusting anything
+		else
+			positionAfterResize match {
+				case Some(f) => position = f(bounds)
+				case None => originalPosition.foreach { position = _ }
+			}
 	}
 	
 	private def _setPosition(newPosition: Point, roundedNewPosition: Point) = {
@@ -1249,7 +1305,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		pendingAnchor.clear()
 		_positionPointer.value = newPosition
 		AwtEventThread.async {
-			component.setLocation((roundedNewPosition + _locationAdjustment.getOrElse(Vector2D.zero)).toAwtPoint)
+			component.setLocation((roundedNewPosition + appliedLocationAdjustment).toAwtPoint)
 		}
 		queuePositionUpdateFinish(roundedNewPosition)
 	}

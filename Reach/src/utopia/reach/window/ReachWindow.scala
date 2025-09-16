@@ -19,7 +19,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, ResettableFlag}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
@@ -27,6 +27,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
+import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.FromContextComponentFactoryFactory
 import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -164,7 +165,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			case None => AlwaysFalse
 		}
 		lazy val absoluteWindowPositionPointer = windowPointer.flatMap {
-			case Some(window) => window.positionPointer.map { _ + window.insets.toPoint }
+			case Some(window) => window.positionPointer
 			case None => Fixed(Point.origin)
 		}
 		
@@ -212,7 +213,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @param matchEdgeLength    Whether the window should share an edge length with the anchor component.
 	  *                           E.g. If bottom alignment is used and 'matchEdgeLength' is enabled, the resulting
 	  *                           window will attempt to stretch so that to matches the width of the 'component'.
-	  *                           The stacksize limits of the window will be respected, however, and may limit the
+	  *                           The stack-size limits of the window will be respected, however, and may limit the
 	  *                           resizing.
 	  *                           Default = false = will not resize the window.
 	  * @param keepAnchored       Whether this window should be kept close to the owner component when its size changes
@@ -232,14 +233,10 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	                                       matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
 	                                      (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R]) =
 	{
-		// Full-screen is not supported for anchored windows
-		val factory = windowed.withAnchorAlignment(preferredAlignment)
-		// Creates the window and the canvas
-		val windowCreation = factory(component.hierarchy.top.parentWindow, title,
-			disableAutoBoundsUpdates = true)(createContent)
-		val window = windowCreation.window
+		println(s"Matches edge length: $matchEdgeLength")
+		println(s"Keeps anchored: $keepAnchored")
 		
-		// Determines the optimal position for the window
+		// Determines the area within which the window may be positioned
 		lazy val screenArea = {
 			val base = Bounds(Point.origin, Screen.actualSize)
 			if (context.screenInsetsEnabled)
@@ -248,69 +245,49 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				base
 		}
 		
-		// A flag used to avoid looping size-altering & listening - Only needed when window stretching is used
-		val ignoreNextSizeUpdateFlag = ResettableFlag()
-		def optimizeWindowPosition() = {
-			if (window.isFullyVisible) {
-				// Case: Stretching enabled => May modify window size as well
-				if (matchEdgeLength) {
-					val newBounds = preferredAlignment.stretchNextToWithin(window.stackSize, component.absoluteBounds,
-						screenArea, margin, swapToFit = true)
-					// Ignores the next size update when altering window size through this method
-					ignoreNextSizeUpdateFlag.value = window.size != newBounds.size
-					window.bounds = newBounds
-				}
-				// Case: Only positioning is enabled
-				else
-					window.position = preferredAlignment.positionRelativeToWithin(window.size, component.absoluteBounds,
-						screenArea, margin, swapToFit = true).position
-			}
-		}
+		// A function for positioning the window next to the target component
+		def positionWindow(windowSize: Size) = preferredAlignment
+			.positionRelativeToWithin(windowSize, component.absoluteBounds, screenArea, margin, swapToFit = true)
+			.position
 		
-		// Whenever the window becomes visible, updates its location and size
-		window.fullyVisibleFlag.addListener { e =>
-			// Case: Window became visible
-			if (e.newValue) {
-				// Case: Optimizing both size and position
-				if (matchEdgeLength)
-					optimizeWindowPosition()
-				// Case: Optimizing size only => Uses window.optimizeBounds() to update size
-				else {
-					// Case: .optimizeBounds() alters size (delayed) => Updates position once the update takes place
-					if (window.optimizeBounds())
-						window.sizePointer.onNextChange { _ => optimizeWindowPosition() }
-					// Case: No size altered => Optimizes position immediately
-					else
-						optimizeWindowPosition()
-				}
-			}
-			ChangeResponse.continueUnless(window.hasClosed)
-		}
+		// Creates the window with automatic positioning logic
+		// Note: Full-screen is not supported for anchored windows
+		val windowCreation = windowed.withAnchorAlignment(preferredAlignment)
+			.withPositionAfterResize { windowBounds => positionWindow(windowBounds.size) }
+			.apply(component.parentWindow, title)(createContent)
+		val window = windowCreation.window
 		
-		// Updates the window position whenever the owner component's absolute position changes,
-		// or when the window's size changes
-		// (May be disabled)
-		if (keepAnchored) {
-			val repositionListener = ChangeListener.onAnyChange {
-				optimizeWindowPosition()
-				// Stops reacting to events once the window has closed
-				ChangeResponse.continueUnless(window.hasClosed)
-			}
-			// Repositions on window size changes
-			// Case: Window optimization may alter size => Ignores recursive/looping calls
-			if (matchEdgeLength)
-				window.sizePointer.addListener { _ =>
-					if (!ignoreNextSizeUpdateFlag.reset())
-						optimizeWindowPosition()
+		// Additional window-positioning / resizing is applied
+		// only while both the window and the target component are visible
+		lazy val windowAndComponentVisibleFlag = window.fullyVisibleFlag && component.linkedFlag
+		
+		// If continuous anchoring is required,
+		// checks for the component's absolute bounds changes and updates the window's position accordingly
+		if (keepAnchored)
+			windowAndComponentVisibleFlag.onceSet {
+				val repositionListener = ChangeListener.onAnyChange {
+					window.position = positionWindow(window.size)
+					// Stops reacting to events once the window has closed
 					ChangeResponse.continueUnless(window.hasClosed)
 				}
-			// Case: Window optimization never alters size => Repositions on every size change
-			else
-				window.sizePointer.addListener(repositionListener)
-			component.boundsPointer.addListener(repositionListener)
-			component.hierarchy.parentsIterator.foreach { _.positionPointer.addListener(repositionListener) }
-			// The canvas absolute position tracking may not be working
-			component.parentCanvas.absolutePositionView.toOption.foreach { _.addListener(repositionListener) }
+				component.boundsPointer.addListenerWhile(windowAndComponentVisibleFlag)(repositionListener)
+				component.hierarchy.parentsIterator
+					.foreach { _.positionPointer.addListenerWhile(windowAndComponentVisibleFlag)(repositionListener) }
+				// Note: The canvas absolute position tracking may not be working
+				component.parentCanvas.absolutePositionView.toOption
+					.foreach { _.addListenerWhile(windowAndComponentVisibleFlag)(repositionListener) }
+			}
+		// If 'matchEdgeLength', auto-resizes the window when it becomes visible and when component size changes
+		if (matchEdgeLength) {
+			def resizeWindow(componentSize: Size = component.size) =
+				window.size = preferredAlignment.stretchToMatch(window.stackSize, componentSize,
+					within = Some(screenArea.size))
+			
+			window.fullyVisibleFlag.addListener { e =>
+				if (e.newValue && component.isLinked)
+					resizeWindow()
+			}
+			component.sizePointer.addListenerWhile(windowAndComponentVisibleFlag) { e => resizeWindow(e.newValue) }
 		}
 		
 		windowCreation

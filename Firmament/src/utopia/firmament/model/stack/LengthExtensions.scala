@@ -424,6 +424,24 @@ object LengthExtensions
 		                        swapToFit: Boolean = false) =
 		{
 			// Matches the shared edge length as much as possible
+			a.positionRelativeToWithin(stretchToMatch(area, to.size, Some(within.size)), to, within, margin, swapToFit)
+		}
+		/**
+		 * Stretches an area, so that it's shared edge length matches that of the target area.
+		 * Works with unidirectional alignments: Right, Top, Left, Bottom.
+		 * Respects the area's stack size; I.e. won't stretch over its maximum size or under its minimum size.
+		 * @param area The area to stretch
+		 * @param to The reference area that determines the targeted width or height
+		 * @param within The maximum area within which the resulting area must fit.
+		 *               Optional.
+		 *
+		 *               Note: The resulting area won't be smaller than the original area's minimum size,
+		 *                     even when that doesn't fit within this area.
+		 * @return A version of 'area' that has been stretched to match 'to' along this alignment's edge,
+		 *         and which should fit 'within', if specified.
+		 */
+		def stretchToMatch(area: StackSize, to: Size, within: Option[Size] = None) = {
+			// Matches the shared edge length as much as possible
 			val defaultSize = a.directions.only match {
 				// Case: One-directional alignment => Edge matching enabled
 				case Some(direction) =>
@@ -434,17 +452,20 @@ object LengthExtensions
 							area.optimal(axis)
 						// Case: Non-aligned axis (parallel to the edge) => Matches the edge (checks max size also)
 						else {
-							val target = to.size(axis)
+							val target = to(axis)
 							area(axis).max.filter { _ < target }.getOrElse(target)
 						}
 					}
-				// Case: 0- or bi-directional alignment => Edge matching disabled
+				// Case: 0- or bidirectional alignment => Edge matching disabled
 				case None => area.optimal
 			}
 			// Makes sure the area fits within the target area (if possible),
 			// and that the minimum size of the area is respected
-			val actualSize = defaultSize.fittingWithin(within.size).filling(area.min)
-			a.positionRelativeToWithin(actualSize, to, within, margin, swapToFit)
+			val fittingWithin = within match {
+				case Some(within) => defaultSize.fittingWithin(within)
+				case None => defaultSize
+			}
+			fittingWithin.filling(area.min)
 		}
 		
 		private def positionWithDirection(length: Double, withinLength: Double, targetStartMargin: StackLength,

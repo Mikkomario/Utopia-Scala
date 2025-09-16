@@ -722,6 +722,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		// When the mouse is released, hides the pop-up
 		// Also hides when not in focus, and on some key-presses
 		popup.focusKeyStateHandler += new PopupKeyListener(popup)
+		// TODO: Make this optional, also
 		popup.focusedFlag.addListener { e =>
 			if (!e.newValue)
 				popup.visible = false

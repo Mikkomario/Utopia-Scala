@@ -163,7 +163,6 @@ object ReachCanvas
 			// Implements the attachment tracking etc.
 			val attachmentPointer = ResettableFlag()
 			val componentPointer = AssignableOnce[java.awt.Component]()
-			// TODO: Utilize the ancestor listener in caching & resetting this value
 			val absoluteParentPositionView = ResettableLazy {
 				componentPointer.value match {
 					case Some(component) =>

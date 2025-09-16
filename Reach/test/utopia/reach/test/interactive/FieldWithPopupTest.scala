@@ -1,6 +1,9 @@
 package utopia.reach.test.interactive
 
+import utopia.firmament.component.Window
+import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.Single
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.keyboard.Key.Enter
@@ -9,7 +12,6 @@ import utopia.reach.component.interactive.input.FieldWithPopup
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.container.wrapper.Framing
-import utopia.reach.focus.FocusRequestable
 import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.ReachWindow
 
@@ -39,5 +41,12 @@ object FieldWithPopupTest extends App
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()
 	window.display(centerOnParent = true)
+	
+	window.insetsPointer.addListener { e => println(e) }
+	Delay(5.seconds) {
+		println(window.insets)
+		println(Window.appliedLocationAdjustment)
+	}
+	
 	start()
 }

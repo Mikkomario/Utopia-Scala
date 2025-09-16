@@ -31,6 +31,15 @@ trait PartOfComponentHierarchy
 	  */
 	def linkedFlag = hierarchy.linkedFlag
 	
+	/**
+	 * @return Whether this component is linked to the main component hierarchy
+	 */
+	def isLinked = linkedFlag.value
+	/**
+	 * @return Whether this component is not currently linked to the main component hierarchy
+	 */
+	def isDetached = !isLinked
+	
 	@deprecated("Deprecated for removal. Please use .hierarchy instead", "v1.6")
 	def parentHierarchy: ComponentHierarchy = hierarchy
 }
