@@ -3,6 +3,7 @@ package utopia.reach.window
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
+import utopia.firmament.context.color.ColorContextPropsView
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.context.window.WindowContext
 import utopia.firmament.localization.LocalizedString
@@ -10,6 +11,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
@@ -175,9 +177,14 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		lazy val lazyCanvas = canvasPointer.get
 		lazy val revalidation = revalidate(lazyWindow, lazyCanvas, context.revalidationStyle)
 		
+		// Determines the window background color
+		val backgroundP = context match {
+			case c: ColorContextPropsView => c.backgroundPointer
+			case c => Fixed(c.windowBackground)
+		}
+		
 		// Creates the canvas
-		val canvas = ReachCanvas(attachmentPointer, Right(absoluteWindowPositionPointer),
-			Fixed(context.windowBackground), context.cursors,
+		val canvas = ReachCanvas(attachmentPointer, Right(absoluteWindowPositionPointer), backgroundP, context.cursors,
 			disableFocus = !context.focusEnabled) { _ => revalidation() } { createContent(_, windowPointer.readOnly) }
 		canvasPointer.set(canvas)
 		
@@ -233,9 +240,6 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	                                       matchEdgeLength: Boolean = false, keepAnchored: Boolean = true)
 	                                      (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R]) =
 	{
-		println(s"Matches edge length: $matchEdgeLength")
-		println(s"Keeps anchored: $keepAnchored")
-		
 		// Determines the area within which the window may be positioned
 		lazy val screenArea = {
 			val base = Bounds(Point.origin, Screen.actualSize)
@@ -279,15 +283,25 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			}
 		// If 'matchEdgeLength', auto-resizes the window when it becomes visible and when component size changes
 		if (matchEdgeLength) {
-			def resizeWindow(componentSize: Size = component.size) =
-				window.size = preferredAlignment.stretchToMatch(window.stackSize, componentSize,
-					within = Some(screenArea.size))
-			
-			window.fullyVisibleFlag.addListener { e =>
-				if (e.newValue && component.isLinked)
-					resizeWindow()
+			// Modifies the window's optimal length along the targeted edge
+			preferredAlignment.unaffectedAxes.only.foreach { axis =>
+				window.addConstraintOver(axis) { original =>
+					val target = component.size(axis)
+					if (original.min > target)
+						original.withOptimal(original.min)
+					else
+						original.max.filter { _ < target } match {
+							case Some(maxLength) => original.withOptimal(maxLength)
+							case None => original.withOptimal(target)
+						}
+				}
+				// Also, whenever the component's length changes, also changes the size of the window
+				component.sizePointer.addListenerWhile(windowAndComponentVisibleFlag) { e =>
+					if (e.notEqualsBy { _(axis) })
+						window.size = preferredAlignment.stretchToMatch(window.stackSize, e.newValue,
+							within = Some(screenArea.size))
+				}
 			}
-			component.sizePointer.addListenerWhile(windowAndComponentVisibleFlag) { e => resizeWindow(e.newValue) }
 		}
 		
 		windowCreation

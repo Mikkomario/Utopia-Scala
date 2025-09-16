@@ -861,7 +861,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	private def makeViewImageLabel(hierarchy: ComponentHierarchy, pointer: Changing[SingleColorIcon],
 	                               noMarginSide: Direction2D) =
 		ViewImageLabel.withContext(hierarchy, innerNormalTextContext)
-			.withSettings(settings.imageSettings).lowPriority.mapInsets { _ - noMarginSide }
+			.withSettings(settings.imageSettings).mapInsets { _ - noMarginSide }
 			.iconPointer(pointer)
 	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
 		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.strongMap { _.nonEmpty })

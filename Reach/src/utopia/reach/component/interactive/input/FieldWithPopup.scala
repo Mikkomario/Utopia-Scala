@@ -27,7 +27,7 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopup
-import utopia.reach.component.interactive.input.FieldWithPopup.ignoreFocusAfterCloseDuration
+import utopia.reach.component.interactive.input.FieldWithPopup.transitionDuration
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
@@ -78,11 +78,15 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	/**
 	 * Whether the field's background color should become the pop-up window's background color, also
 	 */
-	def appliesFieldBackgroundInPopUp: Boolean
+	def appliesFieldBackgroundInPopup: Boolean
+	/**
+	 * Whether the pop-up window should be hidden whenever it loses focus
+	 */
+	def hidesPopupOnFocusLoss: Boolean
 	/**
 	 * Whether the opened pop-up window will be automatically hidden after a mouse release -event.
 	 */
-	def hidesPopUpAfterMouseRelease: Boolean
+	def hidesPopupAfterMouseRelease: Boolean
 	
 	/**
 	 * Additional keyboard keys that open the pop-up window when they are pressed, while this field
@@ -120,7 +124,7 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	 *                        background color, also
 	 * @return Copy of this factory with the specified applies field background in pop up
 	 */
-	def withFieldBackgroundInPopUp(applyBackground: Boolean): Repr
+	def withUsesFieldBackgroundInPopup(applyBackground: Boolean): Repr
 	/**
 	 * Wrapped more generic field settings
 	 * @param settings New field settings to use.
@@ -135,7 +139,14 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	 *             release -event.
 	 * @return Copy of this factory with the specified hides pop up after mouse release
 	 */
-	def withHidePopUpAfterMouseRelease(hide: Boolean): Repr
+	def withHidePopupAfterMouseRelease(hide: Boolean): Repr
+	/**
+	 * Whether the pop-up window should be hidden whenever it loses focus
+	 * @param hide New hides popup on focus loss to use.
+	 *             Whether the pop-up window should be hidden whenever it loses focus
+	 * @return Copy of this factory with the specified hides popup on focus loss
+	 */
+	def withHidesPopupOnFocusLoss(hide: Boolean): Repr
 	/**
 	 * Alignment used for placing the pop-up window next to this field.
 	 * @param alignment New popup alignment to use.
@@ -168,20 +179,29 @@ trait FieldWithPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	/**
 	 * @return Copy of this factory that applies the field's background color to the pop-up window
 	 */
-	def withFieldBackgroundInPopup = withFieldBackgroundInPopUp(true)
+	def withFieldBackgroundInPopup: Repr = withUsesFieldBackgroundInPopup(true)
 	/**
 	 * @return Copy of this factory that doesn't apply the field's background color in the pop-up window
 	 */
-	def withoutFieldBackgroundInPopup = withFieldBackgroundInPopUp(false)
+	def withoutFieldBackgroundInPopup = withUsesFieldBackgroundInPopup(false)
+	
+	/**
+	 * @return A copy of this factory that hides the pop-up window whenever it loses focus
+	 */
+	def hidingPopupOnFocusLoss = withHidesPopupOnFocusLoss(true)
+	/**
+	 * @return A copy of this factory that won't hide the pop-up window when it loses focus
+	 */
+	def notHidingPopupOnFocusLoss = withHidesPopupOnFocusLoss(false)
 	
 	/**
 	 * @return Copy of this factory where the created pop-up windows are hid after a mouse release
 	 */
-	def hidingPopupOnMouseRelease = withHidePopUpAfterMouseRelease(true)
+	def hidingPopupOnMouseRelease = withHidePopupAfterMouseRelease(true)
 	/**
 	 * @return A copy of this factory without pop-up window on mouse release enabled
 	 */
-	def notHidingPopupOnMouseRelease = withHidePopUpAfterMouseRelease(false)
+	def notHidingPopupOnMouseRelease = withHidePopupAfterMouseRelease(false)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -304,9 +324,10 @@ object FieldWithPopupSettings
  * @param popupAlignment                Alignment used for placing the pop-up window next to this field.
  * @param popupMatchesFieldLength       Whether the pop-up window's length should match that of
  *                                      this field, on the side matching [[popupAlignment]].
- * @param appliesFieldBackgroundInPopUp Whether the field's background color should become the
+ * @param appliesFieldBackgroundInPopup Whether the field's background color should become the
  *                                      pop-up window's background color, also
- * @param hidesPopUpAfterMouseRelease   Whether the opened pop-up window will be automatically
+ * @param hidesPopupOnFocusLoss Whether the pop-up window should be hidden whenever it loses focus
+ * @param hidesPopupAfterMouseRelease   Whether the opened pop-up window will be automatically
  *                                      hidden after a mouse release -event.
  * @author Mikko Hilpinen
  * @since 14.09.2025, v1.7
@@ -315,8 +336,8 @@ case class FieldWithPopupSettings(fieldSettings: FieldSettings = FieldSettings.d
                                   expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
                                   activationKeys: Set[Key] = Set[Key](), closeKeys: Set[Key] = Set[Key](),
                                   popupAlignment: Alignment = Alignment.Right, popupMatchesFieldLength: Boolean = false,
-                                  appliesFieldBackgroundInPopUp: Boolean = false,
-                                  hidesPopUpAfterMouseRelease: Boolean = false)
+                                  appliesFieldBackgroundInPopup: Boolean = false, hidesPopupOnFocusLoss: Boolean = false,
+                                  hidesPopupAfterMouseRelease: Boolean = false)
 	extends FieldWithPopupSettingsLike[FieldWithPopupSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -325,14 +346,15 @@ case class FieldWithPopupSettings(fieldSettings: FieldSettings = FieldSettings.d
 	override def withCloseKeys(keys: Set[Key]) = copy(closeKeys = keys)
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
 		copy(expandAndCollapseIcon = icons)
-	override def withFieldBackgroundInPopUp(applyBackground: Boolean) =
-		copy(appliesFieldBackgroundInPopUp = applyBackground)
+	override def withUsesFieldBackgroundInPopup(applyBackground: Boolean) =
+		copy(appliesFieldBackgroundInPopup = applyBackground)
 	override def withFieldSettings(settings: FieldSettings) = copy(fieldSettings = settings)
-	override def withHidePopUpAfterMouseRelease(hide: Boolean) =
-		copy(hidesPopUpAfterMouseRelease = hide)
+	override def withHidePopupAfterMouseRelease(hide: Boolean) =
+		copy(hidesPopupAfterMouseRelease = hide)
 	override def withPopupAlignment(alignment: Alignment) = copy(popupAlignment = alignment)
 	override def withPopupMatchesFieldLength(matchLength: Boolean) =
 		copy(popupMatchesFieldLength = matchLength)
+	override def withHidesPopupOnFocusLoss(hide: Boolean) = copy(hidesPopupOnFocusLoss = hide)
 }
 
 /**
@@ -359,22 +381,24 @@ trait FieldWithPopupSettingsWrapper[+Repr] extends FieldWithPopupSettingsLike[Re
 	
 	override def activationKeys = settings.activationKeys
 	override def closeKeys = settings.closeKeys
-	override def appliesFieldBackgroundInPopUp = settings.appliesFieldBackgroundInPopUp
+	override def appliesFieldBackgroundInPopup = settings.appliesFieldBackgroundInPopup
 	override def expandAndCollapseIcon = settings.expandAndCollapseIcon
 	override def fieldSettings = settings.fieldSettings
-	override def hidesPopUpAfterMouseRelease = settings.hidesPopUpAfterMouseRelease
+	override def hidesPopupAfterMouseRelease = settings.hidesPopupAfterMouseRelease
 	override def popupAlignment = settings.popupAlignment
 	override def popupMatchesFieldLength = settings.popupMatchesFieldLength
+	override def hidesPopupOnFocusLoss: Boolean = settings.hidesPopupOnFocusLoss
 	
+	override def withHidesPopupOnFocusLoss(hide: Boolean): Repr = mapSettings { _.withHidesPopupOnFocusLoss(hide) }
 	override def withActivationKeys(keys: Set[Key]) = mapSettings { _.withActivationKeys(keys) }
 	override def withCloseKeys(keys: Set[Key]) = mapSettings { _.withCloseKeys(keys) }
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
 		mapSettings { _.withExpandAndCollapseIcon(icons) }
-	override def withFieldBackgroundInPopUp(applyBackground: Boolean) =
-		mapSettings { _.withFieldBackgroundInPopUp(applyBackground) }
+	override def withUsesFieldBackgroundInPopup(applyBackground: Boolean) =
+		mapSettings { _.withUsesFieldBackgroundInPopup(applyBackground) }
 	override def withFieldSettings(settings: FieldSettings) = mapSettings { _.withFieldSettings(settings) }
-	override def withHidePopUpAfterMouseRelease(hide: Boolean) =
-		mapSettings { _.withHidePopUpAfterMouseRelease(hide) }
+	override def withHidePopupAfterMouseRelease(hide: Boolean) =
+		mapSettings { _.withHidePopupAfterMouseRelease(hide) }
 	override def withPopupAlignment(alignment: Alignment) = mapSettings { _.withPopupAlignment(alignment) }
 	override def withPopupMatchesFieldLength(matchLength: Boolean) =
 		mapSettings { _.withPopupMatchesFieldLength(matchLength) }
@@ -511,7 +535,10 @@ object FieldWithPopup extends FieldWithPopupSetup()
 {
 	// ATTRIBUTES   ----------------
 	
-	private val ignoreFocusAfterCloseDuration = 0.2.seconds
+	/**
+	 * Minimum duration between possible pop-up close & open events
+	 */
+	private val transitionDuration = 0.2.seconds
 	
 	
 	// OTHER	--------------------
@@ -536,8 +563,15 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 {
 	// ATTRIBUTES	------------------------------
 	
-	// Tracks close time in order to now immediately open the pop-up afterwards
-	private var lastPopupCloseTime = Now.toInstant
+	/**
+	 * Contains the last time the pop-up window opened.
+	 * Used for ensuring that the window is not immediately closed.
+	 */
+	private var _lastPopupOpenTime = Now.toInstant
+	/**
+	 * Tracks close time in order to now immediately open the pop-up afterwards
+	 */
+	private var _lastPopupCloseTime = Now.toInstant
 	
 	/**
 	 * A mutable pointer that contains the pop-up window.
@@ -625,7 +659,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	private lazy val appliedPopUpContext = {
 		val base = VariableReachContentWindowContext(popupContext, context)
 		// Applies the field's background to the pop-up (optional feature)
-		if (settings.appliesFieldBackgroundInPopUp)
+		if (settings.appliesFieldBackgroundInPopup)
 			base.withBackgroundPointer(field.innerBackgroundPointer)
 		else
 			base
@@ -635,11 +669,11 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	// INITIAL CODE	-----------------------------
 	
 	// Initializes keyboard & mouse listening once attached to the component hierarchy
-	if (settings.activationKeys.nonEmpty || settings.hidesPopUpAfterMouseRelease)
+	if (settings.activationKeys.nonEmpty || settings.hidesPopupAfterMouseRelease)
 		linkedFlag.onceSet {
 			if (settings.activationKeys.nonEmpty)
 				KeyboardEvents += new FieldKeyListener
-			if (settings.hidesPopUpAfterMouseRelease)
+			if (settings.hidesPopupAfterMouseRelease)
 				CommonMouseEvents += new PopupHideMouseListener
 		}
 	// Whenever this field becomes detached from the component hierarchy, disposes the pop-up window
@@ -653,7 +687,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	// When gains focus, displays the pop-up. Hides the pop-up when focus is lost.
 	focusFlag.addContinuousListenerAndSimulateEvent(false) { e =>
 		if (e.newValue) {
-			if (Now - lastPopupCloseTime > ignoreFocusAfterCloseDuration)
+			if (Now - _lastPopupCloseTime > transitionDuration)
 				showPopup()
 		}
 		else
@@ -669,6 +703,15 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	 */
 	def popup = popupP.value
 	
+	/**
+	 * The last time the pop-up window was opened.
+	 */
+	def lastPopupOpenTime = _lastPopupOpenTime
+	/**
+	 * The last time the pop-up window was closed.
+	 */
+	def lastPopupCloseTime = _lastPopupCloseTime
+	
 	
 	// IMPLEMENTED	-----------------------------
 	
@@ -677,7 +720,8 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	
 	override def showPopup(): Option[Window] = {
 		// Case: Linked => Creates and/or displays the pop-up window
-		if (linkedFlag.value)
+		if (linkedFlag.value) {
+			_lastPopupOpenTime = Now
 			Some(popupP.mutate { popup =>
 				popup.filter { _.hasNotClosed } match {
 					// Case: Pop-up already created => Displays it
@@ -693,13 +737,17 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 						popup -> Some(popup)
 				}
 			})
+		}
 		// Case: Not attached => Won't open the pop-up
 		else
 			None
 	}
 	override def hidePopup() = {
 		val window = popupP.value.filter { _.hasNotClosed }
-		window.foreach { _.visible = false }
+		window.foreach { window =>
+			_lastPopupCloseTime = Now
+			window.visible = false
+		}
 		window
 	}
 	
@@ -716,18 +764,19 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		}
 		// Remembers when the pop-up closes
 		popup.fullyVisibleFlag.addListener { e =>
-			if (!e.newValue)
-				lastPopupCloseTime = Now
+			if (e.newValue)
+				_lastPopupOpenTime = Now
+			else
+				_lastPopupCloseTime = Now
 		}
-		// When the mouse is released, hides the pop-up
-		// Also hides when not in focus, and on some key-presses
+		// Hides the pop-up under certain conditions
 		popup.focusKeyStateHandler += new PopupKeyListener(popup)
-		// TODO: Make this optional, also
-		popup.focusedFlag.addListener { e =>
-			if (!e.newValue)
-				popup.visible = false
-			ChangeResponse.continueUnless(popup.hasClosed)
-		}
+		if (settings.hidesPopupOnFocusLoss)
+			popup.focusedFlag.addListener { e =>
+				if (!e.newValue)
+					popup.visible = false
+				ChangeResponse.continueUnless(popup.hasClosed)
+			}
 		// Returns the pop-up window
 		popup.window
 	}
@@ -752,15 +801,19 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		// IMPLEMENTED  ----------------------
 		
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
-			// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
-			if (event.pressed) {
-				closeOnReleaseFlag.value = popup.exists { _.isFullyVisible }
-				Preserve
-			}
-			// Case: Mouse release => Hides the pop-up if it was visible when the mouse was pressed
-			else if (closeOnReleaseFlag.reset()) {
-				popup.foreach { _.visible = false }
-				Consume("Pop-up closing")
+			if (Now - _lastPopupOpenTime >= transitionDuration) {
+				// Case: Mouse press => Saves the pop-up status in order to react correctly to the next mouse release
+				if (event.pressed) {
+					closeOnReleaseFlag.set()
+					Preserve
+				}
+				// Case: Mouse release => Hides the pop-up if it was visible when the mouse was pressed
+				else if (closeOnReleaseFlag.reset()) {
+					popup.foreach { _.visible = false }
+					Consume("Pop-up closing")
+				}
+				else
+					Preserve
 			}
 			else
 				Preserve
@@ -802,11 +855,13 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		override def handleCondition: Flag = popup.fullyVisibleFlag
 		
 		override def onKeyState(event: KeyStateEvent) = {
-			// Hides the pop-up
-			popup.visible = false
-			// On tabulator press, yields focus afterwards
-			if (event.index == Tab.index)
-				Delay(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
+			if (Now - _lastPopupOpenTime >= transitionDuration) {
+				// Hides the pop-up
+				popup.visible = false
+				// On tabulator press, yields focus afterwards
+				if (event.index == Tab.index)
+					Delay(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
+			}
 		}
 	}
 }

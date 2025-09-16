@@ -46,6 +46,7 @@ import utopia.reach.focus.{FocusListener, FocusStateTracker, HasFocusFlag}
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 trait SelectionListSettingsLike[+Repr] extends StackSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -98,6 +99,7 @@ trait SelectionListSettingsLike[+Repr] extends StackSettingsLike[Repr]
 	def mapStackSettings(f: StackSettings => StackSettings) = withStackSettings(f(stackSettings))
 }
 
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 object SelectionListSettings
 {
 	// ATTRIBUTES	--------------------
@@ -112,6 +114,7 @@ object SelectionListSettings
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 case class SelectionListSettings(stackSettings: StackSettings = StackSettings.default,
                                  highlightModifier: Double = 1.0)
 	extends SelectionListSettingsLike[SelectionListSettings]
@@ -128,6 +131,7 @@ case class SelectionListSettings(stackSettings: StackSettings = StackSettings.de
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 trait SelectionListSettingsWrapper[+Repr] extends SelectionListSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -163,6 +167,7 @@ trait SelectionListSettingsWrapper[+Repr] extends SelectionListSettingsLike[Repr
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr] with PartOfComponentHierarchy
 {
 	import utopia.firmament.context.ComponentCreationDefaults.componentLogger
@@ -229,6 +234,7 @@ trait SelectionListFactoryLike[+Repr] extends SelectionListSettingsWrapper[Repr]
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 case class SelectionListFactory(hierarchy: ComponentHierarchy,
                                 settings: SelectionListSettings = SelectionListSettings.default,
                                 marginPointer: Changing[StackLength] = Fixed(StackLength.any))
@@ -280,6 +286,7 @@ case class SelectionListFactory(hierarchy: ComponentHierarchy,
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
                                           context: VariableColorContext,
                                           settings: SelectionListSettings = SelectionListSettings.default,
@@ -349,6 +356,7 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 case class SelectionListSetup(settings: SelectionListSettings = SelectionListSettings.default)
 	extends SelectionListSettingsWrapper[SelectionListSetup]
 		with ComponentFactoryFactory[SelectionListFactory]
@@ -363,6 +371,7 @@ case class SelectionListSetup(settings: SelectionListSettings = SelectionListSet
 	override def withSettings(settings: SelectionListSettings) = copy(settings = settings)
 }
 
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 object SelectionList extends SelectionListSetup()
 {
 	// OTHER	--------------------
@@ -375,7 +384,7 @@ object SelectionList extends SelectionListSetup()
   * @author Mikko Hilpinen
   * @since 19.12.2020, v0.1
   */
-// TODO: Deprecate once SelectableStack has been tested
+@deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[Seq[A]]]
 (override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],

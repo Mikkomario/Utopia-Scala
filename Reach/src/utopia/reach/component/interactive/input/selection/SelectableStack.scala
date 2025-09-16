@@ -16,6 +16,7 @@ import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
@@ -83,7 +84,21 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	 * Whether arrow key -based selection should be enabled
 	 */
 	def arrowKeySelectionEnabled: Boolean
+	/**
+	 * Whether the selected value should be preserved even when the available content doesn't
+	 * contain it.
+	 */
+	def allowsSelectionOutsideContent: Boolean
 	
+	/**
+	 * Whether the selected value should be preserved even when the available content doesn't
+	 * contain it.
+	 * @param allow New allows selection outside content to use.
+	 *              Whether the selected value should be preserved even when the available content
+	 *              doesn't contain it.
+	 * @return Copy of this factory with the specified allows selection outside content
+	 */
+	def withAllowsSelectionOutsideContent(allow: Boolean): Repr
 	/**
 	 * A pointer that contains the margin placed between the components in this stack.
 	 * May be defined as either a general size category -pointer (left), or a specific length
@@ -170,6 +185,15 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	 * @return Copy of this factory without any margin between the selectable items
 	 */
 	def withoutMargin = withMargin(StackLength.fixedZero)
+	
+	/**
+	 * @return A copy of this factory where the selected value is allowed to lay outside the selectable content
+	 */
+	def allowingSelectionOutsideContent = withAllowsSelectionOutsideContent(true)
+	/**
+	 * @return A copy of this factory that clears the selected value if it's removed from the selectable content
+	 */
+	def withSelectionRestrictedToContent = withAllowsSelectionOutsideContent(false)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -283,6 +307,8 @@ object SelectableStackSettings
  *                                           selection function even when the component doesn't
  *                                           have focus
  * @param arrowKeySelectionEnabled           Whether arrow key -based selection should be enabled
+ * @param allowsSelectionOutsideContent Whether the selected value should be preserved even
+ *                                      when the available content doesn't contain it.
  * @author Mikko Hilpinen
  * @since 12.09.2025, v1.7
  */
@@ -292,11 +318,14 @@ case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
                                    marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = Left(Fixed(Small)),
                                    extraSelectionKeys: Map[Key, Sign] = Map[Key, Sign](),
                                    alternativeKeySelectionEnabledFlag: Flag = AlwaysFalse,
-                                   arrowKeySelectionEnabled: Boolean = true)
+                                   arrowKeySelectionEnabled: Boolean = true,
+                                   allowsSelectionOutsideContent: Boolean = false)
 	extends SelectableStackSettingsLike[SelectableStackSettings]
 {
 	// IMPLEMENTED	--------------------
 	
+	override def withAllowsSelectionOutsideContent(allow: Boolean) =
+		copy(allowsSelectionOutsideContent = allow)
 	override def withExtraSelectionKeys(keys: Map[Key, Sign]) =
 		copy(extraSelectionKeys = keys)
 	override def withAlternativeKeySelectionEnabledFlag(enabledFlag: Flag) =
@@ -344,7 +373,10 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 	override def selectionDrawer = settings.selectionDrawer
 	override def stackSettings = settings.stackSettings
 	override def marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = settings.marginPointer
+	override def allowsSelectionOutsideContent: Boolean = settings.allowsSelectionOutsideContent
 	
+	override def withAllowsSelectionOutsideContent(allow: Boolean): Repr =
+		mapSettings { _.withAllowsSelectionOutsideContent(allow) }
 	override def withExtraSelectionKeys(keys: Map[Key, Sign]) =
 		mapSettings { _.withExtraSelectionKeys(keys) }
 	override def withAlternativeKeySelectionEnabledFlag(enabledFlag: Flag) =
@@ -474,6 +506,15 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	
 	private val stateP = Pointer.eventful(GuiElementStatus.identity)
 	
+	/**
+	 * A flag that contains true while a value is selected
+	 */
+	lazy val selectedFlag: Flag = valuePointer.lightMap { _.isDefined }
+	/**
+	 * A flag that contains true while a value is yet to be selected
+	 */
+	lazy val deselectedFlag = !selectedFlag
+	
 	private lazy val selectedIndexP = valuePointer.mergeWith(contentPointer) { (selected, content) =>
 		selected.flatMap { selected => content.findIndexWhere { eq(selected, _) } }
 	}
@@ -573,6 +614,13 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	
 	enableFocusHandlingWhileLinked()
 	
+	// May clear the selected value, if it's removed from the available content
+	if (!settings.allowsSelectionOutsideContent)
+		contentPointer.addListener { e =>
+			if (value.exists { value => e.newValue.forNone { _ ~== value } && e.oldValue.exists { _ ~== value } })
+				clearSelection()
+		}
+	
 	
 	// COMPUTED ---------------------------
 	
@@ -594,6 +642,11 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	
 	
 	// OTHER    ---------------------------
+	
+	/**
+	 * Deselects any selected value
+	 */
+	def clearSelection() = valuePointer.clear()
 	
 	/**
 	 * Adjusts the selection by the specified amount

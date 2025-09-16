@@ -2,6 +2,7 @@ package utopia.reach.component.template
 
 import utopia.firmament.component.stack.CachingStackable
 import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.event.mouse.{MouseButtonStateHandler, MouseDragHandler, MouseMoveHandler, MouseWheelHandler}
 import utopia.genesis.handling.template.Handlers
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -19,15 +20,11 @@ trait ConcreteReachComponent extends ReachComponent with CachingStackable
 	
 	override val boundsPointer = EventfulPointer(Bounds.zero)
 	override lazy val positionPointer = boundsPointer.lightMap { _.position }
+	override lazy val xPointer: Changing[Double] = positionPointer.lightMap { _.x }
+	override lazy val yPointer: Changing[Double] = positionPointer.lightMap { _.y }
 	override lazy val sizePointer = boundsPointer.lightMap { _.size }
-	/**
-	  * A pointer that contains the current width of this component
-	  */
-	lazy val widthPointer = sizePointer.lightMap { _.width }
-	/**
-	  * A pointer that contains the current height of this component
-	  */
-	lazy val heightPointer = sizePointer.lightMap { _.height }
+	override lazy val widthPointer = sizePointer.lightMap { _.width }
+	override lazy val heightPointer = sizePointer.lightMap { _.height }
 	
 	override lazy val mouseButtonHandler = MouseButtonStateHandler()
 	override lazy val mouseMoveHandler = MouseMoveHandler()

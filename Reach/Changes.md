@@ -2,6 +2,8 @@
 
 ## v1.7 (in development)
 ### Breaking changes
+- Rewrote the **DropDown** interface completely
+  - The previous implementation is still available as **DropDownOld**, but will be removed in a future update
 - Removed "contextual" from component factory names in situations where no non-contextual version exists
 - Custom **TextField** constructors now require a new constructor function: result-to-text
 - **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
@@ -15,14 +17,26 @@
   parameter: a window pointer.
   - This also applies to windows created via **ReachComponent**'s 
     `createWindow(...)` and `createOwnedWindow(...)` functions.
+- **ReachComponent** now contains new abstract properties: `xPointer`, `yPointer`, `widthPointer` and `heightPointer`
+  - These are implemented in both **ConcreteReachComponent** and **ReachComponentWrapper**, 
+    so no build errors should occur, unless you've built some other custom implementation of **ReachComponent** 
+    directly.
 ### Bugfixes
 - The field name -coloring in **Field** now properly adjusts to the changes in the inner field background color
+- Reach windows now correctly apply a variable background color pointer from the applicable component creation context
+  - Please note that now `.backgroundPointer` from **ColorContextPropsView** will override the `.windowBackground` 
+    property in **ReachWindowContextPropsView**, in cases where both are available.
 ### Deprecations
+- Deprecated **FieldWithSelectionPopup** in the `component.interactive.input` package in favor of a new version 
+  located in the `selection` -subpackage.
+- Deprecated **SelectionList** in favor of the new **SelectableStack** component
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
 - Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
 ### New features
 - Added new **Form** classes as a more customizable alternative to **InputWindowFactory** for form (window) creation 
-- Added **SelectableStack** component
+- Added **SelectableStack** -component
+- Added **FieldWithPopup** -component
+- Added a new (rewritten) version of **FieldWithSelectionPopup**
 - Added **VariableColorContextualFactory** and **VariableTextContextualFactory** traits
   - Multiple existing components now extend these, making context-modifications easier
 - When using **ReachWindow** and specifying content context (i.e. **ReachContentWindowContext**), the context's 
@@ -34,10 +48,13 @@
   - Added new factory functions
 - **PartOfComponentHierarchy**
   - Added `.isLinked` and `.isDetached` -utility functions
+- **ReachComponent**
+  - Added `.coordinatePointerAlong(Axis2D)` and `.lengthPointerAlong(Axis2D)`
 ### Other changes
 - Revalidation (and consequently repainting) is now (potentially) much faster, 
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
 - **Field** now visibly reacts to mouse hover
+- Image labels in **Field** no longer have low stack-size priority
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
 - Rewrote **ReachWindow**'s anchoring logic
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets

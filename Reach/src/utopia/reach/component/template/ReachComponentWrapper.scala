@@ -1,6 +1,7 @@
 package utopia.reach.component.template
 
 import utopia.firmament.component.stack.StackableWrapper
+import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.{DrawLevel, Drawer}
 import utopia.genesis.handling.event.mouse.MouseDragHandler
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -28,6 +29,10 @@ trait ReachComponentWrapper extends ReachComponent with StackableWrapper
 	override def positionPointer = wrapped.positionPointer
 	override def sizePointer = wrapped.sizePointer
 	override def boundsPointer = wrapped.boundsPointer
+	override def xPointer: Changing[Double] = wrapped.xPointer
+	override def yPointer: Changing[Double] = wrapped.yPointer
+	override def widthPointer: Changing[Double] = wrapped.widthPointer
+	override def heightPointer: Changing[Double] = wrapped.heightPointer
 	
 	override def mouseDragHandler: MouseDragHandler = wrapped.mouseDragHandler
 	

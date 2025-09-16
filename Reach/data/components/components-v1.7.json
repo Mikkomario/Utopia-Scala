@@ -810,17 +810,24 @@
               "doc": "Whether the pop-up window's length should match that of this field, on the side matching [[popupAlignment]]."
             },
             {
-              "name": "appliesFieldBackgroundInPopUp",
+              "name": "appliesFieldBackgroundInPopup",
               "param": "applyBackground",
-              "setter": "withFieldBackgroundInPopUp",
+              "setter": "withUsesFieldBackgroundInPopup",
               "type": "Boolean",
               "default": false,
               "doc": "Whether the field's background color should become the pop-up window's background color, also"
             },
             {
-              "name": "hidesPopUpAfterMouseRelease",
+              "name": "hidesPopupOnFocusLoss",
               "param": "hide",
-              "setter": "withHidePopUpAfterMouseRelease",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the pop-up window should be hidden whenever it loses focus"
+            },
+            {
+              "name": "hidesPopupAfterMouseRelease",
+              "param": "hide",
+              "setter": "withHidePopupAfterMouseRelease",
               "type": "Boolean",
               "default": false,
               "doc": "Whether the opened pop-up window will be automatically hidden after a mouse release -event."
@@ -1216,6 +1223,13 @@
               "type": "Boolean",
               "default": true,
               "doc": "Whether arrow key -based selection should be enabled"
+            },
+            {
+              "name": "allowsSelectionOutsideContent",
+              "param": "allow",
+              "type": "Boolean",
+              "default": false,
+              "doc": "Whether the selected value should be preserved even when the available content doesn't contain it."
             }
           ]
         },

@@ -319,6 +319,18 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	// OTHER    ---------------------------
 	
 	/**
+	 * Limits a length to this stack-length's allowed value range
+	 * @param length A length to limit
+	 * @return 'length' adjusted to fit within this stack-lenght's allowed range
+	 */
+	def limit(length: Double) = {
+		if (min > length)
+			min
+		else
+			max.filter { _ < length }.getOrElse(length)
+	}
+	
+	/**
 	  * @param length Increase in length
 	  * @return An increased version of this stack length (min, optimal and max adjusted, if present)
 	  */
@@ -469,8 +481,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	    val newMax = Pair(max, other.max).flatten.reduceOption { _ min _ }
 	    
 		// May pick the smaller optimal length in case the larger optimal is easily shrank
-	    val newOptimal =
-		{
+	    val newOptimal = {
 			if (priority.shrinksFirst == other.priority.shrinksFirst)
 				optimal max other.optimal
 			else if (priority.shrinksFirst)

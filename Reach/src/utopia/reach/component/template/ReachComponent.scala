@@ -13,7 +13,8 @@ import utopia.genesis.graphics.{DrawLevel, Drawer, Priority}
 import utopia.genesis.handling.event.mouse.{MouseDragEvent, MouseDragHandler}
 import utopia.genesis.image.Image
 import utopia.genesis.text.Font
-import utopia.paradigm.enumeration.Alignment
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.shape.shape2d.area.polygon.c4
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.Vector2D
@@ -36,9 +37,25 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	// ABSTRACT	------------------------
 	
 	/**
+	 * @return A pointer that contains this component's current X-coordinate (left)
+	 */
+	def xPointer: Changing[Double]
+	/**
+	 * @return A pointer that contains this component's current Y-coordinate (top)
+	 */
+	def yPointer: Changing[Double]
+	/**
 	  * @return A pointer to the current position of this component
 	  */
 	def positionPointer: Changing[Point]
+	/**
+	 * A pointer that contains the current width of this component
+	 */
+	def widthPointer: Changing[Double]
+	/**
+	 * A pointer that contains the current height of this component
+	 */
+	def heightPointer: Changing[Double]
 	/**
 	  * @return A pointer to the current size of this component
 	  */
@@ -131,6 +148,10 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	override def bounds = boundsPointer.value
 	override def position = positionPointer.value
 	override def size = sizePointer.value
+	override def x: Double = xPointer.value
+	override def y: Double = yPointer.value
+	override def width: Double = widthPointer.value
+	override def height: Double = heightPointer.value
 	
 	override def children: Seq[ReachComponent] = Empty
 	
@@ -138,6 +159,23 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	
 	
 	// OTHER	-------------------------
+	
+	/**
+	 * @param axis Targeted axis
+	 * @return A pointer that contains this component's top-left coordinate along that axis
+	 */
+	def coordinatePointerAlong(axis: Axis2D) = axis match {
+		case X => xPointer
+		case Y => yPointer
+	}
+	/**
+	 * @param axis Targeted axis
+	 * @return A pointer that contains this component's length along that axis
+	 */
+	def lengthPointerAlong(axis: Axis2D) = axis match {
+		case X => widthPointer
+		case Y => heightPointer
+	}
 	
 	/**
 	  * @param another Another component

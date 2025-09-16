@@ -26,6 +26,8 @@
   - Added `.toImage`
 - **FramedFactory**
   - Added new factory functions
+- **StackLength**
+  - Added `.limit(Double): Double`
 ### Other
 - **Window**'s location correction / location adjustment logic 
   now only applies to windows which contain OS borders / decorations

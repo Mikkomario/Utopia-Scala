@@ -4,7 +4,7 @@ import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.ScrollingContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.image.SingleColorIcon
-import utopia.firmament.model.enumeration.SizeCategory
+import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
@@ -204,24 +204,26 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	override def fieldSettings = popupSettings.fieldSettings
 	
 	override def activationKeys = popupSettings.activationKeys
-	override def appliesFieldBackgroundInPopUp = popupSettings.appliesFieldBackgroundInPopUp
+	override def appliesFieldBackgroundInPopup = popupSettings.appliesFieldBackgroundInPopup
 	override def closeKeys = popupSettings.closeKeys
 	override def expandAndCollapseIcon = popupSettings.expandAndCollapseIcon
-	override def hidesPopUpAfterMouseRelease = popupSettings.hidesPopUpAfterMouseRelease
+	override def hidesPopupAfterMouseRelease = popupSettings.hidesPopupAfterMouseRelease
 	override def popupAlignment = popupSettings.popupAlignment
 	override def popupMatchesFieldLength = popupSettings.popupMatchesFieldLength
+	override def hidesPopupOnFocusLoss: Boolean = popupSettings.hidesPopupOnFocusLoss
 	
+	override def withHidesPopupOnFocusLoss(hide: Boolean): Repr = mapPopupSettings { _.withHidesPopupOnFocusLoss(hide) }
 	override def withActivationKeys(keys: Set[Key]) =
 		withPopupSettings(popupSettings.withActivationKeys(keys))
 	override def withCloseKeys(keys: Set[Key]) = withPopupSettings(popupSettings.withCloseKeys(keys))
 	override def withExpandAndCollapseIcon(icons: Pair[SingleColorIcon]) =
 		withPopupSettings(popupSettings.withExpandAndCollapseIcon(icons))
-	override def withFieldBackgroundInPopUp(applyBackground: Boolean) =
-		withPopupSettings(popupSettings.withFieldBackgroundInPopUp(applyBackground))
+	override def withUsesFieldBackgroundInPopup(applyBackground: Boolean) =
+		withPopupSettings(popupSettings.withUsesFieldBackgroundInPopup(applyBackground))
 	override def withFieldSettings(settings: FieldSettings) =
 		withPopupSettings(popupSettings.withFieldSettings(settings))
-	override def withHidePopUpAfterMouseRelease(hide: Boolean) =
-		withPopupSettings(popupSettings.withHidePopUpAfterMouseRelease(hide))
+	override def withHidePopupAfterMouseRelease(hide: Boolean) =
+		withPopupSettings(popupSettings.withHidePopupAfterMouseRelease(hide))
 	override def withPopupAlignment(alignment: Alignment) =
 		withPopupSettings(popupSettings.withPopupAlignment(alignment))
 	override def withPopupMatchesFieldLength(matchLength: Boolean) =
@@ -315,6 +317,9 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withSelectionDrawer(drawer: SelectionDrawer): Repr = withSelectionDrawer(Some(drawer))
 	
+	def withSelectionLayout(layout: StackLayout) = withSelectionLayoutPointer(Fixed(layout))
+	def withSelectionLayoutPointer(p: Changing[StackLayout]) = mapStackSettings { _.withLayoutPointer(p) }
+	
 	/**
 	 * @param settings Settings that affect this stack's layout
 	 * @return Copy of this factory with the specified selection stack settings
@@ -340,7 +345,7 @@ object FieldWithSelectionPopupSettings
 	 * Default settings used with various pop-up related features
 	 */
 	lazy val defaultPopupSettings = FieldWithPopupSettings(closeKeys = Set(Enter, Space, Tab), popupAlignment = Bottom,
-		popupMatchesFieldLength = true, appliesFieldBackgroundInPopUp = true, hidesPopUpAfterMouseRelease = true)
+		popupMatchesFieldLength = true, appliesFieldBackgroundInPopup = true, hidesPopupAfterMouseRelease = true)
 	val default = apply(defaultPopupSettings)
 }
 /**
@@ -670,7 +675,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 		lengthMatchingAxis match {
 			case Some(axis) =>
 				_field.popup match {
-					case Some(popup) => _field.stackSize.mapDimension(axis) { _ && popup.stackSize.along(axis) }
+					case Some(popup) => _field.stackSize.mapDimension(axis) { _ max popup.stackSize.along(axis) }
 					case None => super.stackSize
 				}
 			case None => super.stackSize

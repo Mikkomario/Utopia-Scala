@@ -9,6 +9,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
+import utopia.paradigm.color.ColorRole.Secondary
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.reach.component.interactive.input.selection.DropDown
 import utopia.reach.component.label.text.ViewTextLabel
@@ -33,7 +34,7 @@ object DropDownTest extends App
 	val shrinkIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
 	val baseDdf = DropDown.withExpandAndCollapseIcon(expandIcon, shrinkIcon)
-		.withPromptPointer(Fixed("Select One")).withoutMarginInSelection
+		.withPromptPointer(Fixed("Select One")).withoutMarginInSelection//.withPopupLengthNotTiedToField
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
