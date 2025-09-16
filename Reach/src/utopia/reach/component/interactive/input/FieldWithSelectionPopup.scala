@@ -59,7 +59,7 @@ import scala.concurrent.ExecutionContext
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
-// TODO: Add utility methods
+@deprecated("Replaced with a new version", "v1.7")
 trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -269,6 +269,7 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldSettingsLike[Repr]
 	def withListMargin(margin: SizeCategory): Repr = withListMargin(Some(margin))
 }
 
+@deprecated("Replaced with a new version", "v1.7")
 object FieldWithSelectionPopupSettings
 {
 	// ATTRIBUTES	--------------------
@@ -295,6 +296,7 @@ object FieldWithSelectionPopupSettings
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("Replaced with a new version", "v1.7")
 case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldSettings.default,
                                            listSettings: SelectionListSettings = SelectionListSettings.default,
                                            expandAndCollapseIcon: Pair[SingleColorIcon] = Pair.twice(SingleColorIcon.empty),
@@ -328,6 +330,7 @@ case class FieldWithSelectionPopupSettings(fieldSettings: FieldSettings = FieldS
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("Replaced with a new version", "v1.7")
 trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPopupSettingsLike[Repr]
 {
 	// ABSTRACT	--------------------
@@ -383,6 +386,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("Replaced with a new version", "v1.7")
 case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy,
                                                     context: VariableReachContentWindowContext,
                                                     settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
@@ -445,6 +449,7 @@ case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarch
   * @author Mikko Hilpinen
   * @since 02.06.2023, v1.1
   */
+@deprecated("Replaced with a new version", "v1.7")
 case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupSetup]
 		with FromContextComponentFactoryFactory[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
@@ -458,6 +463,7 @@ case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSetting
 		copy(settings = settings)
 }
 
+@deprecated("Replaced with a new version", "v1.7")
 object FieldWithSelectionPopup extends FieldWithSelectionPopupSetup()
 {
 	// ATTRIBUTES   ----------------

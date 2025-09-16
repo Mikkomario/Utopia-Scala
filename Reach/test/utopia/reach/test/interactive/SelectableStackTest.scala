@@ -1,0 +1,89 @@
+package utopia.reach.test.interactive
+
+import utopia.firmament.drawing.immutable.BorderDrawer
+import utopia.firmament.localization.Display
+import utopia.firmament.model.Border
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.genesis.handling.event.keyboard.{KeyTypedListener, KeyboardEvents}
+import utopia.paradigm.color.Color
+import utopia.paradigm.color.ColorRole.Primary
+import utopia.paradigm.color.ColorShade.Light
+import utopia.reach.component.factory.Mixed
+import utopia.reach.component.interactive.button.text.TextButton
+import utopia.reach.component.interactive.input.selection.SelectableStack
+import utopia.reach.component.label.text.ViewTextLabel
+import utopia.reach.container.multi.Stack
+import utopia.reach.container.wrapper.Framing
+import utopia.reach.container.wrapper.scrolling.ScrollView
+import utopia.reach.test.ReachTestContext
+import utopia.reach.window.ReachWindow
+
+import scala.util.Random
+
+/**
+  * Tests selection list class
+  * @author Mikko Hilpinen
+  * @since 6.2.2021, v0.1
+  */
+object SelectableStackTest extends App
+{
+	import ReachTestContext._
+	
+	// Data
+	val contentPointer = EventfulPointer(Vector(1, 2, 34, 45, 567, 6, 7890))
+	val valuePointer = EventfulPointer[Option[Int]](Some(2))
+	
+	val mainBg = colors.gray.default
+	
+	// Creates the components
+	val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>
+		// Framing
+		framingF.build(Stack) { stackF =>
+			// Stack[ScrollView + Button]
+			stackF.build(Mixed) { factories =>
+				// 1: Scroll View
+				val scroll = factories(ScrollView).initialized.withMaxOptimalLength(224).build(Framing) { framingF =>
+					// Framing
+					framingF.withBackground(Primary, Light).small.build(SelectableStack) { stackF =>
+						// Selectable stack
+						val stack = stackF.withoutFocusKeyRequirement.highlightingSelectedArea
+							.withFocusListener { e => println(e) }
+							.apply(contentPointer, valuePointer) { (factories, contentP, _, _) =>
+								factories(ViewTextLabel)
+									.mapTextInsets { _.mapRight { i => i + margins.large }.expandingToRight }
+									.withCustomDrawer(BorderDrawer(Border(1.0, Color.red)))
+									.apply(contentP, Display.interpolateTo("Label %s"))
+							}
+						stack -> stack
+					}
+				}
+				// 2: Button
+				val button = factories.withContext(baseContext.against(mainBg).forTextComponents / Primary)(TextButton)
+					.apply("Button") { println("Button Pressed") }
+				
+				Vector(scroll.parent, button) -> scroll.result
+			}
+		}
+	}
+	
+	/*
+	stack.children.foreach { c =>
+		println(s"${c.getClass.getSimpleName}: ${c.stackSize}")
+	}*/
+	
+	// Changes content based on digit key-presses
+	KeyboardEvents += KeyTypedListener.unconditional { event =>
+		event.digit.foreach { i => contentPointer.value = (1 to i).toVector }
+		if (event.typedChar == ' ')
+			contentPointer.update { Random.shuffle(_) }
+	}
+	
+	contentPointer.addListener { e => println(s"Content: $e") }
+	valuePointer.addListener { e => println(s"Main value: $e") }
+	
+	// Displays the window
+	window.display(centerOnParent = true)
+	window.setToCloseOnEsc()
+	window.setToExitOnClose()
+	start()
+}

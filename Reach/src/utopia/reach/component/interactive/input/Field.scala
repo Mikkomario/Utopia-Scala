@@ -22,14 +22,15 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.genesis.graphics.{MeasuredText, Priority}
 import utopia.genesis.graphics.Priority.High
+import utopia.genesis.graphics.{MeasuredText, Priority}
 import utopia.genesis.handling.event.mouse.MouseMoveListener
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -52,6 +53,14 @@ import utopia.reach.focus.{FocusChangeListener, FocusStateTracker}
 case class FieldCreationContext(hierarchy: ComponentHierarchy, context: VariableTextContext,
                                 focusListener: FocusChangeListener, promptDrawers: Seq[CustomDrawer])
 	extends PartOfComponentHierarchy
+{
+	/**
+	 * @param ff A component factory -factory
+	 * @tparam F Type of contextual component factory
+	 * @return A contextual component factory from the specified factory that uses the context from this item
+	 */
+	def apply[F](ff: Ccff[VariableTextContext, F]): F = ff.withContext(hierarchy, context)
+}
 
 /**
   * A set of context variables provided when creating an additional right side label

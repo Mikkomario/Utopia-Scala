@@ -12,7 +12,6 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.sign.Sign
-import utopia.flow.time.Now
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
@@ -635,12 +634,6 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 		}
 	
 	/**
-	 * A pointer that contains a timestamp of the latest pop-up visibility change event
-	 */
-	// TODO: Move to drop-down
-	val lastPopupVisibilityChangedPointer = popupVisibleFlag.strongMap { _ => Now.toInstant }
-	
-	/**
 	 * The axis, along which pop-up and field lengths are attempted to match
 	 */
 	private val lengthMatchingAxis =
@@ -661,24 +654,15 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 	@deprecated("Renamed to .popupHiddenWhileFocusedFlag", "v1.7")
 	def popUpHiddenWhileFocusedFlag = popupHiddenWhileFocusedFlag
 	
-	/**
-	 * @return Timestamp of the last pop-up window visibility change.
-	 *         If the pop-up hasn't been displayed yet, yields the creation time of this component.
-	 */
-	def lastPopupVisibilityChangedTime = lastPopupVisibilityChangedPointer.value
-	
 	@deprecated("Renamed to .popupVisibleFlag", "v1.7")
 	def popUpVisibleFlag: Flag = popupVisibleFlag
 	@deprecated("Renamed to .popupHiddenFlag", "v1.7")
 	def popUpHiddenFlag: Flag = popupHiddenFlag
 	
-	@deprecated("Renamed to .lastPopupVisibilityChangedPointer", "v1.7")
-	def popUpVisibilityLastChangedPointer = lastPopupVisibilityChangedPointer
-	
 	
 	// IMPLEMENTED	-----------------------------
 	
-	override protected def wrapped = _field
+	override def wrapped = _field
 	override protected def focusable = _field
 	
 	override def stackSize: StackSize = {

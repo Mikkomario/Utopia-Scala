@@ -9,7 +9,7 @@ import utopia.firmament.controller.data.SelectionKeyListener
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.GuiElementStatus
 import utopia.firmament.model.enumeration.GuiElementState.Focused
-import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, Pressed}
+import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, NoInteraction, Pressed}
 import utopia.firmament.model.enumeration.SizeCategory.Small
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
@@ -29,7 +29,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.ConsumeChoice
-import utopia.genesis.handling.event.keyboard.Key.{LeftArrow, RightArrow, UpArrow}
+import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -477,13 +477,11 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	private lazy val selectedIndexP = valuePointer.mergeWith(contentPointer) { (selected, content) =>
 		selected.flatMap { selected => content.findIndexWhere { eq(selected, _) } }
 	}
+	private val selectionDrawer = settings.selectionDrawer.map { new LocalSelectionDrawer(_) }
 	
-	override protected lazy val wrapped = {
+	override protected val wrapped = {
 		val baseF = ViewStack.withContext(hierarchy, context).withSettings(settings.stackSettings)
-			.withCustomDrawer(settings.selectionDrawer match {
-				case Some(drawer) => new LocalSelectionDrawer(drawer)
-				case None => new HoverDrawer
-			})
+			.withCustomDrawer(selectionDrawer.getOrElse { new HoverDrawer })
 		val stackF = settings.marginPointer match {
 			case Left(sizeP) => baseF.withMarginSizePointer(sizeP)
 			case Right(marginP) => baseF.withMarginPointer(marginP)
@@ -511,6 +509,17 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	}
 	
 	private lazy val locationTracker = new StackItemAreas[ReachComponent](wrapped, componentsP)
+	/**
+	 * A pointer that contains the draw effect area.
+	 * The area is relative to this component's top left position.
+	 */
+	private lazy val effectAreaP = selectionDrawer match {
+		case Some(drawer) =>
+			drawer.selectedAreaP.mergeWith(MouseHoverTracker.hoverOverAreaP) { (selected, hover) =>
+				Pair(selected, hover).view.flatten.reduceOption { (a, b) => Bounds.around(Pair(a, b)) }
+			}
+		case None => MouseHoverTracker.hoverOverAreaP
+	}
 	
 	private val listensToKeyboard = settings.arrowKeySelectionEnabled || settings.extraSelectionKeys.nonEmpty
 	
@@ -525,6 +534,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	// INITIAL CODE -----------------------
 	
 	// Updates the state as necessary
+	// FIXME: These don't seem to work (at least not visualized, nor selection working)
 	focusFlag.addListener { e => if (e.newValue) stateP.update { _ + Focused } else stateP.update { _ - Focused } }
 	MouseHoverTracker.hoverFlag.addListener { e =>
 		if (e.newValue) stateP.update { _ + Hover } else stateP.update { _ - Hover }
@@ -544,7 +554,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 			val keysP = settings.axisPointer.map { axis =>
 				val axisKeys: Map[Key, Sign] = axis match {
 					case X => Map(LeftArrow -> Negative, RightArrow -> Positive)
-					case Y => Map(UpArrow -> Negative, RightArrow -> Positive)
+					case Y => Map(UpArrow -> Negative, DownArrow -> Positive)
 				}
 				axisKeys ++ settings.extraSelectionKeys
 			}
@@ -557,7 +567,12 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 			context.actorHandler += listener
 			KeyboardEvents += listener
 		}
+		
+		// Whenever the component state changes, repaints the effects
+		stateP.addListenerWhile(linkedFlag) { _ => effectAreaP.value.foreach { repaintArea(_) } }
 	}
+	
+	enableFocusHandlingWhileLinked()
 	
 	
 	// COMPUTED ---------------------------
@@ -632,7 +647,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		/**
 		 * Contains the last mouse position over this component, relative to this component's top left corner
 		 */
-		private val relativeMouseLocationP = Pointer.eventful.empty[Point]
+		val relativeMouseLocationP = Pointer.eventful.empty[Point]
 		/**
 		 * Contains true while the mouse is hovering over this component
 		 */
@@ -642,6 +657,15 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		 * Contains the area of the component being hovered over
 		 */
 		lazy val hoverOverAreaP = relativeMouseLocationP.map { _.flatMap(locationTracker.areaNearestTo) }
+		
+		
+		// COMPUTED -----------------------
+		
+		/**
+		 * @return Last captured mouse position over this component, relative to this component's top left corner.
+		 *         None if the mouse is not over this component at the moment.
+		 */
+		def relativeMouseLocation = relativeMouseLocationP.value
 		
 		
 		// IMPLEMENTED  -------------------
@@ -682,8 +706,9 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		// IMPLEMENTED  ------------------------
 		
 		// Sets the "pressed" state
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice =
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
 			pressedComponentP.value = locationTracker.itemNearestTo(event.position.relative - position)
+		}
 	}
 	/**
 	 * Listens to mouse releases anywhere.
@@ -703,9 +728,12 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		
 		// When mouse is released over the same component it was pressed on, selects that component's value
 		// Otherwise just ends the "pressed" state
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice =
-			MousePressListener.pressedComponentP.pop().filter { c => event.relativeTo(position).isOver(c.bounds) }
-				.flatMap(components.findIndexOf).flatMap(content.lift).foreach { selected = _ }
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
+			MousePressListener.pressedComponentP.pop()
+				.filter { c => MouseHoverTracker.relativeMouseLocation.exists { p => c.bounds.contains(p) } }
+				.flatMap(components.findIndexOf).flatMap(content.lift)
+				.foreach { selected = _ }
+		}
 	}
 	
 	/**
@@ -718,17 +746,19 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		
 		override val opaque: Boolean = false
 		
-		private val selectedAreaP = selectedIndexP.mergeWith(componentsP) { (index, components) =>
+		lazy val selectedAreaP = selectedIndexP.mergeWith(componentsP) { (index, components) =>
 			index.flatMap(components.lift).flatMap(locationTracker.areaOf)
 		}
 		
 		
 		// INITIAL CODE -------------------
 		
-		// Repaints this component when selected area changes
-		selectedAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
-		// Also repaints when hover area changes
-		MouseHoverTracker.hoverOverAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
+		linkedFlag.onceSet {
+			// Repaints this component when selected area changes
+			selectedAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
+			// Also repaints when hover area changes
+			MouseHoverTracker.hoverOverAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
+		}
 		
 		
 		// IMPLEMENTED  -------------------
@@ -737,15 +767,21 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
 			val selectedArea = selectedAreaP.value
+			val isMouseOverSelection = MouseHoverTracker.relativeMouseLocation.exists { p =>
+				selectedArea.exists { _.contains(p) }
+			}
+			
 			// Visualizes hover, if distinct from the selected area
-			MouseHoverTracker.hoverOverAreaP.value.filterNot { area => selectedArea.exists { _ ~== area } }
-				.foreach { hoverArea =>
+			if (!isMouseOverSelection)
+				MouseHoverTracker.hoverOverAreaP.value.foreach { hoverArea =>
 					wrapped.draw(drawer, bounds, hoverArea, mouseInteractionLevel,
 						hasFocus = hasFocus, selected = false)
 				}
 			// Visualizes selection
 			selectedArea.foreach { selected =>
-				wrapped.draw(drawer, bounds, selected, mouseInteractionLevel, hasFocus = hasFocus, selected = true)
+				wrapped.draw(drawer, bounds, selected,
+					mouseInteraction = if (isMouseOverSelection) mouseInteractionLevel else NoInteraction,
+					hasFocus = hasFocus, selected = true)
 			}
 		}
 	}
@@ -762,7 +798,8 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		
 		// INITIAL CODE --------------------------
 		
-		MouseHoverTracker.hoverOverAreaP.addListenerWhile(linkedFlag)(areaChangeListener)
+		// Activates repainting logic once attached to the main stack hierarchy
+		linkedFlag.onceSet { MouseHoverTracker.hoverOverAreaP.addListenerWhile(linkedFlag)(areaChangeListener) }
 		
 		
 		// IMPLEMENTED  -------------------------

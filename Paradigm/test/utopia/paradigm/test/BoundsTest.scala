@@ -29,5 +29,9 @@ object BoundsTest extends App
 	assert(b.relativize(p2) ~== Point(0.2, 0.25))
 	assert(b.relativeToAbsolute(Point(0.2, 0.25)) ~== p2)
 	
+	// Tests contains
+	assert(Bounds(Point(0, 60), Size(193, 66)).contains(Point(5, 67)))
+	assert(Bounds(Point(0, 60), Size(193, 66)).contains(Point(60, 78)))
+	
 	println("Success!")
 }

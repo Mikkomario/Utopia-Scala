@@ -375,6 +375,7 @@ object SelectionList extends SelectionListSetup()
   * @author Mikko Hilpinen
   * @since 19.12.2020, v0.1
   */
+// TODO: Deprecate once SelectableStack has been tested
 class SelectionList[A, C <: ReachComponent with Refreshable[A], +P <: Changing[Seq[A]]]
 (override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, contextBackgroundPointer: View[Color],
  override val contentPointer: P, override val valuePointer: EventfulPointer[Option[A]],

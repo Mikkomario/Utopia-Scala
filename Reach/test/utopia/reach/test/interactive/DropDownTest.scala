@@ -2,7 +2,8 @@ package utopia.reach.test.interactive
 
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions.RichIterableOnce
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
@@ -31,21 +32,21 @@ object DropDownTest extends App
 		.getOrElse(SingleColorIcon.empty)
 	val shrinkIcon = arrowImage.map { i => SingleColorIcon(i.transformedWith(Matrix2D.quarterRotationClockwise)) }
 		.getOrElse(SingleColorIcon.empty)
-	val baseDdf = DropDown.withExpandAndCollapseIcon(Pair(expandIcon, shrinkIcon))
-		.withPromptPointer(Fixed("Select One")).withoutListMargin
+	val baseDdf = DropDown.withExpandAndCollapseIcon(expandIcon, shrinkIcon)
+		.withPromptPointer(Fixed("Select One")).withoutMarginInSelection
 	
 	val items = Map("Fruits" -> Vector("Apple", "Banana", "Kiwi"), "Minerals" -> Vector("Diamond", "Ruby", "Sapphire"))
 	
 	val window = ReachWindow.contentContextual.withWindowBackground(colors.gray.light)
 		.using(Framing, title = "Drop-Down Test") { (_, framingF) =>
 			framingF.build(Stack) { stackF =>
-				stackF.related.mapContext { _.forTextComponents.borderless.nonResizable }.build(baseDdf) { ddF =>
+				stackF.related.build(baseDdf) { ddF =>
 					val selectedCategoryPointer = EventfulPointer[Option[String]](None)
 					val selectedItemPointer = EventfulPointer[Option[String]](None)
 					
-					Vector(
+					Pair(
 						ddF.withFieldName("Category")
-							.simple(Fixed(items.keys.toVector.sorted), selectedCategoryPointer),
+							.labels(Fixed(items.keys.toOptimizedSeq.sorted), selectedCategoryPointer),
 						ddF
 							.withFieldNamePointer(selectedCategoryPointer.map {
 								case Some(category) => category
@@ -55,14 +56,13 @@ object DropDownTest extends App
 								case Some(_) => LocalizedString.empty
 								case None => "Select category first"
 							})
-							.withNoOptionsViewConstructor { (hierarchy, context) =>
-									ViewTextLabel(hierarchy).withContext(context).hint
-										.text("Please select a category first")
+							.withNoOptionsViewConstructor { factories =>
+								factories(ViewTextLabel).hint.text("Please select a category first")
 							}
-							.simple(
+							.labels(
 								selectedCategoryPointer.map {
 									case Some(category) => items(category)
-									case None => Vector()
+									case None => Empty
 								},
 								selectedItemPointer)
 					)
@@ -71,6 +71,7 @@ object DropDownTest extends App
 	}
 	
 	window.setToCloseOnEsc()
+	window.setToExitOnClose()
 	window.display(centerOnParent = true)
 	start()
 }

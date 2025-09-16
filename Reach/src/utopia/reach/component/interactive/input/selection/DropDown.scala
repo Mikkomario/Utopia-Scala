@@ -1,44 +1,44 @@
 package utopia.reach.component.interactive.input.selection
 
-import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.ScrollingContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.localization.{Display, LocalizedString}
+import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
-import utopia.paradigm.color.ColorShade
+import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.interactive.input.FieldWithPopup
 import utopia.reach.component.interactive.input.selection.FieldFocusMouseListener.visibilityChangeThreshold
-import utopia.reach.component.interactive.input.{FieldWithSelectionPopup, FieldWithSelectionPopupSettings, FieldWithSelectionPopupSettingsWrapper}
-import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
+import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.context.VariableReachContentWindowContext
+import utopia.reach.context.{ReachWindowContext, VariableReachContentWindowContext}
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 
 import scala.concurrent.ExecutionContext
 
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetup]
-		with Ccff[VariableReachContentWindowContext, ContextualDropDownFactory]
+		with Ccff[VariableReachContentWindowContext, DropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetup = copy(settings = settings)
 	
 	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: VariableReachContentWindowContext): ContextualDropDownFactory =
-		ContextualDropDownFactory(hierarchy, context, settings)
+	                         context: VariableReachContentWindowContext): DropDownFactory =
+		DropDownFactory(hierarchy, context, settings)
 }
 
 /**
@@ -48,80 +48,76 @@ case class DropDownSetup(settings: FieldWithSelectionPopupSettings = FieldWithSe
   */
 object DropDown extends DropDownSetup()
 
-case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
-                                     context: VariableReachContentWindowContext,
-                                     settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
-	extends ContextualFactory[VariableReachContentWindowContext, ContextualDropDownFactory]
-		with FieldWithSelectionPopupSettingsWrapper[ContextualDropDownFactory] with PartOfComponentHierarchy
+case class DropDownFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
+                           settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
+	extends VariableTextContextualFactory[DropDownFactory]
+		with FieldWithSelectionPopupSettingsWrapper[DropDownFactory] with PartOfComponentHierarchy
 {
-	override def withContext(p: VariableReachContentWindowContext): ContextualDropDownFactory = copy(context = p)
-	override def withSettings(settings: FieldWithSelectionPopupSettings): ContextualDropDownFactory =
+	// IMPLEMENTED  --------------------------------
+	
+	override def self: DropDownFactory = this
+	
+	override def withContext(p: VariableTextContext): DropDownFactory = copy(context = p)
+	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownFactory =
 		copy(settings = settings)
+		
+	
+	// OTHER    -------------------------------------
 	
 	/**
 	  * Creates a new field that utilizes a selection pop-up
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
 	  * @param display Display function to use for converting selectable values to text (default = use toString)
-	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
-	  *                      Should only be specified when equality function (==) shouldn't be used.
-	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
-	 *                     Accepts four values:
-	 *                     1) A component hierarchy,
-	 *                     2) Component creation context,
-	 *                     3) Background color pointer
-	 *                     4) Item to display initially
-	 *                     Returns a properly initialized display
+	 * @param makeItemView   A function that constructs an individual view for a selectable item.
+	 *                       Receives:
+	 *                          1. Component factories (with a variable text context)
+	 *                          1. Content pointer to display
+	 *                          1. A flag that contains true while this item is selected
+	 *                          1. Index of this item (0-based)
 	  * @param scrollingContext   Context used for the created scroll view
 	  * @param exc                Context used for parallel operations
-	  * @param log                Logger for various errors
+	  * @param windowContext Context used as the basis for constructing the pop-up window.
+	 *                      Will be adjusted to be borderless and not resizable.
+	 * @param equals Implicit equals function for the selected items. Defaults to ==.
 	  * @tparam A Type of selectable item
-	  * @tparam C Type of component inside the field
-	  * @tparam P Type of content pointer used
-	  * @return A new field
+	  * @return A new drop-down field
 	  */
-	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
-	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
-	 display: Display[Option[A]] = Display.identity.optional,
-	 sameItemCheck: Option[EqualsFunction[A]] = None)
-	(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => C)
-	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	def apply[A](contentPointer: Changing[Seq[A]], valuePointer: EventfulPointer[Option[A]] = Pointer.eventful.empty,
+	             display: Display[Option[A]] = Display.identity.optional)
+	            (makeItemView: (ContextualMixed[VariableTextContext], Changing[A], Flag, Int) => ReachComponent)
+	            (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, windowContext: ReachWindowContext,
+	             equals: EqualsFunction[A] = EqualsFunction.default) =
 	{
-		val isEmptyPointer = valuePointer.map { _.isEmpty }
-		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
+		// Prepares the settings & properties
+		val emptyFlag: Flag = valuePointer.lightMap { _.isEmpty }
+		val appliedPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
 			case Some(pointer) =>
-				pointer.mergeWith(isEmptyPointer) { (prompt, isEmpty) => if (isEmpty) prompt else LocalizedString.empty }
+				pointer.mergeWith(emptyFlag) { (prompt, isEmpty) => if (isEmpty) prompt else LocalizedString.empty }
 			case None => LocalizedString.alwaysEmpty
 		}
-		val appliedSettings = settings.withPromptPointer(actualPromptPointer)
+		val appliedSettings = settings.withPromptPointer(appliedPromptPointer)
 			.withAdditionalActivationKeys(Set(Space, RightArrow, DownArrow))
+		
+		// Creates the wrapped field
 		val field = FieldWithSelectionPopup.withContext(hierarchy, context).withSettings(appliedSettings)
-			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
-				sameItemCheck)
-				{ fieldContext =>
-					val label = ViewTextLabel
-						.withContext(fieldContext.hierarchy, fieldContext.context)
+			.withPopupContext(windowContext.borderless.withResizeLogic(Program))
+			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]]](emptyFlag, contentPointer, valuePointer) {
+				fieldContext =>
+					// The wrapped field is a simple label
+					val label = fieldContext(ViewTextLabel)
 						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
 						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
 						.apply(valuePointer, display)
-					// Makes sure the label doesn't have to resize itself when displaying various options
-					val maxContentWidthPointer = contentPointer.lazyMap {
-						_.view.map { c => label.calculatedStackSizeWith(display(Some(c))) }
-							.reduceOption { _ max _ }
-					}
-					label.addConstraint { original =>
-						maxContentWidthPointer.value match {
-							case Some(maxContentSize) => original max maxContentSize
-							case None => original
-						}
-					}
 					// Wraps the label as a focusable component
 					Focusable.wrap(label, Single(fieldContext.focusListener))
-				}(makeDisplay) { _ => None }
+				}(makeItemView) { _ => None }
+		
 		// Adds mouse interaction to the field
-		field.addMouseButtonListener(new FieldFocusMouseListener(field, enabledFlag))
+		field.addMouseButtonListener(new FieldFocusMouseListener(field.wrapped, enabledFlag))
 		CursorDefining.defineCursorFor(field, View { if (enabledFlag.value) Interactive else Default },
-			field.field.innerBackgroundPointer.lazyMap { c => ColorShade.forLuminosity(c.luminosity) })
+			field.field.innerBackgroundPointer.map { _.shade })
+		
 		field
 	}
 	
@@ -130,35 +126,30 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	  * @param contentPointer Pointer to the available options in this field
 	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
 	  * @param display Display function to use for converting selectable values to text (default = use toString)
-	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
-	  *                      Should only be specified when equality function (==) shouldn't be used.
 	  * @param scrollingContext Context used for the created scroll view
 	  * @param exc              Context used for parallel operations
-	  * @param log              Logger for various errors
-	  * @tparam A Type of selectable item
-	  * @tparam P Type of content pointer used
+	 * @param windowContext     Context used as the basis for constructing the pop-up window.
+	 *                          Will be adjusted to be borderless and not resizable.
+	 * @param equals Implicit equals function for the selected items. Defaults to ==.
+	 * @tparam A Type of selectable item
 	  * @return A new field
 	  */
-	def simple[A, P <: Changing[Seq[A]]](contentPointer: P,
-	                                     valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
-	                                     display: Display[A] = Display.identity,
-	                                     sameItemCheck: Option[EqualsFunction[A]] = None)
-	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,
-	                                        log: Logger) =
+	def labels[A](contentPointer: Changing[Seq[A]], valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
+	              display: Display[A] = Display.identity)
+	             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, windowContext: ReachWindowContext,
+	              equals: EqualsFunction[A] = EqualsFunction.default) =
 	{
-		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, display.optional,
-			sameItemCheck) {
-			(hierarchy, context, firstItem) =>
-				val labelContext = context.withTextExpandingToRight
-				// TODO: At this time, uses static context here (modify when possible)
-				val label = MutableViewTextLabel(hierarchy).withContext(labelContext.current).apply(firstItem, display)
-				labelContext.textDrawContextPointer
-					.addListenerWhile(label.linkedFlag) { e => label.textDrawContext = e.newValue }
-				label
+		// Makes sure some selection-drawing is applied
+		val appliedSettings = {
+			if (settings.selectionDrawer.isDefined)
+				settings
+			else
+				settings.withSelectionDrawer(SelectionDrawer.highlight(context))
+		}
+		withSettings(appliedSettings).apply[A](contentPointer, valuePointer, display.optional) {
+			(factories, contentP, _, _) => factories(ViewTextLabel).apply(contentP, display)
 		}
 	}
-	
-	// TODO: Add a variant that also displays an icon
 }
 
 private object FieldFocusMouseListener
@@ -166,10 +157,12 @@ private object FieldFocusMouseListener
 	// Time before pop-up visibility may be swapped
 	private val visibilityChangeThreshold = 0.2.seconds
 }
-private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _], enabledFlag: Flag)
+private class FieldFocusMouseListener(field: FieldWithPopup[_], enabledFlag: Flag)
 	extends MouseButtonStateListener
 {
 	// ATTRIBUTES	-------------------
+	
+	private val lastVisibilityChangeP = field.popupVisibleFlag.strongMap { _ => Now.toInstant }
 	
 	override val mouseButtonStateEventFilter =
 		MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(field.bounds)
@@ -181,8 +174,8 @@ private class FieldFocusMouseListener(field: FieldWithSelectionPopup[_, _, _, _]
 	
 	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
 		// Requests focus or opens the field, except when the pop-up was just closed
-		if (field.field.hasFocus && field.popUpVisibilityLastChangedPointer.value < Now - visibilityChangeThreshold)
-			field.openPopup()
+		if (field.field.hasFocus && lastVisibilityChangeP.value < Now - visibilityChangeThreshold)
+			field.showPopup()
 		else
 			field.requestFocus()
 		Preserve
