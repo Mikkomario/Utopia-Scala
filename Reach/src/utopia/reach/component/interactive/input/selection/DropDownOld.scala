@@ -1,0 +1,196 @@
+package utopia.reach.component.interactive.input.selection
+
+import utopia.firmament.component.display.Refreshable
+import utopia.firmament.context.ScrollingContext
+import utopia.firmament.context.text.VariableTextContext
+import utopia.firmament.localization.{Display, LocalizedString}
+import utopia.flow.collection.immutable.Single
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.View
+import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
+import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
+import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
+import utopia.paradigm.color.ColorShade
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.contextual.ContextualFactory
+import utopia.reach.component.hierarchy.ComponentHierarchy
+import utopia.reach.component.interactive.input.selection.FieldFocusMouseListenerOld.visibilityChangeThreshold
+import utopia.reach.component.interactive.input.{FieldWithSelectionPopup, FieldWithSelectionPopupSettings, FieldWithSelectionPopupSettingsWrapper}
+import utopia.reach.component.label.text.{MutableViewTextLabel, ViewTextLabel}
+import utopia.reach.component.template.focus.Focusable
+import utopia.reach.component.template.focus.Focusable.FocusWrapper
+import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent}
+import utopia.reach.context.VariableReachContentWindowContext
+import utopia.reach.cursor.CursorType.{Default, Interactive}
+
+import scala.concurrent.ExecutionContext
+
+@deprecated("Deprecated for removal. Replaced with a new version", "v1.7")
+case class DropDownSetupOld(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
+	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetupOld]
+		with Ccff[VariableReachContentWindowContext, ContextualDropDownFactory]
+{
+	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetupOld = copy(settings = settings)
+	
+	override def withContext(hierarchy: ComponentHierarchy,
+	                         context: VariableReachContentWindowContext): ContextualDropDownFactory =
+		ContextualDropDownFactory(hierarchy, context, settings)
+}
+
+/**
+  * A field used for selecting a value from a predefined list of options
+  * @author Mikko Hilpinen
+  * @since 23.12.2020, v0.1
+  */
+@deprecated("Deprecated for removal. Replaced with a new version", "v1.7")
+object DropDownOld extends DropDownSetupOld()
+
+@deprecated("Deprecated for removal. Replaced with a new version", "v1.7")
+case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
+                                     context: VariableReachContentWindowContext,
+                                     settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
+	extends ContextualFactory[VariableReachContentWindowContext, ContextualDropDownFactory]
+		with FieldWithSelectionPopupSettingsWrapper[ContextualDropDownFactory] with PartOfComponentHierarchy
+{
+	override def withContext(p: VariableReachContentWindowContext): ContextualDropDownFactory = copy(context = p)
+	override def withSettings(settings: FieldWithSelectionPopupSettings): ContextualDropDownFactory =
+		copy(settings = settings)
+	
+	/**
+	  * Creates a new field that utilizes a selection pop-up
+	  * @param contentPointer Pointer to the available options in this field
+	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
+	  * @param display Display function to use for converting selectable values to text (default = use toString)
+	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
+	  *                      Should only be specified when equality function (==) shouldn't be used.
+	  * @param makeDisplay A function for constructing new item option fields in the pop-up selection list.
+	 *                     Accepts four values:
+	 *                     1) A component hierarchy,
+	 *                     2) Component creation context,
+	 *                     3) Background color pointer
+	 *                     4) Item to display initially
+	 *                     Returns a properly initialized display
+	  * @param scrollingContext   Context used for the created scroll view
+	  * @param exc                Context used for parallel operations
+	  * @param log                Logger for various errors
+	  * @tparam A Type of selectable item
+	  * @tparam C Type of component inside the field
+	  * @tparam P Type of content pointer used
+	  * @return A new field
+	  */
+	def apply[A, C <: ReachComponent with Refreshable[A], P <: Changing[Seq[A]]]
+	(contentPointer: P, valuePointer: EventfulPointer[Option[A]] = EventfulPointer[Option[A]](None),
+	 display: Display[Option[A]] = Display.identity.optional,
+	 sameItemCheck: Option[EqualsFunction[A]] = None)
+	(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => C)
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	{
+		val isEmptyPointer = valuePointer.map { _.isEmpty }
+		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
+			case Some(pointer) =>
+				pointer.mergeWith(isEmptyPointer) { (prompt, isEmpty) => if (isEmpty) prompt else LocalizedString.empty }
+			case None => LocalizedString.alwaysEmpty
+		}
+		val appliedSettings = settings.withPromptPointer(actualPromptPointer)
+			.withAdditionalActivationKeys(Set(Space, RightArrow, DownArrow))
+		val field = FieldWithSelectionPopup.withContext(hierarchy, context).withSettings(appliedSettings)
+			.apply[A, FocusWrapper[ViewTextLabel[Option[A]]], C, P](isEmptyPointer, contentPointer, valuePointer,
+				sameItemCheck)
+				{ fieldContext =>
+					val label = ViewTextLabel
+						.withContext(fieldContext.hierarchy, fieldContext.context)
+						.mapContext { _.withHorizontallyExpandingText.withoutVerticalTextInsets }
+						.withAdditionalCustomDrawers(fieldContext.promptDrawers)
+						.apply(valuePointer, display)
+					// Makes sure the label doesn't have to resize itself when displaying various options
+					val maxContentWidthPointer = contentPointer.lazyMap {
+						_.view.map { c => label.calculatedStackSizeWith(display(Some(c))) }
+							.reduceOption { _ max _ }
+					}
+					label.addConstraint { original =>
+						maxContentWidthPointer.value match {
+							case Some(maxContentSize) => original max maxContentSize
+							case None => original
+						}
+					}
+					// Wraps the label as a focusable component
+					Focusable.wrap(label, Single(fieldContext.focusListener))
+				}(makeDisplay) { _ => None }
+		// Adds mouse interaction to the field
+		field.addMouseButtonListener(new FieldFocusMouseListenerOld(field, enabledFlag))
+		CursorDefining.defineCursorFor(field, View { if (enabledFlag.value) Interactive else Default },
+			field.field.innerBackgroundPointer.lazyMap { c => ColorShade.forLuminosity(c.luminosity) })
+		field
+	}
+	
+	/**
+	  * Creates a new field that utilizes a selection pop-up and uses text labels for displaying options
+	  * @param contentPointer Pointer to the available options in this field
+	  * @param valuePointer Pointer to the currently selected option, if any (default = new empty pointer)
+	  * @param display Display function to use for converting selectable values to text (default = use toString)
+	  * @param sameItemCheck A function for checking whether two options represent the same instance (optional).
+	  *                      Should only be specified when equality function (==) shouldn't be used.
+	  * @param scrollingContext Context used for the created scroll view
+	  * @param exc              Context used for parallel operations
+	  * @param log              Logger for various errors
+	  * @tparam A Type of selectable item
+	  * @tparam P Type of content pointer used
+	  * @return A new field
+	  */
+	def simple[A, P <: Changing[Seq[A]]](contentPointer: P,
+	                                     valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
+	                                     display: Display[A] = Display.identity,
+	                                     sameItemCheck: Option[EqualsFunction[A]] = None)
+	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,
+	                                        log: Logger) =
+	{
+		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, display.optional,
+			sameItemCheck) {
+			(hierarchy, context, firstItem) =>
+				val labelContext = context.withTextExpandingToRight
+				// TODO: At this time, uses static context here (modify when possible)
+				val label = MutableViewTextLabel(hierarchy).withContext(labelContext.current).apply(firstItem, display)
+				labelContext.textDrawContextPointer
+					.addListenerWhile(label.linkedFlag) { e => label.textDrawContext = e.newValue }
+				label
+		}
+	}
+	
+	// TODO: Add a variant that also displays an icon
+}
+
+@deprecated("Deprecated for removal", "v1.7")
+private object FieldFocusMouseListenerOld
+{
+	// Time before pop-up visibility may be swapped
+	private val visibilityChangeThreshold = 0.2.seconds
+}
+@deprecated("Deprecated for removal", "v1.7")
+private class FieldFocusMouseListenerOld(field: FieldWithSelectionPopup[_, _, _, _], enabledFlag: Flag)
+	extends MouseButtonStateListener
+{
+	// ATTRIBUTES	-------------------
+	
+	override val mouseButtonStateEventFilter =
+		MouseButtonStateEvent.filter.leftPressed && MouseEvent.filter.over(field.bounds)
+	
+	
+	// IMPLEMENTED	-------------------
+	
+	override def handleCondition: Flag = enabledFlag
+	
+	override def onMouseButtonStateEvent(event: MouseButtonStateEvent) = {
+		// Requests focus or opens the field, except when the pop-up was just closed
+		if (field.field.hasFocus && field.popUpVisibilityLastChangedPointer.value < Now - visibilityChangeThreshold)
+			field.openPopup()
+		else
+			field.requestFocus()
+		Preserve
+	}
+}
+
