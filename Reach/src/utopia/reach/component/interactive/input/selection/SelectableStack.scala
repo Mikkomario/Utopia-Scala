@@ -534,7 +534,6 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	// INITIAL CODE -----------------------
 	
 	// Updates the state as necessary
-	// FIXME: These don't seem to work (at least not visualized, nor selection working)
 	focusFlag.addListener { e => if (e.newValue) stateP.update { _ + Focused } else stateP.update { _ - Focused } }
 	MouseHoverTracker.hoverFlag.addListener { e =>
 		if (e.newValue) stateP.update { _ + Hover } else stateP.update { _ - Hover }

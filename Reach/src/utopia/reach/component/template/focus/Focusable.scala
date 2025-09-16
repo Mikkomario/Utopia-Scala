@@ -39,6 +39,11 @@ object Focusable
 	class FocusWrapper[+C <: ReachComponent](override val wrapped: C, override val focusListeners: Seq[FocusListener])
 		extends Focusable with ReachComponentWrapper
 	{
+		// ATTRIBUTES   ------------------------
+		
+		override lazy val focusId = hashCode()
+		
+		
 		// INITIAL CODE	------------------------
 		
 		// Enables focus management while attached to the main hierarchy
@@ -47,10 +52,7 @@ object Focusable
 		
 		// IMPLEMENTED	------------------------
 		
-		override def focusId = hashCode()
-		
 		override def allowsFocusEnter = true
-		
 		override def allowsFocusLeave = true
 	}
 }
