@@ -735,7 +735,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 		// When the mouse is released, hides the pop-up
 		// Also hides when not in focus, and on some key-presses
 		popup.focusKeyStateHandler += new PopupKeyListener(popup)
-		popup.focusedFlag.addListener { e =>
+		popup.focusFlag.addListener { e =>
 			if (!e.newValue)
 				popup.visible = false
 			ChangeResponse.continueUnless(popup.hasClosed)

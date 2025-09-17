@@ -13,6 +13,10 @@
     only not covering custom implementations and static sized components
 ### Deprecations
 - Deprecated **Input**, since it performs the exact same function as **View** in **Flow**
+- Renamed multiple focus-related properties in **Window**:
+  - Renamed `focusedFlag` to `focusFlag`
+  - Renamed `isFocused` to `hasFocus`
+  - Renamed `isNotFocused` to `notInFocus`
 ### New features
 - All context implementations now implement a `windowPointer` property, where the intention is to allow 
   the components to utilize a centralized pointer that will contain the Firmament-based window hosting them.
@@ -26,6 +30,8 @@
   - Added `.toImage`
 - **FramedFactory**
   - Added new factory functions
+- **StackItemAreas**
+  - Added `.areaAt(Int)` and `.areaAt(HasInclusiveEnds)`
 - **StackLength**
   - Added `.limit(Double): Double`
 ### Other
@@ -33,6 +39,8 @@
   now only applies to windows which contain OS borders / decorations
 - **Input** now extends **View**
 - Separated some **StackInsets** features to a new trait named **StackInsetsLike**
+- The generic type parameter in **ScrollViewLike** is now covariant
+- Rewrote **StackItemAreas** `.areaOf(...)` implementation
 
 ## v1.5 - 26.05.2025
 This update completely rewrites the localization implementation, keeping the interfaces mostly intact, however.  

@@ -1,8 +1,8 @@
 package utopia.reach.component.interactive.input.selection
 
-import utopia.firmament.component.input.{InputWithPointer, SelectionWithPointers}
+import utopia.firmament.component.input.{InteractionWithPointer, SelectionWithPointers}
 import utopia.firmament.context.ComponentCreationDefaults
-import utopia.firmament.context.color.VariableColorContextLike
+import utopia.firmament.context.color.{ColorContextPropsView, VariableColorContextLike}
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.controller.StackItemAreas
 import utopia.firmament.controller.data.SelectionKeyListener
@@ -30,6 +30,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Background
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.genesis.handling.event.consume.ConsumeChoice
+import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, LeftArrow, RightArrow, UpArrow}
 import utopia.genesis.handling.event.keyboard.{Key, KeyboardEvents}
 import utopia.genesis.handling.event.mouse._
@@ -51,7 +52,8 @@ import utopia.reach.focus.{FocusListener, FocusStateTracker}
  * @author Mikko Hilpinen
  * @since 12.09.2025, v1.7
  */
-trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] with ViewStackSettingsLike[Repr]
+trait SelectableStackSettingsLike[+Repr]
+	extends FocusListenableFactory[Repr] with ViewStackSettingsLike[Repr] with FromSelectionDrawerFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -61,9 +63,9 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	def stackSettings: ViewStackSettings
 	
 	/**
-	 * A drawer used for visualizing selection and mouse interaction
+	 * A function for constructing the drawer used for visualizing selection and mouse interaction
 	 */
-	def selectionDrawer: Option[SelectionDrawer]
+	def selectionDrawerConstructor: Option[ColorContextPropsView => SelectionDrawer]
 	/**
 	 * A pointer that contains the margin placed between the components in this stack.
 	 * May be defined as either a general size category -pointer (left), or a specific length
@@ -143,13 +145,6 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	 * @return Copy of this factory with the specified arrow key selection enabled
 	 */
 	def withArrowKeySelectionEnabled(enabled: Boolean): Repr
-	/**
-	 * A drawer used for visualizing selection and mouse interaction
-	 * @param drawer New selection drawer to use.
-	 *               A drawer used for visualizing selection and mouse interaction
-	 * @return Copy of this factory with the specified selection drawer
-	 */
-	def withSelectionDrawer(drawer: Option[SelectionDrawer]): Repr
 	
 	/**
 	 * Settings that affect this stack's layout
@@ -161,12 +156,6 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	
 	
 	// COMPUTED ------------------------
-	
-	/**
-	 * @return Copy of this factory without a selection drawer.
-	 *         Useful when the generated components visualize their selection state independently.
-	 */
-	def withoutSelectionDrawer = withSelectionDrawer(None)
 	
 	/**
 	 * @return Copy of this factory enabling arrow key -based selection moving
@@ -212,14 +201,6 @@ trait SelectableStackSettingsLike[+Repr] extends FocusListenableFactory[Repr] wi
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * A drawer used for visualizing selection and mouse interaction
-	 * @param drawer New selection drawer to use.
-	 *               A drawer used for visualizing selection and mouse interaction
-	 * @return Copy of this factory with the specified selection drawer
-	 */
-	def withSelectionDrawer(drawer: SelectionDrawer): Repr = withSelectionDrawer(Some(drawer))
 	
 	/**
 	 * Changes the keyboard keys used for moving the selection around.
@@ -293,8 +274,13 @@ object SelectableStackSettings
  *
  * @param focusListeners                     Focus listeners to assign to created components
  * @param stackSettings                      Settings that affect this stack's layout
- * @param selectionDrawer                    A drawer used for visualizing selection and mouse
- *                                           interaction
+ * @param selectionDrawerConstructor         A function for constructing a drawer for visualizing selection.
+ *                                           None if no selection-drawing should be performed
+ *                                           (which is usually the case when the wrapped components perform
+ *                                           selection visualization themselves).
+ *
+ *                                           Default = Use color highlighting.
+ *
  * @param marginPointer                      A pointer that contains the margin placed between
  *                                           the components in this stack.
  *                                           May be defined as either a general size category -pointer (left),
@@ -314,7 +300,7 @@ object SelectableStackSettings
  */
 case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
                                    stackSettings: ViewStackSettings = ViewStackSettings.default,
-                                   selectionDrawer: Option[SelectionDrawer] = None,
+                                   selectionDrawerConstructor: Option[ColorContextPropsView => SelectionDrawer] = Some(c => SelectionDrawer.highlight(c)),
                                    marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = Left(Fixed(Small)),
                                    extraSelectionKeys: Map[Key, Sign] = Map[Key, Sign](),
                                    alternativeKeySelectionEnabledFlag: Flag = AlwaysFalse,
@@ -334,8 +320,8 @@ case class SelectableStackSettings(focusListeners: Seq[FocusListener] = Empty,
 		copy(arrowKeySelectionEnabled = enabled)
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		copy(focusListeners = listeners)
-	override def withSelectionDrawer(drawer: Option[SelectionDrawer]) =
-		copy(selectionDrawer = drawer)
+	override def withSelectionDrawerConstructor(makeDrawer: Option[ColorContextPropsView => SelectionDrawer]): SelectableStackSettings =
+		copy(selectionDrawerConstructor = makeDrawer)
 	override def withMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]) =
 		copy(marginPointer = p)
 	override def withStackSettings(settings: ViewStackSettings) = copy(stackSettings = settings)
@@ -370,11 +356,14 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 	override def alternativeKeySelectionEnabledFlag = settings.alternativeKeySelectionEnabledFlag
 	override def arrowKeySelectionEnabled = settings.arrowKeySelectionEnabled
 	override def focusListeners = settings.focusListeners
-	override def selectionDrawer = settings.selectionDrawer
 	override def stackSettings = settings.stackSettings
 	override def marginPointer: Either[Changing[SizeCategory], Changing[StackLength]] = settings.marginPointer
 	override def allowsSelectionOutsideContent: Boolean = settings.allowsSelectionOutsideContent
+	override def selectionDrawerConstructor: Option[ColorContextPropsView => SelectionDrawer] =
+		settings.selectionDrawerConstructor
 	
+	override def withSelectionDrawerConstructor(makeDrawer: Option[ColorContextPropsView => SelectionDrawer]): Repr =
+		mapSettings { _.withSelectionDrawerConstructor(makeDrawer) }
 	override def withAllowsSelectionOutsideContent(allow: Boolean): Repr =
 		mapSettings { _.withAllowsSelectionOutsideContent(allow) }
 	override def withExtraSelectionKeys(keys: Map[Key, Sign]) =
@@ -385,8 +374,6 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 		mapSettings { _.withArrowKeySelectionEnabled(enabled) }
 	override def withFocusListeners(listeners: Seq[FocusListener]) =
 		mapSettings { _.withFocusListeners(listeners) }
-	override def withSelectionDrawer(drawer: Option[SelectionDrawer]) =
-		mapSettings { _.withSelectionDrawer(drawer) }
 	override def withStackSettings(settings: ViewStackSettings) = mapSettings { _.withStackSettings(settings) }
 	override def withMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]): Repr =
 		mapSettings { _.withMarginPointer(p) }
@@ -408,7 +395,6 @@ trait SelectableStackSettingsWrapper[+Repr] extends SelectableStackSettingsLike[
 case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy: ComponentHierarchy, context: N,
                                                                        settings: SelectableStackSettings = SelectableStackSettings.default)
 	extends SelectableStackSettingsWrapper[SelectableStackFactory[N]] with PartOfComponentHierarchy
-		with ContextualSelectionFactory[N, SelectableStackFactory[N]]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -495,7 +481,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
                                                              (implicit eq: EqualsFunction[A])
 	extends ReachComponentWrapper with FocusableWithState with HasGuiState
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], Changing[Seq[A]]]
-		with InputWithPointer[Option[A], EventfulPointer[Option[A]]]
+		with InteractionWithPointer[Option[A]]
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -518,18 +504,23 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	private lazy val selectedIndexP = valuePointer.mergeWith(contentPointer) { (selected, content) =>
 		selected.flatMap { selected => content.findIndexWhere { eq(selected, _) } }
 	}
-	private val selectionDrawer = settings.selectionDrawer.map { new LocalSelectionDrawer(_) }
+	/**
+	 * A mutable pointer that contains the index of the currently selected value
+	 */
+	lazy val selectedIndexPointer = Pointer.indirect(selectedIndexP) { selectedIndex = _ }
+	private val selectionDrawer = settings.selectionDrawerConstructor.map { _(context) }
+	private val localSelectionDrawer = selectionDrawer.map { new LocalSelectionDrawer(_) }
 	
 	override protected val wrapped = {
 		val baseF = ViewStack.withContext(hierarchy, context).withSettings(settings.stackSettings)
-			.withCustomDrawer(selectionDrawer.getOrElse { new HoverDrawer })
+			.withCustomDrawer(localSelectionDrawer.getOrElse { new HoverDrawer })
 		val stackF = settings.marginPointer match {
 			case Left(sizeP) => baseF.withMarginSizePointer(sizeP)
 			case Right(marginP) => baseF.withMarginPointer(marginP)
 		}
 		stackF.mapPointer(contentPointer, Mixed) { (factory, pointer, index) =>
 			// Tracks selection status and modifies the background pointer accordingly
-			val (selectedFlag, correctBgFactory) = settings.selectionDrawer
+			val (selectedFlag, correctBgFactory) = selectionDrawer
 				.flatMap { _.selectionBackgroundPointer } match
 			{
 				// Case: Selected item background is different from normal => Creates a custom background color -pointer
@@ -549,12 +540,15 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		}
 	}
 	
-	private lazy val locationTracker = new StackItemAreas[ReachComponent](wrapped, componentsP)
+	/**
+	 * An interface for determining (relative) content locations and components at specific locations
+	 */
+	lazy val locations = new StackItemAreas[ReachComponent](wrapped, componentsP)
 	/**
 	 * A pointer that contains the draw effect area.
 	 * The area is relative to this component's top left position.
 	 */
-	private lazy val effectAreaP = selectionDrawer match {
+	private lazy val effectAreaP = localSelectionDrawer match {
 		case Some(drawer) =>
 			drawer.selectedAreaP.mergeWith(MouseHoverTracker.hoverOverAreaP) { (selected, hover) =>
 				Pair(selected, hover).view.flatten.reduceOption { (a, b) => Bounds.around(Pair(a, b)) }
@@ -579,15 +573,11 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	MouseHoverTracker.hoverFlag.addListener { e =>
 		if (e.newValue) stateP.update { _ + Hover } else stateP.update { _ - Hover }
 	}
-	MousePressListener.pressedFlag.addListener { e =>
-		if (e.newValue) stateP.update { _ + Pressed } else stateP.update { _ - Pressed }
-	}
 	
 	linkedFlag.onceSet {
 		// Sets up mouse listening
 		mouseMoveHandler += MouseHoverTracker
 		mouseButtonHandler += MousePressListener
-		CommonMouseEvents += MouseReleaseListener
 		
 		// Sets up key listening
 		if (listensToKeyboard) {
@@ -627,7 +617,22 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	def selected_=(value: Option[A]) = valuePointer.value = value
 	def selected_=(value: A) = valuePointer.setOne(value)
 	
-	private def selectedIndex = selectedIndexP.value
+	/**
+	 * @return Index of the currently selected value
+	 */
+	def selectedIndex = selectedIndexP.value
+	def selectedIndex_=(newIndex: Int) = selectIndex(newIndex)
+	def selectedIndex_=(newIndex: Option[Int]) = newIndex match {
+		case Some(index) => selectIndex(index)
+		case None =>
+			clearSelection()
+			None
+	}
+	
+	/**
+	 * @return The largest valid [[selectedIndex]] value. None if no item is selectable.
+	 */
+	def maxIndex = Some(content.size - 1).filter { _ >= 0 }
 	
 	private def componentsP = wrapped.componentsPointer
 	private def components = wrapped.components
@@ -664,7 +669,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 						while (index < 0) {
 							index += optionsCount
 						}
-						currentContent.lift(index % optionsCount).foreach { valuePointer.setOne(_) }
+						selectIndex(index % optionsCount)
 					
 					// Case: No items selected yet => Selects the first or the last item
 					case None =>
@@ -683,6 +688,27 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 	 * Moves the selection to the previous available item
 	 */
 	def selectPrevious() = moveSelectionBy(-1)
+	/**
+	 * Selects the value at the specified index
+	 * @param index Targeted index
+	 * @return The selected value.
+	 *         None if the specified index was out-of-bounds (in which case the selection was not altered either).
+	 */
+	def selectIndex(index: Int) = {
+		val newValue = content.lift(index)
+		newValue.foreach { selected = _ }
+		newValue
+	}
+	
+	/**
+	 * Selects the value that has its representation nearest to the specified location
+	 * @param relativePoint A point within this stack. Relative to this stack's top-left corner.
+	 * @return The newly selected value. None if no value was selected.
+	 */
+	def selectNearestTo(relativePoint: Point) = {
+		// Finds and selects the value represented by the pressed component
+		locations.itemNearestTo(relativePoint).flatMap { components.findIndexOf(_) }.flatMap(selectIndex)
+	}
 	
 	
 	// NESTED   ---------------------------
@@ -708,7 +734,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		/**
 		 * Contains the area of the component being hovered over
 		 */
-		lazy val hoverOverAreaP = relativeMouseLocationP.map { _.flatMap(locationTracker.areaNearestTo) }
+		lazy val hoverOverAreaP = relativeMouseLocationP.map { _.flatMap(locations.areaNearestTo) }
 		
 		
 		// COMPUTED -----------------------
@@ -745,46 +771,24 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		override lazy val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
 			MouseButtonStateEvent.filter.leftPressed
 		
-		/**
-		 * Contains the component that was pressed. None if no component was pressed.
-		 */
-		val pressedComponentP = Pointer.eventful.empty[ReachComponent]
-		/**
-		 * Contains true while in a "pressed" state
-		 */
-		val pressedFlag: Flag = pressedComponentP.lightMap { _.isDefined }
-		
 		
 		// IMPLEMENTED  ------------------------
 		
-		// Sets the "pressed" state
 		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
-			pressedComponentP.value = locationTracker.itemNearestTo(event.position.relative - position)
-		}
-	}
-	/**
-	 * Listens to mouse releases anywhere.
-	 * Used for resetting the "pressed" state.
-	 */
-	private object MouseReleaseListener extends MouseButtonStateListener
-	{
-		// ATTRIBUTES   ---------------------------
-		
-		// Only listens while in the pressed state. Also, won't listen while not attached to the component hierarchy.
-		override lazy val handleCondition: Flag = linkedFlag && wrapped.visibleFlag && MousePressListener.pressedFlag
-		override lazy val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent] =
-			MouseButtonStateEvent.filter.leftReleased
+			// Selects the pressed component
+			selectNearestTo(event.position.relative - position)
 			
-		
-		// IMPLEMENTED  ---------------------------
-		
-		// When mouse is released over the same component it was pressed on, selects that component's value
-		// Otherwise just ends the "pressed" state
-		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
-			MousePressListener.pressedComponentP.pop()
-				.filter { c => MouseHoverTracker.relativeMouseLocation.exists { p => c.bounds.contains(p) } }
-				.flatMap(components.findIndexOf).flatMap(content.lift)
-				.foreach { selected = _ }
+			// Updates the state
+			stateP.update { _ + Pressed }
+			// Resets the pressed state once appropriate
+			CommonMouseEvents += MouseButtonStateListener.leftReleased.once.apply { _ =>
+				// Updates the selection, in case the cursor was moved
+				MouseHoverTracker.relativeMouseLocation.foreach(selectNearestTo)
+				stateP.update { _ - Pressed }
+				Preserve
+			}
+			
+			Preserve
 		}
 	}
 	
@@ -799,7 +803,7 @@ class SelectableStack[A, N <: VariableColorContextLike[N, _]](override val hiera
 		override val opaque: Boolean = false
 		
 		lazy val selectedAreaP = selectedIndexP.mergeWith(componentsP) { (index, components) =>
-			index.flatMap(components.lift).flatMap(locationTracker.areaOf)
+			index.flatMap(components.lift).flatMap(locations.areaOf)
 		}
 		
 		

@@ -1188,11 +1188,11 @@
               "doc": "Settings that affect this stack's layout"
             },
             {
-              "name": "selectionDrawer",
-              "param": "drawer",
-              "type": "Option[utopia.component.interactive.input.selection.SelectionDrawer]",
+              "name": "selectionDrawerConstructor",
+              "param": "makeDrawer",
+              "type": "Option[ColorContextPropsView => SelectionDrawer]",
               "default": "None",
-              "doc": "A drawer used for visualizing selection and mouse interaction"
+              "doc": "A function for constructing the drawer used for visualizing selection and mouse interaction"
             },
             {
               "name": "marginPointer",
@@ -1249,6 +1249,11 @@
               "ref": "SelectableStack",
               "prefix": "selection",
               "doc": "Settings that apply to the opened selectable stack"
+            },
+            {
+              "ref": "Scrolling",
+              "prefix": "scroll",
+              "doc": "Settings that apply to the scroll view within the pop-up"
             },
             {
               "name": "noOptionsViewConstructor",

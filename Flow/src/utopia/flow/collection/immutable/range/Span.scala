@@ -2,8 +2,34 @@ package utopia.flow.collection.immutable.range
 
 import utopia.flow.collection.immutable.Pair
 
+import scala.language.implicitConversions
+
 object Span
 {
+	// IMPLICIT -------------------------
+	
+	/**
+	 * @param range An ordered range
+	 * @tparam P Type of the range end-points
+	 * @return A span from the specified range
+	 */
+	implicit def from[P](range: HasInclusiveOrderedEnds[P]): Span[P] = range match {
+		case s: Span[P] => s
+		case r => apply(r.start, r.end)(r.ordering)
+	}
+	/**
+	 * @param range A range
+	 * @param ordering Implicit ordering to use, but only if the specified range doesn't provide one
+	 * @tparam P Type of range end-points
+	 * @return A span from the specified range
+	 */
+	implicit def from[P](range: HasInclusiveEnds[P])(implicit ordering: Ordering[P]): Span[P] = range match {
+		case s: Span[P] => s
+		case r: HasInclusiveOrderedEnds[P] => from(r)
+		case r => apply(r.start, r.end)
+	}
+	
+	
 	// OTHER    -------------------------
 	
 	/**

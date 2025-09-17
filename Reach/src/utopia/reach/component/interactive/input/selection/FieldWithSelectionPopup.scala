@@ -2,12 +2,15 @@ package utopia.reach.component.interactive.input.selection
 
 import utopia.firmament.component.input.SelectionWithPointers
 import utopia.firmament.context.ScrollingContext
+import utopia.firmament.context.color.ColorContextPropsView
 import utopia.firmament.context.text.VariableTextContext
+import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.equality.EqualsFunction
@@ -15,24 +18,27 @@ import utopia.flow.operator.sign.Sign
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.keyboard.Key
 import utopia.genesis.handling.event.keyboard.Key.{ArrowKey, Enter, Space, Tab}
 import utopia.paradigm.enumeration.Alignment.Bottom
 import utopia.paradigm.enumeration.Axis.X
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
+import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.template.Dimensions
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.factory.{ContextualMixed, FromContextComponentFactoryFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopupWrapper
 import utopia.reach.component.interactive.input._
+import utopia.reach.component.interactive.input.selection.FieldWithSelectionPopupSettings.{defaultPopupSettings, defaultScrollSettings}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.{ComponentCreationResult, OpenComponent}
 import utopia.reach.container.multi.{ViewStack, ViewStackSettings}
 import utopia.reach.container.wrapper.Swapper
-import utopia.reach.container.wrapper.scrolling.ScrollView
+import utopia.reach.container.wrapper.scrolling.{ScrollView, ScrollingSettings}
 import utopia.reach.context.{ReachWindowContext, VariableReachContentWindowContext}
 import utopia.reach.focus.FocusListener
 
@@ -44,7 +50,8 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 14.09.2025, v1.7
  */
-trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsLike[Repr]
+trait FieldWithSelectionPopupSettingsLike[+Repr]
+	extends FieldWithPopupSettingsLike[Repr] with FromSelectionDrawerFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -56,6 +63,10 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 * Settings that apply to the opened selectable stack
 	 */
 	def selectionSettings: SelectableStackSettings
+	/**
+	 * Settings that apply to the scroll view within the pop-up
+	 */
+	def scrollSettings: ScrollingSettings
 	
 	/**
 	 * A function used for constructing a view to display when no options are selectable
@@ -113,45 +124,16 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 * @return Copy of this factory with the specified selection settings
 	 */
 	def withSelectionSettings(settings: SelectableStackSettings): Repr
+	/**
+	 * Settings that apply to the scroll view within the pop-up
+	 * @param settings New scroll settings to use.
+	 *                 Settings that apply to the scroll view within the pop-up
+	 * @return Copy of this factory with the specified scroll settings
+	 */
+	def withScrollSettings(settings: ScrollingSettings): Repr
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	 * @return A pointer that contains the selection list placement axis
-	 */
-	def selectionAxisPointer = selectionSettings.axisPointer
-	/**
-	 * focus listeners from the wrapped selectable stack settings
-	 */
-	def selectionFocusListeners = selectionSettings.focusListeners
-	/**
-	 * stack settings from the wrapped selectable stack settings
-	 */
-	def stackSettings = selectionSettings.stackSettings
-	/**
-	 * selection drawer from the wrapped selectable stack settings
-	 */
-	def selectionDrawer = selectionSettings.selectionDrawer
-	/**
-	 * margin pointer from the wrapped selectable stack settings
-	 */
-	def selectionMarginPointer = selectionSettings.marginPointer
-	/**
-	 * extra selection keys from the wrapped selectable stack settings
-	 */
-	def extraSelectionKeys = selectionSettings.extraSelectionKeys
-	/**
-	 * alternative key selection enabled flag from the wrapped selectable stack settings
-	 */
-	def alternativeKeySelectionEnabledFlag = selectionSettings.alternativeKeySelectionEnabledFlag
-	/**
-	 * arrow key selection enabled from the wrapped selectable stack settings
-	 */
-	def arrowKeySelectionEnabled = selectionSettings.arrowKeySelectionEnabled
-	
-	
-	// COMPUTED ------------------------
 	
 	/**
 	 * @return A copy of this factory with no extra option component
@@ -198,6 +180,52 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withoutFocusRequirementInSelection = withAlternativeKeySelectionEnabledFlag(AlwaysTrue)
 	
+	/**
+	 * @return A pointer that contains the selection list placement axis
+	 */
+	def selectionAxisPointer = selectionSettings.axisPointer
+	/**
+	 * focus listeners from the wrapped selectable stack settings
+	 */
+	def selectionFocusListeners = selectionSettings.focusListeners
+	/**
+	 * stack settings from the wrapped selectable stack settings
+	 */
+	def stackSettings = selectionSettings.stackSettings
+	/**
+	 * margin pointer from the wrapped selectable stack settings
+	 */
+	def selectionMarginPointer = selectionSettings.marginPointer
+	/**
+	 * extra selection keys from the wrapped selectable stack settings
+	 */
+	def extraSelectionKeys = selectionSettings.extraSelectionKeys
+	/**
+	 * alternative key selection enabled flag from the wrapped selectable stack settings
+	 */
+	def alternativeKeySelectionEnabledFlag = selectionSettings.alternativeKeySelectionEnabledFlag
+	/**
+	 * arrow key selection enabled from the wrapped selectable stack settings
+	 */
+	def arrowKeySelectionEnabled = selectionSettings.arrowKeySelectionEnabled
+	
+	/**
+	 * custom drawers from the wrapped scrolling settings
+	 */
+	def customDrawersInScrollView = scrollSettings.customDrawers
+	/**
+	 * bar margin from the wrapped scrolling settings
+	 */
+	def scrollBarMargin = scrollSettings.barMargin
+	/**
+	 * max optimal lengths from the wrapped scrolling settings
+	 */
+	def maxOptimalScrollViewLengths = scrollSettings.maxOptimalLengths
+	/**
+	 * limits to content size from the wrapped scrolling settings
+	 */
+	def scrollLimitsToContentSize = scrollSettings.limitsToContentSize
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -228,6 +256,8 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 		withPopupSettings(popupSettings.withPopupAlignment(alignment))
 	override def withPopupMatchesFieldLength(matchLength: Boolean) =
 		withPopupSettings(popupSettings.withPopupMatchesFieldLength(matchLength))
+	override def withSelectionDrawerConstructor(makeDrawer: Option[ColorContextPropsView => SelectionDrawer]): Repr =
+		mapSelectionSettings { _.withSelectionDrawerConstructor(makeDrawer) }
 	
 	
 	// OTHER	--------------------
@@ -304,18 +334,6 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	 */
 	def withSelectionMarginPointer(p: Either[Changing[SizeCategory], Changing[StackLength]]) =
 		withSelectionSettings(selectionSettings.withMarginPointer(p))
-		
-	/**
-	 * @param drawer A drawer used for visualizing selection and mouse interaction
-	 * @return Copy of this factory with the specified selection drawer
-	 */
-	def withSelectionDrawer(drawer: Option[SelectionDrawer]) =
-		mapSelectionSettings { _.withSelectionDrawer(drawer) }
-	/**
-	 * @param drawer A drawer used for visualizing selection and mouse interaction
-	 * @return Copy of this factory with the specified selection drawer
-	 */
-	def withSelectionDrawer(drawer: SelectionDrawer): Repr = withSelectionDrawer(Some(drawer))
 	
 	def withSelectionLayout(layout: StackLayout) = withSelectionLayoutPointer(Fixed(layout))
 	def withSelectionLayoutPointer(p: Changing[StackLayout]) = mapStackSettings { _.withLayoutPointer(p) }
@@ -327,14 +345,44 @@ trait FieldWithSelectionPopupSettingsLike[+Repr] extends FieldWithPopupSettingsL
 	def withStackSettings(settings: ViewStackSettings) =
 		withSelectionSettings(selectionSettings.withStackSettings(settings))
 	
-	def mapPopupSettings(f: Mutate[FieldWithPopupSettings]) = withPopupSettings(f(popupSettings))
+	/**
+	 * @param margin Margin placed between the scroll bar and the content, assuming that the bar is
+	 *               not drawn over the content.
+	 * @return Copy of this factory with the specified scroll bar margin
+	 */
+	def withScrollBarMargin(margin: Size) = withScrollSettings(scrollSettings.withBarMargin(margin))
+	/**
+	 * @param drawers Custom drawers to assign to created components
+	 * @return Copy of this factory with the specified scroll custom drawers
+	 */
+	def withCustomDrawersInScrollView(drawers: Seq[CustomDrawer]) =
+		withScrollSettings(scrollSettings.withCustomDrawers(drawers))
+	/**
+	 * @param limit Whether this scroll area's size should never expand past that of the content's
+	 * @return Copy of this factory with the specified scroll limits to content size
+	 */
+	def withScrollLimitsToContentSize(limit: Boolean) =
+		withScrollSettings(scrollSettings.withLimitsToContentSize(limit))
+	/**
+	 * @param lengths May specify maximum optimal content width and/or height
+	 * @return Copy of this factory with the specified scroll max optimal lengths
+	 */
+	def withMaxOptimalScrollViewLengths(lengths: Dimensions[Option[Double]]) =
+		withScrollSettings(scrollSettings.withMaxOptimalLengths(lengths))
 	
 	def mapSelectionAxisPointer(f: Mutate[Changing[Axis2D]]) = withSelectionAxisPointer(f(selectionAxisPointer))
 	def mapAlternativeKeySelectionEnabledFlag(f: Mutate[Flag]) =
 		withAlternativeKeySelectionEnabledFlag(f(alternativeKeySelectionEnabledFlag))
 	def mapExtraSelectionKeys(f: Mutate[Map[Key, Sign]]) = withExtraSelectionKeys(f(extraSelectionKeys))
+	
+	def mapScrollBarMargin(f: Mutate[Size]) = withScrollBarMargin(f(scrollBarMargin))
+	def mapScrollMaxOptimalLengths(f: Mutate[Dimensions[Option[Double]]]) =
+		withMaxOptimalScrollViewLengths(f(maxOptimalScrollViewLengths))
+	
+	def mapPopupSettings(f: Mutate[FieldWithPopupSettings]) = withPopupSettings(f(popupSettings))
 	def mapSelectionSettings(f: Mutate[SelectableStackSettings]) = withSelectionSettings(f(selectionSettings))
 	def mapStackSettings(f: Mutate[ViewStackSettings]) = withStackSettings(f(stackSettings))
+	def mapScrollSettings(f: Mutate[ScrollingSettings]) = withScrollSettings(f(scrollSettings))
 }
 
 object FieldWithSelectionPopupSettings
@@ -346,7 +394,12 @@ object FieldWithSelectionPopupSettings
 	 */
 	lazy val defaultPopupSettings = FieldWithPopupSettings(closeKeys = Set(Enter, Space, Tab), popupAlignment = Bottom,
 		popupMatchesFieldLength = true, appliesFieldBackgroundInPopup = true, hidesPopupAfterMouseRelease = true)
-	val default = apply(defaultPopupSettings)
+	/**
+	 * Default settings used for the wrapped scrolling view
+	 */
+	lazy val defaultScrollSettings = ScrollingSettings(limitsToContentSize = true)
+	
+	val default = apply()
 }
 /**
  * Combined settings used when constructing field with selection popups
@@ -361,8 +414,9 @@ object FieldWithSelectionPopupSettings
  * @author Mikko Hilpinen
  * @since 14.09.2025, v1.7
  */
-case class FieldWithSelectionPopupSettings(popupSettings: FieldWithPopupSettings = FieldWithPopupSettings.default,
+case class FieldWithSelectionPopupSettings(popupSettings: FieldWithPopupSettings = defaultPopupSettings,
                                            selectionSettings: SelectableStackSettings = SelectableStackSettings.default,
+                                           scrollSettings: ScrollingSettings = defaultScrollSettings,
                                            noOptionsViewConstructor: Option[ContextualMixed[VariableReachContentWindowContext] => ReachComponent] = None,
                                            extraOptionConstructor: Option[ContextualMixed[VariableReachContentWindowContext] => ReachComponent] = None,
                                            extraOptionPlacement: End = End.Last)
@@ -377,6 +431,8 @@ case class FieldWithSelectionPopupSettings(popupSettings: FieldWithPopupSettings
 		copy(noOptionsViewConstructor = f)
 	override def withPopupSettings(settings: FieldWithPopupSettings) = copy(popupSettings = settings)
 	override def withSelectionSettings(settings: SelectableStackSettings) = copy(selectionSettings = settings)
+	override def withScrollSettings(settings: ScrollingSettings): FieldWithSelectionPopupSettings =
+		copy(scrollSettings = settings)
 	
 	// When using a fixed axis, specifies the pop-up opening direction, also
 	override def withSelectionAxisPointer(axisPointer: Changing[Axis2D]): FieldWithSelectionPopupSettings =
@@ -416,6 +472,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 	
 	override def popupSettings = settings.popupSettings
 	override def selectionSettings = settings.selectionSettings
+	override def scrollSettings: ScrollingSettings = settings.scrollSettings
 	
 	override def withExtraOptionConstructor(f: Option[ContextualMixed[VariableReachContentWindowContext] => ReachComponent]) =
 		mapSettings { _.withExtraOptionConstructor(f) }
@@ -427,6 +484,7 @@ trait FieldWithSelectionPopupSettingsWrapper[+Repr] extends FieldWithSelectionPo
 		mapSettings { _.withPopupSettings(settings) }
 	override def withSelectionSettings(settings: SelectableStackSettings) =
 		mapSettings { _.withSelectionSettings(settings) }
+	override def withScrollSettings(settings: ScrollingSettings): Repr = mapSettings { _.withScrollSettings(settings) }
 	override def withSelectionAxisPointer(axisPointer: Changing[Axis2D]): Repr =
 		mapSettings { _.withSelectionAxisPointer(axisPointer) }
 	
@@ -448,7 +506,6 @@ case class FieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy, context
 	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupFactory]
 		with VariableTextContextualFactory[FieldWithSelectionPopupFactory]
 		with PartOfComponentHierarchy
-		with ContextualSelectionFactory[VariableTextContext, FieldWithSelectionPopupFactory]
 {
 	// COMPUTED ------------------------
 	
@@ -586,32 +643,43 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 		.withPossibleRightHintLabel[C](emptyFlag)(makeField)(makeRightHintLabel) { factories =>
 			// The pop-up content resides in a scroll view with custom background drawing
 			// TODO: Once scroll-views support variable axes, apply that here
-			factories(ScrollView).withAxis(settings.selectionSettings.axisPointer.value)
+			// TODO: Apply scroll view settings, also
+			val scrollViewCreation = factories(ScrollView).withSettings(settings.scrollSettings)
+				.withAxis(settings.selectionSettings.axisPointer.value)
 				// TODO: Applies fixed cap where it maybe variable
 				.withBarMargin(factories.context.margins.small, settings.selectionSettings.capPointer.value.optimal)
-				.limitedToContentSize
 				.build(Mixed) { factories =>
 					def createSelectionStack(factory: SelectableStackFactory[VariableTextContext]) =
 						factory.withSettings(settings.selectionSettings).apply(contentPointer, valuePointer)(makeItemView)
 						
-					def createMainContent(factories: ContextualMixed[VariableReachContentWindowContext]) = {
+					// Also yields a pointer that will contain the created stack
+					def createMainContent(factories: ContextualMixed[VariableReachContentWindowContext]): ComponentCreationResult[ReachComponent, Changing[Option[SelectableStack[A, _]]]] = {
 						// The main content is either:
 						//   1. Switchable between options and no-options -view
 						//   2. Only the options view
 						settings.noOptionsViewConstructor match {
 							// Case: No options -view used => Switches between the two views
 							case Some(makeNoOptionsView) =>
-								factories(Swapper).build(Mixed)
+								// Captures the stack, once it has been created
+								val stackP = AssignableOnce[SelectableStack[A, _]]()
+								val component = factories(Swapper).build(Mixed)
 									.apply(nonEmptyFlag) { (factories, nonEmpty: Boolean) =>
 										// Case: List constructor
-										if (nonEmpty)
-											createSelectionStack(factories(SelectableStack))
+										if (nonEmpty) {
+											val stack = createSelectionStack(factories(SelectableStack))
+											stackP.set(stack)
+											stack
+										}
 										// Case: No options -view constructor
 										else
 											makeNoOptionsView(factories)
 									}
+								component -> stackP
+								
 							// Case: No no-options -view used => Always displays the selection list
-							case None => createSelectionStack(factories(SelectableStack))
+							case None =>
+								val stack = createSelectionStack(factories(SelectableStack))
+								stack -> Fixed(Some(stack))
 						}
 					}
 					settings.extraOptionConstructor match {
@@ -625,17 +693,43 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 								// Orders the components based on settings
 								val topAndBottomFactories = Pair.fill(factories.next())
 								val placement = settings.extraOptionPlacement
-								val mainContent = createMainContent(topAndBottomFactories(placement.opposite))
+								val (mainContent, stackP) = createMainContent(topAndBottomFactories(placement.opposite))
+									.toTuple
 								val additional = makeExtraOptionView(topAndBottomFactories(placement))
-								if (placement == First)
-									Pair(additional -> AlwaysTrue, mainContent -> mainContentVisibleFlag)
-								else
-									Pair(mainContent -> mainContentVisibleFlag, additional -> AlwaysTrue)
+								val content = {
+									if (placement == First)
+										Pair(additional -> AlwaysTrue, mainContent -> mainContentVisibleFlag)
+									else
+										Pair(mainContent -> mainContentVisibleFlag, additional -> AlwaysTrue)
+								}
+								content -> stackP
 							}
 						// Case: No additional view used => Always displays the main content
 						case None => createMainContent(factories)
 					}
 				}
+			val scrollView = scrollViewCreation.parent
+			
+			// When the selection changes, ensures that the selected content is visible
+			// (but only while the pop-up itself is visible)
+			linkedFlag.onceSet {
+				scrollViewCreation.result.onceNotEmpty { stack =>
+					stack.selectedIndexPointer.addListenerWhile(popupVisibleFlag) { e =>
+						e.newValue.foreach { index =>
+							// Finds the stack's location within the scroll view
+							stack.positionRelativeTo(scrollView).foreach { adjustment =>
+								// Finds the area surrounding the selected component
+								stack.locations.areaAt(NumericSpan(index - 1, index + 1)).foreach { relativeArea =>
+									// Makes sure that area is getting displayed
+									scrollView.ensureAreaIsVisible(relativeArea + adjustment)
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			scrollView
 		}
 	
 	/**

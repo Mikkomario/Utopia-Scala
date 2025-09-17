@@ -5,6 +5,8 @@
 - **Drawer**
   - Added `.toGraphics`
 ### Other changes
+- Added new `.once` **MouseButtonStateEventListener** constructors
+- Added an abstract **TerminatingHandleable** class
 - Added an implicit conversion from **Color** to **DrawSettings**
 
 ## v4.2.1 - 26.05.2025

@@ -43,6 +43,21 @@ object HasInclusiveEnds
   */
 trait HasInclusiveEnds[+P] extends HasEnds[P] with MayHaveInclusiveEnds[P]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @param ordering Implicit ordering to apply
+	 * @tparam P2 Type of the ordered end-points
+	 * @return A span with these ends
+	 */
+	def toSpan[P2 >: P](implicit ordering: Ordering[P2]): Span[P2] = Span.from(this)
+	/**
+	 * @param n Implicit numeric implementation
+	 * @return A numeric span matching this range
+	 */
+	def toNumericSpan[P2 >: P](implicit n: Numeric[P2]): NumericSpan[P2] = NumericSpan.from(this)
+	
+	
 	// IMPLEMENTED  --------------------
 	
 	override def isUnit = start == end

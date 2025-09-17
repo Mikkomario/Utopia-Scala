@@ -144,19 +144,10 @@ case class DropDownFactory(hierarchy: ComponentHierarchy, context: VariableTextC
 	              display: Display[A] = Display.identity)
 	             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, windowContext: ReachWindowContext,
 	              equals: EqualsFunction[A] = EqualsFunction.default) =
-	{
-		// Makes sure some selection-drawing is applied
-		val appliedSettings = {
-			if (settings.selectionDrawer.isDefined)
-				settings
-			else
-				settings.withSelectionDrawer(SelectionDrawer.highlight(context))
-		}
-		withSettings(appliedSettings.withSelectionLayout(Leading))
+		withSettings(settings.withSelectionLayout(Leading))
 			.apply[A](contentPointer, valuePointer, display.optional) {
 				(factories, contentP, _, _) => factories(ViewTextLabel).apply(contentP, display)
 			}
-	}
 }
 
 private object FieldFocusMouseListener

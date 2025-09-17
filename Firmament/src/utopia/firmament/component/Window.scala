@@ -393,7 +393,11 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	private val _visibleFlag = ResettableFlag()
 	private val _minimizedFlag = ResettableFlag()
 	private val _activeFlag = ResettableFlag()
-	private val _focusedFlag = ResettableFlag(component.isFocused)
+	private val _focusFlag = ResettableFlag(component.isFocused)
+	/**
+	 * @return A flag that contains true whenever this is the focused window
+	 */
+	lazy val focusFlag = _focusFlag.view
 	
 	// Stores position and size in pointers, which are only updated on window events
 	private val _positionPointer = EventfulPointer(Point.origin)
@@ -436,7 +440,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * A flag that contains true when (and only when) this window is fully visible (open, not minimized) and has focus
 	  */
-	lazy val fullyVisibleAndFocusedFlag = fullyVisibleFlag && _focusedFlag
+	lazy val fullyVisibleAndFocusedFlag = fullyVisibleFlag && _focusFlag
 	
 	/**
 	  * A future that resolves once this window is displayed for the first time
@@ -565,7 +569,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  */
 	lazy val focusKeyStateHandler = {
 		val parent = keyStateHandlerPointer.value
-		val handler = KeyStateHandler.conditional(focusedFlag).empty
+		val handler = KeyStateHandler.conditional(focusFlag).empty
 		parent += handler
 		handler
 	}
@@ -852,15 +856,17 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * @return Whether this window is the currently focused window
 	  */
-	def isFocused = _focusedFlag.value
+	def hasFocus = _focusFlag.value
+	@deprecated("Renamed to .hasFocus", "v1.6")
+	def isFocused = hasFocus
 	/**
 	  * @return Whether this window is not the currently focused window
 	  */
-	def isNotFocused = !isFocused
-	/**
-	  * @return A flag that contains true whenever this is the focused window
-	  */
-	def focusedFlag = _focusedFlag.view
+	def notInFocus = !hasFocus
+	@deprecated("Renamed to .notInFocus", "v1.6")
+	def isNotFocused = notInFocus
+	@deprecated("Renamed to .focusFlag", "v1.6")
+	def focusedFlag = focusFlag
 	
 	/**
 	  * @return The current icon displayed on this window.
@@ -1077,7 +1083,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * Closes this window when it loses focus the next time
 	  */
-	def setToCloseOnFocusLost() = focusedFlag.addListener { e =>
+	def setToCloseOnFocusLost() = focusFlag.addListener { e =>
 		// Case: Gained focus => Ignores
 		if (e.newValue)
 			Continue
@@ -1249,7 +1255,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * Moves this window to the front in the process.
 	  */
 	def requestFocus() = {
-		if (isNotFocused)
+		if (notInFocus)
 			AwtEventThread.async {
 				component.toFront()
 				component.repaint()
@@ -1466,15 +1472,15 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 		// This, because the root windows don't seem to gain focus events at all
 		override def windowActivated(e: WindowEvent) = {
 			_activeFlag.set()
-			_focusedFlag.set()
+			_focusFlag.set()
 		}
 		override def windowDeactivated(e: WindowEvent) = {
 			_activeFlag.reset()
-			_focusedFlag.reset()
+			_focusFlag.reset()
 		}
 		
-		override def windowGainedFocus(e: WindowEvent) = _focusedFlag.set()
-		override def windowLostFocus(e: WindowEvent) = _focusedFlag.reset()
+		override def windowGainedFocus(e: WindowEvent) = _focusFlag.set()
+		override def windowLostFocus(e: WindowEvent) = _focusFlag.reset()
 		
 		override def windowClosed(e: WindowEvent) = _closedFlag.set()
 		override def windowClosing(e: WindowEvent) = close()

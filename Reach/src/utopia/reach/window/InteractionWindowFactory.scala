@@ -164,7 +164,7 @@ trait InteractionWindowFactory[A]
 		
 		// Finalizes the enter action enabled -function
 		// Triggers the default button on enter, provided that no button has focus and the window does
-		enterEnabledPointerPointer.set(View { window.isFullyVisible && window.isFocused && window.result._2.value })
+		enterEnabledPointerPointer.set(View { window.isFullyVisible && window.hasFocus && window.result._2.value })
 		
 		// Closes the dialog once a result is acquired.
 		// Also completes the result with a default value if the dialog was closed without producing other result

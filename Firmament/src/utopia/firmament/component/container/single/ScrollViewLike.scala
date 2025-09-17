@@ -8,7 +8,7 @@ import utopia.paradigm.enumeration.Axis2D
   * @author Mikko Hilpinen
   * @since 30.4.2019, Reflection v1+
   */
-trait ScrollViewLike[C <: Stackable] extends ScrollAreaLike[C]
+trait ScrollViewLike[+C <: Stackable] extends ScrollAreaLike[C]
 {
 	// ABSTRACT	--------------------
 	

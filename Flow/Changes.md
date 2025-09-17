@@ -25,6 +25,8 @@
 - Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy**, 
   **MergingLazy** and **LazyWrapper**
 ### New methods
+- **Changing**
+  - New empty/non-empty -related functions are now available for **Option**-based **Changing** instances
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
 - **Flag** (object)
@@ -33,6 +35,11 @@
   - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
     for **Future**s of type **TryCatch**
   - Added `.toFutureTryCatch` to **Future**s of type **Try**
+- **HasInclusiveEnds**
+  - Added `.toSpan` and `.toNumericSpan`
+- **HasInclusiveOrderedEnds** (object)
+  - Added implicit `.from(HasInclusiveEnds)`
+  - Added `.apply(...)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
@@ -50,10 +57,16 @@
   - Added `.flatten` for deep **Lazy** containers
 - **MapAccess** (object)
   - Added a few new **MapAccess** constructors, including **Map** wrappers
+- **NumericSpan**
+  - Added `.extendedBy(...)`
 - **Option** (**CollectionExtensions**)
   - Added `.containsDifferentFrom(Option)`
+- **Pair** (object)
+  - Added `.iterate(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
+- **Span** (object)
+  - Added implicit `.from(HasInclusiveEnds)`
 - **String** (**StringExtensions**)
   - Added `.notContaining(String)` and `.notContainingAnyOf(IterableOnce)`
 - **TimedTasks**
@@ -76,6 +89,7 @@
 - Optimized `IntSet.from(IterableOnce)` implementation
 - Added new `++` and `--` implementations to **IntSet**
 - Rewrote **Lazy**`.mapCurrent` implementation
+- `NumericSpan.from(HasInclusiveEnds)` is now implicit
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**

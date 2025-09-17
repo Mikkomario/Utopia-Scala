@@ -7,6 +7,7 @@ import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.util.Mutate
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.annotation.unchecked.uncheckedVariance
@@ -52,6 +53,13 @@ object Pair
 	  * @return A new pair with two values of the specified function
 	  */
 	def fill[A](item: => A) = apply(item, item)
+	/**
+	 * @param first The first item in this pair
+	 * @param getSecond A function that calculates the second item, based on the first item
+	 * @tparam A Type of the items in this pair
+	 * @return A pair containing the first item, and the generated second item
+	 */
+	def iterate[A](first: A)(getSecond: Mutate[A]) = apply(first, getSecond(first))
 	
 	
 	// NESTED   ------------------------------------

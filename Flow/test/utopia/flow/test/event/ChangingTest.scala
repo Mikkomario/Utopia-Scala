@@ -12,6 +12,7 @@ import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
+import utopia.flow.view.template.eventful.Changing.{AsMayBeEmptyChanging, ChangingCollection}
 
 import scala.util.Try
 

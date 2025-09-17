@@ -432,7 +432,6 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  */
 	def lightenedBy(impact: Double) = {
 		val mag = 1 + relativeLuminance * 3
-		// val g2 = gradient * Math.pow(1 + (1 - o) * 0.5, impact)
 		val t = darkness * Math.pow(1 - 0.1 * mag, impact) - impact * 0.01
 		withDarkness(t)
 	}

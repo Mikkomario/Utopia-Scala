@@ -27,6 +27,17 @@ object NumericSpan
 	
 	implicit def rangeToSpan(r: Range.Inclusive): NumericSpan[Int] = apply(r.start, r.end, r.step)
 	
+	/**
+	 * @param span A span
+	 * @param n Implicit numeric implementation
+	 * @tparam N Type of numeric values used
+	 * @return A numeric span
+	 */
+	implicit def from[N](span: HasInclusiveEnds[N])(implicit n: Numeric[N]): NumericSpan[N] = span match {
+		case s: NumericSpan[N] => s
+		case o => apply(o.start, o.end)
+	}
+	
 	
 	// OTHER    -------------------------
 	
@@ -63,17 +74,6 @@ object NumericSpan
 	  * @return A span that starts and ends at the specified value
 	  */
 	def singleValue[N](value: N)(implicit n: Numeric[N]) = apply(value, value)
-	
-	/**
-	  * @param span A span
-	  * @param n Implicit numeric implementation
-	  * @tparam N Type of numeric values used
-	  * @return A numeric span
-	  */
-	def from[N](span: HasInclusiveEnds[N])(implicit n: Numeric[N]): NumericSpan[N] = span match {
-		case s: NumericSpan[N] => s
-		case o => apply(o.start, o.end)
-	}
 	
 	
 	// IMPLEMENTED  ---------------------
@@ -120,7 +120,7 @@ trait NumericSpan[N]
 	/**
 	  * @return Numeric implementation for the points along this span
 	  */
-	def n: Numeric[N]
+	implicit def n: Numeric[N]
 	
 	
 	// COMPUTED   -------------------------
@@ -168,6 +168,28 @@ trait NumericSpan[N]
 	  * @return A copy of this span where both the start and the end points have been moved the specified distance
 	  */
 	def shiftedBy(distance: N) = _shiftedBy(distance)(n.plus)
+	/**
+	 * @param increase The amount of length increase to add to this span
+	 * @param bothDirections Whether to apply the increase to both ends, doubling the total length increase.
+	 *                       Default = false = Only the end of this span is adjusted.
+	 * @return A copy of this span with adjusted length
+	 */
+	def extendedBy(increase: N, bothDirections: Boolean = false) = {
+		// Case: No increase
+		if (n.zero == increase)
+			self
+		// Case: Increase to both ends
+		else if (bothDirections) {
+			if (isAscending)
+				NumericSpan(n.minus(start, increase), n.plus(end, increase))
+			else
+				NumericSpan(n.plus(start, increase), n.minus(end, increase))
+		}
+		else if (isAscending)
+			mapEnd { n.plus(_, increase) }
+		else
+			mapEnd { n.minus(_, increase) }
+	}
 	
 	/**
 	  * @param length New length to assign to this span

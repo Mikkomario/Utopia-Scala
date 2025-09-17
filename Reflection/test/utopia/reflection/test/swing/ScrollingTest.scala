@@ -79,7 +79,7 @@ object ScrollingTest extends App
 	
 	contentManager.selectedDisplayPointer.addContinuousListener { _.newValue.headOption.foreach { row =>
 		val rowBounds = row.bounds.enlarged(Y(row.height * 4))
-		scrollView.ensureAreaIsVisible(rowBounds)
+		scrollView.ensureContentAreaIsVisible(rowBounds)
 	} }
 	
 	// Creates the frame and displays it

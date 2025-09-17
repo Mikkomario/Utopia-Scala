@@ -4,6 +4,39 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 
+import scala.language.implicitConversions
+
+object HasInclusiveOrderedEnds
+{
+	// IMPLICIT ----------------------------
+	
+	/**
+	 * Makes sure a range is ordered
+	 *
+	 * @param ends     A range
+	 * @param ordering Implicit ordering to apply, but only if the specified range doesn't provide one
+	 * @tparam P Type of the range end-points
+	 * @return An ordered copy of the specified range
+	 */
+	implicit def from[P](ends: HasInclusiveEnds[P])(implicit ordering: Ordering[P]): HasInclusiveOrderedEnds[P] =
+		ends match {
+			case ordered: HasInclusiveOrderedEnds[P] => ordered
+			case range => apply(ends.start, ends.end)
+		}
+	
+	
+	// OTHER    ---------------------------
+	
+	def apply[P](start: P, end: P)(implicit ordering: Ordering[P]): HasInclusiveOrderedEnds[P] =
+		_HasInclusiveOrderedEnds(start, end, ordering)
+	
+	
+	// NESTED   ---------------------------
+	
+	private case class _HasInclusiveOrderedEnds[P](start: P, end: P, ordering: Ordering[P])
+		extends HasInclusiveOrderedEnds[P]
+}
+
 /**
   * A common trait for items which, like ranges, have two ends: A start and an end. Both of these are inclusive.
   * @author Mikko Hilpinen
@@ -17,6 +50,11 @@ trait HasInclusiveOrderedEnds[P] extends HasOrderedEnds[P] with HasInclusiveEnds
 	  * @return The minimum and the maximum of this span
 	  */
 	def minMax: Pair[P] = ends.sorted
+	
+	/**
+	 * @return A span matching this range
+	 */
+	def toSpan: Span[P] = Span.from(this)
 	
 	
 	// IMPLEMENTED  --------------------

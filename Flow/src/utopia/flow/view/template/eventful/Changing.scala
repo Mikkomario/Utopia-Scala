@@ -180,12 +180,23 @@ object Changing
 		override protected def wrapped: Changing[A] = c
 		override protected def _isEmpty(value: A): Boolean = value.isEmpty
 	}
-	
 	implicit class ChangingCollection[C <: Iterable[_]](val c: Changing[C])
 		extends AnyVal with MayBeEmptyChangingWrapper[C]
 	{
 		override protected def wrapped: Changing[C] = c
 		override protected def _isEmpty(value: C): Boolean = value.isEmpty
+	}
+	implicit class ChangingOption[A](val c: Changing[Option[A]])
+		extends AnyVal with MayBeEmptyChangingWrapper[Option[A]]
+	{
+		override protected def wrapped: Changing[Option[A]] = c
+		override protected def _isEmpty(value: Option[A]): Boolean = value.isEmpty
+		
+		/**
+		 * Calls the specified function once this pointer contains a non-empty value (which may be immediately)
+		 * @param f A function that will be called once/if this pointer acquires a non-empty value
+		 */
+		def onceNotEmpty(f: A => Unit) = wrapped.once { !_isEmpty(_) } { _.foreach(f) }
 	}
 	
 	implicit class DeepChanging[A](val c: Changing[Changing[A]]) extends AnyVal

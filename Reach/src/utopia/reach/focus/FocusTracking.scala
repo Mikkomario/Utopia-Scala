@@ -5,6 +5,7 @@ package utopia.reach.focus
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
+// TODO: Consider moving this to Firmament (Window should already inherit this)
 trait FocusTracking
 {
 	// ABSTRACT	-------------------------

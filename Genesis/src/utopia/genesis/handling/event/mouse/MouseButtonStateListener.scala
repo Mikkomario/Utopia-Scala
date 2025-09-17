@@ -1,12 +1,13 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.ListenerFactory
 import utopia.genesis.handling.event.consume.{ConsumeChoice, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseButtonStateEvent.{MouseButtonFilteringFactory, MouseButtonStateEventFilter}
-import utopia.genesis.handling.template.Handleable
+import utopia.genesis.handling.template.{Handleable, TerminatingHandleable}
 import utopia.paradigm.shape.shape2d.area.Area2D
 
 import scala.annotation.unused
@@ -142,17 +143,24 @@ object MouseButtonStateListener
     // NESTED   --------------------------
     
     case class MouseButtonStateListenerFactory(condition: Flag = AlwaysTrue,
-                                               filter: Filter[MouseButtonStateEvent] = AcceptAll)
+                                               filter: Filter[MouseButtonStateEvent] = AcceptAll,
+                                               onlyOneEventLogger: Option[Logger] = None)
         extends ListenerFactory[MouseButtonStateEvent, MouseButtonStateListenerFactory]
             with MouseButtonFilteringFactory[MouseButtonStateEvent, MouseButtonStateListenerFactory]
     {
         // COMPUTED -------------------------
-        
+	    
         /**
           * @return An item that only accepts events that haven't been consumed yet
           */
         def unconsumed = withFilter { _.unconsumed }
-        
+	    
+	    /**
+	     * @param log Logging implementation used for dealing with errors related to stopping the event-receiving
+	     * @return A copy of this factory that creates listeners that only process a single event
+	     */
+	    def once(implicit log: Logger) = copy(onlyOneEventLogger = Some(log))
+	    
         
         // IMPLEMENTED  ---------------------
         
@@ -171,7 +179,10 @@ object MouseButtonStateListener
           * @return A listener that calls the specified function, also applying this factory's conditions & filters
           */
         def apply(f: MouseButtonStateEvent => ConsumeChoice): MouseButtonStateListener =
-            new _MouseButtonStateListener(condition, filter, f)
+	        onlyOneEventLogger match {
+		        case Some(log) => new OneMouseButtonStateEventListener(condition, filter, f)(log)
+		        case None => new _MouseButtonStateListener(condition, filter, f)
+	        }
     }
     
     private class _MouseButtonStateListener(override val handleCondition: Flag,
@@ -181,6 +192,21 @@ object MouseButtonStateListener
     {
         override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = f(event)
     }
+	
+	private class OneMouseButtonStateEventListener(baseCondition: Flag,
+	                                                override val mouseButtonStateEventFilter: Filter[MouseButtonStateEvent],
+	                                                f: MouseButtonStateEvent => ConsumeChoice)
+	                                               (implicit log: Logger)
+		extends TerminatingHandleable(baseCondition) with MouseButtonStateListener
+	{
+		// ATTRIBUTES   -----------------------------
+		
+		override def onMouseButtonStateEvent(event: MouseButtonStateEvent): ConsumeChoice = {
+			val result = f(event)
+			stop()
+			result
+		}
+	}
 }
 
 /**

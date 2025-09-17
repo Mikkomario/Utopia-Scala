@@ -595,6 +595,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	  * A pointer which contains true while a pop-up is hidden
 	  */
 	override lazy val popupHiddenFlag = !popupVisibleFlag
+	
 	// Merges the expand and the collapse icons, if necessary
 	private lazy val rightIconP: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
@@ -772,7 +773,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 		// Hides the pop-up under certain conditions
 		popup.focusKeyStateHandler += new PopupKeyListener(popup)
 		if (settings.hidesPopupOnFocusLoss)
-			popup.focusedFlag.addListener { e =>
+			popup.focusFlag.addListener { e =>
 				if (!e.newValue)
 					popup.visible = false
 				ChangeResponse.continueUnless(popup.hasClosed)

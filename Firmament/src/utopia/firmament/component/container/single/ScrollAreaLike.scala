@@ -39,7 +39,6 @@ import scala.concurrent.duration.FiniteDuration
   * @author Mikko Hilpinen
   * @since 15.5.2019, Reflection v1+
   */
-// TODO: Revalidate upper layers only if necessary
 trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 {
 	// ATTRIBUTES	----------------
@@ -291,14 +290,20 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	
 	/**
 	  * Makes sure the specified area is (fully) visible in this scroll view
-	  * @param area The target area (within content's relative space
-	  *             (Eg. position (0, 0) is considered the top left corner of content))
+	  * @param area The target area within content's relative space,
+	 *             where position (0,0) is in the top left corner of the content
 	  */
-	def ensureAreaIsVisible(area: Bounds, animated: Boolean = true) = {
+	def ensureContentAreaIsVisible(area: Bounds, animated: Boolean = true) = {
 		// Performs calculations in scroll view's relative space
-		val areaInViewSpace = area + contentOrigin
+		ensureAreaIsVisible(area + contentOrigin, animated)
+	}
+	/**
+	 * Makes sure the specified area is (fully) visible in this scroll view
+	 * @param area The target area, relative to this view's top-left corner
+	 */
+	def ensureAreaIsVisible(area: Bounds, animated: Boolean = true) = {
 		// Calculates how much scrolling is required
-		val translation = areaInViewSpace.dimensions.mergeWith(size, 0.0) { (area, myLength) =>
+		val translation = area.dimensions.mergeWith(size, 0.0) { (area, myLength) =>
 			if (area.start < 0)
 				-area.start
 			else if (area.end > myLength)

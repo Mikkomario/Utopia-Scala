@@ -31,7 +31,7 @@ object ReachWindowTest extends App
 		textPointer.update { t => s"more $t" }
 	}
 	
-	window.focusedFlag.addContinuousListenerAndSimulateEvent(false) { e =>
+	window.focusFlag.addContinuousListenerAndSimulateEvent(false) { e =>
 		println(if (e.newValue) "Window focused" else "Window lost focus")
 	}
 	

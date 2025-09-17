@@ -15,7 +15,8 @@ trait AreaOfItems[C]
 	/**
 	  * Finds the area of a single element in this container, including the area around the object
 	  * @param item An item in this stack
-	  * @return The bounds around the item. None if the item isn't in this container
+	  * @return The bounds around the item. None if the item isn't in this container.
+	 *         Note: The returned area is relative to this container's top-left corner.
 	  */
 	def areaOf(item: C): Option[Bounds]
 	
@@ -32,6 +33,7 @@ trait AreaOfItems[C]
 	/**
 	  * @param relativePoint A point relative to this component's position
 	  * @return A component area that is closest to the specified position. None if this container is empty.
+	 *         Note: The returned area is relative to this container's top-left corner.
 	  */
 	def areaNearestTo(relativePoint: Point) = itemNearestTo(relativePoint).flatMap(areaOf)
 }
