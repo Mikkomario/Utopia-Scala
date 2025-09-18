@@ -5,6 +5,7 @@ import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.RequestResult
 import utopia.echo.model.response.ollama.llm.GeneralOllamaModelInfo
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.{ModelLike, Property}
 
 import scala.concurrent.Future
@@ -18,10 +19,14 @@ import scala.util.Try
  */
 object ListModelsRequest extends GetRequest[Seq[GeneralOllamaModelInfo]]
 {
-	// IMPLEMENTED  ------------------------
+	// ATTRIBUTES   ------------------------
 	
-	override def path: String = "tags"
-	override def deprecated: Boolean = false
+	override val path: String = "tags"
+	override val pathParams: Model = Model.empty
+	override val deprecated: Boolean = false
+	
+	
+	// IMPLEMENTED  ------------------------
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Seq[GeneralOllamaModelInfo]]] =
 		prepared.getOne(ModelsParser)

@@ -73,14 +73,16 @@ object PersistingApiRequest
 		/**
 		  * @param path Path to the targeted server-side resource
 		  * @param body Assigned request body (default = empty)
-		  * @param deprecationFlag A flag which contains true if this request gets deprecated
+		  * @param pathParams Parameters placed in the request path (default = empty)
+		 * @param deprecationFlag A flag which contains true if this request gets deprecated
 		  *                        and should be retracted (unless already sent).
 		  *                        Default = always false.
 		  * @return A new API request targeting the specified path and posting the specified body
 		  */
-		def apply(path: String, body: Value = Value.empty,
+		def apply(path: String, body: Value = Value.empty, pathParams: Model = Model.empty,
 		          deprecationFlag: Flag = AlwaysFalse): PersistingApiRequest[A] =
-			new _PersistingApiRequest[A](persistingIdentifier, method, path, body, deprecationFlag)(sendFunction)
+			new _PersistingApiRequest[A](persistingIdentifier, method, path, pathParams, body, deprecationFlag)(
+				sendFunction)
 	}
 	
 	private class PersistingApiRequestHandler[A](persistingIdentifier: Constant)
@@ -111,20 +113,21 @@ object PersistingApiRequest
 	{
 		override def apply(model: ModelLike[Property]): Try[ApiRequest[A]] = schema.validate(model).map { model =>
 			// NB: These parsed models won't be persisted anymore
-			ApiRequest(Method(model("method").getString), model("path").getString, model("body"))(sendFunction)
+			ApiRequest(Method(model("method").getString), model("path").getString, model("body"),
+				model("params").getModel)(sendFunction)
 		}
 	}
 	
 	private class _PersistingApiRequest[+A](persistingIdentifier: Constant, override val method: Method,
-	                                        override val path: String, bodyValue: Value,
+	                                        override val path: String, override val pathParams: Model, bodyValue: Value,
 	                                        deprecationFlag: Flag)
 	                                       (sendFunction: Send[A])
 		extends PersistingApiRequest[A]
 	{
 		// ATTRIBUTES   ----------------------
 		
-		private lazy val persistingModel: Model =
-			persistingIdentifier +: Model.from("method" -> method.toString, "path" -> path, "body" -> bodyValue)
+		private lazy val persistingModel: Model = persistingIdentifier +:
+			Model.from("method" -> method.toString, "path" -> path, "params" -> pathParams, "body" -> bodyValue)
 		
 		override lazy val persistingModelPointer: Changing[Option[Model]] =
 			deprecationFlag.map { deprecated => if (deprecated) None else Some(persistingModel) }
@@ -133,7 +136,6 @@ object PersistingApiRequest
 		// IMPLEMENTED  ----------------------
 		
 		override def body: Either[Value, Body] = Left(bodyValue)
-		
 		override def deprecated: Boolean = deprecationFlag.value
 		
 		override def send(prepared: PreparedRequest): Future[RequestResult[A]] = sendFunction(prepared)

@@ -301,6 +301,9 @@ object MasterScribe
 		{
 			// ATTRIBUTES   --------------------
 			
+			override val method: Method = Post
+			override val pathParams: Model = Model.empty
+			
 			private val remainingIssuesPointer = EventfulPointer(initialIssues)
 			
 			override lazy val persistingModelPointer: Changing[Option[Model]] = {
@@ -322,7 +325,6 @@ object MasterScribe
 			// IMPLEMENTED  --------------------
 			
 			override def path: String = loggingEndpointPath
-			override def method: Method = Post
 			
 			// Updates the store durations of all the issues
 			override def body = Left(updateStoreDurations().map { _._1 }.toVector)

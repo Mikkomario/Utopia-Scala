@@ -57,10 +57,15 @@ object BufferedPullRequest
 class BufferedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit llm: LlmDesignator)
 	extends ApiRequest[String]
 {
+	// ATTRIBUTES   -------------------------
+	
+	override val method: Method = Post
+	override val path: String = "pull"
+	override val pathParams: Model = Model.empty
+	
+	
 	// IMPLEMENTED  -------------------------
 	
-	override def method: Method = Post
-	override def path: String = "pull"
 	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> false))
 	
 	override def deprecated: Boolean = deprecationView.value

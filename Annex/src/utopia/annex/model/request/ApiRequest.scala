@@ -4,7 +4,9 @@ import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
-import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.Future
 
@@ -16,12 +18,17 @@ object ApiRequest
 	  * A function for finalizing the request-sending process.
 	  * Accepts a prepared request and yields a future with a correctly processed / parsed request result.
 	  *
-	  * Typically these functions apply response-parsing using the helper functions in [[PreparedRequest]].
+	  * These functions typically apply response-parsing using the helper functions in [[PreparedRequest]].
 	  */
 	type Send[+A] = PreparedRequest => Future[RequestResult[A]]
 	
 	
 	// COMPUTED ---------------------------
+	
+	/**
+	 * @return Access to GET-request factories
+	 */
+	def get = GetRequest
 	
 	/**
 	  * @return An accessor to functions for creating persisting API-requests
@@ -36,31 +43,19 @@ object ApiRequest
 	  * @param method Method used in this request
 	  * @param path Path to the targeted server-side resource
 	  * @param body Response body to apply. Default = empty.
-	  * @param deprecationCondition A function which yields true when/if this request should be retracted,
-	  *                             if not yet sent.
-	  *                             Default = always false.
+	  * @param pathParams Parameters to send out within the request path. Default = empty.
+	 * @param deprecationView A view which contains true when/if this request should be retracted
+	 *                        (unless it has already been sent).
+	  *                       Default = always false.
 	  * @param send A function which accepts a prepared request and finalizes the sending process,
 	  *             applying correct response-parsing, etc.
 	  * @tparam A Type of parsed response values
 	  * @return A new API request
 	  */
-	def apply[A](method: Method, path: String, body: Value = Value.empty, deprecationCondition: => Boolean = false)
+	def apply[A](method: Method, path: String, body: Value = Value.empty, pathParams: Model = Model.empty,
+	             deprecationView: View[Boolean] = AlwaysFalse)
 	            (send: Send[A]): ApiRequest[A] =
-		new _ApiRequest[A](method, path, body, deprecationCondition)(send)
-	
-	/**
-	  * Creates a new GET request
-	  * @param path Path to the targeted server-side resource
-	  * @param deprecationCondition A function which yields true when/if this request should be retracted,
-	  *                             if not yet sent.
-	  *                             Default = always false.
-	  * @param send A function which accepts a prepared request and finalizes the sending process,
-	  *             applying correct response-parsing, etc.
-	  * @tparam A Type of parsed response values
-	  * @return A new GET request
-	  */
-	def get[A](path: String, deprecationCondition: => Boolean = false)(send: Send[A]) =
-		GetRequest(path, deprecationCondition)(send)
+		new _ApiRequest[A](method, path, pathParams, body, deprecationView)(send)
 	
 	/**
 	  * Creates a new GET request, which doesn't parse / post-process responses.
@@ -70,19 +65,20 @@ object ApiRequest
 	  *                             Default = always false.
 	  * @return A new GET request for retrieving responses in Value format
 	  */
+	@deprecated("Deprecated for removal. Please use .get.value(...) instead", "v1.11")
 	def getValue(path: String, deprecationCondition: => Boolean = false) =
-		GetRequest.value(path, deprecationCondition)
+		get.value(path, deprecationView = View(deprecationCondition))
 	
 	
 	// NESTED   ---------------------------
 	
-	private class _ApiRequest[A](override val method: Method, override val path: String, bod: Value,
-	                             testDeprecation: => Boolean)
+	private class _ApiRequest[A](override val method: Method, override val path: String, override val pathParams: Model,
+	                             bod: Value, deprecationView: View[Boolean])
 	                            (f: Send[A])
 		extends ApiRequest[A]
 	{
 		override def body: Either[Value, Body] = Left(bod)
-		override def deprecated: Boolean = testDeprecation
+		override def deprecated: Boolean = deprecationView.value
 		
 		override def send(prepared: PreparedRequest) = f(prepared)
 	}
@@ -103,9 +99,14 @@ trait ApiRequest[+A] extends Retractable
 	  */
 	def method: Method
 	/**
-	  * @return Request path (root path not included)
+	  * @return Request path
+	 *         (not including the root path, which is defined by the request-sending interface)
 	  */
 	def path: String
+	/**
+	 * @return Parameters to send out in the request path
+	 */
+	def pathParams: Model
 	/**
 	  * @return Request body or body value.
 	  *         Empty value if no body should be sent.

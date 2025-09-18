@@ -6,6 +6,8 @@ import utopia.annex.test.TestClientContext._
 import utopia.flow.async.process.Wait
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.duration.Duration
 
@@ -71,12 +73,12 @@ object RequestQueueTest extends App
 	
 	// NB: Slow request delay is 4 seconds server-side
 	private def slowRequest(deprecatesAfter: Duration = Duration.Inf) = {
-		val testDeprecation = deprecatesAfter.finite match {
+		val deprecationView = deprecatesAfter.finite match {
 			case Some(duration) =>
 				val threshold = Now + duration
-				() => threshold.isPast
-			case None => () => false
+				View { threshold.isPast }
+			case None => AlwaysFalse
 		}
-		ApiRequest.get("slow", testDeprecation()) { _.send() }
+		ApiRequest.get("slow", deprecationView = deprecationView) { _.send() }
 	}
 }

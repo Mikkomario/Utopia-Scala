@@ -110,6 +110,7 @@ trait CreateModelRequest[+R] extends ApiRequest[R]
 	
 	override def method: Method = Post
 	override def path: String = "create"
+	override def pathParams: Model = Model.empty
 	
 	override def body: Either[Value, Body] = {
 		val modelFileProp = modelFile match {

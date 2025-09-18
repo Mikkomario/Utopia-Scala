@@ -50,11 +50,11 @@ class RequestWork(workflow: Iterable[WorkflowNode], clientId: String = defaultCl
 	
 	override val method: Method = Post
 	override val path: String = "prompt"
+	override val pathParams: Model = Model.empty
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	// TODO: Remove test prints
 	override def body: Either[Value, Body] = Left(Model.from(
 		"prompt" -> Model.withConstants(workflow.map { _.toConstant }),
 		"client_id" -> clientId

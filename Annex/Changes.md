@@ -1,6 +1,11 @@
 # Utopia Annex - List of Changes
 
-## v1.10.1 (in development)
+## v1.11 (in development)
+### Breaking changes
+- **ApiRequest** now contains an abstract property: `pathParams: Model`
+  - An implementation must be added to all subclasses
+### New features
+- **ApiRequest**s can now specify path parameters
 ### Other changes
 - `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
 

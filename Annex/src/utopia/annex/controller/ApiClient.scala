@@ -310,15 +310,16 @@ trait ApiClient
 	  * Note: The request must still be sent before it can impact the server or retrieve data.
 	  * @param path Path to the targeted resource on the server (server root path will be prepended to this)
 	  * @param body Body to assign to the outgoing request (default = empty)
-	  * @param method The method used (default = POST)
+	  * @param pathParams Parameters to include in the request path (default = empty)
+	 * @param method The method used (default = POST)
 	  * @param headers Headers to send out with the request
 	  *                (standard modifications will be applied, also) (default = empty)
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @return Prepared POST request
 	  */
-	def post(path: String, body: Either[Value, Body] = Left(Value.empty), method: Method = Post,
-	         headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
-		prepareRequest(method, path, body, headers = headers, timeout = timeout)
+	def post(path: String, body: Either[Value, Body] = Left(Value.empty), pathParams: Model = Model.empty,
+	         method: Method = Post, headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
+		prepareRequest(method, path, body, pathParams, headers, timeout)
 	/**
 	  * Prepares a POST request (or a similar request, such as PUT).
 	  * Note: The request must still be sent before it can impact the server or retrieve data.
@@ -330,9 +331,9 @@ trait ApiClient
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @return Prepared POST request
 	  */
-	def postValue(path: String, body: Value = Value.empty, method: Method = Post, headers: Headers = Headers.empty,
-	              timeout: Duration = Duration.Inf) =
-		post(path, Left(body), method, headers, timeout)
+	def postValue(path: String, body: Value = Value.empty, pathParams: Model = Model.empty, method: Method = Post,
+	              headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
+		post(path, Left(body), pathParams, method, headers, timeout)
 	
 	/**
 	  * Sends out a request
@@ -340,14 +341,14 @@ trait ApiClient
 	  * @return Future which resolves into the eventual request send result
 	  */
 	def send[A](request: ApiRequest[A]): Future[RequestResult[A]] =
-		request.send(prepareRequest(request.method, request.path, request.body))
+		request.send(prepareRequest(request.method, request.path, request.body, request.pathParams))
 	/**
 	  * Prepares a request for sending
 	  * @param request Request to send out (will be modified)
 	  * @return Prepared request
 	  */
-	def apply(request: Request) = new PreparedRequest(this, request.copy(
-		requestUri = uri(request.requestUri), headers = modifyOutgoingHeaders(request.headers)))
+	def apply(request: Request) = new PreparedRequest(this,
+		request.copy(requestUri = uri(request.requestUri), headers = modifyOutgoingHeaders(request.headers)))
 	
 	/**
 	  * Converts a from model factory into a response parser.

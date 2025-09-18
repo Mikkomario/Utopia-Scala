@@ -48,8 +48,14 @@ object ShowModelRequest
 class ShowModelRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit llm: LlmDesignator)
 	extends ApiRequest[ModelShowInfo]
 {
-	override def method: Method = Post
-	override def path: String = "show"
+	// ATTRIBUTES   --------------------------
+	
+	override val method: Method = Post
+	override val path: String = "show"
+	override val pathParams: Model = Model.empty
+	
+	
+	// IMPLEMENTED  -------------------------
 	
 	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName))
 	override def deprecated: Boolean = deprecationView.value

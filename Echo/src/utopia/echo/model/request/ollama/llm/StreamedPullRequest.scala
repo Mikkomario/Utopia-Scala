@@ -66,13 +66,14 @@ class StreamedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)
 {
 	// ATTRIBUTES   -------------------------
 	
+	override val method: Method = Post
+	override val path: String = "pull"
+	override val pathParams: Model = Model.empty
+	
 	private lazy val parser = new StreamedPullResponseParser().toResponse
 	
 	
 	// IMPLEMENTED  -------------------------
-	
-	override def method: Method = Post
-	override def path: String = "pull"
 	
 	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> true))
 	override def deprecated: Boolean = deprecationView.value

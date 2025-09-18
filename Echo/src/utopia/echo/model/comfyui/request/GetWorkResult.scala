@@ -6,7 +6,7 @@ import utopia.disciple.model.error.RequestFailedException
 import utopia.echo.model.comfyui.ComfyUiDir
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{StringType, VectorType}
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.parse.file.FileExtensions._
@@ -85,6 +85,7 @@ class GetWorkResult[+A](promptId: String, parser: FromModelFactory[A], deprecati
 	// ATTRIBUTES   ------------------------
 	
 	override lazy val path: String = s"history/$promptId"
+	override val pathParams: Model = Model.empty
 	
 	
 	// IMPLEMENTED  -----------------------

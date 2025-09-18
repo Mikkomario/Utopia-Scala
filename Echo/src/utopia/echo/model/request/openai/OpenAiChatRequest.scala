@@ -44,6 +44,7 @@ trait OpenAiChatRequest[+A] extends ApiRequest[A] with HasModelSettings
 	
 	override def method: Method = Post
 	override def path: String = "responses"
+	override def pathParams: Model = Model.empty
 	
 	// TODO: Add support for image quality settings and other image settings
 	// TODO: Add support for built-in tools

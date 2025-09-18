@@ -53,6 +53,7 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 	// IMPLEMENTED  ----------------------
 	
 	override def method: Method = Post
+	override def pathParams: Model = Model.empty
 	
 	override def body: Either[Value, Body] = {
 		val baseModel = Model.from(

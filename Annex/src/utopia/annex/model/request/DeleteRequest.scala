@@ -15,6 +15,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
+// TODO: Remove the FromModelFactory extension after a few versions (noted 18.9.2025, v1.11)
 object DeleteRequest extends FromModelFactory[DeleteRequest]
 {
 	// ATTRIBUTES	-----------------------
@@ -24,6 +25,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	
 	// IMPLEMENTED	-----------------------
 	
+	@deprecated("The from-model parsing may be removed in a future release", "v1.11")
 	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
 		if (valid("method").string.forall { _ ~== Delete.toString })
 			Success(apply(valid("path").getString))
@@ -48,6 +50,7 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	private case class SimpleDeleteRequest(path: String) extends DeleteRequest with Persisting
 	{
 		override def deprecated = false
+		override def pathParams: Model = Model.empty
 		
 		override def persistingModelPointer =
 			Fixed(Some(Model(Pair("method" -> method.toString, "path" -> path))))

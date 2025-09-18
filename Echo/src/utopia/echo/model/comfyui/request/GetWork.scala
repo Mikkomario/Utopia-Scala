@@ -17,7 +17,13 @@ import scala.concurrent.Future
  */
 class GetWork(promptId: String, deprecationView: View[Boolean] = AlwaysFalse) extends GetRequest[Model]
 {
+	// ATTRIBUTES   ---------------------
+	
 	override lazy val path: String = s"history/$promptId"
+	override val pathParams: Model = Model.empty
+	
+	
+	// IMPLEMENTED  --------------------
 	
 	override def deprecated: Boolean = deprecationView.value
 	
