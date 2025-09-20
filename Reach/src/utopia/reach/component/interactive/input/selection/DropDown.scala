@@ -27,7 +27,7 @@ import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.focus.Focusable.FocusWrapper
 import utopia.reach.component.template.{CursorDefining, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.context.{ReachWindowContext, VariableReachContentWindowContext}
+import utopia.reach.context.ReachWindowContext
 import utopia.reach.cursor.CursorType.{Default, Interactive}
 
 import scala.concurrent.ExecutionContext
@@ -39,12 +39,11 @@ object DropDownSetup
 }
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = defaultSettings)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetup]
-		with Ccff[VariableReachContentWindowContext, DropDownFactory]
+		with Ccff[VariableTextContext, DropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetup = copy(settings = settings)
 	
-	override def withContext(hierarchy: ComponentHierarchy,
-	                         context: VariableReachContentWindowContext): DropDownFactory =
+	override def withContext(hierarchy: ComponentHierarchy, context: VariableTextContext): DropDownFactory =
 		DropDownFactory(hierarchy, context, settings)
 }
 

@@ -35,12 +35,22 @@ object PostSchrodinger
 	def wrap[S, A](pointer: Changing[(S, Try[A], SchrodingerState)]) = new PostSchrodinger[S, A](pointer)
 	
 	/**
-	  * Creates a new schrödinger that represents a completed successful attempt to create a remote instance
-	  * @param instance Instance that was created
-	  * @tparam A Type of the instance
-	  * @return A new schrödinger
-	  */
-	def successful[A](instance: A) = wrap(Fixed((instance, Success(instance), Alive)))
+	 * Creates a new schrödinger that represents a completed successful attempt to create a remote instance
+	 * @param instance Instance that was created
+	 * @tparam A Type of the instance
+	 * @return A new schrödinger
+	 */
+	def successful[A](instance: A): PostSchrodinger[A, A] = successful(instance, instance)
+	/**
+	 * Creates a new schrödinger that represents a completed successful attempt to create a remote instance
+	 * @param instance Instance that was created
+	 * @param spirit The "spirit" form of that instance
+	 * @tparam A Type of the instance
+	 * @tparam S Type of the instance's spirit form
+	 * @return A new schrödinger
+	 */
+	def successful[A, S](instance: A, spirit: S) =
+		wrap(Fixed(spirit, Success(instance), Alive))
 	/**
 	  * Creates a new schrödinger that represents a (permanently) failed attempt to create a remote instance
 	  * @param spirit Manifest of the data that was posted

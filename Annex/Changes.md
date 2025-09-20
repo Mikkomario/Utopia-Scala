@@ -4,8 +4,13 @@
 ### Breaking changes
 - **ApiRequest** now contains an abstract property: `pathParams: Model`
   - An implementation must be added to all subclasses
+- **ApiRequest** and **GetRequest** constructors 
+  now accept `deprecationView: View[Boolean]` instead of `deprecationCondition: => Boolean`
 ### New features
 - **ApiRequest**s can now specify path parameters
+### New methods
+- **PostSchrodinger** (object)
+  - Added a new `.successful(...)` constructor
 ### Other changes
 - `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
 
