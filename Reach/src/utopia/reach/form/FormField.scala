@@ -72,5 +72,17 @@ class FormField(val name: String, val component: Option[ReachComponent], val foc
                (getValue: => FormFieldOut)
 	extends View[FormFieldOut]
 {
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @return Component associated with this form field.
+	 *         None if this field doesn't have an associated component,
+	 *         or if that component is not linked to the main component hierarchy.
+	 */
+	def visibleComponent = component.filter { _.isLinked }
+	
+	
+	// IMPLEMENTED  -------------------------
+	
 	override def value: FormFieldOut = getValue
 }

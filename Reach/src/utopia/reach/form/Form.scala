@@ -5,8 +5,10 @@ import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.mutable.DataType.{PairType, VectorType}
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -70,8 +72,6 @@ case class Form(fields: Iterable[FormField])
 {
 	// ATTRIBUTES   ---------------------------
 	
-	private lazy val fieldMap = fields.iterator.map { f => f.name -> f }.toMap
-	
 	/**
 	 * Contains the last generated long-running result future.
 	 * Cleared occasionally.
@@ -93,7 +93,7 @@ case class Form(fields: Iterable[FormField])
 	override def value: Future[Option[Model]] = pendingResultP.updateAndGet { _.filterNot { _.isCompleted } }.getOrElse {
 		// If not, starts processing the field output
 		// Collects successfully generated values
-		val successBuilder = OptimizedIndexedSeq.newBuilder[Constant]
+		val successBuilder = OptimizedIndexedSeq.newBuilder[(FormField, Value)]
 		// Collects pending result futures
 		val pendingBuilder = OptimizedIndexedSeq.newBuilder[(FormField, Lazy[Future[FormFieldOut]])]
 		// This flag is set if any form field yields a canceling value (failure or cancel)
@@ -113,7 +113,7 @@ case class Form(fields: Iterable[FormField])
 			val pending = pendingBuilder.result()
 			// Case: No delays => Yields the final model
 			if (pending.isEmpty)
-				Future.successful(Some(Model.withConstants(successBuilder.result())))
+				Future.successful(Some(buildModel(successBuilder)))
 			// Case: Delays => Processes those asynchronously
 			else {
 				val resultFuture = Future {
@@ -123,7 +123,7 @@ case class Form(fields: Iterable[FormField])
 						None
 					// Case: Not canceled => Yields the final model
 					else
-						Some(Model.withConstants(successBuilder.result()))
+						Some(buildModel(successBuilder))
 				}
 				// Remembers the pending process, in case value is called again soon
 				pendingResultP.setOne(resultFuture)
@@ -143,7 +143,7 @@ case class Form(fields: Iterable[FormField])
 	 * @param message Message to display next to that field
 	 */
 	def showNotification(fieldName: String, message: LocalizedString) = {
-		val component = fieldMap.get(fieldName).flatMap { _.component }
+		val component = fieldForKey(fieldName).flatMap { _.component.filter { _.isLinked } }
 		notification(message, component)
 	}
 	/**
@@ -163,6 +163,14 @@ case class Form(fields: Iterable[FormField])
 	 */
 	def ++(other: Form) = new Form(fields ++ other.fields)
 	
+	private def fieldForKey(key: String) = {
+		if (key.isEmpty)
+			None
+		else
+			fields.iterator.filter { _.name == key }
+				.reduceOption { (a, b) => selectField(a, a, b, b).getOrElse(b) }
+	}
+	
 	/**
 	 * Processes pending form field output.
 	 * Assumes that this function is called in an asynchronous thread.
@@ -172,7 +180,8 @@ case class Form(fields: Iterable[FormField])
 	 */
 	@tailrec
 	private def processPending(pending: Seq[(FormField, Lazy[Future[FormFieldOut]])],
-	                           successBuilder: mutable.Growable[Constant], canceledFlag: Settable): Unit =
+	                           successBuilder: mutable.Growable[(FormField, Value)],
+	                           canceledFlag: Settable): Unit =
 	{
 		// Prepares for a potential next iteration / level
 		val nextPendingBuilder = OptimizedIndexedSeq.newBuilder[(FormField, Lazy[Future[FormFieldOut]])]
@@ -185,8 +194,8 @@ case class Form(fields: Iterable[FormField])
 				case Failure(error) =>
 					log(error, "Unexpected failure while processing a pending field output")
 					notification("Unexpected failure while processing field output.\nError message: %s"
-						.in(english).localized.interpolate(error.getMessage), field.component)
-					successBuilder += Constant(field.name, Value.empty)
+						.in(english).localized.interpolate(error.getMessage), field.visibleComponent)
+					successBuilder += (field -> Value.empty)
 			}
 		}
 		
@@ -205,16 +214,17 @@ case class Form(fields: Iterable[FormField])
 	 * @param canceledFlag A flag that should be set if a canceling value is encountered
 	 */
 	@tailrec
-	private def handleOutput(field: FormField, output: FormFieldOut, successBuilder: mutable.Growable[Constant],
+	private def handleOutput(field: FormField, output: FormFieldOut,
+	                         successBuilder: mutable.Growable[(FormField, Value)],
 	                         pendingBuilder: mutable.Growable[(FormField, Lazy[Future[FormFieldOut]])],
 	                         canceledFlag: Settable): Unit =
 		output match {
 			// Case: Success => Remembers the value
-			case FormFieldOut.Success(value) => successBuilder += Constant(field.name, value)
+			case FormFieldOut.Success(value) => successBuilder += (field -> value)
 			// Case: Failure => Displays a message, requests focus and cancels this process
 			case FormFieldOut.Failure(message) =>
 				field.focusable.foreach { _.requestFocus() }
-				notification(message, field.component)
+				notification(message, field.visibleComponent)
 				canceledFlag.set()
 			// Case: Cancel => Silently cancels this process
 			case Cancel => canceledFlag.set()
@@ -227,4 +237,91 @@ case class Form(fields: Iterable[FormField])
 					case None => pendingBuilder += (field -> lazyResult)
 				}
 		}
+	
+	/**
+	 * Converts the collected field values into a model.
+	 * Handles cases where multiple fields specify the same form key.
+	 * @param builder Builder that has collected form values
+	 * @return A model built from the collected values
+	 */
+	private def buildModel(builder: mutable.Builder[_, Iterable[(FormField, Value)]]) =
+		Model.withConstants(builder.result()
+			// Handles cases where multiple fields specify the same key
+			.groupReduce { _._1.name } { case ((fieldA, valueA), (fieldB, valueB)) =>
+				selectField(fieldA, fieldA -> valueA, fieldB, fieldB -> valueB)
+					.getOrElse { mergeValues(fieldA, valueA, fieldB, valueB) }
+			}
+			.map { case (key, (_, value)) => Constant(key, value) })
+	
+	private def selectField[A](left: FormField, leftValue: A, right: FormField, rightValue: A) = {
+		left.component match {
+			// Case: Field A is tied to a specific component
+			case Some(leftC) =>
+				right.component match {
+					// Case: Field B is also tied to a specific component
+					case Some(rightC) =>
+						// Case: These components have the same linked state => Merges the values
+						if (leftC.isLinked == rightC.isLinked)
+							None
+						// Case: Component A is linked, component B is not => Selects field A
+						else if (leftC.isLinked)
+							Some(leftValue)
+						// Case: Component B is linked, component A is not => Selects field B
+						else
+							Some(rightValue)
+					
+					// Case: Field B doesn't specify a component
+					//       => If component A is not linked to the component hierarchy, selects field B
+					case None =>
+						if (leftC.isLinked)
+							Some(leftValue)
+						else
+							Some(rightValue)
+				}
+			// Case: Field A is not tied to a specific component
+			case None =>
+				right.component match {
+					// Case: Field B specifies a component
+					//       => Selects field A (only) if that component is not visible
+					case Some(rightC) =>
+						if (rightC.isLinked)
+							Some(rightValue)
+						else
+							Some(leftValue)
+					// Case: Neither field specifies components => Merges the values
+					case None => None
+				}
+		}
+	}
+	
+	/**
+	 * Merges two form values into a single value
+	 * @param leftValue Left side value
+	 * @param rightValue Right side value
+	 * @return Primary key (preferring right), and the merged value
+	 */
+	private def mergeValues[K](leftKey: K, leftValue: Value, rightKey: K, rightValue: Value): (K, Value) = {
+		// Case: No left value => Only yields right
+		if (leftValue.isEmpty)
+			rightKey -> rightValue
+		// Case: No right value => Only yields left
+		else if (rightValue.isEmpty)
+			leftKey -> leftValue
+		// Case: Merging is required => Combines the values into a collection, flattening existing collection values
+		else {
+			val mergedValue = leftValue.dataType match {
+				case VectorType | PairType =>
+					rightValue.dataType match {
+						case VectorType | PairType => leftValue.getVector ++ rightValue.getVector
+						case _ => leftValue.getVector :+ rightValue
+					}
+				case _ =>
+					rightValue.dataType match {
+						case VectorType | PairType => leftValue +: rightValue.getVector
+						case _ => Pair(leftValue, rightValue)
+					}
+			}
+			rightKey -> mergedValue
+		}
+	}
 }
