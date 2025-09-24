@@ -48,6 +48,7 @@
   - Added new factory functions
 - **PartOfComponentHierarchy**
   - Added `.isLinked` and `.isDetached` -utility functions
+  - Added `.fontMetrics` and `.fontMetricsPointer` -properties to instances that also extend **HasContext**
 - **ReachComponent**
   - Added `.coordinatePointerAlong(Axis2D)` and `.lengthPointerAlong(Axis2D)`
 ### Other changes
@@ -58,7 +59,9 @@
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
 - Rewrote **ReachWindow**'s anchoring logic
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
-- **InputField** conversions don't require **Input* anymore, only requiring **View** (also extended by **Input**)
+- **InputField** conversions don't require **Input** anymore, only requiring **View** (also extended by **Input**)
+- **Mixed** now contains two new utility types: **TF** (**ContextualMixed** of type **StaticTextContext**) 
+  and **VTF** (of type **VariableTextContext**)
 - Optimized the component layout update algorithm
 
 ## v1.6 - 26.05.2025

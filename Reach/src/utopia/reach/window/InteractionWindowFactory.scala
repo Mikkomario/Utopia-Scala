@@ -219,7 +219,7 @@ trait InteractionWindowFactory[A]
 		}
 	}
 	
-	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Vector[Seq[WindowButtonBlueprint[A]]],
+	private def buttonGroupsToStack(factory: StackFactory, buttonGroups: Seq[Seq[WindowButtonBlueprint[A]]],
 									scalingMargin: StackLength, nonScalingMargin: StackLength,
 									resultPromise: Promise[A],
 									defaultActionEnabled: => Boolean): (Stack, Seq[ButtonLike]) =

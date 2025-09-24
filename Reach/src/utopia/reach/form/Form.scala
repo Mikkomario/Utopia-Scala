@@ -2,7 +2,7 @@ package utopia.reach.form
 
 import utopia.firmament.localization.Language.english
 import utopia.firmament.localization.LocalString._
-import utopia.firmament.localization.Localizer
+import utopia.firmament.localization.{LocalizedString, Localizer}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
@@ -59,16 +59,18 @@ object Form
  * @param fields The fields that form this form
  * @param log Implicit logging implementation. Used in asynchronous result-handling and pointer management.
  * @param exc Implicit execution context. Used when handling delayed form field outputs.
- * @param showNotification Logic for displaying notifications
+ * @param notification Logic for displaying notifications
  * @param localizer Localizer for displaying error messages
  * @author Mikko Hilpinen
  * @since 07.09.2025, v1.7
  */
 case class Form(fields: Iterable[FormField])
-          (implicit log: Logger, exc: ExecutionContext, showNotification: ShowFormNotification, localizer: Localizer)
+          (implicit log: Logger, exc: ExecutionContext, notification: ShowFormNotification, localizer: Localizer)
 	extends View[Future[Option[Model]]] with Combinable[FormField, Form]
 {
 	// ATTRIBUTES   ---------------------------
+	
+	private lazy val fieldMap = fields.iterator.map { f => f.name -> f }.toMap
 	
 	/**
 	 * Contains the last generated long-running result future.
@@ -136,6 +138,21 @@ case class Form(fields: Iterable[FormField])
 	// OTHER    ------------------------------
 	
 	/**
+	 * Shows a notification next to a specific form field
+	 * @param fieldName Name of the targeted field
+	 * @param message Message to display next to that field
+	 */
+	def showNotification(fieldName: String, message: LocalizedString) = {
+		val component = fieldMap.get(fieldName).flatMap { _.component }
+		notification(message, component)
+	}
+	/**
+	 * Shows a notification
+	 * @param message Message to display
+	 */
+	def showNotification(message: LocalizedString) = notification(message)
+	
+	/**
 	 * @param fields Fields to add to this form
 	 * @return A copy of this form with the specified fields included
 	 */
@@ -167,7 +184,7 @@ case class Form(fields: Iterable[FormField])
 				// Case: No output => Logs and displays the error. Simulates a successfully acquired empty value.
 				case Failure(error) =>
 					log(error, "Unexpected failure while processing a pending field output")
-					showNotification("Unexpected failure while processing field output.\nError message: %s"
+					notification("Unexpected failure while processing field output.\nError message: %s"
 						.in(english).localized.interpolate(error.getMessage), field.component)
 					successBuilder += Constant(field.name, Value.empty)
 			}
@@ -197,7 +214,7 @@ case class Form(fields: Iterable[FormField])
 			// Case: Failure => Displays a message, requests focus and cancels this process
 			case FormFieldOut.Failure(message) =>
 				field.focusable.foreach { _.requestFocus() }
-				showNotification(message, field.component)
+				notification(message, field.component)
 				canceledFlag.set()
 			// Case: Cancel => Silently cancels this process
 			case Cancel => canceledFlag.set()

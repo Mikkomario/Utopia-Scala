@@ -1,5 +1,6 @@
 package utopia.reach.component.factory
 
+import utopia.firmament.context.text.{StaticTextContext, VariableTextContext}
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
@@ -8,6 +9,18 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.PartOfComponentHierarchy
 
 object Mixed extends Cff[Mixed]
+{
+	// TYPES    ---------------------------
+	
+	/**
+	 * An alias for [[ContextualMixed]] of [[StaticTextContext]]
+	 */
+	type TF = ContextualMixed[StaticTextContext]
+	/**
+	 * An alias for [[ContextualMixed]] of [[VariableTextContext]]
+	 */
+	type VTF = ContextualMixed[VariableTextContext]
+}
 
 /**
   * A factory for creating all kinds of component factories

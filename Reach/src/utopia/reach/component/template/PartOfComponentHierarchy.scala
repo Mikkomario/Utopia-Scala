@@ -1,7 +1,32 @@
 package utopia.reach.component.template
 
+import utopia.firmament.context.HasContext
+import utopia.firmament.context.base.BaseContextPropsView
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.container.ReachCanvas
+
+object PartOfComponentHierarchy
+{
+	// EXTENSIONS   ------------------------
+	
+	implicit class ContextualPartOfHierarchy(val p: PartOfComponentHierarchy with HasContext[BaseContextPropsView])
+	{
+		/**
+		 * @return Font metrics to use under the current (font) settings.
+		 *         Note: These only represent the current state. If the font is variable, this value won't reflect it.
+		 * @see [[fontMetricsPointer]]
+		 */
+		def fontMetrics = p.hierarchy.fontMetricsWith(p.context.fontPointer.value)
+		/**
+		 * @return A pointer that contains the font metrics to use within this context.
+		 *         Applies the contextual font.
+		 */
+		def fontMetricsPointer =
+			p.context.fontPointer.mapWhile(p.hierarchy.linkedFlag) { font =>
+				p.hierarchy.fontMetricsWith(font)
+			}
+	}
+}
 
 /**
   * Common trait for components and other elements that specify a parent component hierarchy.

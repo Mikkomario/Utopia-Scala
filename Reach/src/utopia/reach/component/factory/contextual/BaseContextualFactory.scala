@@ -11,6 +11,8 @@ import utopia.paradigm.color.Color
 trait BaseContextualFactory[+Repr]
 	extends ContextualFactory[StaticBaseContext, Repr] with StaticBaseContextWrapper[StaticBaseContext, Repr]
 {
+	// IMPLEMENTED  ---------------------------------
+	
 	override def base = context
 	
 	override def current: StaticBaseContext = base
