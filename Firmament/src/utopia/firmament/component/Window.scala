@@ -54,6 +54,14 @@ import scala.util.Try
 
 object Window
 {
+	// TYPES    ----------------------------
+	
+	/**
+	 * Type alias for [[java.awt.Window]]
+	 */
+	type JWindow = java.awt.Window
+	
+	
 	// ATTRIBUTES   ------------------------
 	
 	// The smallest allowed window icon size
@@ -175,7 +183,7 @@ object Window
 	  * @return A new window
 	  */
 	def apply(container: java.awt.Container, content: Stackable, eventActorHandler: ActorHandler,
-	          parent: Option[java.awt.Window], title: LocalizedString = LocalizedString.empty,
+	          parent: Option[JWindow], title: LocalizedString = LocalizedString.empty,
 	          resizeLogic: WindowResizePolicy = Program, screenBorderMargins: Insets = Insets.zero,
 	          getAnchor: Option[Bounds => Point] = None, positionAfterResize: Option[Bounds => Point] = None,
 	          icon: Image = ComponentCreationDefaults.windowIcon,
@@ -251,7 +259,7 @@ object Window
 	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
-	def contextual(container: java.awt.Container, content: Stackable, parent: Option[java.awt.Window] = None,
+	def contextual(container: java.awt.Container, content: Stackable, parent: Option[JWindow] = None,
 	               title: LocalizedString = LocalizedString.empty,
 	               getAnchor: Option[Bounds => Point] = None, positionAfterResize: Option[Bounds => Point] = None,
 	               prepareForSizeChange: Option[(Size, Flag) => Unit] = None,

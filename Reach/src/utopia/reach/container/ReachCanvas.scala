@@ -2,6 +2,7 @@ package utopia.reach.container
 
 import utopia.firmament.awt.AwtComponentExtensions._
 import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
@@ -166,10 +167,10 @@ object ReachCanvas
 			val absoluteParentPositionView = ResettableLazy {
 				componentPointer.value match {
 					case Some(component) =>
-						component.parentsIterator.takeTo { _.isInstanceOf[java.awt.Window] }
+						component.parentsIterator.takeTo { _.isInstanceOf[JWindow] }
 							.foldLeft(Point.origin) { (p, c) =>
 								c match {
-									case window: java.awt.Window =>
+									case window: JWindow =>
 										val insets = Insets.of(window.getInsets)
 										p + Point.of(window.getLocation) + insets.toPoint
 									case component => p + Point.of(component.getLocation)

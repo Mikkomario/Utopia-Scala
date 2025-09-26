@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window.interaction
 
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.context.color.StaticColorContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
@@ -93,7 +94,7 @@ trait InteractionWindow[+A]
 	  * @param parentWindow Window over which this window is displayed
 	  * @param exc Implicit execution context
 	  */
-	def displayBlockingOver(parentWindow: java.awt.Window)(implicit exc: ExecutionContext) =
+	def displayBlockingOver(parentWindow: JWindow)(implicit exc: ExecutionContext) =
 		displayBlocking(Some(parentWindow))
 	
 	/**
@@ -101,7 +102,7 @@ trait InteractionWindow[+A]
 	  * @param parentWindow Window over which this window is displayed (optional)
 	  * @param exc Implicit execution context
 	  */
-	def displayBlocking(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext): Unit =
+	def displayBlocking(parentWindow: Option[JWindow] = None)(implicit exc: ExecutionContext): Unit =
 		display(parentWindow).waitFor()
 	
 	/**
@@ -109,14 +110,14 @@ trait InteractionWindow[+A]
 	 * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
 	 * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
 	 */
-	def displayOver(parentWindow: java.awt.Window)(implicit exc: ExecutionContext) = display(Some(parentWindow))
+	def displayOver(parentWindow: JWindow)(implicit exc: ExecutionContext) = display(Some(parentWindow))
 	
 	/**
 	  * Displays an interactive window to the user
 	  * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
 	  * @return A future of the closing of the dialog, with a selected result (or default if none was selected)
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext) =
+	def display(parentWindow: Option[JWindow] = None)(implicit exc: ExecutionContext) =
 	{
 		val context = standardContext
 		

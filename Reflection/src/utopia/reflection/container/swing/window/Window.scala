@@ -1,6 +1,7 @@
 package utopia.reflection.container.swing.window
 
 import utopia.firmament.awt.AwtEventThread
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.component.stack.Constrainable
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
@@ -64,7 +65,7 @@ object Window
 	  * @tparam C Type of content placed within this window
 	  * @return A new window
 	  */
-	def apply[C <: ReflectionStackable with AwtContainerRelated](content: C, parent: Option[java.awt.Window] = None,
+	def apply[C <: ReflectionStackable with AwtContainerRelated](content: C, parent: Option[JWindow] = None,
 	                                                   title: LocalizedString = LocalizedString.empty,
 	                                                   resizePolicy: WindowResizePolicy = User,
 	                                                   screenBorderMargin: Double = 0.0,
@@ -111,7 +112,7 @@ abstract class Window[+Content <: ReflectionStackable with AwtComponentRelated]
 	
 	// ABSTRACT    -----------------
 	
-	override def component: java.awt.Window
+	override def component: JWindow
 	
 	/**
 	  * @return The localized title of this window

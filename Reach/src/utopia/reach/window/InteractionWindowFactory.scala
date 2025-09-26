@@ -1,5 +1,6 @@
 package utopia.reach.window
 
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
@@ -85,13 +86,13 @@ trait InteractionWindowFactory[A]
 	  * @param parentWindow Window over which this window is displayed
 	  * @return The selected result (or the default result)
 	  */
-	def displayBlockingOver(parentWindow: java.awt.Window) = displayBlocking(Some(parentWindow))
+	def displayBlockingOver(parentWindow: JWindow) = displayBlocking(Some(parentWindow))
 	/**
 	  * Displays an interactive dialog to the user. Blocks while the dialog is visible
 	  * @param parentWindow Window over which this window is displayed (optional)
 	  * @return The selected result (or the default result)
 	  */
-	def displayBlocking(parentWindow: Option[java.awt.Window] = None): Try[A] = display(parentWindow).result.waitFor()
+	def displayBlocking(parentWindow: Option[JWindow] = None): Try[A] = display(parentWindow).result.waitFor()
 	/**
 	 * Displays an interactive dialog to the user
 	 * @param parentWindow Window that will "own" the new window. None if the new window should be independent (default)
@@ -99,7 +100,7 @@ trait InteractionWindowFactory[A]
 	  *        2: a future of the closing of the window, with a selected result (or default if none was selected),
 	  *        as an additional result
 	 */
-	def displayOver(parentWindow: java.awt.Window) =
+	def displayOver(parentWindow: JWindow) =
 		display(Some(parentWindow))
 	/**
 	  * Displays an interactive window to the user
@@ -109,7 +110,7 @@ trait InteractionWindowFactory[A]
 	  *         2: a future of the closing of the window, with a selected result (or default if none was selected),
 	  *         as an additional result
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None): WindowCreationResult[ReachComponent, Future[A]] = {
+	def display(parentWindow: Option[JWindow] = None): WindowCreationResult[ReachComponent, Future[A]] = {
 		implicit val wc: StaticReachContentWindowContext = windowContext
 		implicit val exc: ExecutionContext = executionContext
 		implicit val log: Logger = this.log

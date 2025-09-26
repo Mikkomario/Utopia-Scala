@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.context.AnimationContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
@@ -44,7 +45,7 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[Pro
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def display(parentWindow: Option[java.awt.Window] = None)(implicit exc: ExecutionContext, logger: Logger) =
+	def display(parentWindow: Option[JWindow] = None)(implicit exc: ExecutionContext, logger: Logger) =
 	{
 		// Presents the window only if there is some loading still to be done
 		if (progressPointer.value.progress < 1)
@@ -77,7 +78,7 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[Pro
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def displayOver(window: java.awt.Window)(implicit exc: ExecutionContext, logger: Logger) =
+	def displayOver(window: JWindow)(implicit exc: ExecutionContext, logger: Logger) =
 		display(Some(window))
 	
 	/**

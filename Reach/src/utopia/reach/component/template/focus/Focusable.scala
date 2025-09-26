@@ -1,6 +1,7 @@
 package utopia.reach.component.template.focus
 
 import utopia.firmament.component.Window
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
@@ -150,7 +151,7 @@ trait Focusable extends ReachComponent with FocusRequestable
 	  * automatically terminate when the window closes.
 	  * @param window The window this component will own
 	  */
-	def registerOwnershipOf(window: java.awt.Window) = focusManager.registerWindowOwnership(this, window)
+	def registerOwnershipOf(window: JWindow) = focusManager.registerWindowOwnership(this, window)
 	/**
 	  * Creates a new window next to this component.
 	  * Registers this component as the focus owner of the created window.

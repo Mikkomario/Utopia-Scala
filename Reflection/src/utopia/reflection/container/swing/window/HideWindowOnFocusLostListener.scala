@@ -1,5 +1,7 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.component.Window.JWindow
+
 import java.awt.event.{WindowEvent, WindowFocusListener}
 
 /**
@@ -11,7 +13,7 @@ class HideWindowOnFocusLostListener extends WindowFocusListener
 {
 	// ATTRIBUTES	--------------------------
 	
-	private var lastFocusWindow: Option[java.awt.Window] = None
+	private var lastFocusWindow: Option[JWindow] = None
 	
 	
 	// IMPLEMENTED	--------------------------

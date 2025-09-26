@@ -1,5 +1,6 @@
 package utopia.firmament.awt
 
+import utopia.firmament.component.Window.JWindow
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.vector.size.Size
 
@@ -28,14 +29,14 @@ object AwtComponentExtensions
 		  * @return Whether this component is in a visible component hierarchy
 		  */
 		// Iterates over parents, seeking the first window instance. Stops if getParent returns null
-		def isInWindow = parentsIterator.exists { _.isInstanceOf[java.awt.Window] }
+		def isInWindow = parentsIterator.exists { _.isInstanceOf[JWindow] }
 		
 		/**
 		  * @return The first window that contains this component.
 		  *         None if this component isn't attached to any window
 		  */
 		def parentWindow =
-			parentsIterator.find { _.isInstanceOf[java.awt.Window] }.map { _.asInstanceOf[java.awt.Window] }
+			parentsIterator.find { _.isInstanceOf[JWindow] }.map { _.asInstanceOf[JWindow] }
 		/**
 		  * @return The (root) frame that hosts this component or window.
 		  *         None if this component insn't attached to a window.
@@ -49,7 +50,7 @@ object AwtComponentExtensions
 		  *         not attached to any window, an empty iterator is returned.
 		  */
 		def parentWindowsIterator =
-			parentsIterator.filter { _.isInstanceOf[java.awt.Window] }.map { _.asInstanceOf[java.awt.Window] }
+			parentsIterator.filter { _.isInstanceOf[JWindow] }.map { _.asInstanceOf[JWindow] }
 		@deprecated("Replaced with parentWindowsInterator", "v1.0")
 		def parentWindows = parentWindowsIterator
 		
@@ -57,7 +58,7 @@ object AwtComponentExtensions
 		  * @return Whether this component is part of a visible component hierarchy (that includes a visible window)
 		  */
 		def isInVisibleHierarchy = c.isVisible &&
-			parentsIterator.takeWhile { _.isVisible }.exists { _.isInstanceOf[java.awt.Window] }
+			parentsIterator.takeWhile { _.isVisible }.exists { _.isInstanceOf[JWindow] }
 		
 		/**
 		  * Converts this component to an image.

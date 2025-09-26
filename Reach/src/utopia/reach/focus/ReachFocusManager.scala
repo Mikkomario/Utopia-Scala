@@ -2,6 +2,7 @@ package utopia.reach.focus
 
 import utopia.firmament.context.ComponentCreationDefaults.componentLogger
 import utopia.firmament.awt.AwtComponentExtensions._
+import utopia.firmament.component.Window.JWindow
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.ordering.CombinedOrdering
@@ -36,10 +37,10 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	private val targetIdsPointer = targetsPointer.lazyMap { _.map { _.focusId } }
 	
 	// Focus id -> Owned window
-	private var windowOwnerships: Map[Int, java.awt.Window] = HashMap()
+	private var windowOwnerships: Map[Int, JWindow] = HashMap()
 	// Owned window -> owner component
-	private var reverseWindowOwnerships: Map[java.awt.Window, Focusable] = HashMap()
-	private var currentOwnershipFocus: Option[(Focusable, java.awt.Window)] = None
+	private var reverseWindowOwnerships: Map[JWindow, Focusable] = HashMap()
+	private var currentOwnershipFocus: Option[(Focusable, JWindow)] = None
 	
 	private var focusOwner: Option[Focusable] = None
 	
@@ -92,7 +93,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * @param owner The component that owns the window
 	  * @param window The window being owned. <b>Shouldn't contain this focus management system</b>.
 	  */
-	def registerWindowOwnership(owner: Focusable, window: java.awt.Window) = {
+	def registerWindowOwnership(owner: Focusable, window: JWindow) = {
 		windowOwnerships += owner.focusId -> window
 		reverseWindowOwnerships += window -> owner
 		window.addWindowFocusListener(OwnedWindowListener)
@@ -142,7 +143,7 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 	  * Removes any ownership relation associated with the specified window
 	  * @param window Window to no longer affect / share focus
 	  */
-	def removeOwnershipOf(window: java.awt.Window) = {
+	def removeOwnershipOf(window: JWindow) = {
 		windowOwnerships = windowOwnerships.filterNot { _._2 == window }
 		reverseWindowOwnerships -= window
 		// Informs focus lost if that window is the current focus target
@@ -496,9 +497,9 @@ class ReachFocusManager(canvasComponent: java.awt.Component)
 		
 		// OTHER	--------------------------
 		
-		private def isManagedWindow(window: java.awt.Window) = managedWindow.contains(window)
+		private def isManagedWindow(window: JWindow) = managedWindow.contains(window)
 		
-		private def canvasIsOrWasFocusedIn(window: java.awt.Window) =
+		private def canvasIsOrWasFocusedIn(window: JWindow) =
 			Option(window.getFocusOwner).orElse(Option(window.getMostRecentFocusOwner)).contains(canvasComponent)
 	}
 }

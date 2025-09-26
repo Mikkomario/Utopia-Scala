@@ -2,11 +2,12 @@ package utopia.reflection.component.swing.template
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Component
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.mutable.caching.MutableLazy
 import utopia.genesis.graphics.FontMetricsWrapper
-import utopia.genesis.handling.event.mouse.{MouseButton, MouseButtonStateEvent, MouseButtonStateHandler, MouseButtonStates, MouseMoveHandler, MouseWheelHandler}
+import utopia.genesis.handling.event.mouse._
 import utopia.genesis.handling.template.Handlers
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
@@ -195,11 +196,10 @@ trait AwtComponentWrapper extends ReflectionComponentLike with AwtComponentRelat
         
         def hasNext = nextParent.isDefined
         
-        def next() =
-        {
+        def next() = {
             val result = nextParent.get
             // Will stop iteration after reaching a window component
-            if (!result.component.isInstanceOf[java.awt.Window])
+            if (!result.component.isInstanceOf[JWindow])
                 nextParent = result.parent
             else
                 nextParent = None

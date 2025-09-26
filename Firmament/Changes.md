@@ -27,6 +27,7 @@
   - Please note, that this pointer is never populated by default. 
     Implementing libraries / code (such as Utopia Reach) will need to populate / specify it themselves.
 - Added **FixedStackable** trait for static-sized **Stackable** implementations
+- Added **JWindow** alias for **java.awt.Window**
 ### New methods
 - **Alignment** (via **LengthExtensions**)
   - Added `.stretchToMatch(...)`, which is a size only -version of `.stretchNextToWithin(...)`

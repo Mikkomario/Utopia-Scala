@@ -2,6 +2,7 @@ package utopia.reach.window
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.firmament.component.Window
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.context.color.ColorContextPropsView
 import utopia.firmament.context.text.StaticTextContext
@@ -153,7 +154,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def apply[C <: ReachComponent, R](parent: Option[java.awt.Window] = None,
+	def apply[C <: ReachComponent, R](parent: Option[JWindow] = None,
 	                                  title: LocalizedString = LocalizedString.empty,
 	                                  disableAutoBoundsUpdates: Boolean = false)
 	                                 (createContent: (ComponentHierarchy, Changing[Option[Window]]) => Creation[C, R]) =
@@ -450,7 +451,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @return The created window + created canvas + created component + additional function result
 	  */
 	def using[F, C <: ReachComponent, R](factory: ContextualComponentFactories[StaticReachContentWindowContext, F],
-	                                     parent: Option[java.awt.Window] = None,
+	                                     parent: Option[JWindow] = None,
 	                                     title: LocalizedString = LocalizedString.empty,
 	                                     disableAutoBoundsUpdates: Boolean = false)
 	                                    (createContent: (ReachCanvas, F) => Creation[C, R]) =

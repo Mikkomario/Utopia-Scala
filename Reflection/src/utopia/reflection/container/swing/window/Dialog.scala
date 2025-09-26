@@ -1,5 +1,6 @@
 package utopia.reflection.container.swing.window
 
+import utopia.firmament.component.Window.JWindow
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.firmament.model.enumeration.WindowResizePolicy.User
@@ -35,12 +36,12 @@ import javax.swing.JDialog
   *
   * @param borderless Whether OS window borders should not be used for this window (default = false)
 **/
-class Dialog[C <: ReflectionStackable with AwtContainerRelated](owner: java.awt.Window, override val content: C,
-                                                       override val title: LocalizedString = LocalizedString.empty,
-                                                       startResizePolicy: WindowResizePolicy = User,
-                                                       override val screenBorderMargin: Double = 0.0,
-                                                       getAnchor: Bounds => Point = _.center,
-                                                       borderless: Boolean = false)
+class Dialog[C <: ReflectionStackable with AwtContainerRelated](owner: JWindow, override val content: C,
+                                                                override val title: LocalizedString = LocalizedString.empty,
+                                                                startResizePolicy: WindowResizePolicy = User,
+                                                                override val screenBorderMargin: Double = 0.0,
+                                                                getAnchor: Bounds => Point = _.center,
+                                                                borderless: Boolean = false)
     extends Window[C]
 {
     // ATTRIBUTES    -------------------

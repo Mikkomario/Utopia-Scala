@@ -1,5 +1,6 @@
 package utopia.reach.cursor
 
+import utopia.firmament.component.Window.JWindow
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.process.PostponingProcess
 import utopia.flow.collection.immutable.Pair
@@ -60,7 +61,7 @@ object DragTo
 	def repositionOther(component: ReachComponent) =
 		DragToFactory(resizeAxes = Set(), repositionLogic = Some(RepositionParent(component)))
 	
-	private def windowBoundsActions(window: java.awt.Window) = {
+	private def windowBoundsActions(window: JWindow) = {
 		val getBounds = () => Bounds(window.getBounds)
 		val getArea = () => Screen.size
 		val setBounds = { b: Bounds => window.setBounds(b.toAwt) }
