@@ -10,12 +10,12 @@ import utopia.firmament.model.TextDrawContext
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.color.{Color, ColorRole}
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-object MutableTextLabel extends Ccff[StaticTextContext, MutableTextLabelFactory]
+object MutableTextLabel extends CCF[StaticTextContext, MutableTextLabelFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: StaticTextContext) =
 		MutableTextLabelFactory(hierarchy, context)

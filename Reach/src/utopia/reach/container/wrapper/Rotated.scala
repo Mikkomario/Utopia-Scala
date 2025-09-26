@@ -20,7 +20,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.paradigm.transform.LinearTransformation
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
@@ -128,7 +128,7 @@ private case class RotatedHierarchy(parentHierarchy: ComponentHierarchy, contain
 	}
 }
 
-object Rotated extends Cff[RotatedFactory]
+object Rotated extends CF[RotatedFactory]
 {
 	// IMPLEMENTED  ------------------------
 	

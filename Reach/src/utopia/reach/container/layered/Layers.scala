@@ -11,8 +11,8 @@ import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.factory.{ContextualMixed, FromGenericContextFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -62,15 +62,15 @@ case class LayersFactory(hierarchy: ComponentHierarchy, customDrawers: Seq[Custo
 	  *             which specifies the constructed main component + layer components, where each layer is coupled with
 	  *             information showing how it should be positioned.
 	  * @tparam MF Type of the main component factory used
-	  * @tparam CF Type of the layer component factory used
+	  * @tparam LF Type of the layer component factory used
 	  * @tparam M Type of the constructed main component
-	  * @tparam C Type of the constructed layer components
+	  * @tparam L Type of the constructed layer components
 	  * @tparam R Type of additional component creation result
 	  * @return A new layered view + created components + additional creation result
 	  */
-	def build[MF, CF, M <: ReachComponent, C <: ReachComponent, R](mainFactory: Cff[MF], layersFactory: Cff[CF])
-	                                                              (fill: (MF, CF) => CreationOfLayers[M, C, R]) =
-		apply(Open[(M, Seq[(C, LayerPositioning)]), R] { hierarchy =>
+	def build[MF, LF, M <: ReachComponent, L <: ReachComponent, R](mainFactory: CF[MF], layersFactory: CF[LF])
+	                                                              (fill: (MF, LF) => CreationOfLayers[M, L, R]) =
+		apply(Open[(M, Seq[(L, LayerPositioning)]), R] { hierarchy =>
 			fill(mainFactory(hierarchy), layersFactory(hierarchy)) })
 }
 
@@ -107,14 +107,14 @@ case class ContextualLayersFactory[+N](hierarchy: ComponentHierarchy, context: N
 	  *         1. Created layer components
 	  *         1. Additional component creation result
 	  */
-	def build[MF, CF, M <: ReachComponent, C <: ReachComponent, R](mainFactory: Ccff[N, MF], layersFactory: Ccff[N, CF])
+	def build[MF, CF, M <: ReachComponent, C <: ReachComponent, R](mainFactory: CCF[N, MF], layersFactory: CCF[N, CF])
 	                                                              (fill: (MF, CF) => CreationOfLayers[M, C, R]) =
 		apply(Open.contextual(context).apply[ContextualMixed[N], (M, Seq[(C, LayerPositioning)]), R](Mixed) { factories =>
 			fill(factories(mainFactory), factories(layersFactory))
 		})
 }
 
-object Layers extends Cff[LayersFactory]
+object Layers extends CF[LayersFactory]
 {
 	// IMPLEMENTED  -------------------------
 	

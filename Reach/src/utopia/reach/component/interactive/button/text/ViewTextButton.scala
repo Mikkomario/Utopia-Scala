@@ -10,17 +10,17 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.cursor.Cursor
 
-object ViewTextButton extends Cff[ViewTextButtonFactory]
-	with FromContextComponentFactoryFactory[VariableTextContext, ContextualViewTextButtonFactory]
+object ViewTextButton extends CF[ViewTextButtonFactory]
+	with ContextualComponentFactories[VariableTextContext, ContextualViewTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextButtonFactory(hierarchy)
 	

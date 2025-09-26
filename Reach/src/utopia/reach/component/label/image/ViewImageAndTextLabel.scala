@@ -18,7 +18,7 @@ import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.UnresolvedFramedFactory.{UnresolvedStackInsets, sides}
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.{ContextualComponentFactories, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.ViewImageAndTextLabelSettings.defaultImageSettings
 import utopia.reach.component.label.text.ViewTextLabel
@@ -385,7 +385,7 @@ case class ViewImageAndTextLabelFactory(hierarchy: ComponentHierarchy, context: 
   */
 case class ViewImageAndTextLabelSetup(settings: ViewImageAndTextLabelSettings = ViewImageAndTextLabelSettings.default)
 	extends ViewImageAndTextLabelSettingsWrapper[ViewImageAndTextLabelSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ViewImageAndTextLabelFactory]
+		with ContextualComponentFactories[VariableTextContext, ViewImageAndTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	

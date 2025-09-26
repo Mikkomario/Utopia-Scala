@@ -28,7 +28,7 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.Dimensions
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
-import utopia.reach.component.factory.{ContextualMixed, FromContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.{ContextualMixed, ContextualComponentFactories, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopupWrapper
 import utopia.reach.component.interactive.input._
@@ -588,7 +588,7 @@ case class FieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy, context
  */
 case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, FieldWithSelectionPopupFactory]
+		with ContextualComponentFactories[VariableTextContext, FieldWithSelectionPopupFactory]
 {
 	// IMPLEMENTED	--------------------
 	

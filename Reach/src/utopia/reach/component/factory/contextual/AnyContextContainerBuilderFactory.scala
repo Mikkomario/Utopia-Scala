@@ -1,6 +1,6 @@
 package utopia.reach.component.factory.contextual
 
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 
 /**
   * A contextual container factory which in practice is only used for contextual builder creation
@@ -27,5 +27,5 @@ trait AnyContextContainerBuilderFactory[N, +CF, +B[_, _[_]], +Repr[_]]
 	  * @tparam F Type of desired content factory
 	  * @return A new builder
 	  */
-	def build[F[_]](contentFactory: Gccff[N, F]): B[N, F]
+	def build[F[_]](contentFactory: GCF[N, F]): B[N, F]
 }

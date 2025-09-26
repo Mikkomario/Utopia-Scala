@@ -13,9 +13,9 @@ import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.ReachComponent
@@ -164,7 +164,7 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenFactory]
 	  * @tparam R Type of additional creation result
 	  * @return A new open component
 	  */
-	def using[F, C, R](factory: Cff[F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
+	def using[F, C, R](factory: CF[F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
 		apply { hierarchy => creation(factory(hierarchy)) }
 	
 	/**
@@ -182,12 +182,12 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenFactory]
 	  * @tparam C Type of created components
 	  * @return New open components, with their creation results included (if defined)
 	  */
-	def separatelyUsing[F, C <: ReachComponent, CR, R](factory: Cff[F])
+	def separatelyUsing[F, C <: ReachComponent, CR, R](factory: CF[F])
 	                                                  (creation: Iterator[F] => CreationOfCreations[C, CR, R])
 	                                                  (implicit canvas: ReachCanvas) =
 		separately[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
 	@deprecated("Renamed to .separatelyUsing(...)", "v1.7")
-	def manyUsing[F, C <: ReachComponent, CR, R](factory: Cff[F])
+	def manyUsing[F, C <: ReachComponent, CR, R](factory: CF[F])
 	                                            (creation: Iterator[F] => CreationOfCreations[C, CR, R])
 	                                            (implicit canvas: ReachCanvas) =
 		separatelyUsing[F, C, CR, R](factory)(creation)
@@ -204,12 +204,12 @@ object Open extends FromGenericContextFactory[Any, ContextualOpenFactory]
 	  * @tparam C Type of created components
 	  * @return New open components, with their connection pointers as results (if defined)
 	  */
-	def conditionalUsing[F, C <: ReachComponent, R](factory: Cff[F])
+	def conditionalUsing[F, C <: ReachComponent, R](factory: CF[F])
 	                                               (creation: Iterator[F] => CreationOfSwitchables[C, R])
 	                                               (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		separatelyUsing[F, C, Flag, R](factory)(creation)
 	@deprecated("Renamed to .conditionalUsing", "v1.7")
-	def manyConditionalUsing[F, C <: ReachComponent, R](factory: Cff[F])
+	def manyConditionalUsing[F, C <: ReachComponent, R](factory: CF[F])
 	                                                   (creation: Iterator[F] => CreationOfSwitchables[C, R])
 	                                                   (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		conditionalUsing[F, C, R](factory)(creation)
@@ -320,7 +320,7 @@ case class ContextualOpenFactory[N](context: N)
 	  * @tparam R Type of additional creation result
 	  * @return New component with possible additional creation result
 	  */
-	def apply[F[X <: N], C, R](factory: Gccff[N, F])(creation: F[N] => Creation[C, R])(implicit canvas: ReachCanvas) =
+	def apply[F[X <: N], C, R](factory: GCF[N, F])(creation: F[N] => Creation[C, R])(implicit canvas: ReachCanvas) =
 		Open { hierarchy => creation(factory.withContext(hierarchy, context)) }
 	/**
 	  * Creates a new open component using a contextual component factory
@@ -332,7 +332,7 @@ case class ContextualOpenFactory[N](context: N)
 	  * @tparam R  Type of additional creation result
 	  * @return New component with possible additional creation result
 	  */
-	def apply[F, C, R](factory: Ccff[N, F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
+	def apply[F, C, R](factory: CCF[N, F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
 		Open { hierarchy => creation(factory.withContext(hierarchy, context)) }
 	
 	/**
@@ -351,12 +351,12 @@ case class ContextualOpenFactory[N](context: N)
 	  * @tparam R  Additional (reduced) creation result type
 	  * @return New open components, with their results (if defined)
 	  */
-	def separately[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
+	def separately[F[X <: N], C <: ReachComponent, CR, R](factory: GCF[N, F])
 	                                                     (creation: Iterator[F[N]] => CreationOfCreations[C, CR, R])
 	                                                     (implicit canvas: ReachCanvas) =
 		Open.separately { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	@deprecated("Renamed to .separately(...)", "v1.7")
-	def many[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
+	def many[F[X <: N], C <: ReachComponent, CR, R](factory: GCF[N, F])
 	                                               (creation: Iterator[F[N]] => CreationOfCreations[C, CR, R])
 	                                               (implicit canvas: ReachCanvas) =
 		separately[F, C, CR, R](factory)(creation)
@@ -376,31 +376,31 @@ case class ContextualOpenFactory[N](context: N)
 	  * @tparam R  Additional (reduced) creation result type
 	  * @return New open components, with their results (if defined)
 	  */
-	def separately[F, C <: ReachComponent, CR, R](factory: Ccff[N, F])
+	def separately[F, C <: ReachComponent, CR, R](factory: CCF[N, F])
 	                                             (creation: Iterator[F] => CreationOfCreations[C, CR, R])
 	                                             (implicit canvas: ReachCanvas) =
 		Open.separately { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
 	@deprecated("Renamed to .separately(...)", "v1.7")
-	def many[F, C <: ReachComponent, CR, R](factory: Ccff[N, F])
+	def many[F, C <: ReachComponent, CR, R](factory: CCF[N, F])
 	                                       (creation: Iterator[F] => CreationOfCreations[C, CR, R])
 	                                       (implicit canvas: ReachCanvas) =
 		separately[F, C, CR, R](factory)(creation)
 		
-	def conditional[F[X <: N], C <: ReachComponent, R](factory: Gccff[N, F])
+	def conditional[F[X <: N], C <: ReachComponent, R](factory: GCF[N, F])
 	                                                  (creation: Iterator[F[N]] => CreationOfSwitchables[C, R])
 	                                                  (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		separately[F, C, Flag, R](factory)(creation)
 	@deprecated("Renamed to .conditional(...)", "v1.7")
-	def manyConditional[F[X <: N], C <: ReachComponent, R](factory: Gccff[N, F])
+	def manyConditional[F[X <: N], C <: ReachComponent, R](factory: GCF[N, F])
 	                                                      (creation: Iterator[F[N]] => CreationOfSwitchables[C, R])
 	                                                      (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		conditional[F, C, R](factory)(creation)
-	def conditional[F, C <: ReachComponent, R](factory: Ccff[N, F])
+	def conditional[F, C <: ReachComponent, R](factory: CCF[N, F])
 	                                          (creation: Iterator[F] => CreationOfSwitchables[C, R])
 	                                          (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		separately[F, C, Flag, R](factory)(creation)
 	@deprecated("Renamed to .conditional(...)", "v1.7")
-	def manyConditional[F, C <: ReachComponent, R](factory: Ccff[N, F])
+	def manyConditional[F, C <: ReachComponent, R](factory: CCF[N, F])
 	                                              (creation: Iterator[F] => CreationOfSwitchables[C, R])
 	                                              (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
 		conditional[F, C, R](factory)(creation)

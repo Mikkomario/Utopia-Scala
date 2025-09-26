@@ -30,9 +30,9 @@ import utopia.paradigm.enumeration.LinearAlignment.Far
 import utopia.paradigm.enumeration.{Alignment, Direction2D}
 import utopia.paradigm.shape.shape2d.insets.Insets
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.{ContextualComponentFactories, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
 import utopia.reach.component.label.text.ViewTextLabel
@@ -60,7 +60,7 @@ case class FieldCreationContext(hierarchy: ComponentHierarchy, context: Variable
 	 * @tparam F Type of contextual component factory
 	 * @return A contextual component factory from the specified factory that uses the context from this item
 	 */
-	def apply[F](ff: Ccff[VariableTextContext, F]): F = ff.withContext(hierarchy, context)
+	def apply[F](ff: CCF[VariableTextContext, F]): F = ff.withContext(hierarchy, context)
 }
 
 /**
@@ -559,7 +559,7 @@ case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: Variab
   */
 case class FieldSetup(settings: FieldSettings = FieldSettings.default)
 	extends FieldSettingsWrapper[FieldSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualFieldFactory]
+		with ContextualComponentFactories[VariableTextContext, ContextualFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	

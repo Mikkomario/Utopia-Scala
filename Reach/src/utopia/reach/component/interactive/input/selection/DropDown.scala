@@ -17,7 +17,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldWithPopup
@@ -39,7 +39,7 @@ object DropDownSetup
 }
 case class DropDownSetup(settings: FieldWithSelectionPopupSettings = defaultSettings)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetup]
-		with Ccff[VariableTextContext, DropDownFactory]
+		with CCF[VariableTextContext, DropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetup = copy(settings = settings)
 	

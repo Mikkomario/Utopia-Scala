@@ -17,7 +17,7 @@ import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, FromContextComponentFactoryFactory}
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ContextualComponentFactories}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.label.image.{ImageAndTextLabel, ImageAndTextLabelSettings, ImageAndTextLabelSettingsLike, ImageLabelSettings}
@@ -265,7 +265,7 @@ case class ImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context: Sta
   */
 case class ImageAndTextButtonSetup(settings: ImageAndTextButtonSettings = ImageAndTextButtonSettings.default)
 	extends ImageAndTextButtonSettingsWrapper[ImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[StaticTextContext, ImageAndTextButtonFactory]
+		with ContextualComponentFactories[StaticTextContext, ImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	

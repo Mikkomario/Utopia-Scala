@@ -9,8 +9,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -114,7 +114,7 @@ case class ContextualEmptyLabelFactory(hierarchy: ComponentHierarchy, context: S
 		withoutContext.withBackground(context.color.preferring(preferredShade)(role), stackSize, customDrawers)
 }
 
-object EmptyLabel extends Cff[EmptyLabelFactory] with Ccff[StaticColorContext, ContextualEmptyLabelFactory]
+object EmptyLabel extends CF[EmptyLabelFactory] with CCF[StaticColorContext, ContextualEmptyLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = EmptyLabelFactory(hierarchy)
 	

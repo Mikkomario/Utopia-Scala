@@ -30,7 +30,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.VariableColorContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.MutableFocusable
 import utopia.reach.component.template.{ConcreteReachComponent, CursorDefining, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
@@ -359,8 +359,8 @@ case class ContextualSelectionListFactory(hierarchy: ComponentHierarchy,
 @deprecated("This component won't be updated anymore. Please migrate to using SelectableStack instead.", "v1.7")
 case class SelectionListSetup(settings: SelectionListSettings = SelectionListSettings.default)
 	extends SelectionListSettingsWrapper[SelectionListSetup]
-		with ComponentFactoryFactory[SelectionListFactory]
-		with FromContextComponentFactoryFactory[VariableColorContext, ContextualSelectionListFactory]
+		with ComponentFactories[SelectionListFactory]
+		with ContextualComponentFactories[VariableColorContext, ContextualSelectionListFactory]
 {
 	// IMPLEMENTED	--------------------
 	

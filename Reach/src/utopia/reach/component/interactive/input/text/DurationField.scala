@@ -16,7 +16,7 @@ import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.{ContextualComponentFactories, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.text.DurationField.focusTransferDelay
 import utopia.reach.component.interactive.input.{FieldSettings, FieldSettingsLike}
@@ -332,7 +332,7 @@ case class ContextualDurationFieldFactory(hierarchy: ComponentHierarchy, context
   */
 case class DurationFieldSetup(settings: DurationFieldSettings = DurationFieldSettings.default)
 	extends DurationFieldSettingsWrapper[DurationFieldSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualDurationFieldFactory]
+		with ContextualComponentFactories[VariableTextContext, ContextualDurationFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	

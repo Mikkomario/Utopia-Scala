@@ -16,9 +16,9 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
@@ -356,7 +356,7 @@ case class StackFactory(hierarchy: ComponentHierarchy, settings: StackSettings =
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Cff[F], group: SegmentGroup)
+	def buildSegmented[F, C <: ReachComponent, R](contentFactory: CF[F], group: SegmentGroup)
 	                                             (fill: Iterator[F] => CreationOfMany[C, R]): MultiContainerCreation[Stack, C, R] =
 	{
 		val content = Open.separatelyUsing(contentFactory) { fill(_) }
@@ -383,7 +383,7 @@ case class StackFactory(hierarchy: ComponentHierarchy, settings: StackSettings =
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def buildPair[F, C <: ReachComponent, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
+	def buildPair[F, C <: ReachComponent, R](contentFactory: CF[F], alignment: Alignment = Alignment.Left,
 	                                         forceFitLayout: Boolean = false)
 	                                        (fill: F => Creation[Pair[C], R]) =
 		pair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
@@ -474,7 +474,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: Compone
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], group: SegmentGroup)
+	def buildSegmented[F, C <: ReachComponent, R](contentFactory: CCF[N, F], group: SegmentGroup)
 	                                             (fill: Iterator[F] => CreationOfMany[C, R]): MultiContainerCreation[Stack, C, R] =
 	{
 		val content = Open.withContext(context).separately(contentFactory) { fill(_) }
@@ -501,7 +501,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: Compone
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def buildPair[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
+	def buildPair[F, C <: ReachComponent, R](contentFactory: CCF[N, F], alignment: Alignment = Alignment.Left,
 	                                         forceFitLayout: Boolean = false)
 	                                        (fill: F => Creation[Pair[C], R]) =
 		pair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
@@ -513,8 +513,8 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: Compone
   * @since 02.06.2023, v1.1
   */
 case class StackSetup(settings: StackSettings = StackSettings.default)
-	extends StackSettingsWrapper[StackSetup] with Cff[StackFactory]
-		with Gccff[BaseContextPropsView, ContextualStackFactory]
+	extends StackSettingsWrapper[StackSetup] with CF[StackFactory]
+		with GCF[BaseContextPropsView, ContextualStackFactory]
 {
 	// IMPLEMENTED	--------------------
 	

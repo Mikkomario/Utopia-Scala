@@ -15,7 +15,7 @@ import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, GenericContainerFactories, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ContainerCreation.{MultiContainerCreation, ViewContainerCreation}
@@ -502,8 +502,8 @@ case class ContextualViewStackFactory[+N <: BaseContextPropsView](hierarchy: Com
   * @since 12.01.2025, v1.5
   */
 case class ViewStackSetup(settings: ViewStackSettings = ViewStackSettings.default)
-	extends ViewStackSettingsWrapper[ViewStackSetup] with ComponentFactoryFactory[ViewStackFactory]
-		with FromGenericContextComponentFactoryFactory[BaseContextPropsView, ContextualViewStackFactory]
+	extends ViewStackSettingsWrapper[ViewStackSetup] with ComponentFactories[ViewStackFactory]
+		with GenericContainerFactories[BaseContextPropsView, ContextualViewStackFactory]
 {
 	// IMPLEMENTED	--------------------
 	

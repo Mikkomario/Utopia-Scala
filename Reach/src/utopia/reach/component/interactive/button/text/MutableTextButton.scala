@@ -16,7 +16,7 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -26,7 +26,7 @@ import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
-object MutableTextButton extends Cff[MutableTextButtonFactory]
+object MutableTextButton extends CF[MutableTextButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = MutableTextButtonFactory(hierarchy)
 }

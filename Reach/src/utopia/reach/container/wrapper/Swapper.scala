@@ -10,10 +10,10 @@ import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.Open
@@ -122,12 +122,12 @@ case class SwapperFactory(hierarchy: ComponentHierarchy, settings: SwapperSettin
 	  * @tparam F Type of actual factories used for building content
 	  * @return A new view swapper builder
 	  */
-	def build[F](contentFactory: ComponentFactoryFactory[F]) =
+	def build[F](contentFactory: ComponentFactories[F]) =
 		SwapperBuilder[F](hierarchy, settings, contentFactory)
 }
 
 case class SwapperBuilder[+F](hierarchy: ComponentHierarchy, settings: SwapperSettings,
-                              contentFactory: ComponentFactoryFactory[F])
+                              contentFactory: ComponentFactories[F])
 	extends SwapperFactoryLike[SwapperBuilder[F]]
 {
 	// IMPLEMENTED  ---------------------
@@ -157,12 +157,12 @@ case class ContextualSwapperFactory[N](hierarchy: ComponentHierarchy, context: N
 	override def withContext[N2 <: Any](newContext: N2) = copy(context = newContext)
 	override def withSettings(settings: SwapperSettings): ContextualSwapperFactory[N] = copy(settings = settings)
 	
-	override def build[F[_]](contentFactory: Gccff[N, F]) =
+	override def build[F[_]](contentFactory: GCF[N, F]) =
 		ContextualSwapperBuilder[N, F](hierarchy, context, settings, contentFactory)
 }
 
 case class ContextualSwapperBuilder[N, +F[_]](hierarchy: ComponentHierarchy, context: N,
-                                              settings: SwapperSettings, contentFactory: Gccff[N, F])
+                                              settings: SwapperSettings, contentFactory: GCF[N, F])
 	extends SwapperFactoryLike[ContextualSwapperBuilder[N, F]]
 {
 	// IMPLEMENTED  --------------------------
@@ -183,7 +183,7 @@ case class ContextualSwapperBuilder[N, +F[_]](hierarchy: ComponentHierarchy, con
 		_apply[A](valuePointer) { item => Open.withContext(context)(contentFactory) { makeContent(_, item) } }
 }
 
-object Swapper extends Cff[SwapperFactory] with Gccff[Any, ContextualSwapperFactory]
+object Swapper extends CF[SwapperFactory] with GCF[Any, ContextualSwapperFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy): SwapperFactory =
 		SwapperFactory(hierarchy, SwapperSettings.default)

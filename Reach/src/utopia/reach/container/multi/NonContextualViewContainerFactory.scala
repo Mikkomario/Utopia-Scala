@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.wrapper.ContainerCreation.ViewContainerCreation
 import utopia.reach.component.wrapper.Creation.CreationOfSwitchables
@@ -29,7 +29,7 @@ trait NonContextualViewContainerFactory[+Container <: ReachComponent, -Top <: Re
 	  * @tparam R Type of additional component creation result
 	  * @return The created container, created components and the additional result
 	  */
-	def build[F, C <: Top, R](contentFactory: Cff[F])
+	def build[F, C <: Top, R](contentFactory: CF[F])
 	                         (fill: Iterator[F] => CreationOfSwitchables[C, R]): ViewContainerCreation[Container, C, R] =
 		apply(Open.conditionalUsing[F, C, R](contentFactory)(fill)(hierarchy.top))
 	
@@ -48,6 +48,6 @@ trait NonContextualViewContainerFactory[+Container <: ReachComponent, -Top <: Re
 	  * @tparam F Type of component factories to use
 	  * @return A new container
 	  */
-	def mapPointer[A, F](pointer: Changing[Seq[A]], contentFactory: Cff[F])(construct: (F, Changing[A], Int) => Top): Container =
+	def mapPointer[A, F](pointer: Changing[Seq[A]], contentFactory: CF[F])(construct: (F, Changing[A], Int) => Top): Container =
 		_mapPointer(pointer) { (p, i) => Open.using(contentFactory) { construct(_, p, i) } }
 }

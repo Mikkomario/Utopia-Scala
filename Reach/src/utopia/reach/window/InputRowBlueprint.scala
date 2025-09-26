@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory, HorizontalDirection}
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.hierarchy.ComponentHierarchy
 
 object InputRowBlueprint
@@ -40,7 +40,7 @@ object InputRowBlueprint
 	  * @return A new input row blueprint
 	  */
 	@deprecated("Deprecated for removal. Please use .apply(...).using(...) instead", "v1.5")
-	def using[F](factory: Ccff[StaticTextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
+	def using[F](factory: CCF[StaticTextContext, F], key: String, displayName: LocalizedString  = LocalizedString.empty,
 	             fieldAlignment: Alignment = Alignment.Right, visibilityPointer: Changing[Boolean] = AlwaysTrue,
 	             isScalable: Boolean = true)(createField: F => InputField) =
 		apply(key, displayName, fieldAlignment, visibilityPointer, isScalable) { (hierarchy, context) =>
@@ -97,7 +97,7 @@ object InputRowBlueprint
 		  * @tparam F Type of the initialized factory used
 		  * @return A new input row blueprint using the specified constructor
 		  */
-		def using[F](factory: Ccff[StaticTextContext, F])(createField: F => InputField) =
+		def using[F](factory: CCF[StaticTextContext, F])(createField: F => InputField) =
 			apply { (hierarchy, context) => createField(factory.withContext(hierarchy, context)) }
 		/**
 		  * @param factory Component factory to utilize in field construction.
@@ -107,7 +107,7 @@ object InputRowBlueprint
 		  * @tparam F Type of the initialized factory used
 		  * @return A new input row blueprint using the specified constructor
 		  */
-		def usingVariable[F](factory: Ccff[VariableTextContext, F])(createField: F => InputField) =
+		def usingVariable[F](factory: CCF[VariableTextContext, F])(createField: F => InputField) =
 			apply { (hierarchy, context) => createField(factory.withContext(hierarchy, context.toVariableContext)) }
 	}
 }

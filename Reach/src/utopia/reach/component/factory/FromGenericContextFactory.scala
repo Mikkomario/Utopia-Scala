@@ -2,7 +2,7 @@ package utopia.reach.component.factory
 
 /**
   * A factory that can be enriched with component creation context in order to create a contextual component factory.
-  * Suppports generic context types.
+  * Supports generic context types.
   * @author Mikko Hilpinen
   * @since 12.10.2020, v0.1
   * @tparam Top The highest accepted context class

@@ -26,7 +26,7 @@ import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
@@ -56,7 +56,7 @@ case class ListRowContent(components: IterableOnce[ReachComponent], context: Lis
   * @author Mikko Hilpinen
   * @since 12.12.2020, v0.1
   */
-object List extends Cff[ListFactory]
+object List extends CF[ListFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ListFactory(hierarchy)
 }

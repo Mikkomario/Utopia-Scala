@@ -38,7 +38,7 @@ import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.{ContextualMixed, FocusListenableFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.focus.FocusableWithState
@@ -441,8 +441,8 @@ case class SelectableStackFactory[N <: VariableColorContextLike[N, _]](hierarchy
  */
 case class SelectableStackSetup(settings: SelectableStackSettings = SelectableStackSettings.default)
 	extends SelectableStackSettingsWrapper[SelectableStackSetup]
-		// Only extends Ccff because the generic version requires a self-referencing type
-		with Ccff[VariableTextContext, SelectableStackFactory[VariableTextContext]]
+		// Only extends CCF because the generic version requires a self-referencing type
+		with CCF[VariableTextContext, SelectableStackFactory[VariableTextContext]]
 {
 	// IMPLEMENTED	--------------------
 	

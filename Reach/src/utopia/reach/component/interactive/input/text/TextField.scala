@@ -23,7 +23,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.X
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldState.{AfterEdit, BeforeEdit, Editing}
@@ -658,7 +658,7 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
   */
 case class TextFieldSetup(settings: TextFieldSettings = TextFieldSettings.default)
 	extends TextFieldSettingsWrapper[TextFieldSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualTextFieldFactory]
+		with ContextualComponentFactories[VariableTextContext, ContextualTextFieldFactory]
 {
 	// IMPLEMENTED	--------------------
 	

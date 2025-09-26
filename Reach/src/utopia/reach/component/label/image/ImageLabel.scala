@@ -17,7 +17,7 @@ import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.{LinearSizeAdjustable, LinearTransformable}
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
-import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{BackgroundAssignable, ComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 
@@ -351,7 +351,7 @@ case class ContextualImageLabelFactory(hierarchy: ComponentHierarchy, context: S
 }
 
 case class ImageLabelSetup(settings: ImageLabelSettings)
-	extends ImageLabelSettingsWrapper[ImageLabelSetup] with ComponentFactoryFactory[ImageLabelFactory]
+	extends ImageLabelSettingsWrapper[ImageLabelSetup] with ComponentFactories[ImageLabelFactory]
 {
 	// IMPLEMENTED  ---------------------
 	
@@ -362,7 +362,7 @@ case class ImageLabelSetup(settings: ImageLabelSettings)
 	override def apply(hierarchy: ComponentHierarchy) = ImageLabelFactory(hierarchy, settings)
 }
 
-object ImageLabel extends ComponentFactoryFactory[ImageLabelFactory] with ImageLabelSettingsWrapper[ImageLabelSetup]
+object ImageLabel extends ComponentFactories[ImageLabelFactory] with ImageLabelSettingsWrapper[ImageLabelSetup]
 {
 	override protected def settings: ImageLabelSettings = ImageLabelSettings.default
 	override def identity: ImageLabelSetup = ImageLabelSetup(settings)

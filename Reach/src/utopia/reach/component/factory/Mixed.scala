@@ -1,14 +1,13 @@
 package utopia.reach.component.factory
 
 import utopia.firmament.context.text.{StaticTextContext, VariableTextContext}
-import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.PartOfComponentHierarchy
 
-object Mixed extends Cff[Mixed]
+object Mixed extends CF[Mixed]
 {
 	// TYPES    ---------------------------
 	
@@ -30,16 +29,19 @@ object Mixed extends Cff[Mixed]
 case class Mixed(hierarchy: ComponentHierarchy)
 	extends FromGenericContextFactory[Any, ContextualMixed] with PartOfComponentHierarchy
 {
+	// IMPLEMENTED  -----------------------
+	
 	override def withContext[N](context: N) = ContextualMixed(hierarchy, context)
-	@deprecated("Deprecated for removal. With the addition of variable context classes, this should not be necessary anymore", "v1.5")
-	def withContextPointer[N](p: Changing[N]) = VariableContextualMixed(hierarchy, p)
+	
+	
+	// OTHER    ---------------------------
 	
 	/**
-	  * @param factoryFactory A component factory factory
+	  * @param factories A component factory factory
 	  * @tparam F Type of component factory
 	  * @return A specific type of component factory that uses this same hierarchy
 	  */
-	def apply[F](factoryFactory: ComponentFactoryFactory[F]) = factoryFactory(hierarchy)
+	def apply[F](factories: ComponentFactories[F]) = factories(hierarchy)
 }
 
 case class ContextualMixed[+N](hierarchy: ComponentHierarchy, context: N)
@@ -61,32 +63,16 @@ case class ContextualMixed[+N](hierarchy: ComponentHierarchy, context: N)
 	// OTHER	-------------------------------
 	
 	/**
-	  * @param factoryFactory A component factory -factory
+	  * @param factories A component factory -factory
 	  * @tparam N2 Type of context accepted by the specified factory
 	  * @tparam F Type of component factory
 	  * @return A specific type of component factory that uses this same hierarchy and context
 	  */
-	def generic[N2 >: N, F[X <: N2]](factoryFactory: Gccff[N2, F]): F[N2] =
-		factoryFactory.withContext(hierarchy, context)
+	def generic[N2 >: N, F[X <: N2]](factories: GCF[N2, F]): F[N2] = factories.withContext(hierarchy, context)
 	/**
-	  * @param ff A component factory -factory
+	  * @param factories A component factory -factory
 	  * @tparam F Type of contextual component factory
 	  * @return A contextual component factory from the specified factory that uses the context from this item
 	  */
-	def apply[F](ff: FromContextComponentFactoryFactory[N, F]): F = ff.withContext(hierarchy, context)
-}
-
-@deprecated("Deprecated for removal. With the addition of variable context classes, this should not be necessary anymore", "v1.5")
-case class VariableContextualMixed[N](hierarchy: ComponentHierarchy, contextPointer: Changing[N])
-	extends PartOfComponentHierarchy
-{
-	def withoutContext = Mixed(hierarchy)
-	
-	def withContextPointer[N2](p: Changing[N2]) = copy(contextPointer = p)
-	def withContext[N2](context: N2) = ContextualMixed(hierarchy, context)
-	
-	def apply[F](ff: FromVariableContextComponentFactoryFactory[N, F]) =
-		ff.withContextPointer(hierarchy, contextPointer)
-	def static[F](ff: FromContextComponentFactoryFactory[N, F]) =
-		ff.withContext(hierarchy, contextPointer.value)
+	def apply[F](factories: ContextualComponentFactories[N, F]): F = factories.withContext(hierarchy, context)
 }

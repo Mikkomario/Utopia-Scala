@@ -18,8 +18,8 @@ import utopia.genesis.graphics.Priority
 import utopia.genesis.text.Font
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -232,8 +232,8 @@ case class ViewTextLabelFactory(hierarchy: ComponentHierarchy, customDrawers: Se
 		textWithStaticStyle(contentPointer, font, textColor, alignment, insets, None, betweenLinesMargin, allowLineBreaks)
 }
 
-object ViewTextLabel extends Cff[ViewTextLabelFactory]
-	with Ccff[VariableTextContext, ContextualViewTextLabelFactory]
+object ViewTextLabel extends CF[ViewTextLabelFactory]
+	with CCF[VariableTextContext, ContextualViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ViewTextLabelFactory(hierarchy)
 	

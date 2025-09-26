@@ -15,13 +15,13 @@ import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-object MutableViewTextLabel extends Cff[MutableViewTextLabelFactory]
+object MutableViewTextLabel extends CF[MutableViewTextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = MutableViewTextLabelFactory(hierarchy)
 }

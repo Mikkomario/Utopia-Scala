@@ -16,7 +16,7 @@ import utopia.genesis.handling.event.keyboard.Key.{BackSpace, Control, Delete, T
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard._
 import utopia.paradigm.color.ColorRole
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.text.selectable.{AbstractSelectableTextLabel, SelectableTextLabelSettings, SelectableTextLabelSettingsLike}
@@ -308,7 +308,7 @@ case class ContextualEditableTextLabelFactory(hierarchy: ComponentHierarchy,
   */
 case class EditableTextLabelSetup(settings: EditableTextLabelSettings = EditableTextLabelSettings.default)
 	extends EditableTextLabelSettingsWrapper[EditableTextLabelSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualEditableTextLabelFactory]
+		with ContextualComponentFactories[VariableTextContext, ContextualEditableTextLabelFactory]
 {
 	// IMPLEMENTED	--------------------
 	

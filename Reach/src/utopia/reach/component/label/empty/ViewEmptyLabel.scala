@@ -9,13 +9,13 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.contextual.{ContextualFactory, ContextualVariableBackgroundAssignable}
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextFactory, VariableBackgroundAssignable}
+import utopia.reach.component.factory.{ComponentFactories, FromContextFactory, VariableBackgroundAssignable}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-object ViewEmptyLabel extends Cff[ViewEmptyLabelFactory] with ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup]
+object ViewEmptyLabel extends CF[ViewEmptyLabelFactory] with ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup]
 {
 	override protected def settings: ViewEmptyLabelSettings = ViewEmptyLabelSettings.default
 	
@@ -81,7 +81,7 @@ trait ViewEmptyLabelSettingsWrapper[+Repr] extends ViewEmptyLabelSettingsLike[Re
 }
 
 case class ViewEmptyLabelSetup(settings: ViewEmptyLabelSettings)
-	extends ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup] with ComponentFactoryFactory[ViewEmptyLabelFactory]
+	extends ViewEmptyLabelSettingsWrapper[ViewEmptyLabelSetup] with ComponentFactories[ViewEmptyLabelFactory]
 {
 	// IMPLEMENTED  -----------------------
 	

@@ -10,7 +10,7 @@ import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -181,7 +181,7 @@ case class InitializedContextualScrollAreaFactory[N](hierarchy: ComponentHierarc
 		copy(settings = settings)
 }
 
-object ScrollArea extends Cff[ScrollAreaFactory]
+object ScrollArea extends CF[ScrollAreaFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = ScrollAreaFactory(hierarchy)
 }

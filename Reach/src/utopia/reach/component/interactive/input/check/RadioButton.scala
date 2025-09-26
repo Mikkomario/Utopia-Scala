@@ -18,7 +18,7 @@ import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.VariableColorContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -265,8 +265,8 @@ case class RadioButtonFactory(hierarchy: ComponentHierarchy,
   * @since 21.06.2023, v1.1
   */
 case class RadioButtonSetup(settings: RadioButtonSettings = RadioButtonSettings.default)
-	extends RadioButtonSettingsWrapper[RadioButtonSetup] with ComponentFactoryFactory[RadioButtonFactory]
-		with FromContextComponentFactoryFactory[VariableColorContext, ContextualRadioButtonFactory]
+	extends RadioButtonSettingsWrapper[RadioButtonSetup] with ComponentFactories[RadioButtonFactory]
+		with ContextualComponentFactories[VariableColorContext, ContextualRadioButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	

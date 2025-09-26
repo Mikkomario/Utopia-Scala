@@ -21,7 +21,7 @@ import utopia.paradigm.angular.Angle
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -180,7 +180,7 @@ case class LoadingBarFactory(hierarchy: ComponentHierarchy, context: VariableCol
   */
 case class LoadingBarSetup(settings: LoadingBarSettings = LoadingBarSettings.default)
 	extends LoadingBarSettingsWrapper[LoadingBarSetup]
-		with FromContextComponentFactoryFactory[VariableColorContext, LoadingBarFactory]
+		with ContextualComponentFactories[VariableColorContext, LoadingBarFactory]
 {
 	// IMPLEMENTED	--------------------
 	

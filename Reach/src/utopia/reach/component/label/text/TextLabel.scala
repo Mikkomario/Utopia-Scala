@@ -12,7 +12,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.genesis.text.Font
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.contextual.{ContextualBackgroundAssignableFactory, TextContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -141,7 +141,7 @@ case class TextLabelFactory(hierarchy: ComponentHierarchy,
 			allowTextShrink)
 }
 
-object TextLabel extends Cff[TextLabelFactory]
+object TextLabel extends CF[TextLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = TextLabelFactory(hierarchy)
 }

@@ -16,7 +16,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
 import utopia.paradigm.color.ColorShade
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.selection.FieldFocusMouseListenerOld.visibilityChangeThreshold
@@ -33,7 +33,7 @@ import scala.concurrent.ExecutionContext
 @deprecated("Deprecated for removal. Replaced with a new version", "v1.7")
 case class DropDownSetupOld(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[DropDownSetupOld]
-		with Ccff[VariableReachContentWindowContext, ContextualDropDownFactory]
+		with CCF[VariableReachContentWindowContext, ContextualDropDownFactory]
 {
 	override def withSettings(settings: FieldWithSelectionPopupSettings): DropDownSetupOld = copy(settings = settings)
 	

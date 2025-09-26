@@ -7,8 +7,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
@@ -89,7 +89,7 @@ object SegmentGroup
 		  * @tparam R Type of the additional result
 		  * @return Segment wrappers, including the additional result from 'fill'.
 		  */
-		def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Ccff[N, F])
+		def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: CCF[N, F])
 		                                               (fill: Iterator[F] => CreationOfMany[C, R])
 		                                               (implicit canvas: ReachCanvas): CreationOfComponents[R] =
 		{
@@ -226,7 +226,7 @@ trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBui
 	  * @tparam R Type of the additional result
 	  * @return Segment wrappers, including the additional result from 'fill'.
 	  */
-	def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Cff[F])
+	def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: CF[F])
 	                                               (fill: Iterator[F] => CreationOfMany[C, R])
 	                                               (implicit canvas: ReachCanvas): CreationOfComponents[R] =
 	{

@@ -40,7 +40,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.Adjustment
 import utopia.reach.component.factory.contextual.ColorContextualFactory
-import utopia.reach.component.factory.{FocusListenableFactory, FromContextComponentFactoryFactory}
+import utopia.reach.component.factory.{FocusListenableFactory, ContextualComponentFactories}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import Slider.SliderColors
 import utopia.firmament.model.enumeration.MouseInteractionState.{Hover, Pressed}
@@ -419,7 +419,7 @@ case class ContextualSliderFactory(hierarchy: ComponentHierarchy, context: Stati
   */
 case class SliderSetup(settings: SliderSettings = SliderSettings.default)
 	extends SliderSettingsWrapper[SliderSetup]
-		with FromContextComponentFactoryFactory[StaticColorContext, ContextualSliderFactory]
+		with ContextualComponentFactories[StaticColorContext, ContextualSliderFactory]
 {
 	// IMPLEMENTED	--------------------
 	

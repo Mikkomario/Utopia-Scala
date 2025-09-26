@@ -38,7 +38,7 @@ import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateE
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.reach.component.factory.contextual.ContextualFactory
-import utopia.reach.component.factory.{FromContextComponentFactoryFactory, Mixed}
+import utopia.reach.component.factory.{ContextualComponentFactories, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldWithSelectionPopup.ignoreFocusAfterCloseDuration
 import utopia.reach.component.interactive.input.selection.{SelectionList, SelectionListFactory, SelectionListSettings}
@@ -452,7 +452,7 @@ case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarch
 @deprecated("Replaced with a new version", "v1.7")
 case class FieldWithSelectionPopupSetup(settings: FieldWithSelectionPopupSettings = FieldWithSelectionPopupSettings.default)
 	extends FieldWithSelectionPopupSettingsWrapper[FieldWithSelectionPopupSetup]
-		with FromContextComponentFactoryFactory[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
+		with ContextualComponentFactories[VariableReachContentWindowContext, ContextualFieldWithSelectionPopupFactory]
 {
 	// IMPLEMENTED	--------------------
 	

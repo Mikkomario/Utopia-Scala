@@ -9,7 +9,7 @@ import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.ComponentFactoryFactory
+import utopia.reach.component.factory.ComponentFactories
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
@@ -31,7 +31,7 @@ case class MutableImageLabelFactory(hierarchy: ComponentHierarchy) extends PartO
 		new MutableImageLabel(hierarchy, image, insets, alignment, allowUpscaling, useLowPrioritySize)
 }
 
-object MutableImageLabel extends ComponentFactoryFactory[MutableImageLabelFactory]
+object MutableImageLabel extends ComponentFactories[MutableImageLabelFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new MutableImageLabelFactory(hierarchy)
 }

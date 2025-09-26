@@ -21,9 +21,9 @@ import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.ColorContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.label.image.ViewImageLabel
@@ -286,7 +286,7 @@ case class FullContextualCheckBoxFactory(factory: ContextualCheckBoxFactory,
 case class FullCheckBoxSetup(images: Either[Pair[SingleColorIcon], Pair[Image]],
                              settings: CheckBoxSettings = CheckBoxSettings.default,
                              selectedColorRole: ColorRole = Secondary)
-	extends Ccff[StaticColorContext, FullContextualCheckBoxFactory]
+	extends CCF[StaticColorContext, FullContextualCheckBoxFactory]
 {
 	// IMPLEMENTED  ---------------------
 	
@@ -306,8 +306,8 @@ case class FullCheckBoxSetup(images: Either[Pair[SingleColorIcon], Pair[Image]],
   * @since 20.06.2023, v1.1
   */
 case class CheckBoxSetup(settings: CheckBoxSettings = CheckBoxSettings.default)
-	extends CheckBoxSettingsWrapper[CheckBoxSetup] with ComponentFactoryFactory[CheckBoxFactory]
-		with FromContextComponentFactoryFactory[StaticColorContext, ContextualCheckBoxFactory]
+	extends CheckBoxSettingsWrapper[CheckBoxSetup] with ComponentFactories[CheckBoxFactory]
+		with ContextualComponentFactories[StaticColorContext, ContextualCheckBoxFactory]
 {
 	// IMPLEMENTED	--------------------
 	

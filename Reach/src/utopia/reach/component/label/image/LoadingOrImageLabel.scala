@@ -3,7 +3,7 @@ package utopia.reach.component.label.image
 import utopia.firmament.component.stack.{Constrainable, ConstrainableWrapper}
 import utopia.firmament.context.color.VariableColorContext
 import utopia.flow.view.template.eventful.Flag
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.VariableColorContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -42,7 +42,7 @@ case class LoadingOrImageLabelFactory(hierarchy: ComponentHierarchy, context: Va
 		new LoadingOrImageLabel(hierarchy, context, loadingFlag, settings)(constructImageLabel)
 }
 
-object LoadingOrImageLabel extends Ccff[VariableColorContext, LoadingOrImageLabelFactory]
+object LoadingOrImageLabel extends CCF[VariableColorContext, LoadingOrImageLabelFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: VariableColorContext): LoadingOrImageLabelFactory =
 		LoadingOrImageLabelFactory(hierarchy, context)

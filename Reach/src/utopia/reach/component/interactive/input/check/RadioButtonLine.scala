@@ -8,7 +8,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.event.consume.ConsumeChoice.Consume
 import utopia.genesis.handling.event.mouse.MouseButtonStateListener
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -19,7 +19,7 @@ import utopia.reach.cursor.CursorType.{Default, Interactive}
 
 case class RadioButtonLineSetup(settings: RadioButtonSettings = RadioButtonSettings.default)
 	extends RadioButtonSettingsWrapper[RadioButtonLineSetup]
-		with Ccff[VariableTextContext, ContextualRadioButtonLineFactory]
+		with CCF[VariableTextContext, ContextualRadioButtonLineFactory]
 {
 	// IMPLEMENTED  --------------------
 	

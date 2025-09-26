@@ -1,6 +1,6 @@
 package utopia.reach.container.wrapper
 
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.wrapper.{Creation, Open}
 
 /**
@@ -23,6 +23,6 @@ trait NonContextualWrapperContainerFactory[+Container, -Top]
 	  * @tparam R Type of additional component creation result
 	  * @return The created container, created components and the additional result
 	  */
-	def build[F, C <: Top, R](contentFactory: Cff[F])(fill: F => Creation[C, R]) =
+	def build[F, C <: Top, R](contentFactory: CF[F])(fill: F => Creation[C, R]) =
 		apply(Open.using(contentFactory)(fill)(hierarchy.top))
 }

@@ -21,7 +21,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.contextual.GenericContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, GenericContainerFactories, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
@@ -416,8 +416,8 @@ case class CollectionFactory(hierarchy: ComponentHierarchy,
   * @since 09.04.2025, v1.6
   */
 trait AnyCollectionSetup[+F, +CF[_ <: BaseContextPropsView], +Repr]
-	extends CollectionSettingsWrapper[Repr] with ComponentFactoryFactory[F]
-		with FromGenericContextComponentFactoryFactory[BaseContextPropsView, CF]
+	extends CollectionSettingsWrapper[Repr] with ComponentFactories[F]
+		with GenericContainerFactories[BaseContextPropsView, CF]
 /**
   * Used for defining collection creation settings outside the component building process
   * @author Mikko Hilpinen

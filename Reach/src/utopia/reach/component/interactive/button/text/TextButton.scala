@@ -14,7 +14,7 @@ import utopia.paradigm.color.{Color, ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.TextContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsWrapper}
 import utopia.reach.component.label.text.TextLabel
@@ -130,8 +130,8 @@ case class TextButtonFactory(hierarchy: ComponentHierarchy,
   * @since 31.05.2023, v1.1
   */
 case class TextButtonSetup(settings: ButtonSettings = ButtonSettings.default)
-	extends ButtonSettingsWrapper[TextButtonSetup] with ComponentFactoryFactory[TextButtonFactory]
-		with FromContextComponentFactoryFactory[StaticTextContext, ContextualTextButtonFactory]
+	extends ButtonSettingsWrapper[TextButtonSetup] with ComponentFactories[TextButtonFactory]
+		with ContextualComponentFactories[StaticTextContext, ContextualTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	

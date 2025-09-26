@@ -15,7 +15,7 @@ import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, 
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableTextContextualFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.check.RadioButtonLine
@@ -217,7 +217,7 @@ case class ContextualRadioButtonGroupFactory(hierarchy: ComponentHierarchy,
   */
 case class RadioButtonGroupSetup(settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default)
 	extends RadioButtonGroupSettingsWrapper[RadioButtonGroupSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ContextualRadioButtonGroupFactory]
+		with ContextualComponentFactories[VariableTextContext, ContextualRadioButtonGroupFactory]
 {
 	// IMPLEMENTED	--------------------
 	

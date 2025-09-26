@@ -6,7 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.genesis.image.Image
 import utopia.paradigm.color.ColorRole.Primary
 import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.TextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.image._
@@ -19,7 +19,7 @@ import utopia.reach.component.template.PartOfComponentHierarchy
  * @author Mikko Hilpinen
  * @since 09.09.2025, v1.7
  */
-object Button extends Ccff[StaticTextContext, ButtonFactory]
+object Button extends CCF[StaticTextContext, ButtonFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: StaticTextContext): ButtonFactory =
 		ButtonFactory(hierarchy, context)

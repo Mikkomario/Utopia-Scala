@@ -1,6 +1,6 @@
 package utopia.reach.container.multi
 
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
 import utopia.reach.component.wrapper.Creation.CreationOfMany
 import utopia.reach.component.wrapper.Open
@@ -25,7 +25,7 @@ trait NonContextualCombiningContainerFactory[+Container, -Top]
 	  * @tparam R Type of additional component creation result
 	  * @return The created container, created components and the additional result
 	  */
-	def build[F, C <: Top, R](contentFactory: Cff[F])
+	def build[F, C <: Top, R](contentFactory: CF[F])
 	                         (fill: F => CreationOfMany[C, R]): MultiContainerCreation[Container, C, R] =
 		apply(Open.using(contentFactory)(fill)(hierarchy.top))
 }

@@ -16,7 +16,7 @@ import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer}
 import utopia.paradigm.color.{Color, ColorRole}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.transform.Adjustment
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -242,7 +242,7 @@ case class ProgressBarFactory(hierarchy: ComponentHierarchy, context: VariableCo
   */
 case class ProgressBarSetup(settings: ProgressBarSettings = ProgressBarSettings.default)
 	extends ProgressBarSettingsWrapper[ProgressBarSetup]
-		with FromContextComponentFactoryFactory[VariableColorContext, ProgressBarFactory]
+		with ContextualComponentFactories[VariableColorContext, ProgressBarFactory]
 {
 	// IMPLEMENTED	--------------------
 	

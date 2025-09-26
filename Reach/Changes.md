@@ -17,6 +17,9 @@
       - **SeparateOpenComponents** is now **OpenSeparately** of type **ReachComponent**
       - **SwitchableOpenComponents** is now **OpenSwitchables** of type **ReachComponent**
   - Renamed **ContextualOpenComponentFactory** to **ContextualOpenFactory**
+  - Renamed **ComponentFactoryFactory** to **ComponentFactories**
+  - Renamed **FromContextComponentFactoryFactory** to **ContextualComponentFactories**
+  - Renamed **FromGenericContextComponentFactoryFactory** to **GenericContainerFactories**
 - Type aliases relating to component creation, which referred to **Changing** of type **Boolean**, 
   now refer to **Flag** instead
   - This means that some visibility flags, for example, need to be explicitly marked as **Flag**s
@@ -59,6 +62,9 @@
   - **SwitchableComponentsWrapResult** is now **ViewContainerCreation**
   - **BundledOpenComponents** is now **OpenGroup**
   - **OpenLayerComponents** is now **OpenLayers**
+  - **Cff** is now **CF**
+  - **Ccff** is now **CCF**
+  - **Gccff** is now **GCF**
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
 - Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
 - Renamed some functions in **Open** and **ContextualOpenFactory** (previously **ContextualOpenComponentFactory**):
@@ -122,6 +128,7 @@
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - **InputField** conversions don't require **Input** anymore, only requiring **View** (also extended by **Input**)
 - Optimized the component layout update algorithm
+- Removed some previously deprecated classes
 
 ## v1.6 - 26.05.2025
 This relatively major update renames a number of classes and properties, improving consistency and conciseness. 

@@ -4,24 +4,29 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 
 import scala.language.implicitConversions
 
-object ComponentFactoryFactory
+object ComponentFactories
 {
 	// TYPES    -------------------------
 	
 	/**
+	 * Type alias for [[ComponentFactories]]
+	 */
+	type CF[+F] = ComponentFactories[F]
+	/**
 	  * Type alias for ComponentFactoryFactory
 	  */
-	type Cff[+F] = ComponentFactoryFactory[F]
+	@deprecated("Renamed to CF", "v1.7")
+	type Cff[+F] = CF[F]
 	
 	
 	// IMPLICIT -------------------------
 	
-	implicit def apply[F](f: ComponentHierarchy => F): ComponentFactoryFactory[F] = new _Cff[F](f)
+	implicit def apply[F](f: ComponentHierarchy => F): ComponentFactories[F] = new _ComponentFactories[F](f)
 	
 	
 	// NESTED   -------------------------
 	
-	private class _Cff[+F](f: ComponentHierarchy => F) extends ComponentFactoryFactory[F]
+	private class _ComponentFactories[+F](f: ComponentHierarchy => F) extends ComponentFactories[F]
 	{
 		override def apply(hierarchy: ComponentHierarchy): F = f(hierarchy)
 	}
@@ -33,7 +38,7 @@ object ComponentFactoryFactory
   * @author Mikko Hilpinen
   * @since 11.10.2020, v0.1
   */
-trait ComponentFactoryFactory[+F]
+trait ComponentFactories[+F]
 {
 	/**
 	  * Creates a new factory

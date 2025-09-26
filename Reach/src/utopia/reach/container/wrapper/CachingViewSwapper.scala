@@ -6,17 +6,17 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 
 @deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
-object CachingViewSwapper extends Cff[CachingViewSwapperFactory]
+object CachingViewSwapper extends CF[CachingViewSwapperFactory]
 {
 	// IMPLEMENTED	-------------------------
 	
@@ -85,7 +85,7 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	 * @tparam F Type of actual factories used for building content
 	 * @return A new view swapper builder
 	 */
-	def build[F](contentFactory: ComponentFactoryFactory[F]) =
+	def build[F](contentFactory: ComponentFactories[F]) =
 		new CachingViewSwapperBuilder[F](this, contentFactory)
 }
 
@@ -99,12 +99,12 @@ case class ContextualCachingViewSwapperFactory[N](factory: CachingViewSwapperFac
 	override def withContext[N2 <: Any](newContext: N2) =
 		copy(context = newContext)
 	
-	override def build[F[X]](contentFactory: Gccff[N, F]) =
+	override def build[F[X]](contentFactory: GCF[N, F]) =
 		new ContextualViewSwapperBuilder[N, F](factory, context, contentFactory)
 }
 
 @deprecated("Deprecated for removal. Replaced with SwapperBuilder", "v1.5")
-class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentFactory: ComponentFactoryFactory[F])
+class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentFactory: ComponentFactories[F])
 {
 	private implicit val canvas: ReachCanvas = factory.canvas
 	
@@ -137,7 +137,7 @@ class CachingViewSwapperBuilder[+F](factory: CachingViewSwapperFactory, contentF
 }
 
 @deprecated("Deprecated for removal. Replaced with ContextualSwapperBuilder", "v1.5")
-class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory, context: N, contentFactory: Gccff[N, F])
+class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory, context: N, contentFactory: GCF[N, F])
 {
 	private implicit val canvas: ReachCanvas = factory.canvas
 	

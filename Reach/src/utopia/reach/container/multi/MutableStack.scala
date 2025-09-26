@@ -10,7 +10,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.enumeration.Axis2D
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.BaseContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -98,7 +98,7 @@ case class ContextualMutableStackFactory(hierarchy: ComponentHierarchy, context:
 	}
 }
 
-object MutableStack extends Cff[MutableStackFactory]
+object MutableStack extends CF[MutableStackFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = MutableStackFactory(hierarchy)
 }

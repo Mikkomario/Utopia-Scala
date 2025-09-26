@@ -10,7 +10,7 @@ import utopia.paradigm.angular.DirectionalRotation
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.AnimatedImageLabelFactory.defaultSettings
 import utopia.reach.component.template.ReachComponentWrapper
@@ -84,7 +84,7 @@ case class AnimatedImageLabelFactory(hierarchy: ComponentHierarchy, context: Bas
 	}
 }
 
-object AnimatedImageLabel extends Ccff[BaseContextPropsView, AnimatedImageLabelFactory]
+object AnimatedImageLabel extends CCF[BaseContextPropsView, AnimatedImageLabelFactory]
 {
 	override def withContext(hierarchy: ComponentHierarchy, context: BaseContextPropsView): AnimatedImageLabelFactory =
 		AnimatedImageLabelFactory(hierarchy, context)

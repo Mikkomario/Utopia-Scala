@@ -27,7 +27,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.contextual.ColorContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
@@ -275,8 +275,8 @@ case class SwitchFactory(hierarchy: ComponentHierarchy,
   * @since 21.06.2023, v1.1
   */
 case class SwitchSetup(settings: SwitchSettings = SwitchSettings.default)
-	extends SwitchSettingsWrapper[SwitchSetup] with ComponentFactoryFactory[SwitchFactory]
-		with FromContextComponentFactoryFactory[StaticColorContext, ContextualSwitchFactory]
+	extends SwitchSettingsWrapper[SwitchSetup] with ComponentFactories[SwitchFactory]
+		with ContextualComponentFactories[StaticColorContext, ContextualSwitchFactory]
 {
 	// IMPLEMENTED	--------------------
 	

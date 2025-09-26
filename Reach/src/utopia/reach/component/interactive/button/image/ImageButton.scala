@@ -14,7 +14,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.contextual.{ColorContextualFactory, ContextualBackgroundAssignableFactory}
-import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{AppliesButtonImageEffectsFactory, ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.{AbstractButton, ButtonSettings, ButtonSettingsLike}
 import utopia.reach.component.label.image.{ImageLabelSettings, ImageLabelSettingsLike, ViewImageLabel}
@@ -301,8 +301,8 @@ case class ImageButtonFactory(hierarchy: ComponentHierarchy,
   * @since 31.05.2023, v1.1
   */
 case class ImageButtonSetup(settings: ImageButtonSettings = ImageButtonSettings.default)
-	extends ImageButtonSettingsWrapper[ImageButtonSetup] with ComponentFactoryFactory[ImageButtonFactory]
-		with FromContextComponentFactoryFactory[StaticColorContext, ContextualImageButtonFactory]
+	extends ImageButtonSettingsWrapper[ImageButtonSetup] with ComponentFactories[ImageButtonFactory]
+		with ContextualComponentFactories[StaticColorContext, ContextualImageButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	

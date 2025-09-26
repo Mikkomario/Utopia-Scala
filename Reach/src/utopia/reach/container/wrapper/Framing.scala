@@ -16,8 +16,8 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -146,7 +146,7 @@ case class ContextualFramingFactory[N <: BaseContextPropsView](hierarchy: Compon
 		copy(customInsets = Left(Fixed(insetSize)))
 }
 
-object Framing extends Cff[FramingFactory] with Gccff[BaseContextPropsView, ContextualFramingFactory]
+object Framing extends CF[FramingFactory] with GCF[BaseContextPropsView, ContextualFramingFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = FramingFactory(hierarchy)
 	

@@ -12,7 +12,7 @@ import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.ComponentFactoryFactory
+import utopia.reach.component.factory.ComponentFactories
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.button.MutableButtonLike
 import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSettings}
@@ -20,7 +20,7 @@ import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent
 import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
-object MutableImageButton extends ComponentFactoryFactory[MutableImageButtonFactory]
+object MutableImageButton extends ComponentFactories[MutableImageButtonFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = MutableImageButtonFactory(hierarchy)
 }

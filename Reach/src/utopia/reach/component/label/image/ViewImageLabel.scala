@@ -25,8 +25,8 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.transform.LinearSizeAdjustable
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ComponentFactories.CF
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.{VariableBackgroundRoleAssignableFactory, VariableColorContextualFactory}
 import utopia.reach.component.factory.{BackgroundAssignable, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -527,7 +527,7 @@ case class ViewImageLabelFactory(hierarchy: ComponentHierarchy,
   */
 case class ViewImageLabelSetup(settings: ViewImageLabelSettings = ViewImageLabelSettings.default)
 	extends ViewImageLabelSettingsWrapper[ViewImageLabelSetup]
-		with Cff[ViewImageLabelFactory] with Ccff[VariableColorContext, ContextualViewImageLabelFactory]
+		with CF[ViewImageLabelFactory] with CCF[VariableColorContext, ContextualViewImageLabelFactory]
 {
 	override def self: ViewImageLabelSetup = this
 	override def *(mod: Double): ViewImageLabelSetup = mapSettings { _ * mod }

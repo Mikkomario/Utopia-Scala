@@ -5,14 +5,14 @@ import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.Empty
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
-import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.{ContainerCreation, Open}
 
-object AlignFrame extends Cff[AlignFrameFactory]
+object AlignFrame extends CF[AlignFrameFactory]
 {
 	override def apply(hierarchy: ComponentHierarchy) = new AlignFrameFactory(hierarchy)
 }

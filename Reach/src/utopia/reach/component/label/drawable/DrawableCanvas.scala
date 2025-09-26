@@ -22,7 +22,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 import utopia.reach.component.factory.contextual.ContextualFactory
-import utopia.reach.component.factory.{ComponentFactoryFactory, FromContextComponentFactoryFactory, FromContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, ContextualComponentFactories, FromContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{PartOfComponentHierarchy, ConcreteReachComponent}
 
@@ -221,8 +221,8 @@ case class DrawableCanvasFactory(hierarchy: ComponentHierarchy,
   */
 case class DrawableCanvasSetup(settings: DrawableCanvasSettings = DrawableCanvasSettings.default)
 	extends DrawableCanvasSettingsWrapper[DrawableCanvasSetup]
-		with ComponentFactoryFactory[DrawableCanvasFactory]
-		with FromContextComponentFactoryFactory[BaseContext, ContextualDrawableCanvasFactory]
+		with ComponentFactories[DrawableCanvasFactory]
+		with ContextualComponentFactories[BaseContext, ContextualDrawableCanvasFactory]
 {
 	// IMPLEMENTED	--------------------
 	

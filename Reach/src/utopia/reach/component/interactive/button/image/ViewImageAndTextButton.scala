@@ -14,7 +14,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.{ColorRole, FromColorRoleFactory}
 import utopia.paradigm.enumeration.{Alignment, FromAlignmentFactory}
 import utopia.paradigm.shape.shape2d.vector.point.Point
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.UnresolvedFramedFactory.UnresolvedStackInsets
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -304,7 +304,7 @@ case class ViewImageAndTextButtonFactory(hierarchy: ComponentHierarchy, context:
   */
 case class ViewImageAndTextButtonSetup(settings: ViewImageAndTextButtonSettings = ViewImageAndTextButtonSettings.default)
 	extends ViewImageAndTextButtonSettingsWrapper[ViewImageAndTextButtonSetup]
-		with FromContextComponentFactoryFactory[VariableTextContext, ViewImageAndTextButtonFactory]
+		with ContextualComponentFactories[VariableTextContext, ViewImageAndTextButtonFactory]
 {
 	// IMPLEMENTED	--------------------
 	

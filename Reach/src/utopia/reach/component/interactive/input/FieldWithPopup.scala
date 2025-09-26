@@ -23,7 +23,7 @@ import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateE
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.factory.ContextualMixed
-import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.ContextualComponentFactories.CCF
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopup
@@ -522,7 +522,7 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
  */
 case class FieldWithPopupSetup(settings: FieldWithPopupSettings = FieldWithPopupSettings.default)
 	extends FieldWithPopupSettingsWrapper[FieldWithPopupSetup]
-		with Ccff[VariableTextContext, FieldWithPopupFactory]
+		with CCF[VariableTextContext, FieldWithPopupFactory]
 {
 	// IMPLEMENTED	--------------------
 	

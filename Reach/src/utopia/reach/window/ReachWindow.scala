@@ -30,7 +30,7 @@ import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.FromContextComponentFactoryFactory
+import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
@@ -449,7 +449,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional component creation function result
 	  * @return The created window + created canvas + created component + additional function result
 	  */
-	def using[F, C <: ReachComponent, R](factory: FromContextComponentFactoryFactory[StaticReachContentWindowContext, F],
+	def using[F, C <: ReachComponent, R](factory: ContextualComponentFactories[StaticReachContentWindowContext, F],
 	                                     parent: Option[java.awt.Window] = None,
 	                                     title: LocalizedString = LocalizedString.empty,
 	                                     disableAutoBoundsUpdates: Boolean = false)
@@ -496,7 +496,7 @@ case class ReachContentWindowFactory(private val windowFactory: ContextualReachW
 	  * @tparam R Type of additional function result
 	  * @return A new window + created canvas + created canvas content + additional creation result
 	  */
-	def anchoredToUsing[F, C <: ReachComponent, R](factory: FromContextComponentFactoryFactory[StaticTextContext, F],
+	def anchoredToUsing[F, C <: ReachComponent, R](factory: ContextualComponentFactories[StaticTextContext, F],
 	                                               component: ReachComponent, preferredAlignment: Alignment,
 	                                               margin: Double = 0.0,
 	                                               title: LocalizedString = LocalizedString.empty,
