@@ -1,6 +1,5 @@
 package utopia.paradigm.shape.shape2d.insets
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.combine.Subtractable
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.enumeration.Direction2D
@@ -50,7 +49,7 @@ trait ScalableSidesLike[L, +L2D, +Repr]
 	
 	override def *(mod: Double): Repr = mapDefined { multiply(_, mod) }
 	
-	override def -(other: HasSides[L]): Repr = withSides(sides.mergeWith(other.sides)(subtract))
+	override def -(other: HasSides[L]): Repr = mergeWith(other)(subtract)
 		
 	
 	// OTHER    ----------------------
@@ -72,7 +71,7 @@ trait ScalableSidesLike[L, +L2D, +Repr]
 	  * @param mod Scaling modifiers to apply (one for each axis)
 	  * @return A scaled copy of this item
 	  */
-	def *(mod: HasDimensions[Double]) = mapWithDirection { (dir, length) => multiply(length, mod(dir.axis)) }
+	def *(mod: HasDimensions[Double]) = mapWithSide { (dir, length) => multiply(length, mod(dir.axis)) }
 	
 	/**
 	  * @param len Amount of decrease to apply on for all directions

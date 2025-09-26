@@ -301,7 +301,7 @@ trait ImageLike[+Repr] extends ImageView with LinearSizeAdjustable[Repr] with Si
 	  * @param amount Amount of pixels to crop from this image
 	  * @return A cropped copy of this image
 	  */
-	def cropFromSide(side: Direction2D, amount: Double) = crop(Insets.towards(side, amount))
+	def cropFromSide(side: Direction2D, amount: Double) = crop(Insets.apply(side, amount))
 	
 	/**
 	  * @param newSize The target size for this image

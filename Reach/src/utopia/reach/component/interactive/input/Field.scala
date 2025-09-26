@@ -762,10 +762,10 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 		}
 		// When using filled background style, only draws the bottom border, which varies in style based state
 		if (settings.fillBackground)
-			borderWidthP.mergeWith(hintTextColorP)(Border.bottom)
+			hintTextColorP.mergeWith(borderWidthP) { Border(_).bottom(_) }
 		// Otherwise, draws the border on all sides
 		else
-			borderWidthP.mergeWith(hintTextColorP)(Border.symmetric)
+			hintTextColorP.mergeWith(borderWidthP) { Border(_, _) }
 	}
 	private val borderDrawer = BorderViewDrawer(borderP)
 	

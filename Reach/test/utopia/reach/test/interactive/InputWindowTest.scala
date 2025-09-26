@@ -43,8 +43,6 @@ import utopia.reach.window.{InputRowBlueprint, InputWindowFactory}
   */
 object InputWindowTest extends App
 {
-	Changing.listenerDebuggingLimit = 100
-	
 	val icons = ImageCache.icons("Reach/test-images", Some(Size.square(40))).mapValues { _.map { _.cropped } }
 	val selectedBoxIcon = icons("check-box-selected.png")
 	val unselectedBoxIcon = icons("check-box-empty.png")

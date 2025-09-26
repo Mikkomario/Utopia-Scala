@@ -16,7 +16,8 @@ object RealInsets extends SidesFactory[Distance, RealInsets]
   * @author Mikko Hilpinen
   * @since 02.01.2025, v1.7.1
   */
-case class RealInsets(sides: Map[Direction2D, Distance]) extends ScalableSidesLike[Distance, RealSize, RealInsets]
+case class RealInsets(sides: Map[Direction2D, Distance])
+	extends Sides[Distance] with ScalableSidesLike[Distance, RealSize, RealInsets]
 {
 	// ATTRIBUTES   --------------
 	

@@ -1,7 +1,6 @@
 package utopia.reach.test.interactive
 
 import utopia.firmament.drawing.immutable.BorderDrawer
-import utopia.firmament.model.Border
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.paradigm.color.Color
 import utopia.paradigm.shape.shape2d.insets.Insets
@@ -22,7 +21,7 @@ object DragToResizeWindowTest extends App
 	private val dragInsets = Insets.symmetric(16)
 	
 	private val window = ReachWindow.contentContextual.borderless.using(EmptyLabel) { (_, labelF) =>
-		labelF.withCustomDrawer(BorderDrawer(Border(dragInsets, Color.red)))(
+		labelF.withCustomDrawer(BorderDrawer(Color.red)(dragInsets))(
 			200.any.lowPriority.square.mapWidth { _.withMax(600).withMin(100) })
 	}
 	window.setToCloseOnEsc()

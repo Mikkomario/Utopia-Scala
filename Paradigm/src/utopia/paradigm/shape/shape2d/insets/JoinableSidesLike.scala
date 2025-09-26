@@ -1,6 +1,5 @@
 package utopia.paradigm.shape.shape2d.insets
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.combine.Combinable
 import utopia.paradigm.enumeration.{Axis2D, Direction2D}
 
@@ -18,7 +17,7 @@ trait JoinableSidesLike[L, +L2D, +Repr]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override def +(other: HasSides[L]): Repr = withSides(sides.mergeWith(other.sides)(join))
+	override def +(other: HasSides[L]): Repr = mergeWith(other)(join)
 	
 	
 	// OTHER    ----------------------------

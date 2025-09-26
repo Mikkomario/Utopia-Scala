@@ -284,7 +284,7 @@ trait TextContextCopyable[+Repr]
 	  * @param axis Targeted axis
 	  * @return A copy of this context where text insets along that axis are fixed to zero
 	  */
-	def withoutTextInsetsAlong(axis: Axis2D) = mapTextInsets { _.withoutAxis(axis) }
+	def withoutTextInsetsAlong(axis: Axis2D) = mapTextInsets { _.without(axis) }
 	/**
 	  * @param direction Targeted direction
 	  * @return A copy of this context where text insets don't include the specified direction

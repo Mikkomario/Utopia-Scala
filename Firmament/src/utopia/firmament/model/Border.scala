@@ -1,10 +1,13 @@
 package utopia.firmament.model
 
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.util.Mutate
 import utopia.paradigm.color.Color
-import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
-import utopia.paradigm.shape.shape2d.insets.Insets
+import utopia.paradigm.enumeration.{Axis2D, Direction2D}
+import utopia.paradigm.shape.shape2d.insets._
 import utopia.paradigm.shape.shape2d.vector.size.Size
+import utopia.paradigm.shape.template.Dimensions
 
 import javax.swing.BorderFactory
 import javax.swing.border.{EmptyBorder, MatteBorder}
@@ -14,25 +17,54 @@ object Border
 	// ATTRIBUTES	-------------------------
 	
 	/**
+	 * A factory for constructing empty / non-colored borders
+	 */
+	lazy val transparent = BorderFactory(None)
+	/**
 	  * A border with no size and no color
 	  */
-	val zero = empty(Insets.zero)
+	lazy val zero = transparent(Insets.zero)
+	
+	
+	// COMPUTED -----------------------------
+	
+	@deprecated("Renamed to .transparent", "v1.6")
+	def empty = transparent
 	
 	
 	// OTHER	-----------------------------
 	
 	/**
+	 * @param color Color of these borders
+	 * @return A factory for finalizing these borders
+	 */
+	def apply(color: Color) = BorderFactory(Some(color))
+	/**
+	 * @param color Color of these borders. None if transparent.
+	 * @return A factory for finalizing these borders.
+	 */
+	def apply(color: Option[Color]) = BorderFactory(color)
+	
+	/**
+	 * @param color Color of these borders
+	 * @param width Width of these borders
+	 * @return A symmetric set of borders with the specified color and width
+	 */
+	def apply(color: Color, width: Double): Border = apply(color)(width)
+	/**
 	  * @param width Border width (applied to all sides)
 	  * @param color Border color
 	  * @return A new symmetric set of borders
 	  */
-	def apply(width: Double, color: Color): Border = symmetric(width, color)
+	def apply(width: Double, color: Color): Border = apply(color, width)
+	
 	/**
 	  * Creates a new border
 	  * @param insets Border insets
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).apply(Insets) instead", "v1.6")
 	def apply(insets: Insets, color: Color): Border = Border(insets, Some(color))
 	/**
 	  * Creates a new border
@@ -43,7 +75,9 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
-	def apply(left: Double, right: Double, top: Double, bottom: Double, color: Color): Border = apply(Insets(left, right, top, bottom), color)
+	@deprecated("Please use .apply(Color).apply(Double, Double, Double, Double) instead", "v1.6")
+	def apply(left: Double, right: Double, top: Double, bottom: Double, color: Color): Border =
+		apply(Insets(left, right, top, bottom), color)
 	/**
 	  * Creates a new border
 	  * @param sizes Border insets
@@ -51,6 +85,7 @@ object Border
 	  * @param inner The border inside this one
 	  * @return A new border with another border inside
 	  */
+	@deprecated("Please use .apply(Color).apply(Insets).withInner(Border) instead", "v1.6")
 	def apply(sizes: Insets, color: Color, inner: Border): Border = Border(sizes, Some(color), Some(inner))
 	
 	/**
@@ -59,47 +94,45 @@ object Border
 	  * @param color Border color
 	  * @return A new border that only affects the targeted direction
 	  */
-	def towards(direction: Direction2D, width: Double, color: Color) = Border(Insets.towards(direction, width), color)
+	@deprecated("Please use .apply(Color).apply(Direction2D, Double) instead", "v1.6")
+	def towards(direction: Direction2D, width: Double, color: Color) = Border(Insets.apply(direction, width), color)
 	
 	/**
 	  * @param height Height of this border
 	  * @param color Border color
 	  * @return A border that only affects the top of a component
 	  */
+	@deprecated("Please use .apply(Color).top instead", "v1.6")
 	def top(height: Double, color: Color) = towards(Up, height, color)
 	/**
 	  * @param height Height of this border
 	  * @param color Border color
 	  * @return A border that only affects the bottom of a component
 	  */
+	@deprecated("Please use .apply(Color).bottom instead", "v1.6")
 	def bottom(height: Double, color: Color) = towards(Down, height, color)
 	/**
 	  * @param width Width of this border
 	  * @param color Border color
 	  * @return A border that only affects the left side of a component
 	  */
+	@deprecated("Please use .apply(Color).left instead", "v1.6")
 	def left(width: Double, color: Color) = towards(Direction2D.Left, width, color)
 	/**
 	  * @param width Width of this border
 	  * @param color Border color
 	  * @return A border that only affects the right side of a component
 	  */
+	@deprecated("Please use .apply(Color).right instead", "v1.6")
 	def right(width: Double, color: Color) = towards(Direction2D.Right, width, color)
 	
-	/**
-	  * Creates a new border where each side is equal
-	  * @param side The width of each side
-	  * @param color Color of this border
-	  * @return A new border
-	  */
-	@deprecated("Please use .symmetric(Double, Color) instead", "v1.1.1")
-	def square(side: Double, color: Color) = symmetric(side, color)
 	/**
 	  * Creates a symmetric border
 	  * @param side Length of each side
 	  * @param color Color used in this border
 	  * @return A symmetric border
 	  */
+	@deprecated("Please use .apply(Double, Color) instead", "v1.6")
 	def symmetric(side: Double, color: Color) = Border(Insets.symmetric(side), color)
 	/**
 	  * Creates a symmetric border
@@ -108,6 +141,7 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).symmetric(Double, Double) instead", "v1.6")
 	def symmetric(hBorder: Double, vBorder: Double, color: Color) = Border(Insets.symmetric(hBorder, vBorder), color)
 	/**
 	  * Creates a symmetric border
@@ -115,7 +149,8 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
-	def symmetric(insets: Size, color: Color): Border = Border(Insets.symmetric(insets), color)
+	@deprecated("Please use .apply(Color).apply(Size) instead", "v1.6")
+	def symmetric(insets: Size, color: Color): Border = apply(color).apply(insets)
 	
 	/**
 	  * Creates a horizontal border
@@ -124,6 +159,7 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).horizontal(Double, Double) instead", "v1.6")
 	def horizontal(left: Double, right: Double, color: Color) = Border(Insets(left, right, 0, 0), color)
 	/**
 	  * Creates a horizontal border
@@ -131,6 +167,7 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).horizontal(Double) instead", "v1.6")
 	def horizontal(hBorder: Double, color: Color): Border = horizontal(hBorder, hBorder, color)
 	/**
 	  * Creates a vertical border
@@ -139,6 +176,7 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).vertical(Double, Double) instead", "v1.6")
 	def vertical(top: Double, bottom: Double, color: Color) = Border(Insets(0, 0, top, bottom), color)
 	/**
 	  * Creates a vertical border
@@ -146,14 +184,8 @@ object Border
 	  * @param color Border color
 	  * @return A new border
 	  */
+	@deprecated("Please use .apply(Color).vertical(Double) instead", "v1.6")
 	def vertical(vBorder: Double, color: Color): Border = vertical(vBorder, vBorder, color)
-	
-	/**
-	  * Creates an empty border
-	  * @param insets Border insets
-	  * @return An empty border
-	  */
-	def empty(insets: Insets) = Border(insets, None)
 	
 	/**
 	  * Creates a new border that looks like it was raised
@@ -163,10 +195,8 @@ object Border
 	  * @return A new border
 	  */
 	def raised(w: Double, baseColor: Color, intensity: Double = 1.0) = {
-		val dark = Border(Insets(0, w, 0, w), baseColor.darkenedBy(intensity))
-		val light = Border(dark.insets.opposite, baseColor.lightenedBy(intensity), dark)
-		
-		light
+		val dark = apply(baseColor.darkenedBy(intensity))(0, w, 0, w)
+		apply(dark.insets.opposite, Some(baseColor.lightenedBy(intensity)), Some(dark))
 	}
 	/**
 	  * Creates a new border that looks like it was lowered
@@ -177,6 +207,30 @@ object Border
 	  */
 	def lowered(w: Double, baseColor: Color, intensity: Double = 1.0) =
 		raised(w, baseColor, intensity).opposite
+		
+	
+	// NESTED   ----------------------------
+	
+	case class BorderFactory(color: Option[Color]) extends SidesFactory[Double, Border]
+	{
+		// IMPLEMENTED  --------------------
+		
+		override def withSides(sides: Map[Direction2D, Double]): Border = apply(Insets(sides))
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		 * @param sides Sides that specify the width of these borders
+		 * @return A border with the specified widths
+		 */
+		def apply(sides: Insets) = Border(sides, color)
+		/**
+		 * @param sizes The horizontal & vertical borders
+		 * @return A symmetric set of borders with the specified dimensions
+		 */
+		def apply(sizes: Size): Border = apply(Insets.symmetric(sizes))
+	}
 }
 
 /**
@@ -185,8 +239,26 @@ object Border
   * @since 29.4.2019, Reflection v1+
   */
 case class Border(insets: Insets, color: Option[Color], inner: Option[Border] = None)
+	extends Sides[Double] with InsetsLike[Border]
 {
+	override lazy val total: Size = inner match {
+		case Some(inner) => inner.total + insets.total
+		case None => insets.total
+	}
+	/**
+	 * @return The total insets of this border
+	 */
+	lazy val totalInsets: Insets = inner match {
+		case Some(inner) => inner.totalInsets + insets
+		case None => insets
+	}
+	
 	// COMPUTED	-------------------
+	
+	/**
+	 * @return Copy of this border without any coloring
+	 */
+	def transparent = copy(color = None)
 	
 	/**
 	  * @return An awt representation of this border
@@ -196,72 +268,87 @@ case class Border(insets: Insets, color: Option[Color], inner: Option[Border] = 
 		inner.map { i => BorderFactory.createCompoundBorder(myPart, i.toAwt) } getOrElse myPart
 	}
 	
-	/**
-	  * @return The total insets of this border
-	  */
-	def totalInsets: Insets = inner.map { _.totalInsets + insets } getOrElse insets
 	
-	/**
-	  * @return A copy of this border where left is right and top is bottom
-	  */
-	def opposite: Border = Border(insets.opposite, color, inner.map { _.opposite })
+	// IMPLEMENTED  ---------------
 	
-	/**
-	  * @return A copy of this border where left and right have been swapped
-	  */
-	def hMirrored: Border = Border(insets.hMirrored, color, inner.map { _.hMirrored })
-	/**
-	  * @return A copy of this border where top and bottom have been swapped
-	  */
-	def vMirrored: Border = Border(insets.vMirrored, color, inner.map { _.vMirrored })
+	override def self: Border = this
+	override def sides: Map[Direction2D, Double] = insets.sides
 	
+	override def positive: Border = _map { _.positive }
+	override def opposite: Border = _map { _.opposite }
+	override def round: Border = _map { _.round }
 	
-	// OPERATORS	--------------
+	override protected def withSides(sides: Map[Direction2D, Double]): Border = copy(insets = Insets(sides))
 	
-	/**
-	  * Multiplies the width of this border
-	  * @param multiplier A multiplier
-	  * @return A multiplied border
-	  */
-	def *(multiplier: Double): Border = Border(insets * multiplier, color, inner.map { _ * multiplier })
+	override def mapWithSide(f: (Direction2D, Double) => Double): Border = _map { _.mapWithSide(f) }
+	override def mapDefined(f: Double => Double): Border = _map { _.mapDefined(f) }
+	override def flatMapDefined(f: Double => Option[Double]): Border = _map { _.flatMapDefined(f) }
+	override def mapDimensions(f: Dimensions[Pair[Double]] => Dimensions[Pair[Double]]): Border =
+		_map { _.mapDimensions(f) }
 	
-	/**
-	  * Divides the width of this border
-	  * @param div A divider
-	  * @return A divided border
-	  */
-	def /(div: Double) = this * (1/div)
+	override def filter(f: (Direction2D, Double) => Boolean): Border = _map { _.filter(f) }
 	
-	/**
-	  * Combines this border with another
-	  * @param another Another border
-	  * @return A copy of this border with another border inside
-	  */
-	def +(another: Border): Border = inner.map { i => Border(insets, color, Some(i + another)) } getOrElse
-		Border(insets, color, Some(another))
+	override def mirroredAlong(axis: Axis2D): Border = _map { _.mirroredAlong(axis) }
 	
-	/**
-	  * Removes a border from this border
-	  * @param another Another border
-	  * @return A copy of this border without the provided border inside
-	  */
-	def -(another: Border): Border = inner.map {i => if (i == another) Border(insets, color) else
-		Border(insets, color, Some(i - another)) } getOrElse this
+	override def +(other: HasSides[Double]): Border = other match {
+		case b: Border => inside(b)
+		case o => super.+(o)
+	}
+	override def ++(sides: HasSides[Double]): Border = sides match {
+		case b: Border => inside(b)
+		case o => super.++(o)
+	}
 	
 	
 	// OTHER	------------------
 	
 	/**
+	 * Combines this border with another
+	 * @param another Another border
+	 * @return A copy of this border with another border inside
+	 */
+	def +(another: Border): Border = withInner(another)
+	/**
+	 * Removes a border from this border
+	 * @param another Another border
+	 * @return A copy of this border without the provided border inside
+	 */
+	@deprecated("Deprecated for removal", "v1.8")
+	def -(another: Border): Border = inner match {
+		case Some(inner) =>
+			if (inner == another)
+				copy(inner = None)
+			else
+				copy(inner = Some(inner - another))
+		case None => this
+	}
+	
+	/**
+	 * @param color Color assigned to these borders
+	 * @return A copy of these borders with the specified color
+	 */
+	def withColor(color: Color) = copy(color = Some(color))
+	/**
 	  * Maps the color of this border
 	  * @param f A mapping function
 	  * @return A copy of this border with mapped color
 	  */
-	def mapColor(f: Color => Color): Border = Border(insets, color.map(f), inner.map { _.mapColor(f) })
+	def mapColor(f: Mutate[Color]): Border = copy(color = color.map(f), inner = inner.map { _.mapColor(f) })
 	
+	/**
+	 * @param inner A border to place inside this one
+	 * @return A copy of this border with the specified borders inside it
+	 */
+	def withInner(inner: Border): Border = this.inner match {
+		case Some(existing) => copy(inner = Some(existing.withInner(inner)))
+		case None => copy(inner = Some(inner))
+	}
 	/**
 	  * Creates a new border with this border inside it
 	  * @param another Another border
 	  * @return A copy of the other border with this one inside it
 	  */
-	def inside(another: Border) = another + this
+	def inside(another: Border) = another.withInner(this)
+	
+	private def _map(f: Mutate[Insets]): Border = copy(insets = f(insets), inner = inner.map { _._map(f) })
 }

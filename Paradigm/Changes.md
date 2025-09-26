@@ -1,13 +1,27 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.7.3 (in development)
+### Breaking changes
+- **Sides** no longer defines `.self` and `.withSides(...)`
 ### Bugfixes
 - Fixed a bug that caused **ProjectilePath** to transform its shape when its linearity was positive
 - Added more careful zero-division checks to **LinearVelocity**'s `.durationUntilStopWith(LinearAcceleration)`
+### Deprecations
+- Renamed **SidesFactory**'s `.towards(Direction2D, L)` to `.apply(Direction2D, L)`
+- In **SidesLike**, renamed `.withoutAxis(Axis)` to `.without(Axis)`
 ### New features
+- Re-added & rewrote previously deprecated **InsetsLike** as basically **SidesLike** with **Double** sides
 - Added `Bounds.aroundBuilder`
-### Other
+### New methods
+- **SidesLike**
+  - Added `.only(...)` and `.without(...)` functions
+  - Added `exclusive: Boolean = false` -parameter to `.withSide(...)`
+- **SidesFactory**
+  - Added `.apply(L)` for creating symmetric sides
+### Other changes
 - Rewrote **ProjectilePath**
+- Refactored parts of **SidesLike** and its subclasses
+- **Insets** and **RealInsets** now extend **Sides**
 
 ## v1.7.2 - 26.05.2025
 A minor update focusing on value conversions between **String**s and Paradigm-specific **Value** types.

@@ -44,7 +44,7 @@ object JDropDownWrapper
 		val dropDown = new JDropDownWrapper[A](context.textInsets, selectText, context.font, background,
 			highlighted, context.textColor, displayFunction, initialChoices, maximumOptimalWidth)
 		if (context.buttonBorderWidth > 0)
-			dropDown.setBorder(Border.symmetric(context.buttonBorderWidth, context.textColor))
+			dropDown.setBorder(Border(context.textColor)(context.buttonBorderWidth))
 		dropDown
 	}
 }

@@ -1,7 +1,7 @@
 package utopia.firmament.model.stack
 
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.insets.{Insets, SidedBuilder, SidesFactory}
+import utopia.paradigm.shape.shape2d.insets.{Insets, SidedBuilder, Sides, SidesFactory}
 
 object StackInsets extends SidesFactory[StackLength, StackInsets]
 {
@@ -46,7 +46,7 @@ object StackInsets extends SidesFactory[StackLength, StackInsets]
   * @since 2.2.2020, Reflection v1
   */
 case class StackInsets(sides: Map[Direction2D, StackLength])
-	extends StackInsetsLike[StackInsets] with StackInsetsConvertible
+	extends Sides[StackLength] with StackInsetsLike[StackInsets] with StackInsetsConvertible
 {
 	// ATTRIBUTES	-----------------------
 	

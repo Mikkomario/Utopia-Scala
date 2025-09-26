@@ -17,6 +17,7 @@
   - The previous implementation could sometimes lead to division by zero
 ### Deprecations
 - Deprecated **Input**, since it performs the exact same function as **View** in **Flow**
+- Deprecated most of **Border** constructors in favor of the new factory-based approach
 - Renamed multiple focus-related properties in **Window**:
   - Renamed `focusedFlag` to `focusFlag`
   - Renamed `isFocused` to `hasFocus`
@@ -27,6 +28,8 @@
   - Please note, that this pointer is never populated by default. 
     Implementing libraries / code (such as Utopia Reach) will need to populate / specify it themselves.
 - Added **FixedStackable** trait for static-sized **Stackable** implementations
+- Added a factory-based approach to constructing **Border**s and **BorderDrawer**s
+  - Also, **Border** now extends **InsetsLike**, providing a number of new methods
 - Added **JWindow** alias for **java.awt.Window**
 ### New methods
 - **Alignment** (via **LengthExtensions**)
@@ -39,10 +42,11 @@
   - Added `.areaAt(Int)` and `.areaAt(HasInclusiveEnds)`
 - **StackLength**
   - Added `.limit(Double): Double`
-### Other
+### Other changes
 - **Window**'s location correction / location adjustment logic 
   now only applies to windows which contain OS borders / decorations
 - **Input** now extends **View**
+- **StackInsets** now extends **Sides**
 - Separated some **StackInsets** features to a new trait named **StackInsetsLike**
 - The generic type parameter in **ScrollViewLike** is now covariant
 - Rewrote **StackItemAreas** `.areaOf(...)` implementation

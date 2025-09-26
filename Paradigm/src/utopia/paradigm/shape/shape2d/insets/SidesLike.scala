@@ -1,6 +1,7 @@
 package utopia.paradigm.shape.shape2d.insets
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.util.Mutate
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Axis, Axis2D, Direction2D}
@@ -56,7 +57,12 @@ trait SidesFactory[-L, +I] extends DimensionalFactory[Pair[L], I]
       */
     def apply(left: L, right: L, top: L, bottom: L): I = withSides(
         Map(Direction2D.Left -> left, Direction2D.Right -> right, Up -> top, Down -> bottom))
-    
+	
+	/**
+	 * @param sideWidth The width applied to all sides, symmetrically
+	 * @return A symmetric set of sides where each has the specified length
+	 */
+	def apply(sideWidth: L): I = symmetric(sideWidth)
     /**
       * Creates a set of insets where top = bottom and left = right
       * @param w The left & right inset
@@ -68,7 +74,7 @@ trait SidesFactory[-L, +I] extends DimensionalFactory[Pair[L], I]
       * @param sideWidth The width of each side on these insets
       * @return Insets with all sides equal
       */
-    def symmetric(sideWidth: L) = apply(sideWidth, sideWidth, sideWidth, sideWidth)
+    def symmetric(sideWidth: L): I = apply(sideWidth, sideWidth, sideWidth, sideWidth)
     /**
       * @param sideWidth The width of both of the targeted sides
       * @param axis Targeted axis (X|Y)
@@ -109,28 +115,30 @@ trait SidesFactory[-L, +I] extends DimensionalFactory[Pair[L], I]
       * @param amount length of inset
       * @return An inset with only one side
       */
-    def towards(direction: Direction2D, amount: L) = withSides(Map(direction -> amount))
+    def apply(direction: Direction2D, amount: L) = withSides(Map(direction -> amount))
+	@deprecated("Renamed to .apply(Direction2D, L)", "v1.7.3")
+	def towards(direction: Direction2D, amount: L) = apply(direction, amount)
     
     /**
       * @param amount Length of inset
       * @return An inset with only left side
       */
-    def left(amount: L) = towards(Direction2D.Left, amount)
+    def left(amount: L) = apply(Direction2D.Left, amount)
     /**
       * @param amount Length of inset
       * @return An inset with only right side
       */
-    def right(amount: L) = towards(Direction2D.Right, amount)
+    def right(amount: L) = apply(Direction2D.Right, amount)
     /**
       * @param amount Length of inset
       * @return An inset with only top side
       */
-    def top(amount: L) = towards(Up, amount)
+    def top(amount: L) = apply(Up, amount)
     /**
       * @param amount Length of inset
       * @return An inset with only bottom side
       */
-    def bottom(amount: L) = towards(Down, amount)
+    def bottom(amount: L) = apply(Down, amount)
     
     /**
       * @param f A function that accepts a direction and generates the inset to apply towards that direction
@@ -305,20 +313,37 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
     /**
       * @return A copy of these insets with only horizontal components (left & right)
       */
-    def onlyHorizontal = onlyAxis(X)
+    def onlyHorizontal = only(X)
     /**
       * @return A copy of these insets with only vertical components (top & bottom)
       */
-    def onlyVertical = onlyAxis(Y)
+    def onlyVertical = only(Y)
     
     /**
       * @return A copy of these insets without any horizontal components (left or right)
       */
-    def withoutHorizontal = withoutAxis(X)
+    def withoutHorizontal = without(X)
     /**
       * @return A copy of these insets without any vertical components (top or bottom)
       */
-    def withoutVertical = withoutAxis(Y)
+    def withoutVertical = without(Y)
+	
+	/**
+	 * @return A copy of this item with only the top remaining
+	 */
+	def onlyTop = only(Up)
+	/**
+	 * @return A copy of this item with only the bottom remaining
+	 */
+	def onlyBottom = only(Down)
+	/**
+	 * @return A copy of this item with only the left side remaining
+	 */
+	def onlyLeft = only(Direction2D.Left)
+	/**
+	 * @return A copy of this item with only the right side remaining
+	 */
+	def onlyRight = only(Direction2D.Right)
     
     
     // IMPLEMENTED  --------------
@@ -331,32 +356,6 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
     }
     
     
-    // OPERATORS    --------------
-    
-    /**
-      * Adds a number of sides to this set, **overwriting** the existing definitions.
-      * @param sides Sides to place
-      * @return Copy of these sides with some overwritten with the specified set
-      */
-    def ++(sides: HasSides[L]) = withSides(this.sides ++ sides.sides)
-    
-    /**
-      * @param direction Direction to drop from these insets
-      * @return A copy of these insets without an inset for the specified direction
-      */
-    def -(direction: Direction2D) = withSides(sides - direction)
-    /**
-      * @param axis Axis to omit from these insets
-      * @return Copy of these insets without values along the specified axis
-      */
-    def -(axis: Axis2D) = withSides(sides.filterNot { _._1.axis == axis })
-    /**
-      * @param directions Directions to exclude from these insets
-      * @return Copy of these insets without the specified directions included
-      */
-    def --(directions: IterableOnce[Direction2D]) = withSides(sides -- directions)
-    
-    
     // OTHER    ------------------
     
     /**
@@ -367,27 +366,52 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
         withSides(sides.map { case (k, v) => (if (k.axis == axis) k.opposite else k) -> v })
     
     /**
-     * @param direction The direction taken away from these insets
+     * @param side The direction taken away from these insets
      * @return A copy of these insets without specified direction
      */
-    def withoutSide(direction: Direction2D) = withSides(sides - direction)
+    def without(side: Direction2D) = filterNot { (dir, _) => dir == side }
+	@deprecated("Renamed to .without(Direction2D)", "v1.7.3")
+	def withoutSide(direction: Direction2D) = without(direction)
     /**
       * @param directions Directions to exclude from these insets
       * @return A copy of these insets without the specified directions included
       */
-    def withoutSides(directions: IterableOnce[Direction2D]) = withSides(sides -- directions)
-    
-    /**
-      * @param axis Targeted axis
-      * @return A copy of these insets with values only on the specified axis (Eg. for X-axis would only contain left and right)
-      */
-    def onlyAxis(axis: Axis) = withSides(sides.view.filterKeys { _.axis == axis }.toMap)
-    /**
-      * @param axis Targeted axis
-      * @return A copy of these insets without any values for the specified axis
-      */
-    def withoutAxis(axis: Axis) = withSides(sides.view.filterKeys { _.axis != axis }.toMap)
-    
+    def withoutSides(directions: IterableOnce[Direction2D]) = {
+	    val dirsToRemove = Set.from(directions)
+	    if (dirsToRemove.isEmpty)
+		    self
+	    else
+	        filterNot { (dir, _) => dirsToRemove.contains(dir) }
+    }
+	/**
+	 * @param axis Targeted axis
+	 * @return A copy of these insets without any values for the specified axis
+	 */
+	def without(axis: Axis) = filterNot { (dir, _) => dir.axis == axis }
+	@deprecated("Renamed to .without(Axis)")
+	def withoutAxis(axis: Axis) = without(axis)
+	
+	/**
+	 * @param amount New top length
+	 * @return A copy of these insets with new top length
+	 */
+	def withTop(amount: L) = withSide(Up, amount)
+	/**
+	 * @param amount New bottom length
+	 * @return A copy of these insets with new bottom length
+	 */
+	def withBottom(amount: L) = withSide(Down, amount)
+	/**
+	 * @param amount New left length
+	 * @return A copy of these insets with new left length
+	 */
+	def withLeft(amount: L) = withSide(Direction2D.Left, amount)
+	/**
+	 * @param amount New right length
+	 * @return A copy of these insets with new right length
+	 */
+	def withRight(amount: L) = withSide(Direction2D.Right, amount)
+	
     /**
       * Replaces one side of these insets
       * @param side Targeted side
@@ -395,27 +419,18 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       * @return A copy of these insets with replaced side
       */
     def withSide(side: Direction2D, amount: L) = withSides(sides + (side -> amount))
-    
-    /**
-      * @param amount New top length
-      * @return A copy of these insets with new top length
-      */
-    def withTop(amount: L) = withSide(Up, amount)
-    /**
-      * @param amount New bottom length
-      * @return A copy of these insets with new bottom length
-      */
-    def withBottom(amount: L) = withSide(Down, amount)
-    /**
-      * @param amount New left length
-      * @return A copy of these insets with new left length
-      */
-    def withLeft(amount: L) = withSide(Direction2D.Left, amount)
-    /**
-      * @param amount New right length
-      * @return A copy of these insets with new right length
-      */
-    def withRight(amount: L) = withSide(Direction2D.Right, amount)
+	/**
+	 * @param side Side to specify
+	 * @param amount Length of the specified side
+	 * @param exclusive Whether this should be the only applied side (default = false)
+	 * @return A copy of this item with the specified side set to the specified length
+	 */
+	def withSide(side: Direction2D, amount: L, exclusive: Boolean): Repr = {
+		if (exclusive)
+			withSides(Map(side -> amount))
+		else
+			withSide(side, amount)
+	}
     
     /**
       * @param axis Targeted axis
@@ -454,14 +469,66 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       * @return Copy of this item with the specified lengths
       */
     def withVertical(height: L) = withAxis(Y, height)
-    
-    /**
+	
+	/**
+	 * @param side The only side to preserve
+	 * @return A copy of this item with only the specified side preserved (and others at zero)
+	 */
+	def only(side: Direction2D) = filter { (dir, _) => dir == side }
+	/**
+	 * @param axis Targeted axis
+	 * @return A copy of these insets with values only on the specified axis (Eg. for X-axis would only contain left and right)
+	 */
+	def only(axis: Axis) = filter { (dir, _) => dir.axis == axis }
+	@deprecated("Renamed to .only(Axis)", "v1.7.3")
+	def onlyAxis(axis: Axis) = only(axis)
+	
+	/**
+	 * Adds a number of sides to this set, **overwriting** the existing definitions.
+	 * @param sides Sides to place
+	 * @return Copy of these sides with some overwritten with the specified set
+	 */
+	def ++(sides: HasSides[L]) = withSides(this.sides ++ sides.sides)
+	
+	/**
+	 * @param side Side to drop from this item
+	 * @return A copy of this item without the specified side
+	 */
+	def -(side: Direction2D) = without(side)
+	/**
+	 * @param axis Axis to omit from this item
+	 * @return Copy of this item without values along the specified axis
+	 */
+	def -(axis: Axis) = without(axis)
+	/**
+	 * @param sides Directions to exclude from these insets
+	 * @return Copy of these insets without the specified directions included
+	 */
+	def --(sides: IterableOnce[Direction2D]) = withoutSides(sides)
+	
+	/**
+	 * Maps the all 4 sides of this item
+	 * @param f A mapping function
+	 * @return copy of this item with each side mapped
+	 */
+	def map(f: Mutate[L]): Repr = mapWithSide { case (_, len) => f(len) }
+	/**
+	 * Maps the all 4 sides of this item
+	 * @param f A mapping function. Accepts the side to modify, as well as the existing length of that side.
+	 *          Yields the new length for that side.
+	 * @return copy of this item with each side mapped
+	 */
+	def mapWithSide(f: (Direction2D, L) => L): Repr =
+		withSides(Direction2D.values.iterator.map { side => side -> f(side, apply(side)) }.toMap)
+	
+	/**
       * Performs a mapping function over a single side in these insets
       * @param side Targeted side
       * @param f A mapping function
       * @return Copy of these insets with mapped side
       */
-    def mapSide(side: Direction2D)(f: L => L) = withSide(side, f(apply(side)))
+    def mapSide(side: Direction2D)(f: L => L) =
+	    mapWithSide { (target, length) => if (target == side) f(length) else length }
     
     /**
       * Modifies the top of these insets
@@ -494,15 +561,21 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       * @param f Mapping function
       * @return A copy of these insets with mapped sides
       */
-    def mapSides(sides: IterableOnce[Direction2D])(f: L => L) =
-        withSides(this.sides ++ sides.iterator.map { d => d -> f(apply(d)) })
-    /**
+    def mapSides(sides: IterableOnce[Direction2D])(f: L => L) = {
+        val targetedSides = Set.from(sides)
+	    if (targetedSides.isEmpty)
+		    self
+	    else
+		    mapWithSide { (target, len) => if (targetedSides.contains(target)) f(len) else len }
+    }
+	
+	/**
       * Maps sides along the specified axis
       * @param axis Targeted axis
       * @param f Mapping function
       * @return A copy of these insets with two sides mapped
       */
-    def mapAxis(axis: Axis2D)(f: L => L) = mapSides(axis.directions)(f)
+    def mapAxis(axis: Axis2D)(f: L => L) = mapWithSide { (side, len) => if (side.axis == axis) f(len) else len }
     /**
       * Maps left & right
       * @param f Mapping function
@@ -516,12 +589,6 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       */
     def mapVertical(f: L => L) = mapAxis(Y)(f)
     
-    /**
-      * Maps the all 4 sides of this item
-      * @param f A mapping function
-      * @return copy of this item with each side mapped
-      */
-    def map(f: L => L) = withSides(Direction2D.values.map { d => d -> f(apply(d)) }.toMap)
     /**
       * Maps the sides which have a defined value
       * @param f A mapping function
@@ -539,8 +606,30 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       * @param f A mapping function which accepts the direction of a side and the length of that side
       * @return A mapped copy of these insets
       */
-    def mapWithDirection(f: (Direction2D, L) => L) = withSides(sides.map { case (dir, len) => dir -> f(dir, len) })
-    
+    @deprecated("Renamed to .mapWithSide(...)", "v1.7.3")
+    def mapWithDirection(f: (Direction2D, L) => L) = mapWithSide(f)
+	
+	/**
+	 * Maps these sides to another data type
+	 * @param f Mapping function to apply
+	 * @tparam B Type of mapping results
+	 * @return Mapped copy of these sides
+	 */
+	def mapTo[B](f: L => B) = Sides(f(zeroLength))(sides.view.mapValues(f).toMap)
+	
+	/**
+	 * @param f A filtering function applied to each side.
+	 *          Accepts the applicable direction & side length. Yields whether the specified side should be preserved.
+	 * @return A copy of this item only containing the sides accepted by the specified filter.
+	 */
+	def filter(f: (Direction2D, L) => Boolean) = withSides(sides.filter { case (dir, len) => f(dir, len) })
+	/**
+	 * @param f A filtering function applied to each side.
+	 *          Accepts the applicable direction & side length. Yields whether the specified side should be removed.
+	 * @return A copy of this item only containing the sides not fulfilling the specified filter.
+	 */
+	def filterNot(f: (Direction2D, L) => Boolean) = filter { !f(_, _) }
+	
     /**
       * Merges these sides with another set of sides
       * @param other Another set of sides
@@ -550,12 +639,4 @@ trait SidesLike[L, +Repr] extends HasSides[L] with Dimensional[Pair[L], Repr]
       */
     def mergeWith[A](other: HasSides[A])(f: (L, A) => L) =
         withSides((sides.keySet ++ other.sides.keySet).map { d => d -> f(apply(d), other(d)) }.toMap)
-    
-    /**
-      * Maps these sides to another data type
-      * @param f Mapping function to apply
-      * @tparam B Type of mapping results
-      * @return Mapped copy of these sides
-      */
-    def mapTo[B](f: L => B) = Sides(f(zeroLength))(sides.view.mapValues(f).toMap)
 }

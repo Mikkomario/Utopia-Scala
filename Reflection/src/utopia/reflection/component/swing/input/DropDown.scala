@@ -6,11 +6,11 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.drawing.immutable.{BackgroundDrawer, BorderDrawer}
 import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.localization.{Display, LocalizedString}
+import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.enumeration.StackLayout.Fit
 import utopia.firmament.model.stack.modifier.StackSizeModifier
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
-import utopia.firmament.model.{Border, TextDrawContext}
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.graphics.DrawLevel.Normal
@@ -169,12 +169,13 @@ class DropDown[A, C <: AwtStackable with Refreshable[A]]
 	
 	// Adds border drawing to the view
 	{
+		val borderF = BorderDrawer(borderColor)
 		// Draws border around the view
-		view.addCustomDrawer(BorderDrawer(Border.symmetric(borderWidth, borderColor)))
-		// Draws border at the right side of text
-		textLabel.addCustomDrawer(BorderDrawer(Border(Insets.right(borderWidth), borderColor)))
+		view.addCustomDrawer(borderF(borderWidth))
+		// Draws border on the right side of text
+		textLabel.addCustomDrawer(borderF.right(borderWidth))
 		// Draws border at each side, except for top of pop-up
-		popupContentView.addCustomDrawer(BorderDrawer(Border(Insets.symmetric(borderWidth) - Up, borderColor)))
+		popupContentView.addCustomDrawer(borderF(Insets(borderWidth).without(Up)))
 	}
 	
 	// Updates the item display whenever value changes

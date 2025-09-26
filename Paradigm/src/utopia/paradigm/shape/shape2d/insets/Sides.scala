@@ -38,6 +38,11 @@ object Sides
 	}
 	
 	private case class _Sides[A](sides: Map[Direction2D, A], zeroLength: A) extends Sides[A]
+	{
+		override def self: Sides[A] = this
+		
+		override protected def withSides(sides: Map[Direction2D, A]): Sides[A] = Sides(zeroLength)(sides)
+	}
 }
 
 /**
@@ -46,10 +51,3 @@ object Sides
   * @since 16/01/2024, v1.5
   */
 trait Sides[A] extends SidesLike[A, Sides[A]]
-{
-	// IMPLEMENTED  ----------------------
-	
-	override def self: Sides[A] = this
-	
-	override protected def withSides(sides: Map[Direction2D, A]): Sides[A] = Sides(zeroLength)(sides)
-}

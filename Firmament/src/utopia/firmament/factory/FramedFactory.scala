@@ -64,10 +64,10 @@ trait FramedFactory[+Repr]
 	
 	// OTHER    ------------------------
 	
-	def withTop(inset: StackLength) = withInset(Up, inset)
-	def withBottom(inset: StackLength) = withInset(Down, inset)
-	def withLeft(inset: StackLength) = withInset(Direction2D.Left, inset)
-	def withRight(inset: StackLength) = withInset(Direction2D.Right, inset)
+	def withTop(inset: StackLength, exclusive: Boolean = false) = withSide(Up, inset, exclusive)
+	def withBottom(inset: StackLength, exclusive: Boolean = false) = withSide(Down, inset, exclusive)
+	def withLeft(inset: StackLength, exclusive: Boolean = false) = withSide(Direction2D.Left, inset, exclusive)
+	def withRight(inset: StackLength, exclusive: Boolean = false) = withSide(Direction2D.Right, inset, exclusive)
 	
 	def withHorizontalInsets(inset: StackLength) = withInsetsAlong(X, inset)
 	def withVerticalInsets(inset: StackLength) = withInsetsAlong(Y, inset)
@@ -80,7 +80,10 @@ trait FramedFactory[+Repr]
 	def withInsetsAlong(axis: Axis2D, insets: StackLength): Repr = withInsetsAlong(axis, Pair.twice(insets))
 	def withoutInsetsAlong(axis: Axis2D) = mapInsets { _ - axis }
 	
-	def withInset(side: Direction2D, inset: StackLength) = mapInsets { _.withSide(side, inset) }
+	def withSide(side: Direction2D, inset: StackLength, exclusive: Boolean = false) =
+		mapInsets { _.withSide(side, inset, exclusive) }
+	@deprecated("Renamed to .withSide(...)", "v1.6")
+	def withInset(side: Direction2D, inset: StackLength) = withSide(side, inset)
 	def withoutInset(side: Direction2D) = mapInsets { _ - side }
 	
 	def expandingAlong(axis: Axis2D) = mapInsetsAlong(axis) { _.expanding }

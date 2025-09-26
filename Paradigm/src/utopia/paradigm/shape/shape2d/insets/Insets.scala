@@ -2,11 +2,8 @@ package utopia.paradigm.shape.shape2d.insets
 
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Direction2D
-import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
-
-import scala.collection.immutable.HashMap
 
 object Insets extends SidesFactory[Double, Insets]
 {
@@ -53,14 +50,12 @@ object Insets extends SidesFactory[Double, Insets]
 * @author Mikko Hilpinen
 * @since Genesis 25.3.2019
 **/
-case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Double, Size, Insets]
+case class Insets(sides: Map[Direction2D, Double]) extends Sides[Double] with InsetsLike[Insets]
 {
     // ATTRIBUTES   --------------
     
-    override protected val zeroLength = 0.0
     lazy override val dimensions = super.dimensions
-    
-    override lazy val total: Size = Size(totalAlong(X), totalAlong(Y))
+	override lazy val total: Size = super.total
     
     
 	// COMPUTED    ---------------
@@ -70,20 +65,6 @@ case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Dou
      */
     def toAwt = new java.awt.Insets(top.toInt, left.toInt, bottom.toInt, right.toInt)
     
-    /**
-     * The top left position inside these insets
-     */
-    def toPoint = Point(left, top)
-    
-    /**
-      * @return A non-negative version of these insets
-      */
-    def positive = Insets(sides.filter { _._2 > 0 })
-    /**
-      * @return Copy of these insets where every value is rounded to the nearest integer
-      */
-    def round = copy(sides.view.mapValues { _.round.toDouble }.toMap)
-    
     @deprecated("Please use .sides instead", "v1.5")
     def amounts = sides
     
@@ -91,10 +72,6 @@ case class Insets(sides: Map[Direction2D, Double]) extends ScalableSidesLike[Dou
     // IMPLEMENTED  --------------
     
     override def self = this
-    
-    override protected def join(a: Double, b: Double): Double = a + b
-    override protected def subtract(from: Double, amount: Double): Double = from - amount
-    override protected def multiply(a: Double, multiplier: Double) = a * multiplier
     
     override protected def withSides(sides: Map[Direction2D, Double]): Insets = Insets(sides)
 }

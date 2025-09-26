@@ -15,6 +15,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 5.5.2019, Reflection v1+
   */
+// TODO: At some point, rename to BorderDrawer
 trait BorderDrawerLike extends CustomDrawer
 {
 	// ABSTRACT	----------------------
