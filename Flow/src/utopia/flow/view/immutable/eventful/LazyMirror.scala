@@ -1,8 +1,10 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
+import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponse.Detach
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.template.eventful.Changing
 
 object LazyMirror
 {
@@ -19,7 +21,7 @@ object LazyMirror
 
 /**
   * Provides read-only access to a changing item's mapped value. Performs the mapping operation only when required,
-  * but doesn't provide listener interface because of that.
+  * but doesn't provide listener interface.
   * @author Mikko Hilpinen
   * @since 22.7.2020, v1.8
   * @param source The changing item being mirrored
@@ -28,20 +30,34 @@ object LazyMirror
   * @tparam Reflection Type of item after mirroring
   */
 class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection)
-	extends ListenableLazyWrapper[Reflection]
+	extends Lazy[Reflection]
 {
 	// ATTRIBUTES	--------------------------
 	
-	private val cache = ResettableLazy.listenable { f(source.value) }(source.listenerLogger)
-	
-	
-	// INITIAL CODE	--------------------------
-	
-	// Resets cache whenever original pointer changes
-	source.addHighPriorityListener { _ => cache.reset(); Continue }
+	/**
+	 * Contains the cached value
+	 */
+	private val cacheP = Pointer.empty[Reflection]
+	/**
+	 * A listener used for resetting the cached value.
+	 * listens only while there's a value to reset.
+	 */
+	private lazy val resetCacheListener = ChangeListener.onAnyChange {
+		cacheP.clear()
+		Detach
+	}
 	
 	
 	// IMPLEMENTED	--------------------------
 	
-	override protected def wrapped = cache
+	override def current: Option[Reflection] = cacheP.value
+	
+	// Yields the cached value, if appropriate
+	override def value: Reflection = cacheP.value.getOrElse {
+		// Otherwise generates and caches the new value, and prepares a listener for resetting the cache
+		val result = f(source.value)
+		cacheP.setOne(result)
+		source.addHighPriorityListener(resetCacheListener)
+		result
+	}
 }

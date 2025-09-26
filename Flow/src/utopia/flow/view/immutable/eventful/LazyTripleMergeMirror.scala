@@ -1,9 +1,10 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
+import utopia.flow.event.model.ChangeResponse.Detach
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.template.eventful.Changing
 
 object LazyTripleMergeMirror
 {
@@ -21,37 +22,31 @@ object LazyTripleMergeMirror
 	  * @return A lazily merging mirror
 	  */
 	def of[O1, O2, O3, R](source1: Changing[O1], source2: Changing[O2], source3: Changing[O3])
-	                     (merge: (O1, O2, O3) => R) =
+	                     (merge: (O1, O2, O3) => R): Lazy[R] =
 	{
 		// Optimizes the listener-usage
-		source1.fixedValue match {
-			case Some(v1) =>
-				source2.fixedValue match {
-					case Some(v2) =>
-						source3.fixedValue match {
-							case Some(v3) => ListenableLazy { merge(v1, v2, v3) }(source1.listenerLogger)
-							case None => LazyMirror(source3) { merge(v1, v2, _) }
-						}
-					case None =>
-						source3.fixedValue match {
-							case Some(v3) => source2.lazyMap { merge(v1, _, v3) }
-							case None => LazyMergeMirror(source2, source3) { merge(v1, _, _) }
-						}
-				}
-			case None =>
-				source2.fixedValue match {
-					case Some(v2) =>
-						source3.fixedValue match {
-							case Some(v3) => LazyMirror(source1) { merge(_, v2, v3) }
-							case None => LazyMergeMirror(source1, source3) { merge(_, v2, _) }
-						}
-					case None =>
-						source3.fixedValue match {
-							case Some(v3) => LazyMergeMirror(source1, source2) { merge(_, _, v3) }
-							case None => apply(source1, source2, source3)(merge)
-						}
-				}
+		if (source1.mayChange) {
+			if (source2.mayChange) {
+				if (source3.mayChange)
+					apply(source1, source2, source3)(merge)
+				else
+					source1.lazyMergeWith(source2) { merge(_, _, source3.value) }
+			}
+			else if (source3.mayChange)
+				source1.lazyMergeWith(source3) { merge(_, source2.value, _) }
+			else
+				source1.lazyMap { merge(_, source2.value, source3.value) }
 		}
+		else if (source2.mayChange) {
+			if (source3.mayChange)
+				source2.lazyMergeWith(source3) { merge(source1.value, _, _) }
+			else
+				source2.lazyMap { merge(source1.value, _, source3.value) }
+		}
+		else if (source3.mayChange)
+			source3.lazyMap { merge(source1.value, source2.value, _) }
+		else
+			Lazy { merge(source1.value, source2.value, source3.value) }
 	}
 	
 	/**
@@ -76,26 +71,45 @@ object LazyTripleMergeMirror
   * @author Mikko Hilpinen
   * @since 16.8.2024, v2.5
   */
-class LazyTripleMergeMirror[+O1, +O2, +O3, +Reflection](source1: Changing[O1], source2: Changing[O2],
-                                                        source3: Changing[O3])
-                                                       (merge: (O1, O2, O3) => Reflection)
-	extends ListenableLazyWrapper[Reflection]
+class LazyTripleMergeMirror[+O1, +O2, +O3, Reflection](source1: Changing[O1], source2: Changing[O2],
+                                                       source3: Changing[O3])
+                                                      (merge: (O1, O2, O3) => Reflection)
+	extends Lazy[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = ResettableLazy
-		.listenable { merge(source1.value, source2.value, source3.value) }(source1.listenerLogger)
-	private lazy val listener = ChangeListener.onAnyChange { cache.reset(); Continue }
+	private lazy val sources = Vector(source1, source2, source3)
 	
-	
-	// INITIAL CODE	-------------------------------
-	
-	source1.addHighPriorityListener(listener)
-	source2.addHighPriorityListener(listener)
-	source3.addHighPriorityListener(listener)
+	private val cacheP = Pointer.empty[Reflection]
+	private val resetCacheListeners: Seq[ChangeListener[Any]] = sources.indices.map { i =>
+		ChangeListener.onAnyChange {
+			cacheP.clear()
+			detachListeners(i)
+			Detach
+		}
+	}
 	
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override protected def wrapped = cache
+	override def current: Option[Reflection] = cacheP.value
+	
+	override def value: Reflection = cacheP.value.getOrElse {
+		val result = merge(source1.value, source2.value, source3.value)
+		cacheP.setOne(result)
+		sources.iterator.zip(resetCacheListeners).foreach { case (source, listener) =>
+			source.addHighPriorityListener(listener)
+		}
+		result
+	}
+	
+	
+	// OTHER    ------------------------------------
+	
+	private def detachListeners(excludingIndex: Int): Unit = {
+		sources.iterator.zipWithIndex.zip(resetCacheListeners).foreach { case ((source, i), listener) =>
+			if (i != excludingIndex)
+				source.removeListener(listener)
+		}
+	}
 }

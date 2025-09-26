@@ -1,10 +1,12 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponse.Detach
+import utopia.flow.operator.enumeration.End
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.caching.ResettableLazy
-import utopia.flow.view.template.eventful.{Changing, ListenableLazyWrapper}
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.template.eventful.Changing
 
 object LazyMergeMirror
 {
@@ -23,14 +25,14 @@ object LazyMergeMirror
 		// Uses lazy mapping or even lazy wrapping if possible
 		if (source1.mayChange) {
 			if (source2.mayChange)
-				new LazyMergeMirror(source1, source2)(merge)
+				apply(source1, source2)(merge)
 			else
 				source1.lazyMap { merge(_, source2.value) }
 		}
 		else if (source2.mayChange)
 			source2.lazyMap { merge(source1.value, _) }
 		else
-			Lazy.listenable { merge(source1.value, source2.value) }(source1.listenerLogger)
+			Lazy { merge(source1.value, source2.value) }
 	}
 	
 	/**
@@ -53,23 +55,37 @@ object LazyMergeMirror
   * @author Mikko Hilpinen
   * @since 24.10.2020, v1.9
   */
-class LazyMergeMirror[+O1, +O2, +Reflection](source1: Changing[O1], source2: Changing[O2])
+class LazyMergeMirror[+O1, +O2, Reflection](source1: Changing[O1], source2: Changing[O2])
                                             (merge: (O1, O2) => Reflection)
-	extends ListenableLazyWrapper[Reflection]
+	extends Lazy[Reflection]
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val cache = ResettableLazy.listenable { merge(source1.value, source2.value) }(source1.listenerLogger)
-	private lazy val listener = ChangeListener.onAnyChange { cache.reset(); Continue }
+	private val sources = Pair(source1, source2)
 	
-	
-	// INITIAL CODE	-------------------------------
-	
-	source1.addHighPriorityListener(listener)
-	source2.addHighPriorityListener(listener)
+	private val cacheP = Pointer.empty[Reflection]
+	private lazy val resetCacheListeners: Pair[ChangeListener[Any]] = End.values.map { listenedSide =>
+		ChangeListener.onAnyChange {
+			cacheP.clear()
+			detachListener(listenedSide.opposite)
+			Detach
+		}
+	}
 	
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override protected def wrapped = cache
+	override def current: Option[Reflection] = cacheP.value
+	
+	override def value: Reflection = cacheP.value.getOrElse {
+		val result = merge(source1.value, source2.value)
+		cacheP.setOne(result)
+		sources.mergeWith(resetCacheListeners) { _.addHighPriorityListener(_) }
+		result
+	}
+	
+	
+	// OTHER    ---------------------------------
+	
+	private def detachListener(side: End): Unit = sources(side).removeListener(resetCacheListeners(side))
 }

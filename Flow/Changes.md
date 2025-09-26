@@ -7,6 +7,9 @@
   - These also affect **Quarter** and **YearlyDateRange**
 - **Lazy**`.flatMap(...)` now yields **Lazy** instead of **LazySeq**
   - The previous implementation is available as `.mapToSeq(...)`
+- **Changing**'s `.lazyMap(...)` and `.lazyMergeWith(...)` now yield **Lazy** instead of **ListenableLazy**
+  - The utilized **LazyMirror**, **LazyMergeMirror** and **LazyTripleMergeMirror** 
+    no longer extend **ListenableLazy**, only **Lazy**
 - **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
@@ -18,6 +21,8 @@
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
 ### Deprecations
 - Renamed **Lazy**`.mapCurrent(...)` to `.lightMap(...) `
+- Deprecated **Changing**'s `listenerDebuggingLimit` property / feature
+  - This feature will be removed in v2.8, or possibly later
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
 - Added **Year**, **YearMonth** and **Month** as generic data types
@@ -81,6 +86,8 @@
 ### Other changes
 - **XmlReader** now discards non-XML prefix from the streamed input, 
   effectively handling the BOM issue, and other such malformed inputs
+- Rewrote **LazyMirror**, **LazyMergeMirror** and **LazyTripleMergeMirror** to only listen to the source pointers 
+  while they contain a cached value.
 - **LazilyInitializedChanging** now contains custom definitions for certain mapping functions,
   etc. further delaying the initialization in certain use-cases.
 - **MutableOnce** now extends **Lockable**

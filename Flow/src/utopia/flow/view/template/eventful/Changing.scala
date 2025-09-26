@@ -3,7 +3,7 @@ package utopia.flow.view.template.eventful
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.event.listener.{ChangeDependency, ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
+import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
@@ -34,6 +34,7 @@ object Changing
 	  * Please note that this feature is NOT INDENTED FOR USE IN PRODUCTION
 	  * and is merely for testing and debugging purposes.
 	  */
+	@deprecated("Deprecated for removal", "v2.7")
 	var listenerDebuggingLimit = -1
 	
 	
@@ -393,6 +394,7 @@ trait Changing[+A] extends View[A]
 	  *                 if appropriate (i.e. this item will still change) (call-by-name)
 	  */
 	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
+		// TODO: Remove this debugging feature at v2.8 or later
 		// Debugging feature: May follow the maximum number of listeners
 		if (Changing.listenerDebuggingLimit >= 0 && numberOfListeners >= Changing.listenerDebuggingLimit)
 			throw new IllegalStateException(s"Maximum (debugging) limit (${Changing.listenerDebuggingLimit}) of change event listeners reached.")
@@ -485,28 +487,6 @@ trait Changing[+A] extends View[A]
 		if (this.value == value)
 			f
 	}
-	
-	/**
-	  * Registers a new high-priority listener to be informed whenever this item's value changes.
-	  * These dependencies must be informed first before triggering any normal listeners.
-	  * @param dependency A dependency to add (call by name)
-	  */
-	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
-	def addDependency(dependency: => ChangeDependency[A]): Unit = addHighPriorityListener(dependency)
-	/**
-	  * Adds a new dependency to this changing item
-	  * @param beforeChange A function called before each change event (accepts change event that will be fired)
-	  * @param afterChange  A function called after each change event (accepts change event that was fired)
-	  */
-	@deprecated("Deprecated for removal. Please use .addHighPriorityListener(ChangeListener) instead", "v2.2")
-	def addDependency[B](beforeChange: ChangeEvent[A] => B)(afterChange: B => Unit): Unit =
-		addDependency(ChangeDependency.beforeAndAfter(beforeChange)(afterChange))
-	/**
-	  * Removes a change dependency from being activated in the future
-	  * @param dependency A dependency to remove from this item
-	  */
-	@deprecated("Deprecated for removal. Change dependencies have been replaced with high-priority change listeners. Please use .removeListener(Any) instead", "v2.2")
-	def removeDependency(dependency: Any): Unit = removeListener(dependency)
 	
 	/**
 	  * Functions like [[addListenerAndSimulateEvent]],
@@ -820,8 +800,7 @@ trait Changing[+A] extends View[A]
 	  * @tparam B Mapping result type
 	  * @return A lazily mirrored version of this item that uses the specified mapping function
 	  */
-	def lazyMap[B](f: A => B): ListenableLazy[B] =
-		lazyDiverge { LazyMirror(this)(f) } { f(value) }
+	def lazyMap[B](f: A => B): Lazy[B] = if (mayChange) LazyMirror(this)(f) else Lazy { f(value) }
 	
 	/**
 	  * @param f A mapping function
@@ -1150,8 +1129,8 @@ trait Changing[+A] extends View[A]
 	  * @tparam R Type of merge result
 	  * @return A mirror that lazily merges the values from both of these items
 	  */
-	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R): ListenableLazy[R] =
-		divergeMerge[B, ListenableLazy[R]](other) { LazyMergeMirror(this, other)(f) } { v2 => lazyMap { f(_, v2) } } {
+	def lazyMergeWith[B, R](other: Changing[B])(f: (A, B) => R): Lazy[R] =
+		divergeMerge[B, Lazy[R]](other) { LazyMergeMirror(this, other)(f) } { v2 => lazyMap { f(_, v2) } } {
 			LazyMirror(other) { f(value, _) } }
 	/**
 	  * @param second A second changing item
@@ -1162,7 +1141,7 @@ trait Changing[+A] extends View[A]
 	  * @tparam R Type of merge results
 	  * @return A lazy view into the merge results from these pointers
 	  */
-	def lazyMergeWith[B, C, R](second: Changing[B], third: Changing[C])(merge: (A, B, C) => R) =
+	def lazyMergeWith[B, C, R](second: Changing[B], third: Changing[C])(merge: (A, B, C) => R): Lazy[R] =
 		LazyTripleMergeMirror.of(this, second, third)(merge)
 	
 	/**
