@@ -38,7 +38,8 @@ import utopia.reach.component.label.image.{ViewImageLabel, ViewImageLabelSetting
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.template.focus.{Focusable, FocusableWithState, FocusableWrapper}
 import utopia.reach.component.template.{ConcreteReachComponent, PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.component.wrapper.Open
+import utopia.reach.component.wrapper.Open.{OpenComponent, SwitchableOpenComponent}
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.container.wrapper.{Framing, FramingFactory}
 import utopia.reach.focus.{FocusChangeListener, FocusStateTracker}
@@ -535,7 +536,7 @@ case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: Variab
 	def apply[C <: ReachComponent with Focusable](emptyFlag: Flag)
 	                                             (makeField: FieldCreationContext => C)
 	                                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
-		                                                 Option[OpenComponent[ReachComponent, Any]]) =
+		                                                 Option[Open[ReachComponent, Any]]) =
 		new Field[C](hierarchy, context, emptyFlag, settings)(makeField)(makeRightHintLabel)
 	
 	/**
@@ -546,7 +547,7 @@ case class ContextualFieldFactory(hierarchy: ComponentHierarchy, context: Variab
 	  * @tparam C Type of wrapped component
 	  * @return A new field
 	  */
-	def withoutExtraLabel[C <: ReachComponent with Focusable](emptyFlag: Changing[Boolean])
+	def withoutExtraLabel[C <: ReachComponent with Focusable](emptyFlag: Flag)
 	                                                         (makeField: FieldCreationContext => C) =
 		apply(emptyFlag)(makeField) { _ => None }
 }
@@ -580,13 +581,12 @@ object Field extends FieldSetup()
   * @since 14.11.2020, v0.1
   * @tparam C Type of wrapped field
   */
-// TODO: It would be more reasonable if isEmptyPointer/flag was nonEmptyPointer/flag - the problem is that the transition is hard
 class Field[C <: ReachComponent with Focusable](override val hierarchy: ComponentHierarchy,
                                                 context: VariableTextContext, emptyFlag: Flag,
                                                 settings: FieldSettings = FieldSettings.default)
                                                (makeField: FieldCreationContext => C)
                                                (makeRightHintLabel: ExtraFieldCreationContext[C] =>
-	                                                   Option[OpenComponent[ReachComponent, Any]])
+	                                                   Option[Open[ReachComponent, Any]])
 	extends ReachComponentWrapper with FocusableWrapper with FocusableWithState with PartOfComponentHierarchy
 {
 	// ATTRIBUTES	------------------------------------------
@@ -834,7 +834,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	
 	// OTHER	----------------------------------------------
 	
-	private def makeContentFraming[C2 <: ReachComponent](factory: FramingFactory, content: OpenComponent[C2, C]) =
+	private def makeContentFraming[C2 <: ReachComponent](factory: FramingFactory, content: Open[C2, C]) =
 	{
 		// If extra icons are used, places them with the main content in a stack view
 		val framingContent = {
@@ -864,7 +864,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 			.withSettings(settings.imageSettings).mapInsets { _ - noMarginSide }
 			.iconPointer(pointer)
 	private def makeOpenViewImageLabel(pointer: Changing[SingleColorIcon], noMarginSide: Direction2D) =
-		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult(pointer.strongMap { _.nonEmpty })
+		Open { makeViewImageLabel(_, pointer, noMarginSide) }.withResult[Flag](pointer.lightMap { _.nonEmpty })
 	
 	// Assumes that the name-pointer is not always empty
 	private def makeContentAndNameArea(fieldNamePointer: Changing[LocalizedString]) = {
@@ -928,7 +928,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	}
 	
 	// Returns input area
-	private def makeInputArea() = {
+	private def makeInputArea(): OpenComponent[C] = {
 		// Input part may contain a name label, if enabled
 		// Case: Field name is never displayed => Uses a simplified creation function
 		if (settings.fieldNamePointer.existsFixed { _.isEmpty }) {
@@ -949,7 +949,7 @@ class Field[C <: ReachComponent with Focusable](override val hierarchy: Componen
 	}
 	
 	// Returns the generated open component (if any), along with its visibility pointer (if applicable)
-	private def makeHintArea(wrappedField: C): Option[OpenComponent[ReachComponent, Changing[Boolean]]] = {
+	private def makeHintArea(wrappedField: C): Option[SwitchableOpenComponent] = {
 		// In some cases, displays both message field and extra right side label
 		// In other cases only the message field (which is hidden while empty)
 		// The right side hint label expands to the left and not right

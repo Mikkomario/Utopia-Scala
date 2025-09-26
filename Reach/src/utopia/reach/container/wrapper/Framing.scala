@@ -22,7 +22,7 @@ import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 
 trait FramingFactoryLike[+Repr]
 	extends WrapperContainerFactory[Framing, ReachComponent] with CustomDrawableFactory[Repr]
@@ -30,7 +30,7 @@ trait FramingFactoryLike[+Repr]
 {
 	// IMPLEMENTED  --------------------
 	
-	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[Framing, C, R] = {
+	override def apply[C <: ReachComponent, R](content: Open[C, R]): ContainerCreation[Framing, C, R] = {
 		val framing = new Framing(hierarchy, content, insetsPointer, customDrawers)
 		// Closes the content
 		content.attachTo(framing)
@@ -68,8 +68,8 @@ case class FramingFactory(hierarchy: ComponentHierarchy)
 	  * @return A new framing and the produced content component
 	  */
 	@deprecated("Replaced with .apply(StackInsetsConvertible).apply(OpenComponent)", "v1.1")
-	def apply[C <: ReachComponent, R](content: OpenComponent[C, R], insets: StackInsetsConvertible,
-	                                  customDrawers: Seq[CustomDrawer] = Empty): ComponentWrapResult[Framing, C, R] =
+	def apply[C <: ReachComponent, R](content: Open[C, R], insets: StackInsetsConvertible,
+	                                  customDrawers: Seq[CustomDrawer] = Empty): ContainerCreation[Framing, C, R] =
 		apply(insets).withCustomDrawers(customDrawers).apply(content)
 }
 

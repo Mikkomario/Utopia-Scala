@@ -12,8 +12,9 @@ import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
-import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.component.wrapper.Creation.{CreationOfComponents, CreationOfMany}
+import utopia.reach.component.wrapper.Open.OpenSeparately
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.SegmentGroup.ContextualSegmentedBuilder
 
@@ -89,10 +90,10 @@ object SegmentGroup
 		  * @return Segment wrappers, including the additional result from 'fill'.
 		  */
 		def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Ccff[N, F])
-		                                               (fill: Iterator[F] => ComponentsResult[C, R])
-		                                               (implicit canvas: ReachCanvas) =
+		                                               (fill: Iterator[F] => CreationOfMany[C, R])
+		                                               (implicit canvas: ReachCanvas): CreationOfComponents[R] =
 		{
-			val content = Open.withContext(context).many(contentFactory) { fill(_) }
+			val content = Open.withContext(context).separately(contentFactory) { fill(_) }
 			val result = group.wrapUnderSingle(hierarchy, content)
 			result.map { _.parent } -> content.result
 		}
@@ -199,7 +200,7 @@ trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBui
 	  * @param row Row of hierarchies to host the new components and open components to register & wrap
 	  * @return Wrapped components
 	  */
-	def wrapUnderMany[C <: ReachComponent, R](row: Seq[(ComponentHierarchy, OpenComponent[C, R])]) =
+	def wrapUnderMany[C <: ReachComponent, R](row: Seq[(ComponentHierarchy, Open[C, R])]) =
 	{
 		val parentsIterator = row.iterator.map { _._1 }
 		wrap(row.map { _._2 }) { parentsIterator.next() }
@@ -210,7 +211,7 @@ trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBui
 	  * @param row Row of open components to register & wrap
 	  * @return Wrapped components
 	  */
-	def wrapUnderSingle[C <: ReachComponent, R](hierarchy: ComponentHierarchy, row: Seq[OpenComponent[C, R]]) =
+	def wrapUnderSingle[C <: ReachComponent, R](hierarchy: ComponentHierarchy, row: Seq[Open[C, R]]) =
 		wrap(row)(hierarchy)
 	
 	/**
@@ -226,10 +227,10 @@ trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBui
 	  * @return Segment wrappers, including the additional result from 'fill'.
 	  */
 	def buildUnderSingle[F, C <: ReachComponent, R](hierarchy: ComponentHierarchy, contentFactory: Cff[F])
-	                                               (fill: Iterator[F] => ComponentsResult[C, R])
-	                                               (implicit canvas: ReachCanvas) =
+	                                               (fill: Iterator[F] => CreationOfMany[C, R])
+	                                               (implicit canvas: ReachCanvas): CreationOfComponents[R] =
 	{
-		val content = Open.manyUsing(contentFactory) { fill(_) }
+		val content = Open.separatelyUsing(contentFactory) { fill(_) }
 		val result = wrapUnderSingle(hierarchy, content)
 		result.map { _.parent } -> content.result
 	}
@@ -241,7 +242,7 @@ trait SegmentGroup extends FromGenericContextFactory[Any, ContextualSegmentedBui
 	  *                      components will be attached
 	  * @return Wrapped components
 	  */
-	def wrap[C <: ReachComponent, R](row: Seq[OpenComponent[C, R]])(nextHierarchy: => ComponentHierarchy) =
+	def wrap[C <: ReachComponent, R](row: OpenSeparately[C, R])(nextHierarchy: => ComponentHierarchy): Seq[ContainerCreation[ReachComponent, C, R]] =
 	{
 		// Adds each piece of the row into its own segment
 		row.view.zip(acquireSegments(row.size))

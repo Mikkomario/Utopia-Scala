@@ -22,7 +22,7 @@ object WindowCreationResult
 	  * @tparam R Type of additional result
 	  * @return A new window creation result
 	  */
-	def apply[C, R](window: Window, canvasCreation: ComponentWrapResult[ReachCanvas, C, R]): WindowCreationResult[C, R] =
+	def apply[C, R](window: Window, canvasCreation: ContainerCreation[ReachCanvas, C, R]): WindowCreationResult[C, R] =
 		apply(window, canvasCreation.parent, canvasCreation.child, canvasCreation.result)
 	
 	/**

@@ -12,7 +12,7 @@ import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFacto
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
-import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.component.wrapper.Open
 import utopia.reach.container.ReachCanvas
 
 @deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
@@ -63,7 +63,7 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  */
 	def apply[A, C <: ReachComponent, P <: Changing[A]](valuePointer: P,
 	                                                    customDrawers: Seq[CustomDrawer] = Empty)
-	                                                   (makeContent: A => OpenComponent[C, _]) =
+	                                                   (makeContent: A => Open[C, _]) =
 		new CachingViewSwapper[A, C, P](parentHierarchy, valuePointer, customDrawers)(makeContent)
 	
 	/**
@@ -77,7 +77,7 @@ class CachingViewSwapperFactory(parentHierarchy: ComponentHierarchy)
 	  * @return A new swapper container
 	  */
 	def generic[A](valuePointer: Changing[A], customDrawers: Seq[CustomDrawer] = Empty)
-				  (makeContent: A => OpenComponent[ReachComponent, _]) =
+				  (makeContent: A => Open[ReachComponent, _]) =
 		apply[A, ReachComponent, Changing[A]](valuePointer, customDrawers)(makeContent)
 	
 	/**
@@ -187,7 +187,7 @@ class ContextualViewSwapperBuilder[N, +F[X]](factory: CachingViewSwapperFactory,
 @deprecated("Deprecated for removal. Replaced with Swapper", "v1.5")
 class CachingViewSwapper[A, +C <: ReachComponent, +P <: Changing[A]]
 (override val hierarchy: ComponentHierarchy, override val valuePointer: P,
- override val customDrawers: Seq[CustomDrawer] = Empty)(makeContent: A => OpenComponent[C, _])
+ override val customDrawers: Seq[CustomDrawer] = Empty)(makeContent: A => Open[C, _])
 	extends ConcreteCustomDrawReachComponent with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------

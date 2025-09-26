@@ -13,7 +13,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.reach.component.factory.contextual.ReachContentWindowContextualFactory
 import utopia.reach.component.factory.{ContextualMixed, Mixed}
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
+import utopia.reach.component.wrapper.{Creation, WindowCreationResult}
 import utopia.reach.context.StaticReachContentWindowContext
 
 import scala.concurrent.ExecutionContext
@@ -122,7 +122,7 @@ object NotificationWindow
 		 * @return A window that also contains the function 'f' results
 		 */
 		def buildOver[C <: ReachComponent, R](context: ColorContext, component: ReachComponent)
-		                                     (f: ContextualMixed[StaticTextContext] => ComponentCreationResult[C, R]): WindowCreationResult[C, R] =
+		                                     (f: ContextualMixed[StaticTextContext] => Creation[C, R]): WindowCreationResult[C, R] =
 			build[C, R](context, Some(component))(f)
 		/**
 		 * Creates a notification window next to a component or in the bottom right corner of the window or screen,
@@ -134,7 +134,7 @@ object NotificationWindow
 		 * @return A window that also contains the function 'f' results
 		 */
 		def build[C <: ReachComponent, R](context: ColorContext, component: Option[ReachComponent] = None)
-		                                 (f: ContextualMixed[StaticTextContext] => ComponentCreationResult[C, R]): WindowCreationResult[C, R] =
+		                                 (f: ContextualMixed[StaticTextContext] => Creation[C, R]): WindowCreationResult[C, R] =
 		{
 			// The pop-up background color (if applicable) is based on the component-creation context
 			val appliedWindowContext = background match {

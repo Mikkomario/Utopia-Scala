@@ -45,10 +45,10 @@ object DatabaseReferenceReader
 	  * tables for each included database
 	  * @param connection the database connection used
 	  */
-	def setupReferences(tables: Iterable[Table])(implicit connection: Connection) = {
-		val tablesForDatabase = tables.groupBy(_.databaseName)
-		tablesForDatabase.foreach { case (dbName, dbTables) => References.setup(dbName, _apply(dbName, dbTables)) }
-	}
+	def setupReferences(tables: Iterable[Table])(implicit connection: Connection) =
+		tables.groupBy { _.databaseName }.foreach { case (dbName, dbTables) =>
+			References.setup(dbName, _apply(dbName, dbTables))
+		}
 	
 	private def _apply(dbName: String, tables: Iterable[Table])(implicit connection: Connection) =
 		if (tables.isEmpty)

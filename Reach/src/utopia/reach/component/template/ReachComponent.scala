@@ -21,7 +21,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
-import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
+import utopia.reach.component.wrapper.{Creation, WindowCreationResult}
 import utopia.reach.context.ReachWindowContext
 import utopia.reach.window.ReachWindow
 
@@ -405,7 +405,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	                                         title: LocalizedString = LocalizedString.empty,
 	                                         matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                         display: Boolean = false)
-	                                        (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R])
+	                                        (createContent: (ComponentHierarchy, Changing[Option[Window]]) => Creation[C, R])
 	                                        (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                             log: Logger): WindowCreationResult[C, R] =
 	{

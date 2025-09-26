@@ -214,7 +214,7 @@ object LengthExtensions
 		  * @return A set of bounds for the area to position that follows this alignment
 		  */
 		def positionWithInsets(areaToPosition: Size, within: Bounds, insets: StackInsetsConvertible = StackInsets.any,
-		             fitWithinBounds: Boolean = true, preserveShape: Boolean = true) =
+		                       fitWithinBounds: Boolean = true, preserveShape: Boolean = true) =
 		{
 			// Calculates the final size of the positioned area
 			val fittedArea = {

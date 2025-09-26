@@ -14,7 +14,6 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.{Background, Foreground}
 import utopia.genesis.graphics.{DrawLevel, DrawSettings, Drawer, StrokeSettings}
@@ -30,7 +29,7 @@ import utopia.reach.component.interactive.Table.{Column, ColumnSeparatorsDrawer,
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
-import utopia.reach.container.multi.{ContextualStackFactory, ContextualViewStackFactory, SegmentGroup, Stack, ViewStack}
+import utopia.reach.container.multi._
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.container.wrapper.scrolling.{ScrollView, ScrollingSettings}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
@@ -561,7 +560,7 @@ class Table[A](override val hierarchy: ComponentHierarchy, context: VariableText
 				.buildUnderSingle(groupF.hierarchy, Mixed) { factories =>
 					Single(construct(columns.head, factories.next()))
 				}
-				._1.head
+				.component.head
 		// Case: Multiple columns => Wraps them in a stack
 		else {
 			val rowF = {

@@ -3,7 +3,7 @@ package utopia.reach.test.interactive
 import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.genesis.handling.event.keyboard.{KeyStateListener, KeyboardEvents}
 import utopia.genesis.image.Image
 import utopia.paradigm.color.Color
@@ -37,9 +37,9 @@ object ImageViewStackTest extends App
 	val icon2 = Image.readFrom("Reach/test-images/cursor-hand.png").get.withCenterOrigin * 2
 	val icon3 = Image.readFrom("Reach/test-images/cursor-text.png").get
 	
-	val pointer1 = EventfulPointer(true)
-	val pointer2 = EventfulPointer(false)
-	val pointer3 = EventfulPointer(false)
+	val pointer1 = ResettableFlag(initialValue = true)
+	val pointer2 = ResettableFlag()
+	val pointer3 = ResettableFlag()
 	
 	// Window[Stack[Label1, Label2]]
 	val window = ReachWindow.contentContextual.using(ViewStack) { (_, stackF) =>

@@ -30,8 +30,8 @@ object StackLength
 	  * @param priority Priority used with this stack length
 	  * @return A new stack length
 	  */
-    def apply(min: Double, optimal: Double, max: Option[Double] = None,
-			  priority: LengthPriority = Normal) = new StackLength(min, optimal, max, priority)
+    def apply(min: Double, optimal: Double, max: Option[Double] = None, priority: LengthPriority = Normal) =
+	    new StackLength(min, optimal, max, priority)
 	/**
 	  * @param min Minimum length
 	  * @param optimal Optimal length
@@ -162,7 +162,7 @@ class StackLength(rawMin: Double, rawOptimal: Double, rawMax: Option[Double] = N
 	  * Maximum length. None if not limited.
 	  */
 	// Max must be >= optimal
-	val max: Option[Double] = rawMax.map(_ max optimal)
+	val max: Option[Double] = rawMax.map { _ max optimal }
 	
 	
 	// COMPUTED	-----------------------------

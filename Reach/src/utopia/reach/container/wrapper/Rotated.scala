@@ -24,7 +24,7 @@ import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.ReachCanvas
 
 trait RotatedFactoryLike[+Repr]
@@ -58,7 +58,7 @@ trait RotatedFactoryLike[+Repr]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[Rotated, C, R] = {
+	override def apply[C <: ReachComponent, R](content: Open[C, R]): ContainerCreation[Rotated, C, R] = {
 		val container = new Rotated(hierarchy, content.component, direction, customDrawers)
 		content.attachTo(container, RotatedHierarchy(hierarchy, container, direction))
 	}

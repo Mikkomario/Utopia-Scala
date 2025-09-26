@@ -12,7 +12,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.Creation
 import utopia.reach.container.ReachCanvas
 import utopia.reach.cursor.CursorSet
 import utopia.reflection.component.swing.template.{AwtComponentRelated, AwtComponentWrapper, SwingComponentRelated}
@@ -49,7 +49,7 @@ object ReflectionReachCanvas
 	  */
 	def apply[C <: ReachComponent, R](background: Color, cursors: Option[CursorSet] = None,
 	                                  enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
-	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                 (createContent: ComponentHierarchy => Creation[C, R])
 	                                 (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas

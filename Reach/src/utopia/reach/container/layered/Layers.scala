@@ -4,23 +4,22 @@ import utopia.firmament.component.container.many.MultiContainer
 import utopia.firmament.component.stack.StackSizeCalculating
 import utopia.firmament.drawing.immutable.CustomDrawableFactory
 import utopia.firmament.drawing.template.CustomDrawer
-import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.firmament.model.stack.LengthExtensions._
-import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.genesis.graphics.Drawer
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
-import utopia.reach.component.factory.{ContextualMixed, FromGenericContextFactory, Mixed}
 import utopia.reach.component.factory.contextual.GenericContextualFactory
+import utopia.reach.component.factory.{ContextualMixed, FromGenericContextFactory, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.ComponentCreationResult.LayersResult
+import utopia.reach.component.wrapper.Creation.CreationOfLayers
 import utopia.reach.component.wrapper.Open
-import utopia.reach.component.wrapper.OpenComponent.OpenLayerComponents
+import utopia.reach.component.wrapper.Open.OpenLayers
 import utopia.reach.container.layered.LayerPositioning.{AlignedToSide, AnchoredTo, Free}
 
 trait LayersFactoryLike[+Repr] extends PartOfComponentHierarchy with CustomDrawableFactory[Repr]
@@ -35,7 +34,7 @@ trait LayersFactoryLike[+Repr] extends PartOfComponentHierarchy with CustomDrawa
 	  * @return A component wrap result that contains the created Layers container +
 	  *         the main component + the layer components + the additional creation result
 	  */
-	def apply[M <: ReachComponent, C <: ReachComponent, R](content: OpenLayerComponents[M, C, R]) =
+	def apply[M <: ReachComponent, C <: ReachComponent, R](content: OpenLayers[M, C, R]) =
 	{
 		val layers: Layers = new _Layers(hierarchy, content.component._1, content.component._2, customDrawers)
 		content.attachTo(layers).mapChild { case (main, layers) => main -> layers.map { _._1 } }
@@ -70,7 +69,7 @@ case class LayersFactory(hierarchy: ComponentHierarchy, customDrawers: Seq[Custo
 	  * @return A new layered view + created components + additional creation result
 	  */
 	def build[MF, CF, M <: ReachComponent, C <: ReachComponent, R](mainFactory: Cff[MF], layersFactory: Cff[CF])
-	                                                              (fill: (MF, CF) => LayersResult[M, C, R]) =
+	                                                              (fill: (MF, CF) => CreationOfLayers[M, C, R]) =
 		apply(Open[(M, Seq[(C, LayerPositioning)]), R] { hierarchy =>
 			fill(mainFactory(hierarchy), layersFactory(hierarchy)) })
 }
@@ -109,7 +108,7 @@ case class ContextualLayersFactory[+N](hierarchy: ComponentHierarchy, context: N
 	  *         1. Additional component creation result
 	  */
 	def build[MF, CF, M <: ReachComponent, C <: ReachComponent, R](mainFactory: Ccff[N, MF], layersFactory: Ccff[N, CF])
-	                                                              (fill: (MF, CF) => LayersResult[M, C, R]) =
+	                                                              (fill: (MF, CF) => CreationOfLayers[M, C, R]) =
 		apply(Open.contextual(context).apply[ContextualMixed[N], (M, Seq[(C, LayerPositioning)]), R](Mixed) { factories =>
 			fill(factories(mainFactory), factories(layersFactory))
 		})
@@ -152,16 +151,15 @@ trait Layers extends ConcreteCustomDrawReachComponent with MultiContainer[ReachC
 			mainLayer.stackSize
 		else {
 			// Combines the layer sizes
-			// TODO: May be refactored to just calculate the minimum size?
-			val combinedLayerSize = StackSize.combine(overlays.map { _._1.stackSize })
+			val minLayersSize = overlays.iterator.map { _._1.stackSize.min }.reduce { _ bottomRight _ }
 			// Prefers the main layer size, but may be limited by other layers' min sizes
 			val mainLayerSize = mainLayer.stackSize
 			// Case: No expansion required
-			if (combinedLayerSize.min.fitsWithin(mainLayerSize.optimal))
+			if (minLayersSize.fitsWithin(mainLayerSize.optimal))
 				mainLayerSize
 			// Case: Some lengths need to be adjusted
 			else
-				mainLayerSize.withMin(combinedLayerSize.min)
+				mainLayerSize.withMin(minLayersSize)
 		}
 	}
 	
@@ -207,10 +205,9 @@ trait Layers extends ConcreteCustomDrawReachComponent with MultiContainer[ReachC
 				val layerClipZone = clipZone - position
 				// Skips layers that don't overlap with the clip zone
 				val layers = overlays.map { _._1 }.filter { _.bounds.overlapsWith(layerClipZone) }
-				val (layersToDraw, paintMainLayer) = layers.findLastIndexWhere { layer =>
-					layer.opaque &&
-						layer.bounds.contains(layerClipZone)
-				} match {
+				val (layersToDraw, paintMainLayer) = layers
+					.findLastIndexWhere { layer => layer.opaque && layer.bounds.contains(layerClipZone) } match
+				{
 					// Case: Some layers are hidden
 					case Some(opaqueLayerIndex) => layers.drop(opaqueLayerIndex) -> false
 					// Case: No opaque layers

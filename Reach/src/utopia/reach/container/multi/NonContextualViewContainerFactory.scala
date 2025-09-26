@@ -3,8 +3,8 @@ package utopia.reach.container.multi
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.factory.ComponentFactoryFactory.Cff
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentCreationResult.SwitchableComponents
-import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
+import utopia.reach.component.wrapper.ContainerCreation.ViewContainerCreation
+import utopia.reach.component.wrapper.Creation.CreationOfSwitchables
 import utopia.reach.component.wrapper.Open
 
 /**
@@ -30,8 +30,8 @@ trait NonContextualViewContainerFactory[+Container <: ReachComponent, -Top <: Re
 	  * @return The created container, created components and the additional result
 	  */
 	def build[F, C <: Top, R](contentFactory: Cff[F])
-	                         (fill: Iterator[F] => SwitchableComponents[C, R]): SwitchableComponentsWrapResult[Container, C, R] =
-		apply(Open.manyConditionalUsing[F, C, R](contentFactory)(fill)(hierarchy.top))
+	                         (fill: Iterator[F] => CreationOfSwitchables[C, R]): ViewContainerCreation[Container, C, R] =
+		apply(Open.conditionalUsing[F, C, R](contentFactory)(fill)(hierarchy.top))
 	
 	/**
 	  * Builds a new container which reflects the contents of a multi-value pointer.

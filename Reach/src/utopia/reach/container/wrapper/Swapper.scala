@@ -16,7 +16,7 @@ import utopia.reach.component.factory.contextual.AnyContextContainerBuilderFacto
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{Open, OpenComponent}
+import utopia.reach.component.wrapper.Open
 
 trait SwapperSettingsLike[+Repr] extends CustomDrawableFactory[Repr]
 {
@@ -91,7 +91,7 @@ trait SwapperSettingsWrapper[+Repr] extends SwapperSettingsLike[Repr]
 
 trait SwapperFactoryLike[+Repr] extends PartOfComponentHierarchy with SwapperSettingsWrapper[Repr]
 {
-	protected def _apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponent, _]) =
+	protected def _apply[A](valuePointer: Changing[A])(makeContent: A => Open[ReachComponent, _]) =
 		new Swapper[A](hierarchy, valuePointer, customDrawers, isCachingEnabled)(makeContent)
 }
 
@@ -114,7 +114,7 @@ case class SwapperFactory(hierarchy: ComponentHierarchy, settings: SwapperSettin
 	  * @tparam A Type of items being mirrored
 	  * @return A new swapper container
 	  */
-	def apply[A](valuePointer: Changing[A])(makeContent: A => OpenComponent[ReachComponent, _]) =
+	def apply[A](valuePointer: Changing[A])(makeContent: A => Open[ReachComponent, _]) =
 		_apply(valuePointer)(makeContent)
 	
 	/**
@@ -203,7 +203,7 @@ object Swapper extends Cff[SwapperFactory] with Gccff[Any, ContextualSwapperFact
   */
 class Swapper[A](override val hierarchy: ComponentHierarchy, override val valuePointer: Changing[A],
                  override val customDrawers: Seq[CustomDrawer] = Empty, cachingEnabled: Boolean = true)
-                (makeContent: A => OpenComponent[ReachComponent, _])
+                (makeContent: A => Open[ReachComponent, _])
 	extends ConcreteCustomDrawReachComponent with InputWithPointer[A, Changing[A]]
 {
 	// ATTRIBUTES	-------------------------------

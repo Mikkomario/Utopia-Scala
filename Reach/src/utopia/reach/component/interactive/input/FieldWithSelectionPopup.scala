@@ -45,7 +45,7 @@ import utopia.reach.component.interactive.input.selection.{SelectionList, Select
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.{StackSettings, ViewStack}
 import utopia.reach.container.wrapper.Swapper
 import utopia.reach.container.wrapper.scrolling.ScrollView
@@ -438,7 +438,7 @@ case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarch
 	                             (makeField: FieldCreationContext => C)
 	                             (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 	                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
-										 Option[OpenComponent[ReachComponent, Any]])
+										 Option[Open[ReachComponent, Any]])
 	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
 		new FieldWithSelectionPopup[A, C, D, P](hierarchy, context, emptyFlag, contentPointer,
 			valuePointer, settings, sameItemCheck)(makeField)(makeDisplay)(makeRightHintLabel)
@@ -495,7 +495,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
  sameItemCheck: Option[EqualsFunction[A]] = None)
 (makeField: FieldCreationContext => C)
 (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
-(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
+(makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]])
 (implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithStateWrapper
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P]
@@ -708,7 +708,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 										if (settings.noOptionsViewConstructor.isDefined)
 											AlwaysTrue
 										else
-											contentPointer.map { _.nonEmpty }
+											contentPointer.lightMap { _.nonEmpty }: Flag
 									}
 									// Orders the components based on settings
 									val topAndBottomFactories = Pair.fill(factories.next())

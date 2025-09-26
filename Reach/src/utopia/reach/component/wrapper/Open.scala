@@ -1,0 +1,483 @@
+package utopia.reach.component.wrapper
+
+import utopia.firmament.context.base.StaticBaseContext
+import utopia.firmament.drawing.immutable.BackgroundDrawer
+import utopia.firmament.drawing.template.CustomDrawer
+import utopia.firmament.model.enumeration.StackLayout
+import utopia.firmament.model.enumeration.StackLayout.Fit
+import utopia.firmament.model.stack.{StackInsetsConvertible, StackLength}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.view.immutable.eventful.{Always, AlwaysTrue, Fixed}
+import utopia.flow.view.template.eventful.Flag
+import utopia.paradigm.color.Color
+import utopia.paradigm.enumeration.Axis.{X, Y}
+import utopia.paradigm.enumeration.Axis2D
+import utopia.reach.component.factory.ComponentFactoryFactory.Cff
+import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
+import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.Gccff
+import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
+import utopia.reach.component.template.ReachComponent
+import utopia.reach.component.wrapper.Creation.{CreationOfCreations, CreationOfOpenSwitchables, CreationOfSwitchables}
+import utopia.reach.container.ReachCanvas
+import utopia.reach.container.layered.LayerPositioning
+import utopia.reach.container.multi.{Stack, StackSettings}
+import utopia.reach.container.wrapper.Framing
+
+import scala.language.implicitConversions
+
+object Open extends FromGenericContextFactory[Any, ContextualOpenFactory]
+{
+	// TYPES    -----------------------------
+	
+	/**
+	 * Represents an open Reach component
+	 */
+	type OpenComponent[+R] = Open[ReachComponent, R]
+	
+	/**
+	 * Represents 0-n components, all grouped under a single component hierarchy block
+	 */
+	type OpenGroup[+C, +R] = Open[Seq[C], R]
+	/**
+	 * Type of open component that wraps multiple components
+	 */
+	@deprecated("Renamed to OpenGroup", "v1.7")
+	type BundledOpenComponents[+C, +R] = OpenGroup[C, R]
+	
+	/**
+	 * A type alias for a group of separate open components
+	 */
+	type OpenSeparately[+C, +R] = Seq[Open[C, R]]
+	/**
+	 * Type for separate open Reach components
+	 */
+	type SeparateOpenComponents[+R] = OpenSeparately[ReachComponent, R]
+	
+	/**
+	 * Represents 0-n open components, which appear conditionally under separate hierarchy blocks.
+	 */
+	type OpenSwitchables[+C] = OpenSeparately[C, Flag]
+	/**
+	 * Type for separate open Reach components that may be switched on or off using a flag.
+	 * Typically used in view containers.
+	 */
+	type SwitchableOpenComponents = OpenSwitchables[ReachComponent]
+	/**
+	 * Represents an open Reach component that may be switched on or off
+	 */
+	type SwitchableOpenComponent = OpenComponent[Flag]
+	
+	/**
+	 * An open main component (M), plus 0-n additional layers (C), plus an additional result (R).
+	 */
+	type OpenLayers[+M, +C, +R] = Open[(M, Seq[(C, LayerPositioning)]), R]
+	/**
+	 * Type of open component that wraps a main component, plus possibly multiple additional layers.
+	 */
+	@deprecated("Renamed to OpenLayers", "v1.7")
+	type OpenLayerComponents[+M, +C, +R] = OpenLayers[M, C, R]
+	
+	
+	// IMPLICIT	-----------------------------
+	
+	// Allows one to implicitly access the wrapped component
+	implicit def autoAccessComponent[C](open: Open[C, _]): C = open.component
+	
+	
+	// IMPLEMENTED  -----------------------
+	
+	override def withContext[N <: Any](context: N): ContextualOpenFactory[N] =
+		ContextualOpenFactory(context)
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	  * Creates a new open component
+	  * @param creation Component creation function (returns a component and a possible additional result)
+	  * @param canvas Implicit access to top canvas component
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
+	  * @return A new open component
+	  */
+	def apply[C, R](creation: ComponentHierarchy => Creation[C, R])(implicit canvas: ReachCanvas) = {
+		// Creates the hierarchy block first
+		val hierarchy = new SeedHierarchyBlock(canvas)
+		// Then creates the component and the wrapper
+		new Open[C, R](creation(hierarchy), hierarchy)
+	}
+	
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
+	  * @param creation A creation function that accepts an infinite iterator that provides new component hierarchies.
+	  *                 Returns the created components, along optional additional results.
+	  *                 The number of returned items should match exactly the number of new component hierarchies
+	  *                 requested from the iterator. It is not allowed to share a created hierarchy between multiple
+	  *                 components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam C Type of created components
+	  * @return New open components, with additional results included (if defined). Also contains the primary
+	  *         additional creation result.
+	  */
+	def separately[C <: ReachComponent, CR, R](creation: Iterator[ComponentHierarchy] => CreationOfCreations[C, CR, R])
+	                                          (implicit canvas: ReachCanvas): Creation[OpenSeparately[C, CR], R] =
+	{
+		// Provides the creation function with an infinite iterator that creates new component hierarchies as requested
+		// Collects all created component hierarchies
+		val moreHierarchiesIterator = Iterator.continually[ComponentHierarchy] { new SeedHierarchyBlock(canvas) }
+		// Wraps the created components
+		creation(moreHierarchiesIterator).mapComponent {
+			_.iterator
+				.flatMap { component =>
+					// Components must use provided seed hierarchies
+					component.component.hierarchy match {
+						case seed: SeedHierarchyBlock => Some(new Open(component, seed))
+						case _ => None
+					}
+				}
+				.toOptimizedSeq
+		}
+	}
+	@deprecated("Renamed to .separately(...)", "v1.7")
+	def many[C <: ReachComponent, CR, R](creation: Iterator[ComponentHierarchy] => CreationOfCreations[C, CR, R])
+	                                    (implicit canvas: ReachCanvas): Creation[OpenSeparately[C, CR], R] =
+		separately[C, CR, R](creation)
+	def conditional[C <: ReachComponent, R](creation: Iterator[ComponentHierarchy] => CreationOfSwitchables[C, R])
+	                                       (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		separately[C, Flag, R](creation)
+	@deprecated("Renamed to .conditional(...)", "v1.7")
+	def manyConditional[C <: ReachComponent, R](creation: Iterator[ComponentHierarchy] => CreationOfSwitchables[C, R])
+	                                           (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		conditional[C, R](creation)
+	
+	/**
+	  * Creates a new open component
+	  * @param factory A factory that produces component factories for target contexts
+	  * @param creation Component creation function (returns a component and a possible additional result)
+	  * @param canvas Implicit access to top canvas component
+	  * @tparam F Type of component creation factory
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
+	  * @return A new open component
+	  */
+	def using[F, C, R](factory: Cff[F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
+		apply { hierarchy => creation(factory(hierarchy)) }
+	
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
+	  * @param factory A factory that produces component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
+	  *                 Returns the created components, along with some optional creation results.
+	  *                 The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam F Type of component factory
+	  * @tparam C Type of created components
+	  * @return New open components, with their creation results included (if defined)
+	  */
+	def separatelyUsing[F, C <: ReachComponent, CR, R](factory: Cff[F])
+	                                                  (creation: Iterator[F] => CreationOfCreations[C, CR, R])
+	                                                  (implicit canvas: ReachCanvas) =
+		separately[C, CR, R] { hierarchies => creation(hierarchies.map(factory.apply)) }
+	@deprecated("Renamed to .separatelyUsing(...)", "v1.7")
+	def manyUsing[F, C <: ReachComponent, CR, R](factory: Cff[F])
+	                                            (creation: Iterator[F] => CreationOfCreations[C, CR, R])
+	                                            (implicit canvas: ReachCanvas) =
+		separatelyUsing[F, C, CR, R](factory)(creation)
+	/**
+	  * Creates a number of new conditionally displayed open components at once.
+	  * @param factory A factory that produces component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
+	  *                 Returns the created components, along with pointers that indicate whether those components
+	  *                 should be attached to the parent component or not. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas Canvas element that will ultimately host these components (implicit)
+	  * @tparam F Type of component factory
+	  * @tparam C Type of created components
+	  * @return New open components, with their connection pointers as results (if defined)
+	  */
+	def conditionalUsing[F, C <: ReachComponent, R](factory: Cff[F])
+	                                               (creation: Iterator[F] => CreationOfSwitchables[C, R])
+	                                               (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		separatelyUsing[F, C, Flag, R](factory)(creation)
+	@deprecated("Renamed to .conditionalUsing", "v1.7")
+	def manyConditionalUsing[F, C <: ReachComponent, R](factory: Cff[F])
+	                                                   (creation: Iterator[F] => CreationOfSwitchables[C, R])
+	                                                   (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		conditionalUsing[F, C, R](factory)(creation)
+	
+	
+	// EXTENSIONS	-------------------------
+	
+	// Extensions for single wrapped components
+	implicit class SingleOpenComponent[C <: ReachComponent, R](val c: Open[C, R]) extends AnyVal
+	{
+		/**
+		 * A framed version of this component
+		 * @param insets Insets to be placed around this component
+		 * @param customDrawers Custom drawers to apply to this component
+		 * @return A new framing with this component inside it (contains the same custom result as this one)
+		 */
+		def framed(insets: StackInsetsConvertible, customDrawers: Seq[CustomDrawer] = Empty) = {
+			Open.using(Framing) { ff =>
+				val wrapping = ff.apply(insets).withCustomDrawers(customDrawers)(c)
+				wrapping.parent -> wrapping.result
+			}(c.hierarchy.top)
+		}
+		
+		/**
+		 * A framed version of this component
+		 * @param insets Insets to be placed around this component
+		 * @param backgroundColor Color used as the framing's background color
+		 * @return A new framing with this component inside it (contains the same custom result as this one)
+		 */
+		def framed(insets: StackInsetsConvertible, backgroundColor: Color): Open[Framing, R] =
+			framed(insets, Single(BackgroundDrawer(backgroundColor)))
+	}
+	
+	// Extension for sequence of wrapped components
+	implicit class MultiOpenComponent[C <: ReachComponent, R](val c: Open[Seq[C], R]) extends AnyVal
+	{
+		/**
+		 * Creates a stack that will hold these components
+		 * @param direction Axis along which the components are stacked / form a line (default = Y = column)
+		 * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		 *                  (default = Fit = All components have same breadth as this stack)
+		 * @param cap Cap placed at each end of this stack (default = always 0)
+		 * @param customDrawers Custom drawers attached to this stack (default = empty)
+		 * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		 *                  (default = false)
+		 * @param context Implicit component creation context
+		 * @param canvas A set of reach canvases to hold these components
+		 * @return A new stack with these components inside. Also contains the same additional creation result
+		 *         as this one.
+		 */
+		def stack(direction: Axis2D = Y, layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+		          customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
+		         (implicit context: StaticBaseContext, canvas: ReachCanvas) =
+			Open.withContext(context).apply(Stack) { sf =>
+				val settings = StackSettings(axis = direction, layout = layout, capPointer = Fixed(cap),
+					customDrawers = customDrawers)
+				val stack = sf.copy(settings = settings, relatedFlag = Always(areRelated))(c)
+				stack.parent -> stack.result
+			}
+		
+		/**
+		 * Creates a stack row that will hold these components
+		 * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		 *                  (default = Fit = All components have same breadth as this stack)
+		 * @param cap Cap placed at each end of this stack (default = always 0)
+		 * @param customDrawers Custom drawers attached to this stack (default = empty)
+		 * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		 *                  (default = false)
+		 * @param context Implicit component creation context
+		 * @param canvas A set of reach canvases to hold these components
+		 * @return A new stack with these components inside. Also contains the same additional creation result
+		 *         as this one.
+		 */
+		def row(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+		        customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
+		       (implicit context: StaticBaseContext, canvas: ReachCanvas) =
+			stack(X, layout, cap, customDrawers, areRelated)
+		
+		/**
+		 * Creates a stack column that will hold these components
+		 * @param layout Layout used for handling lengths perpendicular to stack direction (breadth)
+		 *                  (default = Fit = All components have same breadth as this stack)
+		 * @param cap Cap placed at each end of this stack (default = always 0)
+		 * @param customDrawers Custom drawers attached to this stack (default = empty)
+		 * @param areRelated Whether the components should be considered closely related (uses smaller margin)
+		 *                  (default = false)
+		 * @param context Implicit component creation context
+		 * @param canvas A set of reach canvases to hold these components
+		 * @return A new stack with these components inside. Also contains the same additional creation result
+		 *         as this one.
+		 */
+		def column(layout: StackLayout = Fit, cap: StackLength = StackLength.fixedZero,
+		           customDrawers: Seq[CustomDrawer] = Empty, areRelated: Boolean = false)
+		          (implicit context: StaticBaseContext, canvas: ReachCanvas) =
+			stack(Y, layout, cap, customDrawers, areRelated)
+	}
+}
+
+case class ContextualOpenFactory[N](context: N)
+{
+	/**
+	  * Creates a new open component using a contextual component factory
+	  * @param factory  A factory that can produce contextual component factories when specified with the proper context
+	  * @param creation Component creation function (accepts a context-specific component creation factory)
+	  * @param canvas   Implicit access to top canvas component
+	  * @tparam F Type of context specific component creation factory
+	  * @tparam C Type of created component
+	  * @tparam R Type of additional creation result
+	  * @return New component with possible additional creation result
+	  */
+	def apply[F[X <: N], C, R](factory: Gccff[N, F])(creation: F[N] => Creation[C, R])(implicit canvas: ReachCanvas) =
+		Open { hierarchy => creation(factory.withContext(hierarchy, context)) }
+	/**
+	  * Creates a new open component using a contextual component factory
+	  * @param factory  A factory that can produce contextual component factories when specified with the proper context
+	  * @param creation Component creation function (accepts a contextual component creation factory)
+	  * @param canvas   Implicit access to top canvas component
+	  * @tparam F  Type of context specific component creation factory
+	  * @tparam C  Type of created component
+	  * @tparam R  Type of additional creation result
+	  * @return New component with possible additional creation result
+	  */
+	def apply[F, C, R](factory: Ccff[N, F])(creation: F => Creation[C, R])(implicit canvas: ReachCanvas) =
+		Open { hierarchy => creation(factory.withContext(hierarchy, context)) }
+	
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
+	  * @param factory  A factory that produces context-aware component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
+	  *                 Returns the created components, along with optional results. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas   Canvas element that will ultimately host these components (implicit)
+	  * @tparam F  Type of component creation factory
+	  * @tparam C  Type of created components
+	  * @tparam CR Additional creation result type for individual components
+	  * @tparam R  Additional (reduced) creation result type
+	  * @return New open components, with their results (if defined)
+	  */
+	def separately[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
+	                                                     (creation: Iterator[F[N]] => CreationOfCreations[C, CR, R])
+	                                                     (implicit canvas: ReachCanvas) =
+		Open.separately { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
+	@deprecated("Renamed to .separately(...)", "v1.7")
+	def many[F[X <: N], C <: ReachComponent, CR, R](factory: Gccff[N, F])
+	                                               (creation: Iterator[F[N]] => CreationOfCreations[C, CR, R])
+	                                               (implicit canvas: ReachCanvas) =
+		separately[F, C, CR, R](factory)(creation)
+	/**
+	  * Creates a number of new open components at once. This method should be used only when the components won't
+	  * share the same container. If the components will be placed in identical container hierarchies,
+	  * apply(...) should be used instead.
+	  * @param factory  A factory that produces context-aware component factories
+	  * @param creation A creation function that accepts an infinite iterator that provides new component factories.
+	  *                 Returns the created components, along with optional results. The number of returned items should match
+	  *                 exactly the number of new component hierarchies requested from the iterator. It is not allowed
+	  *                 to share a created hierarchy between multiple components.
+	  * @param canvas   Canvas element that will ultimately host these components (implicit)
+	  * @tparam F  Type of component creation factory
+	  * @tparam C  Type of created components
+	  * @tparam CR Additional creation result type for individual components
+	  * @tparam R  Additional (reduced) creation result type
+	  * @return New open components, with their results (if defined)
+	  */
+	def separately[F, C <: ReachComponent, CR, R](factory: Ccff[N, F])
+	                                             (creation: Iterator[F] => CreationOfCreations[C, CR, R])
+	                                             (implicit canvas: ReachCanvas) =
+		Open.separately { hierarchies => creation(hierarchies.map { factory.withContext(_, context) }) }
+	@deprecated("Renamed to .separately(...)", "v1.7")
+	def many[F, C <: ReachComponent, CR, R](factory: Ccff[N, F])
+	                                       (creation: Iterator[F] => CreationOfCreations[C, CR, R])
+	                                       (implicit canvas: ReachCanvas) =
+		separately[F, C, CR, R](factory)(creation)
+		
+	def conditional[F[X <: N], C <: ReachComponent, R](factory: Gccff[N, F])
+	                                                  (creation: Iterator[F[N]] => CreationOfSwitchables[C, R])
+	                                                  (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		separately[F, C, Flag, R](factory)(creation)
+	@deprecated("Renamed to .conditional(...)", "v1.7")
+	def manyConditional[F[X <: N], C <: ReachComponent, R](factory: Gccff[N, F])
+	                                                      (creation: Iterator[F[N]] => CreationOfSwitchables[C, R])
+	                                                      (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		conditional[F, C, R](factory)(creation)
+	def conditional[F, C <: ReachComponent, R](factory: Ccff[N, F])
+	                                          (creation: Iterator[F] => CreationOfSwitchables[C, R])
+	                                          (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		separately[F, C, Flag, R](factory)(creation)
+	@deprecated("Renamed to .conditional(...)", "v1.7")
+	def manyConditional[F, C <: ReachComponent, R](factory: Ccff[N, F])
+	                                              (creation: Iterator[F] => CreationOfSwitchables[C, R])
+	                                              (implicit canvas: ReachCanvas): CreationOfOpenSwitchables[C, R] =
+		conditional[F, C, R](factory)(creation)
+}
+
+/**
+  * A wrapper that contains a component with an incomplete stack hierarchy. Open components are then completed and
+  * closed by placing them inside wrappers or containers
+  * @tparam C Type of the wrapped component or components
+ * @tparam R Type of the additional result contained
+ * @author Mikko Hilpinen
+  * @since 11.10.2020, v0.1
+  */
+class Open[+C, +R](val creation: Creation[C, R], val hierarchy: SeedHierarchyBlock)
+{
+	// COMPUTED	---------------------------------
+	
+	/**
+	  * @return The wrapped component
+	  */
+	def component = creation.component
+	/**
+	  * @return Additional component creation result value
+	  */
+	def result = creation.result
+	
+	/**
+	  * @return A tuple containing the wrapped component and the wrapped additional result,
+	  *         but not the component hierarchy
+	  */
+	def componentAndResult = component -> result
+	
+	
+	// OTHER	---------------------------------
+	
+	/**
+	  * Attaches this component to a parent container
+	  * @param parent A parent container
+	  * @param switchFlag A pointer to the changing attachment status (default = always attached)
+	  * @tparam P Type of parent container
+	  * @throws IllegalStateException if this component was already attached to a parent container
+	  * @return A result with the wrapping parent container, the wrapped component and a component creation result
+	  */
+	@throws[IllegalStateException]("If this component was already attached to a parent container")
+	def attachTo[P <: ReachComponent](parent: P, switchFlag: Flag = AlwaysTrue) = {
+		hierarchy.complete(parent, switchFlag)
+		creation.in(parent)
+	}
+	/**
+	  * Attaches this component to a custom component hierarchy
+	  * @param parent Parent container
+	  * @param hierarchy Component hierarchy block that will replace the seed used by this open component
+	  * @tparam P Type of the parent container
+	  * @return A result wrapping the parent container, the wrapped component and a component creation result
+	  */
+	def attachTo[P](parent: P, hierarchy: ComponentHierarchy) = {
+		this.hierarchy.replaceWith(hierarchy)
+		creation.in(parent)
+	}
+	
+	/**
+	  * @param f A mapping function for the component part
+	  * @tparam C2 Mapping function result
+	  * @return A copy of this component with mapped component
+	  */
+	def mapComponent[C2](f: C => C2) = new Open(creation.mapComponent(f), hierarchy)
+	
+	/**
+	  * @param newResult New additional result
+	  * @tparam R2 Type of the new result
+	  * @return A copy of this component with the new additional result
+	  */
+	def withResult[R2](newResult: R2) = new Open(creation.withResult(newResult), hierarchy)
+	/**
+	  * @param f Result mapping function
+	  * @tparam R2 Type of the new result
+	  * @return A copy of this component with mapped additional result
+	  */
+	def mapResult[R2](f: R => R2) = new Open(creation.mapResult(f), hierarchy)
+}

@@ -18,9 +18,10 @@ import utopia.paradigm.enumeration.{Axis, Axis2D}
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
-import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.ContainerCreation.{MultiContainerCreation, ViewContainerCreation}
+import utopia.reach.component.wrapper.Creation.CreationOfOpenSwitchables
+import utopia.reach.component.wrapper.Open.{OpenGroup, OpenSeparately, SeparateOpenComponents}
+import utopia.reach.component.wrapper.{ContainerCreation, Creation, Open}
 
 /**
   * Common trait for view stack factories and settings
@@ -255,13 +256,13 @@ trait ViewStackFactoryLike[+Repr]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def apply[C <: ReachComponent, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Stack, C, R] =
+	override def apply[C <: ReachComponent, R](content: CreationOfOpenSwitchables[C, R]): ViewContainerCreation[Stack, C, R] =
 	{
 		// Creates either a static stack or a view stack, based on whether the pointers are actually used
 		// Case: All parameters are fixed values => Creates an immutable stack
 		if (content.isEmpty || (axisPointer.isFixed && layoutPointer.isFixed && content.forall { _.result.isFixed })) {
 			val stack = fixed(content, content.filter { _.result.value })
-			stack.mapChild { _.map { c => c -> AlwaysTrue } }.withResult(content.result)
+			stack.mapChild { _.map[Creation[C, Flag]] { c => c -> AlwaysTrue } }.withResult(content.result)
 		}
 		// Case: Values include changing values => Creates a view stack
 		else {
@@ -272,13 +273,13 @@ trait ViewStackFactoryLike[+Repr]
 					// WET WET
 					// Wraps the components into segments before placing them in this stack
 					val wrappers = Open
-						.manyConditional { hierarchies =>
+						.conditional { hierarchies =>
 							group.wrap(content) { hierarchies.next() }.map { _.parentAndResult }
 						}
 						.component
 					val stack = fromVisibilityFlags(wrappers)
 					// Still returns the components as the children and not the wrappers
-					ComponentWrapResult(stack, content.map { _.componentAndResult }, content.result)
+					ContainerCreation(stack, content.map { _.componentAndResult }, content.result)
 				
 				// Case: No segmentation used => Applies the default implementation
 				case None => super.apply(content)
@@ -289,7 +290,7 @@ trait ViewStackFactoryLike[+Repr]
 	override protected def _apply(contentPointer: Changing[Seq[ReachComponent]]): Stack =
 		new ViewStack(hierarchy, contentPointer, settings, marginPointer)
 	
-	override def pointer(content: Changing[SeparateOpenComponents[ReachComponent, _]]): Stack = {
+	override def pointer(content: Changing[SeparateOpenComponents[_]]): Stack = {
 		content.fixedValue match {
 			// Case: Displayed content doesn't change
 			case Some(staticContent) =>
@@ -344,8 +345,8 @@ trait ViewStackFactoryLike[+Repr]
 	  * @param visibleContent Visible content (called if segmentation is not applied)
 	  * @return Component wrap result of the created stack
 	  */
-	private def fixed[C <: ReachComponent](fullContent: => SeparateOpenComponents[C, _],
-	                                       visibleContent: => SeparateOpenComponents[C, _]) =
+	private def fixed[C <: ReachComponent](fullContent: => OpenSeparately[C, _],
+	                                       visibleContent: => OpenSeparately[C, _]): MultiContainerCreation[Stack, C, Any] =
 	{
 		val fixedSettings = StackSettings(axis = axisPointer.value, layout = layoutPointer.value,
 			capPointer = capPointer, customDrawers = customDrawers)
@@ -366,15 +367,15 @@ trait ViewStackFactoryLike[+Repr]
 	  * @tparam C Type of the components
 	  * @return A combination of the specified components under a single component hierarchy
 	  */
-	private def merge[C](components: SeparateOpenComponents[C, _]): OpenComponent[Seq[C], Unit] = {
+	private def merge[C](components: OpenSeparately[C, _]): OpenGroup[C, Unit] = {
 		NotEmpty(components) match {
 			case Some(content) =>
 				val commonHierarchy = content.head.hierarchy
 				content.tail.foreach { _.hierarchy.replaceWith(commonHierarchy) }
-				new OpenComponent(ComponentCreationResult(content.map { _.component }), commonHierarchy)
+				new Open(Creation(content.map { _.component }), commonHierarchy)
 			
 			case None =>
-				new OpenComponent(ComponentCreationResult(Empty: Seq[C]), new SeedHierarchyBlock(hierarchy.top))
+				new Open(Creation(Empty: Seq[C]), new SeedHierarchyBlock(hierarchy.top))
 		}
 	}
 }

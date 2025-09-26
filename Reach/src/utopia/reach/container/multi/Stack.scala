@@ -22,10 +22,10 @@ import utopia.reach.component.factory.FromGenericContextComponentFactoryFactory.
 import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
-import utopia.reach.component.wrapper.ComponentCreationResult.ComponentsResult
-import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
-import utopia.reach.component.wrapper.{ComponentCreationResult, ComponentWrapResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
+import utopia.reach.component.wrapper.Creation.CreationOfMany
+import utopia.reach.component.wrapper.Open.OpenGroup
+import utopia.reach.component.wrapper.{ContainerCreation, Creation, Open}
 
 /**
   * Common trait for stack factories and settings
@@ -233,7 +233,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	
 	// IMPLEMENTED  ----------------------------
 	
-	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Stack, C, R] = {
+	override def apply[C <: ReachComponent, R](content: OpenGroup[C, R]): MultiContainerCreation[Stack, C, R] = {
 		val stack: Stack = new _Stack(hierarchy, content.component, axis, layout, marginPointer, capPointer,
 			customDrawers)
 		content attachTo stack
@@ -256,7 +256,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional results for each component
 	  * @return A new segmented stack
 	  */
-	def segmented[C <: ReachComponent, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) = {
+	def segmented[C <: ReachComponent, R](content: Seq[Open[C, R]], group: SegmentGroup) = {
 		// Wraps the components in segments first
 		val wrapped = Open { hierarchy =>
 			val wrapResult = group.wrapUnderSingle(hierarchy, content)
@@ -268,7 +268,7 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		stack.withChild(content.map { _.component })
 	}
 	@deprecated("Renamed to .segmented(...)", "v1.1")
-	def withSegments[C <: ReachComponent, R](content: Seq[OpenComponent[C, R]], group: SegmentGroup) =
+	def withSegments[C <: ReachComponent, R](content: Seq[Open[C, R]], group: SegmentGroup) =
 		segmented(content, group)
 	
 	/**
@@ -290,8 +290,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 	  * @tparam R Type of additional creation result
 	  * @return A new stack with the two items in it
 	  */
-	def pair[C <: ReachComponent, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                 forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
+	def pair[C <: ReachComponent, R](content: Open[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                 forceFitLayout: Boolean = false): ContainerCreation[Stack, Seq[C], R] =
 	{
 		// Specifies stack axis, layout and item order based on the alignment
 		// The first item always goes to the direction of the alignment
@@ -315,8 +315,8 @@ trait StackFactoryLike[+Repr <: StackFactoryLike[_]]
 		withAxisAndLayout(axis, if (forceFitLayout) Fit else layout)(orderedContent)
 	}
 	@deprecated("Renamed to .pair(...)", "v1.1")
-	def forPair[C <: ReachComponent, R](content: OpenComponent[Pair[C], R], alignment: Alignment = Alignment.Left,
-	                                    forceFitLayout: Boolean = false): ComponentWrapResult[Stack, Seq[C], R] =
+	def forPair[C <: ReachComponent, R](content: Open[Pair[C], R], alignment: Alignment = Alignment.Left,
+	                                    forceFitLayout: Boolean = false): ContainerCreation[Stack, Seq[C], R] =
 		pair(content, alignment, forceFitLayout)
 }
 
@@ -357,9 +357,9 @@ case class StackFactory(hierarchy: ComponentHierarchy, settings: StackSettings =
 	  * @return A new segmented stack
 	  */
 	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Cff[F], group: SegmentGroup)
-	                                             (fill: Iterator[F] => ComponentsResult[C, R]) =
+	                                             (fill: Iterator[F] => CreationOfMany[C, R]): MultiContainerCreation[Stack, C, R] =
 	{
-		val content = Open.manyUsing(contentFactory) { fill(_) }
+		val content = Open.separatelyUsing(contentFactory) { fill(_) }
 		segmented(content.component, group).withResult(content.result)
 	}
 	
@@ -385,7 +385,7 @@ case class StackFactory(hierarchy: ComponentHierarchy, settings: StackSettings =
 	  */
 	def buildPair[F, C <: ReachComponent, R](contentFactory: Cff[F], alignment: Alignment = Alignment.Left,
 	                                         forceFitLayout: Boolean = false)
-	                                        (fill: F => ComponentCreationResult[Pair[C], R]) =
+	                                        (fill: F => Creation[Pair[C], R]) =
 		pair(Open.using(contentFactory)(fill), alignment, forceFitLayout)
 }
 
@@ -475,9 +475,9 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: Compone
 	  * @return A new segmented stack
 	  */
 	def buildSegmented[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], group: SegmentGroup)
-	                                             (fill: Iterator[F] => ComponentsResult[C, R]) =
+	                                             (fill: Iterator[F] => CreationOfMany[C, R]): MultiContainerCreation[Stack, C, R] =
 	{
-		val content = Open.withContext(context).many(contentFactory) { fill(_) }
+		val content = Open.withContext(context).separately(contentFactory) { fill(_) }
 		segmented(content.component, group).withResult(content.result)
 	}
 	
@@ -503,7 +503,7 @@ case class ContextualStackFactory[+N <: BaseContextPropsView](hierarchy: Compone
 	  */
 	def buildPair[F, C <: ReachComponent, R](contentFactory: Ccff[N, F], alignment: Alignment = Alignment.Left,
 	                                         forceFitLayout: Boolean = false)
-	                                        (fill: F => ComponentCreationResult[Pair[C], R]) =
+	                                        (fill: F => Creation[Pair[C], R]) =
 		pair(Open.withContext(context)(contentFactory)(fill), alignment, forceFitLayout)
 }
 

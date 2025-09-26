@@ -2,6 +2,25 @@
 
 ## v1.7 (in development)
 ### Breaking changes
+- Multiple renames:
+  - Renamed **ComponentCreationResult** to **Creation**
+    - **SwitchableCreations** type alias no longer contains the result type; 
+      The previous implementation is now named **CreationOfSwitchables**.
+    - **SwitchableComponents** no longer accepts generic types, but is linked to ReachComponent with no result type
+      - The previous implementation is no longer available, 
+        as the component + flag -values are stored as **Creation**s and not **Tuple**s.
+  - Renamed **ComponentWrapResult** to **ContainerCreation**
+  - Renamed **OpenComponent** to **Open**
+    - Note that certain type aliases that mention **OpenComponent**, 
+      now specify **ReachComponent** as one of the generic types:
+      - **OpenComponent** is now a type alias for **Open** of type **ReachComponent** 
+      - **SeparateOpenComponents** is now **OpenSeparately** of type **ReachComponent**
+      - **SwitchableOpenComponents** is now **OpenSwitchables** of type **ReachComponent**
+  - Renamed **ContextualOpenComponentFactory** to **ContextualOpenFactory**
+- Type aliases relating to component creation, which referred to **Changing** of type **Boolean**, 
+  now refer to **Flag** instead
+  - This means that some visibility flags, for example, need to be explicitly marked as **Flag**s
+- Some implicit conversions relating to **Creation** and **Open** might function differently
 - Rewrote the **DropDown** interface completely
   - The previous implementation is still available as **DropDownOld**, but will be removed in a future update
 - Removed "contextual" from component factory names in situations where no non-contextual version exists
@@ -30,8 +49,21 @@
 - Deprecated **FieldWithSelectionPopup** in the `component.interactive.input` package in favor of a new version 
   located in the `selection` -subpackage.
 - Deprecated **SelectionList** in favor of the new **SelectableStack** component
+- Renamed multiple type aliases:
+  - **CreationWrapper** is now **Created**
+  - **ComponentsResult** is now **CreationOfMany**
+  - **LayersResult** is now **CreationOfLayers**
+  - **CreationsResult** is now **CreationOfCreations**
+  - **CreationsWrapper** is now **Creations**
+  - **ComponentsWrapResult** is now **MultiContainerCreation**
+  - **SwitchableComponentsWrapResult** is now **ViewContainerCreation**
+  - **BundledOpenComponents** is now **OpenGroup**
+  - **OpenLayerComponents** is now **OpenLayers**
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
 - Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
+- Renamed some functions in **Open** and **ContextualOpenFactory** (previously **ContextualOpenComponentFactory**):
+  - `.many()` is now `.separately(...)`
+  - `.manyConditional(...)` is now `.conditional(...)`
 ### New features
 - Added new **Form** classes as a more customizable alternative to **InputWindowFactory** for form (window) creation 
 - Added **SelectableStack** -component
@@ -43,7 +75,36 @@
   `windowPointer` property (a new **Firmament** feature) will automatically be specified.
 - All text-related contextual button factories now extend **FromColorRoleFactory**, 
   allowing for easier color assignment
+- Added a number of new type aliases:
+  - **Creation** (previously **ComponentCreationResult**)
+    - **Created**
+    - **CreationOfComponent**
+    - **NewComponent**
+    - **CreationOfMany**
+    - **CreatedGroup**
+    - **CreationOfComponents**
+    - **NewComponents**
+    - **CreationOfLayers**
+    - **NewLayers**
+    - **Creations**
+    - **CreationOfCreations**
+    - **CreationOfSwitchables**
+    - **CreationOfOpenSwitchables**
+  - **ContainerCreation** (previously **ComponentWrapResult**)
+    - **MultiContainerCreation**
+    - **ViewContainerCreation**
+  - **Open** (previously **OpenComponent**)
+    - **OpenGroup**
+    - **OpenSeparately**
+    - **OpenSwitchables**
+    - **SwitchableOpenComponent**
+    - **OpenLayers**
+  - **Mixed**:
+    - **TF** = **ContextualMixed** of type **StaticTextContext**
+    - **VTF** = **ContextualMixed** of type **VariableTextContext**
 ### New methods
+- **ContainerCreation** (previously **ComponentWrapResult**)
+  - Added `.withParent(...)` and `.mapParent(...)`
 - **ContextualFramedFactory**
   - Added new factory functions
 - **PartOfComponentHierarchy**
@@ -60,8 +121,6 @@
 - Rewrote **ReachWindow**'s anchoring logic
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - **InputField** conversions don't require **Input** anymore, only requiring **View** (also extended by **Input**)
-- **Mixed** now contains two new utility types: **TF** (**ContextualMixed** of type **StaticTextContext**) 
-  and **VTF** (of type **VariableTextContext**)
 - Optimized the component layout update algorithm
 
 ## v1.6 - 26.05.2025

@@ -15,7 +15,7 @@ import utopia.reach.component.factory.FromContextFactory
 import utopia.reach.component.factory.contextual.BaseContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{MutableConcreteCustomDrawReachComponent, ReachComponent}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.Open
 
 case class MutableStackFactory(hierarchy: ComponentHierarchy, settings: StackSettings = StackSettings.default,
                                margin: StackLength = StackLength.any)
@@ -111,7 +111,7 @@ object MutableStack extends Cff[MutableStackFactory]
 class MutableStack[C <: ReachComponent](override val hierarchy: ComponentHierarchy,
                                         initialDirection: Axis2D, initialLayout: StackLayout,
                                         initialMargin: StackLength, initialCap: StackLength)
-	extends MutableConcreteCustomDrawReachComponent with Stack with MutableMultiContainer[OpenComponent[C, _], C]
+	extends MutableConcreteCustomDrawReachComponent with Stack with MutableMultiContainer[Open[C, _], C]
 {
 	// ATTRIBUTES	------------------------
 	
@@ -160,14 +160,14 @@ class MutableStack[C <: ReachComponent](override val hierarchy: ComponentHierarc
 		}
 	}
 	
-	override protected def add(component: OpenComponent[C, _], index: Int) = {
+	override protected def add(component: Open[C, _], index: Int) = {
 		if (!contains(component.component)) {
 			_componentsPointer.update { old => (old.take(index) :+ component.component) ++ old.drop(index) }
 			updatePointerFor(component)
 			revalidate()
 		}
 	}
-	override protected def add(components: IterableOnce[OpenComponent[C, _]], index: Int) = {
+	override protected def add(components: IterableOnce[Open[C, _]], index: Int) = {
 		// Needs to buffer the components (iterating multiple times)
 		val newComps = components.iterator.filterNot { c => contains(c.component) }.toOptimizedSeq
 		if (newComps.nonEmpty) {
@@ -222,7 +222,7 @@ class MutableStack[C <: ReachComponent](override val hierarchy: ComponentHierarc
 	  */
 	def contains(component: C) = components.contains(component)
 	
-	private def updatePointerFor(c: OpenComponent[C, _]) = {
+	private def updatePointerFor(c: Open[C, _]) = {
 		pointers.get(c.component.hashCode()) match {
 			case Some(existingPointer) => existingPointer.value = true
 			case None =>

@@ -2,7 +2,7 @@ package utopia.reach.container.wrapper
 
 import utopia.reach.component.factory.FromContextComponentFactoryFactory.Ccff
 import utopia.reach.component.factory.contextual.GenericContextualFactory
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open}
+import utopia.reach.component.wrapper.{Creation, Open}
 
 /**
   * Common trait for initialized container factories that wrap a single component and use a component creation context
@@ -26,6 +26,6 @@ trait ContextualWrapperContainerFactory[+N, TopN, +Container, -TopC, +Repr[N2 <:
 	  * @tparam R Type of additional component creation result
 	  * @return A new container (als includes the created component and the additional creation result)
 	  */
-	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: F => ComponentCreationResult[C, R]) =
+	def build[F, C <: TopC, R](contentFactory: Ccff[N, F])(fill: F => Creation[C, R]) =
 		apply[C, R](Open.withContext(context)(contentFactory)(fill)(hierarchy.top))
 }

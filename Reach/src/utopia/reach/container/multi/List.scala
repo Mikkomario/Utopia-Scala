@@ -21,7 +21,7 @@ import utopia.genesis.handling.event.consume.Consumable
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents}
-import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse._
 import utopia.paradigm.color.Color
 import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -32,7 +32,7 @@ import utopia.reach.component.factory.contextual.ColorContextualFactory
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.focus.Focusable
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.{Creation, Open}
 import utopia.reach.focus.{FocusListener, FocusStateTracker}
 
 import java.awt.event.KeyEvent
@@ -89,7 +89,7 @@ case class ListFactory(hierarchy: ComponentHierarchy)
 	             insideRowLayout: StackLayout = Fit, rowMargin: StackLength = StackLength.any,
 	             columnMargin: StackLength = StackLength.any, edgeMargins: StackSize = StackSize.fixedZero,
 	             customDrawers: Seq[CustomDrawer] = Empty, focusListeners: Seq[FocusListener] = Empty)
-				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
+				(fill: Iterator[ListRowContext] => Creation[IterableOnce[ListRowContent], R]) =
 	{
 		val rowDirection = group.rowDirection
 		val rowCap = edgeMargins.along(rowDirection)
@@ -105,7 +105,7 @@ case class ListFactory(hierarchy: ComponentHierarchy)
 		val (content, result) = fill(rowContextIterator).toTuple
 		val mainStackContent = Open.using(Stack) { rowF =>
 			content.iterator.splitMap { rowContent =>
-				val wrappedRowComponents = new OpenComponent(Seq.from(rowContent.components),
+				val wrappedRowComponents = new Open(Seq.from(rowContent.components),
 					rowContent.context.hierarchy)
 				val row = rowF.withAxis(rowDirection).withLayout(insideRowLayout).withMargin(columnMargin)
 					.withCap(rowCap)(wrappedRowComponents)
@@ -183,7 +183,7 @@ case class ContextualListFactory(factory: ListFactory, context: StaticColorConte
 	  */
 	def apply[R](group: SegmentGroup, insideRowLayout: StackLayout = Fit, edgeMargins: StackSize = StackSize.fixedZero,
 				 customDrawers: Seq[CustomDrawer] = Empty, focusListeners: Seq[FocusListener] = Empty)
-				(fill: Iterator[ListRowContext] => ComponentCreationResult[IterableOnce[ListRowContent], R]) =
+				(fill: Iterator[ListRowContext] => Creation[IterableOnce[ListRowContent], R]) =
 		factory(group, Fixed(context.background), insideRowLayout, context.stackMargin,
 			context.smallStackMargin, edgeMargins, customDrawers, focusListeners)(fill)
 }

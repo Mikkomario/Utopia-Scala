@@ -44,6 +44,8 @@ object References
 				references.groupBy { _.from.tableName }
 					.view.mapValues { _.view.map { ref => ref.from.name -> ref }.toMap }.toMap
 			
+			// FIXME: Somehow we arrive here sometimes at program startup
+			//  (although we shouldn't have any Table instances before the setup function is called)
 			case None => throw EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
 		}
 	}

@@ -1,28 +1,39 @@
 package utopia.reach.component.wrapper
 
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import scala.language.implicitConversions
 
-object ComponentWrapResult
+object ContainerCreation
 {
 	// TYPES    ------------------------
 	
 	/**
+	 * Represents the creation of a container that contains 0-n components
+	 */
+	type MultiContainerCreation[+P, +C, +R] = ContainerCreation[P, Seq[C], R]
+	/**
 	  * Type of component wrap result that wraps multiple components
 	  */
-	type ComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Seq[C], R]
+	@deprecated("Renamed to MultiContainerCreation", "v1.7")
+	type ComponentsWrapResult[+P, +C, +R] = MultiContainerCreation[P, C, R]
+	
+	/**
+	 * Represents the creation of a container where the contents are conditionally displayed
+	 */
+	type ViewContainerCreation[+P, +C, +R] = MultiContainerCreation[P, Creation[C, Flag], R]
 	/**
 	  * Type of component wrap result that wraps multiple switchable components and
 	  * includes their visibility pointers
 	  */
-	type SwitchableComponentsWrapResult[+P, +C, +R] = ComponentWrapResult[P, Seq[(C, Changing[Boolean])], R]
+	@deprecated("Replaced with ViewContainerCreation", "v1.7")
+	type SwitchableComponentsWrapResult[+P, +C, +R] = ContainerCreation[P, Seq[(C, Changing[Boolean])], R]
 	
 	
 	// IMPLICIT	------------------------
 	
 	// Results can implicitly be converted to supply the parent component when requested
-	implicit def autoAccessParent[P](result: ComponentWrapResult[P, _, _]): P = result.parent
+	implicit def autoAccessParent[P](result: ContainerCreation[P, _, _]): P = result.parent
 	
 	
 	// OTHER	------------------------
@@ -35,7 +46,7 @@ object ComponentWrapResult
 	  * @tparam C Type of child component
 	  * @return A component wrap result that contains both components
 	  */
-	def apply[P, C](parent: P, child: C): ComponentWrapResult[P, C, Unit] = apply(parent, child, ())
+	def apply[P, C](parent: P, child: C): ContainerCreation[P, C, Unit] = apply(parent, child, ())
 }
 
 /**
@@ -53,7 +64,7 @@ object ComponentWrapResult
   * @author Mikko Hilpinen
   * @since 7.10.2020, v0.1
   */
-case class ComponentWrapResult[+P, +C, +R](parent: P, child: C, result: R)
+case class ContainerCreation[+P, +C, +R](parent: P, child: C, result: R)
 {
 	// COMPUTED	----------------------------
 	
@@ -74,10 +85,23 @@ case class ComponentWrapResult[+P, +C, +R](parent: P, child: C, result: R)
 	/**
 	  * @return A component creation result based on this wrap result
 	  */
-	def toCreationResult = ComponentCreationResult(parent, result)
+	def toCreationResult = Creation(parent, result)
 	
 	
 	// OTHER	----------------------------
+	
+	/**
+	 * @param newParent New parent / container to assign to this result
+	 * @tparam P2 Type of the new parent
+	 * @return Copy of this creation with the specified parent
+	 */
+	def withParent[P2](newParent: P2) = copy(parent = newParent)
+	/**
+	 * @param f A mapping function applied to the parent container
+	 * @tparam P2 Type of the mapping result
+	 * @return A copy of this creation with a mapped container
+	 */
+	def mapParent[P2](f: P => P2) = withParent(f(parent))
 	
 	/**
 	  * @param newChild New child to assign to this result
@@ -97,7 +121,7 @@ case class ComponentWrapResult[+P, +C, +R](parent: P, child: C, result: R)
 	  * @tparam R2 Type of the new result
 	  * @return A copy of this wrap result with specified additional value
 	  */
-	def withResult[R2](newResult: R2) = new ComponentWrapResult(parent, child, newResult)
+	def withResult[R2](newResult: R2) = new ContainerCreation(parent, child, newResult)
 	/**
 	  * @param f A mapping function for the additional result
 	  * @tparam R2 Type of the mapped result

@@ -8,9 +8,13 @@
   - Allows for changing and more customizable listened keys
 - Modified **GuiElementState** enumeration some, adding related **MouseInteractionState** enumeration
   - Moved the **Hover** state to **MouseInteractionState** object
-- Stackable now requires the classes to implement `updateStackSize(): Boolean`
+- **Stackable** now requires the classes to implement `updateStackSize(): Boolean`
   - This is already implemented by all **CachingStackable** and **StackableWrapper**, 
     only not covering custom implementations and static sized components
+### Bugfixes
+- Modified **TextContextCopyable**'s `.withTextInsets(SizeCategory)` and `.withTextInsetsAlong(SizeCategory)`
+  implementations; The new version is no longer based on scaling, and may function differently
+  - The previous implementation could sometimes lead to division by zero
 ### Deprecations
 - Deprecated **Input**, since it performs the exact same function as **View** in **Flow**
 - Renamed multiple focus-related properties in **Window**:

@@ -9,7 +9,7 @@ import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Alignment
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.{ComponentCreationResult, WindowCreationResult}
+import utopia.reach.component.wrapper.{Creation, WindowCreationResult}
 import utopia.reach.context.ReachWindowContext
 import utopia.reach.focus.{FocusListener, FocusRequestable}
 
@@ -199,7 +199,7 @@ trait Focusable extends ReachComponent with FocusRequestable
 	                                              title: LocalizedString = LocalizedString.empty,
 	                                              matchEdgeLength: Boolean = false, keepAnchored: Boolean = true,
 	                                              display: Boolean = false)
-	                                             (createContent: (ComponentHierarchy, Changing[Option[Window]]) => ComponentCreationResult[C, R])
+	                                             (createContent: (ComponentHierarchy, Changing[Option[Window]]) => Creation[C, R])
 	                                             (implicit context: ReachWindowContext, exc: ExecutionContext,
 	                                                  log: Logger): WindowCreationResult[C, R] =
 	{

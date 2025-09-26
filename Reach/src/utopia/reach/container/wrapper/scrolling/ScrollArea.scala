@@ -15,7 +15,7 @@ import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory, WrapperContainerFactory}
 
 import scala.language.implicitConversions
@@ -88,7 +88,7 @@ trait ScrollAreaFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollArea, 
 {
 	// IMPLEMENTED  ---------------------
 	
-	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[ScrollArea, C, R] = {
+	override def apply[C <: ReachComponent, R](content: Open[C, R]): ContainerCreation[ScrollArea, C, R] = {
 		val area = new ScrollArea(hierarchy, content.component, settings)
 		applyLengthConstraintsTo(area)
 		content.attachTo(area)

@@ -35,7 +35,7 @@ import utopia.reach.component.interactive.input._
 import utopia.reach.component.interactive.input.selection.FieldWithSelectionPopupSettings.{defaultPopupSettings, defaultScrollSettings}
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.{ComponentCreationResult, OpenComponent}
+import utopia.reach.component.wrapper.{Creation, Open}
 import utopia.reach.container.multi.{ViewStack, ViewStackSettings}
 import utopia.reach.container.wrapper.Swapper
 import utopia.reach.container.wrapper.scrolling.{ScrollView, ScrollingSettings}
@@ -574,7 +574,7 @@ case class FieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy, context
 		                                                 valuePointer: EventfulPointer[Option[A]] = Pointer.eventful.empty)
 		                                                (makeField: FieldCreationContext => C)
 		                                                (makeItemView: (ContextualMixed[VariableTextContext], Changing[A], Flag, Int) => ReachComponent)
-		                                                (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]] = { _: ExtraFieldCreationContext[C] => None })
+		                                                (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]] = { _: ExtraFieldCreationContext[C] => None })
 		                                                (implicit equals: EqualsFunction[A] = EqualsFunction.default) =
 			new FieldWithSelectionPopup[A, C](hierarchy, context, popupContext, emptyFlag, contentPointer,
 				valuePointer, settings, makeField, makeRightHintLabel, makeItemView)
@@ -618,7 +618,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
                                                                      override val valuePointer: EventfulPointer[Option[A]],
                                                                      settings: FieldWithSelectionPopupSettings,
                                                                      makeField: FieldCreationContext => C,
-                                                                     makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]],
+                                                                     makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]],
                                                                      makeItemView: (ContextualMixed[VariableTextContext], Changing[A], Flag, Int) => ReachComponent)
                                                                     (implicit eq: EqualsFunction[A],
                                                                      scrollingContext: ScrollingContext,
@@ -653,7 +653,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 						factory.withSettings(settings.selectionSettings).apply(contentPointer, valuePointer)(makeItemView)
 						
 					// Also yields a pointer that will contain the created stack
-					def createMainContent(factories: ContextualMixed[VariableReachContentWindowContext]): ComponentCreationResult[ReachComponent, Changing[Option[SelectableStack[A, _]]]] = {
+					def createMainContent(factories: ContextualMixed[VariableReachContentWindowContext]): Creation[ReachComponent, Changing[Option[SelectableStack[A, _]]]] = {
 						// The main content is either:
 						//   1. Switchable between options and no-options -view
 						//   2. Only the options view

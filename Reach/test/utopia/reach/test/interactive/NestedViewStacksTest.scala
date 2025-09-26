@@ -1,14 +1,14 @@
 package utopia.reach.test.interactive
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.ResettableFlag
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.Key.FunctionKey
 import utopia.genesis.handling.event.keyboard.KeyStateListener
 import utopia.reach.component.factory.Mixed
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.Creation
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.ReachWindow
@@ -34,14 +34,14 @@ object NestedViewStacksTest extends App
 				val constantLabel2 = labelFactories.next()("Press 2 to show another component")
 				val toggleLabel = labelFactories.next()("Press 1 and/or 2 to toggle visibility")
 				
-				val toggleVisibleFlag = vp2.mapWhile(nestedFactory.hierarchy.linkedFlag)(Identity)
+				val toggleVisibleFlag: Flag = vp2.viewWhile(nestedFactory.linkedFlag)
 				println("Setting up toggle visibility flag")
 				toggleVisibleFlag.addListener { e => println(s"Label visibility $e") }
 				nestedFactory.hierarchy.linkedFlag.addListener { e => println(s"Stack visibility $e") }
 				Pair(constantLabel2 -> AlwaysTrue, toggleLabel -> toggleVisibleFlag)
 			}
 			
-			ComponentCreationResult(Pair(constantLabel -> AlwaysTrue, nestedStack.parent -> vp1), nestedStack.parent)
+			Pair(constantLabel -> AlwaysTrue, nestedStack.parent -> vp1) -> nestedStack.parent
 		}
 	}
 	private val nestedStack = window.result

@@ -5,6 +5,7 @@ import utopia.firmament.context.color.ColorContextCopyable
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.{StackInsets, StackLength}
+import utopia.flow.util.Mutate
 import utopia.genesis.text.Font
 import utopia.paradigm.enumeration.Alignment.Center
 import utopia.paradigm.enumeration.Axis.{X, Y}
@@ -242,11 +243,13 @@ trait TextContextCopyable[+Repr]
 	  * @return A copy of this context with specified inset sizes
 	  */
 	def withTextInsets(insetsSize: SizeCategory): Repr = {
-		val medium = margins.medium
-		val targetScale = insetsSize.scaling(margins.adjustment)
+		val standard = margins.around(insetsSize)
 		mapTextInsets { _.map { current =>
-			val currentScale = current.optimal / medium
-			current * (targetScale/currentScale)
+			val base = standard.withPriority(current.priority)
+			if (current.hasMax)
+				base
+			else
+				base.noMax
 		} }
 	}
 	/**
@@ -255,13 +258,14 @@ trait TextContextCopyable[+Repr]
 	  * @return A copy of this context with specified inset sizes
 	  */
 	def withTextInsetsAlong(axis: Axis2D, insetsSize: SizeCategory) = {
-		// WET WET
-		val medium = margins.medium
-		val targetScale = insetsSize.scaling(margins.adjustment)
+		val standard = margins.around(insetsSize)
 		mapTextInsets {
 			_.mapAxis(axis) { current =>
-				val currentScale = current.optimal / medium
-				current * (targetScale / currentScale)
+				val base = standard.withPriority(current.priority)
+				if (current.hasMax)
+					base
+				else
+					base.noMax
 			}
 		}
 	}
@@ -297,15 +301,18 @@ trait TextContextCopyable[+Repr]
 	  * @param f A mapping function for between-lines margin
 	  * @return A modified copy of this context
 	  */
-	def mapMarginBetweenLines(f: StackLength => StackLength) = withMarginBetweenLines(f(betweenLinesMargin))
+	def mapMarginBetweenLines(f: Mutate[StackLength]): Repr = withMarginBetweenLines(f(betweenLinesMargin))
 	/**
 	  * @param margin Margin to place between the lines (relative to margins)
 	  * @return A copy of this context with that between lines -margin
 	  */
-	def withMarginBetweenLines(margin: SizeCategory) = {
-		val targetScaling = margin.scaling(margins.adjustment)
-		val current = betweenLinesMargin
-		val currentScaling = current.optimal / margins.medium
-		current * (targetScaling/currentScaling)
+	def withMarginBetweenLines(margin: SizeCategory): Repr = {
+		mapMarginBetweenLines { original =>
+			val base = margins.around(margin).withPriority(original.priority)
+			if (original.hasMax)
+				base
+			else
+				base.noMax
+		}
 	}
 }

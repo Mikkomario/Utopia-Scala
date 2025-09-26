@@ -24,8 +24,8 @@ import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.factory.{ComponentFactoryFactory, FromGenericContextComponentFactoryFactory, FromGenericContextFactory}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
+import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
+import utopia.reach.component.wrapper.Open.OpenGroup
 import utopia.reach.container.multi.Collection.{StackBoundsWrapper, layoutPriorities}
 
 import scala.collection.mutable
@@ -273,7 +273,7 @@ trait CollectionFactoryLike[+Repr]
 {
 	// IMPLEMENTED  -------------------
 	
-	override def apply[C <: ReachComponent, R](content: BundledOpenComponents[C, R]): ComponentsWrapResult[Collection, C, R] = {
+	override def apply[C <: ReachComponent, R](content: OpenGroup[C, R]): MultiContainerCreation[Collection, C, R] = {
 		val collection: Collection = new _Collection(hierarchy, content.component,
 			primaryAxis, insideRowLayout, betweenRowsLayout, innerMarginPointer, outerMarginPointer,
 			splitThresholdPointer, customDrawers)

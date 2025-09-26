@@ -15,7 +15,7 @@ import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.wrapper.{ContextualWrapperContainerFactory, NonContextualWrapperContainerFactory}
 
 import scala.language.implicitConversions
@@ -45,7 +45,7 @@ trait ScrollViewFactoryLike[+Repr] extends ScrollWrapperFactoryLike[ScrollView, 
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[ScrollView, C, R] = {
+	override def apply[C <: ReachComponent, R](content: Open[C, R]): ContainerCreation[ScrollView, C, R] = {
 		val view = new ScrollView(hierarchy, content.component, settings, axis)
 		applyLengthConstraintsTo(view)
 		content.attachTo(view)

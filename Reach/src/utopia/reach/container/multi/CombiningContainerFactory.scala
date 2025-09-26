@@ -1,7 +1,7 @@
 package utopia.reach.container.multi
 
-import utopia.reach.component.wrapper.ComponentWrapResult.ComponentsWrapResult
-import utopia.reach.component.wrapper.OpenComponent.BundledOpenComponents
+import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
+import utopia.reach.component.wrapper.Open.OpenGroup
 import utopia.reach.container.ContainerFactory
 
 /**
@@ -13,4 +13,4 @@ import utopia.reach.container.ContainerFactory
   * @tparam Top       The highest accepted wrapped component type (typically ReachComponentLike)
   */
 trait CombiningContainerFactory[+Container, -Top]
-	extends ContainerFactory[Container, Top, BundledOpenComponents, ComponentsWrapResult]
+	extends ContainerFactory[Container, Top, OpenGroup, MultiContainerCreation]

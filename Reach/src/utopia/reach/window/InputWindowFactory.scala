@@ -15,7 +15,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.AssignableOnce
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.Key.Esc
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.enumeration.LinearAlignment.{Close, Far, Middle}
@@ -24,7 +24,8 @@ import utopia.reach.component.interactive.button.image.ImageButton
 import utopia.reach.component.label.text.TextLabel
 import utopia.reach.component.template.ReachComponent
 import utopia.reach.component.template.focus.Focusable
-import utopia.reach.component.wrapper.{ComponentCreationResult, Open, OpenComponent}
+import utopia.reach.component.wrapper.Open.SwitchableOpenComponents
+import utopia.reach.component.wrapper.{Creation, Open}
 import utopia.reach.container.ReachCanvas
 import utopia.reach.container.multi.{SegmentGroup, Stack, ViewStack}
 import utopia.reach.container.wrapper.{AlignFrame, Framing}
@@ -76,8 +77,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	  * @param context Additional context item created in inputTemplate
 	  * @return Combined component
 	  */
-	protected def buildLayout(factories: ContextualMixed[StaticTextContext],
-	                          content: Seq[OpenComponent[ReachComponent, Changing[Boolean]]],
+	protected def buildLayout(factories: ContextualMixed[StaticTextContext], content: SwitchableOpenComponents,
 	                          context: N): ReachComponent
 	
 	/**
@@ -206,7 +206,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	private def groupsToComponent(factories: ContextualMixed[StaticColorContext],
 								  groups: RowGroups[InputRowBlueprint],
 								  fieldsBuffer: VectorBuilder[(String, InputField)])
-								 (implicit context: FieldRowContext): (ReachComponent, Changing[Boolean]) =
+								 (implicit context: FieldRowContext): (ReachComponent, Flag) =
 	{
 		// Checks whether segmentation should be used
 		val segmentGroup = {
@@ -247,7 +247,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 								 group: RowGroup[InputRowBlueprint],
 								 segmentGroup: Option[SegmentGroup],
 								 fieldsBuffer: VectorBuilder[(String, InputField)])
-								(implicit context: FieldRowContext): (ReachComponent, Changing[Boolean]) =
+								(implicit context: FieldRowContext): (ReachComponent, Flag) =
 	{
 		// If this group consists of multiple rows, wraps them in a stack. Otherwise presents the row as is
 		if (group.isSingleRow)
@@ -273,7 +273,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 	private def actualizeRow(factories: ContextualMixed[StaticColorContext],
 							 blueprint: InputRowBlueprint, segmentGroup: Option[SegmentGroup],
 							 fieldsBuilder: VectorBuilder[(String, InputField)])
-							(implicit context: FieldRowContext): (ReachComponent, Changing[Boolean]) =
+							(implicit context: FieldRowContext): (ReachComponent, Flag) =
 	{
 		// Case: Two components are used
 		if (blueprint.displaysName) {
@@ -356,7 +356,7 @@ trait InputWindowFactory[A, N] extends InteractionWindowFactory[A]
 		val components = if (fieldNameIsFirst) Pair(fieldNameLabel, field.field) else Pair(field.field, fieldNameLabel)
 		
 		// Attaches field visibility pointer as a result
-		ComponentCreationResult.many(components, blueprint.visibleFlag)
+		Creation.many(components, blueprint.visibleFlag)
 	}
 }
 

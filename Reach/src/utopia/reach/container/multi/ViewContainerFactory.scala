@@ -12,9 +12,10 @@ import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, Lockabl
 import utopia.flow.view.template.eventful.Changing
 import utopia.reach.component.hierarchy.SeedHierarchyBlock
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentWrapResult.SwitchableComponentsWrapResult
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
-import utopia.reach.component.wrapper.OpenComponent.{SeparateOpenComponents, SwitchableOpenComponents}
+import utopia.reach.component.wrapper.ContainerCreation.ViewContainerCreation
+import utopia.reach.component.wrapper.Creation.CreationOfOpenSwitchables
+import utopia.reach.component.wrapper.Open.{OpenSeparately, OpenSwitchables}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.ContainerFactory
 
 import scala.collection.mutable
@@ -25,7 +26,7 @@ import scala.collection.mutable
   * @since 5.5.2023, v1.1
   */
 trait ViewContainerFactory[+Container <: ReachComponent, -Top]
-	extends ContainerFactory[Container, Top, SwitchableOpenComponents, SwitchableComponentsWrapResult]
+	extends ContainerFactory[Container, Top, CreationOfOpenSwitchables, ViewContainerCreation]
 {
 	// ABSTRACT ------------------------
 	
@@ -40,9 +41,9 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	
 	// IMPLEMENTED  --------------------
 	
-	override def apply[C <: Top, R](content: SwitchableOpenComponents[C, R]): SwitchableComponentsWrapResult[Container, C, R] = {
+	override def apply[C <: Top, R](content: CreationOfOpenSwitchables[C, R]): ViewContainerCreation[Container, C, R] = {
 		val container = fromVisibilityFlags(content)
-		ComponentWrapResult(container, content.map { _.componentAndResult }, content.result)
+		ContainerCreation(container, content.map { _.componentAndResult }, content.result)
 	}
 	
 	
@@ -53,7 +54,7 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	  * @param content A pointer that contains the currently displayed content.
 	  * @return A new container
 	  */
-	def pointer(content: Changing[SeparateOpenComponents[Top, _]]): Container = {
+	def pointer(content: Changing[OpenSeparately[Top, _]]): Container = {
 		// Creates the container
 		val componentsP = content.map { _.map { _.component } }
 		val container = _apply(componentsP)
@@ -96,7 +97,7 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	  * @tparam A Type of values displayed on individual components
 	  * @return A new container
 	  */
-	protected def _mapPointer[A](pointer: Changing[Seq[A]])(construct: (Changing[A], Int) => OpenComponent[Top, _]): Container =
+	protected def _mapPointer[A](pointer: Changing[Seq[A]])(construct: (Changing[A], Int) => Open[Top, _]): Container =
 	{
 		// Creates one component for each slot in the display values, adding more components as needed
 		val componentCache = Cache.clearable { index: Int =>
@@ -139,7 +140,7 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 	  * @param content Content to display
 	  * @return A newly created container
 	  */
-	protected def fromVisibilityFlags(content: SwitchableOpenComponents[Top, _]) = {
+	protected def fromVisibilityFlags(content: OpenSwitchables[Top]) = {
 		// Checks which components have dynamic linking and which have static linking
 		val (staticComponents, dynamicComponents) = content.zipWithIndex.divideBy { _._1.result.mayChange }.toTuple
 		val alwaysVisibleComponents = staticComponents.view.filter { _._1.result.value }.toOptimizedSeq

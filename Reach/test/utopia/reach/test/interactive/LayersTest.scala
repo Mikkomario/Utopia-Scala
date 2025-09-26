@@ -8,7 +8,7 @@ import utopia.paradigm.enumeration.Alignment.{Bottom, BottomLeft, Top, TopRight}
 import utopia.paradigm.enumeration.Axis.Y
 import utopia.reach.component.label.empty.EmptyLabel
 import utopia.reach.component.label.text.TextLabel
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.Creation
 import utopia.reach.container.layered.LayerPositioning.AlignedToSide
 import utopia.reach.container.layered.Layers
 import utopia.reach.test.ReachTestContext
@@ -43,7 +43,7 @@ object LayersTest extends App
 				labelF.withBackground(Secondary)("TopRight") -> AlignedToSide(TopRight),
 				labelF.withBackground(Secondary)("BottomLeft") -> AlignedToSide(BottomLeft, expandIfPossible = false)
 			)
-			ComponentCreationResult.layers(mainLabel, layers)
+			Creation.layers(mainLabel, layers)
 		}
 	}
 	

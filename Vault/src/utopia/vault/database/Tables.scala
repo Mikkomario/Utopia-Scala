@@ -79,9 +79,9 @@ class Tables(connectionPool: ConnectionPool)
 			// Reads data for each table
 			val tables = tableNames.map { DatabaseTableReader(dbName, _, columnNameConversion) }
 			// Sets up references between the tables
-			DatabaseReferenceReader.setupReferences(tables.toSet)
+			DatabaseReferenceReader.setupReferences(tables)
 			
-			tables.map { t => t.name.toLowerCase -> t }.toMap
+			tables.iterator.map { t => t.name.toLowerCase -> t }.toMap
 		}
 		
 		

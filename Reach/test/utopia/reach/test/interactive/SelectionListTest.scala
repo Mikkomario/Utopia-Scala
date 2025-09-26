@@ -26,6 +26,7 @@ import scala.util.Random
   * @author Mikko Hilpinen
   * @since 6.2.2021, v0.1
   */
+@deprecated("Deprecated for removal", "v1.7")
 object SelectionListTest extends App
 {
 	import ReachTestContext._

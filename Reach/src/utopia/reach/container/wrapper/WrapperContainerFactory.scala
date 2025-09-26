@@ -1,6 +1,6 @@
 package utopia.reach.container.wrapper
 
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 import utopia.reach.container.ContainerFactory
 
 /**
@@ -11,4 +11,4 @@ import utopia.reach.container.ContainerFactory
   * @tparam Top The highest accepted wrapped component type (typically ReachComponentLike)
   */
 trait WrapperContainerFactory[+Container, -Top]
-	extends ContainerFactory[Container, Top, OpenComponent, ComponentWrapResult]
+	extends ContainerFactory[Container, Top, Open, ContainerCreation]

@@ -10,7 +10,7 @@ import utopia.reach.component.factory.FromGenericContextFactory
 import utopia.reach.component.factory.contextual.GenericContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
-import utopia.reach.component.wrapper.{ComponentWrapResult, OpenComponent}
+import utopia.reach.component.wrapper.{ContainerCreation, Open}
 
 object AlignFrame extends Cff[AlignFrameFactory]
 {
@@ -41,7 +41,7 @@ trait AlignFrameFactoryLike[+Repr]
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def apply[C <: ReachComponent, R](content: OpenComponent[C, R]): ComponentWrapResult[AlignFrame, C, R] = {
+	override def apply[C <: ReachComponent, R](content: Open[C, R]): ContainerCreation[AlignFrame, C, R] = {
 		val frame = new AlignFrame(hierarchy, content.component, alignment, customDrawers, scalesToFill)
 		content attachTo frame
 	}
@@ -75,7 +75,7 @@ case class AlignFrameFactory(hierarchy: ComponentHierarchy)
 	 * @return A new align frame
 	 */
 	@deprecated("Please use .apply(Alignment).apply(OpenComponent) instead", "v1.1")
-	def apply[C <: ReachComponent, R](content: OpenComponent[C, R], alignment: Alignment,
+	def apply[C <: ReachComponent, R](content: Open[C, R], alignment: Alignment,
 	                                  customDrawers: Seq[CustomDrawer] = Empty) =
 	{
 		val frame = new AlignFrame(hierarchy, content.component, alignment, customDrawers)

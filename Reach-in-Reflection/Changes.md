@@ -1,5 +1,8 @@
 # Reach in Reflection - List of Changes
 
+## v1.0.6 (in development)
+Supports **Reach v1.7**
+
 ## v1.0.5 - 26.05.2025
 Adds support for **Flow v2.6** and **Reach v1.6**
 

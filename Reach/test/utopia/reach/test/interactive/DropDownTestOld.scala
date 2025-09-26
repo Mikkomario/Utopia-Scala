@@ -21,6 +21,7 @@ import utopia.reach.window.ReachWindow
   * @author Mikko Hilpinen
   * @since 23.12.2020, v0.1
   */
+@deprecated("Deprecated for removal", "v1.7")
 object DropDownTestOld extends App
 {
 	import ReachTestContext._

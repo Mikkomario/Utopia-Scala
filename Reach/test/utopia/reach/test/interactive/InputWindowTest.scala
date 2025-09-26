@@ -14,8 +14,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.Changing
-import utopia.flow.view.template.eventful.Flag.wrap
+import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
@@ -28,7 +27,7 @@ import utopia.reach.component.interactive.input.check.CheckBox
 import utopia.reach.component.interactive.input.selection.RadioButtonGroup
 import utopia.reach.component.interactive.input.text.{DurationField, TextField}
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.Open
 import utopia.reach.container.multi.{Stack, ViewStack}
 import utopia.reach.container.wrapper.Framing
 import utopia.reach.focus.FocusRequestable
@@ -119,7 +118,7 @@ object InputWindowTest extends App
 		}
 		
 		override protected def buildLayout(factories: ContextualMixed[StaticTextContext],
-		                                   content: Seq[OpenComponent[ReachComponent, Changing[Boolean]]],
+		                                   content: Seq[Open[ReachComponent, Flag]],
 		                                   context: Unit) =
 		{
 			val framingMargin = margins.medium.downscaling x margins.medium.any

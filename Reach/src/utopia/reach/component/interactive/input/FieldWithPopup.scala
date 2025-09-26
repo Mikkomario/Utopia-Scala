@@ -31,7 +31,7 @@ import utopia.reach.component.interactive.input.FieldWithPopup.transitionDuratio
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.Open
 import utopia.reach.context.{ReachWindowContext, VariableReachContentWindowContext}
 
 import scala.concurrent.ExecutionContext
@@ -486,7 +486,7 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
 		 */
 		def withRightHintLabel[C <: ReachComponent with Focusable](emptyFlag: Flag)
 		                                                          (makeField: FieldCreationContext => C)
-		                                                          (makeRightHintLabel: ExtraFieldCreationContext[C] => OpenComponent[ReachComponent, Any])
+		                                                          (makeRightHintLabel: ExtraFieldCreationContext[C] => Open[ReachComponent, Any])
 		                                                          (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent) =
 			_apply[C](emptyFlag, makeField, c => Some(makeRightHintLabel(c)), makePopupContent)
 		/**
@@ -503,12 +503,12 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
 		 */
 		def withPossibleRightHintLabel[C <: ReachComponent with Focusable](emptyFlag: Flag)
 		                                                                  (makeField: FieldCreationContext => C)
-		                                                                  (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
+		                                                                  (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]])
 		                                                                  (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent) =
 			_apply[C](emptyFlag, makeField, makeRightHintLabel, makePopupContent)
 		
 		private def _apply[C <: ReachComponent with Focusable](emptyFlag: Flag, makeField: FieldCreationContext => C,
-		                                                       makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]],
+		                                                       makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]],
 		                                                       makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent) =
 			new FieldWithPopup[C](hierarchy, context, popupContext, emptyFlag, settings)(makeField)(makeRightHintLabel)(
 				makePopupContent)
@@ -556,7 +556,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
                                                          context: VariableTextContext, popupContext: ReachWindowContext,
                                                          emptyFlag: Flag, settings: FieldWithPopupSettings)
                                                         (makeField: FieldCreationContext => C)
-                                                        (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[OpenComponent[ReachComponent, Any]])
+                                                        (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]])
                                                         (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent)
                                                         (implicit exc: ExecutionContext)
 	extends ReachComponentWrapper with FocusableWithStateWrapper with CanDisplayPopup

@@ -21,7 +21,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteReachComponent, ReachComponent}
-import utopia.reach.component.wrapper.OpenComponent
+import utopia.reach.component.wrapper.Open
 
 /**
   * Segments are used for aligning multiple components from different stacks / containers so that their lengths
@@ -95,7 +95,7 @@ class Segment(direction: Axis2D = Y, layout: StackLayout = Fit)
 	  * @param index Index of this segment
 	  * @return Container that now wraps the specified component (as a wrap result)
 	  */
-	def wrap[C <: ReachComponent, R](hierarchy: ComponentHierarchy, component: OpenComponent[C, R], index: Int) =
+	def wrap[C <: ReachComponent, R](hierarchy: ComponentHierarchy, component: Open[C, R], index: Int) =
 	{
 		// Creates the wrapping container and attaches the component to it
 		val container = new SegmentContainer(hierarchy, component, index)

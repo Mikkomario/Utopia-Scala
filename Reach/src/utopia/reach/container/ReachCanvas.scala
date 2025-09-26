@@ -38,7 +38,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.ReachComponent
-import utopia.reach.component.wrapper.ComponentCreationResult
+import utopia.reach.component.wrapper.Creation
 import utopia.reach.cursor.{CursorSet, ReachCursorManager}
 import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.drawing.RealTimeReachPaintManager
@@ -87,7 +87,7 @@ object ReachCanvas
 	                                  backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
 	                                  enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
 	                                 (revalidateImplementation: ReachCanvas => Unit)
-	                                 (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                 (createContent: ComponentHierarchy => Creation[C, R])
 	                                 (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Creates the canvas first
@@ -155,7 +155,7 @@ object ReachCanvas
 	                                     revalidateListener: ReachCanvas => Unit = _ => (),
 	                                     enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
 	                                     disableMouse: Boolean = false)
-	                                    (createContent: ComponentHierarchy => ComponentCreationResult[C, R])
+	                                    (createContent: ComponentHierarchy => Creation[C, R])
 	                                    (implicit exc: ExecutionContext, log: Logger) =
 	{
 		// Performs the canvas creation in the AWT event tread (blocks)
