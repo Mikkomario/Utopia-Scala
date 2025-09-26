@@ -1,8 +1,8 @@
 package utopia.flow.test.event
 
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.flow.event.model.{ChangeEvent, ChangeResult}
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.event.model.{ChangeEvent, ChangeResult}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{DoubleType, StringType}
@@ -11,8 +11,7 @@ import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
-import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, LockablePointer, ResettableFlag, SettableFlag}
-import utopia.flow.view.template.eventful.Changing.{AsMayBeEmptyChanging, ChangingCollection}
+import utopia.flow.view.mutable.eventful._
 
 import scala.util.Try
 
@@ -21,6 +20,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 24.7.2023, v2.2
   */
+// TODO: Divide this into blocks or functions
 object ChangingTest extends App
 {
 	// Tests advanced change event functions
@@ -531,6 +531,121 @@ object ChangingTest extends App
 	mp1.value = 2
 	
 	assert(lastMergeResult == 4)
+	
+	// Tests lazy mapping
+	
+	private val lp1 = Pointer.eventful(1)
+	private val lpm1 = lp1.lazyMap { _ + 1 }
+	
+	assert(lp1.hasNoListeners)
+	assert(lpm1.nonInitialized)
+	
+	assert(lpm1.value == 2)
+	
+	assert(lp1.hasListeners)
+	assert(lpm1.isInitialized)
+	
+	lp1.value = 2
+	
+	assert(lp1.hasNoListeners)
+	assert(lpm1.nonInitialized)
+	
+	assert(lpm1.value == 3)
+	
+	assert(lp1.hasListeners)
+	assert(lpm1.isInitialized)
+	
+	lp1.value = 1
+	
+	assert(lp1.hasNoListeners)
+	assert(lpm1.nonInitialized)
+	
+	private val lp2 = Pointer.eventful(2)
+	private val lpm2 = lp1.lazyMergeWith(lp2) { _ + _ }
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lpm2.nonInitialized)
+	
+	assert(lpm2.value == 3)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lpm2.isInitialized)
+	
+	lp2.value = 3
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lpm2.nonInitialized)
+	
+	assert(lpm2.value == 4)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lpm2.isInitialized)
+	
+	lp1.value = -1
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lpm2.nonInitialized)
+	
+	assert(lpm2.value == 2)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lpm2.isInitialized)
+	
+	lp1.value = 1
+	lp2.value = 2
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lpm2.nonInitialized)
+	
+	private val lp3 = Pointer.eventful(3)
+	private val lpm3 = lp1.lazyMergeWith(lp2, lp3) { _ + _ + _ }
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lp3.hasNoListeners)
+	assert(lpm3.nonInitialized)
+	
+	assert(lpm3.value == 6)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lp3.hasListeners)
+	assert(lpm3.isInitialized)
+	
+	lp3.value = 4
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lp3.hasNoListeners)
+	assert(lpm3.nonInitialized)
+	
+	assert(lpm3.value == 7)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lp3.hasListeners)
+	assert(lpm3.isInitialized)
+	
+	lp2.value = 4
+	
+	assert(lp1.hasNoListeners)
+	assert(lp2.hasNoListeners)
+	assert(lp3.hasNoListeners)
+	assert(lpm3.nonInitialized)
+	
+	assert(lpm3.value == 9)
+	
+	assert(lp1.hasListeners)
+	assert(lp2.hasListeners)
+	assert(lp3.hasListeners)
+	assert(lpm3.isInitialized)
 	
 	println("Done!")
 }
