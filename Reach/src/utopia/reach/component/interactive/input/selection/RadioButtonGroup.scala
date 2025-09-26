@@ -21,7 +21,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.check.RadioButtonLine
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.container.multi.{Stack, StackSettings, StackSettingsLike}
-import utopia.reach.focus.ManyFocusableWrapper
+import utopia.reach.focus.{HasFocusFlag, ManyFocusableWrapper}
 
 import scala.language.implicitConversions
 
@@ -244,7 +244,7 @@ class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: V
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,
                           hotKeys: Map[A, Set[HotKey]] = Map())
 	extends ReachComponentWrapper with Pool[Seq[A]] with InteractionWithPointer[A]
-		with ManyFocusableWrapper
+		with ManyFocusableWrapper with HasFocusFlag
 {
 	// ATTRIBUTES	------------------------
 	
@@ -267,7 +267,7 @@ class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: V
 	/**
 	  * Pointer that contains true while any button in this group has focus
 	  */
-	lazy val focusPointer = focusTargets.map { _.focusFlag }.reduceOption { _ || _ }.getOrElse(AlwaysFalse)
+	lazy val focusFlag = focusTargets.map { _.focusFlag }.reduceOption { _ || _ }.getOrElse(AlwaysFalse)
 	
 	
 	// INITIAL CODE	------------------------
@@ -283,12 +283,18 @@ class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: V
 	}
 	
 	
+	// COMPUTED ----------------------------
+	
+	@deprecated("Renamed to .focusFlag", "v1.7")
+	def focusPointer = focusFlag
+	
+	
 	// IMPLEMENTED	------------------------
 	
 	override protected def wrapped = _wrapped
 	override protected def focusTargets = buttons
 	
-	override def hasFocus = focusPointer.value
+	override def hasFocus = focusFlag.value
 	
 	
 	// NESTED	----------------------------
@@ -302,7 +308,7 @@ class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: V
 		
 		// IMPLEMENTED  --------------------
 		
-		override def handleCondition: Flag = focusPointer
+		override def handleCondition: Flag = focusFlag
 		
 		override def onKeyState(event: KeyStateEvent) = event.arrowAlong(settings.axis).foreach { direction =>
 			if (moveFocusInside(direction.sign, forceFocusLeave = true))

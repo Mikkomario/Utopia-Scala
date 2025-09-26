@@ -13,6 +13,7 @@
   - Added a new `.successful(...)` constructor
 ### Other changes
 - `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
+- **GetRequest** now fully specifies the `body` type, no longer requiring the **Nothing** on the right side in subclasses
 
 ## v1.10 - 26.05.2025
 This update modifies how **PullSchrodinger** handles failure cases.  

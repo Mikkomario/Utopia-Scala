@@ -66,7 +66,8 @@
   - **Ccff** is now **CCF**
   - **Gccff** is now **GCF**
 - Deprecated `.toVector` in **ComponentHierarchy**, in favor of new (and mostly identical) `.toSeq`
-- Deprecated Stack's `.visibilityPointer` in favor of `.visibleFlag`
+- Deprecated **Stack**'s `.visibilityPointer` in favor of `.visibleFlag`
+- Renamed **RadioButtonGroup**'s `.focusPointer` to `.focusFlag`
 - Renamed some functions in **Open** and **ContextualOpenFactory** (previously **ContextualOpenComponentFactory**):
   - `.many()` is now `.separately(...)`
   - `.manyConditional(...)` is now `.conditional(...)`
@@ -125,6 +126,7 @@
 - Image labels in **Field** no longer have low stack-size priority
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
 - Rewrote **ReachWindow**'s anchoring logic
+- **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - **InputField** conversions don't require **Input** anymore, only requiring **View** (also extended by **Input**)
 - Optimized the component layout update algorithm
