@@ -44,6 +44,4 @@ trait DistinctReadModelAccess[+M, +A, +V] extends ModelAccess[M, A, V]
 	  * @return All accessible values of that column / property. May contain empty values.
 	  */
 	def pullProperty(propName: String)(implicit connection: Connection) = pullColumn(table(propName))
-	@deprecated("Renamed to pullProperty", "v1.20")
-	def pullAttribute(attributeName: String)(implicit connection: Connection) = pullProperty(attributeName)
 }

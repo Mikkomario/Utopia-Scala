@@ -192,12 +192,6 @@ case class Condition(segment: SqlSegment, knownResult: UncertainBoolean = Uncert
 	  */
 	def ||(other: Condition): Condition = Condition.or(Pair(this, other))
 	/**
-	  * Combines the conditions together using a logical OR. All of the conditions are wrapped in
-	  * single parentheses '()' and performed together, from left to right.
-	  */
-	@deprecated("Deprecated for removal. Please use .or(...) instead", "v1.20")
-	def ||(first: Condition, second: Condition, more: Condition*): Condition = this || (Pair(first, second) ++ more)
-	/**
 	  * @param other Another condition
 	  * @return A combination of these conditions (using OR) wrapped in parenthesis '()'
 	  */

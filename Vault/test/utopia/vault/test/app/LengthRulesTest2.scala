@@ -7,7 +7,7 @@ import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.test.TestContext._
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, ConnectionPool}
-import utopia.vault.sql.{Delete, Insert, Select, SelectAll}
+import utopia.vault.sql.{Delete, Insert, Select}
 import utopia.vault.test.database.TestTables
 
 /**

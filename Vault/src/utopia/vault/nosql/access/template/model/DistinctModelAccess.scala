@@ -38,10 +38,6 @@ trait DistinctModelAccess[+M, +A, +V] extends DistinctReadModelAccess[M, A, V]
 	def putProperty(propertyName: String, value: Value, updateCondition: Option[Condition] = None)
 	               (implicit connection: Connection) =
 		putColumn(table(propertyName), value, updateCondition)
-	@deprecated("Renamed to .putProperty", "v1.17")
-	def putAttribute(attributeName: String, value: Value, updateCondition: Option[Condition] = None)
-	                (implicit connection: Connection) =
-		putProperty(attributeName, value, updateCondition)
 	
 	/**
 	  * Sets a NULL value to a column of all accessible items

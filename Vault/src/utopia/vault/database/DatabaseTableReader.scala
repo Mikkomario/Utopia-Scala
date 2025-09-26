@@ -86,10 +86,6 @@ object DatabaseTableReader
         val parts = splitterRegex.split(original)
         s"${parts.head}${parts.tail.map { _.capitalize }.mkString}"
     }
-    // Converts underscore naming style strings to camelcase naming style strings
-    // Eg. day_of_birth => dayOfBirth
-    @deprecated("Renamed to .underscoreToCamelCase(String)", "1.17")
-    def underlineToCamelCase(original: String) = underscoreToCamelCase(original)
     
     /**
       * The default implementation of the "column names to (db) property names" -function used in table reading.

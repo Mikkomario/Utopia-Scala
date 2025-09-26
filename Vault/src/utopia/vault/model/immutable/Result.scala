@@ -138,42 +138,6 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
     def firstIndexForTable(table: Table) = rows.headOption.map { _.indexForTable(table) } getOrElse Value.empty
     
     /**
-      * Groups the rows to groups by tables
-      * @param primaryTable The table the grouping is primarily done
-      * @param secondaryTables The tables that have additional row groups
-      * @return A map that links a group of rows to each unique primary table index. The primary table's row is also linked.
-      *         The secondary maps contain rows for each of the secondary tables (although the list may be empty).
-      *         Only unique rows are preserved (based on row index)
-      */
-    @deprecated("Please use groupAnd(...) instead", "v1.18")
-    def grouped(primaryTable: Table, secondaryTables: Iterable[Table]) = {
-        rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }.view
-            .mapValues { rows =>
-                rows.head ->
-                    secondaryTables.map { table =>
-                        table -> rows.filter { _.containsDataForTable(table) }.distinctBy { _.indexForTable(table) }
-                    }.toMap
-            }.toMap
-    }
-    /**
-      * Groups the rows by a table
-      * @param primaryTable The table that determines the groups
-      * @param secondaryTable The table that is dependent / linked to the first table
-      * @return A map that contains links to a list of rows for each unique primary table index. Primary table row
-      *         is also included in results. Resulting lists contain only rows that include data from the secondary table,
-      *         each duplicate row (based on secondary table index) is removed.
-      */
-    @deprecated("Please use group(...) instead", "v1.18")
-    def grouped(primaryTable: Table, secondaryTable: Table) = {
-        rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-            .view.mapValues { rows =>
-                rows.head -> rows.filter { _.containsDataForTable(secondaryTable) }
-                    .distinctBy { _.indexForTable(secondaryTable) }
-            }
-            .toMap
-    }
-    
-    /**
       * Combines parsed data from this result, using two factories and one merge function
       * @param f1 Factory for reading the primary elements
       * @param f2 Factory for reading the secondary elements
