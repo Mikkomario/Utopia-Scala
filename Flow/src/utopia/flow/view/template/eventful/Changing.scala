@@ -163,13 +163,24 @@ object Changing
 		def mayBeEmpty = !isAlwaysNonEmpty
 		
 		/**
+		 * @return A future that resolves once this pointer contains a non-empty value,
+		 *         which may be immediately.
+		 */
+		def nonEmptyFuture = wrapped.futureWhere { !_isEmpty(_) }
+		/**
+		 * @return A future that resolves once this pointer contains an empty value,
+		 *         which may be immediately.
+		 */
+		def emptyFuture = wrapped.findMapFuture { v => if (_isEmpty(v)) Some(()) else None }
+		
+		/**
 		  * @return A flag that contains true while this pointer contains a non-empty value
 		  */
-		def nonEmptyFlag: Flag = wrapped.map { !_isEmpty(_) }
+		def nonEmptyFlag: Flag = wrapped.lightMap { !_isEmpty(_) }
 		/**
 		  * @return A flag that contains true while this pointer contains an empty value
 		  */
-		def emptyFlag: Flag = wrapped.map(_isEmpty)
+		def emptyFlag: Flag = wrapped.lightMap(_isEmpty)
 	}
 	
 	
@@ -190,8 +201,26 @@ object Changing
 	implicit class ChangingOption[A](val c: Changing[Option[A]])
 		extends AnyVal with MayBeEmptyChangingWrapper[Option[A]]
 	{
+		// COMPUTED --------------------------
+		
+		/**
+		 * @return A future that resolves into the first value of this pointer, which may be the current value.
+		 */
+		def future = c.findMapFuture(Identity)
+		/**
+		 * @return A future that resolves into the next value of this pointer.
+		 *         Note: If this pointer won't change, this future will never resolve.
+		 */
+		def nextFuture = c.findMapNextFuture(Identity)
+		
+		
+		// IMPLEMENTED  ----------------------
+		
 		override protected def wrapped: Changing[Option[A]] = c
 		override protected def _isEmpty(value: Option[A]): Boolean = value.isEmpty
+		
+		
+		// OTHER    --------------------------
 		
 		/**
 		 * Calls the specified function once this pointer contains a non-empty value (which may be immediately)

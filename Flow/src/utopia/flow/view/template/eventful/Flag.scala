@@ -97,6 +97,14 @@ trait Flag extends Changing[Boolean] with MaybeSet
 	  * @return Whether this flag will always remain false
 	  */
 	def isAlwaysFalse = existsFixed { !_ }
+	/**
+	 * @return True if this flag might at some point contain true
+	 */
+	def maybeTrue = !isAlwaysFalse
+	/**
+	 * @return True if this flag might at some point contain false
+	 */
+	def maybeFalse = !isAlwaysTrue
 	
 	/**
 	  * @return A reversed copy of this flag

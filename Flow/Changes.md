@@ -31,11 +31,14 @@
   **MergingLazy** and **LazyWrapper**
 ### New methods
 - **Changing**
-  - New empty/non-empty -related functions are now available for **Option**-based **Changing** instances
+  - Added new empty/non-empty -related functions to **Option**-based **Changing** instances
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
 - **Flag** (object)
-  - Added `.completionOf(Future)`
+  - Object
+    - Added `.completionOf(Future)`
+  - Trait
+    - Added `.maybeTrue` and `.maybeFalse`
 - **Future**
   - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
     for **Future**s of type **TryCatch**
