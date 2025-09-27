@@ -11,32 +11,37 @@ import scala.language.implicitConversions
 
 object ColorSet
 {
-	// IMPLICIT	--------------------------
+	// ATTRIBUTES   -----------------------
 	
 	/**
-	  * @param set A color set
-	  * @return Default color for the set
-	  */
-	implicit def setToColor(set: ColorSet): Color = set.default
-	
-	
-	// ATTRIBUTES   -----------------------
+	 * A color set of 2 colors: Black (default, slightly opaque) and white (slightly opaque)
+	 */
+	lazy val blackAndWhite = apply(Color.textBlack, Color.textWhite, Color.textBlack)
 	
 	/**
 	  * Default shade of gray to use in light themed uis
 	  */
-	val defaultLightGray = apply(
+	lazy val defaultLightGray = apply(
 		Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(200))
 	/**
 	  * Default shade of gray to use in dark themed uis
 	  */
-	val defaultDarkGray = apply(
+	lazy val defaultDarkGray = apply(
 		Rgb.grayWithValue(66), Rgb.grayWithValue(109), Rgb.grayWithValue(27))
 	
 	
 	// COMPUTED	---------------------------
 	
 	private def defaultMinimumContrast = Minimum.largeTextMinimumContrast
+	
+	
+	// IMPLICIT	--------------------------
+	
+	/**
+	 * @param set A color set
+	 * @return Default color for the set
+	 */
+	implicit def setToColor(set: ColorSet): Color = set.default
 	
 	
 	// OTHER	---------------------------

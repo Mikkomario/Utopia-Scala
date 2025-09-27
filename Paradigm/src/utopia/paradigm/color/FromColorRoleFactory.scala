@@ -38,6 +38,10 @@ trait FromColorRoleFactory[+A]
 	  * @return A grayscale item
 	  */
 	def gray = apply(Gray)
+	/**
+	 * @return An item in black or white
+	 */
+	def blackOrWhite = apply(BlackOrWhite)
 	
 	/**
 	  * @return An item with a warning-themed color
@@ -55,4 +59,8 @@ trait FromColorRoleFactory[+A]
 	  * @return An item with an info-related color
 	  */
 	def info = apply(Info)
+	/**
+	 * @return An item with a color for a focused state
+	 */
+	def focus = apply(Focus)
 }

@@ -9,7 +9,7 @@ import utopia.firmament.model.HotKey
 import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.EventfulPointer
+import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.VeryHigh
@@ -171,8 +171,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	  */
 	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	                     valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
-	                     shade: => ColorShade = Light,
+	                     valuePointer: ResettableFlag = ResettableFlag(), shade: => ColorShade = Light,
 	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 	{
 		val scaling = ComponentCreationDefaults.switchScalingFactor
@@ -215,9 +214,7 @@ case class ContextualSwitchFactory(hierarchy: ComponentHierarchy, context: Stati
 	  * @param valuePointer   A mutable pointer to this switches pointer (default = new pointer)
 	  * @return A new switch
 	  */
-	def apply(valuePointer: EventfulPointer[Boolean] = EventfulPointer(false))
-	         (implicit animationContext: AnimationContext) =
-	{
+	def apply(valuePointer: ResettableFlag = ResettableFlag())(implicit animationContext: AnimationContext) = {
 		val knobR = context.margins.medium
 		val xOffset = (knobR * 0.2) min 1.0
 		val yOffset = (knobR * 0.3) min 2.0
@@ -262,15 +259,14 @@ case class SwitchFactory(hierarchy: ComponentHierarchy,
 	  */
 	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-	          valuePointer: EventfulPointer[Boolean] = EventfulPointer(false),
-	          shade: => ColorShade = Light,
+	          valuePointer: ResettableFlag = ResettableFlag(), shade: => ColorShade = Light,
 	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
 		_apply(actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset, valuePointer, shade,
 			animationDuration)
 }
 
 /**
-  * Used for defining switch creation settings outside of the component building process
+  * Used for defining switch creation settings outside the component building process
   * @author Mikko Hilpinen
   * @since 21.06.2023, v1.1
   */
@@ -307,7 +303,7 @@ object Switch extends SwitchSetup()
 // TODO: Utilize ProgressAnimator and possibly SliderSettings
 class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHandler, color: Color,
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
-             override val valuePointer: EventfulPointer[Boolean] = EventfulPointer(false)(ComponentCreationDefaults.componentLogger),
+             override val valuePointer: ResettableFlag = ResettableFlag()(ComponentCreationDefaults.componentLogger),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
              animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
 	extends AbstractButton(settings) with ConcreteCustomDrawReachComponent with InteractionWithPointer[Boolean]
@@ -405,6 +401,7 @@ class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHand
 				
 				// Draws the hover area, if necessary
 				if (hoverR > 0 && enabled) {
+					// TODO: Use the focus color, if appropriate
 					val hoverAlpha = Switch.this.state.hoverAlpha
 					if (hoverAlpha > 0) {
 						val baseHoverColor = if (value) color else baseColor

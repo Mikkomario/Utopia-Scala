@@ -13,6 +13,7 @@ object ColorScheme
 	  */
 	lazy val default = ColorScheme(ColorSet.defaultDarkGray, Map(
 		Gray -> ColorSet.defaultLightGray,
+		BlackOrWhite -> ColorSet.blackAndWhite,
 		Failure -> ColorSet(Rgb.withValues(176, 0, 32), Rgb.withValues(233, 73, 72), Rgb.withValues(121, 0, 0)),
 		Warning -> ColorSet(Rgb.withValues(239, 159, 0), Rgb.withValues(255, 208, 72), Rgb.withValues(183, 113, 0)),
 		Success -> ColorSet(Rgb.withValues(44, 181, 17), Rgb.withValues(107, 232, 77), Rgb.withValues(0, 132, 0))

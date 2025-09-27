@@ -28,6 +28,8 @@
   - The previous implementation is still available as **DropDownOld**, but will be removed in a future update
 - Removed "contextual" from component factory names in situations where no non-contextual version exists
 - Custom **TextField** constructors now require a new constructor function: result-to-text
+- The `valuePointer` **Switch** is now of type **ResettableFlag** instead of **EventfulPointer**
+  - This also affects the constructors, possibly causing build errors
 - **VariableBackgroundRoleAssignableFactory** now extends **VariableColorContextWrapper**
   - The implementing classes should extend either **VariableColorContextualFactory** or 
     **VariableTextContextualFactory**

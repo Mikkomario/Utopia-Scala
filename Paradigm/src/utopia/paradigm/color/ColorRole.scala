@@ -58,7 +58,21 @@ object ColorRole
 	{
 		override def alternative = None
 	}
+	/**
+	 * Color from the pool of black and white. Used in text elements, for example.
+	 */
+	case object BlackOrWhite extends ColorRole
+	{
+		override def alternative: Option[ColorRole] = Some(Gray)
+	}
 	
+	/**
+	 * Color indicating success
+	 */
+	case object Success extends ColorRole
+	{
+		override def alternative = Some(Secondary)
+	}
 	/**
 	  * Color indicating an error. Used as a highlight color when something goes wrong and demands user attention.
 	  */
@@ -66,7 +80,6 @@ object ColorRole
 	{
 		override def alternative = Some(Tertiary)
 	}
-	
 	/**
 	  * Color indicating an error. Used when the problem is question is not as serious as it would be when using the
 	  * Error color.
@@ -75,7 +88,6 @@ object ColorRole
 	{
 		override def alternative = Some(Failure)
 	}
-	
 	/**
 	  * Color indicating additional information
 	  */
@@ -85,10 +97,10 @@ object ColorRole
 	}
 	
 	/**
-	  * Color indicating success
-	  */
-	case object Success extends ColorRole
+	 * Color for representing the focus component state
+	 */
+	case object Focus extends ColorRole
 	{
-		override def alternative = Some(Secondary)
+		override def alternative: Option[ColorRole] = Some(Secondary)
 	}
 }

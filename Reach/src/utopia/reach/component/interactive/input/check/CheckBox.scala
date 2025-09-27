@@ -198,7 +198,7 @@ case class ContextualCheckBoxFactory(hierarchy: ComponentHierarchy, context: Sta
 			}
 		}
 		new CheckBox(hierarchy, appliedImages,
-			Pair(context.textColor.withAlpha(1.0), context.color(selectedColorRole)),
+			Pair(context.color.focus, context.color(selectedColorRole)),
 			context.margins.small.round.toDouble, settings, valuePointer)
 	}
 	/**

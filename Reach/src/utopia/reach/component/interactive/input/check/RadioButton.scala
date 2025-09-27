@@ -318,6 +318,7 @@ class RadioButton[A](override val hierarchy: ComponentHierarchy, selectedValuePo
 				colorScheme(settings.selectedColorRole)
 					.against(background, minimumContrast = Minimum.defaultMinimumContrast)
 			else {
+				// TODO: Use a different color when focused. Also, utilize context.
 				val base = background.shade.defaultTextColor
 				if (isEnabled) base.withAlpha(0.72) else base.withAlpha(0.5)
 			}

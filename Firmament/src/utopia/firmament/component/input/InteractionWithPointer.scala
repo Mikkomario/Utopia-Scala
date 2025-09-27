@@ -7,6 +7,7 @@ import utopia.flow.view.mutable.eventful.EventfulPointer
   * @author Mikko Hilpinen
   * @since 29.6.2019, Reflection v1+
   */
+// TODO: Add a new trait specifically for Flag-based interactions
 trait InteractionWithPointer[A] extends Interaction[A] with InputWithPointer[A, EventfulPointer[A]]
 {
 	override def value_=(newValue: A) = valuePointer.value = newValue
