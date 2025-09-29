@@ -11,6 +11,9 @@
 ### New methods
 - **PostSchrodinger** (object)
   - Added a new `.successful(...)` constructor
+- **ResponseParser** (via **ResponseParseExtensions**)
+  - Added `.parsingFailuresWith(...)` and `.withResponseBodyAsFailureMessage` to 
+    **ResponseParser**s that already yield a **Response**.
 ### Other changes
 - `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
 - **GetRequest** now fully specifies the `body` type, no longer requiring the **Nothing** on the right side in subclasses

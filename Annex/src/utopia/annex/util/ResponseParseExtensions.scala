@@ -4,9 +4,13 @@ import utopia.access.model.enumeration.Status
 import utopia.annex.controller.PreparingResponseParser
 import utopia.annex.model.response.Response
 import utopia.disciple.controller.parse.{ResponseParseResult, ResponseParser}
+import utopia.flow.parse.string.StringFrom
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.{Logger, NoOpLogger}
+import utopia.flow.util.TryExtensions._
 
+import java.io.InputStream
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -160,13 +164,29 @@ object ResponseParseExtensions
 	
 	implicit class AnnexResponseParser[+A](val p: ResponseParser[Response[A]]) extends AnyVal
 	{
+		// COMPUTED ----------------------------
+		
+		/**
+		 * @param log Implicit logging implementation used for recording failures to convert a
+		 *            failure response body into a string
+		 * @return A copy of this parser which handles all failures by converting them into Response.Failure,
+		 *         including the whole response body as the failure message.
+		 */
+		def withResponseBodyAsFailureMessage(implicit log: Logger) =
+			parsingFailuresWith { (stream, charset) =>
+				StringFrom.stream(stream, charset.getOrElse(StandardCharsets.UTF_8))
+					.logWithMessage("Failed to parse a failure response body into a string").getOrElse("")
+			}
+		
+		
+		// OTHER    ----------------------------
+		
 		/**
 		  * @param f A mapping function to apply to successful response contents
 		  * @tparam B Type of mapped contents
 		  * @return Copy of this parser which applies the specified mapping function to successful responses
 		  */
 		def mapSuccess[B](f: A => B) = p.map { _.map(f) }
-		
 		/**
 		  * @param f A mapping function to apply to successful response contents,
 		  *          possibly converting it to a failure response instead.
@@ -177,5 +197,23 @@ object ResponseParseExtensions
 		  * @return Copy of this parser which applies the specified mapping function in addition to normal parsing logic
 		  */
 		def tryMapSuccess[B](f: A => Either[(Status, String), B]) = p.map { _.tryMap(f) }
+		
+		/**
+		 * Creates a copy of this parser, which intercepts all failure responses,
+		 * without processing them using this parser's natural logic.
+		 * @param messageFromBody A function called for non-empty failure responses.
+		 *                        Receives the response body input-stream,
+		 *                        as well as the character set specified in the headers (if present),
+		 *                        and yields a failure message (which may be empty)
+		 * @return Copy of this parser handling failure responses by converting them into Response.Failure.
+		 */
+		def parsingFailuresWith(messageFromBody: (InputStream, Option[Charset]) => String) =
+			p.handleFailuresWith { (status, headers, stream) =>
+				val message = stream match {
+					case Some(stream) => messageFromBody(stream, headers.charset)
+					case None => ""
+				}
+				Response.Failure(status, message, headers)
+			}
 	}
 }

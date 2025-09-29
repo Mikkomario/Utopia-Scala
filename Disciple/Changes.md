@@ -2,6 +2,8 @@
 
 ## v1.9.1 (in development)
 A new build supporting the latest **Flow** version.
+### New features
+- Added **WriteToFileResponseParser**
 
 ## v1.9 - 26.05.2025
 This update adds support for server-sent events. Package structuring is also updated.  

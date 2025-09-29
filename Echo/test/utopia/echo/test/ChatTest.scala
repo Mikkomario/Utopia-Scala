@@ -8,7 +8,6 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.file.FileExtensions._
@@ -29,11 +28,6 @@ import scala.util.{Failure, Success}
   */
 object ChatTest extends App
 {
-	// ATTRIBUTES   -------------------
-	
-	private val multiLineIndicator = "\"\"\""
-	
-	
 	// APP CODE -----------------------
 	
 	// Prompts the user to select the LLM to use
@@ -257,28 +251,4 @@ object ChatTest extends App
 	private def requestSystemMessage() =
 		requestMultiLineString(
 			s"Please specify the system message to use. You can write multiple lines if you start and end with $multiLineIndicator.")
-	
-	private def requestMultiLineString(prompt: String = ""): Option[String] = {
-		StdIn.readNonEmptyLine(prompt).map { firstLine =>
-			// Case: Multi-line input
-			if (firstLine.startsWith(multiLineIndicator)) {
-				// Case: Single-line multi-line input => Removes the multi-line indicators
-				if (firstLine.endsWith(multiLineIndicator))
-					firstLine.drop(multiLineIndicator.length).dropRight(multiLineIndicator.length)
-				// Case: Actual multi-line input => Reads until user ends with """
-				else {
-					val moreLines = Iterator.continually { StdIn.readLine() }
-						.takeTo { _.endsWith(multiLineIndicator) }
-						.toOptimizedSeq
-					((firstLine.drop(multiLineIndicator.length) +: moreLines.dropRight(1)) :+
-						moreLines.last.dropRight(multiLineIndicator.length))
-						.dropWhile { _.isEmpty }.dropRightWhile { _.isEmpty }
-							.mkString("\n")
-				}
-			}
-			// Case: Single-line input
-			else
-				firstLine
-		}
-	}
 }

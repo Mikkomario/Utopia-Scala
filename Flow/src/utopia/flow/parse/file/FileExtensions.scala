@@ -958,20 +958,16 @@ object FileExtensions
 		  * @param inputStream Reader that supplies the data
 		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
 		  */
-		def writeStream(inputStream: InputStream) = Try {
-			Files.copy(inputStream, p,
-				StandardCopyOption.REPLACE_EXISTING)
-		}.map { _ => p }
+		def writeStream(inputStream: InputStream) =
+			Try { Files.copy(inputStream, p, StandardCopyOption.REPLACE_EXISTING) }.map { _ => p }
 		/**
 		  * Appends specified text to this file
 		  * @param text  Text to append to this file
 		  * @param codec Charset / codec used (implicit)
 		  * @return This path. Failure if writing failed.
 		  */
-		def append(text: String)(implicit codec: Codec) = Try {
-			Files.write(p, text.getBytes(codec.charSet),
-				StandardOpenOption.APPEND, StandardOpenOption.CREATE)
-		}
+		def append(text: String)(implicit codec: Codec) =
+			Try { Files.write(p, text.getBytes(codec.charSet), StandardOpenOption.APPEND, StandardOpenOption.CREATE) }
 		/**
 		  * Writes into this file with a function. An output stream is opened for the duration of the function.
 		  * Doesn't overwrite the current contents of this file but appends to them instead.

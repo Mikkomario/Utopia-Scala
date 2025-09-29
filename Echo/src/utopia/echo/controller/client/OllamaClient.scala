@@ -18,19 +18,56 @@ import utopia.flow.util.logging.Logger
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
+object OllamaClient
+{
+	// ATTRIBUTES   ----------------------
+	
+	private lazy val localServerAddress = "http://localhost:11434/api"
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	 * Creates a new Ollama client
+	 * @param gateway The [[Gateway]] interface to utilize.
+	 *                Note: Should specify relatively long timeout thresholds,
+	 *                      since Ollama requests tend to be very long-running.
+	 * @param serverAddress Address to the Ollama server.
+	 *                      Default = "http://localhost:11434/api", the default local Ollama url.
+	 * @param log Implicit logging interface
+	 * @param exc Implicit execution context
+	 * @return A new Ollama client
+	 */
+	def using(gateway: Gateway, serverAddress: String = localServerAddress)
+	         (implicit log: Logger, exc: ExecutionContext) =
+		new OllamaClient(gateway, serverAddress)
+	
+	/**
+	 * Creates a new Ollama client that utilizes a new [[Gateway]] instance.
+	 * @param serverAddress Address to the Ollama server.
+	 *                      Default = "http://localhost:11434/api", the default local Ollama url.
+	 * @param requestInterceptors Interceptors for logging and/or modifying outgoing requests (optional)
+	 * @param responseInterceptors Interceptors for logging and/or modifying incoming responses (optional)
+	 * @param log Implicit logging interface
+	 * @param exc Implicit execution context
+	 * @return A new Ollama client
+	 */
+	def apply(serverAddress: String = localServerAddress,
+	          requestInterceptors: Seq[RequestInterceptor] = Empty,
+	          responseInterceptors: Seq[ResponseInterceptor] = Empty)
+	         (implicit log: Logger, exc: ExecutionContext) =
+		using(Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
+			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors), serverAddress)
+}
+
 /**
   * A client-side interface for interacting with an Ollama API
   * @author Mikko Hilpinen
   * @since 11.07.2024, v1.0
   */
-class OllamaClient(serverAddress: String = "http://localhost:11434/api",
-                   requestInterceptors: Seq[RequestInterceptor] = Empty,
-                   responseInterceptors: Seq[ResponseInterceptor] = Empty)
+class OllamaClient(gateway: Gateway, serverAddress: String = "http://localhost:11434/api")
                   (implicit log: Logger, exc: ExecutionContext)
-	extends LlmServiceClient(
-		Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
-			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors),
-		serverAddress)
+	extends LlmServiceClient(gateway, serverAddress)
 {
 	// COMPUTED ----------------------------
 	

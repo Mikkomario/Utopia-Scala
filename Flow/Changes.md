@@ -20,12 +20,16 @@
 - Under certain conditions, **OptimizedMultiMergeMirror** 
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
 ### Deprecations
+- Deprecated **IterateLines** in favor of new `Lines.iterate`
+- Deprecated **LinesFrom** in favor of new `Lines.from`
+- Deprecated **SourceParser** in favor of new **FromSource**
 - Renamed **Lazy**`.mapCurrent(...)` to `.lightMap(...) `
 - Deprecated **Changing**'s `listenerDebuggingLimit` property / feature
   - This feature will be removed in v2.8, or possibly later
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
 - Added **Year**, **YearMonth** and **Month** as generic data types
+- Added **OpenSource**, **FromSource** and **Lines** for interacting with **Source**
 - Added builder for **IntSet**s
 - Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy**, 
   **MergingLazy** and **LazyWrapper**
@@ -94,6 +98,7 @@
 - **LazilyInitializedChanging** now contains custom definitions for certain mapping functions,
   etc. further delaying the initialization in certain use-cases.
 - **MutableOnce** now extends **Lockable**
+- Rewrote **StringFrom**
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
 - Optimized `IntSet.from(IterableOnce)` implementation

@@ -10,6 +10,7 @@ import scala.io.Codec
   * @author Mikko Hilpinen
   * @since 1.11.2019, v1.8
   */
+@deprecated("Please use FromSource instead", "v2.7")
 trait SourceParser[+A]
 {
 	// ABSTRACT	--------------------------

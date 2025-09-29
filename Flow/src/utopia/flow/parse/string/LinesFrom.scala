@@ -5,6 +5,7 @@ package utopia.flow.parse.string
   * @author Mikko Hilpinen
   * @since 1.11.2019, v1.6.1+
   */
+@deprecated("Please use Lines.from instead", "v2.7")
 object LinesFrom extends SourceParser[Vector[String]]
 {
 	override protected def process(linesIterator: Iterator[String]) = linesIterator.toVector

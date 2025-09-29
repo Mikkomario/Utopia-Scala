@@ -46,6 +46,11 @@ object ResponseParser
 	// COMPUTED ----------------------
 	
 	/**
+	 * @return Access to file-writing response parser constructors
+	 */
+	def write = WriteToFileResponseParser
+	
+	/**
 	  * @param log Implicit logging implementation to use for recording parsing failures
 	  * @return A response parser for extracting string contents.
 	  *         Assumes UTF-8 encoding when no other encoding has been specified.

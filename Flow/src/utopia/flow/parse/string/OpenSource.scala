@@ -9,13 +9,24 @@ import scala.io.{Codec, Source}
 import scala.util.Try
 
 /**
-  * Used for iterating over text lines from various sources
+  * Common trait for interfaces that read data from a [[Source]] instance.
   * @author Mikko Hilpinen
-  * @since 1.11.2019, v1.8
+  * @since 1.11.2019, v2.7
   */
-@deprecated("Please use Lines.iterate instead", "v2.7")
-object IterateLines
+trait OpenSource[+I]
 {
+	// ABSTRACT ----------------------------
+	
+	/**
+	 * Converts a [[Source]] instance into the intermediary, processed type
+	 * @param source Source to convert into the intermediary type, and to present to the specified processor function
+	 * @param processor A function that's to receive the pre-processed source
+	 */
+	protected def presentSource[A](source: Source, processor: I => A): A
+	
+	
+	// OTHER    ----------------------------
+	
 	/**
 	  * Iterates over lines read from a stream.
 	  * @param stream   An input stream
@@ -23,8 +34,8 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromStream[A](stream: InputStream, encoding: String)(f: Iterator[String] => A) =
-		withSource(Source.fromInputStream(stream, encoding))(f)
+	def stream[A](stream: InputStream, encoding: String)(f: I => A) =
+		_apply(Source.fromInputStream(stream, encoding))(f)
 	/**
 	  * Iterates over lines read from a stream.
 	  * @param stream An input stream
@@ -32,8 +43,8 @@ object IterateLines
 	  * @param codec  Character encoding used (implicit)
 	  * @return Parse function result
 	  */
-	def fromStream[A](stream: InputStream)(f: Iterator[String] => A)(implicit codec: Codec) =
-		withSource(Source.fromInputStream(stream)(codec))(f)
+	def stream[A](stream: InputStream)(f: I => A)(implicit codec: Codec) =
+		_apply(Source.fromInputStream(stream)(codec))(f)
 	/**
 	  * Iterates over lines read from a stream.
 	  * @param stream   An input stream
@@ -41,8 +52,7 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromStream[A](stream: InputStream, encoding: Charset)(f: Iterator[String] => A): Try[A] =
-		fromStream(stream)(f)(Codec(encoding))
+	def stream[A](stream: InputStream, encoding: Charset)(f: I => A): Try[A] = this.stream(stream)(f)(Codec(encoding))
 	
 	/**
 	  * Iterates over lines read from a file.
@@ -51,8 +61,7 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromFile[A](file: File, encoding: String)(f: Iterator[String] => A) =
-		withSource(Source.fromFile(file, encoding))(f)
+	def file[A](file: File, encoding: String)(f: I => A) = _apply(Source.fromFile(file, encoding))(f)
 	/**
 	  * Iterates over lines read from a file.
 	  * @param file  An input file
@@ -60,8 +69,7 @@ object IterateLines
 	  * @param codec Character encoding used (implicit)
 	  * @return Parse function result
 	  */
-	def fromFile[A](file: File)(f: Iterator[String] => A)(implicit codec: Codec) =
-		withSource(Source.fromFile(file)(codec))(f)
+	def file[A](file: File)(f: I => A)(implicit codec: Codec) = _apply(Source.fromFile(file)(codec))(f)
 	/**
 	  * Iterates over lines read from a file.
 	  * @param file     An input file
@@ -69,7 +77,7 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromFile[A](file: File, encoding: Charset)(f: Iterator[String] => A): Try[A] = fromFile(file)(f)(Codec(encoding))
+	def file[A](file: File, encoding: Charset)(f: I => A): Try[A] = this.file(file)(f)(Codec(encoding))
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path     Path to target file
@@ -77,7 +85,7 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromPath[A](path: Path, encoding: String)(f: Iterator[String] => A) = fromFile(path.toFile, encoding)(f)
+	def path[A](path: Path, encoding: String)(f: I => A) = file(path.toFile, encoding)(f)
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path  Path to target file
@@ -85,8 +93,7 @@ object IterateLines
 	  * @param codec Character encoding used (implicit)
 	  * @return Parse function result
 	  */
-	def fromPath[A](path: Path)(f: Iterator[String] => A)(implicit codec: Codec) =
-		fromFile(path.toFile)(f)(codec)
+	def path[A](path: Path)(f: I => A)(implicit codec: Codec) = file(path.toFile)(f)(codec)
 	/**
 	  * Iterates over lines read from a file.
 	  * @param path     Path to target file
@@ -94,9 +101,7 @@ object IterateLines
 	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
 	  * @return Parse function result
 	  */
-	def fromPath[A](path: Path, encoding: Charset)(f: Iterator[String] => A): Try[A] =
-		fromFile(path.toFile)(f)(Codec(encoding))
+	def path[A](path: Path, encoding: Charset)(f: I => A): Try[A] = file(path.toFile)(f)(Codec(encoding))
 	
-	private def withSource[A](openSource: => Source)(f: Iterator[String] => A) =
-		Try { openSource.consume { s => f(s.getLines()) } }
+	private def _apply[A](open: => Source)(process: I => A) = Try { open.consume { presentSource(_, process) } }
 }

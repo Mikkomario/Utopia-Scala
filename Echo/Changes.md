@@ -1,6 +1,7 @@
 # Utopia Echo - List of Changes
 
 ## v1.4 (in development)
+TODO: Document new TTS features
 ### Breaking changes
 - Reworked the response / reply class hierarchy:
   - There are no longer separate **Reply** and **Response** classes. All classes now extend **Reply** / **ReplyLike**.
@@ -35,6 +36,8 @@
   - **Chat** classes are now located under `utopia.echo.controller.chat`
 - **ToolCall** now requires a new property: `callId: String`, which may be empty
   - This property will be used in the OpenAI integration
+- Modified **OllamaClient** constructor to accept a **Gateway** instance
+  - The previous constructor is available as an `.apply(...)` method in the companion object
 ### New features
 - Added a basic [ComfyUI](https://www.comfy.org/) integration for generating images using stable diffusion
   - The current implementation is extendable to building custom workflows, 
