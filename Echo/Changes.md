@@ -1,7 +1,6 @@
 # Utopia Echo - List of Changes
 
 ## v1.4 (in development)
-TODO: Document new TTS features
 ### Breaking changes
 - Reworked the response / reply class hierarchy:
   - There are no longer separate **Reply** and **Response** classes. All classes now extend **Reply** / **ReplyLike**.
@@ -42,6 +41,9 @@ TODO: Document new TTS features
 - Added a basic [ComfyUI](https://www.comfy.org/) integration for generating images using stable diffusion
   - The current implementation is extendable to building custom workflows, 
     but concrete / full implementation is limited to simple image generation
+- Added [Piper](https://github.com/OHF-Voice/piper1-gpl) integration, which may be used for simple text-to-speech
+  - This includes **PiperClient**, as a **RequestQueue** interface, plus **TextToAudioFileRequest**, 
+    and the more generic **TextToSpeechRequest** 
 - Added more advanced support for thinking LLMs:
   - Context size is maximized in order to ensure that the thinking process fits
   - Thinking may be deactivated
