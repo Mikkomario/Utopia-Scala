@@ -1,5 +1,6 @@
 package utopia.echo.test
 
+import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.client.PiperClient
@@ -17,7 +18,18 @@ import java.nio.file.Path
 object PiperTest extends App
 {
 	println("Performing a request")
-	PiperClient().push(TextToAudioFileRequest("Tämä on toinen testilause", "Echo/data/test-output/test.wav"))
+	val client = PiperClient()
+	
+	// TODO: Test this when we have more voices downloaded
+	client.push(GetRequest.value("voices")).future.waitForResult() match {
+		case Response.Success(value, _, headers) =>
+			println(headers)
+			println(value)
+		
+		case failure: RequestFailure => log(failure.cause)
+	}
+	
+	client.push(TextToAudioFileRequest("Tämä on toinen testilause", "Echo/data/test-output/test.wav"))
 		.future.waitForResult() match
 	{
 		case Response.Success(path: Path, _, _) =>

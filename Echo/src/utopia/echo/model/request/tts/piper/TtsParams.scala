@@ -18,10 +18,10 @@ object TtsParams extends SureFromModelFactory[TtsParams]
 	 */
 	lazy val defaultLengthScale = 1.0
 	/**
-	 * The assumed default noise scale (0.4).
+	 * The assumed default noise scale (0.667).
 	 * Used in mapping functions.
 	 */
-	lazy val defaultNoiseScale = 0.4
+	lazy val defaultNoiseScale = 0.667
 	/**
 	 * The assumed default noise width scale (0.8).
 	 * Used in mapping functions.
