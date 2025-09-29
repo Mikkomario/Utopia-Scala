@@ -53,6 +53,9 @@ case class DropDownSetup(settings: FieldWithSelectionPopupSettings = defaultSett
   * @since 23.12.2020, v0.1
   */
 object DropDown extends DropDownSetup()
+{
+	def defaultSettings = DropDownSetup.defaultSettings
+}
 
 case class DropDownFactory(hierarchy: ComponentHierarchy, context: VariableTextContext,
                            settings: FieldWithSelectionPopupSettings = defaultSettings)
