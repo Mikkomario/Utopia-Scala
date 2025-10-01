@@ -1,7 +1,7 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.process.ShutdownReaction.Cancel
-import utopia.flow.async.process.WaitTarget.WeeklyTime
+import utopia.flow.async.process.WaitTarget.{NoWait, WeeklyTime}
 import utopia.flow.time.WeekDay
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Flag
@@ -26,7 +26,7 @@ object LoopingProcess
 	  * @param exc Implicit execution context
 	  * @return A new looping process
 	  */
-	def apply(startDelay: WaitTarget = WaitTarget.zero, waitLock: AnyRef = new AnyRef,
+	def apply(startDelay: WaitTarget = NoWait, waitLock: AnyRef = new AnyRef,
 	          shutdownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
 	         (f: => Flag => Option[WaitTarget])
 	         (implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
@@ -48,7 +48,7 @@ object LoopingProcess
 	              isRestartable: Boolean = true)
 	             (f: => Flag => U)
 	             (implicit exc: ExecutionContext, logger: Logger) =
-		apply(if (waitFirst) interval else WaitTarget.zero, waitLock, isRestartable = isRestartable) { p =>
+		apply(if (waitFirst) interval else NoWait, waitLock, isRestartable = isRestartable) { p =>
 			f(p)
 			Some(interval)
 		}
@@ -118,7 +118,7 @@ object LoopingProcess
   * @param exc Implicit execution context
   * @param logger Logger that records exceptions caught during the scheduled actions
   **/
-abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock: AnyRef = new AnyRef,
+abstract class LoopingProcess(startDelay: WaitTarget = NoWait, waitLock: AnyRef = new AnyRef,
                               shutdownReaction: ShutdownReaction = Cancel)
                              (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, Some(shutdownReaction))
@@ -148,7 +148,7 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 	
 	// IMPLEMENTED    --------------
 	
-	override protected def runOnce() = {
+	override protected def runOnce(): Unit = {
 		// Performs the initial delay, if one has been specified
 		var broken = {
 			if (startDelay.isPositive) {
@@ -192,7 +192,7 @@ abstract class LoopingProcess(startDelay: WaitTarget = WaitTarget.zero, waitLock
 	  * Skips the current waiting process, if active.
 	  * Causes this loop to run the next iteration() function, if this loop was in waiting mode.
 	  */
-	def skipWait() = WaitUtils.notify(waitLock)
+	def skipWait(): Unit = WaitUtils.notify(waitLock)
 	
 	/**
 	  * Starts this loop as a timed task, if possible

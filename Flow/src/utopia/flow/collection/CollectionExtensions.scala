@@ -2078,6 +2078,42 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * @param first The item that should appear first
+		 * @param buildFrom Implicit build-from
+		 * @param eq Implicit equals function. Default = use ==.
+		 * @tparam To Type of resulting collection
+		 * @return A copy of this collection where 'first' is the first element.
+		 *         If this collection already contained the specified element as its first entry,
+		 *         yields an identical (or possibly this) collection.
+		 */
+		def startingWith[To](first: seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, To]) =
+		{
+			if (ops.isEmpty)
+				buildFrom.fromSpecific(coll)(Single(first))
+			else if (ops.headOption.contains(first))
+				buildFrom.fromSpecific(coll)(ops)
+			else
+				buildFrom.fromSpecific(coll)(Iterator.single(first) ++ ops.iterator)
+		}
+		/**
+		 * @param last The item that should appear last in this collection
+		 * @param buildFrom Implicit build-from
+		 * @tparam To Type of resulting collection
+		 * @return A copy of this collection where 'last' is the last element.
+		 *         If this collection already contained the specified element as its last entry,
+		 *         yields an identical (or possibly this) collection.
+		 */
+		def endingWith[To](last: seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, To]) =
+		{
+			if (ops.isEmpty)
+				buildFrom.fromSpecific(coll)(Single(last))
+			else if (ops.lastOption.contains(last))
+				buildFrom.fromSpecific(coll)(ops)
+			else
+				buildFrom.fromSpecific(coll)(ops :+ last)
+		}
+		
+		/**
 		 * Attempts to merge / reduce as many items in this collection as possible
 		 * @param f A function that accepts two items. Yields Some if the items could be merged, and None otherwise.
 		 * @return A copy of this collection that contains the reduction results.

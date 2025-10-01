@@ -8,6 +8,12 @@ package utopia.flow.operator.equality
   */
 trait EqualsBy extends Equals
 {
+	// ATTRIBUTES   ----------------------
+	
+	private lazy val _hashCode =
+		equalsProperties.foldLeft(1) { (result, property) => 31 * result + property.hashCode() }
+	
+	
 	// COMPUTED PROPS    -----------------
 	
 	/**
@@ -20,9 +26,9 @@ trait EqualsBy extends Equals
 	
 	// IMPLEMENTED METHODS    ------------
 	
-	override def canEqual(a: Any) = getClass.isInstance(a)
+	override def hashCode() = _hashCode
 	
-	override def hashCode() = equalsProperties.foldLeft(1)((result, property) => 31 * result + property.hashCode())
+	override def canEqual(a: Any) = getClass.isInstance(a)
 	
 	// Default implementation is: canEqual(a) && hashCode() == a.hashCode()
 	override def equals(a: Any) = a match {

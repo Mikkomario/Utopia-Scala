@@ -33,6 +33,7 @@
 - Added builder for **IntSet**s
 - Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy**, 
   **MergingLazy** and **LazyWrapper**
+- Added **NoWait** as a new **WaitTarget**
 ### New methods
 - **Changing**
   - Added new empty/non-empty -related functions to **Option**-based **Changing** instances
@@ -75,7 +76,10 @@
   - Added `.containsDifferentFrom(Option)`
 - **Pair** (object)
   - Added `.iterate(...)`
+- **ResettableFlag** (object)
+  - Added `.wrap(EventfulPointer)`
 - **Seq** (**CollectionExtensions**)
+  - Added `.startingWith(...)` and `.endingWith(...)`
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
 - **Span** (object)
   - Added implicit `.from(HasInclusiveEnds)`
@@ -104,6 +108,7 @@
 - Optimized `IntSet.from(IterableOnce)` implementation
 - Added new `++` and `--` implementations to **IntSet**
 - Rewrote **Lazy**`.mapCurrent` implementation
+- **EqualsBy** now caches the generated `hashCode()` value
 - `NumericSpan.from(HasInclusiveEnds)` is now implicit
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
@@ -113,6 +118,7 @@
   the resulting collections are now **IndexedSeq** instead of **Vector**.
 - Modified `toString` implementations of most **Changing** implementations
 - Converted **WeakValuesCache** into a trait and refactored it; Also, **WeakCache** now extends **WeakValuesCache**.
+- Modified **Wait** to skip the process altogether, if the passed **WaitTarget** is zero or negative
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

@@ -54,31 +54,32 @@ class Wait(val target: WaitTarget, val lock: AnyRef = new AnyRef,
 {
 	// IMPLEMENTED  ---------------------------
 	
-	override protected def runOnce() =
-	{
-		// Catches InterruptedExceptions
-		Try {
-			var waitCompleted = false
-			target.endTime match {
-				case Some(targetTime) =>
-					lock.synchronized {
-						lazy val remainingWait = targetTime - Now
-						while (!waitCompleted && remainingWait > Duration.Zero) {
-							// Performs the actual wait here (nano precision)
-							lock.wait(remainingWait.toMillis, remainingWait.getNano / 1000)
-							// May break on any notify call. Also, stop() always breaks
-							if (target.breaksOnNotify || state.isBroken)
-								waitCompleted = true
+	override protected def runOnce(): Unit = {
+		// May skip the wait altogether
+		if (target.isPositive)
+			// Catches InterruptedExceptions
+			Try {
+				var waitCompleted = false
+				target.endTime match {
+					case Some(targetTime) =>
+						lock.synchronized {
+							lazy val remainingWait = targetTime - Now
+							while (!waitCompleted && remainingWait > Duration.Zero) {
+								// Performs the actual wait here (nano precision)
+								lock.wait(remainingWait.toMillis, remainingWait.getNano / 1000)
+								// May break on any notify call. Also, stop() always breaks
+								if (target.breaksOnNotify || state.isBroken)
+									waitCompleted = true
+							}
 						}
-					}
-				// Waits until notified
-				case None => lock.synchronized { lock.wait() }
+					// Waits until notified
+					case None => lock.synchronized { lock.wait() }
+				}
+			}.failure.foreach {
+				// Case: Interrupted during waiting => Treats as if broken through stop()
+				case _: InterruptedException => markAsInterrupted()
+				// Case: Interrupted through another exception => Logs
+				case error => SysErrLogger(error, "Unexpected error during a Wait")
 			}
-		}.failure.foreach {
-			// Case: Interrupted during waiting => Treats as if broken through stop()
-			case _: InterruptedException => markAsInterrupted()
-			// Case: Interrupted through another exception => Logs
-			case error => SysErrLogger(error, "Unexpected error during a Wait")
-		}
 	}
 }

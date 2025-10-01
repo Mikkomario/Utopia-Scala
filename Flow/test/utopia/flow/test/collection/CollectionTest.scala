@@ -136,5 +136,12 @@ object CollectionTest extends App
 	assert(Vector("a1", "b1", "c1", "a2", "b2", "a3").iterator.groupMapReduce { _.head } { _.tail } { _ ++ _ } ==
 		Map('a' -> "123", 'b' -> "12", 'c' -> "1"))
 	
+	// Tests startingWith and endingWith
+	private val numbers3 = Vector(1, 2, 3)
+	assert(numbers3.startingWith(0) == Vector(0, 1, 2, 3))
+	assert(numbers3.endingWith(4) == Vector(1, 2, 3, 4))
+	assert(numbers3.startingWith(1) == numbers3)
+	assert(numbers3.endingWith(3) == numbers3)
+	
 	println("Success!")
 }

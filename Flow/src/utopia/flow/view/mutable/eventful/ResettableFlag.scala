@@ -7,7 +7,8 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.Switch
-import utopia.flow.view.template.eventful.AbstractChanging
+import utopia.flow.view.template.eventful.Flag.FlagWrapper
+import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, Flag}
 
 import scala.util.Try
 
@@ -28,6 +29,16 @@ object ResettableFlag
 	  * @return A new resettable flag
 	  */
 	def apply(initialValue: Boolean = false)(implicit log: Logger): ResettableFlag = new _ResettableFlag(initialValue)
+	
+	/**
+	 * Wraps a mutable boolean pointer
+	 * @param pointer A pointer to wrap
+	 * @return The specified pointer as a resettable flag
+	 */
+	def wrap(pointer: EventfulPointer[Boolean]): ResettableFlag = pointer match {
+		case flag: ResettableFlag => flag
+		case p => new ResettableFlagWrapper(p)
+	}
 	
 	
 	// NESTED   -----------------------
@@ -55,6 +66,17 @@ object ResettableFlag
 		override def toString = s"Flag(${ _value }).resettable"
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
+	}
+	
+	private class ResettableFlagWrapper(p: EventfulPointer[Boolean])
+		extends ResettableFlag with ChangingWrapper[Boolean]
+	{
+		override lazy val view: Flag = new FlagView(this)
+		
+		override implicit def listenerLogger: Logger = p.listenerLogger
+		override protected def wrapped: Changing[Boolean] = p
+		
+		override def value_=(newValue: Boolean): Unit = p.value = newValue
 	}
 }
 

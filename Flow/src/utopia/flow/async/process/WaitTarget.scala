@@ -1,5 +1,6 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.process.WaitTarget.NoWait
 import utopia.flow.operator.MayBeZero
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today, WeekDay}
@@ -38,7 +39,7 @@ sealed trait WaitTarget extends MayBeZero[WaitTarget]
     
 	// COMPUTED    --------------
     
-    override def zero = WaitTarget.zero
+    override def zero = NoWait
     
     /**
      * Whether this wait target has a maximum duration
@@ -109,6 +110,7 @@ object WaitTarget
     /**
       * A zero length wait duration
       */
+    @deprecated("Please use NoWait instead", "v2.7")
     val zero = WaitDuration(Duration.Zero)
     
     
@@ -120,7 +122,20 @@ object WaitTarget
     
     
     // NESTED   ------------------------
-    
+	
+	/**
+	 * A wait target that involves no waiting
+	 */
+	case object NoWait extends WaitTarget
+	{
+		override val isPositive: Boolean = false
+		override val breaksOnNotify: Boolean = false
+		
+		override protected val targetTime: Either[SDuration, Instant] = Left(Duration.Zero)
+		
+		override def breakable: WaitTarget = this
+	}
+	
     /**
       * This waitTarget waits until the lock is notified
       */
@@ -140,8 +155,7 @@ object WaitTarget
     case class WaitDuration(duration: Duration, breaksOnNotify: Boolean = true) extends WaitTarget
     {
         protected val targetTime = Left(duration)
-    
-        override def isPositive = duration > Duration.Zero
+        override lazy val isPositive = duration > Duration.Zero
     
         def breakable: WaitDuration = if (breaksOnNotify) this else WaitDuration(duration)
     }

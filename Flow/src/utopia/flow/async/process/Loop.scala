@@ -1,6 +1,6 @@
 package utopia.flow.async.process
 
-import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.async.process.WaitTarget.{NoWait, WaitDuration}
 import utopia.flow.time.WeekDay
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
@@ -37,7 +37,7 @@ object Loop
       * @return The loop that was just started
       */
     def apply(f: => Option[WaitTarget])(implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
-        after(WaitTarget.zero)(f)
+        after(NoWait)(f)
     
     /**
       * Starts a new infinite looping process
