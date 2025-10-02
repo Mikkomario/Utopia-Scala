@@ -2,7 +2,7 @@ package utopia.genesis.handling.event
 
 import utopia.flow.operator.filter.Filter
 import utopia.flow.util.Mutate
-import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.flow.view.template.eventful.Flag
 
 /**
   * Common trait for factories used for creating event listeners
@@ -55,7 +55,7 @@ trait ListenerFactory[Event, +Repr]
       *         If there was a condition already in place, both of these conditions will be applied
       *         (using logical and).
       */
-    def conditional(condition: Changing[Boolean]): Repr = usingCondition(this.condition && condition)
+    def conditional(condition: Flag): Repr = usingCondition(this.condition && condition)
     
     /**
       * @param f A mapping function applied to this factory's listening condition

@@ -801,10 +801,14 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	def text_=(newText: String) = textPointer.value = newText
 	
 	/**
+	 * @return A flag that contains true while this field is being edited
+	 */
+	def editingFlag = _wrapped.wrappedField.editingFlag
+	
+	/**
 	  * @return A pointer that contains the current state of this field
 	  */
 	def statePointer = _statePointer.readOnly
-	
 	/**
 	  * @return The current state of this field
 	  */
