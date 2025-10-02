@@ -22,6 +22,7 @@ import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.color.ColorRole
+import utopia.paradigm.color.ColorRole.Focus
 import utopia.paradigm.enumeration.Axis.X
 import utopia.reach.component.factory.ContextualComponentFactories
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
@@ -29,6 +30,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldState.{AfterEdit, BeforeEdit, Editing}
 import utopia.reach.component.interactive.input.InputValidationResult.Default
 import utopia.reach.component.interactive.input._
+import utopia.reach.component.interactive.input.text.TextFieldSettings.defaultEditingSettings
 import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.label.text.ViewTextLabel
 import utopia.reach.component.label.text.selectable.SelectableTextLabelSettings
@@ -174,6 +176,11 @@ object TextFieldSettings
 {
 	// ATTRIBUTES	--------------------
 	
+	/**
+	 * Default editing settings used
+	 */
+	val defaultEditingSettings = EditableTextLabelSettings.default.withHighlightColor(Focus)
+	
 	val default = apply()
 }
 /**
@@ -188,7 +195,7 @@ object TextFieldSettings
   * @since 02.06.2023, v1.1
   */
 case class TextFieldSettings(fieldSettings: FieldSettings = FieldSettings.default,
-                             editingSettings: EditableTextLabelSettings = EditableTextLabelSettings.default,
+                             editingSettings: EditableTextLabelSettings = defaultEditingSettings,
                              resultFilter: Option[Regex] = None, showsCharacterCount: Boolean = false)
 	extends TextFieldSettingsLike[TextFieldSettings]
 {

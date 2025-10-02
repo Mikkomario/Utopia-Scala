@@ -127,6 +127,7 @@
 - **Field** now visibly reacts to mouse hover
 - Image labels in **Field** no longer have low stack-size priority
 - **TextField**'s `.textPointer` and `.valuePointer` are now mutable
+- **TextField** now uses the **Focus** color role
 - Rewrote **ReachWindow**'s anchoring logic
 - **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets

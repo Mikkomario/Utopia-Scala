@@ -1,6 +1,7 @@
 package utopia.paradigm.color
 
 import utopia.flow.collection.immutable.Single
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
@@ -141,7 +142,6 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 			// Case: Prefers a color variant => Uses the value with enough contrast
 			case variant: ColorShade => against(backgroundColor, variant, minimumContrast)
 		}
-	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring light color)
@@ -150,10 +150,8 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	  *                        (default = minimum legibility default = 4.5:1)
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def againstPreferringLight(backgroundColor: Color,
-	                                 minimumContrast: Double = defaultMinimumContrast): Color =
+	def againstPreferringLight(backgroundColor: Color, minimumContrast: Double = defaultMinimumContrast): Color =
 		against(backgroundColor, Light, minimumContrast)
-	
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring dark color)
@@ -183,19 +181,35 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	  */
 	@tailrec
 	final def againstMany(colors: Iterable[Color], preference: ColorLevel = Standard,
-	                minimumContrast: Double = defaultMinimumContrast): Color =
+	                      minimumContrast: Double = defaultMinimumContrast): Color =
 	{
 		val preferred = apply(preference)
+		val contrastsToPreferred = colors.iterator.map(preferred.contrastAgainst).caching
 		// Case: There is enough contrast against the preferred option => Uses that one
-		if (colors.forall { preferred.contrastAgainst(_) >= minimumContrast })
+		if (contrastsToPreferred.forall { _ >= minimumContrast })
 			preferred
 		// Case: Not enough contrast for the preferred option => Uses alternative options
 		else
 			preference match {
-				// Case: Standard option was not OK => Uses the better variant
+				// Case: Standard option was not OK => Checks the variants
 				case Standard =>
-					variants.valuesIterator
-						.maxByOption { c => colors.map { c.contrastAgainst(_) }.reduce { _ + _ } }.getOrElse(default)
+					if (variants.isEmpty)
+						default
+					else {
+						// Finds the better variant option
+						val (betterVariant, contrastToVariant) = variants.valuesIterator
+							.map { variant => variant -> colors.iterator.map(variant.contrastAgainst).min }
+							.maxBy { _._2 }
+						// Case: The variant has high-enough contrast, or is better than the preferred option
+						//       => Uses the color variant
+						if (contrastToVariant >= minimumContrast || contrastToVariant > contrastsToPreferred.min)
+							betterVariant
+						// Case: None of the options meet the minimum requirements and the preferred color is better
+						//       => Selects the preferred option
+						else
+							preferred
+					}
+					
 				// Case: Preferred variant was not OK => Uses the standard shade or the better variant (recursive)
 				case _: ColorShade => againstMany(colors, minimumContrast = minimumContrast)
 			}
@@ -213,8 +227,7 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	  */
 	def map(f: Color => Color) = ColorSet(f(default), variants.view.mapValues(f).toMap)
 	
-	private def against(backgroundColor: Color, preference: ColorShade, minimumContrast: Double) =
-	{
+	private def against(backgroundColor: Color, preference: ColorShade, minimumContrast: Double) = {
 		val order = (variants.get(preference).toVector :+ default) ++ variants.get(preference.opposite)
 		val contrasts = order.map { color => color -> Lazy { color.contrastAgainst(backgroundColor) } }
 		// Finds the first shade that has enough contrast to the background

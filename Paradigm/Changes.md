@@ -20,6 +20,7 @@
   - Added `.apply(L)` for creating symmetric sides
 ### Other changes
 - Rewrote **ProjectilePath**
+- Improved the logic in **ColorSet**'s `.againstMany(...)`
 - Refactored parts of **SidesLike** and its subclasses
 - **Insets** and **RealInsets** now extend **Sides**
 

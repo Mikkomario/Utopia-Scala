@@ -423,7 +423,7 @@ case class FieldSettings(fieldNamePointer: Changing[LocalizedString] = Localized
                          hintPointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
                          errorMessagePointer: Changing[LocalizedString] = LocalizedString.alwaysEmpty,
                          highlightPointer: Changing[Option[ColorRole]] = Fixed(None), enabledFlag: Flag = AlwaysTrue,
-                         focusColorRole: ColorRole = ColorRole.Secondary, hintScaleFactor: Double = 0.7,
+                         focusColorRole: ColorRole = ColorRole.Focus, hintScaleFactor: Double = 0.7,
                          iconPointers: Pair[Changing[SingleColorIcon]] = Pair.twice(SingleColorIcon.alwaysEmpty),
                          imageSettings: ViewImageLabelSettings = ViewImageLabelSettings.default,
                          fillBackground: Boolean = ComponentCreationDefaults.useFillStyleFields)
