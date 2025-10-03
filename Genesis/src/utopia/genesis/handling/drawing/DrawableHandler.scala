@@ -43,29 +43,29 @@ object DrawableHandler
 	
 	/**
 	  * @param clipPointer Pointer that determines draw clipping area
-	  * @param visiblePointer Pointer that determines when this handler may be drawn
+	  * @param visibleFlag Pointer that determines when this handler may be drawn
 	  * @param drawOrder Applied draw order when this handler is used as a Drawable instance
 	  * @param exc Implicit execution context used when queing delayed repaints
 	  * @param log Logging implementation for catching errors in queued repaints
 	  */
 	case class DrawableHandlerFactory(clipPointer: Option[Changing[Bounds]] = None,
-	                                  visiblePointer: Flag = AlwaysTrue,
-	                                  fpsLimits: Map[Priority, Fps] = Map(), preDrawPriority: Priority = High,
-	                                  drawOrder: DrawOrder = DrawOrder.default)
+									  visibleFlag: Flag = AlwaysTrue,
+									  fpsLimits: Map[Priority, Fps] = Map(), preDrawPriority: Priority = High,
+									  drawOrder: DrawOrder = DrawOrder.default)
 	                                 (implicit exc: ExecutionContext, log: Logger)
 		extends HandlerFactory[Drawable, DrawableHandler, DrawableHandlerFactory]
 	{
 		// ATTRIBUTES   ------------------
 		
-		override val condition = visiblePointer
+		override val condition = visibleFlag
 		
 		
 		// IMPLEMENTED  ------------------
 		
-		override def usingCondition(newCondition: Flag): DrawableHandlerFactory = copy(visiblePointer = newCondition)
+		override def usingCondition(newCondition: Flag): DrawableHandlerFactory = copy(visibleFlag = newCondition)
 		
 		override def apply(items: IterableOnce[Drawable]) =
-			new DrawableHandler(clipPointer, visiblePointer, drawOrder, fpsLimits, preDrawPriority, items)
+			new DrawableHandler(clipPointer, visibleFlag, drawOrder, fpsLimits, preDrawPriority, items)
 		
 		
 		// OTHER    ----------------------
@@ -82,13 +82,15 @@ object DrawableHandler
 		  * @return Copy of this factory that only draws to that area
 		  */
 		def clippedTo(clipBounds: Bounds) = withClipPointer(Fixed(clipBounds))
-		
+
 		/**
-		  * @param p A pointer that determines when this handler may be drawn
-		  * @return Copy of this factory that only allows the handlers to be drawn while the specified pointer
-		  *         contains true.
-		  */
-		def withVisibilityPointer(p: Changing[Boolean]) = copy(visiblePointer = p)
+		 * @param flag A pointer that determines when this handler may be drawn
+		 * @return Copy of this factory that only allows the handlers to be drawn while the specified pointer
+		 *         contains true.
+		 */
+		def withVisibleFlag(flag: Flag) = copy(visibleFlag = flag)
+		@deprecated("Replaced with withVisibleFlag", "v4.2.2")
+		def withVisibilityPointer(p: Changing[Boolean]) = copy(visibleFlag = p)
 		
 		/**
 		  * Overwrites this factory's current FPS limits.
@@ -164,11 +166,11 @@ object DrawableHandler
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePointer: Changing[Boolean] = AlwaysTrue,
-                      override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority, Fps] = Map(),
-                      preDrawPriority: Priority = High, initialItems: IterableOnce[Drawable] = Empty)
+class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag: Flag = AlwaysTrue,
+					  override val drawOrder: DrawOrder = DrawOrder.default, fpsLimits: Map[Priority, Fps] = Map(),
+					  preDrawPriority: Priority = High, initialItems: IterableOnce[Drawable] = Empty)
                      (implicit exc: ExecutionContext, log: Logger)
-	extends DeepHandler[Drawable](initialItems, visiblePointer) with Drawable with PaintManager
+	extends DeepHandler[Drawable](initialItems, visibleFlag) with Drawable with PaintManager
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -229,6 +231,12 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visiblePoint
 				process.stopIfRunning()
 		}
 	}
+	
+	
+	// COMPUTED ------------------------------
+	
+	@deprecated("Renamed to visibleFlag", "v4.2.2")
+	def visiblePointer = visibleFlag
 	
 	
 	// IMPLEMENTED  --------------------------

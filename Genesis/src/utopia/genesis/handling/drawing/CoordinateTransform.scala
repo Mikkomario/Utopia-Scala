@@ -36,7 +36,7 @@ trait CoordinateTransform
 	def view[V <: DoubleVectorLike[V]](viewPoint: V): V
 	
 	/**
-	  * Starts delivering of transformed mouse events to the wrapped wrapped item and/or possibly other items.
+	  * Starts delivering of transformed mouse events to the wrapped item and/or possibly other items.
 	  * @param parentHandlers The handlers that will deliver mouse events to be converted.
 	  *                       The supported (& expected) handler types are:
 	  *                             - [[MouseButtonStateHandler]]
@@ -48,7 +48,7 @@ trait CoordinateTransform
 	  *                              Set this to true if you don't want the wrapped item to receive these mouse events
 	  *                              (directly).
 	  *                              Default = false = the wrapped item will start to receive mouse events,
-	  *                              if its capable of handling them.
+	  *                              if it's capable of handling them.
 	  * @return Handlers that deliver transformed mouse events
 	  */
 	def setupMouseEvents(parentHandlers: Handlers, disableMouseToWrapped: Boolean = false): Handlers

@@ -1,6 +1,9 @@
 # Utopia Genesis - List of Changes
 
 ## v4.2.2 (in development)
+### Breaking changes
+- **DrawableHandler**'s `visiblePointer` is now `visibleFlag`
+  - This also affects the constructor, which may be breaking in some edge use-cases
 ### New methods
 - **Drawer**
   - Added `.toGraphics`
@@ -8,6 +11,8 @@
 - Added new `.once` **MouseButtonStateEventListener** constructors
 - Added an abstract **TerminatingHandleable** class
 - Added an implicit conversion from **Color** to **DrawSettings**
+- **DeepHandler**'s `additionalHandleCondition` constructor parameter is now of type `Flag`
+- **Repositioner** now uses `lightMap(...)` in pointer-handling
 
 ## v4.2.1 - 26.05.2025
 This update improves the reliability of the **Actor** system with better error-handling. 

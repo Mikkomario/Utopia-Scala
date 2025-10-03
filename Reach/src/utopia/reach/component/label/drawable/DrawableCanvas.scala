@@ -248,7 +248,6 @@ object DrawableCanvas extends DrawableCanvasSetup()
   * @author Mikko Hilpinen
   * @since 09/02/2024, v1.3
   */
-// TODO: Add support for mouse drag events
 class DrawableCanvas(override val hierarchy: ComponentHierarchy, viewAreaPointer: Changing[Bounds],
                      scalingLogic: ScalePreservingShape = Fit, fpsLimits: Map[Priority, Fps] = Map(),
                      minSize: Size = Size.zero)
@@ -263,14 +262,16 @@ class DrawableCanvas(override val hierarchy: ComponentHierarchy, viewAreaPointer
 	  * Handler where the items drawn within this canvas should be placed
 	  */
 	val drawHandler = DrawableHandler.withClipPointer(viewAreaPointer)
-		.withVisibilityPointer(hierarchy.linkedFlag).withFpsLimits(fpsLimits).empty
+		.withVisibleFlag(hierarchy.linkedFlag).withFpsLimits(fpsLimits).empty
 	private val wrapper = new Repositioner(drawHandler, Left(Fixed(Point.origin), visualSizePointer), scalingLogic)
 	
 	private val relativeMouseButtonHandler = MouseButtonStateHandler.empty
 	private val relativeMouseMoveHandler = MouseMoveHandler.empty
 	private val relativeMouseWheelHandler = MouseWheelHandler.empty
+	private val relativeMouseDragHandler = MouseDragHandler.empty
 	private val relativeMouseHandlers =
-		Handlers(relativeMouseButtonHandler, relativeMouseMoveHandler, relativeMouseWheelHandler)
+		Handlers(relativeMouseButtonHandler, relativeMouseMoveHandler, relativeMouseWheelHandler,
+			relativeMouseDragHandler)
 	/**
 	  * Handlers that apply in the "view world" context. Mutable.
 	  * Mouse events are transformed to the view-world coordinates (instead of component coordinates)
@@ -343,8 +344,14 @@ class DrawableCanvas(override val hierarchy: ComponentHierarchy, viewAreaPointer
 		if (relativeMouseMoveHandler.mayBeHandled)
 			relativeMouseMoveHandler.onMouseMove(relativize(event))
 	}
-	
-	
+	override def distributeMouseDragEvent(event: MouseDragEvent) = {
+		if (mouseDragHandler.mayBeHandled)
+			mouseDragHandler.onMouseDrag(event)
+		if (relativeMouseDragHandler.mayBeHandled)
+			relativeMouseDragHandler.onMouseDrag(relativize(event))
+	}
+
+
 	// OTHER    ----------------------------
 	
 	private def distributeConsumableMouseEvent[E <: MouseEvent[E] with Consumable[E], L <: Handleable]

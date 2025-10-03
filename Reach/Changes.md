@@ -84,6 +84,7 @@
   `windowPointer` property (a new **Firmament** feature) will automatically be specified.
 - All text-related contextual button factories now extend **FromColorRoleFactory**, 
   allowing for easier color assignment
+- **DrawableCanvas** now supports mouse drag events
 - Added a number of new type aliases:
   - **Creation** (previously **ComponentCreationResult**)
     - **Created**

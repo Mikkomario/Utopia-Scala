@@ -13,7 +13,12 @@ import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 /**
   * Modifies where and how large another Drawable item is drawn
-  * @author Mikko Hilpinen
+  * @param wrapped The repositioned item
+ * @param targetPointer Either:
+ *                      	- Left: A pointer for the new top left position, and for the size
+ *                      	- Right: A pointer for the new (draw) bounds
+ * @param resizeLogic Logic applied when resizing (default = Fit = fit to the targeted area, preserving shape)
+ * @author Mikko Hilpinen
   * @since 11/02/2024, v4.0
   */
 class Repositioner(override protected val wrapped: Drawable,
@@ -25,8 +30,8 @@ class Repositioner(override protected val wrapped: Drawable,
 	// ATTRIBUTES   --------------------
 	
 	private val (targetPositionPointer, targetSizePointer) =
-		targetPointer.leftOrMap { b => b.strongMap { _.position } -> b.strongMap { _.size } }
-	private val originalSizePointer = wrapped.drawBoundsPointer.strongMap { _.size }
+		targetPointer.leftOrMap { b => b.lightMap { _.position } -> b.lightMap { _.size } }
+	private val originalSizePointer = wrapped.drawBoundsPointer.lightMap { _.size }
 	
 	private val relativeBoundsPointer = originalSizePointer.mergeWith(targetSizePointer)(resizeLogic.apply)
 	override val drawBoundsPointer = relativeBoundsPointer.mergeWith(targetPositionPointer) { _ + _ }
