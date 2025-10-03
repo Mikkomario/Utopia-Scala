@@ -57,6 +57,16 @@ trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 	def streamColumns[A](columns: Seq[Column])(f: Iterator[Seq[Value]] => A)(implicit connection: Connection): A
 	
 	
+	// COMPUTED -----------------------------
+	
+	/**
+	 * Counts the number of accessible items
+	 * @param connection Implicit DB connection
+	 * @return The number of unique accessible entries
+	 */
+	def size(implicit connection: Connection) = count(index, distinct = true)
+	
+	
 	// OTHER    -----------------------------
 	
 	/**
