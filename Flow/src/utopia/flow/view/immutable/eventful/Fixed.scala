@@ -45,7 +45,7 @@ object Fixed
   * Common class for pointers that never change
   * @tparam A Type of the wrapped fixed value
   */
-sealed abstract class Fixed[+A] extends Changing[A] with EqualsBy
+abstract class Fixed[+A] extends Changing[A] with EqualsBy
 {
 	// ATTRIBUTES   -------------
 	
@@ -57,7 +57,7 @@ sealed abstract class Fixed[+A] extends Changing[A] with EqualsBy
 	
 	// IMPLEMENTED	-------------
 	
-	override def readOnly = this
+	override def readOnly: Changing[A] = this
 	override protected def equalsProperties: Seq[Any] = Single(value)
 	
 	override def toString = s"Always($value)"

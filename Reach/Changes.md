@@ -127,8 +127,10 @@
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
 - **Field** now visibly reacts to mouse hover
 - Image labels in **Field** no longer have low stack-size priority
-- **TextField**'s `.textPointer` and `.valuePointer` are now mutable
-- **TextField** now uses the **Focus** color role
+- Multiple changes to **TextField**:
+  - `.textPointer` and `.valuePointer` are now mutable
+  - **TextField** now uses the **Focus** color role
+  - Modified how the field formats its value when it loses focus / stops editing
 - Rewrote **ReachWindow**'s anchoring logic
 - **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets

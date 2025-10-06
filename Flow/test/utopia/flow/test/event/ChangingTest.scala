@@ -9,7 +9,7 @@ import utopia.flow.generic.model.mutable.DataType.{DoubleType, StringType}
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.{Pointer, Settable}
 import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful._
 
@@ -646,6 +646,53 @@ object ChangingTest extends App
 	assert(lp2.hasListeners)
 	assert(lp3.hasListeners)
 	assert(lpm3.isInitialized)
+	
+	// Tests MayBeAssignableOnce
+	
+	private val mbas = Pair.fill { MayBeAssignedOnce[Boolean]() }
+	private val mbaStopPs = Pair.fill { Settable() }
+	private val mbaFinalResultPs = Pair.fill { Pointer.empty[Boolean] }
+	mbas.mergeWith(mbaStopPs) { (p, sf) =>
+		p.onceChangingStops {
+			if (!sf.set())
+				throw new IllegalStateException("Must not arrive here twice")
+		}
+	}
+	mbas.mergeWith(mbaFinalResultPs) { (p, rp) =>
+		p.addListener { e =>
+			rp.getAndSet(e.newValue).foreach { oldValue =>
+				throw new IllegalStateException(
+					s"Only once change event should ever be received. Previous value was $oldValue.")
+			}
+		}
+	}
+	
+	assert(mbas.forall { _.destiny == MaySeal })
+	assert(mbas.forall { _.value.isEmpty })
+	assert(mbas.forall { _.unlocked })
+	assert(mbaStopPs.forall { _.isNotSet })
+	assert(mbaFinalResultPs.forall { _.isEmpty })
+	
+	// Assigns the final states
+	mbas.first.set(true)
+	mbas.second.lock()
+	
+	assert(mbas.forall { _.destiny == Sealed })
+	assert(mbas.first.value.contains(true))
+	assert(mbas.second.value.isEmpty)
+	assert(mbas.first.unlocked)
+	assert(mbas.second.locked)
+	assert(mbaStopPs.forall { _.isSet })
+	assert(mbaFinalResultPs.first.contains(true))
+	assert(mbaFinalResultPs.second.isEmpty)
+	assert(Try { mbas.first.set(false) }.isFailure)
+	assert(Try { mbas.second.set(false) }.isFailure)
+	assert(mbas.forall { !_.trySet(false) })
+	assert(mbas.first.value.contains(true))
+	assert(mbas.second.value.isEmpty)
+	
+	mbas.first.lock()
+	assert(mbas.first.locked)
 	
 	println("Done!")
 }

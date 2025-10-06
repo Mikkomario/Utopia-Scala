@@ -8,6 +8,7 @@ import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Month.{December, January}
+import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 
 import java.time.{DateTimeException, LocalDate}
@@ -136,6 +137,27 @@ case class YearMonth(year: Year, month: Month) extends MonthLike[YearMonth] with
 	
 	
 	// OTHER    --------------------------
+	
+	/**
+	 * @param year A year
+	 * @return A copy of this year month with the specified year
+	 */
+	def withYear(year: Year) = copy(year = year)
+	/**
+	 * @param month A month
+	 * @return A copy of this year month with the specified month
+	 */
+	def withMonth(month: Month) = copy(month = month)
+	/**
+	 * @param f A mapping function applied to this year month's year value
+	 * @return A copy of this year month with a modified year value
+	 */
+	def mapYear(f: Mutate[Year]) = withYear(f(year))
+	/**
+	 * @param f A mapping function applied to this year month's month value
+	 * @return A copy of this year month with a modified month value
+	 */
+	def mapMonth(f: Mutate[Month]) = withMonth(f(month))
 	
 	/**
 	  * @param day Targeted day of month

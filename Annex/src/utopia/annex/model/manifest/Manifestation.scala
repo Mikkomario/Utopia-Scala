@@ -1,5 +1,6 @@
 package utopia.annex.model.manifest
 
+import utopia.flow.util.Mutate
 import utopia.flow.view.template.Extender
 
 /**
@@ -14,9 +15,20 @@ case class Manifestation[+A](wrapped: A, state: SchrodingerState) extends Extend
 	// OTHER    ------------------------
 	
 	/**
-	  * @param f A mapping function to apply to the wrapped item within this Manifest
+	  * @param f A mapping function to apply to the wrapped item within this manifestation
 	  * @tparam B Type of mapping results
-	  * @return A mapped copy of this Manifest
+	  * @return A mapped copy of this manifestation
 	  */
 	def mapItem[B](f: A => B) = copy(wrapped = f(wrapped))
+	
+	/**
+	 * @param state A new state to assign
+	 * @return A copy of this manifestation with the specified state
+	 */
+	def withState(state: SchrodingerState) = if (this.state == state) this else copy(state = state)
+	/**
+	 * @param f A mapping function applied to this manifestation's state
+	 * @return A copy of this manifestation with the specified state
+	 */
+	def mapState(f: Mutate[SchrodingerState]) = withState(f(state))
 }

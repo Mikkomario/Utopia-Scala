@@ -143,11 +143,13 @@ object Schrodinger
   * @constructor Creates a new Schrödinger instance that wraps the specified state pointer (abstract)
   * @param fullStatePointer A pointer that contains the current state of this Schrödinger item.
   *                         The state of this item consists of two parts:
-  *                             1) The current manifest (placeholder or final), and
-  *                             2) The server result that was acquired, if applicable (e.g. as an Option)
-*                           The specified pointer must not change after its state has been set to final.
+  *                             1. The current manifest (placeholder or final), and
+  *                             1. The server result that was acquired, if applicable (e.g. as an Option)
+*
+ *                          The specified pointer must not change after its state has been set to final.
   *                         Doing so might cause illogical behavior in this instance.
-  * @tparam M Type of manifest wrapped by this Schrödinger. Manifest is the form in which attempts and results appear
+  *
+ * @tparam M Type of manifest wrapped by this Schrödinger. Manifest is the form in which attempts and results appear
   *           (i.e. the common class between the Schrödinger state, the alive state and the dead state)
   * @tparam R Type for tracking received responses
   */
@@ -216,14 +218,81 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)])
 	
 	/**
 	  * @return A pointer that contains 3 elements concerning this Schrödinger:
-	  *         1) The current manifest form,
-	  *         2) The current result form,
-	  *         3) The current state
+	  *             1. The current manifest form
+	  *             1. The current result form
+	  *             1. The current state
 	  */
 	def pointer = fullStatePointer.readOnly
 	
 	
 	// OTHER    ---------------------------
+	
+	/**
+	 * @param f A mapping function applied to this schrödinger.
+	 *
+	 *          Accepts:
+	 *              1. The current manifestation of this schrödinger
+	 *              1. The current result-state
+	 *              1. The current state of this schrödinger
+	 *
+	 *          Yields the new manifestation and the new result-state.
+	 *          The state is expected to remain the same.
+	 *
+	 * @tparam M2 Type of the new manifestation
+	 * @tparam R2 Type of the new result-state
+	 * @return A mapped version of this schrödinger
+	 * @see [[mapWithState]], if you want to also modify the schrödinger state
+	 */
+	def map[M2, R2](f: (M, R, SchrodingerState) => (M2, R2)) =
+		new Schrodinger[M2, R2](fullStatePointer.map { case (manifest, result, state) =>
+			val (newManifest, newResult) = f(manifest, result, state)
+			(newManifest, newResult, state)
+		})
+	/**
+	 * @param f A mapping function applied to this schrödinger's manifestation
+	 * @tparam M2 Type of the new manifestation
+	 * @return A copy of this schrödinger with a mapped manifestation.
+	 *         The result and state remain identical.
+	 */
+	def mapManifest[M2](f: M => M2) =
+		new Schrodinger[M2, R](fullStatePointer.map { case (manifest, result, state) => (f(manifest), result, state) })
+	/**
+	 * @param f A mapping function applied to this schrödinger's result-state.
+	 *
+	 *          Accepts:
+	 *              1. The current result-state
+	 *              1. The current state of this schrödinger
+	 *
+	 *          Yields the new result-state. The schrödinger state is expected to remain identical.
+	 *
+	 * @tparam R2 Type of the mapped result-state
+	 * @return A copy of this schrödinger with a mapped result-state, yet identical manifest and state.
+	 * @see [[mapWithState]], if you want to also modify the schrödinger state
+	 */
+	def mapResult[R2](f: (R, SchrodingerState) => R2) =
+		new Schrodinger[M, R2](fullStatePointer.map { case (manifest, result, state) =>
+			(manifest, f(result, state), state)
+		})
+	/**
+	 * @param f A mapping function applied to this schrödinger.
+	 *
+	 *          Accepts:
+	 *              1. The current manifestation
+	 *              1. The current result-state
+	 *              1. The current schrödinger state
+	 *
+	 *          Yields new versions of each.
+	 *          Note: If this function yields a [[Final]] state, no further changes will be mapped.
+	 *                Also, if the accepted state is final, the resulting state should also be final.
+	 *
+	 * @tparam M2 Type of the mapped manifest
+	 * @tparam R2 Type of the mapped result-state
+	 * @see [[map]], if you don't need to modify the state
+	 * @return A mapped copy of this schrödinger
+	 */
+	def mapWithState[M2, R2](f: (M, R, SchrodingerState) => (M2, R2, SchrodingerState)) =
+		new Schrodinger[M2, R2](
+			fullStatePointer.mapUntil { case (manifest, result, state) => f(manifest, result, state) } { _._3.isFinal })
 	
 	/**
 	  * Waits for the instance version that is based on the server result. Wait time can be limited with timeout.

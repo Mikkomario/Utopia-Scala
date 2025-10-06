@@ -9,11 +9,15 @@
 ### New features
 - **ApiRequest**s can now specify path parameters
 ### New methods
+- **Manifestation**
+  - Added `.withState(SchrodingerState)` and `.mapState(...)`
 - **PostSchrodinger** (object)
   - Added a new `.successful(...)` constructor
 - **ResponseParser** (via **ResponseParseExtensions**)
   - Added `.parsingFailuresWith(...)` and `.withResponseBodyAsFailureMessage` to 
     **ResponseParser**s that already yield a **Response**.
+- **Schrodinger**
+  - Added various mapping functions
 ### Other changes
 - `PersistingApiRequest.apply(...)` result no longer fails model parsing if persisted with an unintroduced **Method**
 - **GetRequest** now fully specifies the `body` type, no longer requiring the **Nothing** on the right side in subclasses

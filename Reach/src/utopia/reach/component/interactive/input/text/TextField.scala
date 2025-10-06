@@ -697,6 +697,9 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	// ATTRIBUTES	------------------------------------------
 	
 	private val _statePointer = EventfulPointer[FieldState](BeforeEdit)
+	/**
+	 * A listener that sets this field's state to "Editing" whenever the text changes
+	 */
 	private val goToEditInputListener: ChangeListener[Any] = ChangeListener.onAnyChange {
 		if (hasFocus)
 			_statePointer.value = Editing
@@ -760,8 +763,10 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 				// Formats text contents whenever focus is lost
 				case FocusLost =>
 					textPointer.removeListener(goToEditInputListener)
-					_statePointer.value = AfterEdit
-					settings.resultFilter.foreach { filter => textPointer.update(filter.filter) }
+					if (state == Editing) {
+						textPointer.value = resultToText(value)
+						_statePointer.value = AfterEdit
+					}
 				case _ => ()
 			}
 			val appliedLabelSettings = settings.editingSettings

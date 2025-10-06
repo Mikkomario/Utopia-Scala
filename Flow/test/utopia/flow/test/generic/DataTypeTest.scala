@@ -165,5 +165,7 @@ object DataTypeTest extends App
 	assert("01.02.2021".getMonth == February)
 	assert("01.02.2021".getYearMonth == Year(2021)/February)
 	
+	assert(LocalDate.of(2021, 9, 12).getString == "2021-09-12")
+	
 	println("Success")
 }

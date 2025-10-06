@@ -1,14 +1,12 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.operator.Identity
-import utopia.flow.operator.enumeration.End
 import utopia.flow.util.TryExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.immutable.View
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.MaybeAssignable
 import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, MayStopChanging}
@@ -79,15 +77,11 @@ object AssignableOnce
 	  * @param v A predefined value
 	  * @tparam A Type of held value
 	  */
-	private class SetOnce[A](v: A) extends AssignableOnce[A]
+	private class SetOnce[A](v: A) extends Fixed[Option[A]] with AssignableOnce[A]
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override implicit val listenerLogger: Logger = SysErrLogger
-		override val hasListeners: Boolean = false
-		override val numberOfListeners: Int = 0
-		
-		override lazy val value: Option[A] = Some(v)
+		override val value: Option[A] = Some(v)
 		override val isSet = true
 		override val destiny = Sealed
 		override lazy val future: Future[A] = Future.successful(v)
@@ -97,16 +91,10 @@ object AssignableOnce
 		
 		override def get = v
 		
-		override def readOnly: Changing[Option[A]] = this
-		
 		override def toString = s"Assigned.always($v)"
 		
 		override protected def _set(value: A): Unit = ()
 		override protected def declareChangingStopped(): Unit = ()
-		
-		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Option[A]]]): Unit = ()
-		override def removeListener(changeListener: Any): Unit = ()
-		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 		
 		override def onceSet[U](f: A => U): Unit = f(v)
 	}

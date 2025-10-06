@@ -28,6 +28,8 @@
   - This feature will be removed in v2.8, or possibly later
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
+- Added **MayBeAssignedOnce** -pointer class, which is a lockable version of **AssignableOnce**, 
+  meaning that one of its possible final states is that it is locked without ever receiving a value.
 - Added **Year**, **YearMonth** and **Month** as generic data types
 - Added **OpenSource**, **FromSource** and **Lines** for interacting with **Source**
 - Added builder for **IntSet**s
@@ -36,6 +38,7 @@
 - Added **NoWait** as a new **WaitTarget**
 ### New methods
 - **Changing**
+  - Added `.forFinalValue(...)`
   - Added new empty/non-empty -related functions to **Option**-based **Changing** instances
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
@@ -94,6 +97,8 @@
 - **WeakValuesCache**
   - Added `.prune()`, which removes keys for released values
     - This also affects **WeakCache** through inheritance
+- **YearMonth**
+  - Added new with and map functions
 ### Other changes
 - **XmlReader** now discards non-XML prefix from the streamed input, 
   effectively handling the BOM issue, and other such malformed inputs
@@ -102,6 +107,8 @@
 - **LazilyInitializedChanging** now contains custom definitions for certain mapping functions,
   etc. further delaying the initialization in certain use-cases.
 - **MutableOnce** now extends **Lockable**
+- **Fixed** is no longer sealed; Also, `readOnly` in **Fixed** now specifies the output type as **Changing**, 
+  not necessarily **Fixed**
 - Rewrote **StringFrom**
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**

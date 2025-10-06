@@ -469,7 +469,7 @@ trait Changing[+A] extends View[A]
 	
 	/**
 	  * Assigns a new listener to be informed in case this pointer stops from changing
-	  * (i.e. isChanging becomes false).
+	  * (i.e. [[destiny]] becomes [[Sealed]]).
 	  *
 	  * The listener won't be called if this pointer had already stopped from changing.
 	  * If you wish to receive events in these situations as well, please use
@@ -483,7 +483,7 @@ trait Changing[+A] extends View[A]
 	}
 	/**
 	  * Assigns a new listener to be informed in case this pointer stops from changing
-	  * (i.e. isChanging becomes false).
+	  * (i.e. [[destiny]] becomes [[Sealed]]).
 	  * If this pointer had already stopped from changing, calls the listener immediately.
 	  * @param listener A listener to assign, if appropriate (call-by-name)
 	  */
@@ -499,23 +499,30 @@ trait Changing[+A] extends View[A]
 	}
 	/**
 	  * Runs the specified function once/if this pointer stops from changing
-	  * (i.e. isChanging becomes false).
+	  * (i.e. [[destiny]] becomes [[Sealed]]).
 	  * If this pointer had already stopped from changing, calls the function immediately.
 	  * @param f A function to be performed, when/if appropriate
 	  */
 	def onceChangingStops[U](f: => U): Unit = addChangingStoppedListenerAndSimulateEvent(ChangingStoppedListener(f))
 	/**
+	 * @param f A function called once/if it becomes certain that this pointer won't change anymore
+	 *          (i.e. when this pointer's [[destiny]] becomes [[Sealed]]).
+	 *
+	 *          Note: Some pointers will never call this function, as they always have the potential to change.
+	 *
+	 * @tparam U Arbitrary function result type
+	 * @see [[onceChangingStops]]
+	 */
+	def forFinalValue[U](f: A => U): Unit = onceChangingStops { f(value) }
+	/**
 	  * Runs the specified function once/if this pointer stops from changing
-	  * (i.e. when/if [[mayChange]] becomes false), but only if the changing stops at a specific value
+	  * (i.e. when/if [[destiny]] becomes [[Sealed]]), but only if the changing stops at a specific value
 	  * @param value Targeted value
 	  * @param f Function to run once/if this item reaches the specified final value
 	  * @tparam B Type of the targeted value
 	  * @tparam U Arbitrary function result type
 	  */
-	def onceFixedAt[B >: A, U](value: B)(f: => U): Unit = onceChangingStops {
-		if (this.value == value)
-			f
-	}
+	def onceFixedAt[B >: A, U](value: B)(f: => U): Unit = forFinalValue { finalValue => if (finalValue == value) f }
 	
 	/**
 	  * Functions like [[addListenerAndSimulateEvent]],
