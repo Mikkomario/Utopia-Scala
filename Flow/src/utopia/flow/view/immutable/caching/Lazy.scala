@@ -7,9 +7,18 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.caching.DeprecatingLazy
+import utopia.flow.view.mutable.eventful.GeneratesOnce
 
 object Lazy
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Access to constructing lazy containers that fire change events
+	 */
+	def eventful = GeneratesOnce
+	
+	
 	// OTHER    ------------------------
 	
 	/**

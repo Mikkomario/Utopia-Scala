@@ -1523,8 +1523,7 @@ trait Changing[+A] extends View[A]
 	  */
 	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
 	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
-	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit)
-	                                           =
+	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
 	{
 		// Calculates the event lazily
 		// In case where the current and old value are equal, won't generate an event

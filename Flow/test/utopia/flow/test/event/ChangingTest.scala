@@ -694,5 +694,96 @@ object ChangingTest extends App
 	mbas.first.lock()
 	assert(mbas.first.locked)
 	
+	// Tests GeneratesOnce
+	
+	// Generates the first instance
+	private var go1GenerateCalls = 0
+	private val go1 = GeneratesOnce.simulatingOldValue { 0 } {
+		go1GenerateCalls += 1
+		1
+	}
+	private var go1InitializedCalled = false
+	go1.initializedFlag.onceSet { go1InitializedCalled = true }
+	private var go1EventResult = -1
+	go1.addListener { e =>
+		assert(e.newValue == 1)
+		assert(e.oldValue == 0)
+		go1EventResult = e.newValue
+	}
+	
+	// Makes sure it didn't get initialized
+	assert(go1.nonInitialized)
+	assert(go1.current.isEmpty)
+	assert(go1GenerateCalls == 0)
+	assert(!go1InitializedCalled)
+	assert(go1EventResult == -1)
+	assert(go1.destiny == MaySeal)
+	
+	// Generates a mapped view
+	private var go2GenerateCalls = 0
+	private val go2 = go1.map { v =>
+		go2GenerateCalls += 1
+		v + 1
+	}
+	private var go2InitializedCalled = false
+	go2.initializedFlag.onceSet { go2InitializedCalled = true }
+	private var go2EventResult = -1
+	go2.addListener { e =>
+		assert(e.newValue == 2)
+		assert(e.oldValue == 1)
+		go2EventResult = e.newValue
+	}
+	
+	// Generates another mapped view that's not being listened to
+	private val go3 = go1.map { -_ }
+	
+	// Makes sure neither got initialized
+	assert(go1.nonInitialized)
+	assert(go1.current.isEmpty)
+	assert(go1GenerateCalls == 0)
+	assert(!go1InitializedCalled)
+	assert(go1EventResult == -1)
+	assert(go1.destiny == MaySeal)
+	
+	assert(go2.nonInitialized)
+	assert(go2.current.isEmpty)
+	assert(go2GenerateCalls == 0)
+	assert(!go2InitializedCalled)
+	assert(go2EventResult == -1)
+	assert(go2.destiny == MaySeal)
+	
+	assert(go3.nonInitialized)
+	assert(go3.current.isEmpty)
+	
+	// Generates the first value
+	assert(go1.value == 1)
+	
+	// Makes sure initialized state is correct in both pointers
+	assert(go1.isInitialized)
+	assert(go1.current.contains(1))
+	assert(go1GenerateCalls == 1)
+	assert(go1InitializedCalled)
+	assert(go1EventResult == 1)
+	assert(go1.destiny == Sealed)
+	
+	assert(go2.current.contains(2))
+	assert(go2GenerateCalls == 2, go2GenerateCalls) // Expects to be called for both the old and the new value
+	assert(go2InitializedCalled)
+	assert(go2EventResult == 2)
+	assert(go2.destiny == Sealed)
+	assert(go2.value == 2)
+	assert(go2GenerateCalls == 2)
+	
+	assert(go3.nonInitialized)
+	assert(go3.current.isEmpty)
+	assert(go3.destiny == MaySeal)
+	
+	// Queries the remaining value
+	assert(go3.value == -1)
+	
+	assert(go3.isInitialized)
+	assert(go3.current.contains(-1))
+	assert(go3.destiny == Sealed)
+	
 	println("Done!")
 }

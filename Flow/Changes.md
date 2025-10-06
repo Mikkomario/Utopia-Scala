@@ -28,6 +28,7 @@
   - This feature will be removed in v2.8, or possibly later
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
+- Added **GeneratesOnce**, which combines both **Lazy** and **Changing**
 - Added **MayBeAssignedOnce** -pointer class, which is a lockable version of **AssignableOnce**, 
   meaning that one of its possible final states is that it is locked without ever receiving a value.
 - Added **Year**, **YearMonth** and **Month** as generic data types
