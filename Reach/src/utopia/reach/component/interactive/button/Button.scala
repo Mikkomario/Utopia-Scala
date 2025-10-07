@@ -62,7 +62,7 @@ case class ButtonFactory(hierarchy: ComponentHierarchy, context: StaticTextConte
 			case Some(color) => apply(color)
 			case None => self
 		}
-		factory(content.icon, content.text)(action)
+		factory.mapButtonSettings { _ ++ content.settings }.apply(content.icon, content.text)(action)
 	}
 	
 	/**

@@ -36,12 +36,14 @@ object ButtonContent
  * @since 09.09.2025, v1.7
  */
 case class ButtonContent(text: LocalizedString = LocalizedString.empty, icon: SingleColorIcon = SingleColorIcon.empty,
-                         color: Option[ColorRole] = None)
-	extends FromColorRoleFactory[ButtonContent]
+                         color: Option[ColorRole] = None, settings: ButtonSettings = ButtonSettings.default)
+	extends FromColorRoleFactory[ButtonContent] with ButtonSettingsWrapper[ButtonContent]
 {
 	// IMPLEMENTED  -------------------------
 	
 	override def apply(role: ColorRole): ButtonContent = copy(color = Some(role))
+	
+	override def withSettings(settings: ButtonSettings): ButtonContent = copy(settings = settings)
 	
 	
 	// OTHER    -----------------------------

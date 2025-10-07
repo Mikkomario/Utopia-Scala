@@ -102,6 +102,13 @@ trait ButtonSettingsLike[+Repr]
 	  * @return Copy of this factory that uses the specified key as a hotkey
 	  */
 	def triggeredWith(key: Key) = withHotKey(HotKey(key))
+	/**
+	 * @param key A key that triggers this button
+	 * @param condition A condition that must be met for the hotkey to activate / have any effect
+	 * @return A copy of this content with the specified hotkey
+	 */
+	def conditionallyTriggeredWith(key: Key)(condition: => Boolean) =
+		withHotKey(HotKey.conditional(key)(condition))
 	
 	/**
 	  * @param listener A focus listener
@@ -139,6 +146,16 @@ case class ButtonSettings(enabledFlag: Flag = AlwaysTrue, hotKeys: Set[HotKey] =
 	override def withEnabledFlag(p: Flag) = copy(enabledFlag = p)
 	override def withFocusListeners(listeners: Seq[FocusListener]) = copy(focusListeners = listeners)
 	override def withHotKeys(keys: Set[HotKey]) = copy(hotKeys = keys)
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	 * @param other Another set of button settings
+	 * @return A combination of these settings, applying both
+	 */
+	def ++(other: ButtonSettings) = ButtonSettings(enabledFlag && other.enabledFlag, hotKeys ++ other.hotKeys,
+		focusListeners ++ other.focusListeners)
 }
 
 /**
