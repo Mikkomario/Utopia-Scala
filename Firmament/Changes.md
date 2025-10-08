@@ -30,6 +30,8 @@
 - Added **FixedStackable** trait for static-sized **Stackable** implementations
 - Added a factory-based approach to constructing **Border**s and **BorderDrawer**s
   - Also, **Border** now extends **InsetsLike**, providing a number of new methods
+- Added **AwtUtils** object
+  - Currently, the only feature is constructing a window closed -future for Java AWT windows
 - Added **JWindow** alias for **java.awt.Window**
 ### New methods
 - **Alignment** (via **LengthExtensions**)
