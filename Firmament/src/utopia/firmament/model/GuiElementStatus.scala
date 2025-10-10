@@ -79,7 +79,7 @@ case class GuiElementStatus(states: Set[GuiElementState]) extends MaybeEmpty[Gui
 	/**
 	  * @return Hover effect alpha value to use with this status
 	  */
-	def hoverAlpha = if (intensity > 0) intensity * 0.2 else 0
+	def hoverAlpha = if (intensity > 0) intensity * 0.25 else 0
 	
 	
 	// IMPLEMENTED  -------------------

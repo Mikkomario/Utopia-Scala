@@ -47,6 +47,7 @@
 ### Other changes
 - **Window**'s location correction / location adjustment logic 
   now only applies to windows which contain OS borders / decorations
+- Hover alpha value calculation in **GuiElementStatus** now yields 25% higher values
 - **Input** now extends **View**
 - **StackInsets** now extends **Sides**
 - Separated some **StackInsets** features to a new trait named **StackInsetsLike**

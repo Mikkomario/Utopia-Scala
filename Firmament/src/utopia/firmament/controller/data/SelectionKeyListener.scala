@@ -164,8 +164,8 @@ object SelectionKeyListener
 		 *         [[utopia.genesis.handling.event.keyboard.KeyStateHandler]]
 		 */
 		def apply(moveSelection: Int => Unit) =
-			new SelectionKeyListener(keysPointer, enabledFlag, initialScrollDelay, scrollDelayModifier, minScrollDelay)(
-				moveSelection)
+			new SelectionKeyListener(keysPointer, enabledFlag, initialScrollDelay, scrollDelayModifier, minScrollDelay,
+				additionalCondition)(moveSelection)
 	}
 }
 
